@@ -1,0 +1,2 @@
+#!/bin/sh
+exec env OMEN_TUNNELS_GATEWAY_PORT_OFFSET=1000 omen-tunnels "$@"

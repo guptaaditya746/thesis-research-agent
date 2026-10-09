@@ -1,0 +1,3 @@
+[submodule "related/final-final-llm-setup"]
+	path = related/final-final-llm-setup
+	url = git@github.com:guptaaditya746/thesis-llm-setup.git
