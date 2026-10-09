@@ -1,0 +1,11 @@
+HF cache: /mnt/ceph/storage/data-tmp/current/xepi3167/.cache/huggingface/hub
+model=Qwen--Qwen3.8-27B-FP8
+  snapshot_commit=017b9c7af6b5689d5dd426a76e0bc077eb5ca20a
+  tokenizer_config.json sha256=b11349aafa7cdc6a320767cf7ceb29ed82f7eda5d65e8e0819e76f0ce947bf27
+  generation_config.json sha256=e70c136c1b78ddc1fb0905bac8e733a4dc448d4f852a5dd75143fffc70be550e
+  chat_template.jinja sha256=c3cf9e34abf4f9e36c2d72165aa9c132d3e2a725b6c2586aaa3a8af9d7a81041
+model=Qwen--Qwen3-30B-A3B-Instruct-2507-FP8
+  snapshot_commit=5a5a776300a41aaa681dd7ff0106608ef2bc90db
+  tokenizer_config.json sha256=a62ff0a2472a0fa1b8eaabcb57c59b58afa42a22831dc141400b6e0cf2b65ce3
+  generation_config.json sha256=19d306dd769db12a9d710b44cf7f83b635efbe5166b84fb4358a08fb7d88bb53
+  chat_template.jinja MISSING

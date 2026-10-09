@@ -1,0 +1,11 @@
+S1b corrected results (allocation and import tested as separate commands)
+limit=2GiB: numpy,pandas imports=ok; 100GB string allocation=MemoryError
+limit=4GiB: numpy,pandas imports=ok; 100GB string allocation=MemoryError
+limit=8GiB: numpy,pandas imports=ok; 100GB string allocation=MemoryError
+limit=16GiB: numpy,pandas imports=ok; 100GB string allocation=MemoryError
+smallest_working_limit=2GiB
+allocation_results=tests/S1b/allocation-results.txt
+cgroup=/system.slice/gammaweb08_slurmstepd.scope/job_7048/step_0/user/task_0
+memory.max=max (no cgroup memory cap exposed)
+memory.stat anon=10293456896 bytes
+memory.stat file=57997000704 bytes

@@ -1,0 +1,13 @@
+S5b command: setsid python3 /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/tests/S5/sandbox.py --readonly /usr --readonly /lib --readonly /lib64 --readonly /bin --readonly /etc --readonly /dev --readonly /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/tests/A6/corpus --readonly /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3 --writeonly /dev/null --writable /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/tests/S5/scratch --workdir /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/tests/S5/scratch -- bash -c <test>
+2
+1
+corpus-ro-ok
+work-ok
+net-off-ok
+port-8001-denied
+port-8002-denied
+port-8004-denied
+port-4000-denied
+port-8010-denied
+home-hidden-ok
+timeout-rc=124

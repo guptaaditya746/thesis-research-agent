@@ -1,0 +1,145 @@
+{
+  "seed_alone": {
+    "distinct": 1,
+    "samples": [
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.422
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.124
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.125
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.122
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.125
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.125
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.126
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.125
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.123
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.124
+      }
+    ]
+  },
+  "seed_under_sub_load": {
+    "distinct": 1,
+    "samples": [
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.14
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.123
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.123
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.122
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.123
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.124
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.124
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.127
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.128
+      },
+      {
+        "text": "7",
+        "finish_reason": "stop",
+        "seconds": 0.125
+      }
+    ]
+  },
+  "queue_probe": {
+    "capacity_assumption": "two SUB replicas \u00d7 max_num_seqs=3; six busy requests, seventh submitted two seconds later",
+    "queued_request": {
+      "seconds": 0.424,
+      "finish_reason": "length"
+    },
+    "busy_requests": [
+      {
+        "seconds": 8.253,
+        "finish_reason": "length"
+      },
+      {
+        "seconds": 8.257,
+        "finish_reason": "length"
+      },
+      {
+        "seconds": 10.201,
+        "finish_reason": "length"
+      },
+      {
+        "seconds": 10.233,
+        "finish_reason": "length"
+      },
+      {
+        "seconds": 10.201,
+        "finish_reason": "length"
+      },
+      {
+        "seconds": 17.15,
+        "finish_reason": "length"
+      }
+    ]
+  }
+}

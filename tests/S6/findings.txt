@@ -1,0 +1,16 @@
+kill-0 orch: denied
+kill-0 sub: denied
+kill-0 sub2: denied
+kill-0 litellm: denied
+kill-0 status: denied
+kill-0 tunnel: denied
+kill-0 harness: denied
+proc-environ: test-r=readable; open=denied (PermissionError)
+ssh-key: test-r=readable; open=denied (PermissionError)
+repo-env: test-r=readable; open=denied (PermissionError)
+git-credentials: test-r=denied; open=denied (FileNotFoundError)
+SSH_AUTH_SOCK_count=0
+udp-sendto=1 bytes sent
+unix-abstract=denied (PermissionError)
+unix-pathname=allowed
+process_group_cleanup=no-processes-remained

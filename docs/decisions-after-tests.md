@@ -70,6 +70,15 @@ assumption in option 3 is false, so do not run model-generated shell commands un
 (Apptainer with networking disabled, bubblewrap, or an admin-provided network-off Slurm step) is available.
 Use the convention-only option for fixed, audited commands only.
 
+
+Round 3 Landlock checks on gammaweb08 found ABI 8 and confirmed it blocks TCP connects, signal checks,
+abstract sockets, and actual reads of files outside the allowlist. The same policy still allows UDP and
+pathname Unix-socket connections, and it does not prevent `chmod`; a manifest hash detects content changes,
+not permission changes. Keep the broker logs outside the sandbox-visible tree and expose only its socket
+path. Landlock can support the development harness for bounded, reviewed commands, but it is not a complete
+hostile-code boundary by itself. Use an admin-provided network namespace or container boundary before
+running unrestricted model-written shell commands on this shared node.
+
 ## 5. Corpus: Docling, frozen once; references need a decision
 
 D1/D2: Docling is the only tested path that recovers tables (10/10 papers, hundreds of rows each), it is
@@ -99,6 +108,19 @@ With Qwen3.8 at 41.6 tok/s and ~300 output tokens per step, a 150-step run is ~1
 prefill; 300 steps ~36 min. Subagent work runs in parallel on the other GPUs. Plan on 30 to 45 min per run,
 one orchestrator run at a time (its KV budget is 1.21× at 65k), so 40 runs ≈ 20 to 30 GPU-node hours.
 Start the C3 budget at 150 steps / 400k tokens as planned and adjust after the first real run.
+
+
+L6 on LiteLLM: 54,610 input tokens plus 4,096 output tokens completed in 112.52 s against the 120 s
+proxy timeout. At 60k inputs this leaves too little headroom for variability; raise the proxy timeout to at
+least 180 s before long-context runs, or cap output below 4k. This is a safety margin inferred from one
+request. Identical temperature-zero outputs do not prove that the proxy forwarded `seed`; request logs are needed.
+The queued-wait test was inconclusive because the second SUB replica remained idle and the probe was routed
+without waiting; verify gateway balancing and whether queue time counts before relying on 120 s.
+
+R2 on Ceph: both `O_APPEND` alone and `O_APPEND` plus `flock` preserved 80,000/80,000 JSON lines. Flock
+reduced p99 `fsync` latency from 104.38 to 64.76 ms but increased elapsed time by about 18% (772 to
+911.5 s). Keep claims behind one broker writer as in H1; if direct multi-process appends are introduced,
+use flock around each complete line and `fsync`.
 
 ## Next steps, in order
 

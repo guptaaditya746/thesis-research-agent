@@ -1,0 +1,3 @@
+{'mode': 'append-only', 'records': 80000, 'bad': 0, 'expected': 80000, 'p50_fsync_ms': 4.220091, 'p99_fsync_ms': 104.383681, 'bytes': 696315600, 'elapsed_s': 772.0}
+{'mode': 'append-flock', 'records': 80000, 'bad': 0, 'expected': 80000, 'p50_fsync_ms': 4.110989999999999, 'p99_fsync_ms': 64.75898, 'bytes': 696315600, 'elapsed_s': 911.5}
+r2_rc=0

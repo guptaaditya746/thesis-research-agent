@@ -111,6 +111,18 @@ found. Step-by-step instructions: `docs/codex-sandbox-runbook.md`.
 
 Also in the session: push the `agent-layout` branch of llm-setup, which exists only on the node.
 
+### Round 3 results
+
+- S5a: Landlock ABI 8 on kernel 7.0.0-22-generic, with the `landlock` LSM enabled.
+- S5b: TCP connects to the internet and all five local model/proxy/status ports were denied; the smoke checks and process-group timeout passed.
+- S5c: the pinned toolchain and offline wheel install worked, and the hash manifest verified. Landlock did not stop the owner from changing file modes.
+- S6: actual `/proc` and secret-file opens and `kill -0` checks were denied; abstract sockets were denied. UDP send and pathname Unix-socket connect were allowed. This is useful isolation for accidental command behavior, not a complete boundary for hostile commands.
+- S1b: 2 GiB was the smallest tested virtual-memory limit that still imported NumPy and pandas; a 100 GB allocation raised `MemoryError` at all tested limits. The task cgroup exposed `memory.max=max`.
+- H1: 100 brokered claims replaced the forged step id with the current harness step and produced a valid hash chain; private event files were unreadable and unwritable from the sandbox. The socket path itself must be the only broker endpoint exposed.
+- R3: pinned snapshots, offline vLLM mode, locked setup sync, 40 passing tests, Ruff and profile validation are recorded under `tests/R3/` and the submodule's `agent-layout` branch.
+- L6: 20/20 schema responses validated; seeded outputs matched all 10 calls both alone and under SUB load, but request logs did not prove seed propagation. A 54,610-token + 4,096-output-token ORCH request completed in 112.52 s, 7.48 s under `request_timeout=120`. A seventh SUB request returned in 0.41 s while one replica was idle, so queued wait accounting remains unproven; backend routing was uneven. See `tests/L6/`.
+- R2: both append modes produced 80,000 valid JSON lines with no torn records. Flock reduced p99 `fsync` latency from 104.38 to 64.76 ms, with elapsed time rising from 772 to 911.5 s. Prefer the single-writer H1 broker for claims; use flock if multiple processes must write directly. See `tests/R2/`.
+
 ### Flaws found in earlier tests or plans
 
 - **S5 as first planned** checked only whether Landlock is on, not its ABI (fixed in S5a above).

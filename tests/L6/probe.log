@@ -1,0 +1,49 @@
+[
+  {
+    "test": "long_prompt",
+    "elapsed_s": 71.87,
+    "prompt_tokens": 54605,
+    "completion_tokens": 1776,
+    "finish_reason": "stop"
+  },
+  {
+    "test": "schema",
+    "valid": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "test": "seed_alone",
+    "distinct_outputs": 1,
+    "outputs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  {
+    "test": "seed_under_sub_load",
+    "distinct_outputs": 1,
+    "outputs": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  }
+]
+probe_rc=0
+NOTE seed samples in this initial run had message.content=null; use seed-queue-results.json for the valid thinking-off rerun.

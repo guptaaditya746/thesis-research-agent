@@ -1,0 +1,8 @@
+Landlock wrapper smoke tests
+2
+1
+corpus-ro-ok
+work-ok
+net-off-ok
+home-hidden-ok
+timeout-rc=124

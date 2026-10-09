@@ -1,0 +1,20 @@
+[
+  {
+    "test": "long_prompt",
+    "elapsed_s": 71.87,
+    "prompt_tokens": 54605,
+    "completion_tokens": 1776,
+    "finish_reason": "stop"
+  },
+  {
+    "test": "schema",
+    "valid": 20,
+    "total": 20,
+    "errors": []
+  },
+  {
+    "test": "seed_probe_initial",
+    "status": "invalid-for-seed-count",
+    "note": "thinking-enabled replies placed no text in content; replaced by tests/L6/seed-queue-results.json with thinking disabled"
+  }
+]

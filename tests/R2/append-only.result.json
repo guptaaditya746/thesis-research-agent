@@ -1,0 +1,10 @@
+{
+  "mode": "append-only",
+  "records": 80000,
+  "bad": 0,
+  "expected": 80000,
+  "p50_fsync_ms": 4.220091,
+  "p99_fsync_ms": 104.383681,
+  "bytes": 696315600,
+  "elapsed_s": 772.0
+}

@@ -1,0 +1,2 @@
+process_group_cleanup=SIGTERM-process-group
+background-child=3598236 state=gone after group cleanup

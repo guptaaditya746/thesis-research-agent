@@ -1,0 +1,13 @@
+S1b allocation under virtual memory limits
+limit=2GiB
+allocation=MemoryError
+allocation_rc=0
+limit=4GiB
+allocation=MemoryError
+allocation_rc=0
+limit=8GiB
+allocation=MemoryError
+allocation_rc=0
+limit=16GiB
+allocation=MemoryError
+allocation_rc=0

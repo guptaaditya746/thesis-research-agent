@@ -1,0 +1,2 @@
+sandbox_chmod_rc=0
+permissions restored read-only

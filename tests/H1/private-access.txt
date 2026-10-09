@@ -1,0 +1,4 @@
+dir-read=denied:PermissionError
+log-open=denied:PermissionError
+dir-write=denied:PermissionError
+process_group_cleanup=no-processes-remained

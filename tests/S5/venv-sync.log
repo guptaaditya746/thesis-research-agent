@@ -1,0 +1,8 @@
+command: uv pip sync --require-hashes -p $AGENT_ROOT/agent-venv/bin/python tests/S5/agent-requirements.lock
+exit=0
+numpy 2.5.3
+pandas 3.0.6
+regex 2026.9.29
+rapidfuzz 3.14.6
+pyyaml 6.0.3
+scikit-learn 1.9.1

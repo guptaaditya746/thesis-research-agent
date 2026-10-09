@@ -1,0 +1,48 @@
+{
+  "busy": [
+    {
+      "label": "busy-0",
+      "elapsed_s": 37.53,
+      "finish_reason": "stop",
+      "completion_tokens": 3140
+    },
+    {
+      "label": "busy-1",
+      "elapsed_s": 81.14,
+      "finish_reason": "stop",
+      "completion_tokens": 3510
+    },
+    {
+      "label": "busy-2",
+      "elapsed_s": 82.11,
+      "finish_reason": "stop",
+      "completion_tokens": 3803
+    },
+    {
+      "label": "busy-3",
+      "elapsed_s": 42.19,
+      "finish_reason": "stop",
+      "completion_tokens": 3548
+    },
+    {
+      "label": "busy-4",
+      "elapsed_s": 39.6,
+      "finish_reason": "stop",
+      "completion_tokens": 3331
+    },
+    {
+      "label": "busy-5",
+      "elapsed_s": 85.8,
+      "finish_reason": "stop",
+      "completion_tokens": 3869
+    }
+  ],
+  "queued": {
+    "label": "queued-probe",
+    "elapsed_s": 0.41,
+    "finish_reason": "length",
+    "completion_tokens": 32
+  },
+  "note": "Six busy requests saturate two SUB replicas at max_num_seqs=3; the 7th request was submitted 2 s later."
+}
+probe_rc=0

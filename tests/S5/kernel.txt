@@ -1,0 +1,4 @@
+7.0.0-22-generic
+LSM: lockdown,capability,landlock,yama,apparmor,ima,evm
+architecture: x86_64
+landlock ABI: 8

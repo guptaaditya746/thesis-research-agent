@@ -1,0 +1,8 @@
+{
+  "input_token_target": 60000,
+  "elapsed_s": 112.52,
+  "prompt_tokens": 54610,
+  "completion_tokens": 4096,
+  "finish_reason": "length"
+}
+probe_rc=0

@@ -1,0 +1,10 @@
+Collecting networkx
+  Downloading networkx-3.7-py3-none-any.whl.metadata (6.7 kB)
+Collecting tabulate
+  Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+Downloading networkx-3.7-py3-none-any.whl (2.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 4.7 MB/s eta 0:00:00
+Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+Saved /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3/wheels/networkx-3.7-py3-none-any.whl
+Saved /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3/wheels/tabulate-0.10.0-py3-none-any.whl
+Successfully downloaded networkx tabulate

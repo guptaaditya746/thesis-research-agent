@@ -1,0 +1,4 @@
+/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3/bin/rg: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), static-pie linked, stripped
+/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3/bin/jq: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, BuildID[sha1]=0ebe5e235d5742c8130152e28cb1d081554d06bb, for GNU/Linux 3.2.0, stripped
+ripgrep 15.2.0 (rev e89fff89ac)
+jq-1.8.2

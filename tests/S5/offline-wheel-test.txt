@@ -1,0 +1,13 @@
+S5c offline local wheel install
+Looking in links: /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3/wheels
+Processing /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3/wheels/networkx-3.7-py3-none-any.whl
+Installing collected packages: networkx
+Successfully installed networkx-3.7
+networkx 3.7
+outside wheel-store package test:
+Looking in links: /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-round3/wheels
+ERROR: Could not find a version that satisfies the requirement numpy==2.5.3 (from versions: none)
+ERROR: No matching distribution found for numpy==2.5.3
+outside_package_rc=1 (nonzero expected)
+networkx 3.7
+outside_package_rc=1 (nonzero expected)

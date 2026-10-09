@@ -1,0 +1,7 @@
+Resolved 239 packages in 28ms
+Uninstalled 4 packages in 26ms
+ - iniconfig==2.3.0
+ - pluggy==1.6.0
+ - pytest==9.1.1
+ - ruff==0.16.9
+uv_sync_rc=0
