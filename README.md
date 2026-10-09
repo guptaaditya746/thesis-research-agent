@@ -31,4 +31,5 @@ install -m 755 scripts/omen-tunnels-external ~/.local/bin/omen-tunnels-external
   what is still open.
 - `docs/infra-tests-next.md`: infrastructure tests still to run on Slurm with `final-final-llm-setup` and the
   Omen tunnels.
+- `docs/codex-infra-runbook.md`: step-by-step instructions for running those tests on the cluster.
 - Plan and brainstorm (living doc): https://claude.ai/code/artifact/c1715abf-9b58-451b-8ce6-bfd4e7fa7df4

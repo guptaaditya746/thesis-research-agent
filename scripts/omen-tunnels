@@ -45,6 +45,8 @@ DEFAULT_SERVICES = ("tracing", "postgres")
 GATEWAY = f"{os.environ.get('WEBIS_USER', 'xepi3167')}@ssh.webis.de"
 OMEN = f"{os.environ.get('OMEN_USER', 'omen-server')}@{os.environ.get('OMEN_HOST', '192.168.0.107')}"
 SSH = os.environ.get("OMEN_TUNNELS_SSH", "ssh")
+# omen-tunnels-external sets 1000 so the external gateway uses its legacy ports.
+GATEWAY_PORT_OFFSET = int(os.environ.get("OMEN_TUNNELS_GATEWAY_PORT_OFFSET", "0"))
 
 
 def runtime_dir() -> Path:
@@ -74,6 +76,7 @@ def forward_args(role: str, names: list[str]) -> list[str]:
     args = []
     for name in names:
         omen, laptop, gateway, compute = SERVICES[name]
+        gateway += GATEWAY_PORT_OFFSET
         if role == "omen":
             args += ["-L", f"127.0.0.1:{laptop}:127.0.0.1:{omen}"]
         elif role == "gateway":
@@ -132,7 +135,7 @@ def roles_for(machine: str) -> list[tuple[str, str]]:
 def list_services() -> None:
     print(f"{'SERVICE':29} {'OMEN':>5} {'LAPTOP':>7} {'GATEWAY':>7} {'COMPUTE':>7}")
     for name, ports in SERVICES.items():
-        print(f"{name:29} {ports[0]:5} {ports[1]:7} {ports[2]:7} {ports[3]:7}")
+        print(f"{name:29} {ports[0]:5} {ports[1]:7} {ports[2] + GATEWAY_PORT_OFFSET:7} {ports[3]:7}")
 
 
 def main() -> int:
@@ -179,7 +182,7 @@ def main() -> int:
                 try:
                     subprocess.run(ssh_command(role, names, sock), check=True)
                 except subprocess.CalledProcessError as exc:
-                    ports = ", ".join(str(SERVICES[name][2 if role == "gateway" else 1 if role == "omen" else 3]) for name in names)
+                    ports = ", ".join(str(SERVICES[name][2] + GATEWAY_PORT_OFFSET if role == "gateway" else SERVICES[name][1 if role == "omen" else 3]) for name in names)
                     hint = (
                         "Stop the earlier manual laptop-to-gateway SSH tunnel, then retry. "
                         "If no old tunnel exists, these gateway ports are held by another session."

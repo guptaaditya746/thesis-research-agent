@@ -17,7 +17,8 @@ The tests below cover that gap. Each one says why it is needed and which doc it 
 ## Findings from reading the code (fix before testing)
 
 1. **`omen-tunnels-external` has no effect.** The wrapper sets `OMEN_TUNNELS_GATEWAY_PORT_OFFSET=1000`, but
-   `scripts/omen-tunnels` never reads that variable, so the external gateway gets the normal ports. Test T1.
+   `scripts/omen-tunnels` never read that variable, so the external gateway got the normal ports. Fixed on
+   9 Oct (the script now adds the offset to every gateway port); T1 verifies it on the cluster.
 2. **`llm-setup` cannot start the chosen model layout.** `profile.py` accepts only the roles `heavy`, `lite`
    and `embed`, with one backend each. `decisions-after-tests.md` §1 needs Qwen3.8 as the orchestrator plus two
    Heavy replicas behind one alias. `supervisor._command` also does not pass `--reasoning-parser qwen3` or
@@ -30,7 +31,7 @@ The tests below cover that gap. Each one says why it is needed and which doc it 
 
 | id | Test | Why | Pass |
 |---|---|---|---|
-| T1 | Run `omen-tunnels-external laptop start --dry-run thesis-postgres` and the `compute` equivalent. Fix the script to add the offset to the gateway ports, then run again. | Finding 1. Without the offset, the external gateway uses ports another session may hold, and the README's description of the wrapper is wrong. | The `-R` and compute `-L` lines show gateway port + 1000 (e.g. 55433 → 56433). |
+| T1 | Run `omen-tunnels-external compute start thesis-postgres --dry-run` and the same without `-external`. | Finding 1. Without the offset, the external gateway uses ports another session may hold, and the README's description of the wrapper is wrong. | The `-R` and compute `-L` lines show gateway port + 1000 (e.g. 55433 → 56433). |
 | T2 | Inside the GPU job (`srun --jobid <id> --overlap --pty bash -l`), run `omen-tunnels-external compute start <services>` for the services the system will use. Then connect to each one: `psql`, `redis-cli ping`, an HTTP GET for tracing/MinIO/ClickHouse. | Nothing has yet confirmed that a Slurm step can open the compute hop: the key `~/.ssh/id_ed25519_webis_tunnel` must exist on the node, and the gateway must allow `-L`. Docker Compose is not available on Slurm, so this tunnel is the only path to the stateful services. | Every chosen service answers on its compute port. Record the round-trip latency (median of 100 pings) and the time for a 100 MB MinIO upload. |
 | T3 | Keep the tunnel up for 8 h while a fake agent writes one event per second to the tracing service. Midway, kill the gateway hop and then put the laptop to sleep for 2 min. | The chain passes through the laptop, and an evaluation run lasts 30 to 45 min, 40 runs in total (`decisions-after-tests.md` §6). SSH keep-alive (30 s × 3) notices a drop after about 90 s. The run must not depend on the tunnel staying up. | The harness keeps writing `events.jsonl` on disk (the source of truth, `plan.md` "Interceptor"), logs a `sink_down` event and backfills when the tunnel is back. No step is lost or duplicated. |
 | T4 | Start the compute hop twice on the same node, from two job steps or two jobs. | Compute ports are fixed on `127.0.0.1`, and the state directory is keyed by hostname. A second job on the same node will collide. | The second start fails with a clear message, or the ports are made per-job. Record which. |
