@@ -73,7 +73,7 @@ The tests below cover that gap. Each one says why it is needed and which doc it 
 ## Round 2 results (9 Oct 2026)
 
 - T1 PASS — external gateway target is offset by 1000; `list` shows the shifted gateway column.
-- T2 pending — compute SSH hop starts but forwarded service connections reset; laptop reports its gateway hop is down. Restart it and repeat the read-only laptop probes before deciding whether the Omen services or forwarding are at fault.
+- T2 partial/fail — laptop reported both hops Ready after restart and the compute hop was restarted, but all five compute ports still reset. Laptop-side GET/PING probes are needed to identify which hop is failing; see `tests/T2/`.
 - T3 NOT RUN — T2 connectivity is not working; the eight-hour heartbeat would not measure tunnel stability.
 - T4 PASS — second same-node start reports “Already running”; the first tunnel stays up.
 - L1 PASS (in allocation) — all three model backends, LiteLLM and status ready in 11m14s; doctor passed; KV 79,371/64,848/64,848 initially.
