@@ -1,0 +1,16 @@
+Profile: valid (agent-3x40)
+LiteLLM configuration: valid; aliases: orch-model, sub-model; cross-role fallbacks: none
+vLLM: available
+Process orch: PID 3568342 owned/alive
+Process sub: PID 3568343 owned/alive
+Process sub-2: PID 3574335 owned/alive
+Process gateway: PID 3571554 owned/alive
+Process status: PID 3571603 owned/alive
+orch-model /health: HTTP 200
+orch-model /metrics: HTTP 200
+sub-model /health: HTTP 200
+sub-model /metrics: HTTP 200
+sub-model /health: HTTP 200
+sub-model /metrics: HTTP 200
+LiteLLM alias orch-model: reachable
+LiteLLM alias sub-model: reachable

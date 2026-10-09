@@ -1,0 +1,9 @@
+tests/L1/runtime/sub-2.log:60:(EngineCore pid=3568626) INFO 10-09 12:15:36 [kv_cache_utils.py:1710] GPU KV cache size: 64,848 tokens
+tests/L1/runtime/sub-2.log:61:(EngineCore pid=3568626) INFO 10-09 12:15:36 [kv_cache_utils.py:1711] Maximum concurrency for 32,768 tokens per request: 1.98x
+tests/L1/runtime/sub-2.log:76:(APIServer pid=3568344) INFO 10-09 12:15:44 [api_server.py:617] Starting vLLM server on http://127.0.0.1:8004
+tests/L1/runtime/sub.log:60:(EngineCore pid=3568625) INFO 10-09 12:15:36 [kv_cache_utils.py:1710] GPU KV cache size: 64,848 tokens
+tests/L1/runtime/sub.log:61:(EngineCore pid=3568625) INFO 10-09 12:15:36 [kv_cache_utils.py:1711] Maximum concurrency for 32,768 tokens per request: 1.98x
+tests/L1/runtime/sub.log:76:(APIServer pid=3568343) INFO 10-09 12:15:44 [api_server.py:617] Starting vLLM server on http://127.0.0.1:8002
+tests/L1/runtime/orch.log:115:(EngineCore pid=3568945) INFO 10-09 12:09:42 [kv_cache_utils.py:1710] GPU KV cache size: 79,371 tokens
+tests/L1/runtime/orch.log:116:(EngineCore pid=3568945) INFO 10-09 12:09:42 [kv_cache_utils.py:1711] Maximum concurrency for 65,536 tokens per request: 1.21x
+tests/L1/runtime/orch.log:131:(APIServer pid=3568342) INFO 10-09 12:10:06 [api_server.py:617] Starting vLLM server on http://127.0.0.1:8001

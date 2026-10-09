@@ -1,0 +1,16 @@
+port=4000 path=/v1/models no_auth_http=500 curl_rc=0
+port=8010 path=/v1/models no_auth_http=404 curl_rc=0
+port=8001 path=/v1/models no_auth_http=200 curl_rc=0
+port=8002 path=/v1/models no_auth_http=200 curl_rc=0
+port=8004 path=/v1/models no_auth_http=200 curl_rc=0
+port=33004 path=/ no_auth_http=curl: (56) Recv failure: Connection reset by peer
+000 curl_rc=56
+port=39000 path=/ no_auth_http=curl: (56) Recv failure: Connection reset by peer
+000 curl_rc=56
+port=48123 path=/ no_auth_http=curl: (56) Recv failure: Connection reset by peer
+000 curl_rc=56
+port=45433 service=thesis-postgres no_auth_response=b''
+port=46380 service=thesis-redis no_auth_error=ConnectionResetError: [Errno 104] Connection reset by peer
+port=8010 path=/v1/status no_auth_http=200
+port=4000 path=/v1/models no_auth_body=Internal server error; gateway log cause: ModuleNotFoundError: No module named 'prisma'
+no secret-like env names

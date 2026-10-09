@@ -1,0 +1,2 @@
+Services: tracing, thesis-postgres, thesis-redis, minio-api, tracing-clickhouse-http
+compute: up

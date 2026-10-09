@@ -1,0 +1,9 @@
+job=JobId=7048 JobName=bash UserId=xepi3167(11026) GroupId=users(100) MCS_label=N/A Priority=1 Nice=0 Account=default QOS=normal JobState=RUNNING Reason=None Dependency=(null) Requeue=1 Restarts=0 BatchFlag=0 Reboot=0 ExitCode=0:0 RunTime=13:10:18 TimeLimit=2-00:00:00 TimeMin=N/A SubmitTime=2026-10-08T23:13:07 EligibleTime=2026-10-08T23:13:07 AccrueTime=2026-10-08T23:13:07 StartTime=2026-10-08T23:13:14 EndTime=2026-10-10T23:13:14 Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-10-08T23:13:14 Scheduler=Backfill Partition=gammaweb AllocNode:Sid=webis3:307129 ReqNodeList=(null) ExcNodeList=(null) NodeList=gammaweb08 BatchHost=gammaweb08 NumNodes=1 NumCPUs=16 NumTasks=1 CPUs/Task=16 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=16,mem=64G,node=1,billing=16 AllocTRES=cpu=16,mem=64G,node=1,billing=16 Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=16 MinMemoryNode=64G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) LicensesAlloc=(null) Network=(null) Command=bash SubmitLine=srun --gres=gpu:ampere:3 --cpus-per-task=16 --mem=64g --time=48:00:00 --pty bash -l WorkDir=/mnt/ceph/storage/data-tmp/current/xepi3167/thesis TresPerNode=gres/gpu:ampere:3 TresPerTask=cpu=16
+memory.max=max
+memory.current=67933589504
+tmpfs=tmpfs          tmpfs  252G   23G  230G   9% /tmp
+status_before=busy
+2026-10-09T12:23:33+02:00
+cpu_timeout_rc=124
+2026-10-09T12:25:33+02:00
+status_after=busy {'orch-model': 'healthy', 'sub-model@8002': 'busy', 'sub-model@8004': 'busy'}

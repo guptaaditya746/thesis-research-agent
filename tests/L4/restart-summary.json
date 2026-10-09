@@ -1,0 +1,8 @@
+{
+  "restarted_event": "2026-10-09T10:27:39+00:00",
+  "ready_after_restart_seconds": 150,
+  "restarted_pid": 3574335,
+  "health_observed_seconds": 166,
+  "watchdog_healthy_again_event": "2026-10-09T10:30:10+00:00",
+  "notes": "Supervisor event reports 2:30 after launch; monitor saw HTTP 200 at 2:46. Health polling is coarse."
+}

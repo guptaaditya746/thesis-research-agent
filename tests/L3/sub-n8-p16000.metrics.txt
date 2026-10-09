@@ -1,0 +1,204 @@
+1791541203.683 http://127.0.0.1:8002/metrics
+# HELP vllm:num_requests_running Number of requests in model execution batches.
+# TYPE vllm:num_requests_running gauge
+vllm:num_requests_running{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting Number of requests waiting to be processed.
+# TYPE vllm:num_requests_waiting gauge
+vllm:num_requests_waiting{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting_by_reason Number of waiting requests by reason. Reason labels: 'capacity' = waiting for scheduling capacity; 'deferred' = deferred by transient constraints (LoRA budget, KV transfer, blocked status). Sum of all reasons equals vllm:num_requests_waiting.
+# TYPE vllm:num_requests_waiting_by_reason gauge
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="capacity"} 0.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="deferred"} 0.0
+# HELP vllm:kv_cache_usage_perc KV-cache usage. 1 means 100 percent usage.
+# TYPE vllm:kv_cache_usage_perc gauge
+vllm:kv_cache_usage_perc{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_total counter
+vllm:num_preemptions_total{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_created Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_created gauge
+vllm:num_preemptions_created{engine="0",model_name="sub-model"} 1.7915409406041963e+09
+# HELP vllm:request_success_total Count of successfully processed requests.
+# TYPE vllm:request_success_total counter
+vllm:request_success_total{engine="0",finished_reason="stop",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="length",model_name="sub-model"} 2.0
+vllm:request_success_total{engine="0",finished_reason="abort",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="error",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="repetition",model_name="sub-model"} 0.0
+# HELP vllm:request_success_created Count of successfully processed requests.
+# TYPE vllm:request_success_created gauge
+vllm:request_success_created{engine="0",finished_reason="stop",model_name="sub-model"} 1.791540940604284e+09
+vllm:request_success_created{engine="0",finished_reason="length",model_name="sub-model"} 1.7915409406042907e+09
+vllm:request_success_created{engine="0",finished_reason="abort",model_name="sub-model"} 1.7915409406042967e+09
+vllm:request_success_created{engine="0",finished_reason="error",model_name="sub-model"} 1.791540940604302e+09
+vllm:request_success_created{engine="0",finished_reason="repetition",model_name="sub-model"} 1.791540940604307e+09
+1791541203.693 http://127.0.0.1:8004/metrics
+# HELP vllm:num_requests_running Number of requests in model execution batches.
+# TYPE vllm:num_requests_running gauge
+vllm:num_requests_running{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting Number of requests waiting to be processed.
+# TYPE vllm:num_requests_waiting gauge
+vllm:num_requests_waiting{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting_by_reason Number of waiting requests by reason. Reason labels: 'capacity' = waiting for scheduling capacity; 'deferred' = deferred by transient constraints (LoRA budget, KV transfer, blocked status). Sum of all reasons equals vllm:num_requests_waiting.
+# TYPE vllm:num_requests_waiting_by_reason gauge
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="capacity"} 0.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="deferred"} 0.0
+# HELP vllm:kv_cache_usage_perc KV-cache usage. 1 means 100 percent usage.
+# TYPE vllm:kv_cache_usage_perc gauge
+vllm:kv_cache_usage_perc{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_total counter
+vllm:num_preemptions_total{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_created Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_created gauge
+vllm:num_preemptions_created{engine="0",model_name="sub-model"} 1.7915409406005692e+09
+# HELP vllm:request_success_total Count of successfully processed requests.
+# TYPE vllm:request_success_total counter
+vllm:request_success_total{engine="0",finished_reason="stop",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="length",model_name="sub-model"} 2.0
+vllm:request_success_total{engine="0",finished_reason="abort",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="error",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="repetition",model_name="sub-model"} 0.0
+# HELP vllm:request_success_created Count of successfully processed requests.
+# TYPE vllm:request_success_created gauge
+vllm:request_success_created{engine="0",finished_reason="stop",model_name="sub-model"} 1.7915409406006477e+09
+vllm:request_success_created{engine="0",finished_reason="length",model_name="sub-model"} 1.791540940600654e+09
+vllm:request_success_created{engine="0",finished_reason="abort",model_name="sub-model"} 1.7915409406006591e+09
+vllm:request_success_created{engine="0",finished_reason="error",model_name="sub-model"} 1.791540940600664e+09
+vllm:request_success_created{engine="0",finished_reason="repetition",model_name="sub-model"} 1.7915409406006682e+09
+1791541208.708 http://127.0.0.1:8002/metrics
+# HELP vllm:num_requests_running Number of requests in model execution batches.
+# TYPE vllm:num_requests_running gauge
+vllm:num_requests_running{engine="0",model_name="sub-model"} 3.0
+# HELP vllm:num_requests_waiting Number of requests waiting to be processed.
+# TYPE vllm:num_requests_waiting gauge
+vllm:num_requests_waiting{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting_by_reason Number of waiting requests by reason. Reason labels: 'capacity' = waiting for scheduling capacity; 'deferred' = deferred by transient constraints (LoRA budget, KV transfer, blocked status). Sum of all reasons equals vllm:num_requests_waiting.
+# TYPE vllm:num_requests_waiting_by_reason gauge
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="capacity"} 0.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="deferred"} 0.0
+# HELP vllm:kv_cache_usage_perc KV-cache usage. 1 means 100 percent usage.
+# TYPE vllm:kv_cache_usage_perc gauge
+vllm:kv_cache_usage_perc{engine="0",model_name="sub-model"} 0.7421026653504442
+# HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_total counter
+vllm:num_preemptions_total{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_created Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_created gauge
+vllm:num_preemptions_created{engine="0",model_name="sub-model"} 1.7915409406041963e+09
+# HELP vllm:request_success_total Count of successfully processed requests.
+# TYPE vllm:request_success_total counter
+vllm:request_success_total{engine="0",finished_reason="stop",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="length",model_name="sub-model"} 2.0
+vllm:request_success_total{engine="0",finished_reason="abort",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="error",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="repetition",model_name="sub-model"} 0.0
+# HELP vllm:request_success_created Count of successfully processed requests.
+# TYPE vllm:request_success_created gauge
+vllm:request_success_created{engine="0",finished_reason="stop",model_name="sub-model"} 1.791540940604284e+09
+vllm:request_success_created{engine="0",finished_reason="length",model_name="sub-model"} 1.7915409406042907e+09
+vllm:request_success_created{engine="0",finished_reason="abort",model_name="sub-model"} 1.7915409406042967e+09
+vllm:request_success_created{engine="0",finished_reason="error",model_name="sub-model"} 1.791540940604302e+09
+vllm:request_success_created{engine="0",finished_reason="repetition",model_name="sub-model"} 1.791540940604307e+09
+1791541208.719 http://127.0.0.1:8004/metrics
+# HELP vllm:num_requests_running Number of requests in model execution batches.
+# TYPE vllm:num_requests_running gauge
+vllm:num_requests_running{engine="0",model_name="sub-model"} 4.0
+# HELP vllm:num_requests_waiting Number of requests waiting to be processed.
+# TYPE vllm:num_requests_waiting gauge
+vllm:num_requests_waiting{engine="0",model_name="sub-model"} 1.0
+# HELP vllm:num_requests_waiting_by_reason Number of waiting requests by reason. Reason labels: 'capacity' = waiting for scheduling capacity; 'deferred' = deferred by transient constraints (LoRA budget, KV transfer, blocked status). Sum of all reasons equals vllm:num_requests_waiting.
+# TYPE vllm:num_requests_waiting_by_reason gauge
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="capacity"} 1.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="deferred"} 0.0
+# HELP vllm:kv_cache_usage_perc KV-cache usage. 1 means 100 percent usage.
+# TYPE vllm:kv_cache_usage_perc gauge
+vllm:kv_cache_usage_perc{engine="0",model_name="sub-model"} 0.9740868706811451
+# HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_total counter
+vllm:num_preemptions_total{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_created Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_created gauge
+vllm:num_preemptions_created{engine="0",model_name="sub-model"} 1.7915409406005692e+09
+# HELP vllm:request_success_total Count of successfully processed requests.
+# TYPE vllm:request_success_total counter
+vllm:request_success_total{engine="0",finished_reason="stop",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="length",model_name="sub-model"} 2.0
+vllm:request_success_total{engine="0",finished_reason="abort",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="error",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="repetition",model_name="sub-model"} 0.0
+# HELP vllm:request_success_created Count of successfully processed requests.
+# TYPE vllm:request_success_created gauge
+vllm:request_success_created{engine="0",finished_reason="stop",model_name="sub-model"} 1.7915409406006477e+09
+vllm:request_success_created{engine="0",finished_reason="length",model_name="sub-model"} 1.791540940600654e+09
+vllm:request_success_created{engine="0",finished_reason="abort",model_name="sub-model"} 1.7915409406006591e+09
+vllm:request_success_created{engine="0",finished_reason="error",model_name="sub-model"} 1.791540940600664e+09
+vllm:request_success_created{engine="0",finished_reason="repetition",model_name="sub-model"} 1.7915409406006682e+09
+1791541213.733 http://127.0.0.1:8002/metrics
+# HELP vllm:num_requests_running Number of requests in model execution batches.
+# TYPE vllm:num_requests_running gauge
+vllm:num_requests_running{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting Number of requests waiting to be processed.
+# TYPE vllm:num_requests_waiting gauge
+vllm:num_requests_waiting{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting_by_reason Number of waiting requests by reason. Reason labels: 'capacity' = waiting for scheduling capacity; 'deferred' = deferred by transient constraints (LoRA budget, KV transfer, blocked status). Sum of all reasons equals vllm:num_requests_waiting.
+# TYPE vllm:num_requests_waiting_by_reason gauge
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="capacity"} 0.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="deferred"} 0.0
+# HELP vllm:kv_cache_usage_perc KV-cache usage. 1 means 100 percent usage.
+# TYPE vllm:kv_cache_usage_perc gauge
+vllm:kv_cache_usage_perc{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_total counter
+vllm:num_preemptions_total{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_preemptions_created Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_created gauge
+vllm:num_preemptions_created{engine="0",model_name="sub-model"} 1.7915409406041963e+09
+# HELP vllm:request_success_total Count of successfully processed requests.
+# TYPE vllm:request_success_total counter
+vllm:request_success_total{engine="0",finished_reason="stop",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="length",model_name="sub-model"} 5.0
+vllm:request_success_total{engine="0",finished_reason="abort",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="error",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="repetition",model_name="sub-model"} 0.0
+# HELP vllm:request_success_created Count of successfully processed requests.
+# TYPE vllm:request_success_created gauge
+vllm:request_success_created{engine="0",finished_reason="stop",model_name="sub-model"} 1.791540940604284e+09
+vllm:request_success_created{engine="0",finished_reason="length",model_name="sub-model"} 1.7915409406042907e+09
+vllm:request_success_created{engine="0",finished_reason="abort",model_name="sub-model"} 1.7915409406042967e+09
+vllm:request_success_created{engine="0",finished_reason="error",model_name="sub-model"} 1.791540940604302e+09
+vllm:request_success_created{engine="0",finished_reason="repetition",model_name="sub-model"} 1.791540940604307e+09
+1791541213.744 http://127.0.0.1:8004/metrics
+# HELP vllm:num_requests_running Number of requests in model execution batches.
+# TYPE vllm:num_requests_running gauge
+vllm:num_requests_running{engine="0",model_name="sub-model"} 4.0
+# HELP vllm:num_requests_waiting Number of requests waiting to be processed.
+# TYPE vllm:num_requests_waiting gauge
+vllm:num_requests_waiting{engine="0",model_name="sub-model"} 0.0
+# HELP vllm:num_requests_waiting_by_reason Number of waiting requests by reason. Reason labels: 'capacity' = waiting for scheduling capacity; 'deferred' = deferred by transient constraints (LoRA budget, KV transfer, blocked status). Sum of all reasons equals vllm:num_requests_waiting.
+# TYPE vllm:num_requests_waiting_by_reason gauge
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="capacity"} 0.0
+vllm:num_requests_waiting_by_reason{engine="0",model_name="sub-model",reason="deferred"} 0.0
+# HELP vllm:kv_cache_usage_perc KV-cache usage. 1 means 100 percent usage.
+# TYPE vllm:kv_cache_usage_perc gauge
+vllm:kv_cache_usage_perc{engine="0",model_name="sub-model"} 0.9067127344521224
+# HELP vllm:num_preemptions_total Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_total counter
+vllm:num_preemptions_total{engine="0",model_name="sub-model"} 1.0
+# HELP vllm:num_preemptions_created Cumulative number of preemption from the engine.
+# TYPE vllm:num_preemptions_created gauge
+vllm:num_preemptions_created{engine="0",model_name="sub-model"} 1.7915409406005692e+09
+# HELP vllm:request_success_total Count of successfully processed requests.
+# TYPE vllm:request_success_total counter
+vllm:request_success_total{engine="0",finished_reason="stop",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="length",model_name="sub-model"} 3.0
+vllm:request_success_total{engine="0",finished_reason="abort",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="error",model_name="sub-model"} 0.0
+vllm:request_success_total{engine="0",finished_reason="repetition",model_name="sub-model"} 0.0
+# HELP vllm:request_success_created Count of successfully processed requests.
+# TYPE vllm:request_success_created gauge
+vllm:request_success_created{engine="0",finished_reason="stop",model_name="sub-model"} 1.7915409406006477e+09
+vllm:request_success_created{engine="0",finished_reason="length",model_name="sub-model"} 1.791540940600654e+09
+vllm:request_success_created{engine="0",finished_reason="abort",model_name="sub-model"} 1.7915409406006591e+09
+vllm:request_success_created{engine="0",finished_reason="error",model_name="sub-model"} 1.791540940600664e+09
+vllm:request_success_created{engine="0",finished_reason="repetition",model_name="sub-model"} 1.7915409406006682e+09

@@ -1,0 +1,2 @@
+{"off": {"reasoning_content_equal": true, "content_equal": true, "finish_reason_equal": true, "usage_equal": true, "direct_has_reasoning": false, "litellm_has_reasoning": false}, "on": {"reasoning_content_equal": true, "content_equal": true, "finish_reason_equal": true, "usage_equal": true, "direct_has_reasoning": true, "litellm_has_reasoning": true}, "enable_thinking_honoured_through_proxy": true}
+exit_code=0

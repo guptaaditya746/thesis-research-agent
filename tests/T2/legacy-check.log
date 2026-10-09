@@ -1,0 +1,5 @@
+legacy_forward_start_rc=0
+curl: (56) Recv failure: Connection reset by peer
+legacy_port_55433_http=000
+legacy_request_rc=56
+Exit request sent.

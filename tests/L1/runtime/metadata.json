@@ -1,0 +1,16 @@
+{
+  "sessionId": "20261009T100449Z-582c56e3",
+  "profile": "profiles/agent-3x40.yaml",
+  "services": [
+    "orch",
+    "sub"
+  ],
+  "host": "gammaweb08",
+  "slurmJobId": "7048",
+  "environmentVariables": [
+    "HF_TOKEN",
+    "LITELLM_MASTER_KEY",
+    "LLM_BACKEND_KEY",
+    "LLM_SETUP_SESSION_ID"
+  ]
+}

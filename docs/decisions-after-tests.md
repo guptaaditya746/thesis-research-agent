@@ -13,9 +13,12 @@ prefix caching on its hybrid (Mamba) layers is marked experimental in vLLM 0.21 
 history only); FlashInfer sampler must be disabled (`VLLM_USE_FLASHINFER_SAMPLER=0`) because `nvcc` is absent.
 
 **Subagents: `Qwen/Qwen3-30B-A3B-Instruct-2507-FP8` ("Heavy"), one A100 per replica, two replicas on GPUs 1 and 2,
-`max_model_len 32768`.** 130 tok/s single-sequence (A5), 69k KV tokens per GPU (A2), so each replica serves
-two 32k subagents or four 16k ones at once; two replicas give a fan-out of 4 to 8. Route round-robin through
-LiteLLM (A7 showed it passes `reasoning_content`, `content`, `finish_reason` and `usage` unchanged).
+`max_model_len 32768`.** 130 tok/s single-sequence (A5), 69k KV tokens per GPU (A2). L3 passed four concurrent
+32k requests with no preemptions, but eight concurrent 16k requests repeatedly preempted because 16,313
+tokens including output × four requests per replica slightly exceeds the initial 64,848-token KV cache.
+Keep the active limit at three per replica for 16k requests, or raise and remeasure KV capacity. LiteLLM
+preserved thinking on/off and response fields in L2, but long-output one-block compliance was 90%, so retain
+the lenient parser from §2. `simple-shuffle` gave a variable replica split under burst load.
 
 **Not used:** `Qwen3-30B-A3B-Thinking-2507-FP8`. B1/B2: 26% one-block compliance at every `max_tokens`,
 because it answers with a bare command and no fence (37/50) once its reasoning has gone to `reasoning_content`;
@@ -44,8 +47,10 @@ Logged as `loop_notice` events.
 ## 4. Sandbox: bwrap is not available; decide between three options this week
 
 A6: `bwrap` is not installed and `unshare -rn` fails with `uid_map: Operation not permitted`, so unprivileged
-user namespaces are off on the node. Nothing in the harness tests (C1, C2) used a sandbox. Options, in order
-of preference:
+user namespaces are off on the node. S4 found direct HTTPS egress to example.com, Hugging Face and PyPI (all
+HTTP 200), and no Apptainer/Singularity binary. The no-network premise behind option 3 is false. S3 also
+confirmed that raw vLLM and the status API answer without credentials. Do not run model-generated shell
+commands that can reach the network until an isolation boundary is available. Options, in order of preference:
 
 1. **Apptainer/Singularity** (usual on HPC; check `which apptainer singularity` and whether it runs
    `--containall --no-home --net --network none` for an unprivileged user). If present, one container per
@@ -60,7 +65,10 @@ of preference:
    its prompt. This does not stop a determined agent, but it catches accidents and it is auditable from the
    hash checks.
 
-Until one of 1–2 is in place, run C3–C7 under option 3 and mark them "unsandboxed" in RESULTS.md.
+Round 2 update (S3/S4): direct egress works and unauthenticated raw vLLM ports answer. The no-network
+assumption in option 3 is false, so do not run model-generated shell commands until an isolation boundary
+(Apptainer with networking disabled, bubblewrap, or an admin-provided network-off Slurm step) is available.
+Use the convention-only option for fixed, audited commands only.
 
 ## 5. Corpus: Docling, frozen once; references need a decision
 

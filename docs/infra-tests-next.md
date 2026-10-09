@@ -69,3 +69,21 @@ The tests below cover that gap. Each one says why it is needed and which doc it 
    from the job, and nothing the agent can reach is unprotected.
 3. S1, S2, L4, T3, T4, L5 (one day): failure behaviour of the job, the proxy and the tunnel.
 4. Then the blocked tests above, once the minimal harness exists.
+
+## Round 2 results (9 Oct 2026)
+
+- T1 PASS — external gateway target is offset by 1000; `list` shows the shifted gateway column.
+- T2 pending — compute SSH hop starts but forwarded service connections reset; laptop reports its gateway hop is down. Restart it and repeat the read-only laptop probes before deciding whether the Omen services or forwarding are at fault.
+- T3 NOT RUN — T2 connectivity is not working; the eight-hour heartbeat would not measure tunnel stability.
+- T4 PASS — second same-node start reports “Already running”; the first tunnel stays up.
+- L1 PASS (in allocation) — all three model backends, LiteLLM and status ready in 11m14s; doctor passed; KV 79,371/64,848/64,848 initially.
+- L2 PARTIAL — thinking switch and response fields survive LiteLLM; B3 one-block rate is 90% on long-output prompts and 100% on multi-step prompts.
+- L3 FAIL — limiting each SUB replica to three active sequences removed preemptions for 8 × 16k (two runs, 8/8 complete), but `least-busy` routing produced splits of 5/3 and 8/0. The 4 × 32k case completed with 0 preemptions; routing balance still needs a fix.
+- L4 PARTIAL — active SUB request completes during graceful SIGTERM; no proxy retry is logged; supervisor restores the backend in 2m30s.
+- L5 PARTIAL — current default compile-cache path is already on Ceph; orch ready in 5m20s versus the round-one 8m27s cold start, but this was not a controlled two-job comparison.
+- S1 PARTIAL — 120s CPU loop is stopped and model health remains available; memory stress cases skipped because the 64G job was already using 67.9 GB.
+- S2 PARTIAL — scancel leaves a verified 4-event chain ending in `run_aborted`; backend restart was observed under L4, not in a new GPU job.
+- S3 FAIL — raw vLLM and status endpoints answer without credentials; no secret-like environment names appear; Omen endpoints reset.
+- S4 PARTIAL — all three HTTPS targets return 200; no proxy variables or Apptainer/Singularity are present.
+
+Decision changes: direct egress invalidates the network assumption in sandbox option 3, so untrusted model-generated shell commands must wait for an isolation boundary. Raw vLLM endpoints are reachable without auth, so the command loop needs that boundary before running on the shared node. L3 also shows the two SUB replicas cannot guarantee eight simultaneous 16k requests with zero preemptions at the initial cache size; cap active sequences or increase measured KV capacity. See `docs/decisions-after-tests.md` §1 and §4.

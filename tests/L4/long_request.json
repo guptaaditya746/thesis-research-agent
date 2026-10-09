@@ -1,0 +1,14 @@
+{
+  "elapsed_s": 7.545417761895806,
+  "ttft_s": 0.3534711850807071,
+  "content_chars_received": 4140,
+  "finish_reason": "stop",
+  "usage": {
+    "completion_tokens": 922,
+    "prompt_tokens": 39,
+    "total_tokens": 961,
+    "completion_tokens_details": null,
+    "prompt_tokens_details": null
+  },
+  "error": null
+}

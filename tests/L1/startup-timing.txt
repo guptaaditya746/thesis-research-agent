@@ -1,0 +1,8 @@
+Execution: direct foreground stack inside existing Slurm job 7048, node gammaweb08
+Session start: 2026-10-09T10:04:49Z
+orch ready: 5m20s
+sub ready: 10m57s
+sub-2 ready: 10m57s
+gateway ready: 6s
+status ready: 2s
+all services ready: 11m14s

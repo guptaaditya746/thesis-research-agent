@@ -1,0 +1,4 @@
+ALIAS             PID    STATE        RUNNING WAITING KV CACHE BACKEND
+orch-model   3568342 healthy            0       0      0.0 http://127.0.0.1:8001
+sub-model@8002 3568343 busy               0       0      0.0 http://127.0.0.1:8002
+sub-model@8004 3574335 healthy            0       0      0.0 http://127.0.0.1:8004

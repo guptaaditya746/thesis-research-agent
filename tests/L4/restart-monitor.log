@@ -1,0 +1,5 @@
+2026-10-09T12:28:25+0200 elapsed_since_monitor_s=0 health=0 pid=3574335
+2026-10-09T12:28:55+0200 elapsed_since_monitor_s=30 health=0 pid=3574335
+2026-10-09T12:29:25+0200 elapsed_since_monitor_s=60 health=0 pid=3574335
+2026-10-09T12:29:55+0200 elapsed_since_monitor_s=90 health=0 pid=3574335
+2026-10-09T12:30:25+0200 elapsed_since_monitor_s=120 health=200 pid=3574335

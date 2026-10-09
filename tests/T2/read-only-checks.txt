@@ -1,0 +1,17 @@
+/usr/bin/bash: line 3: pg_isready: command not found
+pg_isready_rc=127
+/usr/bin/bash: line 5: psql: command not found
+psql_rc=127
+Traceback (most recent call last):
+  File "<stdin>", line 7, in <module>
+ConnectionResetError: [Errno 104] Connection reset by peer
+redis_rc=1
+tracing curl: (56) Recv failure: Connection reset by peer
+http=000 time_s=0.001224
+curl_rc=56
+minio-api curl: (56) Recv failure: Connection reset by peer
+http=000 time_s=0.001194
+curl_rc=56
+tracing-clickhouse-http curl: (56) Recv failure: Connection reset by peer
+http=000 time_s=0.001108
+curl_rc=56

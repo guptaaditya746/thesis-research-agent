@@ -1,0 +1,9 @@
+Starting compute hop to xepi3167@ssh.webis.de...
+Ready. On the compute node use the same service names.
+  tracing: 127.0.0.1:33004 on compute
+  thesis-postgres: 127.0.0.1:45433 on compute
+  thesis-redis: 127.0.0.1:46380 on compute
+  minio-api: 127.0.0.1:39000 on compute
+  tracing-clickhouse-http: 127.0.0.1:48123 on compute
+Services: tracing, thesis-postgres, thesis-redis, minio-api, tracing-clickhouse-http
+compute: up

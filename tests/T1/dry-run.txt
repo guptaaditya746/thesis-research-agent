@@ -1,0 +1,28 @@
+ssh -i /mnt/ceph/storage/data-tmp/current/xepi3167/.ssh/id_ed25519_webis_tunnel -M -f -N -S /tmp/omen-tunnels-11026-gammaweb08/compute.sock -o IdentitiesOnly=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 127.0.0.1:45433:127.0.0.1:55433 xepi3167@ssh.webis.de
+ssh -i /mnt/ceph/storage/data-tmp/current/xepi3167/.ssh/id_ed25519_webis_tunnel -M -f -N -S /tmp/omen-tunnels-11026-gammaweb08/compute.sock -o IdentitiesOnly=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 127.0.0.1:45433:127.0.0.1:56433 xepi3167@ssh.webis.de
+SERVICE                        OMEN  LAPTOP GATEWAY COMPUTE
+tracing                        3004   23004   30304   33004
+postgres                       5432   25432   30432   35432
+portainer                      9443   29443   50443   39443
+dockge                         5001   25001   46001   35001
+dozzle                         9999   29999   50999   39999
+dagster                        3000   23000   44000   33000
+metabase                       3002   23002   44002   33002
+evidently                      8008   28008   49008   38008
+nessie                        19120   39120   60120   49120
+kg-viewer                      8085   28085   49085   38085
+kg-studio                      8086   28086   49086   38086
+grafana                        3001   23001   44001   33001
+cadvisor                       8089   28089   49089   38089
+prometheus                     9090   29090   50090   39090
+adminer                        8088   28088   49088   38088
+redis                          6379   26379   47379   36379
+minio-api                      9000   29000   50000   39000
+minio-console                  9001   29001   50001   39001
+neetcode                       8083   28083   49083   38083
+nginx-test                     8080   28080   49080   38080
+tracing-postgres              15432   35432   56432   45432
+thesis-postgres               15433   35433   56433   45433
+thesis-redis                  16379   36380   57380   46380
+tracing-clickhouse-http       18123   38123   59123   48123
+tracing-clickhouse-native     19000   39000   60000   49000

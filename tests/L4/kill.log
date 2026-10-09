@@ -1,0 +1,2 @@
+active_backend=sub-2 port=8004 running=1.0 pid=3568344 pgid=3568344 owned=True
+sent_SIGTERM_to_owned_process_group=3568344 after_s=0.22
