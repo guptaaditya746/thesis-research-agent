@@ -19,3 +19,14 @@ wrapper beside `omen-tunnels` in `PATH`:
 install -m 755 scripts/omen-tunnels ~/.local/bin/omen-tunnels
 install -m 755 scripts/omen-tunnels-external ~/.local/bin/omen-tunnels-external
 ```
+
+## Design and tests
+
+- `thesis_pipeline.html`: one-page diagram of the design (click any box or chip for details; content is in
+  the data blocks at the top of its script).
+- `docs/slurm_test_plan.md`: the test plan the `tests/` directory implements; results in `tests/RESULTS.md`.
+- `docs/plan.md`: the full plan and brainstorm (export of the living doc); `docs/context.md`: the original
+  context note the redesign started from.
+- `docs/decisions-after-tests.md`: what the first test round decided (models, parser, sandbox, corpus) and
+  what is still open.
+- Plan and brainstorm (living doc): https://claude.ai/code/artifact/c1715abf-9b58-451b-8ce6-bfd4e7fa7df4

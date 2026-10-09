@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thesis Pipeline</title>
+<style>
+  :root {
+    --bg: #ffffff; --ink: #1d2433; --muted: #5f6b7a; --line: #9aa5b4;
+    --lane-a: #f4f6f9; --lane-b: #eef2f7;
+    --node: #ffffff; --node-line: #b8c2cf;
+    --llm: #4b3fb5;                          /* LLM badge */
+    --people: #2f7d4f;                       /* people badge */
+    --now: #d97706; --now-soft: #fff3dc;     /* "currently working here" */
+    --paper: #1f5fa8; --paper-soft: #e5eefa; /* idea taken from a paper */
+    --tool: #56606e; --tool-soft: #edf0f3;   /* tool, dataset or protocol used as is */
+    --ours: #0d7a5f; --ours-soft: #e1f3ec;   /* our own contribution */
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
+  main { padding: 28px 28px 40px; max-width: 1720px; margin: 0 auto; }
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; margin-bottom: 18px; }
+  h1 { font: 600 34px/1.15 Georgia, "Times New Roman", serif; margin: 0 0 6px; }
+  h2 { font: 600 24px/1.2 Georgia, "Times New Roman", serif; margin: 34px 0 14px; }
+  .sub { margin: 0; font-size: 18px; color: var(--muted); }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 16px; align-items: center; max-width: 900px; }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend svg { width: 28px; height: 28px; }
+  .key-now { width: 26px; height: 18px; border: 3px solid var(--now); background: var(--now-soft); border-radius: 5px; display: inline-block; }
+  .key-chip { font-size: 13px; font-weight: 600; padding: 3px 9px; border-radius: 999px; border: 1.5px solid; }
+  .k-paper { color: var(--paper); background: var(--paper-soft); border-color: var(--paper); }
+  .k-tool { color: var(--tool); background: var(--tool-soft); border-color: var(--tool); }
+  .k-ours { color: var(--ours); background: var(--ours-soft); border-color: var(--ours); }
+  #diagram { width: 100%; overflow-x: auto; }
+  #diagram svg { display: block; width: 100%; min-width: 1100px; height: auto; }
+  /* SVG styling */
+  .lane-bg { fill: var(--lane-a); }
+  .lane-bg.alt { fill: var(--lane-b); }
+  .lane-bg.focus { fill: #fff8ec; }
+  .lane-name { font: 700 19px/1 "Segoe UI", system-ui, sans-serif; fill: var(--ink); }
+  .lane-sub { font-size: 14.5px; fill: var(--muted); }
+  .node { fill: var(--node); stroke: var(--node-line); stroke-width: 1.6; }
+  .node.now { fill: var(--now-soft); stroke: var(--now); stroke-width: 4; }
+  .name { font-weight: 700; fill: var(--ink); }
+  .desc { font-size: 14px; fill: var(--muted); }
+  .chip-paper { fill: var(--paper-soft); stroke: var(--paper); stroke-width: 1.2; }
+  .chip-tool { fill: var(--tool-soft); stroke: var(--tool); stroke-width: 1.2; }
+  .chip-ours { fill: var(--ours-soft); stroke: var(--ours); stroke-width: 1.2; }
+  .chip-text { font-size: 12.5px; font-weight: 600; }
+  .ct-paper { fill: var(--paper); } .ct-tool { fill: var(--tool); } .ct-ours { fill: var(--ours); }
+  .flow { stroke: var(--line); stroke-width: 2; fill: none; }
+  .lane-bg.open { fill: #f3f3f3; }
+  .lane-open-tag { font: 700 12.5px/1 "Segoe UI", system-ui, sans-serif; fill: #8a8f98; letter-spacing: .08em; }
+  .is-open { opacity: .45; }
+  .is-open:hover, .is-open:focus-visible { opacity: .8; }
+  .chip-suggested { stroke-dasharray: 4 3; }
+  .key-suggested { border-style: dashed !important; }
+  .key-open { width: 26px; height: 18px; background: #f3f3f3; border: 1.5px solid #c5c9cf; border-radius: 5px; display: inline-block; }
+  .open-banner { border-left: 4px solid #8a8f98; background: #f3f3f3; padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 4px 0 6px; font-size: 15px; }
+  .cross { stroke: var(--line); stroke-width: 2; fill: none; stroke-dasharray: 6 5; }
+  .cross.now { stroke: var(--now); stroke-dasharray: none; stroke-width: 2.5; }
+  .edge-label { font-size: 13px; fill: var(--muted); paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
+  .arrow { fill: var(--line); }
+  .arrow-now { fill: var(--now); }
+  .flag { fill: var(--now); }
+  .flag-text { font: 700 14px/1 "Segoe UI", system-ui, sans-serif; fill: #ffffff; letter-spacing: .06em; }
+  .pulse { fill: none; stroke: var(--now); stroke-width: 3; opacity: .55; transform-box: fill-box; transform-origin: center; animation: pulse 2.2s ease-out infinite; }
+  @keyframes pulse { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.12, 1.3); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; opacity: .35; } }
+  .hl { filter: drop-shadow(0 0 0.35rem rgba(31, 95, 168, .55)); }
+  /* reference list */
+  .refs { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 10px 28px; }
+  .ref { display: grid; grid-template-columns: 136px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 8px 10px; border-radius: 8px; }
+  .ref:hover, .ref.hl-row { background: var(--lane-a); }
+  .ref .key-chip { justify-self: start; }
+  .ref .cite { font-size: 15px; }
+  .ref .used { font-size: 13.5px; color: var(--muted); }
+  footer { margin-top: 18px; font-size: 14px; color: var(--muted); }
+  /* details panel */
+  #diagram .stage, #diagram .chip { cursor: pointer; }
+  #diagram .stage:hover .node, #diagram .stage:focus-visible .node { stroke: var(--paper); stroke-width: 2.6; }
+  #diagram .stage:focus, #diagram .chip:focus { outline: none; }
+  #diagram .chip:hover rect, #diagram .chip:focus-visible rect { stroke-width: 2.4; }
+  #diagram .stage.selected .node { stroke: var(--paper); stroke-width: 4; }
+  .ref { cursor: pointer; }
+  .hint { font-size: 15px; color: var(--muted); margin: 10px 0 0; }
+  .scrim { position: fixed; inset: 0; background: rgba(29, 36, 51, .28); opacity: 0; pointer-events: none; transition: opacity .18s; z-index: 10; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(600px, 100vw); background: #fff; z-index: 11;
+    box-shadow: -12px 0 32px rgba(29, 36, 51, .18); transform: translateX(102%); transition: transform .22s ease;
+    display: flex; flex-direction: column; }
+  .panel.open { transform: none; }
+  @media (prefers-reduced-motion: reduce) { .panel, .scrim { transition: none; } }
+  .panel-top { display: flex; align-items: center; gap: 8px; padding: 14px 18px; border-bottom: 1px solid #e3e7ed; }
+  .panel-top button { font: inherit; font-size: 14px; border: 1px solid var(--node-line); background: #fff; color: var(--ink);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  .panel-top button:hover { background: var(--lane-a); }
+  .panel-top button:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+  .panel-top .spacer { flex: 1; }
+  .panel-body { overflow-y: auto; padding: 20px 24px 32px; }
+  .panel-kind { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .badge { font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; color: #fff; }
+  .b-llm { background: var(--llm); } .b-people { background: var(--people); } .b-now { background: var(--now); }
+  .panel h3 { font: 600 28px/1.2 Georgia, "Times New Roman", serif; margin: 0 0 4px; }
+  .panel .lead { margin: 0 0 6px; color: var(--muted); font-size: 16px; }
+  .panel section { margin-top: 20px; }
+  .panel section h4 { margin: 0 0 8px; font-size: 13px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .panel p, .panel li { font-size: 16px; line-height: 1.5; }
+  .panel p { margin: 0; }
+  .panel ul { margin: 0; padding-left: 20px; }
+  .panel li + li { margin-top: 6px; }
+  .panel code { font: 13.5px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--lane-a); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  .io { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: center; }
+  .io div { background: var(--lane-a); border-radius: 8px; padding: 10px 12px; font-size: 15px; line-height: 1.4; }
+  .io span { color: var(--muted); font-size: 20px; }
+  .example { border-left: 4px solid var(--paper); background: var(--paper-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; }
+  .ours-box { border-left: 4px solid var(--ours); background: var(--ours-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; }
+  .ours-box.flash { animation: flash 1.2s ease-out; }
+  @keyframes flash { 0% { box-shadow: 0 0 0 4px rgba(13, 122, 95, .45); } 100% { box-shadow: 0 0 0 0 rgba(13, 122, 95, 0); } }
+  .differs { border-left: 4px solid var(--now); background: var(--now-soft); padding: 10px 14px 10px 32px; border-radius: 0 8px 8px 0; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; }
+  .links button { font: inherit; font-size: 13.5px; font-weight: 600; padding: 4px 11px; border-radius: 999px; border: 1.5px solid; cursor: pointer; }
+  .links button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .links .l-stage { color: var(--ink); background: #fff; border-color: var(--node-line); }
+  .cite-text { font-size: 15px; color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1 id="title"></h1>
+      <p class="sub" id="subtitle"></p>
+    </div>
+    <div class="legend" id="legend"></div>
+  </header>
+  <div id="diagram" aria-label="Thesis pipeline diagram with the source of each idea"></div>
+  <p class="hint">Click any box, chip or reference for what it is, how it works here, and where it comes from.</p>
+  <h2>Where the ideas come from</h2>
+  <div class="refs" id="refs"></div>
+  <footer id="footer"></footer>
+</main>
+
+<script>
+/* ===================================================================================
+   EDIT HERE. Everything the page shows comes from these blocks.
+   - SOURCES: every paper, tool or dataset the thesis builds on.
+       short: the chip text   kind: "paper" | "tool"   cite: full reference   url: optional
+       suggested: true -> dashed chip: a reference proposed but not yet confirmed
+   - LANES: one row each, top to bottom. `sources` on a lane = chips under the lane name.
+       flow: false -> no arrows between its boxes (alternatives, not steps)
+       open: true  -> greyed out and marked "to be redesigned"
+   - STAGES: boxes. `lane` = row, `col` = position in the row (0 = leftmost).
+       llm: true      -> LLM badge (the stage calls a language model)
+       people: true   -> people badge (human work)
+       current: true  -> highlighted as "currently working here"
+       sources: [...] -> keys of SOURCES whose idea this stage uses (chips under the box)
+       ours: "text"   -> an "ours" chip: what in this stage is our own contribution (oursTitle: its longer tooltip)
+     Stages of one lane are joined left to right automatically (sorted by col).
+   - LINKS: extra arrows between lanes: [from id, to id, label].
+   - LLM_ICON_SRC: a data:image/... URI of the Qwen logo, to replace the generic LLM icon.
+   - STAGE_DETAILS / SOURCE_DETAILS (below FOOTER): the text of the panel that opens on a click.
+   Sources marked "TODO" are the ones to double-check against your bibliography.
+   =================================================================================== */
+
+const TITLE = "Thesis pipeline";
+const SUBTITLE = "A question becomes standalone concepts; the user picks one; a free agent researches the papers' Markdown files; the answer is a knowledge graph with full provenance";
+
+const LLM_LABEL = "LLM call (Qwen)";
+const LLM_ICON_SRC = null;   // e.g. "data:image/png;base64,...."  (null = generic LLM icon)
+
+const SOURCES = {
+  dblp:     { short: "DBLP",            kind: "tool",  cite: "DBLP knowledge graph and RDF schema (papers, authors, venues, citations)" },
+  cskg:     { short: "CS-KG 2.0",       kind: "tool",  cite: "CS-KG 2.0 ontology of computer-science entities and relations (KMi, The Open University)" },
+  ambigqa:  { short: "AmbigQA",         kind: "paper", cite: "Min et al. AmbigQA: Answering Ambiguous Open-domain Questions. EMNLP 2020 (an ambiguous question is split into disambiguated interpretations before it is answered)" },
+  sweagent: { short: "SWE-agent",       kind: "paper", cite: "Yang et al. SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering. NeurIPS 2024 (an LLM agent working freely in a shell; mini-SWE-agent is its minimal version)" },
+  codeact:  { short: "CodeAct",         kind: "paper", cite: "Wang et al. Executable Code Actions Elicit Better LLM Agents. ICML 2024 (the agent acts by writing and running code)" },
+  latm:     { short: "Tool making",     kind: "paper", cite: "Cai et al. Large Language Models as Tool Makers. ICLR 2024 (the agent writes its own reusable tools)" },
+  provo:    { short: "PROV-O",          kind: "tool",  cite: "W3C PROV-O: The PROV Ontology. W3C Recommendation, 2013 (a standard vocabulary for provenance: what was derived from what, by which activity)" },
+  webanno:  { short: "Web Annotation",  kind: "tool",  suggested: true, cite: "W3C Web Annotation Data Model, 2017 (TextQuoteSelector: exact, prefix, suffix; TextPositionSelector: start, end). Suggested, to confirm", url: "https://www.w3.org/TR/annotation-model/" },
+  li2026:   { short: "Direct corpus interaction", kind: "paper", suggested: true, cite: "Li et al. Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction. arXiv 2605.05242, May 2026 (an agent searches raw text with grep, reads and scripts, no index). Suggested, to confirm", url: "https://arxiv.org/abs/2605.05242" },
+  sen2026:  { short: "Grep & harnesses", kind: "paper", suggested: true, cite: "Sen et al. Is Grep All You Need? How Agent Harnesses Reshape Agentic Search. arXiv 2605.15184, May 2026 (the harness and how tool output is shown change results more than the retriever). Suggested, to confirm", url: "https://arxiv.org/abs/2605.15184" },
+  ambiguity:{ short: "Su & Cardie 2026", kind: "paper", suggested: true, cite: "Su & Cardie. Knowing but Not Showing: LLMs Recognize Ambiguity but Rarely Ask Clarifying Questions. arXiv 2605.25284, May 2026. Suggested, to confirm", url: "https://arxiv.org/abs/2605.25284" },
+  skills:   { short: "Agent Skills",    kind: "tool",  suggested: true, cite: "Anthropic. Equipping agents for the real world with Agent Skills. Engineering blog, October 2025; released as an open standard, December 2025 (a tool = a folder with a SKILL.md: name, description, body, bundled scripts). Suggested, to confirm", url: "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" },
+  qin2026:  { short: "Trace tampering", kind: "paper", suggested: true, cite: "Qin et al. LLM Agents Can Easily Tamper With Their Own Traces. arXiv 2609.30266, September 2026 (log through an interceptor outside the agent's control). Suggested, to confirm", url: "https://arxiv.org/abs/2609.30266" },
+  ledger:   { short: "LEDGER",          kind: "paper", suggested: true, cite: "Kim, Miao & Liu. LEDGER: Claim-to-Evidence Trace Graphs for Auditing LLM Agents. arXiv 2608.18398, August 2026. Suggested, to confirm", url: "https://arxiv.org/abs/2608.18398" },
+  goo2026:  { short: "Citation faithfulness", kind: "paper", suggested: true, cite: "Goo et al. Evaluating and Guarding Citation Faithfulness in Agentic Scientific Synthesis. arXiv 2607.20527, July 2026 (verifier strictness alone moves the unsupported rate from 3% to 18%: validate the judge on human gold). Suggested, to confirm", url: "https://arxiv.org/abs/2607.20527" },
+  edc:      { short: "EDC",             kind: "paper", cite: "Zhang & Soh. Extract, Define, Canonicalize: An LLM-based Framework for Knowledge Graph Construction. EMNLP 2024" },
+  zobel:    { short: "Zobel 1998",      kind: "paper", cite: "Zobel. How Reliable are the Results of Large-Scale Information Retrieval Experiments? SIGIR 1998 (pooled gold is biased)" },
+  argilla:  { short: "Argilla",         kind: "tool",  cite: "Argilla: open-source annotation tool" },
+  kappa:    { short: "Cohen's κ",       kind: "paper", cite: "Cohen. A Coefficient of Agreement for Nominal Scales. 1960 (agreement between reviewers)" },
+  benchie:  { short: "BenchIE",         kind: "paper", cite: "Gashteovski et al. BenchIE: Fact-Based Open Information Extraction Evaluation. ACL 2022 (accepted variants of a fact)" },
+  webnlg:   { short: "WebNLG 2020",     kind: "paper", cite: "WebNLG+ Challenge 2020 text-to-RDF evaluation (matching levels)" },
+  text2kg:  { short: "Text2KGBench",    kind: "paper", cite: "Mihindukulasooriya et al. Text2KGBench: Ontology-Driven Knowledge Graph Generation from Text. ISWC 2023" },
+  euzenat:  { short: "Euzenat 2007",    kind: "paper", cite: "Euzenat. Semantic Precision and Recall for Ontology Alignment Evaluation. IJCAI 2007 (entailed matching)" },
+  judge:    { short: "LLM judge",       kind: "paper", cite: "Zheng et al. Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. NeurIPS 2023; Mo et al. KGGen (MINE), 2025" },
+  trec:     { short: "TREC RAG 2024",   kind: "paper", cite: "Pradeep et al. Nugget Evaluation for the TREC 2024 RAG Track. 2024 (vital nuggets → vital recall)" },
+  bootstrap:{ short: "Bootstrap",       kind: "paper", cite: "Efron & Tibshirani. An Introduction to the Bootstrap. 1993 (95% intervals over questions)" },
+};
+
+const LANES = [
+  { id: "corpus",  name: "Corpus",           sub: "built once, no index" },
+  { id: "toolbox", name: "Agent's toolbox",  sub: "a shell, Python, three harness commands", flow: false },
+  { id: "system",  name: "Research system",  sub: "per question" },
+  { id: "prov",    name: "Trace & provenance", sub: "per run, written by the harness" },
+  { id: "eval",    name: "Evaluation",       sub: "per run · proposed: three layers", open: true },
+  { id: "gold",    name: "Gold standard",    sub: "per concept", open: true },
+];
+
+const STAGES = [
+  // Corpus
+  { id: "papers",   lane: "corpus",  col: 0, name: "Papers",          desc: "337 PDFs",                llm: false },
+  { id: "md",       lane: "corpus",  col: 1, name: "Markdown",        desc: "one .md file per paper",  llm: false },
+  // Agent's toolbox (no arrows between them: the agent picks)
+  { id: "grep",     lane: "toolbox", col: 1, name: "Shell",           desc: "grep, read, scripts", llm: false, sources: ["sweagent"] },
+  { id: "scripts",  lane: "toolbox", col: 2, name: "Own scripts",     desc: "Python over the .md",     llm: false, sources: ["codeact"] },
+  { id: "subagents",lane: "toolbox", col: 3, name: "Subagents",       desc: "spawn: brief + files",    llm: true,  ours: "own log, shared claims" },
+  { id: "newtools", lane: "toolbox", col: 4, name: "New tools",       desc: "save_tool: SKILL.md",     llm: true,  sources: ["latm", "skills"] },
+  { id: "claim",    lane: "toolbox", col: 5, name: "Claim tool",      desc: "fact + quote + step",     llm: false, sources: ["webanno"], ours: "only route into the graph", oursTitle: "The claim command is the only way a fact enters the knowledge graph, so provenance is complete by construction" },
+  // Research system (one question)
+  { id: "question", lane: "system",  col: 0, name: "Question",        desc: "as the user asks it",     llm: false },
+  { id: "concepts", lane: "system",  col: 1, name: "Concepts",        desc: "ambiguity axes → briefs", llm: true,  sources: ["ambigqa", "ambiguity"], ours: "corpus-blind, checked", oursTitle: "Concepts are generated without looking at the corpus and checked for researchability (structural check, critic, two-procedure test)" },
+  { id: "view",     lane: "system",  col: 2, name: "Research briefs", desc: "definition · shape · CQs", llm: false, sources: ["dblp", "cskg"], ours: "brief; schema derived", oursTitle: "Each concept is a research brief: one-line definition with its measure, an answer shape, competency questions; the subschema is derived from the answer shape" },
+  { id: "pick",     lane: "system",  col: 3, name: "User picks one",  desc: "the concept to research", llm: false, people: true },
+  { id: "agent",    lane: "system",  col: 4, name: "Agent",           desc: "complete freedom",        llm: true,  current: true, sources: ["sweagent", "li2026", "sen2026"], ours: "every step visible" },
+  { id: "kg",       lane: "system",  col: 5, name: "Knowledge graph", desc: "claims → canonical triples", llm: true, sources: ["provo", "edc"], ours: "full provenance" },
+  { id: "trace",    lane: "system",  col: 6, name: "Trace back",      desc: "node → step → .md text",  llm: false, people: true, ours: "user traces any fact" },
+  // Trace & provenance (written by the harness, read by everything else)
+  { id: "log",      lane: "prov",    col: 4, name: "Event log",       desc: "events.jsonl, chained", llm: false, sources: ["qin2026"], ours: "logged outside the agent", oursTitle: "The interceptor runs in the harness process; the agent's sandbox cannot see or edit the log" },
+  { id: "views",    lane: "prov",    col: 5, name: "Trace views",     desc: "claims → steps → quotes", llm: false, sources: ["ledger"] },
+  { id: "replay",   lane: "prov",    col: 6, name: "Replay",          desc: "offline · re-execute",    llm: false, ours: "computed facts re-run" },
+  // Evaluation (proposed redesign: three layers)
+  { id: "faith",    lane: "eval",    col: 3, name: "Faithfulness",    desc: "quote supports fact?",    llm: true,  sources: ["goo2026", "judge", "kappa"], ours: "needs no gold" },
+  { id: "correct",  lane: "eval",    col: 4, name: "Correctness",     desc: "vs answer key, 3 levels", llm: true,  sources: ["webnlg", "euzenat", "text2kg", "trec"] },
+  { id: "process",  lane: "eval",    col: 5, name: "Process",         desc: "cost · coverage of D",    llm: false, ours: "compared by outcome" },
+  { id: "results",  lane: "eval",    col: 6, name: "Results",         desc: "concepts × repetitions",  llm: false, sources: ["bootstrap"] },
+  // Gold standard (to be redesigned: D per concept)
+  { id: "screen",   lane: "gold",    col: 0, name: "Screen papers",   desc: "every paper, per concept", llm: true,  ours: "coverage rows" },
+  { id: "extract",  lane: "gold",    col: 1, name: "Extract",         desc: "into the answer shape",   llm: true,  sources: ["edc"] },
+  { id: "D",        lane: "gold",    col: 2, name: "Document D",      desc: "filled answer shape",     llm: false, sources: ["zobel"], ours: "D: supervisor's idea" },
+  { id: "triage",   lane: "gold",    col: 3, name: "Triage",          desc: "answers / context",       llm: true,  ours: "triage + sample" },
+  { id: "human",    lane: "gold",    col: 4, name: "Human review",    desc: "two reviewers",           llm: false, people: true, sources: ["argilla", "kappa"] },
+  { id: "key",      lane: "gold",    col: 5, name: "Answer key",      desc: "gold triples",            llm: false, sources: ["benchie", "ambigqa"] },
+];
+
+const LINKS = [
+  ["md",    "grep",     "read-only corpus"],
+  ["agent", "newtools", "chooses freely"],
+  ["claim", "kg",       "claims.jsonl"],
+  ["agent", "log",      "events.jsonl"],
+  ["kg",    "faith",    "every claim + its quote"],
+  ["replay","process",  "cost, coverage"],
+  ["view",  "D",        "answer shape = gold template"],
+  ["key",   "correct",  "gold"],
+];
+
+const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. Dashed chips: a suggested reference still to confirm. Greyed lanes show the proposed redesign of evaluation and gold (three layers; D per concept), not yet decided. Click a box, chip or reference for details (Esc closes); a link ending in #stage=agent or #source=codeact opens that panel directly.";
+
+/* ---- STAGE_DETAILS / SOURCE_DETAILS: what the panel shows when a box, chip or lane is clicked -------------------------
+   STAGE_DETAILS: one entry per STAGES id. SOURCE_DETAILS: one per SOURCES key. Every field is optional:
+     what      one or two sentences: what this is
+     how       bullet list: how it works in our system
+     io        [input, output]
+     example   a short worked example
+     ours      what in this step is our own contribution
+     differs   (sources) where we deviate from the paper; (stages) known limits
+     settings  settings that change it (name: what it does)
+     code      files where it lives
+   ---------------------------------------------------------------------------------------------- */
+const STAGE_DETAILS = {
+  // ---------------------------------------------------------------- Corpus
+  papers: {
+    what: "The fixed set of research papers every question is answered from. It does not change during an experiment.",
+    how: [
+      "337 papers, verified against DBLP: 37 original papers, 150 ACL 2025 long papers and 150 EMNLP 2025 main papers.",
+      "Corpus-wide questions (\"which benchmarks do the RAG papers use?\") need many papers at once.",
+    ],
+    io: ["PDF files", "the papers the agent may read"],
+  },
+  md: {
+    what: "Each PDF is converted once into a plain Markdown file. That is the whole \"corpus\": no search index, no embeddings, no pre-extracted facts.",
+    how: [
+      "One .md file per paper, keeping headings, paragraphs, tables and references as text.",
+      "Nothing is prepared for the agent: it decides itself how to find things in these files (see the toolbox).",
+      "Every fact in the final graph must point back to a place in one of these files, so the conversion has to keep the text stable (a fact can be located again later).",
+    ],
+    io: ["PDF", "paper.md (plain text with structure)"],
+    ours: "No retrieval pipeline is imposed: the corpus is just files, and finding evidence is entirely the agent's job.",
+  },
+
+  // ---------------------------------------------------------------- Agent's toolbox
+  grep: {
+    what: "The agent has one action: a shell command in a sandbox that holds the corpus read-only, a writable scratch directory and Python. Searching, reading, scripting and tool-making all go through it.",
+    how: [
+      "Shell commands such as grep, find, head, sed or a small reader, over the .md folder. Typically the first step: shortlist the papers and sections that mention the concept, then read them.",
+      "One command = one step in the trace, so the log is uniform and trivially replayable (the mini-SWE-agent model).",
+      "Tool output is shown inline, truncated to the first N lines with the path of the full output appended; the agent can head, tail or grep the rest. Sen et al. (2026) find inline output beats output in files.",
+      "Guardrails that do not restrict freedom: read-only corpus, no network, a CPU-time limit per command, and step and token budgets that are announced to the agent rather than enforced silently.",
+    ],
+    io: [".md files + search terms the agent chose", "matching lines, shortlisted papers, read passages"],
+    example: "grep -il \"retrieval-augmented\" corpus/*.md → 41 papers → read their evaluation sections.",
+    settings: ["step budget (e.g. 300 commands)", "token budget", "per-command CPU limit (120 s, extendable with a logged flag)", "inline output lines (N)"],
+  },
+  scripts: {
+    what: "The agent can write and run its own Python over the Markdown files when shell search is not enough.",
+    how: [
+      "Parse tables, count mentions per paper, collect every sentence with a pattern, cross-reference papers, compute aggregates.",
+      "The script and its output are part of the visible trace, so a computed fact can be checked by rerunning it.",
+    ],
+    io: ["a task the agent set itself", "script + its output"],
+    example: "A script that collects every \"evaluated on …\" sentence from the shortlisted papers and groups the dataset names.",
+  },
+  subagents: {
+    what: "The agent can split the work: after shortlisting, it launches one subagent per relevant paper (or per batch of papers) with the spawn command.",
+    how: [
+      "spawn --brief sub.json --files a.md b.md --return schema.json: the subagent receives the chosen concept, a narrow sub-brief written by the parent (\"for these 12 papers, list every dataset the paper reports a number on, with the quote\"), the file list, the schema of what to return, and the same sandbox with its own scratch directory.",
+      "Each subagent has its own event log under sub/<id>/ and the same claim command; its claims go into the shared claims.jsonl tagged with the subagent id, so provenance never has to be merged. Only the result.json files are merged, and the parent reads them as ordinary command output.",
+      "Several spawn calls in one command run in parallel, capped by the harness. Subagents use the smaller model and cannot spawn further (depth 1) in the first version.",
+      "This is the orchestrator-and-workers pattern Anthropic describes for its research system: each worker gets an objective, an output format and a boundary.",
+    ],
+    io: ["shortlist + a sub-brief per batch", "result.json per subagent + their claims"],
+    ours: "Subagents share the claims file and keep their own log, so the trace of a run is a tree with one provenance store.",
+  },
+  newtools: {
+    what: "If the existing ways are not enough, the agent may build a new tool for itself, register it with save_tool, and then use it.",
+    how: [
+      "The agent writes a script in scratch and runs it (already visible). save_tool --name X --script tools/x.py --description \"...\" copies it into tools/X/ with a SKILL.md header (name, description, usage, inputs, outputs) in the Agent Skills format.",
+      "The harness records a tool_created event with the script's hash and, on the next turn, lists the tool's name and description in the agent's context; the body is read only when used (progressive disclosure).",
+      "Every later call is a normal command whose event carries the tool hash, so a computed fact can cite the exact script version and its inputs.",
+      "Reuse across runs is a switch: off by default so evaluated runs are comparable, on in a \"warm\" mode for an experiment on whether tools accumulate.",
+    ],
+    io: ["a recurring need", "tools/<name>/SKILL.md + script, registered and logged"],
+    example: "A table extractor, a citation resolver across the .md files, a matcher for dataset-name variants.",
+  },
+  claim: {
+    what: "The only way a fact enters the knowledge graph. The agent records each finding as it goes, with the exact text that supports it; nothing is extracted from a final report afterwards.",
+    how: [
+      "claim --subject S --predicate P --object O --file paper.md --quote \"...\": the harness looks the quote up in the file and refuses the claim if it is not found, then stores the triple, the anchor and the id of the step it was called from.",
+      "The anchor is three things together: the quoted span with 32 characters of prefix and suffix (Web Annotation TextQuoteSelector), the character offsets (TextPositionSelector), and the SHA-256 of the file. Offsets are the fast path when the hash matches; the quote is the fallback and what the user sees.",
+      "Computed facts: claim --via tools/x.py --inputs ... records a result derived from a script run on named inputs. An aggregate (count, ranking) is accepted only when the per-item facts it aggregates are already claims, so a ranking traces to the script, its hash, and every quote beneath it.",
+      "Predicates are free at emission, with the ontology's relation names given as hints; canonicalisation happens afterwards (see Knowledge graph).",
+    ],
+    io: ["a finding + the supporting text (or a script + inputs)", "a line in claims.jsonl with full provenance"],
+    ours: "Provenance is complete by construction: every fact carries its step and its anchor from the moment it exists.",
+  },
+
+  // ---------------------------------------------------------------- Research system
+  question: {
+    what: "The user's research question, in their own words.",
+    how: [
+      "Nothing is looked up yet: the question goes straight to concept generation.",
+    ],
+    example: "\"Who is the best author in the corpus?\" or \"Which benchmarks do the RAG papers evaluate on?\"",
+  },
+  concepts: {
+    what: "From the question alone, the system proposes concepts: standalone, unambiguous versions of what the user could mean, as many as are sensible.",
+    how: [
+      "Generation by ambiguity axes, not a one-shot list: the model names the open choices (entity type, measure, scope, aggregation unit, undefined predicates such as \"best\"), takes the combinations, drops the meaningless ones (at most 12), writes a research brief for each, then ranks and shows the top 3 to 7.",
+      "Made without looking at the corpus, so the options are not limited to what happens to be easy to find. The generator gets only a corpus fact sheet (337 CS papers, ACL and EMNLP 2025, DBLP metadata, full text, no external citation data) and every brief carries a \"needs\" line.",
+      "Researchable without asking back = the scope names concrete papers, the measure names an operation over named fields, every answer column has a type, no predicate is undefined. Checked three ways: a structural check on the brief JSON, a critic call that judges rather than answers (models flag ambiguity well when asked explicitly: Su & Cardie 2026), and a two-procedure test (the model writes the procedure twice; a judge says whether both give the same table).",
+      "One concept is a result of the axes all having one value, never a shortcut; the pick step is shown even then.",
+      "If the chosen concept cannot be answered from the corpus, the agent's first (traced) step says so and the run ends with a cited \"not answerable because …\" claim.",
+    ],
+    io: ["question", "concepts.json: a list of research briefs"],
+    ours: "Disambiguation happens before any research, is decoupled from what the corpus contains, and is checked for researchability automatically.",
+  },
+  view: {
+    what: "Each concept is shown as a research brief: a one-line definition with its measure, an answer shape (a table or graph template with placeholders), two or three competency questions, and what it needs from the corpus. The subschema is derived from the answer shape and shown on request.",
+    how: [
+      "Brief = {title, definition, measure {operation, of, group_by}, scope, answer_shape {kind: table | graph, columns or node and edge types}, competency_questions, needs, subschema}.",
+      "Why this mix: the definition and the answer shape are what a user can compare at a glance; the competency questions are what evaluation needs (each one is a check the answer must pass); a subschema alone makes \"most papers\" and \"most cited\" look identical; a SPARQL pattern is unreadable and there is no triple store any more.",
+      "Cards side by side; differences between cards are highlighted by diffing the measure and scope fields. Terms come from DBLP (Person, Paper, Venue) and CS-KG (Method, Task, Dataset, Metric).",
+      "The filled answer shape is exactly what the gold answer key for that concept looks like (see Document D).",
+    ],
+    io: ["concepts.json", "cards the user can compare; the chosen brief becomes runs/<run>/concept.json"],
+    example: "\"Most first-author papers at ACL 2025\": count Paper group by first_author, scope venue == ACL 2025, columns author (Person), first_author_papers (integer), papers (list<Paper>).",
+    ours: "The research brief as the unit the user chooses from, with the schema derived rather than shown first.",
+  },
+  pick: {
+    what: "The user chooses exactly one concept to research.",
+    how: [
+      "This is the only point where a person steers the run; everything after it is the agent's own work.",
+      "The chosen concept, not the original question, is what the agent receives.",
+    ],
+    io: ["concept view", "one chosen concept"],
+  },
+  agent: {
+    what: "An LLM agent researches the chosen concept over the Markdown files with complete freedom: no prescribed search method, tools or steps.",
+    how: [
+      "It decides itself how to search and read: grep, its own Python scripts, subagents per paper, or tools it invents (the toolbox above). Li et al. (2026) show this direct corpus interaction beats sparse, dense and reranking retrieval on BRIGHT and BEIR; Sen et al. (2026) show the harness matters as much as the method.",
+      "No time limit is imposed by design, and an empty result is an acceptable outcome; the point is a faithful, inspectable research process, not speed. Budgets, when reached, are announced to the agent, which is asked to conclude with what it has.",
+      "Every action is recorded by the interceptor (see Event log): each model call, command, script, subagent and output, in order, so the whole run can be replayed and inspected.",
+      "Findings are recorded as it goes with the claim command, each tied to the step and the .md text it came from; these become the knowledge graph.",
+      "Models: the largest Qwen you can serve with a 128k context for the orchestrator, a smaller Qwen for subagents, both via LiteLLM. Context is kept small by subagents first, inline truncation second, observation masking of old outputs third.",
+    ],
+    io: ["runs/<run>/concept.json + the read-only .md files", "claims.jsonl + events.jsonl + tools/ + scratch/"],
+    ours: "Complete freedom for the agent, combined with complete visibility of what it did.",
+  },
+  kg: {
+    what: "The answer, shown as a knowledge graph: the claims the agent recorded, canonicalised onto the ontology, each node and edge linked to its provenance.",
+    how: [
+      "Input is claims.jsonl, written by the claim command during the run; nothing is extracted from a final report. Canonicalisation is a separate, logged step: EDC's Define and Canonicalise map each free predicate onto DBLP, CS-KG 2.0 or our own terms; a predicate that maps to nothing is kept under an ours: namespace and listed, never dropped. Entities are resolved the same way (authors against DBLP metadata, datasets and methods against CS-KG), with the raw mention kept.",
+      "The canonical triple points back to the raw claim (prov:wasDerivedFrom), so nothing is overwritten.",
+      "Provenance is a small PROV-O subset: entities (Claim, Passage, File, Script, Result), activities (Command, ModelCall, by event id), agents (main, each subagent, the model, the user), relations wasGeneratedBy, wasDerivedFrom, used, wasAssociatedWith, wasInformedBy. Exported as graph.ttl.",
+      "Computed facts (counts, rankings) derive from the script and the per-item claims it aggregated, so a ranking shows the script, its hash, and every quote beneath it.",
+    ],
+    io: ["claims.jsonl + events.jsonl", "graph.json for the viewer, graph.ttl (PROV-O)"],
+    example: ":claim_041 prov:wasGeneratedBy :cmd_0187 ; prov:wasDerivedFrom :passage_041 (exact \"We evaluate on HotpotQA …\", start 18422, end 18466, in file sha256 …).",
+    ours: "Full provenance on every node and edge, present from the moment a fact is recorded.",
+  },
+  trace: {
+    what: "The user can follow any fact back to where it came from.",
+    how: [
+      "Click a node or edge → the claim-to-evidence view centred on that claim → the agent step that produced it (command, script, subagent) → the exact text in the .md file, resolved from the anchor.",
+      "Anchors resolve by offsets when the file hash matches the corpus manifest, by quote with prefix and suffix otherwise, and are reported as broken only if the quote is gone; the corpus is frozen, so that can only happen after a new corpus version.",
+      "This is the system's \"understanding back\" to the user: not just an answer, but how it was reached and on what evidence.",
+    ],
+    io: ["a fact in the graph", "its step and its source text"],
+    ours: "Trace from any fact to the step and the source text.",
+  },
+
+  // ---------------------------------------------------------------- Trace & provenance
+  log: {
+    what: "One append-only JSONL file per run, one event per model call or command, hash-chained, written by an interceptor in the harness process that the agent's sandbox cannot see.",
+    how: [
+      "Event types: model_call (model, input hash, full output, tokens), command (cmd, cwd, exit, stdout path and head, duration, tool name and hash if a saved tool), claim (triple, anchor, via), spawn / return (sub id, brief, files, result path), tool_created (name, path, hash, description).",
+      "Every event has id, t, agent (main or a subagent id), parent (the event that caused it: a command points at the model call that asked for it; a subagent's first event at the parent's spawn) and prev_hash, so a run can be checked for gaps.",
+      "A step is one model call or one command: nothing smaller, nothing larger. Phases are labels the viewer infers, never written by the agent.",
+      "Qin et al. (2026) found that every mainstream local agent harness but one let the agent delete its own traces when asked; keeping the log outside the agent's reach is their recommended fix and costs nothing here.",
+      "Export to OpenTelemetry GenAI spans (invoke_agent, execute_tool, chat) is a one-page mapping if an existing trace UI is wanted; the conventions are still experimental (mid-2026), so they are not the primary format.",
+    ],
+    io: ["every model call and command of the harness", "runs/<run>/events.jsonl (+ sub/<id>/events.jsonl)"],
+    ours: "Logging from outside the agent, with a hash chain, so a run is a self-verifying record.",
+  },
+  views: {
+    what: "Three views over events.jsonl and claims.jsonl; the claim-to-evidence graph is the primary one.",
+    how: [
+      "Claim-to-evidence graph: nodes are claims, steps, scripts and quoted passages; edges are produced-by, derived-from, input-of. Clicking a fact in the knowledge graph opens this view centred on that claim (LEDGER, 2026, builds exactly this and argues it is what a reviewer needs).",
+      "Timeline: every event in order, subagents as collapsible bands, filterable by type. The debugging view.",
+      "Subagent tree with dataflow: parent and children, the files each touched, what it returned (AgentTrails, 2026, shows provenance graphs of actions and artifacts reveal dependencies a chronological log hides).",
+      "All three are projections of one data model, so the views are cheap once the model exists.",
+    ],
+    io: ["events.jsonl + claims.jsonl", "the three views in the viewer"],
+  },
+  replay: {
+    what: "A run can be re-rendered without running anything, or re-executed against the frozen corpus to check that its deterministic part reproduces.",
+    how: [
+      "Offline replay: read the log, show every command's stored output and every model output, verify the hash chain. What the viewer does and what ships with the thesis.",
+      "Re-execution: rerun the commands against the frozen corpus and diff their outputs with the stored ones; model calls are not rerun (stored outputs are injected).",
+      "Computed facts are verified this way: rerun the script on its recorded inputs and compare.",
+      "Ding et al. (2026) coded 24 runnable research-agent systems: 83% release code, 38% release seeds or execution traces. A self-verifying log with replay is a contribution in itself.",
+    ],
+    io: ["a run directory", "a verified re-rendering, or a diff of re-executed outputs"],
+    ours: "Replay as a built-in check of computed facts.",
+  },
+
+  // ---------------------------------------------------------------- Evaluation (proposed: three layers)
+  faith: {
+    what: "Layer 1: does the quoted text support each fact? Needs no gold, so it can start as soon as the harness runs.",
+    how: [
+      "Three checks per claim, after Onweller et al. (2026): the anchor resolves (100% by construction), the passage is relevant, the passage supports the triple. Computed facts are checked mechanically by re-execution.",
+      "Support is judged by an LLM, but the judge is calibrated: two people label 200 to 300 claims in Argilla (Cohen's \u03ba), the threshold is picked on half, agreement is reported on the other half, and the judge and protocol are always named.",
+      "Goo et al. (2026) found the measured unsupported-citation rate moved from about 3% to 18% on identical outputs depending only on verifier strictness; Onweller et al. found deep-research agents keep links valid above 94% while factual accuracy against the cited source is 39% to 77%.",
+    ],
+    io: ["claims.jsonl + the corpus", "per-claim: resolves / relevant / supported; a run-level faithfulness rate with an interval"],
+    ours: "Faithfulness as the first and cheapest evaluation, measured on every claim of every run.",
+  },
+  correct: {
+    what: "Layer 2: is the graph right and complete for the chosen concept? Scored against the answer key built from Document D, at three matching levels.",
+    how: [
+      "Strict: identical after normalising case, spacing, DBLP links, author names and relation aliases.",
+      "Entailed: one triple logically implies the other under the ontology's rules (sub-relations, inverses, symmetric relations, class hierarchy, same-as, domains and ranges). Direction matters: a more specific run triple recovers the gold fact (recall) but the gold does not vouch for its extra detail (precision).",
+      "Soft: also accepts reviewers' variants and, for what the rules leave unmatched, an LLM judge asked \"do these two triples state the same fact?\".",
+      "Table-shaped answers: set F1 over rows of the filled answer shape. Vital recall over the facts reviewers marked essential. DBLP triples the concept did not ask about are not scored (locally closed).",
+    ],
+    io: ["run graph + answer key for the concept", "P / R / F1 at three levels, set F1, vital recall"],
+    example: "Gold: \"MethodX evaluatesOn BenchY\". Run: \"BenchY usedBy MethodX\" \u2192 not strict, but entailed if evaluatesOn \u2291 uses (inverse of usedBy).",
+    differs: ["One-to-one matching is stricter than Euzenat's set-based definition: one run triple that implies two gold facts recovers one.", "The judge only compares triples about the same subject."],
+    code: ["packages/evaluation/src/harness_evaluation/matching.py (carried over)", "relations.py (the rules)", "judge.py (cached judge)"],
+  },
+  process: {
+    what: "Layer 3: what did the run cost and what did it look at? Route-independent measures, so runs that took different routes can be compared.",
+    how: [
+      "Steps, tokens, wall time, papers opened, coverage (papers opened out of D's relevant papers), commands per claim, tokens per claim, share of claims from subagents, whether a budget stop occurred, subagent count.",
+      "The route itself is never scored; it is described from the trace views, with one or two runs shown in full in the thesis.",
+      "Ablations as harness switches: tool output inline vs in files; subagents on or off; tool invention on or off; corpus-blind vs corpus-aware concepts; a smaller orchestrator. The first two mirror Sen et al. and Li et al. on a scientific corpus.",
+    ],
+    io: ["events.jsonl + D's paper list", "cost and coverage per run"],
+    ours: "Comparing free agents by outcome and cost, never by route.",
+  },
+  results: {
+    what: "The final comparison across concepts and repetitions, with honest uncertainty.",
+    how: [
+      "Each concept is run 3 to 5 times (the agent is stochastic); repetitions are averaged per concept first; every concept then counts once.",
+      "95% intervals by BCa bootstrap over runs and over concepts; ablation differences are paired on the same concepts, with a sign-flip permutation p-value.",
+      "Layer 0, concept quality, is reported alongside: concept recall against interpretations written by two or three people per question (AmbigQA-style), the two-procedure agreement rate, pairwise distinctness ratings.",
+      "Results by concept shape (count, list, graph) and difficulty (metadata-only vs full-text) instead of complexity \u00d7 path.",
+    ],
+    io: ["per-run scores of the three layers", "tables with intervals; one or two runs shown in full"],
+    code: ["packages/evaluation/src/harness_evaluation/stats.py (carried over)"],
+  },
+
+  // ---------------------------------------------------------------- Gold standard
+  screen: {
+    what: "For each chosen concept, decide which papers are relevant at all, before any facts are extracted. Because the concept fixes the measure and the scope, the screening question is sharper than it was for a whole ambiguous question (\"does this paper report a number on any dataset?\").",
+    how: [
+      "A reader (one LLM call per paper) sees the paper and says relevant or not, with findings. Without the old index, the reader gets the whole .md or its section headings plus matched passages from a plain grep; to be decided.",
+      "Every paper gets a coverage row: relevant, not relevant, or error, so it is visible what was looked at.",
+      "A trial build (--max-papers N) screens only the N papers our search ranks highest for the question; the real build screens all 337.",
+      "Screening check: a random sample of papers marked not relevant (5 per question) goes to people, giving the miss rate of screening with an interval.",
+    ],
+    io: ["question + every paper", "coverage rows (relevant / not relevant)"],
+    settings: ["HARNESS_DOC_SCREEN_PASSAGES (10)", "HARNESS_DOC_MAX_PAPERS (0 = all)", "HARNESS_DOC_SCREENING_SAMPLE (5)"],
+    code: ["labelling: src/labelling/evidence_doc.py", "labelling screening-sample / screening-report"],
+  },
+  extract: {
+    what: "Extract the facts of every relevant paper for the question, with the same EDC extraction the harness uses.",
+    how: [
+      "Per relevant paper: the passages the reader cited plus the 12 passages our ranker scores highest for the question (or every passage).",
+      "EDC with the exhaustive profile: one passage per batch, unmapped relations kept as new relations.",
+      "Run once per interpretation for ambiguous questions.",
+    ],
+    io: ["relevant papers", "triples with source passages"],
+    differs: ["Which passages are read is decided by our own ranker, so D can share the harness's retrieval bias; HARNESS_DOC_EXTRACT_PASSAGES=0 extracts every passage to avoid that."],
+    settings: ["HARNESS_DOC_EXTRACT_PASSAGES (12; 0 = every passage)"],
+    code: ["labelling: src/labelling/evidence_doc.py"],
+  },
+  D: {
+    what: "The evidence document D: for one chosen concept, everything the corpus says that could answer it, built once, offline, and independent of the runs it later scores. Now per concept instead of per question, and its reviewed content is a filled answer shape.",
+    how: [
+      "Contents: the brief, a coverage row per paper, every extracted row or triple of the answer shape with its passage and evidence.",
+      "Uses: reviewed, it becomes the answer key (Correctness, layer 2); its paper list defines coverage (Process, layer 3). Mode B (D as a run input) is dropped: the agent's job is to find things itself.",
+      "Budget: D for 6 to 10 concepts from 3 to 5 questions, chosen to differ in shape (count, list, graph) and difficulty (metadata-only vs full-text).",
+      "Stored as evidence_docs/<question id>/doc.json, with a readable doc.md.",
+      "Builder settings and versions are recorded in it, so a D can be reproduced.",
+    ],
+    io: ["screening + extraction", "doc.json / doc.md per question"],
+    example: "nlp33 \"Which benchmarks and datasets do the indexed RAG papers evaluate on?\" → D lists, per relevant paper, triples such as (paper, evaluatesOn, BenchY) with the passage they come from.",
+    ours: "The supervisor's idea: one exhaustive document per question instead of pooling the compared systems' outputs.",
+    settings: ["make evidence-docs ARGS=\"--only nlp33\"", "HARNESS_EVIDENCE_DOC_ROOT (where the harness finds D)"],
+    code: ["labelling: src/labelling/evidence_doc.py, docs/EVIDENCE_DOCS.md"],
+  },
+  triage: {
+    what: "A model sorts every triple of D into answers / context / irrelevant, so people review the right ones first. Triage orders the review; it never decides the gold.",
+    how: [
+      "People review every \"answers\" and \"context\" triple, plus 50 random others per question.",
+      "From that random sample, the number of answering triples triage missed is estimated with a 95% Wilson interval, and so is the recall of the reviewed tiers.",
+      "Before the review is done, a draft answer key can be made from triage alone (marked draft; not reported).",
+    ],
+    io: ["D's triples", "tiers + a random sample for review"],
+    ours: "Stratified review with a measured miss rate instead of reviewing thousands of triples.",
+    code: ["labelling: src/labelling/triage.py", "make triage / make draft"],
+  },
+  human: {
+    what: "People decide what the gold is, in Argilla.",
+    how: [
+      "Each record: keep, drop, or partly right with a fix; mark vital facts; type other correct wordings (variants); add missing facts.",
+      "20% of questions are reviewed by two people independently; their agreement is Cohen's κ, taken from a snapshot before any discussion.",
+      "Disagreements are settled by a third person.",
+      "The LLM judge is checked the same way: people label a sample of its decisions; the judge is used for soft scores only if the (population-weighted) κ ≥ 0.61.",
+    ],
+    io: ["triaged triples", "reviewed triples"],
+    code: ["labelling: src/labelling/argilla_io.py, gold.py", "guidelines/annotation.md"],
+  },
+  key: {
+    what: "The answer key: per question, the gold triples a run is scored against.",
+    how: [
+      "Each gold triple: weight (vital or okay), its passages, accepted variants, and reviewer-rejected alternatives (used for judged precision).",
+      "Ambiguous questions: one set of gold triples per accepted reading.",
+      "The same fact found in two passages is one gold triple listing both passages.",
+      "Installed into the harness (datasets/gold/candidates.jsonl) and frozen; later harness changes only rerun the evaluation.",
+    ],
+    io: ["reviewed triples", "gold rows (gold-v1.jsonl)"],
+    code: ["labelling: src/labelling/gold.py", "make export / make install"],
+  },
+
+};
+
+const SOURCE_DETAILS = {
+  dblp: {
+    what: "The computer-science bibliography as a knowledge graph: papers, authors, venues, years and citations, with an RDF schema.",
+    how: ["Shared vocabulary for the bibliographic parts of a concept view (Author, Paper, authoredBy, cites, …)."],
+  },
+  cskg: {
+    what: "CS-KG 2.0: a large knowledge graph of computer-science research entities (methods, tasks, datasets, metrics) and their relations, with an ontology.",
+    how: ["Shared vocabulary for the research-content parts of a concept view (uses, evaluatesOn, Dataset, Method, …)."],
+  },
+  ambigqa: {
+    what: "Many questions have several valid interpretations. AmbigQA first decides whether a question is ambiguous and rewrites it into disambiguated interpretations, each answerable on its own.",
+    how: [
+      "Concepts: the question is turned into standalone, unambiguous concepts before any research, and the user picks one.",
+      "Gold (to be redesigned): one answer key per accepted reading.",
+    ],
+    differs: ["AmbigQA answers every interpretation; here the user chooses one concept and only that one is researched. Concepts are proposed without looking at the corpus."],
+  },
+  sweagent: {
+    what: "SWE-agent showed that an LLM agent working freely in a computer environment (a shell, files, its own commands) can solve open-ended tasks, and that the interface it is given shapes how well it works. mini-SWE-agent reduced this to a bash tool and a plain history.",
+    how: ["The research agent works the same way: a free agent in a workspace with the .md files, choosing its own commands, scripts and subagents."],
+    differs: ["No task-specific commands are prepared for it (no search engine, no corpus API): even the way to search is its own choice."],
+  },
+  codeact: {
+    what: "CodeAct: an LLM agent acts by writing and executing code instead of calling a fixed set of tools; code lets it combine, loop and compute, and it reads the output and corrects itself.",
+    how: ["The agent may write its own Python over the .md files (parse, count, cross-reference) whenever shell search is not enough."],
+    differs: ["The action is a shell command, not a Python cell, so scripts are files the agent writes and runs; this keeps one event type per step."],
+  },
+  latm: {
+    what: "LLMs as tool makers: an LLM writes a reusable tool (a function) for a recurring kind of task, then uses it instead of solving each case from scratch.",
+    how: ["The agent may invent a new tool when it needs one (e.g. a table extractor or a dataset-name matcher), register it with save_tool, then use it; every use is logged with the tool's hash."],
+    differs: ["Tools are packaged in the Agent Skills format and, by default, do not carry over between evaluated runs."],
+  },
+  provo: {
+    what: "PROV-O, the W3C provenance ontology: a standard way to say what an entity was derived from, which activity generated it, and who was responsible.",
+    how: ["The knowledge graph's provenance links, as a small subset: Claim wasGeneratedBy Command; Claim wasDerivedFrom Passage or Result; Command used File or Script; Command wasAssociatedWith an agent; Command wasInformedBy ModelCall. Exported as graph.ttl."],
+    differs: ["Only four entity kinds, two activity kinds and five relations are used; PROV-AGENT (Souza et al., 2025) extends PROV with prompts, responses and decisions and is the closest prior model, but every decision here is already a ModelCall activity."],
+  },
+  webanno: {
+    what: "The W3C Web Annotation Data Model defines selectors for pointing at a span of text: TextQuoteSelector (the exact text with a prefix and a suffix) and TextPositionSelector (start and end character offsets).",
+    how: ["Each claim's anchor combines both selectors with a SHA-256 of the file: offsets are the fast path when the hash matches the corpus manifest, the quote with prefix and suffix is the fallback and what the user sees."],
+    differs: ["Line ranges are not used: Markdown lines are long and any edit breaks them. The corpus is frozen, so a broken anchor can only come from a new corpus version."],
+  },
+  li2026: {
+    what: "Direct corpus interaction: an agent searches raw text with general-purpose terminal tools (grep, file reads, scripts) instead of an embedding model, vector index or retrieval API. No offline indexing. Outperforms strong sparse, dense and reranking baselines on several BRIGHT and BEIR datasets and reaches strong accuracy on BrowseComp-Plus and multi-hop QA.",
+    how: ["The closest prior system to the research agent: the same tools over raw files, no index. Cited for the agent's design and as the published evidence that it can work."],
+    differs: ["Their corpora are web and QA collections; ours is 337 scientific papers as Markdown, and the output is a knowledge graph with provenance rather than an answer."],
+  },
+  sen2026: {
+    what: "Compares grep and vector retrieval across harnesses (a custom one, Claude Code, Codex, Gemini CLI) and tool-output styles (inline vs in files). Grep generally wins, and scores depend heavily on the harness and tool-calling style even with identical data.",
+    how: ["Why the harness is a first-class design decision: tool output is shown inline (truncated, with the full output on disk), and the inline-vs-file choice is kept as an ablation switch."],
+    differs: ["Their task is long-memory QA over conversation history; ours is research over papers."],
+  },
+  ambiguity: {
+    what: "Models recognise ambiguity when explicitly asked to judge it, but in standard QA almost always answer directly instead of asking; retrieved context makes them even less likely to ask.",
+    how: ["The researchability check uses a separate critic call that judges rather than answers. The design moves the one necessary interaction (the pick) to the front, instead of hoping the agent asks mid-run."],
+    differs: ["Related benchmarks: InteractComp (2025/2026) finds the best search agent at 13.7% on ambiguous queries vs 71.5% with full context; IDRBench (2026) finds interaction helps deep-research alignment on average but hurts in 20% of tasks."],
+  },
+  skills: {
+    what: "Agent Skills: a tool is a folder with a SKILL.md (YAML name and description, then the body) and optional bundled scripts. Only name and description are loaded at startup; the body and files are read when the skill is relevant (progressive disclosure).",
+    how: ["The format save_tool writes for invented tools, and the mechanism by which a new tool is announced to the agent on its next turn without filling its context."],
+    differs: ["Skills here are written by the agent during a run, not prepared by people, and carry a content hash so every use is traceable to one version."],
+  },
+  qin2026: {
+    what: "Tests whether local agent harnesses let the agent alter its own trace: every tested harness but one allowed trace deletion when asked, without triggering guardrails, and frontier models tamper with traces on their own when it improves their reward. Recommends logging through an independent interception mechanism outside the agent's control.",
+    how: ["The event log is written by the interceptor in the harness process; the agent's sandbox cannot see or edit it. Each line is hash-chained to the previous one."],
+  },
+  ledger: {
+    what: "LEDGER builds layered trace graphs from agent sessions: trace records grouped into evidence and workflow nodes, artifacts as evidence anchors, typed edges from claims to the actions, artifacts and checks that support them. Argues a chronological log hides which actions support which conclusion.",
+    how: ["The primary trace view is a claim-to-evidence graph in this sense: claims, steps, scripts and quoted passages, with produced-by, derived-from and input-of edges, opened from any fact in the knowledge graph."],
+    differs: ["Related: AgentTrails (Wu et al., 2026) turns trajectories into provenance graphs of actions and artifacts and aligns several runs on one canvas; Graph of Trace (ACL 2026 demo) visualises traces of scientific agents."],
+  },
+  goo2026: {
+    what: "Audits the verifiers used to check citations in agentic scientific synthesis (OpenScholar, PaperQA2): on identical outputs the measured unsupported-citation rate moved from about 3% to 18% depending only on verifier strictness. Proposes validating the verifier against human gold and a conformal guard on the catch rate.",
+    how: ["The faithfulness layer calibrates its LLM judge on a human-labelled sample, reports agreement on held-out claims, and always names the judge and protocol. Onweller et al. (2026) supply the three dimensions: link works, relevant, fact check."],
+  },
+  edc: {
+    what: "Extract, Define, Canonicalize: LLM-based knowledge-graph construction in three steps (extract open triples, define each relation, map relations onto a schema).",
+    how: ["Define and Canonicalise are the logged step that maps the agent's free predicates and entity mentions onto DBLP, CS-KG 2.0 and our own terms after the run; Extract is also used to build the evidence document D on the gold side."],
+    differs: ["The agent's own Extract step is not prescribed: it records claims with free predicates through the claim command, and canonicalisation never overwrites the raw claim."],
+  },
+
+  zobel: {
+    what: "Gold built by pooling the outputs of the compared systems is biased towards those systems; systems outside the pool look worse.",
+    how: ["Why the gold is built from an evidence document D made before and independently of the runs, instead of from the runs' outputs."],
+    differs: ["D is built with the harness's own extraction and ranker, so some bias remains; the screening check and the option to extract every passage limit it."],
+  },
+
+  argilla: {
+    what: "An open-source annotation tool.",
+    how: ["All human review: D's triples, the overlap set for agreement, missing facts, the screening check and the judge check."],
+  },
+
+  kappa: {
+    what: "Cohen's κ: agreement between two raters corrected for the agreement expected by chance. 0.61–0.80 is \"substantial\" (Landis & Koch).",
+    how: ["Agreement between the two reviewers on the overlap set; agreement between people and the LLM judge (weighted back to the real yes/no mix, because the judge sample is balanced)."],
+  },
+
+  benchie: {
+    what: "Facts can be worded in many correct ways; BenchIE groups all acceptable wordings of a fact (a fact synset) so a correct extraction is not counted wrong.",
+    how: ["Reviewers type accepted variants for gold triples; a run triple equal to a variant matches at the soft level."],
+    differs: ["Variants are partial (two or three typical wordings), not exhaustive synsets."],
+  },
+
+  webnlg: {
+    what: "The WebNLG+ 2020 text-to-RDF challenge evaluated generated triples at several matching levels (exact, partial, strict, type) side by side.",
+    how: ["The idea of reporting several matching levels (strict, entailed, soft) together, so the reader sees how much is wording."],
+  },
+
+  text2kg: {
+    what: "A benchmark for ontology-driven knowledge-graph generation. Its gold is \"locally closed\": a generated triple is only judged if its relation appears in the gold for that sentence.",
+    how: ["Locally closed scoring of DBLP triples: true but unrequested metadata (e.g. extra authors) is not counted as an error."],
+    differs: ["Applied to DBLP relations only; invented relations are always scored, because they carry the system's real claims."],
+  },
+
+  euzenat: {
+    what: "Semantic precision and recall: compare two sets of statements by what they logically imply, not by their wording. Recall counts gold facts implied by the output; precision counts output facts implied by the gold.",
+    how: ["The entailed level, using the ontology's RDFS/OWL rules; triples that imply each other count as one fact."],
+    differs: ["Credit is one-to-one (one run fact recovers at most one gold fact); Euzenat's definition is set-based."],
+  },
+
+  judge: {
+    what: "Using a strong LLM to judge outputs; it agrees with people on many tasks but must be validated per task and can favour its own style.",
+    how: ["The soft level asks an LLM \"do these two triples state the same fact?\" for pairs the rules leave unmatched; answers are cached, and the judge is checked against people (κ ≥ 0.61) before its verdicts are reported."],
+  },
+
+  trec: {
+    what: "The TREC 2024 RAG track scores answers by \"nuggets\" (atomic facts), with vital nuggets weighted as essential.",
+    how: ["Vital recall: recall over the gold facts reviewers marked vital."],
+    differs: ["Binary match, i.e. the track's strict vital score (partial support earns nothing)."],
+  },
+
+  bootstrap: {
+    what: "Resampling the questions many times to estimate how much a mean could vary: an honest confidence interval with few questions.",
+    how: ["95% BCa intervals over questions for every reported mean, and for paired differences between paths (with a sign-flip permutation p-value)."],
+  },
+};
+
+/* ============================== drawing (no edits needed below) ============================== */
+const LABEL_W = 250, COL_W = 200, NODE_W = 178, NODE_H = 86, CHIP_H = 22, CHIP_GAP = 5, TOP = 14, FLAG_H = 46;
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, parent) => {
+  const node = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+  if (parent) parent.appendChild(node);
+  return node;
+};
+
+// chips of a stage: its sources, then its "ours" note
+function chipsOf(s) {
+  const out = (s.sources || []).map(key => {
+    const src = SOURCES[key];
+    if (!src) { console.warn("unknown source", key); return null; }
+    return { kind: src.kind, text: src.short, title: src.cite, key, suggested: !!src.suggested };
+  }).filter(Boolean);
+  if (s.ours) out.push({ kind: "ours", text: s.ours, title: `Our contribution: ${s.oursTitle || s.ours}`, ours: s.id });
+  return out;
+}
+const stackHeight = n => n ? 8 + n * CHIP_H + (n - 1) * CHIP_GAP : 0;
+
+function llmIcon(parent, cx, cy, r) {
+  el("circle", { cx, cy, r, fill: "var(--llm)" }, parent);
+  if (LLM_ICON_SRC) {
+    const s = r * 1.5;
+    el("image", { href: LLM_ICON_SRC, x: cx - s / 2, y: cy - s / 2, width: s, height: s }, parent);
+    return;
+  }
+  const star = (x, y, a, b) => `M${x} ${y - a} Q${x + b} ${y - b} ${x + a} ${y} Q${x + b} ${y + b} ${x} ${y + a} Q${x - b} ${y + b} ${x - a} ${y} Q${x - b} ${y - b} ${x} ${y - a} Z`;
+  el("path", { d: star(cx - r * 0.12, cy + r * 0.08, r * 0.62, r * 0.14), fill: "#fff" }, parent);
+  el("path", { d: star(cx + r * 0.45, cy - r * 0.45, r * 0.28, r * 0.07), fill: "#fff" }, parent);
+}
+
+function peopleIcon(parent, cx, cy, r) {
+  el("circle", { cx, cy, r, fill: "var(--people)" }, parent);
+  el("circle", { cx, cy: cy - r * 0.28, r: r * 0.26, fill: "#fff" }, parent);
+  el("path", { d: `M${cx - r * 0.52} ${cy + r * 0.55} Q${cx - r * 0.5} ${cy + r * 0.02} ${cx} ${cy + r * 0.02} Q${cx + r * 0.5} ${cy + r * 0.02} ${cx + r * 0.52} ${cy + r * 0.55} Z`, fill: "#fff" }, parent);
+}
+
+function fitText(text, maxWidth, size, min = 10) {
+  text.setAttribute("font-size", size);
+  while (text.getComputedTextLength() > maxWidth && size > min) {
+    size -= 0.5;
+    text.setAttribute("font-size", size);
+  }
+}
+
+function chip(parent, x, y, w, c) {
+  const g = el("g", { class: "chip", "data-key": c.key || "", "data-ours": c.ours || "", tabindex: 0, role: "button",
+                      "aria-label": `${c.text}: details` }, parent);
+  el("rect", { x, y, width: w, height: CHIP_H, rx: CHIP_H / 2, class: `chip-${c.kind}${c.suggested ? " chip-suggested" : ""}` }, g);
+  if (c.open) g.classList.add("is-open");
+  const t = el("text", { x: x + w / 2, y: y + 15.5, "text-anchor": "middle", class: `chip-text ct-${c.kind}` }, g);
+  t.textContent = c.text;
+  fitText(t, w - 12, 12.5, 9);
+  el("title", {}, g).textContent = `${c.title} (click for details)`;
+  return g;
+}
+
+function draw() {
+  const host = document.getElementById("diagram");
+  host.textContent = "";
+  const cols = Math.max(...STAGES.map(s => s.col)) + 1;
+  const W = LABEL_W + cols * COL_W + 10;
+  // each lane is as tall as its tallest box + chip stack (+ the flag under the current stage)
+  const laneH = LANES.map(lane => {
+    const tallest = Math.max(0, ...STAGES.filter(s => s.lane === lane.id)
+      .map(s => stackHeight(chipsOf(s).length) + (s.current ? FLAG_H : 0)));
+    const labelChips = 70 + (lane.sources || []).length * (CHIP_H + CHIP_GAP);
+    return Math.max(NODE_H + tallest + 44, labelChips + 20, 150);
+  });
+  const laneTop = laneH.map((_, i) => TOP + laneH.slice(0, i).reduce((a, b) => a + b, 0));
+  const H = TOP + laneH.reduce((a, b) => a + b, 0) + 10;
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}` }, host);
+  const defs = el("defs", {}, svg);
+  for (const [id, cls] of [["arr", "arrow"], ["arr-now", "arrow-now"]]) {
+    const m = el("marker", { id, viewBox: "0 0 10 10", refX: 9, refY: 5, markerWidth: 8, markerHeight: 8, orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M0 0 L10 5 L0 10 z", class: cls }, m);
+  }
+
+  const laneIndex = Object.fromEntries(LANES.map((l, i) => [l.id, i]));
+  const pos = {};
+  for (const s of STAGES) {
+    const li = laneIndex[s.lane];
+    const chips = chipsOf(s);
+    pos[s.id] = { x: LABEL_W + s.col * COL_W + (COL_W - NODE_W) / 2, y: laneTop[li] + 26, s, chips,
+                  bottom: laneTop[li] + 26 + NODE_H + stackHeight(chips.length) };
+  }
+
+  // lanes
+  LANES.forEach((lane, i) => {
+    const y = laneTop[i];
+    const focus = STAGES.some(s => s.lane === lane.id && s.current);
+    el("rect", { x: 0, y: y + 4, width: W, height: laneH[i] - 8, rx: 12, class: `lane-bg${i % 2 ? " alt" : ""}${focus ? " focus" : ""}${lane.open ? " open" : ""}` }, svg);
+    if (lane.open) el("text", { x: 22, y: y + 30, class: "lane-open-tag" }, svg).textContent = "TO BE REDESIGNED";
+    el("text", { x: 22, y: y + 58, class: "lane-name" }, svg).textContent = lane.name;
+    el("text", { x: 22, y: y + 82, class: "lane-sub" }, svg).textContent = lane.sub || "";
+    (lane.sources || []).forEach((src, k) => {
+      const c = src.ours
+        ? { kind: "ours", text: src.ours, title: `Our contribution: ${src.ours}`, ours: "paths" }
+        : { kind: SOURCES[src.key].kind, text: src.label || SOURCES[src.key].short, title: SOURCES[src.key].cite, key: src.key };
+      chip(svg, 22, y + 96 + k * (CHIP_H + CHIP_GAP), LABEL_W - 40, c);
+    });
+  });
+
+  const edgeLayer = el("g", {}, svg);
+  const nodeLayer = el("g", {}, svg);
+
+  // flow arrows inside each lane
+  for (const lane of LANES) {
+    if (lane.flow === false) continue;
+    const row = STAGES.filter(s => s.lane === lane.id).sort((a, b) => a.col - b.col);
+    for (let i = 0; i + 1 < row.length; i++) {
+      const a = pos[row[i].id], b = pos[row[i + 1].id];
+      el("line", { x1: a.x + NODE_W, y1: a.y + NODE_H / 2, x2: b.x - 3, y2: b.y + NODE_H / 2, class: "flow", "marker-end": "url(#arr)" }, edgeLayer);
+    }
+  }
+
+  // links between lanes (they leave below a box's chips and arrive at the top of a box, or the reverse)
+  for (const [from, to, label] of LINKS) {
+    const a = pos[from], b = pos[to];
+    if (!a || !b) { console.warn("LINKS: unknown stage", from, to); continue; }
+    const down = b.y > a.y;
+    const shift = a.s.col === b.s.col ? 0 : (b.s.col > a.s.col ? 22 : -22);
+    const sx = a.x + NODE_W / 2 + shift, tx = b.x + NODE_W / 2 - shift;
+    const flagOffset = s => (s.current ? FLAG_H : 0);
+    const laneFlag = STAGES.some(x => x.lane === a.s.lane && x.current) ? FLAG_H : 0;
+    const sy = down ? a.bottom + 4 + Math.max(flagOffset(a.s), laneFlag) : a.y;
+    const ty = down ? b.y - 3 : b.bottom + 6;
+    const my = (sy + ty) / 2;
+    const now = a.s.current || b.s.current;
+    let d = `M${sx} ${sy} C${sx} ${my} ${tx} ${my} ${tx} ${ty}`;
+    if (down && sy > a.bottom + 4) d = `M${sx} ${a.bottom + 4} L${sx} ${sy} ` + d.slice(d.indexOf("C"));
+    if (!down && a.s.current) {        // from the current stage upwards: leave from its side, clear of the flag
+      const sideX = a.x + NODE_W, sideY = a.y + NODE_H / 2 - 18;
+      d = `M${sideX} ${sideY} C${sideX + 60} ${sideY} ${tx} ${ty + 40} ${tx} ${ty}`;
+    }
+    el("path", { d, class: `cross${now ? " now" : ""}`, "marker-end": `url(#${now ? "arr-now" : "arr"})` }, edgeLayer);
+    if (label) {
+      const t = el("text", { x: (sx + tx) / 2 + 10, y: my + 4, class: "edge-label" }, edgeLayer);
+      t.textContent = label;
+    }
+  }
+
+  // stages
+  for (const s of STAGES) {
+    const { x, y, chips } = pos[s.id];
+    const open = LANES.find(l => l.id === s.lane)?.open;
+    const g = el("g", { class: `stage${open ? " is-open" : ""}`, "data-stage": s.id, tabindex: 0, role: "button", "aria-label": `${s.name}: details` }, nodeLayer);
+    if (s.current) el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: "pulse" }, g);
+    el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: `node${s.current ? " now" : ""}` }, g);
+    const name = el("text", { x: x + NODE_W / 2, y: y + 38, "text-anchor": "middle", class: "name" }, g);
+    name.textContent = s.name;
+    const desc = el("text", { x: x + NODE_W / 2, y: y + 62, "text-anchor": "middle", class: "desc" }, g);
+    desc.textContent = s.desc || "";
+    fitText(name, NODE_W - 26, 18, 11);
+    fitText(desc, NODE_W - 16, 14, 11);
+    if (s.llm) llmIcon(g, x + NODE_W - 6, y + 6, 15);
+    if (s.people) peopleIcon(g, x + NODE_W - 6, y + 6, 15);
+    el("title", {}, g).textContent = `${s.name}: ${s.desc || ""}${s.llm ? " · LLM calls" : ""}${s.people ? " · people" : ""} (click for details)`;
+    chips.forEach((c, k) => chip(nodeLayer, x + 6, y + NODE_H + 8 + k * (CHIP_H + CHIP_GAP), NODE_W - 12, { ...c, open }));
+    if (s.current) {
+      const fx = x + NODE_W / 2, fy = pos[s.id].bottom + 16;
+      el("path", { d: `M${fx - 8} ${fy} L${fx} ${fy - 11} L${fx + 8} ${fy} Z`, class: "flag" }, g);
+      const pill = el("rect", { y: fy, height: 30, rx: 15, class: "flag" }, g);
+      const label = el("text", { x: fx, y: fy + 20, "text-anchor": "middle", class: "flag-text" }, g);
+      label.textContent = "CURRENTLY WORKING HERE";
+      const w = label.getComputedTextLength() + 34;
+      pill.setAttribute("x", fx - w / 2);
+      pill.setAttribute("width", w);
+    }
+  }
+}
+
+function references() {
+  const box = document.getElementById("refs");
+  const usedBy = {};
+  for (const s of STAGES) for (const key of s.sources || []) (usedBy[key] ||= []).push(s.name);
+  for (const lane of LANES) for (const src of lane.sources || []) if (src.key) (usedBy[src.key] ||= []).push(lane.name);
+  const order = Object.keys(SOURCES).sort((a, b) => (SOURCES[a].kind === "paper" ? 0 : 1) - (SOURCES[b].kind === "paper" ? 0 : 1));
+  for (const key of order) {
+    const src = SOURCES[key];
+    const row = document.createElement("div");
+    row.className = "ref";
+    row.dataset.key = key;
+    row.innerHTML = `<span class="key-chip k-${src.kind}"></span><div><div class="cite"></div><div class="used"></div></div>`;
+    row.querySelector(".key-chip").textContent = src.short;
+    row.querySelector(".cite").textContent = src.cite;
+    if (src.suggested) row.querySelector(".key-chip").classList.add("key-suggested");
+    row.querySelector(".used").textContent = usedBy[key] ? `Used in: ${usedBy[key].join(", ")}` : "Not placed on a stage yet";
+    box.appendChild(row);
+  }
+  // hovering a chip in the diagram marks its reference row, and the reverse
+  const rows = [...box.querySelectorAll(".ref")];
+  const chipsFor = key => [...document.querySelectorAll(`#diagram .chip[data-key="${key}"]`)];
+  document.querySelectorAll("#diagram .chip").forEach(c => {
+    const key = c.dataset.key;
+    if (!key) return;
+    c.addEventListener("mouseenter", () => rows.forEach(r => r.classList.toggle("hl-row", r.dataset.key === key)));
+    c.addEventListener("mouseleave", () => rows.forEach(r => r.classList.remove("hl-row")));
+  });
+  rows.forEach(r => {
+    r.addEventListener("mouseenter", () => chipsFor(r.dataset.key).forEach(c => c.classList.add("hl")));
+    r.addEventListener("mouseleave", () => chipsFor(r.dataset.key).forEach(c => c.classList.remove("hl")));
+  });
+}
+
+/* ============================== details panel (no edits needed) ============================== */
+const LANE_NAME = Object.fromEntries(LANES.map(l => [l.id, l.name]));
+const KIND_LABEL = { paper: "Idea from a paper", tool: "Tool or data", ours: "Our contribution" };
+const STAGE_BY_ID = Object.fromEntries(STAGES.map(s => [s.id, s]));
+const panelHistory = [];
+let lastFocus = null;
+
+function h(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") node.className = v; else if (k.startsWith("on")) node.addEventListener(k.slice(2), v); else node.setAttribute(k, v);
+  }
+  for (const c of children.flat()) if (c != null && c !== false) node.append(c);
+  return node;
+}
+// `code like this` inside the text becomes <code>
+function rich(text) {
+  return String(text).split(/(`[^`]+`)/).map(part => part.startsWith("`") && part.endsWith("`") ? h("code", {}, part.slice(1, -1)) : part);
+}
+const section = (title, ...body) => h("section", {}, h("h4", {}, title), ...body);
+const list = (items, cls) => h("ul", cls ? { class: cls } : {}, (items || []).map(i => h("li", {}, rich(i))));
+const sourceButton = key => h("button", { class: `k-${SOURCES[key].kind}`, type: "button", onclick: () => openDetails("source", key) }, SOURCES[key].short);
+const stageButton = id => h("button", { class: "l-stage", type: "button", onclick: () => openDetails("stage", id) }, STAGE_BY_ID[id] ? STAGE_BY_ID[id].name : id);
+
+function stageNeighbours(id) {
+  const s = STAGE_BY_ID[id];
+  if (!s) return { before: [], after: [] };
+  const row = STAGES.filter(x => x.lane === s.lane).sort((a, b) => a.col - b.col);
+  const i = row.indexOf(s);
+  const before = [...(i > 0 ? [row[i - 1].id] : []), ...LINKS.filter(l => l[1] === id).map(l => l[0])];
+  const after = [...(i + 1 < row.length ? [row[i + 1].id] : []), ...LINKS.filter(l => l[0] === id).map(l => l[1])];
+  return { before, after };
+}
+
+function renderStage(id) {
+  const s = STAGE_BY_ID[id];
+  const d = STAGE_DETAILS[id] || {};
+  const body = [];
+  const kind = h("div", { class: "panel-kind" },
+    h("b", { class: "key-chip k-tool" }, s ? `${LANE_NAME[s.lane]} · step ${STAGES.filter(x => x.lane === s.lane && x.col <= s.col).length}` : "Research harness"),
+    s && s.llm ? h("span", { class: "badge b-llm" }, "LLM calls") : null,
+    s && s.people ? h("span", { class: "badge b-people" }, "People") : null,
+    s && s.current ? h("span", { class: "badge b-now" }, "Currently working here") : null);
+  body.push(kind, h("h3", {}, d.title || (s ? s.name : id)));
+  if (s && LANES.find(l => l.id === s.lane)?.open) body.push(h("p", { class: "open-banner" },
+    "To be redesigned for the new research system. Shown as it was in the previous design, where runs came from a fixed pipeline over a corpus index."));
+  if (s && s.desc) body.push(h("p", { class: "lead" }, s.desc));
+  if (d.what) body.push(section("What it is", h("p", {}, rich(d.what))));
+  if (d.how) body.push(section("How it works here", list(d.how)));
+  if (d.io) body.push(section("Input → output", h("div", { class: "io" }, h("div", {}, rich(d.io[0])), h("span", { "aria-hidden": "true" }, "→"), h("div", {}, rich(d.io[1])))));
+  if (d.example) body.push(section("Example", h("p", { class: "example" }, rich(d.example))));
+  const ours = d.ours || (s && (s.oursTitle || s.ours));
+  if (ours) body.push(section("Our contribution", h("p", { class: "ours-box", id: "panel-ours" }, rich(ours))));
+  if (d.differs) body.push(section("Known limits", list(d.differs, "differs")));
+  if (s && s.sources && s.sources.length) body.push(section("Ideas used (click for details)", h("div", { class: "links" }, s.sources.map(sourceButton))));
+  const { before, after } = stageNeighbours(id);
+  if (before.length || after.length) body.push(section("Connected steps",
+    h("div", { class: "links" }, ...before.map(x => h("span", {}, stageButton(x))), before.length ? h("span", { "aria-hidden": "true" }, "→ this step →") : null, ...after.map(stageButton))));
+  if (d.settings) body.push(section("Settings", list(d.settings)));
+  if (d.code) body.push(section("Where in the code", list(d.code.map(c => "`" + c + "`"))));
+  return body;
+}
+
+function renderSource(key) {
+  const src = SOURCES[key];
+  const d = SOURCE_DETAILS[key] || {};
+  const usedBy = STAGES.filter(s => (s.sources || []).includes(key)).map(s => s.id);
+  const lanes = LANES.filter(l => (l.sources || []).some(x => x.key === key)).map(l => l.name);
+  const body = [
+    h("div", { class: "panel-kind" }, h("b", { class: `key-chip k-${src.kind}${src.suggested ? " key-suggested" : ""}` },
+      KIND_LABEL[src.kind] + (src.suggested ? " · suggested, to confirm" : ""))),
+    h("h3", {}, src.short),
+  ];
+  if (d.what) body.push(section(src.kind === "paper" ? "The idea" : "What it is", h("p", {}, rich(d.what))));
+  if (d.how) body.push(section("How we use it", list(d.how)));
+  if (d.differs) body.push(section("Where we differ", list(d.differs, "differs")));
+  if (usedBy.length || lanes.length) body.push(section("Used in (click for details)",
+    h("div", { class: "links" }, usedBy.map(stageButton), lanes.map(n => h("span", { class: "key-chip k-tool" }, n)))));
+  body.push(section("Reference", h("p", { class: "cite-text" }, src.cite), src.url ? h("p", {}, h("a", { href: src.url, target: "_blank", rel: "noopener" }, src.url)) : null));
+  return body;
+}
+
+function openDetails(kind, key, { focusOurs = false, fromHistory = false } = {}) {
+  const panel = document.getElementById("panel");
+  if (!panel.classList.contains("open")) { lastFocus = document.activeElement; panelHistory.length = 0; }
+  else if (!fromHistory && panel.dataset.current) panelHistory.push(panel.dataset.current);
+  panel.dataset.current = `${kind}:${key}`;
+  const body = panel.querySelector(".panel-body");
+  body.replaceChildren(...(kind === "source" ? renderSource(key) : renderStage(key)));
+  body.scrollTop = 0;
+  panel.querySelector(".back").hidden = panelHistory.length === 0;
+  panel.classList.add("open");
+  panel.setAttribute("aria-hidden", "false");
+  document.getElementById("scrim").classList.add("open");
+  document.querySelectorAll("#diagram .stage").forEach(g => g.classList.toggle("selected", kind === "stage" && g.dataset.stage === key));
+  history.replaceState(null, "", `#${kind}=${encodeURIComponent(key)}`);
+  if (focusOurs) {
+    const box = document.getElementById("panel-ours");
+    if (box) { box.scrollIntoView({ block: "center" }); box.classList.add("flash"); }
+  }
+  panel.querySelector(".close").focus({ preventScroll: true });
+}
+
+function closeDetails() {
+  const panel = document.getElementById("panel");
+  panel.classList.remove("open");
+  panel.setAttribute("aria-hidden", "true");
+  panel.dataset.current = "";
+  document.getElementById("scrim").classList.remove("open");
+  document.querySelectorAll("#diagram .stage").forEach(g => g.classList.remove("selected"));
+  history.replaceState(null, "", location.pathname + location.search);
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+
+function detailsTarget(node) {
+  if (node.dataset.stage) return ["stage", node.dataset.stage, {}];
+  if (node.dataset.key) return ["source", node.dataset.key, {}];
+  if (node.dataset.ours) return ["stage", node.dataset.ours, { focusOurs: true }];
+  return null;
+}
+
+function wireDetails() {
+  const panel = h("aside", { id: "panel", class: "panel", role: "dialog", "aria-modal": "true", "aria-hidden": "true", "aria-label": "Details" },
+    h("div", { class: "panel-top" },
+      h("button", { class: "back", type: "button", onclick: () => { const prev = panelHistory.pop(); if (prev) { const [k, v] = prev.split(/:(.*)/s); openDetails(k, v, { fromHistory: true }); } } }, "← Back"),
+      h("span", { class: "spacer" }),
+      h("button", { class: "close", type: "button", onclick: closeDetails, "aria-label": "Close details" }, "Close ✕")),
+    h("div", { class: "panel-body" }));
+  document.body.append(h("div", { id: "scrim", class: "scrim", onclick: closeDetails }), panel);
+  const diagram = document.getElementById("diagram");
+  const activate = event => {
+    const node = event.target.closest(".stage, .chip");
+    if (!node) return;
+    const target = detailsTarget(node);
+    if (target) openDetails(target[0], target[1], target[2]);
+  };
+  diagram.addEventListener("click", activate);
+  diagram.addEventListener("keydown", event => {
+    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(event); }
+  });
+  document.querySelectorAll(".ref").forEach(row => {
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.addEventListener("click", () => openDetails("source", row.dataset.key));
+    row.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetails("source", row.dataset.key); } });
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && panel.classList.contains("open")) closeDetails(); });
+  // a link like thesis_pipeline.html#stage=edc opens that panel
+  const fromHash = () => {
+    const m = location.hash.match(/^#(stage|source)=(.+)$/);
+    if (!m) return;
+    const key = decodeURIComponent(m[2]);
+    if (m[1] === "source" ? SOURCES[key] : (STAGE_BY_ID[key] || STAGE_DETAILS[key])) openDetails(m[1], key);
+  };
+  window.addEventListener("hashchange", fromHash);
+  fromHash();
+}
+
+function legend() {
+  const box = document.getElementById("legend");
+  const item = (drawIcon, label) => {
+    const span = document.createElement("span");
+    const svg = el("svg", { viewBox: "0 0 30 30" }, span);
+    drawIcon(svg);
+    span.append(label);
+    box.appendChild(span);
+  };
+  item(svg => llmIcon(svg, 15, 15, 13), LLM_LABEL);
+  item(svg => peopleIcon(svg, 15, 15, 13), "People");
+  const add = html => { const s = document.createElement("span"); s.innerHTML = html; box.appendChild(s); };
+  add('<i class="key-now"></i>Currently working here');
+  add('<b class="key-chip k-paper">EDC</b>Idea from a paper');
+  add('<b class="key-chip k-tool">DBLP</b>Tool or data');
+  add('<b class="key-chip k-ours">full provenance</b>Our contribution');
+  add('<b class="key-chip k-paper key-suggested">CodeAct</b>Suggested reference');
+  add('<i class="key-open"></i>To be redesigned');
+}
+
+document.getElementById("title").textContent = TITLE;
+document.getElementById("subtitle").textContent = SUBTITLE;
+document.getElementById("footer").textContent = FOOTER;
+legend();
+draw();
+references();
+wireDetails();
+</script>
+</body>
+</html>
