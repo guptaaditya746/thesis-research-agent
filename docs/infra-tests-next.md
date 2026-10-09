@@ -87,3 +87,49 @@ The tests below cover that gap. Each one says why it is needed and which doc it 
 - S4 PARTIAL — all three HTTPS targets return 200; no proxy variables or Apptainer/Singularity are present.
 
 Decision changes: direct egress invalidates the network assumption in sandbox option 3, so untrusted model-generated shell commands must wait for an isolation boundary. Raw vLLM endpoints are reachable without auth, so the command loop needs that boundary before running on the shared node. L3 also shows the two SUB replicas cannot guarantee eight simultaneous 16k requests with zero preemptions at the initial cache size; cap active sequences or increase measured KV capacity. See `docs/decisions-after-tests.md` §1 and §4.
+
+## Round 3: the sandbox session (planned 9 Oct 2026)
+
+Round 2 left one blocker: model-written commands cannot run until each one is isolated (A6, S3, S4).
+No root, no user namespaces and no Apptainer leave one kernel mechanism an ordinary user can apply to
+their own processes: Landlock. Round 3 tests it, together with the gaps a review of all docs and results
+found. Step-by-step instructions: `docs/codex-sandbox-runbook.md`.
+
+### Tests in the session
+
+| id | Test | Why |
+|---|---|---|
+| S5a | Kernel, LSM list and **Landlock ABI version** (syscall, not just `/sys/kernel/security/lsm`) | ABI ≥ 4 is needed to block TCP (internet and the raw vLLM ports), ≥ 6 to block signals and abstract unix sockets. The ABI decides which design is possible. |
+| S5b | The A6 checks under a Landlock wrapper (landrun or a small ctypes wrapper), plus raw vLLM ports refused | The isolation boundary decisions §4 asks for, without root. |
+| S6 | Escape checks from inside: `kill -0` on vLLM/LiteLLM/harness, readable `/proc/<pid>/environ`, SSH key and `.env`, UDP send, unix sockets, background process outliving its step | The agent runs as the same user, so below ABI 6 it could kill the model servers. "Outside the agent's reach" (plan.md §5.3) must be checked, not assumed. A process outliving its step breaks one step = one event and replay. |
+| S5c | Agent toolchain: pinned, hashed, read-only `agent-venv` + ripgrep and jq built at job start; local wheel store for `pip install --no-index` into scratch; `chmod u+w` must fail under Landlock | The agent gets the same tools in every run (reproducible, comparable) and can install from a fixed store without internet. `chmod a-w` alone does not stop the owner. |
+| S1b | `ulimit -v` that stops a runaway allocation but lets numpy and pandas load; `memory.stat` anon vs file; scratch on Ceph, not tmpfs `/tmp` | S1's memory cases were skipped, not passed; Landlock does nothing about memory. |
+| L6 | Through LiteLLM: a worst-case orchestrator step against the 120 s `request_timeout`; JSON-schema structured output (research-brief schema) on Qwen3.8; whether `seed` reaches vLLM; output divergence at temperature 0 alone and under load | The worst step (~124 s) exceeds the hard-coded timeout with no retry. Concept generation (§5.1–5.2) needs structured output. The two-procedure test and run variance need to know how deterministic calls are. |
+| R2 | 8 concurrent writers appending to one file on Ceph, with and without `flock`; `fsync` p50/p99 | Subagents share `claims.jsonl` (plan.md §5.3); a torn line corrupts provenance. |
+| R3 | Record HF snapshot commits and chat-template hashes of the served models; `--revision` and `HF_HUB_OFFLINE=1` on `agent-layout`; `uv sync --locked` | Every job re-resolves packages and models today, so two runs may not use identical software. |
+| H1 | Prototype broker: `claim` inside the sandbox talks to a harness-owned process over a unix socket; the broker assigns step ids and owns the hash-chained logs; chain head also written to the Slurm log | Harness commands run inside the sandbox, so the log must not be writable from it; a same-user process could otherwise recompute the whole chain. |
+
+Also in the session: push the `agent-layout` branch of llm-setup, which exists only on the node.
+
+### Flaws found in earlier tests or plans
+
+- **S5 as first planned** checked only whether Landlock is on, not its ABI (fixed in S5a above).
+- **D3** (anchors) passed on 6 KB outline files only; it must be re-run on full Docling text like C1 and D4.
+- **Run-time budget** (decisions §6) counts decode only. At ~2.4k tokens/s prefill, a cache miss at 50k context costs ~20 s per step; the C2 re-run at 30k must report prefill seconds per step.
+- **S1** memory cases were skipped, not passed (job already at 67.9 GB of 64 GB); S1b replaces them.
+- **B5** used invented sentences; it must quote real Docling passages (tables, math, ligatures) and run under the sandbox.
+- **C5** must pin the command environment (`PYTHONHASHSEED=0`, `LC_ALL=C.UTF-8`, `TZ=UTC`), or re-execution diffs are noise.
+- **Evaluation size** is closer to 100+ runs than 40 (6–10 concepts × 3–5 runs plus five ablations).
+
+### Later
+
+| id | Test | When |
+|---|---|---|
+| R1 | Anchors on full Docling text: table cells, footnotes, Markdown escapes, ligatures, NFC/NFD, soft hyphens, astral math characters (Python code points vs JS UTF-16 offsets), and model-retyped quotes (curly quotes, dashes) mapped back to raw offsets | after the corpus is frozen, before the harness |
+| C8 | Context overflow: masking or compaction must start before 61,440 prompt tokens (65,536 minus `max_tokens`) | after the harness |
+| F7 | `kill -9` the orchestrator's vLLM mid-request (L4 was a graceful stop); the harness waits through a 5+ min restart and logs it | after the harness |
+| E1 | Capacity: queue wait for a 3×A100 48 h job (`sacctmgr show qos`, `sprio`), cold starts, prefill, judge and D screening for 100+ runs. D screening of full papers (~35k tokens) does not fit the 32k subagent context. | before evaluation |
+| E2 | Judges on local models through LiteLLM: citation-guard, nuggetizer, Text2KGBench scripts (parse rate, context fit; the judge should not be the agent's own model); owlrl closure time on DBLP + CS-KG; the Langfuse OTLP copy through the tunnel | before evaluation |
+| H2 | Argilla: where it runs, search backend, access for two annotators, export round trip for κ | before evaluation |
+| X1 | Only if Landlock fails: commands in Docker on Omen over the tunnel; per-command latency × 300 steps; corpus copy matches the manifest | if S5 fails |
+| — | T2 retest and T3 after updating `omen-tunnels-external` on the laptop; C2 at 30k tokens; L3 routing; C1 and D4 on full text; B5 and C3–C7 | as before |
