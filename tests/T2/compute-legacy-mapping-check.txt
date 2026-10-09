@@ -1,0 +1,5 @@
+thesis-redis PING: b'-NOAUTH Authentication required.\r\n', 0.078s
+thesis-postgres SSLRequest response: b'N', 0.007s
+tracing GET: HTTP 200, 0.027s
+MinIO GET: HTTP 403, 0.007s
+ClickHouse GET: HTTP 200, 0.006s

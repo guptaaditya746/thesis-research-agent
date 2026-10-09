@@ -1,0 +1,12 @@
+Laptop Codex read-only report (user relayed, 2026-10-09):
+- Existing control socket: /run/user/1000/omen-tunnels-1000-prims-thinkpad/gateway.sock
+- Gateway host: webis3.medien.uni-weimar.de
+- `omen-tunnels-external laptop list` succeeded.
+- Active gateway SSH process PID 37078 requested:
+  -R 127.0.0.1:29304:127.0.0.1:23004
+  -R 127.0.0.1:55433:127.0.0.1:35433
+  -R 127.0.0.1:56380:127.0.0.1:36380
+  -R 127.0.0.1:49000:127.0.0.1:29000
+  -R 127.0.0.1:58123:127.0.0.1:38123
+- These are legacy gateway ports; the repo `omen-tunnels-external` wrapper is expected to add 1000.
+- After switching the compute hop to base `omen-tunnels`, all five read-only service probes answered. Redis returned NOAUTH, indicating a reachable Redis endpoint that requires authentication.
