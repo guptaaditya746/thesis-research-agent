@@ -79,6 +79,25 @@
   .ref .cite { font-size: 15px; }
   .ref .used { font-size: 13.5px; color: var(--muted); }
   footer { margin-top: 18px; font-size: 14px; color: var(--muted); }
+  .ref-group { font: 600 19px/1.2 Georgia, "Times New Roman", serif; margin: 22px 0 2px; }
+  .ref-note { margin: 0 0 8px; }
+  /* concept briefs */
+  .briefs { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+  .brief { border: 1.6px solid var(--node-line); border-radius: 12px; padding: 16px 18px; background: var(--node); }
+  .brief h3 { font: 600 21px/1.25 Georgia, "Times New Roman", serif; margin: 0 0 4px; }
+  .brief .def { margin: 0 0 12px; font-size: 16px; line-height: 1.45; }
+  .brief dl { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 6px 12px; margin: 0; font-size: 15px; }
+  .brief dt { color: var(--muted); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; padding-top: 2px; }
+  .brief dd { margin: 0; }
+  .brief .diff { background: var(--now-soft); border-radius: 4px; padding: 0 4px; box-shadow: inset 0 -2px 0 var(--now); }
+  .brief table { border-collapse: collapse; font-size: 14px; width: 100%; }
+  .brief th, .brief td { border: 1px solid var(--node-line); padding: 4px 8px; text-align: left; }
+  .brief th { background: var(--lane-a); font-weight: 600; }
+  .brief th small { color: var(--muted); font-weight: 400; }
+  .brief td { color: var(--muted); }
+  .brief ul { margin: 0; padding-left: 18px; }
+  .brief code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--lane-a); padding: 1px 5px; border-radius: 4px; }
+  @media (max-width: 760px) { .briefs { grid-template-columns: minmax(0, 1fr); } .brief dl { grid-template-columns: minmax(0, 1fr); } }
   /* setup status */
   .status { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .status-row { display: grid; grid-template-columns: 170px 110px minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: baseline;
@@ -163,8 +182,11 @@
   <h2>Setup status</h2>
   <p class="hint" id="status-note"></p>
   <div class="status" id="status"></div>
-  <h2>Where the ideas come from</h2>
-  <div class="refs" id="refs"></div>
+  <h2>What a concept looks like</h2>
+  <p class="hint" id="brief-note"></p>
+  <div class="briefs" id="briefs"></div>
+  <h2>The works we use</h2>
+  <div id="refs"></div>
   <footer id="footer"></footer>
 </main>
 
@@ -197,42 +219,54 @@ const LLM_LABEL = "LLM call (Qwen)";
 const LLM_ICON_SRC = null;   // e.g. "data:image/png;base64,...."  (null = generic LLM icon)
 
 const SOURCES = {
-  dblp:     { short: "DBLP",            kind: "tool",  cite: "DBLP knowledge graph and RDF schema (papers, authors, venues, citations)" },
-  cskg:     { short: "CS-KG 2.0",       kind: "tool",  cite: "CS-KG 2.0 ontology of computer-science entities and relations (KMi, The Open University)" },
-  ambigqa:  { short: "AmbigQA",         kind: "paper", cite: "Min et al. AmbigQA: Answering Ambiguous Open-domain Questions. EMNLP 2020 (an ambiguous question is split into disambiguated interpretations before it is answered)" },
-  sweagent: { short: "SWE-agent",       kind: "paper", cite: "Yang et al. SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering. NeurIPS 2024 (an LLM agent working freely in a shell; mini-SWE-agent is its minimal version)" },
-  codeact:  { short: "CodeAct",         kind: "paper", cite: "Wang et al. Executable Code Actions Elicit Better LLM Agents. ICML 2024 (the agent acts by writing and running code)" },
-  latm:     { short: "Tool making",     kind: "paper", cite: "Cai et al. Large Language Models as Tool Makers. ICLR 2024 (the agent writes its own reusable tools)" },
-  provo:    { short: "PROV-O",          kind: "tool",  cite: "W3C PROV-O: The PROV Ontology. W3C Recommendation, 2013 (a standard vocabulary for provenance: what was derived from what, by which activity)" },
-  webanno:  { short: "Web Annotation",  kind: "tool",  suggested: true, cite: "W3C Web Annotation Data Model, 2017 (TextQuoteSelector: exact, prefix, suffix; TextPositionSelector: start, end). Suggested, to confirm", url: "https://www.w3.org/TR/annotation-model/" },
-  li2026:   { short: "Direct corpus interaction", kind: "paper", suggested: true, cite: "Li et al. Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction. arXiv 2605.05242, May 2026 (an agent searches raw text with grep, reads and scripts, no index). Suggested, to confirm", url: "https://arxiv.org/abs/2605.05242" },
-  sen2026:  { short: "Grep & harnesses", kind: "paper", suggested: true, cite: "Sen et al. Is Grep All You Need? How Agent Harnesses Reshape Agentic Search. arXiv 2605.15184, May 2026 (the harness and how tool output is shown change results more than the retriever). Suggested, to confirm", url: "https://arxiv.org/abs/2605.15184" },
-  ambiguity:{ short: "Su & Cardie 2026", kind: "paper", suggested: true, cite: "Su & Cardie. Knowing but Not Showing: LLMs Recognize Ambiguity but Rarely Ask Clarifying Questions. arXiv 2605.25284, May 2026. Suggested, to confirm", url: "https://arxiv.org/abs/2605.25284" },
-  skills:   { short: "Agent Skills",    kind: "tool",  suggested: true, cite: "Anthropic. Equipping agents for the real world with Agent Skills. Engineering blog, October 2025; released as an open standard, December 2025 (a tool = a folder with a SKILL.md: name, description, body, bundled scripts). Suggested, to confirm", url: "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills" },
-  qin2026:  { short: "Trace tampering", kind: "paper", suggested: true, cite: "Qin et al. LLM Agents Can Easily Tamper With Their Own Traces. arXiv 2609.30266, September 2026 (log through an interceptor outside the agent's control). Suggested, to confirm", url: "https://arxiv.org/abs/2609.30266" },
-  ledger:   { short: "LEDGER",          kind: "paper", suggested: true, cite: "Kim, Miao & Liu. LEDGER: Claim-to-Evidence Trace Graphs for Auditing LLM Agents. arXiv 2608.18398, August 2026. Suggested, to confirm", url: "https://arxiv.org/abs/2608.18398" },
-  goo2026:  { short: "Citation faithfulness", kind: "paper", suggested: true, cite: "Goo et al. Evaluating and Guarding Citation Faithfulness in Agentic Scientific Synthesis. arXiv 2607.20527, July 2026 (verifier strictness alone moves the unsupported rate from 3% to 18%: validate the judge on human gold). Suggested, to confirm", url: "https://arxiv.org/abs/2607.20527" },
-  edc:      { short: "EDC",             kind: "paper", cite: "Zhang & Soh. Extract, Define, Canonicalize: An LLM-based Framework for Knowledge Graph Construction. EMNLP 2024" },
-  zobel:    { short: "Zobel 1998",      kind: "paper", cite: "Zobel. How Reliable are the Results of Large-Scale Information Retrieval Experiments? SIGIR 1998 (pooled gold is biased)" },
-  argilla:  { short: "Argilla",         kind: "tool",  cite: "Argilla: open-source annotation tool" },
-  kappa:    { short: "Cohen's κ",       kind: "paper", cite: "Cohen. A Coefficient of Agreement for Nominal Scales. 1960 (agreement between reviewers)" },
-  benchie:  { short: "BenchIE",         kind: "paper", cite: "Gashteovski et al. BenchIE: Fact-Based Open Information Extraction Evaluation. ACL 2022 (accepted variants of a fact)" },
-  webnlg:   { short: "WebNLG 2020",     kind: "paper", cite: "WebNLG+ Challenge 2020 text-to-RDF evaluation (matching levels)" },
-  text2kg:  { short: "Text2KGBench",    kind: "paper", cite: "Mihindukulasooriya et al. Text2KGBench: Ontology-Driven Knowledge Graph Generation from Text. ISWC 2023" },
-  euzenat:  { short: "Euzenat 2007",    kind: "paper", cite: "Euzenat. Semantic Precision and Recall for Ontology Alignment Evaluation. IJCAI 2007 (entailed matching)" },
-  judge:    { short: "LLM judge",       kind: "paper", cite: "Zheng et al. Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. NeurIPS 2023; Mo et al. KGGen (MINE), 2025" },
-  trec:     { short: "TREC RAG 2024",   kind: "paper", cite: "Pradeep et al. Nugget Evaluation for the TREC 2024 RAG Track. 2024 (vital nuggets → vital recall)" },
-  bootstrap:{ short: "Bootstrap",       kind: "paper", cite: "Efron & Tibshirani. An Introduction to the Bootstrap. 1993 (95% intervals over questions)" },
-  // infrastructure and reused code (checked 9 Oct 2026)
-  vllm:     { short: "vLLM",            kind: "tool",  cite: "vLLM 0.21.0: OpenAI-compatible model server with paged KV cache and prefix caching", url: "https://docs.vllm.ai/" },
-  litellm:  { short: "LiteLLM",         kind: "tool",  cite: "LiteLLM proxy: one OpenAI-compatible gateway in front of the vLLM backends, with model aliases, routing and limits", url: "https://docs.litellm.ai/" },
-  llmsetup: { short: "llm-setup",       kind: "tool",  cite: "final-final-llm-setup (our serving repository, submodule related/final-final-llm-setup): Slurm batch job, supervisor, LiteLLM config, status API", url: "https://github.com/guptaaditya746/thesis-llm-setup" },
-  minisweagent: { short: "mini-swe-agent", kind: "tool", cite: "mini-swe-agent 2.4.6 (SWE-agent team, MIT): a bash-only agent loop of about 200 lines with pluggable models and environments", url: "https://github.com/SWE-agent/mini-swe-agent" },
-  langfuse: { short: "Langfuse",        kind: "tool",  cite: "Langfuse (self-hosted on Omen): LLM trace UI; accepts OpenTelemetry GenAI spans over OTLP HTTP at /api/public/otel from v3.22", url: "https://langfuse.com/integrations/native/opentelemetry" },
-  docling:  { short: "Docling",         kind: "tool",  cite: "Docling 2.110.0 (MIT): PDF to Markdown with table structure; identical output on reconversion (D2)", url: "https://github.com/docling-project/docling" },
-  dcilite:  { short: "DCI-Agent-Lite",  kind: "tool",  cite: "DCI-Agent-Lite (MIT): the official code of Li et al. 2026; bash-only corpus search with five context-management levels", url: "https://github.com/DCI-Agent/DCI-Agent-Lite" },
-  cookbook: { short: "Research prompts", kind: "tool", cite: "Anthropic claude-cookbooks, patterns/agents/prompts (MIT): research_lead_agent.md, research_subagent.md and citations_agent.md from Anthropic's multi-agent research system", url: "https://github.com/anthropics/claude-cookbooks/tree/main/patterns/agents/prompts" },
-  citeguard:{ short: "citation-guard",  kind: "tool",  cite: "GooTec/citation-guard v0.2.0 (MIT): the code, verifier prompts and conformal guard of Goo et al. 2026", url: "https://github.com/GooTec/citation-guard" },
+  // ---- we build on: methods, standards, data and code taken over (citations verified 9 Oct 2026)
+  dblp:     { short: "DBLP KG",         kind: "tool",  role: "build", cite: "Ackermann, Bast, Beckermann, Kalmbach, Neises, Ollinger. The dblp Knowledge Graph and SPARQL Endpoint. TGDK 2(2):3:1–3:23, 2024. doi:10.4230/TGDK.2.2.3", url: "https://doi.org/10.4230/TGDK.2.2.3" },
+  cskg:     { short: "CS-KG 2.0",       kind: "tool",  role: "build", cite: "Dessí, Osborne, Buscaldi, Reforgiato Recupero, Motta. CS-KG 2.0: A Large-scale Knowledge Graph of Computer Science. Scientific Data 12:964, 2025. doi:10.1038/s41597-025-05200-8", url: "https://doi.org/10.1038/s41597-025-05200-8" },
+  ambigqa:  { short: "AmbigQA",         kind: "paper", role: "build", cite: "Min, Michael, Hajishirzi, Zettlemoyer. AmbigQA: Answering Ambiguous Open-domain Questions. EMNLP 2020, pp. 5783–5797. doi:10.18653/v1/2020.emnlp-main.466", url: "https://aclanthology.org/2020.emnlp-main.466/" },
+  sweagent: { short: "SWE-agent",       kind: "paper", role: "build", cite: "Yang, Jimenez, Wettig, Lieret, et al. SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering. NeurIPS 2024. arXiv:2405.15793 (mini-SWE-agent has no paper of its own; cite this plus the repository and version)", url: "https://arxiv.org/abs/2405.15793" },
+  codeact:  { short: "CodeAct",         kind: "paper", role: "build", cite: "Wang, Chen, Yuan, Zhang, et al. Executable Code Actions Elicit Better LLM Agents. ICML 2024. arXiv:2402.01030", url: "https://arxiv.org/abs/2402.01030" },
+  latm:     { short: "Tool making",     kind: "paper", role: "build", cite: "Cai, Wang, Ma, Chen, Zhou. Large Language Models as Tool Makers. ICLR 2024 (venue to confirm on OpenReview). arXiv:2305.17126", url: "https://arxiv.org/abs/2305.17126" },
+  skills:   { short: "Agent Skills",    kind: "tool",  role: "build", cite: "Zhang, Lazuka, Murag. Equipping agents for the real world with Agent Skills. Anthropic Engineering Blog, 16 Oct 2025; open standard at agentskills.io since 18 Dec 2025", url: "https://agentskills.io/specification" },
+  provo:    { short: "PROV-O",          kind: "tool",  role: "build", cite: "Lebo, Sahoo, McGuinness (eds.). PROV-O: The PROV Ontology. W3C Recommendation, 30 April 2013", url: "https://www.w3.org/TR/prov-o/" },
+  webanno:  { short: "Web Annotation",  kind: "tool",  role: "build", cite: "Sanderson, Ciccarese, Young (eds.). Web Annotation Data Model. W3C Recommendation, 23 February 2017 (TextQuoteSelector, TextPositionSelector)", url: "https://www.w3.org/TR/annotation-model/" },
+  edc:      { short: "EDC",             kind: "paper", role: "build", cite: "Zhang, Soh. Extract, Define, Canonicalize: An LLM-based Framework for Knowledge Graph Construction. EMNLP 2024, pp. 9820–9836. doi:10.18653/v1/2024.emnlp-main.548", url: "https://aclanthology.org/2024.emnlp-main.548/" },
+  benchie:  { short: "BenchIE",         kind: "paper", role: "build", cite: "Gashteovski, Yu, Kotnis, Lawrence, Niepert, Glavaš. BenchIE: A Framework for Multi-Faceted Fact-Based Open Information Extraction Evaluation. ACL 2022, pp. 4472–4490. doi:10.18653/v1/2022.acl-long.307", url: "https://aclanthology.org/2022.acl-long.307/" },
+  webnlg:   { short: "WebNLG+ 2020",    kind: "paper", role: "build", cite: "Castro Ferreira et al. The 2020 Bilingual, Bi-Directional WebNLG+ Shared Task: Overview and Evaluation Results (WebNLG+ 2020). Proc. 3rd WebNLG+ Workshop, ACL, pp. 55–76, 2020", url: "https://aclanthology.org/2020.webnlg-1.7/" },
+  text2kg:  { short: "Text2KGBench",    kind: "paper", role: "build", cite: "Mihindukulasooriya, Tiwari, Enguix, Lata. Text2KGBench: A Benchmark for Ontology-Driven Knowledge Graph Generation from Text. ISWC 2023, LNCS, pp. 247–265. doi:10.1007/978-3-031-47243-5_14", url: "https://doi.org/10.1007/978-3-031-47243-5_14" },
+  euzenat:  { short: "Euzenat 2007",    kind: "paper", role: "build", cite: "Euzenat. Semantic Precision and Recall for Ontology Alignment Evaluation. IJCAI 2007, pp. 348–353" },
+  judge:    { short: "LLM judge",       kind: "paper", role: "build", cite: "Zheng et al. Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. NeurIPS 2023 Datasets and Benchmarks. arXiv:2306.05685", url: "https://arxiv.org/abs/2306.05685" },
+  trec:     { short: "Nugget recall",   kind: "paper", role: "build", cite: "Pradeep, Thakur, Upadhyay, Campos, Craswell, Soboroff, Dang, Lin. The Great Nugget Recall: Automating Fact Extraction and RAG Evaluation with Large Language Models. SIGIR 2025, pp. 180–190. doi:10.1145/3726302.3730090", url: "https://doi.org/10.1145/3726302.3730090" },
+  kappa:    { short: "Cohen's κ",       kind: "paper", role: "build", cite: "Cohen. A Coefficient of Agreement for Nominal Scales. Educational and Psychological Measurement 20(1):37–46, 1960; bands from Landis & Koch, Biometrics 33(1):159–174, 1977" },
+  bootstrap:{ short: "BCa bootstrap",   kind: "paper", role: "build", cite: "Efron. Better Bootstrap Confidence Intervals. JASA 82(397):171–185, 1987; Efron & Tibshirani. An Introduction to the Bootstrap. Chapman & Hall, 1993" },
+  argilla:  { short: "Argilla",         kind: "tool",  role: "build", cite: "Argilla: open-source data annotation tool (version 2.8.0; maintenance mode). github.com/argilla-io/argilla", url: "https://github.com/argilla-io/argilla" },
+  docling:  { short: "Docling",         kind: "tool",  role: "build", cite: "Auer et al. Docling Technical Report. arXiv:2408.09869, 2024 (version used: 2.110.0, MIT)", url: "https://arxiv.org/abs/2408.09869" },
+  vllm:     { short: "vLLM",            kind: "tool",  role: "build", cite: "vLLM 0.21.0: OpenAI-compatible model server with paged KV cache and prefix caching", url: "https://docs.vllm.ai/" },
+  litellm:  { short: "LiteLLM",         kind: "tool",  role: "build", cite: "LiteLLM proxy: one OpenAI-compatible gateway in front of the vLLM backends, with model aliases, routing and limits", url: "https://docs.litellm.ai/" },
+  llmsetup: { short: "llm-setup",       kind: "tool",  role: "build", cite: "final-final-llm-setup (our serving repository, submodule related/final-final-llm-setup): Slurm batch job, supervisor, LiteLLM config, status API", url: "https://github.com/guptaaditya746/thesis-llm-setup" },
+  minisweagent: { short: "mini-swe-agent", kind: "tool", role: "build", cite: "mini-swe-agent 2.4.6 (SWE-agent team, MIT): a bash-only agent loop of about 200 lines with pluggable models and environments", url: "https://github.com/SWE-agent/mini-swe-agent" },
+  langfuse: { short: "Langfuse",        kind: "tool",  role: "build", cite: "Langfuse (self-hosted on Omen): LLM trace UI; accepts OpenTelemetry GenAI spans over OTLP HTTP at /api/public/otel from v3.22", url: "https://langfuse.com/integrations/native/opentelemetry" },
+  cookbook: { short: "Research prompts", kind: "tool", role: "build", cite: "Hadfield, Zhang, Lien, Scholz, et al. How we built our multi-agent research system. Anthropic Engineering Blog, 13 Jun 2025; prompts released in anthropics/claude-cookbooks, patterns/agents/prompts (MIT)", url: "https://www.anthropic.com/engineering/multi-agent-research-system" },
+  citeguard:{ short: "citation-guard",  kind: "tool",  role: "build", cite: "GooTec/citation-guard v0.2.0 (MIT): the code, verifier prompts and conformal guard of Goo et al. 2026", url: "https://github.com/GooTec/citation-guard" },
+
+  // ---- we compare against: closest systems and candidate baselines
+  li2026:   { short: "Direct corpus interaction", kind: "paper", role: "compare", cite: "Li, Zhang, Wei, Lu, et al. Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction. arXiv:2605.05242, 2026 (preprint; the repository mentions NeurIPS 2026, not confirmed)", url: "https://arxiv.org/abs/2605.05242" },
+  dcilite:  { short: "DCI-Agent-Lite",  kind: "tool",  role: "compare", cite: "DCI-Agent-Lite (MIT): the official code of Li et al. 2026; bash-only corpus search with five context-management levels", url: "https://github.com/DCI-Agent/DCI-Agent-Lite" },
+  sen2026:  { short: "Grep & harnesses", kind: "paper", role: "compare", cite: "Sen, Kasturi, Lumer, Gulati, Subbiah. Is Grep All You Need? How Agent Harnesses Reshape Agentic Search. arXiv:2605.15184, 2026 (preprint)", url: "https://arxiv.org/abs/2605.15184" },
+  flyaoc:   { short: "FlyAOC",          kind: "paper", role: "compare", cite: "Zhang, Moylan, Xiong, Mei, Luo, Ma. FlyAOC: Evaluating Agentic Ontology Curation of Drosophila Scientific Knowledge Bases. NeurIPS 2026 Evaluations & Datasets. arXiv:2602.09163", url: "https://arxiv.org/abs/2602.09163" },
+  intentrl: { short: "IntentRL",        kind: "paper", role: "compare", cite: "Luo, Li, Xie, Zhang, Li, Shen. IntentRL: Training Proactive User-intent Agents for Open-ended Deep Research via Reinforcement Learning. ICML 2026. arXiv:2602.03468", url: "https://arxiv.org/abs/2602.03468" },
+  ledger:   { short: "LEDGER",          kind: "paper", role: "compare", cite: "Kim, Miao, Liu. LEDGER: Claim-to-Evidence Trace Graphs for Auditing LLM Agents. arXiv:2608.18398, 2026 (preprint)", url: "https://arxiv.org/abs/2608.18398" },
+
+  // ---- we cite: findings and standards behind a design or evaluation choice
+  underspec:{ short: "Underspecified Qs", kind: "paper", role: "cite", cite: "Huang, Barlacchi, Pezzelle. Who is the richest club in the championship? Detecting and Rewriting Underspecified Questions Improve QA Performance. arXiv:2602.11938, 2026 (preprint)", url: "https://arxiv.org/abs/2602.11938" },
+  disambig: { short: "Disambiguate first", kind: "paper", role: "cite", cite: "Saparina, Lapata. Disambiguate First, Parse Later: Generating Interpretations for Ambiguity Resolution in Semantic Parsing. Findings of ACL 2025. arXiv:2502.18448", url: "https://arxiv.org/abs/2502.18448" },
+  ambrosia: { short: "AMBROSIA",        kind: "paper", role: "cite", cite: "Saparina, Lapata. AMBROSIA: A Benchmark for Parsing Ambiguous Questions into Database Queries. NeurIPS 2024 Datasets and Benchmarks. arXiv:2406.19073", url: "https://arxiv.org/abs/2406.19073" },
+  ambiguity:{ short: "Su & Cardie 2026", kind: "paper", role: "cite", cite: "Su, Cardie. Knowing but Not Showing: LLMs Recognize Ambiguity but Rarely Ask Clarifying Questions. arXiv:2605.25284, 2026 (preprint)", url: "https://arxiv.org/abs/2605.25284" },
+  ambigds:  { short: "Ambig-DS",        kind: "paper", role: "cite", cite: "Stoisser, Boubnovski Martell, Boldsen, Märtens, Kitchen. Ambig-DS: A Benchmark for Task-Framing Ambiguity in Data-Science Agents. arXiv:2605.09698, 2026 (preprint)", url: "https://arxiv.org/abs/2605.09698" },
+  laquer:   { short: "LAQuer",          kind: "paper", role: "cite", cite: "Hirsch et al. LAQuer: Localized Attribution Queries in Content-grounded Generation. ACL 2025. arXiv:2506.01187", url: "https://arxiv.org/abs/2506.01187" },
+  qin2026:  { short: "Trace tampering", kind: "paper", role: "cite", cite: "Qin, Schmotz, Prinzhorn, Beurer-Kellner, Prabhu, Andriushchenko. LLM Agents Can Easily Tamper With Their Own Traces. arXiv:2609.30266, 2026 (preprint)", url: "https://arxiv.org/abs/2609.30266" },
+  goo2026:  { short: "Citation faithfulness", kind: "paper", role: "cite", cite: "Goo, Kim, Han, Jo, Kim, Kim. Evaluating and Guarding Citation Faithfulness in Agentic Scientific Synthesis. arXiv:2607.20527, 2026 (preprint)", url: "https://arxiv.org/abs/2607.20527" },
+  trace2026:{ short: "TRACE",           kind: "paper", role: "cite", cite: "Kim et al. Beyond the Final Answer: Evaluating the Reasoning Trajectories of Tool-Augmented Agents. ICML 2026. arXiv:2510.02837", url: "https://arxiv.org/abs/2510.02837" },
+  zobel:    { short: "Zobel 1998",      kind: "paper", role: "cite", cite: "Zobel. How Reliable are the Results of Large-Scale Information Retrieval Experiments? SIGIR 1998, pp. 307–314. doi:10.1145/290941.291014", url: "https://doi.org/10.1145/290941.291014" },
 };
 
 const LANES = [
@@ -254,13 +288,13 @@ const STAGES = [
   { id: "scripts",  lane: "toolbox", col: 2, name: "Own scripts",     desc: "Python over the .md",     llm: false, sources: ["codeact"] },
   { id: "subagents",lane: "toolbox", col: 3, name: "Subagents",       desc: "spawn: brief + files",    llm: true,  sources: ["cookbook"], ours: "own log, shared claims" },
   { id: "newtools", lane: "toolbox", col: 4, name: "New tools",       desc: "save_tool: SKILL.md",     llm: true,  sources: ["latm", "skills"] },
-  { id: "claim",    lane: "toolbox", col: 5, name: "Claim tool",      desc: "fact + quote + step",     llm: false, sources: ["webanno"], ours: "only route into the graph", oursTitle: "The claim command is the only way a fact enters the knowledge graph, so provenance is complete by construction" },
+  { id: "claim",    lane: "toolbox", col: 5, name: "Claim tool",      desc: "fact + quote + step",     llm: false, sources: ["webanno", "laquer"], ours: "only route into the graph", oursTitle: "The claim command is the only way a fact enters the knowledge graph, so provenance is complete by construction" },
   // Research system (one question)
   { id: "question", lane: "system",  col: 0, name: "Question",        desc: "as the user asks it",     llm: false },
-  { id: "concepts", lane: "system",  col: 1, name: "Concepts",        desc: "ambiguity axes → briefs", llm: true,  sources: ["ambigqa", "ambiguity"], ours: "corpus-blind, checked", oursTitle: "Concepts are generated without looking at the corpus and checked for researchability (structural check, critic, two-procedure test)" },
+  { id: "concepts", lane: "system",  col: 1, name: "Concepts",        desc: "ambiguity axes → briefs", llm: true,  sources: ["ambigqa", "disambig", "ambrosia", "underspec", "ambiguity", "ambigds", "intentrl"], ours: "corpus-blind, checked", oursTitle: "Concepts are generated without looking at the corpus and checked for researchability (structural check, critic, two-procedure test)" },
   { id: "view",     lane: "system",  col: 2, name: "Research briefs", desc: "definition · shape · CQs", llm: false, sources: ["dblp", "cskg"], ours: "brief; schema derived", oursTitle: "Each concept is a research brief: one-line definition with its measure, an answer shape, competency questions; the subschema is derived from the answer shape" },
   { id: "pick",     lane: "system",  col: 3, name: "User picks one",  desc: "the concept to research", llm: false, people: true },
-  { id: "agent",    lane: "system",  col: 4, name: "Agent",           desc: "complete freedom",        llm: true,  sources: ["sweagent", "li2026", "sen2026"], ours: "every step visible" },
+  { id: "agent",    lane: "system",  col: 4, name: "Agent",           desc: "complete freedom",        llm: true,  sources: ["sweagent", "li2026", "sen2026", "flyaoc"], ours: "every step visible" },
   { id: "kg",       lane: "system",  col: 5, name: "Knowledge graph", desc: "claims → canonical triples", llm: true, sources: ["provo", "edc"], ours: "full provenance" },
   { id: "trace",    lane: "system",  col: 6, name: "Trace back",      desc: "node → step → .md text",  llm: false, people: true, ours: "user traces any fact" },
   // Trace & provenance (written by the harness, read by everything else)
@@ -278,7 +312,7 @@ const STAGES = [
   // Evaluation (proposed redesign: three layers)
   { id: "faith",    lane: "eval",    col: 3, name: "Faithfulness",    desc: "quote supports fact?",    llm: true,  sources: ["goo2026", "citeguard", "judge", "kappa"], ours: "needs no gold" },
   { id: "correct",  lane: "eval",    col: 4, name: "Correctness",     desc: "vs answer key, 3 levels", llm: true,  sources: ["webnlg", "euzenat", "text2kg", "trec"] },
-  { id: "process",  lane: "eval",    col: 5, name: "Process",         desc: "cost · coverage of D",    llm: false, ours: "compared by outcome" },
+  { id: "process",  lane: "eval",    col: 5, name: "Process",         desc: "cost · coverage of D",    llm: false, sources: ["trace2026"], ours: "compared by outcome" },
   { id: "results",  lane: "eval",    col: 6, name: "Results",         desc: "concepts × repetitions",  llm: false, sources: ["bootstrap"] },
   // Gold standard (to be redesigned: D per concept)
   { id: "screen",   lane: "gold",    col: 0, name: "Screen papers",   desc: "every paper, per concept", llm: true,  ours: "coverage rows" },
@@ -298,11 +332,11 @@ const LINKS = [
   ["replay","process",  "cost, coverage"],
   ["view",  "D",        "answer shape = gold template"],
   ["key",   "correct",  "gold"],
-  ["harness", "log",    "interceptor writes"],
+  ["harness", "log",    ""],
   ["log",   "omen",     "copy to Langfuse"],
 ];
 
-const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. Dashed chips: a suggested reference still to confirm. Greyed lanes show the proposed redesign of evaluation and gold (three layers; D per concept), not yet decided. The \"Where it runs\" lane is the infrastructure: its panels give the measured numbers and test ids from tests/RESULTS.md (rounds 1 and 2, 8–9 Oct 2026). Click a box, chip or reference for details (Esc closes); a link ending in #stage=agent or #source=codeact opens that panel directly.";
+const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. A box shows at most two chips; its panel lists every work it uses, and the list below groups all works by role. Greyed lanes show the proposed redesign of evaluation and gold (three layers; D per concept), not yet decided. The \"Where it runs\" lane is the infrastructure: its panels give the measured numbers and test ids from tests/RESULTS.md (rounds 1 and 2, 8–9 Oct 2026). Click a box, chip or reference for details (Esc closes); a link ending in #stage=agent or #source=codeact opens that panel directly.";
 
 /* ---- STAGE_DETAILS / SOURCE_DETAILS: what the panel shows when a box, chip or lane is clicked -------------------------
    STAGE_DETAILS: one entry per STAGES id. SOURCE_DETAILS: one per SOURCES key. Every field is optional:
@@ -411,7 +445,8 @@ const STAGE_DETAILS = {
   concepts: {
     what: "From the question alone, the system proposes concepts: standalone, unambiguous versions of what the user could mean, as many as are sensible.",
     how: [
-      "Generation by ambiguity axes, not a one-shot list: the model names the open choices (entity type, measure, scope, aggregation unit, undefined predicates such as \"best\"), takes the combinations, drops the meaningless ones (at most 12), writes a research brief for each, then ranks and shows the top 3 to 7.",
+      "Why this step exists: 16% to over 50% of benchmark questions are underspecified (Huang et al. 2026), and agents mostly fail by silently committing to one framing (Ambig-DS 2026).",
+      "Generation by ambiguity axes, not a one-shot list (asked directly, LLMs give mostly the preferred reading: Saparina & Lapata 2025): the model names the open choices (entity type, measure, scope, aggregation unit, undefined predicates such as \"best\"), takes the combinations, drops the meaningless ones (at most 12), writes a research brief for each, then ranks and shows the top 3 to 7.",
       "Made without looking at the corpus, so the options are not limited to what happens to be easy to find. The generator gets only a corpus fact sheet (337 CS papers, ACL and EMNLP 2025, DBLP metadata, full text, no external citation data) and every brief carries a \"needs\" line.",
       "Researchable without asking back = the scope names concrete papers, the measure names an operation over named fields, every answer column has a type, no predicate is undefined. Checked three ways: a structural check on the brief JSON, a critic call that judges rather than answers (models flag ambiguity well when asked explicitly: Su & Cardie 2026), and a two-procedure test (the model writes the procedure twice; a judge says whether both give the same table).",
       "One concept is a result of the axes all having one value, never a shortcut; the pick step is shown even then.",
@@ -425,7 +460,7 @@ const STAGE_DETAILS = {
     how: [
       "Brief = {title, definition, measure {operation, of, group_by}, scope, answer_shape {kind: table | graph, columns or node and edge types}, competency_questions, needs, subschema}.",
       "Why this mix: the definition and the answer shape are what a user can compare at a glance; the competency questions are what evaluation needs (each one is a check the answer must pass); a subschema alone makes \"most papers\" and \"most cited\" look identical; a SPARQL pattern is unreadable and there is no triple store any more.",
-      "Cards side by side; differences between cards are highlighted by diffing the measure and scope fields. Terms come from DBLP (Person, Paper, Venue) and CS-KG (Method, Task, Dataset, Metric).",
+      "Cards side by side; differences between cards are highlighted by diffing the measure and scope fields. Terms come from DBLP (Person, Paper, Venue) and CS-KG 2.0 (Method, Task, Material, Metric).",
       "The filled answer shape is exactly what the gold answer key for that concept looks like (see Document D).",
     ],
     io: ["concepts.json", "cards the user can compare; the chosen brief becomes runs/<run>/concept.json"],
@@ -781,7 +816,43 @@ const SOURCE_DETAILS = {
   ambiguity: {
     what: "Models recognise ambiguity when explicitly asked to judge it, but in standard QA almost always answer directly instead of asking; retrieved context makes them even less likely to ask.",
     how: ["The researchability check uses a separate critic call that judges rather than answers. The design moves the one necessary interaction (the pick) to the front, instead of hoping the agent asks mid-run."],
-    differs: ["Related benchmarks: InteractComp (2025/2026) finds the best search agent at 13.7% on ambiguous queries vs 71.5% with full context; IDRBench (2026) finds interaction helps deep-research alignment on average but hurts in 20% of tasks."],
+    differs: ["Related benchmarks: InteractComp (Deng et al., ICML 2026) finds the best search agent at 13.7% on ambiguous queries vs 71.5% with full context; IDRBench (Feng et al., 2026 preprint) finds clarification helps in about 74% of tasks but hurts in about 20%."],
+  },
+  underspec: {
+    what: "Between 16% and over 50% of questions in standard QA benchmarks are underspecified; rewriting them into fully specified questions improves accuracy.",
+    how: ["Evidence that a question like \"who is the best author?\" must be turned into specified concepts before research, and that doing so pays off."],
+  },
+  disambig: {
+    what: "Asked directly, LLMs produce mainly the preferred reading of an ambiguous question; generating the interpretations explicitly first (with an infilling step for the missing ones) improves coverage.",
+    how: ["Why concepts are generated by enumerating ambiguity axes and combining their values instead of asking for a list of interpretations in one shot."],
+    differs: ["Their target is a database query; ours is a research brief over papers. Their finding is a warning that a corpus-blind generator under-produces non-default readings, so concept recall is measured (layer 0)."],
+  },
+  ambrosia: {
+    what: "A benchmark of ambiguous analytical questions (scope, attachment, vagueness), each reading linked to its own executable query; LLMs struggle to recognise and resolve the ambiguity.",
+    how: ["Precedent for the brief's measure field: every interpretation maps to an operation over named fields (count Paper group by first_author), not just to a rephrased question."],
+  },
+  ambigds: {
+    what: "Data-science agents mostly fail by silently committing to the wrong framing of an ambiguous task, not by execution errors; one clarifying question recovers much of the loss, but agents cannot tell when to ask.",
+    how: ["Supports fixing the framing before research and having the system, not the agent, decide when to ask: the user picks one concept up front."],
+  },
+  intentrl: {
+    what: "Trains a deep-research agent to clarify the user's latent intent before long research, beating the clarification modules of commercial deep-research agents.",
+    how: ["The closest system for the concept step: it also clarifies before researching."],
+    differs: ["It refines intent in a multi-turn dialogue learnt with reinforcement learning; we show all concepts at once as research briefs and the user picks one, with no training."],
+  },
+  flyaoc: {
+    what: "Agents search a fixed corpus of 16,898 full-text papers to produce structured knowledge-base annotations; results depend on harness design and tool-use reliability.",
+    how: ["The closest analogue to our setting (a fixed scientific corpus, structured output, process measured), from biology curation."],
+    differs: ["Their output is curation annotations scored against an existing knowledge base; ours is a provenance-complete graph for one user-chosen concept, scored against a gold key built for it."],
+  },
+  laquer: {
+    what: "Attributing generated facts to exact source spans greatly shortens the evidence a reader has to check; attributing decontextualised facts remains hard.",
+    how: ["Supports anchoring every claim to an exact quote rather than to a document or passage."],
+    differs: ["Its hard case is ours too: canonicalised triples are decontextualised, so the anchor is kept on the raw claim and the canonical triple points back to it."],
+  },
+  trace2026: {
+    what: "Tool-using requests have several valid trajectories, so scoring against one reference trajectory is inaccurate; TRACE evaluates trajectories without a reference, on several dimensions.",
+    how: ["Supports scoring free agents by outcome, evidence and cost rather than by route (layer 3)."],
   },
   skills: {
     what: "Agent Skills: a tool is a folder with a SKILL.md (YAML name and description, then the body) and optional bundled scripts. Only name and description are loaded at startup; the body and files are read when the skill is relevant (progressive disclosure).",
@@ -919,6 +990,42 @@ const SOURCE_DETAILS = {
   },
 };
 
+/* ---- BRIEFS: worked example of concepts as research briefs (schema: docs/plan.md §5.2) -------------
+   Fields that differ between the briefs (measure, scope) are highlighted automatically.
+   ---------------------------------------------------------------------------------------------- */
+const BRIEF_NOTE = "Question: \"Who is the best author in the corpus?\" Two of the concepts the generator proposes, each as a research brief. Highlighted: where they differ. The user picks exactly one; its filled answer shape is also the template of the gold answer key.";
+const BRIEFS = [
+  {
+    id: "c1",
+    title: "Most papers in the corpus",
+    definition: "The author who appears, in any author position, on the largest number of papers in the corpus.",
+    measure: { operation: "count", of: "Paper", group_by: "author", order: "desc" },
+    scope: { papers: "all 337 papers" },
+    answer_shape: { kind: "table", columns: [{ name: "author", type: "Person" }, { name: "papers_in_corpus", type: "integer" }, { name: "papers", type: "list<Paper>" }] },
+    competency_questions: ["Which corpus papers list X as an author?", "How many corpus papers does each author have?", "Are two spellings of one name merged (one DBLP person)?"],
+    needs: ["author list per paper"],
+    subschema: { classes: ["Person", "Paper"], relations: ["Paper authoredBy Person"] },
+  },
+  {
+    id: "c3",
+    title: "Most first-author papers at ACL 2025",
+    definition: "The author who appears as first author on the largest number of ACL 2025 papers in the corpus.",
+    measure: { operation: "count", of: "Paper", group_by: "first_author", order: "desc" },
+    scope: { papers: "venue == ACL 2025" },
+    answer_shape: { kind: "table", columns: [{ name: "author", type: "Person" }, { name: "first_author_papers", type: "integer" }, { name: "papers", type: "list<Paper>" }] },
+    competency_questions: ["Which ACL 2025 papers list X as first author?", "How many such papers does each author have?", "Are two spellings of one name merged?"],
+    needs: ["author order per paper", "venue per paper"],
+    subschema: { classes: ["Person", "Paper", "Venue"], relations: ["Paper firstAuthor Person", "Paper publishedAt Venue"] },
+  },
+];
+
+/* ---- ROLES: the groups of the reference list. Every SOURCES entry has role: "build" | "compare" | "cite" */
+const ROLES = {
+  build:   { title: "We build on", note: "Methods, standards, data and code the system takes over directly. Code is copied only where the licence allows; otherwise the idea is reimplemented." },
+  compare: { title: "We compare against", note: "The closest systems and findings: what the design is positioned against, and candidate baselines on our corpus." },
+  cite:    { title: "We cite", note: "Findings, protocols and standards that justify a design or evaluation choice." },
+};
+
 /* ---- STATUS: the "Setup status" table under the diagram -----------------------------------------
    state: "works" | "partial" | "blocked" | "open"   stage: the box its name opens   tests: ids in tests/RESULTS.md
    ---------------------------------------------------------------------------------------------- */
@@ -959,8 +1066,10 @@ const el = (tag, attrs = {}, parent) => {
 };
 
 // chips of a stage: its sources, then its "ours" note
+// at most MAX_CHIPS per box: the first source(s) and the "ours" note; the rest are listed in the box's panel
+const MAX_CHIPS = 2;
 function chipsOf(s) {
-  const out = (s.sources || []).map(key => {
+  const out = (s.sources || []).slice(0, s.ours ? MAX_CHIPS - 1 : MAX_CHIPS).map(key => {
     const src = SOURCES[key];
     if (!src) { console.warn("unknown source", key); return null; }
     return { kind: src.kind, text: src.short, title: src.cite, key, suggested: !!src.suggested };
@@ -1128,9 +1237,16 @@ function references() {
   const usedBy = {};
   for (const s of STAGES) for (const key of s.sources || []) (usedBy[key] ||= []).push(s.name);
   for (const lane of LANES) for (const src of lane.sources || []) if (src.key) (usedBy[src.key] ||= []).push(lane.name);
+  // one group per role (ROLES), papers before tools inside a group
   const order = Object.keys(SOURCES).sort((a, b) => (SOURCES[a].kind === "paper" ? 0 : 1) - (SOURCES[b].kind === "paper" ? 0 : 1));
+  const grids = {};
+  for (const [role, { title, note }] of Object.entries(ROLES)) {
+    box.append(h("h3", { class: "ref-group" }, title), h("p", { class: "hint ref-note" }, note));
+    grids[role] = box.appendChild(h("div", { class: "refs" }));
+  }
   for (const key of order) {
     const src = SOURCES[key];
+    if (!grids[src.role]) console.warn("SOURCES: unknown role", key, src.role);
     const row = document.createElement("div");
     row.className = "ref";
     row.dataset.key = key;
@@ -1139,7 +1255,7 @@ function references() {
     row.querySelector(".cite").textContent = src.cite;
     if (src.suggested) row.querySelector(".key-chip").classList.add("key-suggested");
     row.querySelector(".used").textContent = usedBy[key] ? `Used in: ${usedBy[key].join(", ")}` : "Not placed on a stage yet";
-    box.appendChild(row);
+    (grids[src.role] || grids.cite).appendChild(row);
   }
   // hovering a chip in the diagram marks its reference row, and the reverse
   const rows = [...box.querySelectorAll(".ref")];
@@ -1154,6 +1270,31 @@ function references() {
     r.addEventListener("mouseenter", () => chipsFor(r.dataset.key).forEach(c => c.classList.add("hl")));
     r.addEventListener("mouseleave", () => chipsFor(r.dataset.key).forEach(c => c.classList.remove("hl")));
   });
+}
+
+function briefCards() {
+  document.getElementById("brief-note").textContent = BRIEF_NOTE;
+  const box = document.getElementById("briefs");
+  // a sub-field is highlighted when its value is not the same in every brief
+  const differs = (field, sub) => new Set(BRIEFS.map(b => JSON.stringify((b[field] || {})[sub]))).size > 1;
+  const parts = (field, b) => Object.entries(b[field] || {}).map(([k, v], i) =>
+    [i ? " · " : "", h("span", differs(field, k) ? { class: "diff", title: `differs between concepts: ${k}` } : {}, k === "operation" || k === "papers" ? String(v) : `${k.replace("_", " ")} ${v}`)]).flat();
+  for (const b of BRIEFS) {
+    const shape = b.answer_shape;
+    const table = h("table", {},
+      h("thead", {}, h("tr", {}, shape.columns.map(c => h("th", {}, c.name, h("br"), h("small", {}, c.type))))),
+      h("tbody", {}, h("tr", {}, shape.columns.map(() => h("td", {}, "…")))));
+    box.append(h("article", { class: "brief", "aria-label": `Concept ${b.id}: ${b.title}` },
+      h("h3", {}, b.title),
+      h("p", { class: "def" }, b.definition),
+      h("dl", {},
+        h("dt", {}, "Measure"), h("dd", {}, parts("measure", b)),
+        h("dt", {}, "Scope"), h("dd", {}, parts("scope", b)),
+        h("dt", {}, "Answer shape"), h("dd", {}, table),
+        h("dt", {}, "Competency questions"), h("dd", {}, h("ul", {}, b.competency_questions.map(q => h("li", {}, q)))),
+        h("dt", {}, "Needs"), h("dd", {}, b.needs.join("; ")),
+        h("dt", {}, "Subschema"), h("dd", {}, `${b.subschema.classes.join(", ")} · ${b.subschema.relations.join(", ")} (derived, shown on request)`))));
+  }
 }
 
 function statusTable() {
@@ -1344,7 +1485,6 @@ function legend() {
   add('<b class="key-chip k-paper">EDC</b>Idea from a paper');
   add('<b class="key-chip k-tool">DBLP</b>Tool or data');
   add('<b class="key-chip k-ours">full provenance</b>Our contribution');
-  add('<b class="key-chip k-paper key-suggested">CodeAct</b>Suggested reference');
   add('<i class="key-open"></i>To be redesigned');
 }
 
@@ -1356,6 +1496,7 @@ draw();
 references();
 wireDetails();
 statusTable();
+briefCards();
 </script>
 </body>
 </html>
