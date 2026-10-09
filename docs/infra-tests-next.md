@@ -73,7 +73,7 @@ The tests below cover that gap. Each one says why it is needed and which doc it 
 ## Round 2 results (9 Oct 2026)
 
 - T1 PASS — external gateway target is offset by 1000; `list` shows the shifted gateway column.
-- T2 partial/fail — laptop probes reached tracing (200), Thesis Postgres, MinIO (403 AccessDenied), and ClickHouse (200), while compute-side requests still reset. The compute SSH master lands on `webis3`, where all five expected reverse-forward listeners are refused. Compare the laptop gateway master’s host to confirm whether SSH load balancing split the tunnels; see `tests/T2/`.
+- T2 partial/fail — laptop probes reached tracing (200), Thesis Postgres, MinIO (403 AccessDenied), and ClickHouse (200), while compute-side requests still reset. Laptop and compute gateway SSH masters both land on `webis3`; all five expected reverse-forward listeners are refused there. The laptop's Omen hop works but its expected `-R` forwards are absent; inspect the helper's active SSH arguments and forwarding policy. See `tests/T2/`.
 - T3 NOT RUN — T2 connectivity is not working; the eight-hour heartbeat would not measure tunnel stability.
 - T4 PASS — second same-node start reports “Already running”; the first tunnel stays up.
 - L1 PASS (in allocation) — all three model backends, LiteLLM and status ready in 11m14s; doctor passed; KV 79,371/64,848/64,848 initially.
