@@ -1,0 +1,1 @@
+{"requested_input_tokens": 48000, "usage": {"completion_tokens": 2, "prompt_tokens": 48034, "total_tokens": 48036, "completion_tokens_details": null, "prompt_tokens_details": null}, "finish_reason": "stop", "ttft_seconds": 20.308226719032973, "total_seconds": 20.31022139498964, "content": "No", "reasoning": "", "error": null}

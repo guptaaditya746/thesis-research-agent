@@ -1,0 +1,6 @@
+{"step": 1, "label": "longest-paper", "stdout_bytes": 19185, "stderr_bytes": 0, "observation_bytes": 8240, "context_tokens_before": 8, "context_tokens_after": 1745, "exit_code": 0}
+{"step": 2, "label": "large-stdout", "stdout_bytes": 100001, "stderr_bytes": 0, "observation_bytes": 8240, "context_tokens_before": 8, "context_tokens_after": 1048, "exit_code": 0}
+{"step": 3, "label": "large-stderr", "stdout_bytes": 0, "stderr_bytes": 100000, "observation_bytes": 0, "context_tokens_before": 8, "context_tokens_after": 2072, "exit_code": 0}
+{"step": 4, "label": "50mb-output", "stdout_bytes": 50000000, "stderr_bytes": 0, "observation_bytes": 8240, "context_tokens_before": 8, "context_tokens_after": 8215, "exit_code": 0}
+{"run_dir": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/tests/C1/run", "longest_paper": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/UI/files/harness/corpus_data/outlines/2025-acl-long-1127.md", "steps": 4, "largest_stdout": 50000000, "largest_context_observation_bytes": 8240, "events": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/tests/C1/run/events.jsonl"}
+PASS: verified 4 event hashes

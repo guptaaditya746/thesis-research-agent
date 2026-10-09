@@ -1,0 +1,72 @@
+[
+  {
+    "paper_id": "2025-acl-long-999",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.999.pdf",
+    "seconds": 234.70603674510494,
+    "chars": 231091,
+    "error": null
+  },
+  {
+    "paper_id": "2025-acl-long-1031",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1031.pdf",
+    "seconds": 126.44210104690865,
+    "chars": 170165,
+    "error": null
+  },
+  {
+    "paper_id": "2025-acl-long-935",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.935.pdf",
+    "seconds": 119.78083223616704,
+    "chars": 103804,
+    "error": null
+  },
+  {
+    "paper_id": "2025-acl-long-625",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.625.pdf",
+    "seconds": 138.28150132577866,
+    "chars": 186387,
+    "error": null
+  },
+  {
+    "paper_id": "2025-acl-long-1458",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1458.pdf",
+    "seconds": 60.11184260621667,
+    "chars": 96328,
+    "error": null
+  },
+  {
+    "paper_id": "2025-emnlp-main-1755",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1755.pdf",
+    "seconds": 121.16771636065096,
+    "chars": 128900,
+    "error": null
+  },
+  {
+    "paper_id": "2025-emnlp-main-1418",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1418.pdf",
+    "seconds": 72.32099434407428,
+    "chars": 151982,
+    "error": null
+  },
+  {
+    "paper_id": "2025-emnlp-main-971",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.971.pdf",
+    "seconds": 49.170269067399204,
+    "chars": 142298,
+    "error": null
+  },
+  {
+    "paper_id": "2025-emnlp-main-356",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.356.pdf",
+    "seconds": 84.65494044683874,
+    "chars": 101244,
+    "error": null
+  },
+  {
+    "paper_id": "2025-emnlp-main-1032",
+    "pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1032.pdf",
+    "seconds": 21.38272677594796,
+    "chars": 45529,
+    "error": null
+  }
+]

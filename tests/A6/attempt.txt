@@ -1,0 +1,4 @@
+Date: 2026-10-08, Slurm job 7048 on gammaweb08 (GPU node)
+Instruction: Run commands directly on the allocated compute node; no bwrap sandbox was used.
+`bwrap` is not installed on the node. The fallback `unshare -rn true` fails with `unshare: write failed /proc/self/uid_map: Operation not permitted`.
+A6 therefore remains blocked/unrun; no claim of a working sandbox command is made. A CPU-partition run would also require a separate CPU allocation.

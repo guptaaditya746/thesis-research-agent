@@ -1,0 +1,4 @@
+{"request": 0, "ttft_s": 0.7841629050672054, "latency_s": 7.20089651690796, "usage": {"completion_tokens": 300, "prompt_tokens": 32013, "total_tokens": 32313, "completion_tokens_details": null, "prompt_tokens_details": null}, "error": null}
+{"request": 1, "ttft_s": 3.020210660994053, "latency_s": 8.380987622309476, "usage": {"completion_tokens": 300, "prompt_tokens": 32013, "total_tokens": 32313, "completion_tokens_details": null, "prompt_tokens_details": null}, "error": null}
+{"request": 2, "ttft_s": 15.37619393505156, "latency_s": 19.353705928195268, "usage": {"completion_tokens": 300, "prompt_tokens": 32013, "total_tokens": 32313, "completion_tokens_details": null, "prompt_tokens_details": null}, "error": null}
+{"request": 3, "ttft_s": 11.161047073081136, "latency_s": 19.195257051847875, "usage": {"completion_tokens": 300, "prompt_tokens": 32013, "total_tokens": 32313, "completion_tokens_details": null, "prompt_tokens_details": null}, "error": null}

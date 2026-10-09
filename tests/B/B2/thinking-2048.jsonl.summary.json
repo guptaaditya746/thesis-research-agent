@@ -1,0 +1,11 @@
+{
+  "n": 50,
+  "one_block_pct": 16.0,
+  "reasoning_nonempty_pct": 100.0,
+  "reasoning_block_missing_count": 0,
+  "length_cut_count": 3,
+  "mean_reasoning_tokens": 940.38,
+  "p95_reasoning_tokens": 2048,
+  "mean_content_tokens": 21.26,
+  "mean_seconds": 7.28583235421218
+}

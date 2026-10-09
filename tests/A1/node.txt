@@ -1,0 +1,14 @@
+Date: 2026-10-08
+SLURMD_NODENAME: gammaweb08
+Slurm job: 7048 (interactive; 3×GPU, 16 CPU, 64 GiB requested; 48-hour allocation)
+GPU: 3× NVIDIA A100-SXM4-40GB, 40960 MiB each
+Driver: 580.159.04
+NVIDIA-SMI-reported CUDA: 13.0
+Python: 3.13.12 from /tmp/xepi3167/llm-setup/venv
+PyTorch: 2.11.0+cu130; CUDA 13.0; torch.cuda.device_count() = 3
+vLLM: 0.21.0
+CPU: 16
+Memory: 503 GiB total / 415 GiB available
+Disk: `/scratch` absent; node `/tmp` tmpfs 252 GiB total, 231 GiB free; Ceph 11 PiB total, 3.1 PiB free
+HF cache: 365 GB
+Result: PASS when using the node-local environment from `final-final-llm-setup`; system Python alone is not a serving environment.

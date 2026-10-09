@@ -1,0 +1,2 @@
+{"request": 0, "ttft_s": 8.088578619994223, "latency_s": 11.345645768102258, "usage": {"completion_tokens": 300, "prompt_tokens": 48013, "total_tokens": 48313, "completion_tokens_details": null, "prompt_tokens_details": null}, "error": null}
+{"request": 1, "ttft_s": 18.689629648346454, "latency_s": 21.948069834150374, "usage": {"completion_tokens": 300, "prompt_tokens": 48013, "total_tokens": 48313, "completion_tokens_details": null, "prompt_tokens_details": null}, "error": null}
