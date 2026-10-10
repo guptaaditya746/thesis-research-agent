@@ -1,6 +1,15 @@
-import json,socket,sys
-p=sys.argv[1]
-for i in range(100):
- req={'step_id':999999,'s':f's{i}','p':'reports','o':i,'file':'paper.md','quote':f'quote {i}'}
- s=socket.socket(socket.AF_UNIX); s.connect(p); s.sendall(json.dumps(req).encode()+b'\n'); s.recv(1000); s.close()
-print('submitted=100 forged_step_id=999999')
+import json
+import os
+import socket
+
+fd = int(os.environ["CLAIM_FD"])
+channel = socket.socket(fileno=fd)
+with channel.makefile("rwb") as stream:
+    for i in range(100):
+        request = {"step_id": 999999, "s": f"s{i}", "p": "reports", "o": i,
+                   "file": "paper.md", "quote": f"quote {i}"}
+        stream.write(json.dumps(request).encode() + b"\n")
+        stream.flush()
+        if stream.readline() != b'{"ok":true}\n':
+            raise SystemExit(f"claim {i} was not acknowledged")
+print("submitted=100 forged_step_id=999999")

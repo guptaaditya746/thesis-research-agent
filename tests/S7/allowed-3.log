@@ -1,0 +1,7 @@
+PYTHON=2
+GREP=8
+RG=8
+JQ=true
+IMPORTS=ok
+SCRATCH=ok
+/bin/bash: line 1: /mnt/ceph/storage/data-tmp/current/xepi3167/.local/bin/uv: Permission denied

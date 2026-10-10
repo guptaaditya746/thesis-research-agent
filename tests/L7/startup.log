@@ -1,0 +1,53 @@
+[0:00:00] checking the profile and vLLM options
+[0:00:06] session 20261010T115138Z-71a553de on gammaweb08; logs in runtime/20261010T115138Z-71a553de
+[0:00:06] models: orch on GPU 0, sub on GPU 1, sub-2 on GPU 2 (loading in parallel; usually 5-20 min)
+[0:00:23] orch: initialising the engine (0:00:16) · sub: initialising the engine (0:00:16) · sub-2: initialising the engine (0:00:16)
+[0:00:39] orch: initialising the engine (0:00:32) · sub: loading weights 0% (0:00:32) · sub-2: loading weights 0% (0:00:32)
+[0:00:55] orch: loading weights 9% (0:00:48) · sub: loading weights 0% (0:00:48) · sub-2: loading weights 0% (0:00:48)
+[0:01:11] orch: loading weights 20% (0:01:04) · sub: loading weights 0% (0:01:04) · sub-2: loading weights 0% (0:01:04)
+[0:01:28] orch: loading weights 30% (0:01:21) · sub: loading weights 0% (0:01:21) · sub-2: loading weights 0% (0:01:21)
+[0:01:44] orch: loading weights 41% (0:01:37) · sub: loading weights 0% (0:01:37) · sub-2: loading weights 0% (0:01:37)
+[0:02:00] orch: loading weights 52% (0:01:53) · sub: loading weights 0% (0:01:53) · sub-2: loading weights 0% (0:01:53)
+[0:02:16] orch: loading weights 62% (0:02:09) · sub: loading weights 0% (0:02:09) · sub-2: loading weights 0% (0:02:09)
+[0:02:32] orch: loading weights 73% (0:02:25) · sub: loading weights 0% (0:02:25) · sub-2: loading weights 0% (0:02:25)
+[0:02:49] orch: loading weights 85% (0:02:42) · sub: loading weights 0% (0:02:42) · sub-2: loading weights 0% (0:02:42)
+[0:03:05] orch: loading weights 95% (0:02:58) · sub: loading weights 0% (0:02:58) · sub-2: loading weights 0% (0:02:58)
+[0:03:21] orch: loading weights 98% (0:03:14) · sub: loading weights 0% (0:03:14) · sub-2: loading weights 0% (0:03:14)
+[0:03:37] orch: loading weights 98% (0:03:30) · sub: loading weights 25% (0:03:30) · sub-2: loading weights 25% (0:03:30)
+[0:03:53] orch: weights loaded (0:03:46) · sub: loading weights 25% (0:03:46) · sub-2: loading weights 25% (0:03:46)
+[0:04:10] orch: compiling (0:04:03) · sub: loading weights 25% (0:04:03) · sub-2: loading weights 25% (0:04:03)
+[0:04:26] orch: compiling (0:04:19) · sub: loading weights 25% (0:04:19) · sub-2: loading weights 25% (0:04:19)
+[0:04:42] orch: compiling (0:04:35) · sub: loading weights 25% (0:04:35) · sub-2: loading weights 25% (0:04:35)
+[0:04:58] orch: compiling (0:04:51) · sub: loading weights 25% (0:04:51) · sub-2: loading weights 25% (0:04:51)
+[0:05:14] orch: compiling (0:05:07) · sub: loading weights 25% (0:05:07) · sub-2: loading weights 25% (0:05:07)
+[0:05:31] orch: compiling (0:05:24) · sub: loading weights 25% (0:05:24) · sub-2: loading weights 25% (0:05:24)
+[0:05:47] orch: compiling (0:05:40) · sub: loading weights 25% (0:05:40) · sub-2: loading weights 25% (0:05:40)
+[0:06:03] orch: compiling (0:05:56) · sub: loading weights 25% (0:05:56) · sub-2: loading weights 25% (0:05:56)
+[0:06:19] orch: compiling (0:06:12) · sub: loading weights 25% (0:06:12) · sub-2: loading weights 25% (0:06:12)
+[0:06:36] orch: compiling (0:06:29) · sub: loading weights 25% (0:06:29) · sub-2: loading weights 25% (0:06:29)
+[0:06:52] orch: compiling (0:06:45) · sub: loading weights 50% (0:06:45) · sub-2: loading weights 50% (0:06:45)
+[0:07:08] orch: compiling (0:07:01) · sub: loading weights 50% (0:07:01) · sub-2: loading weights 50% (0:07:01)
+[0:07:24] orch: compiling (0:07:17) · sub: loading weights 50% (0:07:17) · sub-2: loading weights 50% (0:07:17)
+[0:07:40] orch: compiling (0:07:33) · sub: loading weights 50% (0:07:33) · sub-2: loading weights 50% (0:07:33)
+[0:07:57] orch: sizing the KV cache (0:07:50) · sub: loading weights 50% (0:07:50) · sub-2: loading weights 50% (0:07:50)
+[0:08:13] orch: sizing the KV cache (0:08:06) · sub: loading weights 50% (0:08:06) · sub-2: loading weights 50% (0:08:06)
+[0:08:15] orch: ready after 0:08:08
+[0:08:29] sub: loading weights 50% (0:08:22) · sub-2: loading weights 50% (0:08:22)
+[0:08:45] sub: loading weights 50% (0:08:38) · sub-2: loading weights 50% (0:08:38)
+[0:09:01] sub: loading weights 50% (0:08:54) · sub-2: loading weights 50% (0:08:54)
+[0:09:17] sub: loading weights 50% (0:09:10) · sub-2: loading weights 50% (0:09:10)
+[0:09:34] sub: loading weights 50% (0:09:27) · sub-2: loading weights 50% (0:09:27)
+[0:09:50] sub: loading weights 75% (0:09:43) · sub-2: loading weights 75% (0:09:43)
+[0:10:06] sub: loading weights 75% (0:09:59) · sub-2: loading weights 75% (0:09:59)
+[0:10:22] sub: weights loaded (0:10:15) · sub-2: weights loaded (0:10:15)
+[0:10:38] sub: compiling (0:10:31) · sub-2: compiling (0:10:31)
+[0:10:54] sub: compiling (0:10:47) · sub-2: compiling (0:10:47)
+[0:11:10] sub: sizing the KV cache (0:11:03) · sub-2: sizing the KV cache (0:11:03)
+[0:11:12] sub: ready after 0:11:05
+[0:11:12] sub-2: ready after 0:11:05
+[0:11:19] gateway: ready after 0:00:06
+[0:11:21] status: ready after 0:00:02
+[0:11:21] ready: gateway http://127.0.0.1:4000/v1 · status http://127.0.0.1:8010/v1/status
+[0:11:21] watching 5 services; Ctrl-C or `scancel` stops the session
+[0:12:11] session: stopping (stopped with `llm-setup stop`)
+[0:12:11] session: stopped (nothing was running)

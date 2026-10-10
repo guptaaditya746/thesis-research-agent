@@ -1,0 +1,10 @@
+{"id": "t01", "content": "```bash\ncurl -s \"https://api.semanticscholar.org/graph/v1/paper/search?query=dense+sparse+retrieval+comparison&fields=title,abstract,year,authors&limit=20\"\n```", "block_count": 1, "finish_reason": "stop", "seconds": 1.6476031811907887}
+{"id": "t02", "content": "```bash\ngrep -RniE 'dataset|corpus|collection' /corpus | grep -iE 'retrieval|passage' | head -30\n```", "block_count": 1, "finish_reason": "stop", "seconds": 1.0958848781883717}
+{"id": "t03", "content": "```bash\ngrep -Rni 'question answering' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6718822410330176}
+{"id": "t04", "content": "```bash\ngrep -RniE 'contrastive.*(rerank|re-rank|re rank)|rerank.*contrastive|re-rank.*contrastive|contrastive.*listwise|contrastive.*pairwise' /corpus | head -40\n```", "block_count": 1, "finish_reason": "stop", "seconds": 1.545764836948365}
+{"id": "t05", "content": "```bash\ngrep -Rni 'recall@100' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.7651073238812387}
+{"id": "t06", "content": "```bash\ngrep -RniE 'multilingual|multi-lingual|cross-lingual|cross-linguistic' /corpus | head -40\n```", "block_count": 1, "finish_reason": "stop", "seconds": 1.1159127219580114}
+{"id": "t07", "content": "```bash\nls -la\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.33239559084177017}
+{"id": "t08", "content": "```bash\ngrep -Rni 'MS MARCO' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6819844511337578}
+{"id": "t09", "content": "```bash\ngrep -Rni 'zero-shot' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6738663064315915}
+{"id": "t10", "content": "```bash\ngrep -Rni 'retrieval augmented generation' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.7484630029648542}

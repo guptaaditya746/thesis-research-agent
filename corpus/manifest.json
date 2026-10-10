@@ -1,0 +1,3381 @@
+{
+  "source": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input",
+  "paper_count": 337,
+  "converted_count": 336,
+  "failure_count": 1,
+  "docling_version": "2.110.0",
+  "do_ocr": false,
+  "do_table_structure": true,
+  "papers": [
+    {
+      "id": "p2",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/02.pdf",
+      "source_sha256": "682074cb270eadb99c0a0c5249eef0ef64150ce2e3f780a7a7d0505e8a9b7e48",
+      "markdown_sha256": "89fd60ae6daa14076d6c14910b61f900a8e8bc931358f17e8e84538613045525",
+      "bytes": 122825,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 60.631,
+      "failure": null
+    },
+    {
+      "id": "p3",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/03.pdf",
+      "source_sha256": "c0b91287ed3158b1a9417bebb0983d4c608c5c132fc0c024021d0214177542d8",
+      "markdown_sha256": "485b9f73c88c107dde713085847d6b40583d977cda85468519b290ac44b9437c",
+      "bytes": 39792,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.717,
+      "failure": null
+    },
+    {
+      "id": "p4",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/04.pdf",
+      "source_sha256": "7a6d966b78a205efe0943e9188f16ec33e470526da1066df5406922fafb4f0d6",
+      "markdown_sha256": "9e28951ba7636fe1716485fd0b547632736f014027e8cbc31a06121f42c6d8b4",
+      "bytes": 68924,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 43.67,
+      "failure": null
+    },
+    {
+      "id": "p5",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/05.pdf",
+      "source_sha256": "5f8233152e459b901b33979c8bdc0363aa7f3719f22a6c6f2db421300db6b5af",
+      "markdown_sha256": "8c1fbb250f9b9e34dc8ebce56bea1dae817795be5c887b598a0527c11590e3f0",
+      "bytes": 37275,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 7.087,
+      "failure": null
+    },
+    {
+      "id": "p6",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/06.pdf",
+      "source_sha256": "05ac3ee948f4a87d6babf243cdd66bd982521b6ed31214e9d19245dd2d2ab0cc",
+      "markdown_sha256": "1231e24194daa678c458cec6ceecc775a3569d3e51ead13e116dedf35e59092b",
+      "bytes": 50315,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 12.198,
+      "failure": null
+    },
+    {
+      "id": "p7",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/07.pdf",
+      "source_sha256": "14d1951bdbcc12beae3cf5902a2a91d9871399424ae13f17e6bd44bb871b596c",
+      "markdown_sha256": "eb3d0aeac808b02ed5019dd194fc97d13b4e9b02a54a17b4c81f2ad8c08040c0",
+      "bytes": 74870,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.379,
+      "failure": null
+    },
+    {
+      "id": "p8",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/08.pdf",
+      "source_sha256": "2e0ac4be914e4ece5ae559cb9d36a3038397bf01b7443a98177c684a96c8ce27",
+      "markdown_sha256": "520905aea8b1ca9c060dbfc9510ff428bb5cd332c82c316d9309c1bbaa0d4d87",
+      "bytes": 65527,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 20.155,
+      "failure": null
+    },
+    {
+      "id": "p9",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/09.pdf",
+      "source_sha256": "f49a6c8300d7e68081560390ab59fab246ece161ff90d009c140f5dbc47dd446",
+      "markdown_sha256": "27539c0763cd3a6f53a104c90bde1249bade412704def8d485b16bcf64195f44",
+      "bytes": 41649,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 22.795,
+      "failure": null
+    },
+    {
+      "id": "p10",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/10.pdf",
+      "source_sha256": "ee9fe1f320e01fda2d9220800eb23762efe46676bba68abe75b7eece2009cfa3",
+      "markdown_sha256": "55dec3f1d10accb3f51448ca325b0d49408e81f872be54abd596376974d60a4e",
+      "bytes": 43005,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 10.045,
+      "failure": null
+    },
+    {
+      "id": "p11",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/11.pdf",
+      "source_sha256": "b5e4c0477be48f9da400f2f5617e846f41715a4a69ad06c316e50ba54b79bd61",
+      "markdown_sha256": "7a29e4600b646fb352694e8944e5c16330b54c37f9980ec621ed1099b954c141",
+      "bytes": 60921,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 22.713,
+      "failure": null
+    },
+    {
+      "id": "p12",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/12.pdf",
+      "source_sha256": "939ff5ea644eb768d6822e864ebc5f3c57df959a5e515137215da4319515530a",
+      "markdown_sha256": "c55151bd95d5015adaae0c7ca46e66fafd1b84e69bce161f77b198a606ae9a6b",
+      "bytes": 46915,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.265,
+      "failure": null
+    },
+    {
+      "id": "p13",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/13.pdf",
+      "source_sha256": "f84649e688181e529938ebde7986fc991a2ef3f0b9dc6dc0021774b265083fbd",
+      "markdown_sha256": "4e401d59a49ce45c83eaf8dc88ad4c38bccac0eaecffd4984bbc1e56e7201c14",
+      "bytes": 45185,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 11.436,
+      "failure": null
+    },
+    {
+      "id": "p16",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/16.pdf",
+      "source_sha256": "649cf7b59232783dd8487db1f120d042c5e5255461a3da0d586afef867ff18fd",
+      "markdown_sha256": "3f8afd60ec5e3c0fb4866166c0a9dbc546f76cd2a57536edf5a992e4cdd47c04",
+      "bytes": 33085,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 10.116,
+      "failure": null
+    },
+    {
+      "id": "p17",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/17.pdf",
+      "source_sha256": "1f3fd1aab84fddaefc0835a4cb8602e3fb99f899cfa5c18da137dc457449e23a",
+      "markdown_sha256": "3a0211adc379ff3e797743c265111b719afb60303324d01af6d711b0cb0e2d9b",
+      "bytes": 44271,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 11.262,
+      "failure": null
+    },
+    {
+      "id": "p19",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/19.pdf",
+      "source_sha256": "c97e9e92ae9645c45eb0a4cfd5bf56a5870c5c10236daebea2d3d5180876d8ad",
+      "markdown_sha256": "492894fdf99d75d44ee633be213047d9dc47bc779e31723635e9945984731914",
+      "bytes": 42606,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 9.832,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1010",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1010.pdf",
+      "source_sha256": "5e11450b31e039a953009319b517c002ff6a16cbbc5df5f89cb76522d95a5ff3",
+      "markdown_sha256": "bdbc2ffa23fb16941ce8b8d3a59d51fe32939ad8fa5dc6f5c67d25443e478a60",
+      "bytes": 66723,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.056,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-102",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.102.pdf",
+      "source_sha256": "55858648fd35d7278caaa51a1a4ab478bceb1c278edd84d1de9074e8e08b9eea",
+      "markdown_sha256": "a37c8df1aeedab07e17a2000eec984a1b1529c6d9929fd4c971db4d16d13b99b",
+      "bytes": 58290,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 29.626,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1020",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1020.pdf",
+      "source_sha256": "e0faa6103d8f0e3f3dd757a61f920dde3d51de9fc33b86106a92a4daec1aa4d5",
+      "markdown_sha256": "c76851640ef95d73266a01b24d84adf2a3d14a776e12ed05a6b50be0d7b91be8",
+      "bytes": 69849,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.152,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1031",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1031.pdf",
+      "source_sha256": "efb9ebe3a9aa1563378c39219ee7d218c86f1f00102e4ace969c6fc6a9e95e1d",
+      "markdown_sha256": "9411647b7cdefff32cdf2314d40271b991574d13ad181b9b7fef131f85090f97",
+      "bytes": 170330,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 124.853,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1042",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1042.pdf",
+      "source_sha256": "58422c64fa6e55c1d12cac69dff1bd7d9c7b59e3e29a3105140f4a82eaa4ebc3",
+      "markdown_sha256": "856cc2c697fe38b04ff3f495874e5c26eb51e50024cb81764ee71c2561509076",
+      "bytes": 83385,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.55,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1052",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1052.pdf",
+      "source_sha256": "9f7cd50cc30110df972f150ead94711d44281a6fa3c94e8b10e2ade6020f2a76",
+      "markdown_sha256": "cbe25d1c9be33834810ae420869c446b0fe6c2063ddc3d5a844dfc710d62be22",
+      "bytes": 92351,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 92.115,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1063",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1063.pdf",
+      "source_sha256": "b9423fd08e307ad0e8a2085717c0f1418dceab1706df998fd8d6345bc313e3d6",
+      "markdown_sha256": "ec064927046078f8cf67b922228d3b8a07c82a3c7fcc26133119f708afc0621c",
+      "bytes": 70465,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.525,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1074",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1074.pdf",
+      "source_sha256": "0e9af917673cf0dee41627bf81476d2d59b868fbcd0e7352878e88fe2e498c83",
+      "markdown_sha256": "80e7cc80b56e65b97be0231fd4cb00ee05918661ccf04c58a991dbdbcf3b7288",
+      "bytes": 76082,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 49.108,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1085",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1085.pdf",
+      "source_sha256": "3a95ca7970e6f48b14d67df11c580724b24a06ac8ba19e407907b0c75782951f",
+      "markdown_sha256": "9e738d0957eb45ae96ae0bae913e1a291bdb09c75c3b99d0921454293f379c82",
+      "bytes": 83099,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 65.281,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1095",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1095.pdf",
+      "source_sha256": "c4306fe53c9425c36887d48c3871a1337a29c2bf38c8c2f81c255aa29af58d1f",
+      "markdown_sha256": "32133588df3abf65212f40d6161333fdf3a244c2a35c9174592b79c956021bae",
+      "bytes": 58288,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 28.293,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1106",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1106.pdf",
+      "source_sha256": "366cd1ee74c15b54cee620dbe2e1a23524f0338f7222d80e537a30eb3c66c790",
+      "markdown_sha256": "ef64fa5ae1b2c577a00c8284a9902db9889275a011eb925bb10780c852102506",
+      "bytes": 86277,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.757,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1117",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1117.pdf",
+      "source_sha256": "33527be80e3fed243839ff74907e5798ce50dc43479aa36c92d1e6249f09f97e",
+      "markdown_sha256": "33d20ee357663173b4bfedb27c26c8348f2329466debf603991972206035cee9",
+      "bytes": 70701,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.604,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1127",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1127.pdf",
+      "source_sha256": "fb1aaf4bd30ff5a59bd1167cf2511f60b640ecd793f096c118d4873e62ac9ffc",
+      "markdown_sha256": "ae15ef4b0a3cb75a92df5eb69e3a0f1a8d34029f536bd0c105b07a37fb411b98",
+      "bytes": 154890,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 140.01,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-113",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.113.pdf",
+      "source_sha256": "13b91db18b996b124f140d2175487204bd3e3f43733ced8d742b676ece8f1eea",
+      "markdown_sha256": "95befde82ac923e94e2910c425b7b40308af01312ec1525af04ac7ef09400fea",
+      "bytes": 55874,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.834,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1138",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1138.pdf",
+      "source_sha256": "994c20c0d9f40dc73be0c5702a26537609da4a599c11405db39f1e7a87b534c1",
+      "markdown_sha256": "aebc09d0662d351553247d29623ecee879d9f7ef2e4c8f85c5a8e1fd37f000ae",
+      "bytes": 86349,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 42.018,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1149",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1149.pdf",
+      "source_sha256": "f427731404dc5e2f0ccec0fd3a200dec89c3b0d843d404ae3499200af0bf51cf",
+      "markdown_sha256": "cf5c676b88e73602d156e7af9ed316b074c21c9c2915cfae0889f3b51e093297",
+      "bytes": 126249,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 125.664,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1159",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1159.pdf",
+      "source_sha256": "2bba47e00e25bb90d2d55ef83b5dbfc0d20ce32b131ba7709c08816659f42b4c",
+      "markdown_sha256": "7ffae4e21141f406da1675df1d8a86a3666dd4fab370a705276228f580722f0c",
+      "bytes": 76077,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 37.472,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1170",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1170.pdf",
+      "source_sha256": "eee2efb4169045f6144d4a103de6bc9b358ac3c5592264a45a4a96fbf0e0dbbc",
+      "markdown_sha256": "b363af6bc0da551306229f8d27f91193009f49c144172bfb53d9667395baabba",
+      "bytes": 104691,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 65.856,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1181",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1181.pdf",
+      "source_sha256": "37f2212d8d54de3e89aa050fae0b41bae7598ae3ddfd648ac1e991dbfa648505",
+      "markdown_sha256": "9145daa45c19210999740740f029d62701d5194927dac8912fac86f308d9666b",
+      "bytes": 81162,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.998,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1191",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1191.pdf",
+      "source_sha256": "80b59f2831b9c02aa14043cd45b4a033c6d0e17cc8ad36f754d519e238b99cf6",
+      "markdown_sha256": "6e12936fab8fda87796322a4d1f41705d5a446932dcbf92cdb408584905c997f",
+      "bytes": 70075,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 44.159,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1202",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1202.pdf",
+      "source_sha256": "576c55db2106934bdf23c340f50c3ad30d959830eafec2cd1c4451d1b9a3fafb",
+      "markdown_sha256": "9d51c0fbe52f0358c6d3a7e7d2035f02f456fbcc0dc07e4002f5da4a6fc9ee70",
+      "bytes": 84626,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 56.416,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1213",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1213.pdf",
+      "source_sha256": "cc2a271c22ff424ed1449673696c3e690ebe369db45f9d12e4672020d74fd4ea",
+      "markdown_sha256": "4299b764b7c95ec3e10280d3241f88eb3c669e23588b7e8c8fc76e0b504238f5",
+      "bytes": 77730,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 37.296,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1223",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1223.pdf",
+      "source_sha256": "c7229a41372c56d8bd291089d064f317c42f2eed674a71fa4013ac3827b3bf25",
+      "markdown_sha256": "f807894bf20acee398f28fba95b4a82ac264d5744ef7f5ec8f43029dcb16d221",
+      "bytes": 62958,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 22.571,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-123",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.123.pdf",
+      "source_sha256": "e69a36de5eb327d7c7dac5662f7cc9ae415b87910d345b3eab3021af17030c39",
+      "markdown_sha256": "3c6e541181a76dce4487de359a28ebb2b39d721b884f201ec31936a7880284cd",
+      "bytes": 78190,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.896,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1234",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1234.pdf",
+      "source_sha256": "572b8d9f5ba16f5b624f0c25b9b6148939bf31e72c223f36a6cc6484bbff8d28",
+      "markdown_sha256": "10c08f5ad8674b3aaa1854adb9a2b4816d765e733a9dcc0997a92b4cc5e0e0d0",
+      "bytes": 173345,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 61.802,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1245",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1245.pdf",
+      "source_sha256": "12462ccf102e4f21d1dcd25c0abbc41dd1cb4e9e21a10e6a13abb3326cb1190e",
+      "markdown_sha256": "fe64638d2e8300c1c6dbdd5c550a25cd68ffc10f59c788aa659e69790214e9d5",
+      "bytes": 99158,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.907,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1255",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1255.pdf",
+      "source_sha256": "2f9270efe1b8afc492d2a4a5f058b201ccc362ae34ec2a5964c3546eb978fa34",
+      "markdown_sha256": "18e93c2a03bdf8e8188e2ee3ddc09241e1cd77cf3d250778628bf3c3dab3bebf",
+      "bytes": 339427,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 110.742,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1266",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1266.pdf",
+      "source_sha256": "f30d41a34c059b997caa5cb90b8f3b7a37aef6c30b0fc8369f8063d355d0cb8c",
+      "markdown_sha256": "d1a124cefc1f5292ff7d32fed22d25e272e29dda0a5efedc8ffe17134fadcc24",
+      "bytes": 221044,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 161.037,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1277",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1277.pdf",
+      "source_sha256": "a760a0626cec1ddbb261f2e02cb1c36ec03c1394980298d0eb7b6955a69cd67e",
+      "markdown_sha256": "ec09b1d57be980a9aaa6b5192044cbee65816fbfeb0f86824f5919075a80e3c8",
+      "bytes": 87698,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 38.396,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1287",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1287.pdf",
+      "source_sha256": "1df76d7ccbfa67ca59bbae64e8e0d4f682fd3d7a1f27eb3796859d0580ccd653",
+      "markdown_sha256": "2dcdeee58746f68c961138fa870a63b06a7961f7f5bfac7d629d407b63c96b89",
+      "bytes": 113358,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 194.248,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1298",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1298.pdf",
+      "source_sha256": "f7154a1f1941489fdf156b3e1084cef806c6ae02cc1ba7ada4d97cd9b102b3a5",
+      "markdown_sha256": "7b3e90d2032c566b002c8f40b7fd9994c1c3e027f29d25179753dafa46c64844",
+      "bytes": 53412,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.057,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1309",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1309.pdf",
+      "source_sha256": "69f1ad82aa8c0da90c5ed3a832f33319d051b9a9e25eb2a01d6ec720d8dc2906",
+      "markdown_sha256": "ce941b2da2754aa45563f364494e9027f51130364fe70c176f68d109230a27fa",
+      "bytes": 94015,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.845,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1319",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1319.pdf",
+      "source_sha256": "0ed28eabc25fa0a3b711e140fd642e3490564ea491201022c7c6fa669f4754a3",
+      "markdown_sha256": "f00627e985cf88dbbd7eef24b9db68bf4162c4034fe6b5e3e533d67a880ba2d2",
+      "bytes": 69100,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 36.896,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1330",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1330.pdf",
+      "source_sha256": "2f805094d513fef774c5d92807f9718913e7f70fe86e958a24a3c1caa636373f",
+      "markdown_sha256": "e903d2327294610b3c842c05326355515a75d05013d94641a43819e49f86fb7c",
+      "bytes": 109251,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 37.02,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-134",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.134.pdf",
+      "source_sha256": "c21147eef6517524b0e50280d77300421e7b984f0b5c39275c09ba7279dc610c",
+      "markdown_sha256": "5f3d73b3d064638550336c45aa6450acde2e38bb5270afdd27f8cf7100ba111b",
+      "bytes": 101167,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 58.347,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1341",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1341.pdf",
+      "source_sha256": "35a060709802d816867b695613f7d6601ad9105dc644eb5dcb1910bf78a459f7",
+      "markdown_sha256": "a9df207cdecadd30212ef15f75f606247062dcc9ec18dc78f8c4750bf5dce7c7",
+      "bytes": 54318,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 22.727,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1352",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1352.pdf",
+      "source_sha256": "09e2265af123b550a9b4d2802bf8cf0f25f6355621cc1465ff8f7923c691b4f5",
+      "markdown_sha256": "77be9a510fbd45515a0d85e9b7b1659f3c14d0cbf6841d77c3426aa60e4f0720",
+      "bytes": 52637,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 20.776,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1362",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1362.pdf",
+      "source_sha256": "52a9bc9aeff486dd3ceae18b41a6f066f37a17bafe550208a03e23efbf5ef682",
+      "markdown_sha256": "11b4258032af6241228a4e3f5a4b98efe650b2400c0f5e024fb42be6bab8f760",
+      "bytes": 76849,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.609,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1373",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1373.pdf",
+      "source_sha256": "4fe93cfe9ca31614945e4a2a057819e26c67e7b0c590cc977204aefea499ee8f",
+      "markdown_sha256": "21cef1a7f3eb72241828600fce9420ccfeb2d0f1c558d32945ce85bcf8349221",
+      "bytes": 68602,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 70.347,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1384",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1384.pdf",
+      "source_sha256": "96ce5818a4cdb13aae5391d0bbb967b86da41208ec70a399f9a8a749eeea255b",
+      "markdown_sha256": "f512d130da4e6715120bea0f82f144a2e53656c7b72b7634168dfe4ed39fb361",
+      "bytes": 70384,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 60.108,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1394",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1394.pdf",
+      "source_sha256": "5358e682d9afac845944ef39ce0f6861513bf150d10c45348091a631e05b6859",
+      "markdown_sha256": "82b23c2abb43509fe7c238490bcbb67f1ef521ab254fce55b0e537d676a286fe",
+      "bytes": 68848,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 56.706,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1405",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1405.pdf",
+      "source_sha256": "45a74082f486923af1a104e94e56d160870c496103782c7003b290c82d70385f",
+      "markdown_sha256": "8732afd5b7e5b9a0689a069973b0e9c3a9ffd211b5536648c70b7b5d9b20754d",
+      "bytes": 59843,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 44.657,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1416",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1416.pdf",
+      "source_sha256": "49a7abaf617b7ffe2e959e34693a00638cf98cb9f87f8f372e3a56b14eace8d7",
+      "markdown_sha256": "bda062263919d17096249ed2f78752564e70b2524569b000d9f7ac3a8e8dd24a",
+      "bytes": 109845,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 36.82,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1426",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1426.pdf",
+      "source_sha256": "492b06320202bbaaa646fb90e2ace9b81637e14046a922b807de5ffe35b46047",
+      "markdown_sha256": "bbae88a968176f1dcb4ef0dae1dfa86e629d16380eae7be40fd62c13c1f0e9cc",
+      "bytes": 60972,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 48.6,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1437",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1437.pdf",
+      "source_sha256": "94b1f5161118b963df18021e7686a72287746aa5c5090bedcca702bef58f73ed",
+      "markdown_sha256": "038f5046aaf78f2e7e1b75be8b82bec0fe6b4217866d8378d5fad661d8a4186b",
+      "bytes": 71857,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.143,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1448",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1448.pdf",
+      "source_sha256": "4ae4c61feb659a5bcf0382d910fb9606e03092b760977e4d120855736aac390e",
+      "markdown_sha256": "02c9ada4de52b42bfcea28dea534d74fa40d01dd112b8050b9aa68a883953a94",
+      "bytes": 107034,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 45.053,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-145",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.145.pdf",
+      "source_sha256": "45984e0207dcaadc6739a29d3b893927edc1e93284a6a157bbbb824f810bb092",
+      "markdown_sha256": "eb687ded30285ce4e472ec93f5962883c0244b4025b209106fefcde11791805e",
+      "bytes": 44454,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 17.85,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1458",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1458.pdf",
+      "source_sha256": "2ba2b52640638280af4ff3665bd1b1ca4b311b8c68a8afd6fc8f9a84029351fc",
+      "markdown_sha256": "5ce0f9470b1a3b6d299a7c542988ce826f0836458d7ce41d7f4616da38db4a4f",
+      "bytes": 96455,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 62.428,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1469",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1469.pdf",
+      "source_sha256": "9236e451b6b19f42c7c18ed1180943b1b629dcc84324da4d62b9a17e9dffa6eb",
+      "markdown_sha256": "2041d5d73cb9020c4094aad6e86e9dbbc31308e6d629d0a965840bee63c0b15e",
+      "bytes": 66153,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 28.035,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1480",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1480.pdf",
+      "source_sha256": "043158fce81030dc146ad50c0938620625b440b27d6465813b93fd204aaa3d4c",
+      "markdown_sha256": "b5797ca57894505c7c55fb28358eb656a21b3d17f3bdc1c6d47d56acc82d5225",
+      "bytes": 56472,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.165,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1490",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1490.pdf",
+      "source_sha256": "99a6a177a96cf70aba2ce10591f945bfb55485190fc0c73a60efc0b401c491e1",
+      "markdown_sha256": "32ffc2a0835314d4c93282a4f4b3c84fe6347984edc0a8f19ee69ccd3b0ff282",
+      "bytes": 62056,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.008,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1501",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1501.pdf",
+      "source_sha256": "fe368802937c89631d015da47c76083b43dd83f65c0a06514b5d2ef130c0b5f3",
+      "markdown_sha256": "15461b1d3902384232f60774899c971248aa1af470e728f7492ffe80e872d4ca",
+      "bytes": 84105,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.755,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1512",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1512.pdf",
+      "source_sha256": "74750485e036e7fcf6532765519e137c67f739d6ea40e0edbd645002cf8db549",
+      "markdown_sha256": "2a3c95a6cff9aeed1418eeacda39599bdb0cc87d312fc3eb07e921b86000db72",
+      "bytes": 55844,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.267,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1522",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1522.pdf",
+      "source_sha256": "57cc2c8d6f2ab52e64e9e59051f545815788874e36b2091f37a03004132d3694",
+      "markdown_sha256": "97b8b04a0bba3f41846ba488365765d019e12ab9807c4539d5aa2b71af292fd9",
+      "bytes": 85093,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.965,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1533",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1533.pdf",
+      "source_sha256": "8b238157e2631ee5d5a79375fafcc340f3e2d6eebe6c8b1ef807312542f6c598",
+      "markdown_sha256": "15c83a53ef3ffbdd5a37923c164574c9228e946ce480cb4d1d8567edadd01a3c",
+      "bytes": 93465,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 62.098,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1544",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1544.pdf",
+      "source_sha256": "36b6f3d52c2abc81525e88b46699f0991db2557dd684e49ddc6d25af821cc365",
+      "markdown_sha256": "a7c65dfcc71706f61db5aef8c304db4f05775ba40fffad45ade29cb8806a8415",
+      "bytes": 126604,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.853,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-155",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.155.pdf",
+      "source_sha256": "94f68dce63ffe7c18252fc554253f1d6e096ce0acf2b8eb5b7317ee3843c8577",
+      "markdown_sha256": "b2b535b0425b0f321f732fb35c4623923c9e9ac86a753326f650893884476b00",
+      "bytes": 106515,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 64.994,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1554",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1554.pdf",
+      "source_sha256": "c6593e0193cb68df01065d152a15a3015a0dccd569ea9a4cf6ac645a8f03aba8",
+      "markdown_sha256": "987b12ea596622d5cbc008566ac01993457cb963b534b35c3336d3c0b88a0945",
+      "bytes": 115319,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 140.728,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1566",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1566.pdf",
+      "source_sha256": "310eb819a83538ce6f11aa8c9872522a0359383c0ccf0943be4bf35234a11811",
+      "markdown_sha256": "b5a374cf4986b1da1f7530e1f632ab23164803fc93ebc23ca5d5db94b2977410",
+      "bytes": 94074,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 39.253,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1577",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1577.pdf",
+      "source_sha256": "1f53c34d068a3eb2f71df54f7dc73175ade2b5853a71a759f65e85b2fb528794",
+      "markdown_sha256": "7323df58e1ba29adcaefc350bcc3d77db152b38cdcfdae1ff867eb8ef0e0d4b0",
+      "bytes": 84332,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.3,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1587",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1587.pdf",
+      "source_sha256": "5ed3ea4f6f503251722e018d271c05edebad0b829a45e2b2bd8999ee4e7b3933",
+      "markdown_sha256": "137c163842fa859cfe71eee1f46175a27dc49e33f646aaa6d696d84e61e8f9bd",
+      "bytes": 90369,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.291,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-1598",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.1598.pdf",
+      "source_sha256": "7d6f44bcbdde19a856425d8ddbc6dcf8437561f2f2df81fde248ea527da4126b",
+      "markdown_sha256": "e3e7e6c3561caa67b0d39d5dffccebd76d258c01c441592cd043eee2f07a0403",
+      "bytes": 61678,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.064,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-166",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.166.pdf",
+      "source_sha256": "52c6c8e1df064d87c8a5f79d283ad77211e07e782e22a5f205ed8acbf0ace3ea",
+      "markdown_sha256": "b20321dff9f415cdb34a55bb393a82f03051e74a9e2ba15aed2d8e643fdba67b",
+      "bytes": 83573,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.718,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-17",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.17.pdf",
+      "source_sha256": "85ae040036b87e3927093768f8a105a8e08ca95efde77ee02f759a0032cb4295",
+      "markdown_sha256": "f3a1d56e4f30356f457cfc48aa593342a4a0f5bde56daa5ccee3613ee211ae42",
+      "bytes": 105905,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 64.966,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-177",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.177.pdf",
+      "source_sha256": "03f94136383752ebada398757b39916545596f51c4467654bad3f6dffca92ece",
+      "markdown_sha256": "5e217d53f7b75e25d0108c3f8418e8f39ed2721313cdc4726c04146190ffec0b",
+      "bytes": 65123,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.692,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-187",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.187.pdf",
+      "source_sha256": "65d6b3146df35e619f51ab35e7f06a490e04baf9786867dffca8bc30ed20bd4b",
+      "markdown_sha256": "e184f44ccc7ba42d7e5ecaa529ea96a08df387d38bbe3dd2129a92f03c92a17b",
+      "bytes": 65064,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.29,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-198",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.198.pdf",
+      "source_sha256": "ed18180081c8c2a91e247bc1e8f902b100b5f9ba1bf1d330787c851f658a5935",
+      "markdown_sha256": "712e289aff8dc466231466afac4f64150d7d2a321eb0e655a6596d455f63171d",
+      "bytes": 54820,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 37.784,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-209",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.209.pdf",
+      "source_sha256": "8592b103b5403ab675efa3f3adc820ff839ff34e864c381db1599f965e24349d",
+      "markdown_sha256": "b8ef618a98cb71b79882e706744a63cd0ff3e16dbed30359637954ceee8cbe6e",
+      "bytes": 54093,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 36.302,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-219",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.219.pdf",
+      "source_sha256": "0ea5c30bb4f86557355d29cd324c2cdb0d00fa7c273b6c7d97d7feea12c3784b",
+      "markdown_sha256": "4d942b8bcd0e47a65431c844223cca1f3073ee70f518d2b68a3ccc599ebaa679",
+      "bytes": 94190,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 36.005,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-230",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.230.pdf",
+      "source_sha256": "5bebdbe4b52f213eed8a3ef45775598d85f799f1b2f0028861591dd514703062",
+      "markdown_sha256": "bd6dc38d01e2f971f9d17187efc43eef4a484b63db6960cbf8fbaf15443d30b1",
+      "bytes": 82496,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.221,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-241",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.241.pdf",
+      "source_sha256": "855fd13b8158e96ae0daddc1222e5b989d7d6477df5f6ee4ae943666babadbad",
+      "markdown_sha256": "9b9c104d568f5d45d7db9a33d99d42cd8d22d1d66e729fcdf02404951c99977b",
+      "bytes": 87546,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.965,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-251",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.251.pdf",
+      "source_sha256": "895972d2f8f9cf26b13fe1771949357a0b68dd41a277c625b39508ca551d3cae",
+      "markdown_sha256": "ef991ffe8f68d27237acade418c8fe534071811555bd85e0b759ceabfb3fc1b4",
+      "bytes": 88153,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 53.455,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-262",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.262.pdf",
+      "source_sha256": "dc83ab8ba4b4102d427c608b69781708622cb87d24a710b41f934dff1e34fdd9",
+      "markdown_sha256": "39fbeda5fd2c2c768d14c4256a9bf17cdf4f8d19f92d81cb1df76f63f31d114c",
+      "bytes": 57404,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.364,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-27",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.27.pdf",
+      "source_sha256": "768173c5f63dd8165e1da0442bcd1fc6070cac627edf7667d011831e3b62aa40",
+      "markdown_sha256": "7f65bd7b5c1d80126de842ab0de23c60af9b2664825b57fd0551fb0d0af3fd44",
+      "bytes": 99855,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 82.941,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-273",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.273.pdf",
+      "source_sha256": "6421231202272408e1411eee1113081299c34b3d97d220fe7ce95ebc6a656f37",
+      "markdown_sha256": "944be7855218d6ae03391d13aec2aaf70357a8e3a5b6a76d2cc2f3cde327c509",
+      "bytes": 54978,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.407,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-284",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.284.pdf",
+      "source_sha256": "6a89dc030507af66dc89f034e18a867ba8e805009c76fa22881d4cb6cdb16d11",
+      "markdown_sha256": "9514e5740e6b8cd77a8dc50c4f451fb0d906a3345817daeff5d83fb7fbd21b85",
+      "bytes": 95272,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.904,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-294",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.294.pdf",
+      "source_sha256": "0ec54a1c73e74f8949a312e61fa4dcc354e62f101d50c8b48400e1a43cd9a104",
+      "markdown_sha256": "d40673e9e6862e9c6b0646cf9478e62381ba36bf74cde473b5ec11445a481d10",
+      "bytes": 96432,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 53.373,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-305",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.305.pdf",
+      "source_sha256": "34cca761136ea3c39eb16f183a03138e1bd13ae1965db9220f4cf7580106667c",
+      "markdown_sha256": "d3f6658c110cf2d6d83e1c4954a10cd9abc8db922b355e95d849c52c040d798b",
+      "bytes": 74637,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 38.229,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-316",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.316.pdf",
+      "source_sha256": "9258d663aec1164b36190db5f77ae8581b73c86a44a6d9fbb2c734e441c7d1aa",
+      "markdown_sha256": "0959eb1cba675720cf304dc4b268033d741d02e60c40c98d15be8767c57fb146",
+      "bytes": 69172,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.579,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-326",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.326.pdf",
+      "source_sha256": "91d83f5da36c00c000953f5880c61bb0d6006739d47a9f359a282582dbf02fe8",
+      "markdown_sha256": "74ebfce5b9cac8c16adf70a474d22dcc6e39e0c38ed3bf9a761c3d101bbcc3ae",
+      "bytes": 128571,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 73.145,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-337",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.337.pdf",
+      "source_sha256": "14d6151dade04fd26274f182e07e68c3ca807c7f899437498998b07178f0fb9d",
+      "markdown_sha256": "05bca8d4f3cf63d664ea93c6c59e6206691734d70f759c2d2315d1085387c756",
+      "bytes": 112744,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 135.227,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-348",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.348.pdf",
+      "source_sha256": "90d9242ca96e0848f88ab0d986ebdeb271a569501b6183406118f16309ed4d22",
+      "markdown_sha256": "2c7924357a2bccfee9cdd6731c336587cfc3c8f9df11bb6c35f7119e1138add1",
+      "bytes": 201481,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 62.338,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-358",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.358.pdf",
+      "source_sha256": "4bfc9147ff4147d35f354d2bb73a9e4c626d9b28ac085c0ab4a05408b3ae5b76",
+      "markdown_sha256": "ee71833de2484c8888822481c9fe4438536ce4be5f1c9735566e252d8f59898f",
+      "bytes": 99411,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 91.286,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-369",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.369.pdf",
+      "source_sha256": "04024ea7a836f8a8b199448c5cd9851d76d22b8a5ae47f6bcd79fb8f37c2484b",
+      "markdown_sha256": "15fc8b77e1d8c121f42a61e16c5e23a63bac818493fc59858d71c75ee1d3bd4a",
+      "bytes": 142660,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 86.86,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-38",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.38.pdf",
+      "source_sha256": "b9d00a5022d338273a54a305a8449ed71cbbeee6e2e6db4331e7ae2cf8df1f91",
+      "markdown_sha256": "d210c25f9826a296d8a6c9f01dc886cb11b2e4ddfadeac531c325d20245d41bf",
+      "bytes": 93490,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.092,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-380",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.380.pdf",
+      "source_sha256": "150e805888cd78b4e86a9bad7fe6dab0f7e34e17f7340a68fdedb0ae45c6aed2",
+      "markdown_sha256": "607ed0c2f862ff55d0f408df008d7c9bbb45561770843372bef8ca827eb9654b",
+      "bytes": 75988,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 65.291,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-390",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.390.pdf",
+      "source_sha256": "1a110244be4e1d1f93bc1ae296c461d6c1751d51d7667759d4b3c33fcc795001",
+      "markdown_sha256": "ef567239ed56dd432f042e8101bd888e07795bc32a40a2edc602ae7fbc9feb1a",
+      "bytes": 84513,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 50.907,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-401",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.401.pdf",
+      "source_sha256": "4177111ef32c428a60eb4f5645969797c6e0096b24a9a6e5d586ef4bb5e6d425",
+      "markdown_sha256": "d387ff9c5d892d3b06a08142862f5fa645be05e8fd44071e55a939b8d3cf1f35",
+      "bytes": 210283,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 442.919,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-412",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.412.pdf",
+      "source_sha256": "811dc6ac66a057de2e1e97b071dad36e1044ec53eeb21c6e13c6ede1f0e75c85",
+      "markdown_sha256": "dce1f25539c269c1d83d20bcb8783de3827962a38d7592ef5dc7ede4f7a2c2ce",
+      "bytes": 60044,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.294,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-422",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.422.pdf",
+      "source_sha256": "ab32cae487964dd04b210004f05afc0610029fe01495dacfdfc170ef24fdd5c1",
+      "markdown_sha256": "0a88bd5dc228e83277cf8a917fc4f5e34275cfede73e882de7f6c82a2989f2f2",
+      "bytes": 68031,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 17.547,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-433",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.433.pdf",
+      "source_sha256": "e4b047a78c1a8fc447fdcd1cc50f2e2b1b8489d718c5a13458f5974f66fd5d33",
+      "markdown_sha256": "fe34ee0abd5efd707197d677e0180826a959c9beaae86a8dc8d9029c6841d845",
+      "bytes": 86426,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.39,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-444",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.444.pdf",
+      "source_sha256": "fb7eea6266b75b1d45221bf4e2722d92a9e55c58bc809bd3007942a0f6a7dc37",
+      "markdown_sha256": "4faff2134c0158c8689f4f743f15ecc4e84acc8515b31d265a0c7b029c7171c7",
+      "bytes": 66151,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.298,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-454",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.454.pdf",
+      "source_sha256": "3277937b5f6bcaa1ebce8940941f02f7aacb8724e8022912f942952b120434fe",
+      "markdown_sha256": "2d9f59e295d73128784071c4d0a49513fd6d0c57958ca1f68bcd624d472b6719",
+      "bytes": 71841,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 49.292,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-465",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.465.pdf",
+      "source_sha256": "8ca96e48304e02b6d1327abb4090df2e1698328af6a851e3db19f67b01d159cd",
+      "markdown_sha256": "48aba2b22677eb15568f1c1016076289271194d45cf4e9436c7706a5521ed373",
+      "bytes": 54558,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.64,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-476",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.476.pdf",
+      "source_sha256": "486be7f4302a8372dc8abb130e8954a4804901ccef40be25473f57cb2efdda65",
+      "markdown_sha256": "e13c85e6fb262e2b8eea1c9c16d92a5b8c6bd341bc99db2c75816199292cccb1",
+      "bytes": 62657,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 20.554,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-486",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.486.pdf",
+      "source_sha256": "072e334616abdedf313e412005078d5f2d2b1baf9058304507681aa857b20e89",
+      "markdown_sha256": "ced93c45ab5e8188db37b7f45b210d795b1c4eab5b2f8398a1641fc1662cbca9",
+      "bytes": 65855,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 64.839,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-49",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.49.pdf",
+      "source_sha256": "5713dd414a489a42ad48acbbc62c6eceebc9d1dc0949f72a8704c0fbee7b633c",
+      "markdown_sha256": "a7767c9b4dfb9d418229c171cf91c41276238fe9563a92e30fd0034515c02f82",
+      "bytes": 85756,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.852,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-497",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.497.pdf",
+      "source_sha256": "a839c5c0c0396ac1ce3167f7bffad827b2dbd0dd5e76bf66610b2bd811051283",
+      "markdown_sha256": "4f8aea4735dda79e8b47c40ec073e5fa0fd10adc6fb2aa0b97e74aeef6d8e93d",
+      "bytes": 61940,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.643,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-508",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.508.pdf",
+      "source_sha256": "732f69fef0a8255beda990b28de040a720edf74bb6dd41cb59c0e9a27be47626",
+      "markdown_sha256": "1a897828b4dc611e1af2de7697a0f2d2871a0f55221d8d7206bd6e36737b0399",
+      "bytes": 68818,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.394,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-518",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.518.pdf",
+      "source_sha256": "113e215756dbe29b478c64be9b35c8b474b34231e87dcf0ccc1a8b97d8a92d88",
+      "markdown_sha256": "a64ae5ce0b203a777547711bb8af97fbee1d787a12849c8abf7ce832b6754706",
+      "bytes": 69913,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.444,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-529",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.529.pdf",
+      "source_sha256": "61351b396ffdb4cc40c73c84057a4efb7a8c653c97456aafe99b99ab0b496dd1",
+      "markdown_sha256": "392c3540509a0dbcd044867443e4b8a498153168be990079fad0e70f74d72ed4",
+      "bytes": 69728,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.788,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-540",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.540.pdf",
+      "source_sha256": "33abf06ff0a7659bb162a495542739a4c15610efef0a36fd05120ab5988f829e",
+      "markdown_sha256": "cd1233a157cb340034a2ee818d37b63457a6246f8e6e2079166790fcf4a0e4dd",
+      "bytes": 56448,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.361,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-551",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.551.pdf",
+      "source_sha256": "57f36514e654be1fe5902210917cbcda84773274590eea381f9560cf257d2c2f",
+      "markdown_sha256": "f6d3cd2043d2c32cc377f66f5f5236fc2e0305593e6b2b74924a98312363b49b",
+      "bytes": 56390,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 16.359,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-561",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.561.pdf",
+      "source_sha256": "10cd81e0b285e39956ca5dd14806585b8f7f2c019c053cfed55b1c299e8e710f",
+      "markdown_sha256": "39f0c6b1304033f8fad709254b78b4699f6d646ddb309019598773f2e6579ae1",
+      "bytes": 84451,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 50.3,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-572",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.572.pdf",
+      "source_sha256": "03d1df4e2bd591f73b10835b1c8e7a3f6775d848cfa457eb129880afeb137868",
+      "markdown_sha256": "f69645bb1e3b6eb729a6349184e960e5799c78f01a3fd5ad9aa90596800001c4",
+      "bytes": 69324,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.989,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-583",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.583.pdf",
+      "source_sha256": "5d7a115a6e9aaa6104c9386c7fadc8480306c6b7c344e3d408081a4f530f1130",
+      "markdown_sha256": "7dd5c420a3dea26aa4050b6117910cdf334a5a18b5d1d905dbe0a24213d1886a",
+      "bytes": 169477,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 143.405,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-59",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.59.pdf",
+      "source_sha256": "29f353fcbfa587b3c0f07e5b73ce550fa4b29f0d43a2fdc1dc87c60e0239fd9c",
+      "markdown_sha256": "3c7526d75b2a63c2c7fc12a8238157a6581b12813e0cbda79bd8a84eb1c1f4d8",
+      "bytes": 85566,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 38.349,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-593",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.593.pdf",
+      "source_sha256": "106f93c0e8d5d630cfefd7e0ca3e26285ae3146f3ea12131cc17f464c5d23cd9",
+      "markdown_sha256": "87cf80da4dabea4780e9b8771dbf679be647dafbd9f0d7971d74962394d6ab40",
+      "bytes": 96828,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 52.458,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-6",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.6.pdf",
+      "source_sha256": "66694602345908dc7a2a58be1522c444bff3be69505c1985b39bf2b678d05c5c",
+      "markdown_sha256": "c50352aaabda7219f9941712c834a598f60d8710c5954b7a70eea86fdb5668f0",
+      "bytes": 89098,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 44.131,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-604",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.604.pdf",
+      "source_sha256": "1c361382a4278a1dd731754a131e1250033a45341335e699544e7206119e6b81",
+      "markdown_sha256": "ebaed19492e58061da7b7a345570d8b45a494c31289849cdeb1d1e56185308bd",
+      "bytes": 50781,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.083,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-615",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.615.pdf",
+      "source_sha256": "fd7f50cba20a78ce57f6b3126c5679ea9157468675e54e0ce7194eed7253f1b9",
+      "markdown_sha256": "7488c5f69e5e52fde9f9d4ee64000cc73de698887d5eabb6a5f6230a106be027",
+      "bytes": 58850,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 28.638,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-625",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.625.pdf",
+      "source_sha256": "7a1ad23f0740cd8e7cd5139564363b52a00af1becc62efbfdd01428da4eebb78",
+      "markdown_sha256": "3dcb0be409ae653a73dac659a1050c1091ef4eeaaa959029019fdf625cb39274",
+      "bytes": 186471,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 143.592,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-636",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.636.pdf",
+      "source_sha256": "291c4644583b18610afcde7d2bf8024ad448c7677d44c85db4a77e5815c331f0",
+      "markdown_sha256": "63d463fc665134fc9ef752c971da1cc8984adca79f8e6f64261ee4497f030ce0",
+      "bytes": 77926,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.786,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-647",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.647.pdf",
+      "source_sha256": "fc096e6e774b576769053929e44a16cf087d847b7958af4d710b44581884608d",
+      "markdown_sha256": "a3293e775771eb5f145eaa238fede27ce85a4ddbddce96ab3415563cb46f2eee",
+      "bytes": 61691,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.236,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-657",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.657.pdf",
+      "source_sha256": "50ffaede14fd1356a0609734527e2e3161e679775acbf73abd90a355edb9b151",
+      "markdown_sha256": "20ee7546a7111d7440dc0e9077aadf1221c0791e5ae3ffd4df74f99b9b32dd31",
+      "bytes": 103763,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.722,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-668",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.668.pdf",
+      "source_sha256": "262db78a5d6a923c623a11c1fdaf2e40fc9f2374d57b4f9b2446f44b961ccdc0",
+      "markdown_sha256": "22829d23c03b6d7ef07da35e2582ab486b1d1124e219da633ec3a9f194127569",
+      "bytes": 71559,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 22.184,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-679",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.679.pdf",
+      "source_sha256": "955567b3b967fd2cef64edd97fc4a23fbf1a04204f6e277bc634c952ad1f6817",
+      "markdown_sha256": "b773081db80328cc4bee9143a0fdfe575c127219195336f6a8f16315f0adf6bf",
+      "bytes": 74081,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.169,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-689",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.689.pdf",
+      "source_sha256": "93242e594d1eadf9fa3ff147f6549d0f869a44b70a92ac2dcc403d80ce32d4dd",
+      "markdown_sha256": "6d9cc84a1d15c390ad125cc85ce78a802fae3df0a0229af5035362a2ceddf2dc",
+      "bytes": 73019,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 60.097,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-70",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.70.pdf",
+      "source_sha256": "b646bcdf4e20f1ec55a56ee2f3c455ee877083d176db92a0c7455bde2f1463db",
+      "markdown_sha256": "a67ff1e7a130bf63c5669e9263bbd9f39b5f1d54762f79011f88df04cc04d50f",
+      "bytes": 155811,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 139.422,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-700",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.700.pdf",
+      "source_sha256": "3bdc8f86c65df1d6cbc0f74d5e6defc31f43fe7dfaaa946439f0fd0361849566",
+      "markdown_sha256": "4c24cd49a880f521cd93fe5a093c4b8c097ca267b22175d6d5de5f11bcefa6bc",
+      "bytes": 106480,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 86.98,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-711",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.711.pdf",
+      "source_sha256": "95dbcc90f22d6f03648ce14f54f94238ec695770cf0f547241dc42d52bff64bb",
+      "markdown_sha256": "a07ca5f99bb4cde79dfae712f2c0a10caec5291b5924afc9279d6e0b4fbadf2a",
+      "bytes": 114525,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 46.15,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-721",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.721.pdf",
+      "source_sha256": "92c7c9f1e9480948e8fcf73d359fb9ff5196ce4f8b91012ccc80a70e0968c0f4",
+      "markdown_sha256": "472108fd2ccf88a60b435d63b6dc90a8ef7f0c0ca893fac0efea629bb8e2c3ec",
+      "bytes": 63690,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.681,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-732",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.732.pdf",
+      "source_sha256": "c360b5d34a75746246f89bdebdcfede889ef3dbe3a63f7e95239af7e727aa059",
+      "markdown_sha256": "83b2b2224784e35eb2cef33725fa244e4f14cc1dda709ddaf2c07339d7ef439b",
+      "bytes": 113985,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 60.903,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-743",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.743.pdf",
+      "source_sha256": "1b7675b77fd49630ba1d6d0cd50d5709db7813eccaf7c628249c118b4a47dbd8",
+      "markdown_sha256": "652bd52b320ccf2967dc22f146c246541e2da349076427b5e9c36f7e341d0c50",
+      "bytes": 63167,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.062,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-753",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.753.pdf",
+      "source_sha256": "ed7e3c044745f1fc554b684655cbe7d3f57752ad7b11a7d4271c72119871c9a7",
+      "markdown_sha256": "0d6401bbdaac72ec22058e1a70a0edd7b69209a053e9efd74ce6c106fa1b5ae1",
+      "bytes": 58143,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.141,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-764",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.764.pdf",
+      "source_sha256": "cc6360ee1c061ce37d355a2771eff61a4d6ee64739895bbb3e91ca84356335f3",
+      "markdown_sha256": "6f4992c48eee5eaaa1f3a84bfcb08b0fc57b089b2bc89bf7f8984c1a4487e82c",
+      "bytes": 90070,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.317,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-775",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.775.pdf",
+      "source_sha256": "a83b7863e4180fe6ae7bb41885fccabd7516d9aaf4db51778ab0282c7583d13d",
+      "markdown_sha256": "e91f8833f278d90eff0a4cf1a770d5d30836e61c854c7b0b48ab86c7ed85dd54",
+      "bytes": 63930,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 25.878,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-785",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.785.pdf",
+      "source_sha256": "86fd1d527f6f3ff3cde94f4eafb5408d2573876af953e64519ee62b072d1ce25",
+      "markdown_sha256": "2c29018d3e430a8aef436d816ab46e06243abc5583eb208b7224ffde20326eb1",
+      "bytes": 97921,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 28.673,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-796",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.796.pdf",
+      "source_sha256": "c5c01f2296b59b66f46cf3ec7eb09b6d87a8adfe1077581f7d9ec545b725cf8c",
+      "markdown_sha256": "830a2a10c9ebf3c8b544a8f95d91136e79b35e2295088f0cad39ba65165f177b",
+      "bytes": 131929,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 255.483,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-807",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.807.pdf",
+      "source_sha256": "1b17bc6dc75b340c32a70da95d8a911e6f878b7388b2ecd6603f88bb6025ae34",
+      "markdown_sha256": "da1d57cad1a35b4d26e9dd6fbe61213e5a8da0bd66c934b9030c2409b6eb279d",
+      "bytes": 54295,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.206,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-81",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.81.pdf",
+      "source_sha256": "dc4f7d005cf3112f73e824c4014178e422798f1f62d1ac73431283e3e3486e38",
+      "markdown_sha256": "bfac0352bc0938aa3cceb30b9fe6b24db287d9c97f30508ff0f2491441e86a30",
+      "bytes": 80639,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.852,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-818",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.818.pdf",
+      "source_sha256": "4603e200f81f904f909245c84b4bdcb76b577b5fe99e51f44c5af909c843df81",
+      "markdown_sha256": "0245d981338530bcffb3b74aa756b55a5f8c32f88585bdb21122f8feab8c5e1d",
+      "bytes": 78242,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 42.185,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-828",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.828.pdf",
+      "source_sha256": "9837ae0f3331d9b0c9f399258797d9ff6128d301270e340292e9566c69f26e46",
+      "markdown_sha256": "5e09a2eee4de86ffa56b46716f8d011771a81944055c2aeae443d97e70aed4b9",
+      "bytes": 92487,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 42.956,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-839",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.839.pdf",
+      "source_sha256": "5df64b85588a7a24f11ee094bf8456cd773e644f98285bd06a9d8e6f9a19b2d4",
+      "markdown_sha256": "b4d5a8f49d9de74ee14da3990e5c7d966197b5d2cc89b5e10b4aeabd7ba5f88f",
+      "bytes": 96714,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 87.927,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-850",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.850.pdf",
+      "source_sha256": "8db472b59013d643531c844369d842802bdba9b5939e5e054eebac839e4b9f68",
+      "markdown_sha256": "b299989d1a62e661196c078b450f578f1a662f2a6bb20612c44578e68c10b9c3",
+      "bytes": 75478,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 53.978,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-860",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.860.pdf",
+      "source_sha256": "43f6df484d90eabcd76796793fe77e3ac9cfedda6f08050ca69971c92098e942",
+      "markdown_sha256": "9a90d0b7c58e88cefec1b36c5c3ed39a4bafad2126a2cebfa8740b8ef7138886",
+      "bytes": 69128,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 29.531,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-871",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.871.pdf",
+      "source_sha256": "06221acee5189931e7a2605ed411691a432f6d3135807082057bfbb1dd50df55",
+      "markdown_sha256": "61456ec0558a46927db995a6ebe2261cc6715ea3e06a9ff92e728d8eebee67aa",
+      "bytes": 44430,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 16.861,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-882",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.882.pdf",
+      "source_sha256": "1e98961ebb2fe6a3eaf5844448355829c6fc45c54c34184ca202b3f43c12715d",
+      "markdown_sha256": "b3ecc2c0bd31524febb4b4868ac101e45cc034eeb7a699423346b8a629329f86",
+      "bytes": 89068,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 39.42,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-892",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.892.pdf",
+      "source_sha256": "331280c4528f49443498e38be8178e3c7e4aa97eb76a38eeda8379e7c8dade5a",
+      "markdown_sha256": "629c04eb36aa349e4cc0708aa4597a6a6255ed2aa183206ae9c50f3a2b9703fe",
+      "bytes": 75944,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 56.298,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-903",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.903.pdf",
+      "source_sha256": "50f7da57f61203576f56236418139b947e5ef979d027520956b4f44498e83583",
+      "markdown_sha256": "0fb5431e5cf78c4bf9e33ec0ec00eb7b1a752b0795669d7b00eb00e90c416c8b",
+      "bytes": 88966,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 115.853,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-91",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.91.pdf",
+      "source_sha256": "ff9e496d41ff40809d2fa5fc15b0c957026bacc21e448de2be83f377d88f9c3a",
+      "markdown_sha256": "9cc44a1bea5c42d71d005dcb49aef62049e1314dbd21bf65d1b6fd7668449446",
+      "bytes": 148808,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 140.155,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-914",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.914.pdf",
+      "source_sha256": "06560311c73be6aafc0502e9be47e19721610eab50b550a014c21e4f3d8125d6",
+      "markdown_sha256": "2ca0bd2468bcd99a628a8dcd9bd8b640d5abb1da8ab9c47ebf35b98166fff9be",
+      "bytes": 62612,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 17.088,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-924",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.924.pdf",
+      "source_sha256": "9094d139e0a5d28022bf9080a444078623c8fb9093ee70a1a3983d603505628a",
+      "markdown_sha256": "4844eb0311ca30b7680e13261f1415af758ea006ede07e65c928ab38642b0d3c",
+      "bytes": 61952,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.638,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-935",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.935.pdf",
+      "source_sha256": "fbaceae7e0d78ae1cebd6a6b80f4503bc65bdb6db848e8c8e6ab1be78c8631e2",
+      "markdown_sha256": "c105c146fe0774b1c1a7c6d97cbdc0510263974ac988560b7698ca2045791262",
+      "bytes": 104019,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 113.443,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-946",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.946.pdf",
+      "source_sha256": "6b5b71f97a3d309e75bb465413e6893caf54fb82f2b8a67d509c6f7641af5de9",
+      "markdown_sha256": "6e0cd9492600fe4d0da16f62f038a5b5f03781607561e3d9de98212267f0bcc9",
+      "bytes": 67666,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 44.598,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-956",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.956.pdf",
+      "source_sha256": "c8a7adef299d52252e5dde37c0490aa45c5074b930c184da2535c553de9b0c12",
+      "markdown_sha256": "59e58f9f3b1ecff583f9288f022dfa69070cd03072a32f387482d9eb56f6bd32",
+      "bytes": 109166,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 106.187,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-967",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.967.pdf",
+      "source_sha256": "2a8be794326366f151d6e53d0b57d597a3787f28f9ecf273902654aacf945670",
+      "markdown_sha256": "78e5ddf527d8f06da376cdb57f4bf93224c78ce068de10436edbab3fe8415b21",
+      "bytes": 44883,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 22.045,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-978",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.978.pdf",
+      "source_sha256": "ef9ea6e196308063219a465a87eef02a87978b3d9a085f33f608315d16070308",
+      "markdown_sha256": "8d675156b51fea25318db66a73b62e556b024a95763ec914d1e60ecead6ad2fe",
+      "bytes": 50855,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.553,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-988",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.988.pdf",
+      "source_sha256": "c080a5d55e0819e22cbd63e038f2232b5d94ab4c306ff104cdef7021ada31a31",
+      "markdown_sha256": "3d39f666d0a1e2f5d67f6692b8631ea2b0c53aa3df9c0424a5ccf7e9b68daf11",
+      "bytes": 112887,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 156.386,
+      "failure": null
+    },
+    {
+      "id": "2025-acl-long-999",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.acl-long.999.pdf",
+      "source_sha256": "bb7771487aeaa0ba6670c4e7650c62d43f3948ed5bb03f270154948a461d8ee4",
+      "markdown_sha256": "7ab8a25c69ad7be49a5cc3650ef5d5d3bf4f48feb16758c6f99614d28a834458",
+      "bytes": 232557,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 205.108,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1008",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1008.pdf",
+      "source_sha256": "cb30f53ada8b9be6a0b16af1a7e6b69accc3d0c284eb0fc1a199b515c3fe910a",
+      "markdown_sha256": "89580e7f40a7829587b4941a7f69f9f1166c0c579622e44fbabf40664ed79935",
+      "bytes": 74052,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.065,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1020",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1020.pdf",
+      "source_sha256": "2bd11c18077d15c1c83baf0cb27514b42dc17a3ca8d14d5e7c44b9e29c916287",
+      "markdown_sha256": "0e5a188895fd53227eeec34a2b8f6dabdb358d34f17eda63ea1e9072e608d45c",
+      "bytes": 56715,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.783,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-103",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.103.pdf",
+      "source_sha256": "bbc586e1a055a698cb0ec3863517656b26bde8a0dc9dee6c8f6e1b78ca1df45e",
+      "markdown_sha256": "85220e3a4c1f15717a07f2adb38845bbe5eec51a888b8756e6a96445298014d8",
+      "bytes": 163630,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 62.577,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1032",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1032.pdf",
+      "source_sha256": "e7b5f7c23a0a2b1c1a4ef71596b2607dd31c7f78fbb6a85e1f220422f5db3267",
+      "markdown_sha256": "7b75701b5cdf0ccbeaf076f1c67e602851dfef0fb3fd38f13ed9c4ceac07ec7a",
+      "bytes": 45584,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.744,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1044",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1044.pdf",
+      "source_sha256": "77199fa45a1e288af4ef6374a3982660ba344c2902f97d4557a69c430a2f0a2f",
+      "markdown_sha256": "18590861899b01bc28d03a5a30eb2b751b2c50b78d1756c952242f03f1a82018",
+      "bytes": 82459,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 54.997,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1056",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1056.pdf",
+      "source_sha256": "2fecc4ca6e00d6c225318526d2976a04c00e901130e3e4cd062176c8b6085cd1",
+      "markdown_sha256": "bb013fad788ab07d422c505b828278eae62a093745ec2a80651b5dae96889603",
+      "bytes": 28697,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 29.245,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1068",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1068.pdf",
+      "source_sha256": "176046f384c5b04fa5496df61de0e3738dfe568ec3f612f54f64a6518fbd8f28",
+      "markdown_sha256": "04e3393b6619b4c11c6967839e977431bf0f263483208244080779afc97fa489",
+      "bytes": 78053,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 70.078,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1080",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1080.pdf",
+      "source_sha256": "175869182f91a61e7acdf4d8fbf41b667e9012b376fdc316ea1ec06354f4c364",
+      "markdown_sha256": "4070b38f00a3cc05119ebf9709a310b3ed386ff5b4e32e3dea303ca4bd0d5b0b",
+      "bytes": 75948,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.417,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1092",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1092.pdf",
+      "source_sha256": "c73e7f8b286f62312aa4f2b9316aaaab197d62da46cf1398603ab9f6a8aa72fc",
+      "markdown_sha256": "e2d1e1741754fea9c22c2820375449f88dfb34db54d2a1808f708ce78bc3b836",
+      "bytes": 82699,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 63.942,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1104",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1104.pdf",
+      "source_sha256": "fafe484c4990a0cc323f29acf3f82d150bfd17832c1df856a727e5d35ca09fa5",
+      "markdown_sha256": "cb93abe8ffc89e81f5e0a33ebe4c2b6e411b08e0abfbb9510a2f870c6033340a",
+      "bytes": 57453,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.843,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1116",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1116.pdf",
+      "source_sha256": "1b6c4c762050dd4456e6fcf13d50e37aba430b61b3acf9bc43b03b807ddf5f6d",
+      "markdown_sha256": "f24793f3a94e001eb16cd6ca80703d7a5099670d0a72528ae30d29ef64ec6c83",
+      "bytes": 45364,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 14.846,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1128",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1128.pdf",
+      "source_sha256": "b97472128ad7484aac2c39f4cd98a9dc5fe5adac209cc1a808fbbc78dc4f30c3",
+      "markdown_sha256": "c40a0d6439ebaa65c914b8a099d8b08c73b1cfcc00df485377a1d1ad3657c7ce",
+      "bytes": 57109,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 38.659,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1140",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1140.pdf",
+      "source_sha256": "4eb33a8ac786bf77ecf88e432e7ce58032d136daa3d43956e72706afcb3a22b8",
+      "markdown_sha256": "953905ef0807ab0a0028fd57be099c919d5f6dfdf1efccce0be4f6992b9305d1",
+      "bytes": 151681,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 138.813,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-115",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.115.pdf",
+      "source_sha256": "d1514a0c8f8dd06eebc39f891e79dde8b9258d9a1d8027fd185030cccbb474c3",
+      "markdown_sha256": "8793505f7a91325d46d9e6bb86dafae0fcaa10ccca6577fe9cca6906cd6cad76",
+      "bytes": 85496,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 43.655,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1152",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1152.pdf",
+      "source_sha256": "d265ad398e1f1f7c816c98ea25ab5943d310b41f967f20ff7c15e7996165baef",
+      "markdown_sha256": "9f118c165cf89c01c39ae4cdcbdf04140f266d31b55e6f758982e26ee70918e6",
+      "bytes": 64170,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.177,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1164",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1164.pdf",
+      "source_sha256": "faaa1f89512b7b3e937412764f7839a044deeb303e7456f81fd2221cace105c2",
+      "markdown_sha256": "c217c5f94853edcd279df626503d8023f8857a7864fd63b661063e97111e7cf9",
+      "bytes": 103322,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.471,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1176",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1176.pdf",
+      "source_sha256": "b85d71b34df1ed42e1b7e999d724bf36754beb0510030e5290c1e9816782c875",
+      "markdown_sha256": "197bdc570fba3860dc417fe67ceb7ffbe52a71eeec33285e8aa3aefc69ec3cfa",
+      "bytes": 50065,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 18.892,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1188",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1188.pdf",
+      "source_sha256": "d2ee7ed72d751f8528a00d96422b36b158d4e77420df9352c0df004d5a19579b",
+      "markdown_sha256": "296f83894e126357aefd778cbe2f7e043585b82c515ebb7a3fb5cd50380fe3de",
+      "bytes": 63444,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 29.403,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1200",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1200.pdf",
+      "source_sha256": "695d25ce411aff8032ce6f7220d6d596fdd4d1c57554f12e8e999bdb9c8dca6e",
+      "markdown_sha256": "71a65e7af13e166a1f497274738eddb3c8d6122d3b031fa344111b1914449d92",
+      "bytes": 118372,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.558,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1213",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1213.pdf",
+      "source_sha256": "1dcf7fcbc95818a2ec927490de4acad7327a3bea782f2fe8fa9e3e6f0222bf76",
+      "markdown_sha256": "0b97b20770819b8aa15b852732273140b45166518002d504b222f8ff8e56875e",
+      "bytes": 74134,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.386,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1225",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1225.pdf",
+      "source_sha256": "c4f937289d0f74b6c446308c7ea88cb9409294a3cf42c313c6c012cf2cc44349",
+      "markdown_sha256": "33eda6fc57c4d0081565c55a8e13a2965940090bae72b2c80b536074db511e94",
+      "bytes": 87277,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.894,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1237",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1237.pdf",
+      "source_sha256": "419b6bf86d4aace8379505d4d762e18ff908f99d76a06af23cd3514dc3f024c5",
+      "markdown_sha256": "ed98baab0f50f12d20a4870b81456ee9286c252a9bf182322567aa24e204f006",
+      "bytes": 82169,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.639,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1249",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1249.pdf",
+      "source_sha256": "3096a2448dc2fe44965e1ebbb38178d70cf0ba3b15825fbf984e549470a07bd4",
+      "markdown_sha256": "5fd5bcec541e4f31be764411506d65d7515d8c822e57df2927a955c3963992b1",
+      "bytes": 105782,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.623,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1261",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1261.pdf",
+      "source_sha256": "0c0ccaaceeb815b821204252e153ce4fb0fc5dd4b5ddfa71cb3b5eac23726c55",
+      "markdown_sha256": "e3350aea6394f4e7997d39285cbf29d43bdf89277043598692477df2fa1c5c96",
+      "bytes": 102915,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 92.342,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-127",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.127.pdf",
+      "source_sha256": "2cfec95d4c15bf4d7da9fccf3360549c97e795e9a27f3bfb3f73186945ce4c50",
+      "markdown_sha256": "b61b0d156427db077ec94bc41b6006f23f5da8129a5945277b55ad22073a17b3",
+      "bytes": 124939,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 60.734,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1273",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1273.pdf",
+      "source_sha256": "120a9ef09a9dbeeaf3a62e8e8ca5db192e327af672f9306d6d57b67380a22159",
+      "markdown_sha256": "5cd028093942886e7ea5c9a08e0836d34f113c1a43463c8380f5db09178106f7",
+      "bytes": 50200,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 45.465,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1285",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1285.pdf",
+      "source_sha256": "3f6e913f59851cf6764b83a21156aadc012818ee023b66db3dead0572709e86f",
+      "markdown_sha256": "c1a7df4daa3f755031c43ae9be54100cd070b3ce5a54fab2b6dff6f4186cc0aa",
+      "bytes": 63354,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.392,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1297",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1297.pdf",
+      "source_sha256": "e8b7411122ce6635f3bf16bfb3401b70122a6c2acb43432d19e76be39612a3fd",
+      "markdown_sha256": "51b53e716eff3c6e6ad8f14571eec8a8004477dcf379d232642a7414b884675a",
+      "bytes": 67945,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.411,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1309",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1309.pdf",
+      "source_sha256": "45cad5141b4acbb946fa7db5e13bc524a48562c2101a75666400b4a1404604f6",
+      "markdown_sha256": "b7077c49d73e1e1b70771fa98395cefd1c090a93d1b655626e1ab2066c4b7265",
+      "bytes": 63493,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 49.249,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1321",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1321.pdf",
+      "source_sha256": "b7559725a29cb93227d9f826c8a1aeb0b1dff46f3ffb7f2c797a5c89501b0906",
+      "markdown_sha256": "438b953b7ef6528a3bc16f30c9c812cec4c0ba8bfea4a77d52fcde29dcdfba8f",
+      "bytes": 93733,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 55.444,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1333",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1333.pdf",
+      "source_sha256": "5638616518127a851a92ae736670fb3d46a5bb376e3ef5acc361dde3198f80c4",
+      "markdown_sha256": "c290d92c7e0bbe35a9ef4eaf8de4f8681db416bb1169f5c08c44bcc82117ee6c",
+      "bytes": 52558,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.252,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1345",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1345.pdf",
+      "source_sha256": "8a3c47d43f5d2e7eb41a943d5490c87e67a0449570f21eadc484bb1ca71f8662",
+      "markdown_sha256": "7ec63a713e77cd2f20c85214b8bc4f0d0f52a3f3fdef5bcf48aa281ebc0918e3",
+      "bytes": 73882,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.404,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1357",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1357.pdf",
+      "source_sha256": "11d92a37cae2b1f67567b0c2f2382a0f7b456d45508102b4a51fa389a1ed534d",
+      "markdown_sha256": "8353cab9181c05980921acf1577145cc23b0b980dd56d7473f368008b63e8d9e",
+      "bytes": 104816,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.825,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1369",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1369.pdf",
+      "source_sha256": "428e5cf49b63d358f66f7cd5b965140193440d51c9fc33c226378edd3205b72d",
+      "markdown_sha256": "c57607a687e239f209f09d41f2e55863fce96a99124f80ff7af0a04cef5d6b23",
+      "bytes": 48908,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.374,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1381",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1381.pdf",
+      "source_sha256": "19563dca202775391e0556061dedf6fd785ce3000b35ae970661ff5dd93651db",
+      "markdown_sha256": "8418e2323077040bdd2d674092c635d7c468100f5f97f2774c9f02f8de36a327",
+      "bytes": 48648,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.796,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-139",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.139.pdf",
+      "source_sha256": "f9258bf9264676ac05aa3ec8d14af14ac2896f26c0a4997597bdd69dc8f0de9e",
+      "markdown_sha256": "281224f3555d60a7844c8a530e9deca93bcad471ac87b79fa6a49c370830c032",
+      "bytes": 100531,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 64.004,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1393",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1393.pdf",
+      "source_sha256": "c92cacab116db810a7927445a069fa9c143245cb298bea00871b0f41033c3ac1",
+      "markdown_sha256": "0990980e87464914110709d4bfc31cdf446cc9d1202caf5a6b506f8082fb196d",
+      "bytes": 57055,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.777,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1405",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1405.pdf",
+      "source_sha256": "61eda67b8ce8dd7e8f54f5478a4c9b4aad9cae6c201d25835ed553bcefd7cc4c",
+      "markdown_sha256": "95e8d3ff6178d5186e786dfccc2658d398992c1f41209ea28e6cc7a8ca2d337a",
+      "bytes": 71914,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 48.712,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1418",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1418.pdf",
+      "source_sha256": "2320662a155ef880dd0ab365eb321ae04897d7019cb2af69f7b360f7941ab25b",
+      "markdown_sha256": "0d8eab020a1303b84d7396b871b008c7ea9cd5d64ddc789b05f6a350aef7e738",
+      "bytes": 154994,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 77.706,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1430",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1430.pdf",
+      "source_sha256": "c826795618c874cdd72abed8c1d86006243e0f9bc9ca11db740881f8fa9dbac4",
+      "markdown_sha256": "74722ef34857d75a17645955e56cfca2aff84a651341cc758803b158e821d68e",
+      "bytes": 108145,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 74.762,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1442",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1442.pdf",
+      "source_sha256": "79ea4a923067cd82bfd507e10566b040614e0dc85b83847bcb9b8b6ef2192ed8",
+      "markdown_sha256": "64383b50b94c6b6f8ddf8fae9ae32a0f46dddbe87724cc56f6f6270f4191b58f",
+      "bytes": 117483,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 96.339,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1454",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1454.pdf",
+      "source_sha256": "91adacfcdca2bddb2ba6650df333c4761f97159a1e763a1f871ec4ed11db1a38",
+      "markdown_sha256": "725a0176eafa7809712148b8e069da207c86d3b9fe5fd494c3f1faf75d0bb737",
+      "bytes": 47897,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.363,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1466",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1466.pdf",
+      "source_sha256": "f99bcfcbd312de2f6badb7a4637fc7e54fbb7c029398747b71855da55a1fbaf7",
+      "markdown_sha256": "a14d70b27e3b1873abd55caf10281e2e0486fda23ae9b56e9f6f42dd1c681207",
+      "bytes": 52799,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.245,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1478",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1478.pdf",
+      "source_sha256": "bb5ac2a47c48b816db28266ed97a9b2603cde695ebfc9f89692b1f52c45afb2f",
+      "markdown_sha256": "81f118a9034c50c7a84a620fa6a05903616705481437f0bd536ced19a372eb3c",
+      "bytes": 56434,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.08,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1490",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1490.pdf",
+      "source_sha256": "8efc955f02201637bbc8c7893fa6e3b1dcb265ca8523b479d2cc1c10a99281b1",
+      "markdown_sha256": "36454409f9e6c9fab3611e396db3c39bed294a3d711540dc4f019539f66c6db9",
+      "bytes": 100443,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.856,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1502",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1502.pdf",
+      "source_sha256": "df3da5bb9260eb5258517332e0427f8b4db18ce353a770f182d8e9a0a2c8b366",
+      "markdown_sha256": "f54447045cf014aff03d84019eda4555e9aca07981828b821838df263e787bcd",
+      "bytes": 91633,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 97.91,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-151",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.151.pdf",
+      "source_sha256": "70f6ab5d432f299817c6e3433834d4822d6a1445785d155198f65cb4647fc07a",
+      "markdown_sha256": "03a3680b243daddb8b6a07537605ace2b79f61d82fd9b0ba83585194d5fed7c6",
+      "bytes": 57570,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.99,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1514",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1514.pdf",
+      "source_sha256": "4fef628755c6a481b9852a5c3932289f14a3ef01e08ebff073afe35f497da5a5",
+      "markdown_sha256": "5aae3e4b4fe8892a2d6cc92ac127c1c181f0939ffb536892c9e68630363a4beb",
+      "bytes": 64955,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 17.056,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1526",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1526.pdf",
+      "source_sha256": "8470b5cc5d861996cfef48ef8b4f1034ce5a6533ca1b1ea9b5358ea31a88d446",
+      "markdown_sha256": "d3c618d3b1082ade5b0e7f600c158a68f609b9a0244421691622c1f6a2423791",
+      "bytes": 76573,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 17.559,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1538",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1538.pdf",
+      "source_sha256": "45dea188f34dd4a714bb79f3a5a8c4a9762115f7adb85797f272fa3c71f76e23",
+      "markdown_sha256": "30745aae6e03b39dd563b17d6fe6e33d90eee07a06848efefe0de60c95507152",
+      "bytes": 47946,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 17.073,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1550",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1550.pdf",
+      "source_sha256": "3fb6c0a39d8e52b1b714df74540ed54211594ffd83d7bb184e768819995c29b2",
+      "markdown_sha256": "8edbdb082309095122864b35dd3f7c0555fed50b32f0722d6ff3e218fe9befd0",
+      "bytes": 71126,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.362,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1562",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1562.pdf",
+      "source_sha256": "0d2f7a112d2143c15f7e5cbebeaaf9c6c2afa3d2772915a04c4dfbeb516a2183",
+      "markdown_sha256": "107a52f63eecf33d126c2b31a839f0c0a21e6f9cae79281e2e0718bdb45c88be",
+      "bytes": 69403,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.627,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1574",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1574.pdf",
+      "source_sha256": "ef40ef526cb85aab122db20c708244dcd6d60c5c605ddf07fef553f2aea4245f",
+      "markdown_sha256": "4d9ba86e4c1b004a167db8caef30ab349bd8bfb940ccdbea13c445d6addf2d04",
+      "bytes": 73945,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 39.639,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1586",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1586.pdf",
+      "source_sha256": "6fc730bbad881327370265551c3ca4f82be740771397db07952662767163c607",
+      "markdown_sha256": "d132e56b747281d89831ed2c3df617003a392001b7b8fef61745161fd1215cd2",
+      "bytes": 44579,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 14.521,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1598",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1598.pdf",
+      "source_sha256": "ffedfd294925264a81f79da8a7d85583f5da13de5e16ac7fae97f830cbcbb75f",
+      "markdown_sha256": "f3a9ea9a70baebe77bc91e12307bdf0dd37d5029b52a1e7dd825e23f1f49af50",
+      "bytes": 49327,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.866,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1611",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1611.pdf",
+      "source_sha256": "22303628373c32578081e37497e69557e7a880197bfdda1e85f2662491079568",
+      "markdown_sha256": "89b8ba75a831bdd3c34111454d570049e1ce28af807f9d130890cf6301282d98",
+      "bytes": 90125,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.516,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1623",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1623.pdf",
+      "source_sha256": "05e2bf678b78c3f7d59b2e8cd59ee6a17c10102794a5ea76a08e520158107728",
+      "markdown_sha256": "9e76da8c1ecc713b367a432e897f03a78c2767cf2cdd84c5f7f4fb825ec996f3",
+      "bytes": 45873,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 14.751,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-163",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.163.pdf",
+      "source_sha256": "dbfb055a03eb41cb850cc7c5bbc50af5acc78e88c96a209bca4f4bf139a0bead",
+      "markdown_sha256": "3cf2768e925fa6d36ad8b7512b579e4ef4391bae7748f21f9b26133889b85f43",
+      "bytes": 113480,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 85.575,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1635",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1635.pdf",
+      "source_sha256": "512d8e2930521d8ed65b8e37d7fa4bbf066c6bc83ecd16eda3323b6c9f5260dd",
+      "markdown_sha256": "b0d03ce3c142e4ff54b33395fc40066572f1832b33687da44d0c5ad1e21d2d55",
+      "bytes": 125599,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 60.064,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1647",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1647.pdf",
+      "source_sha256": "2ad10e280d1a4ab101edf1999243a3b0dbe237d9c9750bd03b13c80e6561e3ed",
+      "markdown_sha256": "55091307557c6e69e894f12edccccd04c471a56ea2ce72c0175e0a02c5e5bb7b",
+      "bytes": 107740,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 53.682,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1659",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1659.pdf",
+      "source_sha256": "e2b2ad9a9acefdff13cc250eb02963973830fd941e89891bdbef3e074af77347",
+      "markdown_sha256": "0c5c9e15d674b0721ee0755a650efe5d9e88711c0836e79db3bbad777408cce6",
+      "bytes": 640728,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 376.159,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1671",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1671.pdf",
+      "source_sha256": "5c6ebfa622007b652e5884a44b639a551b4bac7bb3508dc3a9eba3c156a1a856",
+      "markdown_sha256": "0226126c5a9e45a2e7c8369615504ae50aed0ec3c599b627dabf1fd9574e10d1",
+      "bytes": 63296,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.543,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1683",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1683.pdf",
+      "source_sha256": "c5f5f67a765ce85ecd454f219c4778a5eb34b6d584694b4dbb23f516945a7bf7",
+      "markdown_sha256": "a318a902250f6e02ff8b7b794f2435fc7247a23525dd7d375756a2f012fc4546",
+      "bytes": 68636,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 37.81,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1695",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1695.pdf",
+      "source_sha256": "bcd059d5a6e39248b5704cd8272aad2a0b83e6dc21feb998eab196966cf9dcfa",
+      "markdown_sha256": "f42acfe6bbf313e1ccb142467658ddb275df903e69ca2acd3d3aac5772fac4b4",
+      "bytes": 62706,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 35.185,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1707",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1707.pdf",
+      "source_sha256": "db6559c9485a48491ef69ea0f2c1798e81434ba3d0211d2c6c2ff95a7614cb9f",
+      "markdown_sha256": "103baceada336707210bea16f9cfe6ff578557437b61c2b74b32145e19ee4e9f",
+      "bytes": 111430,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 57.231,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1719",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1719.pdf",
+      "source_sha256": "4e11e77cfe27ab10fae7809066dc029c6703f8944ae92bdfc33f295da38927ea",
+      "markdown_sha256": "34aef0ca63aae4645b96909042b6601182b70aceb58b8b7cb47127757ff6af3c",
+      "bytes": 65939,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.162,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1731",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1731.pdf",
+      "source_sha256": "50c074b6a4b28b8ba8d4cd576f223c803eed70abc78bade6fd69e35ff25bf32d",
+      "markdown_sha256": "69a653d33d93d6407b2844351404a817242f89ff6f4c7778a883ceef3931417c",
+      "bytes": 370351,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 492.735,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1743",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1743.pdf",
+      "source_sha256": "f31a6abffc93f96920282268799f38e88f5e7ca321de85d41459e65f78cbc6ce",
+      "markdown_sha256": "7023a48a32627e2549555887b6c65999306d877d17bf19e46ee00f3b4569c8a1",
+      "bytes": 94261,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 42.688,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-175",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.175.pdf",
+      "source_sha256": "c0ecd62de4c4a46d2e94e5e525711b3283479b2fd270c92a173108e432b5308f",
+      "markdown_sha256": "a96dd2c6ed2dec533d909befa522276c97e79290ec34c4938e296c06df15410d",
+      "bytes": 139047,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 217.18,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1755",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1755.pdf",
+      "source_sha256": "d9b3d0157e5e23b74503e3976f8972c86ad6e03dbbd4f30947d326d5539c2ae7",
+      "markdown_sha256": "0bf64321abf31db54e8060f91b29bd3bdf984f674a4864865b9d2bf826cfcc6e",
+      "bytes": 129160,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 119.938,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1767",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1767.pdf",
+      "source_sha256": "3bb9c7c0f545bf23e46e8115944f05723882120135b6120544cb042a89e23090",
+      "markdown_sha256": "af3fc932547d6b864b98b4b525c70d2505e0be3810d25bf74b4db0055f515ffa",
+      "bytes": 54036,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 90.751,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1779",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1779.pdf",
+      "source_sha256": "34d54ca057a56a6e2ef9e3944b53d1dce68b2f02120380c7c5a7d91773fbe551",
+      "markdown_sha256": "c92c49278e77eb69335fc685ee9481b5b150d847ccd055f593bb4f68efc49c3b",
+      "bytes": 48382,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 20.223,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1791",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1791.pdf",
+      "source_sha256": "baa9ec998ab3eb14416ae9c242b188083337728e693c0aef5adfd5487718dafd",
+      "markdown_sha256": "72c584442e9da38071fa7fead74d2ad5f208acfd4663377f389f534df7691345",
+      "bytes": 58016,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 25.256,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-1803",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.1803.pdf",
+      "source_sha256": "9e475d70b5541a9832794ee0c11a496154e38eb275a6d3e69c1a623a40f87074",
+      "markdown_sha256": "45e04051228660e9f325438b154b755352d02312db0b4b7252ff0749d89e5bf5",
+      "bytes": 64234,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.948,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-187",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.187.pdf",
+      "source_sha256": "f77307524813bbf5912b11fb5e47e640c8657e5b437aa6f88dd8e88f0e9031aa",
+      "markdown_sha256": "624ccbd7db4d3004cbff2b95a8c1b1b119a645d045fc24b0af8d204b550dc264",
+      "bytes": 104574,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.528,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-19",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.19.pdf",
+      "source_sha256": "f661eeaef5c1750ec2d615612e12835a4302fa78dc86c2382850dc8af12a9f06",
+      "markdown_sha256": "5d3abc483b76554bc2b8cc6bf0708e5ae551ccd35947573db686281ef955538e",
+      "bytes": 113115,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.991,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-199",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.199.pdf",
+      "source_sha256": "4b722f3422cbd80c7c82f02bb002f6b0bfb4cb7db5b82d6632453090ee84874e",
+      "markdown_sha256": "70f56b6c76d6f0ac3c5ec3a78aaeba8de012a64794064779bdc19f9453090c1e",
+      "bytes": 100052,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 119.025,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-212",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.212.pdf",
+      "source_sha256": "1fef67939364b1f4f5448f55dd5dd05579509bf32e27efab59afd3438ecb5323",
+      "markdown_sha256": "e36702f81f7b7977ef122a7e8a84684dbd5fafba81839909d9141fc19c9378d3",
+      "bytes": 99288,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 52.409,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-224",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.224.pdf",
+      "source_sha256": "b074a2acfdf5bd85e61d343149e805c4e5e77c4ee13fc2fcb390d8a4737cffa9",
+      "markdown_sha256": "0c7acde98b4eb75228719469fd7f5db556cbc10cb24655bf495cb728c5b6bbee",
+      "bytes": 67131,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.853,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-236",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.236.pdf",
+      "source_sha256": "2b94594b62dab949f4da3c73f1e4d55a4c658fa8ad96a111f8554c1aaa75d32c",
+      "markdown_sha256": "930e948f58c8fa04a8883d165ce1277cf7df362525ddf649f1ff9f030fea5ab2",
+      "bytes": 58916,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 19.848,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-248",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.248.pdf",
+      "source_sha256": "ef2eb5cb8699e495e43b63d71ea8c8621bcb8bf98f3d2e9b6563495e78a604e7",
+      "markdown_sha256": "05eb9c6e4b0394dcbc81a808db8021f0b141d8fc5ccf0d58a9e5d450263e6025",
+      "bytes": 77048,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.182,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-260",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.260.pdf",
+      "source_sha256": "39ff4534d2e66cd6f47b3dd597754947f4ff34ebbcb7bc1531012acc8df0e318",
+      "markdown_sha256": "0fb72c661f5ee037911117869638c249f26162c28deccc49ff8428b2b95af146",
+      "bytes": 62058,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.15,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-272",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.272.pdf",
+      "source_sha256": "c2fd7175ca5592f06d7ceb356872beb6397b690fcf421b65a68741ffd9e46251",
+      "markdown_sha256": "61e4fac03ca924f669610eae00695581742d31d59fd93a171478d4540dc6ee74",
+      "bytes": 68906,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.207,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-284",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.284.pdf",
+      "source_sha256": "055b4f3f704cff30ecc418c3711d5d5f317846697a2a92fec1ed17a6fadd8ff9",
+      "markdown_sha256": "648b8993a04200ed2aa9f46afd2a5bd5db2076e144c46a9986b83aac63f411fc",
+      "bytes": 71543,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 37.224,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-296",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.296.pdf",
+      "source_sha256": "89b874485ff4ae7b30c7f2ef4251740f916b5b2e3280c6bd286b574569589afc",
+      "markdown_sha256": "3c4aa8800feb621a0f4bbc3ebc84c2f96113854828d54e7701af21e0c732e58f",
+      "bytes": 71732,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 20.32,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-308",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.308.pdf",
+      "source_sha256": "97fb5a9bc6562c04a0716653abcdfae97abd98543d57bbc647191450558f26c8",
+      "markdown_sha256": "baada5efbed79e771ba5d6d5a5bfad634a97c053b9ee4093396da519db863d31",
+      "bytes": 62350,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.512,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-31",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.31.pdf",
+      "source_sha256": "04b8e2d8eb3df80690818bf3b261bd61c8a1fd80eef6e22cc10015f3f230f646",
+      "markdown_sha256": "4ca0cdeebd459cf38f7679c35fbff098ce5759d86f5721ddc7b0001bff76f9b5",
+      "bytes": 60884,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.618,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-320",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.320.pdf",
+      "source_sha256": "49fab9cb5b496cd8993d7f64512719505dc301e93feac67358326bb32d72ef0e",
+      "markdown_sha256": "0c5ed0fbbc9be0edca8584acef255eed224e53d0890d987556dcb62c8791abc6",
+      "bytes": 104777,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 176.016,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-332",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.332.pdf",
+      "source_sha256": "5d71a7c8e022897b250503dd2ea251946ad9dd8cfd3e18daf49cff7c0f89a714",
+      "markdown_sha256": "4c2cb2d1ee8700536d65a876f654e49f935e26c0d4e6b513ec00b8fbaba9d37e",
+      "bytes": 49094,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 24.69,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-344",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.344.pdf",
+      "source_sha256": "778d134eb798e054bc9e9e6c34982aba007ec5431516ef5c6e69c4ed6a4e8c13",
+      "markdown_sha256": "13c4cd70938e84c1a8ce64de3d811483ac7dbad7e4b42fcf01e0a706276f8925",
+      "bytes": 63052,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.014,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-356",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.356.pdf",
+      "source_sha256": "3c94f49600e43099251a23166da818993320fa8fd9b70f9e33bfe9c55b84f04d",
+      "markdown_sha256": "31b564596a6babe66c4ad3782ac02ea86a73dc693ea94d9a84e15554b39b7e62",
+      "bytes": 101447,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 84.636,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-368",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.368.pdf",
+      "source_sha256": "7f003f170355baf9c93296d8ef9f8dd23657194fa294d262c55495015c8ee434",
+      "markdown_sha256": "f956e99286cf9046c7b1e20d6bf49a133c90d683a3236174832eceeb59681f9f",
+      "bytes": 73739,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.807,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-380",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.380.pdf",
+      "source_sha256": "ff5c4b34941f331f6c81499411365d859f3acb92c62a012fed4ea8244c843af2",
+      "markdown_sha256": "81d96946e97dec1c9098bcf7023f27efbf9100a176a5bdb2c4eaed6b5da56e6d",
+      "bytes": 52869,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.216,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-392",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.392.pdf",
+      "source_sha256": "99bbf88a6a693ca2fc478ae43945c3bc77c92989aa7218d38ad0e4782907c02d",
+      "markdown_sha256": "e2d6b98683991f2d9d0db6514a532cb4127d3f8e8bede5a6ab934ad0ef77264c",
+      "bytes": 80055,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 74.505,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-405",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.405.pdf",
+      "source_sha256": "47dc2e55c4a0153386f68afe3e1a091a0d51db2d484ce241b35556bcd5139eb5",
+      "markdown_sha256": "5e12ff90fd1bcb226566ea8dc1dc39b21ad476a4506282042a6c64c02cec822b",
+      "bytes": 78151,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 57.752,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-417",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.417.pdf",
+      "source_sha256": "611cc60e0b9dc87b282e1487660b4ec49b2b71cb38f5d6aa38a77e83df9a3275",
+      "markdown_sha256": "bb6c09faaea7d9ca44c8916952e7a3b52ca9fe8851abd4c486df49a09637947d",
+      "bytes": 82371,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.329,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-429",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.429.pdf",
+      "source_sha256": "62ae067119e9aaa20a0ad24d6a5e787af9fc669e2b7e15387dd39f37854e5acf",
+      "markdown_sha256": "7cf760f68bb5c6a9258d222932c468a3a5f8eba90ede868bee48caeaae5e9ce3",
+      "bytes": 46022,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.56,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-43",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.43.pdf",
+      "source_sha256": "b00730e350490ddba35542e5fae63fff4abb9c6d5f784e0cbafd397fe1288a76",
+      "markdown_sha256": "8f2d24ef2670f6f20566e747cbdbe34463dba74dbcd33052aa9ab2722f561519",
+      "bytes": 99081,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.587,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-441",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.441.pdf",
+      "source_sha256": "71f12237efe091b802ac5f0b6656ede8c9223cfda7ebeaf86b69c3a07f7cac41",
+      "markdown_sha256": "9b93bf5a6a708a54241c7626d0937f98fa9de9ed33c857ae7d4d5083f0f0d368",
+      "bytes": 67028,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.158,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-453",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.453.pdf",
+      "source_sha256": "c9443a6298be883d1cbf6fc79ab1e84c677db87c0c8294b61fdb4fc45cade466",
+      "markdown_sha256": "4a16e1e4c9f138913d1454b37d91c943222655b7ab4074a5378b5a5a61d98d70",
+      "bytes": 74466,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 38.062,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-465",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.465.pdf",
+      "source_sha256": "388eb48edbb5c6f54c7e7ffb15c37bf4263e7a4ac6b028bbfcafa3b05ee2de09",
+      "markdown_sha256": "63c0fa8cdca9fe57ddbc5daa9720c7d62bf5b77b56d49bf5c91aba3fe0658b7f",
+      "bytes": 120420,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 59.842,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-477",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.477.pdf",
+      "source_sha256": "02d50aa33b9121b02beaf8afba8eec92fe74225b38cdc64ed29a6c6b9eb55272",
+      "markdown_sha256": "e3cd0c7133d54094cc6535470df514957e4594c14baf858826455c1b3192c4fb",
+      "bytes": 63392,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 43.329,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-489",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.489.pdf",
+      "source_sha256": "c50a20a6ecbc404eff469dc3f7be232aced4a97f43ab47067aa1069f6d31a309",
+      "markdown_sha256": "7ef4ff06bbdf6ac7615fcc891634fe0621614f5f2632d370202781448115101b",
+      "bytes": 70375,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 68.698,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-501",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.501.pdf",
+      "source_sha256": "3cbd6602e8cb59c2e06b0f84a55cff918b7cc9e269342c132444aee6e19e22c7",
+      "markdown_sha256": "d6a213eb328bb7894b1164b351920efe57ce87f2f41b7470096be761d291783c",
+      "bytes": 76850,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 39.855,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-513",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.513.pdf",
+      "source_sha256": "92213721b367d3c5dc846380e596a84fa69387bca771b8162fab597008f4cf7c",
+      "markdown_sha256": "d917426f8b44d50f4cec5004eb1b4f221569f75291823bf0c9787ab8da203887",
+      "bytes": 66698,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 40.736,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-525",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.525.pdf",
+      "source_sha256": "632acac4046471f709b270fcafe0790de4335377b586c7545d6912ebde6927f5",
+      "markdown_sha256": "81f737d1283870aa5167b8add3566129a376753813558b7e13e56656df204316",
+      "bytes": 87972,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 53.846,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-537",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.537.pdf",
+      "source_sha256": "8f3aca8aabe14aded794a5b653ba97772934be83af98c4fa669fd00385c30925",
+      "markdown_sha256": "64f39bb394adc4cce2c9c22badc21573596ff08744eab7a44f23171282331154",
+      "bytes": 50669,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 46.108,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-549",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.549.pdf",
+      "source_sha256": "fc7584fdb11d9311bf58617329a394ac8c55089359b6fae4ef7658a023e7568d",
+      "markdown_sha256": "dfab97668d19740eadc20bb6dffd6795200ea4cec8e7c9f8821242657a270649",
+      "bytes": 94151,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 42.283,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-55",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.55.pdf",
+      "source_sha256": "08e8e021597ce691e67eb021dc075c70ed177a5b75986e573817e6c231356bc4",
+      "markdown_sha256": "37421d506ac25725db11715964b3fa84c4b49a28949aa1deba7f9155fef9b474",
+      "bytes": 61449,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 39.336,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-561",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.561.pdf",
+      "source_sha256": "5c00ac10c7c1f39d4f75f9f0e01127d6d3a5c79118ad0d7bc44f0c616de25177",
+      "markdown_sha256": "31aef137b0a1c051c18b1c9a739621b8e35cec05a98c537228ae2fc01cdf34a5",
+      "bytes": 73350,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 20.868,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-573",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.573.pdf",
+      "source_sha256": "4f53bfb41738140656670d62c1f685a8967e0de4115f384664b1985b04335e92",
+      "markdown_sha256": "4875a9e2045c44a9e275d8134c900536f7222437043c950cb7fd01568c55ba46",
+      "bytes": 60213,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 31.483,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-585",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.585.pdf",
+      "source_sha256": "9d4c2ad2a05f049012244221026c57a48ead5c6663676ef35a5004fe967c870c",
+      "markdown_sha256": "bab8d25d994ca380f9c3ba69e5c329b28d079ea727c5bec8d27ed4f02af850a7",
+      "bytes": 112844,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 43.315,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-597",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.597.pdf",
+      "source_sha256": "8b2ae3940710b4287787fa5d97713c7d3cefb1b615f0280f8ed2086fcd4d24a2",
+      "markdown_sha256": "33002ffb8067da39d4d501c95d8d52d4e00f7213245a950a05c9a1d2104326a1",
+      "bytes": 64143,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.437,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-610",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.610.pdf",
+      "source_sha256": "822cc81a52e8de60dd29125ec15906081e0233d3b1685de4d2378d0c6a6a620a",
+      "markdown_sha256": "d61a0964494c723e5d880d33f996cd4b6425786ae80482cfa6d1e11620986934",
+      "bytes": 76004,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.979,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-622",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.622.pdf",
+      "source_sha256": "c0d9939d32868afed06643b81241906ab5d6bd83f6bc83d3a80ffc77355ae85b",
+      "markdown_sha256": "8d8259b4ec2ba400e1722a754421d4cae8357359708faa7805bc907df21465e7",
+      "bytes": 25509,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 15.389,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-634",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.634.pdf",
+      "source_sha256": "36311a9d8045ca6fbe34f72b34f4133d3f6a854a4ffbef7527eda48ceaf150b0",
+      "markdown_sha256": "a3705a1ec883f667794b6da68ff9dfe11f4bcdab35ed91f99a9f1b163e8d99b4",
+      "bytes": 86885,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 42.064,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-646",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.646.pdf",
+      "source_sha256": "7caa6cb7c5d21590b5f5099566c21a6248b84eb03bb1c0ed5c08c69ecc4f1f51",
+      "markdown_sha256": "8337bca5f27497dce93de11f82d3b2afbb175e370dd3b8efa393186809884da2",
+      "bytes": 63813,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 33.524,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-658",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.658.pdf",
+      "source_sha256": "bebd2f76d4b3e6c9455e199540b759ba4a5ef6df306f057f122048b58bfc75f0",
+      "markdown_sha256": "81f7604f20520665e7247e154542ad9a9ba3b43af96de7fb363bf24f0e208db2",
+      "bytes": 57154,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.923,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-67",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.67.pdf",
+      "source_sha256": "b372cfade0105bb40011be2ddbf96c3e1ddd8464f8498fda827da6fd7a1930b0",
+      "markdown_sha256": "66e3ccff5836d2dd64d571f8a73f505fdf0dc196d4f93c68ad96c5f11d21258d",
+      "bytes": 64241,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 28.574,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-670",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.670.pdf",
+      "source_sha256": "f59428043b167df574966b300a4a446462cd56d0027b716a981b46bee56e7e7a",
+      "markdown_sha256": "099b5207c6a0645e9bf72b08160ecb4fa29adaf094a5e958efd4638c2a551860",
+      "bytes": 76333,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.948,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-682",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.682.pdf",
+      "source_sha256": "83cdba82b48698a0199afa825559035014817686b9ee83fbd94d9348dc94f6dc",
+      "markdown_sha256": "cf5c0598ca1b166e3098ab0b8fa661d4b851b81c9e26ab506eac69401e3d6ef4",
+      "bytes": 134279,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.923,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-694",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.694.pdf",
+      "source_sha256": "78db428cbd328a0a0f91fdd661aa97928bc6a04fcd9bb420703fac979f73b49e",
+      "markdown_sha256": "8b4c0addefa4cfcc2e610fb93096a44c3f95558b7e5eec0fa91a4da5a5a27e8a",
+      "bytes": 66001,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.609,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-7",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.7.pdf",
+      "source_sha256": "a3e0df37b0343abf5ee5c6f37a2893c52c372033d4e3f53ae9c42692dde1d557",
+      "markdown_sha256": "727cba70ab412239c36af186dfa51426552cd1d1a5804cbeaca2f7c0b861745c",
+      "bytes": 63393,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.106,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-706",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.706.pdf",
+      "source_sha256": "71a9ecb7f6745ca1821de4345bbefcb0ec1c3c14288087b33f27567e5607d73a",
+      "markdown_sha256": "65251e6c088ab2c3d01fd6748b168609c013489e6ece58100d187b49c7e76f8e",
+      "bytes": 162803,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 86.18,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-718",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.718.pdf",
+      "source_sha256": "be0e858961903a46d4f1376fcba21db40ed2d11a50905486bef88eaf95e36c20",
+      "markdown_sha256": "55e5add5295fbe423e01f59fde170792b7c6bf4b5e53004244587187794f2ba6",
+      "bytes": 52550,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.048,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-730",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.730.pdf",
+      "source_sha256": "de49f636d832e980ae17e1cca79248b921a8dced63ec2420bfbc4569380ffcc7",
+      "markdown_sha256": "29314ab098e59194a13cb4e23137c0735c82ee464cb1927031286c81ed44a941",
+      "bytes": 113717,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 50.034,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-742",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.742.pdf",
+      "source_sha256": "f7204bb3245d0988a93575ba158a655dd52a22d0bc0c83ee09ebbae5d2ce62d1",
+      "markdown_sha256": "2b95432959fc09ff6ba554b0090683f688f67ea35ba5c56572d89d1a2e788eb6",
+      "bytes": 93442,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.062,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-754",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.754.pdf",
+      "source_sha256": "1834ab6d69ac51b4bbb9eef30cc359f4f1aa38df523ec827b1ecdb202a3ad11e",
+      "markdown_sha256": "4b07a5e88cfd1d062000b8080127c9ae5002a473a308837b16ae556f06b5d3ee",
+      "bytes": 121215,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 121.719,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-766",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.766.pdf",
+      "source_sha256": "e0cc5d11e48537fbfe79ec508103e555e784ae4f4f0de65ff3d0e435b5f44371",
+      "markdown_sha256": "e9fa38139f182d64607795e2906558085666a85f1d2b820842a9ba3800362bdb",
+      "bytes": 99274,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 97.442,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-778",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.778.pdf",
+      "source_sha256": "67e1729e1d755831c3647950b6ba5bb83e0ef5ec325aaeaf1aaa6a1d7281107e",
+      "markdown_sha256": "4d0f480e4700b84cd9ce6b8b56d689aceebbba763cbff1e70d558e7be0ef1bc2",
+      "bytes": 121272,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 61.16,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-79",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.79.pdf",
+      "source_sha256": "a206294f814f4f50f109f52996ad00ce53062194332a30cb0bcccdf0fda0c4f5",
+      "markdown_sha256": "69d2b396f8ac60e9e82d40becf6c33e035bfacb997cec04957f68d9c7abe348a",
+      "bytes": 115522,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 150.972,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-790",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.790.pdf",
+      "source_sha256": "88d1a2d6bd85cb449b33c5a2b4640bf74e384dca289dc900884e8699dbc29b7f",
+      "markdown_sha256": "53477de7d13505ba4bac509456c0a42a62d951eda6ded9f495c10be8361b971f",
+      "bytes": 127620,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 46.695,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-802",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.802.pdf",
+      "source_sha256": "0b49794d1a96f6e30eb0398eae75bc31a02ade2d6e3c6824954a5af02d6293e3",
+      "markdown_sha256": "76167d8d8aa6ca53a6ab498abe84d4e5e9fe203213e4c1835c382590ca000907",
+      "bytes": 105321,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 43.957,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-815",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.815.pdf",
+      "source_sha256": "aab01ed3be47d7868bf4fc823707906059b3daad990cddf32a0820e1fdfdd019",
+      "markdown_sha256": "8aaf08f14ac311226c8f93187de3059449773454caa074f33a6fc6e2af15b295",
+      "bytes": 64303,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 38.652,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-827",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.827.pdf",
+      "source_sha256": "5bbb98be693d5552b004332713df2d6b0f9f889d3901d79acbde1a89ddef7b08",
+      "markdown_sha256": "3080f66880a7134aa9fef3838825afa53aa34c092fa988ce2328417bfe09496e",
+      "bytes": 147385,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 97.998,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-839",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.839.pdf",
+      "source_sha256": "0ff902a16a26b1c91dd0ed0b92b7a66f4187633ac55ea3742cf8be6de948bb92",
+      "markdown_sha256": "45890f0c5456549c028cf80f6e6fc5bc44822a36cdddabbd2a9e2863875948b1",
+      "bytes": 63228,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 23.546,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-851",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.851.pdf",
+      "source_sha256": "e565e761737796c083b3abe8f0ba2c6fe0dcf58ab897b0473b18c7ad62e029d1",
+      "markdown_sha256": "3591dfc56259e730838e42301e54cf4b8a1b0d44701a0cfd8dd89d7721ea222f",
+      "bytes": 39683,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 32.704,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-863",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.863.pdf",
+      "source_sha256": "fd2faf824f4e1c97285d52d0946484ec9190e2b4954c36aa308a83a00afa43e9",
+      "markdown_sha256": "60b342446973b74d37051901fcf91d29f4fefe8794bd00a08f640162aecac19a",
+      "bytes": 88141,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 50.358,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-875",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.875.pdf",
+      "source_sha256": "3e53b32e8c2c91ca811d0dad166507ef6f27f7f5f8cec03002222a6722b20036",
+      "markdown_sha256": "8c8838f58d6c55c55fced71dcc4f20f48cae93c969c415d80b81ec881e1932d8",
+      "bytes": 84133,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.096,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-887",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.887.pdf",
+      "source_sha256": "eca30c65e3eacfd40db491e131360bcee923135e4be03cc702ca0d7228a7afbb",
+      "markdown_sha256": "10c8f63539a1d170c7973e9fabbb2c89101c68b844fb2bed43bbe77768a3530a",
+      "bytes": 94510,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 41.74,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-899",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.899.pdf",
+      "source_sha256": "05f2c44656774738e60c073215a158debc733bcaec3a652922904ae9943df1fd",
+      "markdown_sha256": "601a22c34ce9a35ce5739e21ca1b1e8dd2dd7168b44e9ffb429c8b85658d5e76",
+      "bytes": 71069,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 28.714,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-91",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.91.pdf",
+      "source_sha256": "19ffc2ee15c7e65920bbcf6ace4cfaf93c24d41ff12ec432cc7726720010ca1e",
+      "markdown_sha256": "569cb6188963cbf429f33af106f1ff4528013d72d91d1339c55bf6919896df4e",
+      "bytes": 84673,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 28.144,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-911",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.911.pdf",
+      "source_sha256": "6a2cd840ca9bd325f70eeff59a0bd119861be154519fce4ddd2a28c1f4ed1138",
+      "markdown_sha256": "b70a588edef4672270b2d93b63d4c812b3dbe92bbde377356ef847c9618aaf2e",
+      "bytes": 64852,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 42.191,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-923",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.923.pdf",
+      "source_sha256": "87da468b58a516ff97b6b0a2dd48ceba1b0b6bf1ae2ae4b9f640d3b6704c1279",
+      "markdown_sha256": "e469af2b0cd00726404c94fc2c8c4dcc86599e2793c8bc49637ad8ed511c408e",
+      "bytes": 87882,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.091,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-935",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.935.pdf",
+      "source_sha256": "56cf8210ffdf506d54037dbb1fcb42b75024fe9c249b90fd2f149c8b9b6cf2ee",
+      "markdown_sha256": "8bb163149509c49a6123ea1c73f6c11a95224674084f0ff34dc226422927dbbb",
+      "bytes": 67818,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 27.041,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-947",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.947.pdf",
+      "source_sha256": "012651299f991d021822ef9914f3890a52942c75e8390b363c297e7d87d0dbe7",
+      "markdown_sha256": "3d255921be6a3e2bd3a2b4f27cfbe04c7dcf4f0ac7e8c5e23cfd31340977c814",
+      "bytes": 70738,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 45.949,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-959",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.959.pdf",
+      "source_sha256": "98fd85d8458b8014918f889f46ed0965f61ffc8024c1ab0db86a068b81706eff",
+      "markdown_sha256": "84a221f813ccee878f3316ed91cd80cac1820a50014de652de0222c98dc70e6c",
+      "bytes": 68582,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 29.325,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-971",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.971.pdf",
+      "source_sha256": "0d7d3923695cb7a2a8d54106021af5ba95f691cae76118c56fbd68d37f8d69cf",
+      "markdown_sha256": "b0fe57d4cd867be470e756b21caa39c36c212d0472594498c8647abda5121f17",
+      "bytes": 143751,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.124,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-983",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.983.pdf",
+      "source_sha256": "239f962519625f83d2d7ce9bc2b595243b5c3048492e3a5630a904a762d6bec0",
+      "markdown_sha256": "37c8dc81638b1b757a326bd1f7d2a80f218dbd3098a6a093b4420e752fe8193d",
+      "bytes": 110370,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.728,
+      "failure": null
+    },
+    {
+      "id": "2025-emnlp-main-995",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/2025.emnlp-main.995.pdf",
+      "source_sha256": "edbf7ac5848a1f49d0de49fb5a57749d0bca96474de74be923f8342416d24ddf",
+      "markdown_sha256": "f7beb222145a48328792ed51b9db719fdaabd2c512fcc9a55f675c5920ba7dbc",
+      "bytes": 95419,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.827,
+      "failure": null
+    },
+    {
+      "id": "p21",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/21.pdf",
+      "source_sha256": "3589027e49989a4e358982a2664abfef1e4da90bace77ca35607a0ec6c46d8d5",
+      "markdown_sha256": "8097bb7cf812bd7e557405d96a00c0dc73e2b04cb2aacc0bc2d8ba050ed39b01",
+      "bytes": 43546,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 7.532,
+      "failure": null
+    },
+    {
+      "id": "p23",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/23.pdf",
+      "source_sha256": "35b9fad5b156b6ac70d6abc3b8083ca35cd66bdaa96728cc5d6769d86ceb9784",
+      "markdown_sha256": "b69731a21a3e7e69f31ff2c78bfeb4b997643c1abcf82533d1f2011b909fd308",
+      "bytes": 256263,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 44.48,
+      "failure": null
+    },
+    {
+      "id": "p24",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/24.pdf",
+      "source_sha256": "0935019d2f5d397c5280b37b336882a6c0ac199485177f919f9cb4fe812b1bad",
+      "markdown_sha256": "6f95735ab58286fc32cb1dbb8a9f9c889342523622d63ae8ca7e452352aaa81e",
+      "bytes": 44040,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 9.366,
+      "failure": null
+    },
+    {
+      "id": "p25",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/25.pdf",
+      "source_sha256": "e8ab3dc94b5dafb4cc402556b69174b6ad9976978b064141232acc0f866997d7",
+      "markdown_sha256": "40444a623443a9f810ece04cb66abdecaba1ca531a8994d0ac6bddca487f17ee",
+      "bytes": 38843,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 12.044,
+      "failure": null
+    },
+    {
+      "id": "p27",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/27.pdf",
+      "source_sha256": "1f12018ddf5b5e174f860f2bae48c5c832e7ebff247c099036912c69dbb1e0c2",
+      "markdown_sha256": "30532a9d970aea23262cd9f4c57d8d023485752fab66fd28d136e5937226bfa1",
+      "bytes": 49253,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 14.63,
+      "failure": null
+    },
+    {
+      "id": "p28",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/28.pdf",
+      "source_sha256": "2ee10ae0961bef97ca522bb7ee5b7514e7a918a637dedad569b572b18bccb35e",
+      "markdown_sha256": "d073f7ad2f8d6a10b15b29ebdd785cd50ec303df850edc20bf3cc14b52488654",
+      "bytes": 49206,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.143,
+      "failure": null
+    },
+    {
+      "id": "p30",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/30.pdf",
+      "source_sha256": "ba8fe996a24b3b203f9b929c0bfacfaee58664312fb6032d34ba0d45e6e09ab3",
+      "markdown_sha256": "c8a4778fd9f72d1f792bbecd2f7792fd336a6ed66ce9e6d8211160b331749e19",
+      "bytes": 38257,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 8.327,
+      "failure": null
+    },
+    {
+      "id": "p31",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/31.pdf",
+      "source_sha256": "a69741b07ededbd0f10d8e3770b8402ced48d1ef8d048da258bd717f5a994335",
+      "markdown_sha256": "dfeea4fb68f5c719ebba0e94954a35a0f5379b88405476bb186131486835c35e",
+      "bytes": 47928,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 16.953,
+      "failure": null
+    },
+    {
+      "id": "p34",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/34.pdf",
+      "source_sha256": "f1876883dbc47331e8a2297c395499c86456d19f6ab44ce37fc9b2a9eda7c592",
+      "markdown_sha256": "4c6b3868a696b507d96135bd54d4fd387f306e279a29526e6c3854988e64612b",
+      "bytes": 41910,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 13.629,
+      "failure": null
+    },
+    {
+      "id": "p36",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/36.pdf",
+      "source_sha256": "f8d078dc2a5a95c3a7f40485a0584a4c8e03aa8e74bd9ab6b4b4dc61a46deead",
+      "markdown_sha256": "2c32339ea8018e3cd9fe7c3c711b123631c71ce730af114a7e6c0ebf0e4b8882",
+      "bytes": 32263,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 6.547,
+      "failure": null
+    },
+    {
+      "id": "p37",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/37.pdf",
+      "source_sha256": "e103b5b906e62b2d14b2d804545b33d46765de5c4dabd9269464c7b366829d8a",
+      "markdown_sha256": "23ca7ecc302c758353206bf14474e98c9a741976be2cd6f581aa0c778bd36f87",
+      "bytes": 55533,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 21.32,
+      "failure": null
+    },
+    {
+      "id": "p38",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/38.pdf",
+      "source_sha256": "9a339f67ee06ed25919ef42f073e002b9066cf41fdd7cf40e64c33eb9aac75b4",
+      "markdown_sha256": null,
+      "bytes": 0,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 30.944,
+      "failure": "ValueError: Markdown too small: 222 bytes"
+    },
+    {
+      "id": "p40",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/40.pdf",
+      "source_sha256": "8fc1b74a7b742c9ed307b32af6e6d5d2ecfe4986ecba2d92ef2220535c2a5426",
+      "markdown_sha256": "5592da4ee82cb53fa5f58cda921b82005143f282957ad6e96821440cee4da38a",
+      "bytes": 129190,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.962,
+      "failure": null
+    },
+    {
+      "id": "p41",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/41.pdf",
+      "source_sha256": "22be59c0e636b7e04557bfebca47c5ac20fe4e0e3a194c9982921c975ace9316",
+      "markdown_sha256": "dda29b03b3906ef78bf82e51ddc81f06151a6b5bbc87df504922262e53d67045",
+      "bytes": 34190,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 11.58,
+      "failure": null
+    },
+    {
+      "id": "p42",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/42.pdf",
+      "source_sha256": "7faf7287c5920d0c16b1f55849a214d97b8355af621632176178860d07b237e0",
+      "markdown_sha256": "c5437fe7c3c2a3c7279e3fb0603cbc3da4cca15c5159936168561a91fb7b7f24",
+      "bytes": 42211,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 15.78,
+      "failure": null
+    },
+    {
+      "id": "p44",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/44.pdf",
+      "source_sha256": "7f0de61907c9f208921f2ce3d3fb2ffc7ba55a9aa248b463098a11d7265e1bf4",
+      "markdown_sha256": "d55d0061293ad1e2020df631d7a9668992a68223e778f0763c025d3f18ad3c8d",
+      "bytes": 85101,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 81.289,
+      "failure": null
+    },
+    {
+      "id": "p45",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/45.pdf",
+      "source_sha256": "c37ea833d381b175841915d79400d35cc4557796ede1f53672f4f6aa3e6a1fef",
+      "markdown_sha256": "4d1554257e7c0b4594fddd24541e723de826d2aad1bad7cd2ba65ba208d4d5c1",
+      "bytes": 36189,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 13.892,
+      "failure": null
+    },
+    {
+      "id": "p47",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/47.pdf",
+      "source_sha256": "9ff51f7742dbbcf1e7f1647ae0f925c4da76628af015c95cba8c4b925322b1b3",
+      "markdown_sha256": "6f68ba17487758fc9ec584c81a02750bfbef8198cbce7f2de55632285d3d78b9",
+      "bytes": 107094,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 34.057,
+      "failure": null
+    },
+    {
+      "id": "p48",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/48.pdf",
+      "source_sha256": "531e2105aa13ee663fbd43ff67759c60e014c73c913bf2c53d0399ee235264f7",
+      "markdown_sha256": "a7a4f9fe3fa2588aa43e8cb0b5e8a2b34d719376c7d00439071c4d5a7314e584",
+      "bytes": 37024,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 13.669,
+      "failure": null
+    },
+    {
+      "id": "p49",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/49.pdf",
+      "source_sha256": "719f6b13ae5cf179f01e63e9b02e1ce733ae6a42a4ecfb11650a7aca8bb0fcb2",
+      "markdown_sha256": "9d49316841d38a07e03294d6c0225edfe71e7859084e9dd6c169e58f76e99361",
+      "bytes": 136962,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 47.698,
+      "failure": null
+    },
+    {
+      "id": "p50",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/50.pdf",
+      "source_sha256": "1443855a92842f4d699c3fb2557a391ab35a70fb88f5b39b38076ee1486a5f1e",
+      "markdown_sha256": "690d479ca8bb9ebf5450911ee647eae5d1ccf091d80e23e3ae0c6b6ef38e7e64",
+      "bytes": 64016,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 26.888,
+      "failure": null
+    },
+    {
+      "id": "p52",
+      "source_pdf": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/52.pdf",
+      "source_sha256": "5061f7eacde3e15a111e7ab408fac3d1d58eb1c662901eef7f230f15b404c0e4",
+      "markdown_sha256": "2f40ba6484cc2b39f66073613ba600a6953001d869be091e8733ffb8ef4e5f1d",
+      "bytes": 73076,
+      "docling_version": "2.110.0",
+      "conversion_seconds": 51.226,
+      "failure": null
+    }
+  ]
+}

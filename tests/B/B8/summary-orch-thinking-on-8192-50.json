@@ -1,0 +1,10 @@
+{
+  "n": 50,
+  "exactly_one_block": 47,
+  "one_block_pct": 94.0,
+  "prose_only": 3,
+  "multiple_blocks": 0,
+  "reasoning_nonempty": 50,
+  "length_cuts": 3,
+  "mean_seconds": 31.045362581862136
+}

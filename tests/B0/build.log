@@ -1,0 +1,24 @@
+Using CPython 3.13.12
+Creating virtual environment at: /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final/agent-venv
+Activate with: source /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final/agent-venv/bin/activate
+Using Python 3.13.12 environment at: /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final/agent-venv
+Resolved 13 packages in 547ms
+Installed 13 packages in 14.54s
+ + cloudpickle==3.1.2
+ + joblib==1.6.0
+ + narwhals==2.26.0
+ + numpy==2.5.3
+ + pandas==3.0.6
+ + python-dateutil==2.9.0.post0
+ + pyyaml==6.0.3
+ + rapidfuzz==3.14.6
+ + regex==2026.9.29
+ + scikit-learn==1.9.1
+ + scipy==1.18.1
+ + six==1.17.0
+ + threadpoolctl==3.7.0
+/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final/bin/rg: OK
+/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final/bin/jq: OK
+cp: warning: behavior of -n is non-portable and may change in future; use --update=none instead
+cp: warning: behavior of -n is non-portable and may change in future; use --update=none instead
+scripts/build-agent-root.sh: line 44: agent-root.sha256: Permission denied

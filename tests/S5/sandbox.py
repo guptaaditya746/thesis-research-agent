@@ -16,6 +16,56 @@ SYS_RESTRICT_SELF = 446
 CREATE_RULESET_VERSION = 1
 RULE_PATH_BENEATH = 1
 PR_SET_NO_NEW_PRIVS = 38
+PR_SET_SECCOMP = 22
+SECCOMP_MODE_FILTER = 2
+SECCOMP_RET_KILL_PROCESS = 0x80000000
+SECCOMP_RET_ALLOW = 0x7fff0000
+SECCOMP_RET_ERRNO = 0x00050000
+AUDIT_ARCH_X86_64 = 0xC000003E
+NR_SOCKET = 41
+NR_SOCKETPAIR = 53
+AF_UNIX = 1
+AF_INET = 2
+AF_INET6 = 10
+AF_NETLINK = 16
+
+
+class SockFilter(ctypes.Structure):
+    _fields_ = [("code", ctypes.c_ushort), ("jt", ctypes.c_ubyte),
+                ("jf", ctypes.c_ubyte), ("k", ctypes.c_uint32)]
+
+
+class SockFprog(ctypes.Structure):
+    _fields_ = [("len", ctypes.c_ushort), ("filter", ctypes.POINTER(SockFilter))]
+
+
+def install_socket_seccomp(libc: ctypes.CDLL) -> None:
+    # Classic BPF: verify x86_64, reject socket(AF_INET/6/UNIX/NETLINK) and
+    # socketpair, and allow all other syscalls. Inherited descriptors remain usable.
+    instructions = [
+        (0x20, 0, 0, 4),                         # LD W ABS seccomp_data.arch
+        (0x15, 1, 0, AUDIT_ARCH_X86_64),         # JEQ arch, skip kill if matched
+        (0x06, 0, 0, SECCOMP_RET_KILL_PROCESS),
+        (0x20, 0, 0, 0),                         # LD W ABS seccomp_data.nr
+        (0x15, 12, 0, NR_SOCKETPAIR),            # socketpair -> EPERM
+        (0x15, 1, 0, NR_SOCKET),                 # socket -> family checks
+        (0x06, 0, 0, SECCOMP_RET_ALLOW),
+        (0x20, 0, 0, 16),                        # LD W ABS seccomp_data.args[0]
+        (0x15, 0, 1, AF_INET),
+        (0x06, 0, 0, SECCOMP_RET_ERRNO | 1),
+        (0x15, 0, 1, AF_INET6),
+        (0x06, 0, 0, SECCOMP_RET_ERRNO | 1),
+        (0x15, 0, 1, AF_UNIX),
+        (0x06, 0, 0, SECCOMP_RET_ERRNO | 1),
+        (0x15, 0, 1, AF_NETLINK),
+        (0x06, 0, 0, SECCOMP_RET_ERRNO | 1),
+        (0x06, 0, 0, SECCOMP_RET_ALLOW),
+        (0x06, 0, 0, SECCOMP_RET_ERRNO | 1),
+    ]
+    filters = (SockFilter * len(instructions))(*(SockFilter(*item) for item in instructions))
+    program = SockFprog(len(instructions), filters)
+    if libc.prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, ctypes.byref(program), 0, 0) < 0:
+        fail_syscall("prctl(PR_SET_SECCOMP)")
 
 FS_EXECUTE = 1 << 0
 FS_WRITE_FILE = 1 << 1
@@ -118,6 +168,7 @@ def main() -> int:
         os.chdir(os.path.realpath(workdir))
         if libc.prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0:
             fail_syscall("prctl(PR_SET_NO_NEW_PRIVS)")
+        install_socket_seccomp(libc)
         if libc.syscall(SYS_RESTRICT_SELF, ctypes.c_int(ruleset_fd),
                         ctypes.c_uint32(0)) < 0:
             fail_syscall("landlock_restrict_self")

@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Send one JSON claim to the pre-opened broker descriptor."""
+
+import json
+import os
+import socket
+import sys
+
+
+request = json.load(sys.stdin)
+fd = int(os.environ["CLAIM_FD"])
+channel = socket.socket(fileno=fd)
+with channel.makefile("rwb") as stream:
+    stream.write(json.dumps(request, ensure_ascii=False).encode("utf-8") + b"\n")
+    stream.flush()
+    response = json.loads(stream.readline())
+print(json.dumps(response))

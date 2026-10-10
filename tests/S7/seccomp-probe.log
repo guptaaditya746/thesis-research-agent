@@ -1,0 +1,6 @@
+UDP=denied errno=1 expected=1
+TCP=denied errno=1 expected=1
+UNIX=denied errno=1 expected=1
+NETLINK=denied errno=1 expected=1
+SOCKETPAIR=denied errno=1 expected=1
+SYSCALL_SOCKETPAIR=denied errno=1

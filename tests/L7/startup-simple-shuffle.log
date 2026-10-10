@@ -1,0 +1,31 @@
+[0:00:00] checking the profile and vLLM options
+[0:00:07] session 20261010T120353Z-fc5a9d14 on gammaweb08; logs in runtime/20261010T120353Z-fc5a9d14
+[0:00:07] models: orch on GPU 0, sub on GPU 1, sub-2 on GPU 2 (loading in parallel; usually 5-20 min)
+[0:00:23] orch: initialising the engine (0:00:16) · sub: initialising the engine (0:00:16) · sub-2: initialising the engine (0:00:16)
+[0:00:39] orch: loading weights 0% (0:00:32) · sub: loading weights 0% (0:00:32) · sub-2: loading weights 0% (0:00:32)
+[0:00:55] orch: loading weights 11% (0:00:48) · sub: loading weights 0% (0:00:48) · sub-2: loading weights 0% (0:00:48)
+[0:01:11] orch: loading weights 21% (0:01:04) · sub: loading weights 0% (0:01:04) · sub-2: loading weights 0% (0:01:04)
+[0:01:28] orch: loading weights 33% (0:01:21) · sub: loading weights 0% (0:01:21) · sub-2: loading weights 0% (0:01:21)
+[0:01:44] orch: loading weights 41% (0:01:37) · sub: loading weights 0% (0:01:37) · sub-2: loading weights 0% (0:01:37)
+[0:02:00] orch: loading weights 50% (0:01:53) · sub: loading weights 25% (0:01:53) · sub-2: loading weights 25% (0:01:53)
+[0:02:16] orch: loading weights 59% (0:02:09) · sub: compiling (0:02:09) · sub-2: compiling (0:02:09)
+[0:02:26] sub: ready after 0:02:19
+[0:02:26] sub-2: ready after 0:02:19
+[0:02:33] orch: loading weights 68% (0:02:25)
+[0:02:49] orch: loading weights 79% (0:02:42)
+[0:03:05] orch: loading weights 85% (0:02:58)
+[0:03:21] orch: compiling (0:03:14)
+[0:03:37] orch: compiling (0:03:30)
+[0:03:53] orch: compiling (0:03:46)
+[0:04:09] orch: capturing CUDA graphs (0:04:02)
+[0:04:25] orch: sizing the KV cache (0:04:18)
+[0:04:27] orch: ready after 0:04:20
+[0:04:33] gateway: ready after 0:00:06
+[0:04:35] status: ready after 0:00:02
+[0:04:35] ready: gateway http://127.0.0.1:4000/v1 · status http://127.0.0.1:8010/v1/status
+[0:04:35] watching 5 services; Ctrl-C or `scancel` stops the session
+[0:09:37] up 0:05:01 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:14:39] up 0:10:03 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:19:40] up 0:15:05 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:23:32] session: stopping (stopped with `llm-setup stop`)
+[0:23:32] session: stopped (nothing was running)
