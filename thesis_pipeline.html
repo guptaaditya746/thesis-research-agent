@@ -242,7 +242,7 @@ const SOURCES = {
   docling:  { short: "Docling",         kind: "tool",  role: "build", cite: "Auer et al. Docling Technical Report. arXiv:2408.09869, 2024 (version used: 2.110.0, MIT)", url: "https://arxiv.org/abs/2408.09869" },
   vllm:     { short: "vLLM",            kind: "tool",  role: "build", cite: "vLLM 0.21.0: OpenAI-compatible model server with paged KV cache and prefix caching", url: "https://docs.vllm.ai/" },
   litellm:  { short: "LiteLLM",         kind: "tool",  role: "build", cite: "LiteLLM proxy: one OpenAI-compatible gateway in front of the vLLM backends, with model aliases, routing and limits", url: "https://docs.litellm.ai/" },
-  llmsetup: { short: "llm-setup",       kind: "tool",  role: "build", cite: "final-final-llm-setup (our serving repository, submodule related/final-final-llm-setup): Slurm batch job, supervisor, LiteLLM config, status API", url: "https://github.com/guptaaditya746/thesis-llm-setup" },
+  llmsetup: { short: "llm-setup",       kind: "tool",  role: "build", cite: "thesis-llm-setup (our serving repository, submodule llm-setup): Slurm batch job, supervisor, LiteLLM config, status API", url: "https://github.com/guptaaditya746/thesis-llm-setup" },
   minisweagent: { short: "mini-swe-agent", kind: "tool", role: "build", cite: "mini-swe-agent 2.4.6 (SWE-agent team, MIT): a bash-only agent loop of about 200 lines with pluggable models and environments", url: "https://github.com/SWE-agent/mini-swe-agent" },
   langfuse: { short: "Langfuse",        kind: "tool",  role: "build", cite: "Langfuse (self-hosted on Omen): LLM trace UI; accepts OpenTelemetry GenAI spans over OTLP HTTP at /api/public/otel from v3.22", url: "https://langfuse.com/integrations/native/opentelemetry" },
   cookbook: { short: "Research prompts", kind: "tool", role: "build", cite: "Hadfield, Zhang, Lien, Scholz, et al. How we built our multi-agent research system. Anthropic Engineering Blog, 13 Jun 2025; prompts released in anthropics/claude-cookbooks, patterns/agents/prompts (MIT)", url: "https://www.anthropic.com/engineering/multi-agent-research-system" },
@@ -307,7 +307,7 @@ const STAGES = [
   { id: "subs",     lane: "infra",   col: 2, name: "Subagent models", desc: "Qwen3-30B-A3B ×2 · 32k",  llm: true,  sources: ["vllm"] },
   { id: "gateway",  lane: "infra",   col: 3, name: "LiteLLM gateway", desc: ":4000 · status :8010",    llm: false, sources: ["litellm"] },
   { id: "harness",  lane: "infra",   col: 4, name: "Harness",         desc: "same node · srun --overlap", llm: false, sources: ["minisweagent"], ours: "parser + interceptor", oursTitle: "mini-swe-agent is installed and subclassed: our lenient reply parser, output cap, budgets and the interceptor that writes events.jsonl" },
-  { id: "sandbox",  lane: "infra",   col: 5, name: "Sandbox",         desc: "blocked: no isolation yet", llm: false, current: true },
+  { id: "sandbox",  lane: "infra",   col: 5, name: "Sandbox",         desc: "Landlock now, seccomp next", llm: false, current: true },
   { id: "omen",     lane: "infra",   col: 6, name: "Omen services",   desc: "Langfuse · Postgres · Redis", llm: false, sources: ["langfuse"], ours: "omen-tunnels", oursTitle: "scripts/omen-tunnels chains Omen → laptop → Webis gateway → compute node, because Docker cannot run on Slurm and the node cannot reach Omen directly" },
   // Evaluation (proposed redesign: three layers)
   { id: "faith",    lane: "eval",    col: 3, name: "Faithfulness",    desc: "quote supports fact?",    llm: true,  sources: ["goo2026", "citeguard", "judge", "kappa"], ours: "needs no gold" },
@@ -554,15 +554,15 @@ const STAGE_DETAILS = {
   slurm: {
     what: "Everything runs inside one Slurm GPU job on the Webis cluster (gammaweb08 in the tests): the model servers, the gateway, the harness and the agent's commands. Docker is not available on Slurm, so services that need it run on the Omen machine instead (last box).",
     how: [
-      "Started with `sbatch slurm/llm-stack.sbatch` from final-final-llm-setup with `LLM_SETUP_PROFILE=profiles/agent-3x40.yaml`: 3× A100 40 GB, 16 CPUs, 64 GB, 48 h. The job keeps running when the terminal closes, restarts a crashed backend, and stops cleanly at `scancel` or 3 minutes before the limit (SIGTERM).",
+      "Started with `sbatch slurm/llm-stack.sbatch` from llm-setup with `LLM_SETUP_PROFILE=profiles/agent-3x40.yaml`: 3× A100 40 GB, 16 CPUs, 64 GB, 48 h. The job keeps running when the terminal closes, restarts a crashed backend, and stops cleanly at `scancel` or 3 minutes before the limit (SIGTERM).",
       "The Python environment is rebuilt on node-local `/tmp` in each allocation. `/tmp` is tmpfs, so files there count as memory. The corpus, the run directories and the vLLM compile cache are on Ceph.",
       "A shell on the same node for the harness, the doctor and the tunnels: `srun --jobid <id> --overlap --pty bash -l`.",
       "L1: all three backends, LiteLLM and the status API were ready 11m14s after start, and `llm-setup doctor` passed. S2: on `scancel`, a run's hash-chained log ended with a run_aborted event and verified.",
     ],
     differs: ["S1: with all three models loaded the job was already at 67.9 GB of its 64 GB request, so there is no memory headroom for agent scripts. Request more memory or cap memory per command.",
-              "The agent-layout changes to llm-setup (roles orch and sub, replicas, extra flags) exist only on the node, on branch agent-layout; they are not pushed yet."],
+              "The agent layout (roles orch and sub, replicas, extra flags, pinned revisions) is on main of thesis-llm-setup."],
     settings: ["`#SBATCH --gres=gpu:ampere:3 --mem=64G --time=48:00:00 --signal=B:TERM@180`", "`LLM_SETUP_PROFILE=profiles/agent-3x40.yaml`", "`VLLM_USE_FLASHINFER_SAMPLER=0` (the node has no nvcc)"],
-    code: ["related/final-final-llm-setup/slurm/llm-stack.sbatch", "related/final-final-llm-setup/profiles/", "tests/A1/node.txt, tests/L1/, tests/S1/, tests/S2/"],
+    code: ["llm-setup/slurm/llm-stack.sbatch", "llm-setup/profiles/", "tests/A1/node.txt, tests/L1/, tests/S1/, tests/S2/"],
   },
   orch: {
     what: "The model that runs the main agent: Qwen3.8-27B-FP8 on GPU 0, thinking off, with a 65,536-token context.",
@@ -597,7 +597,7 @@ const STAGE_DETAILS = {
     ],
     differs: ["S3: the raw vLLM ports (8001, 8002, 8004) and the status API answer without credentials, so any process on the node, an agent command included, could call a model outside the log until commands are isolated.",
               "S3 also saw LiteLLM's /v1/models return 500 (missing prisma module); chat completions work."],
-    code: ["related/final-final-llm-setup/src/llm_setup/supervisor.py (render_litellm)", "tests/A7/passthrough.py, tests/L2/, tests/L4/, tests/S3/"],
+    code: ["llm-setup/src/llm_setup/supervisor.py (render_litellm)", "tests/A7/passthrough.py, tests/L2/, tests/L4/, tests/S3/"],
   },
   harness: {
     what: "The program that runs the agent loop: send the history to the model, parse the reply into one shell command, run it, append the output, and log both through the interceptor.",
@@ -610,15 +610,15 @@ const STAGE_DETAILS = {
     code: ["planned: src/thesis_agent/harness/", "tests/C1/capping.py, tests/C1/verify_chain.py"],
   },
   sandbox: {
-    what: "The boundary every agent command should run inside: corpus read-only, scratch writable, no network, no access to the model ports or the log, and CPU and memory limits. It does not exist yet and is the current blocker.",
+    what: "The boundary every agent command runs inside: corpus and toolchain read-only, one scratch directory writable, no network, no access to the model ports, the log or other processes, and time and memory limits.",
     how: [
-      "A6: bwrap is not installed and unprivileged user namespaces are off (`unshare -rn` fails), so neither bwrap nor Apptainer with --fakeroot can work.",
-      "S4: the node has direct internet (example.com, Hugging Face and PyPI all answer) and no Apptainer or Singularity. The convention-only option (read-only corpus, hash checks, no proxy variables) therefore cannot keep commands off the network.",
-      "S3: the model ports answer without credentials, so an unisolated command could also call the models outside the log.",
-      "What works today: `timeout 120` per command (S1) and a hash-checked read-only corpus. Fixed, audited commands may run this way; commands written by the model may not.",
+      "Round 2 found no bwrap, no Apptainer and no user namespaces, and direct internet on the node (A6, S4). Round 3 found Landlock ABI 8 on kernel 7.0 (S5a), which needs no root.",
+      "`tests/S5/sandbox.py` (ctypes Landlock) and `run_sandbox.py` (own process group, killed at the end): files, TCP connect and bind, signals and abstract Unix sockets are blocked; `timeout 120` and `ulimit -v 2G` (S5b, S6, S1b).",
+      "A pinned, hashed, read-only agent-venv plus ripgrep and jq; extra packages only from a local wheel store (S5c).",
+      "A broker outside the sandbox owns events.jsonl and claims.jsonl and assigns step ids (H1).",
     ],
-    differs: ["Options, in order: ask the admins for Apptainer, or for bwrap or user namespaces; or a Slurm step with networking disabled, if the cluster offers one. The decision is open (decisions-after-tests.md §4)."],
-    code: ["tests/A6/attempt.txt, tests/S1/, tests/S3/anonymous-probes.txt, tests/S4/egress.txt"],
+    differs: ["Landlock does not cover UDP or pathname Unix sockets (S6). The final Slurm session adds a seccomp filter and passes the broker as an inherited descriptor (S7), then runs everything together (F1)."],
+    code: ["tests/S5/sandbox.py, tests/S5/run_sandbox.py, tests/H1/, tests/S6/findings.md, docs/slurm-final-runbook.md"],
   },
   omen: {
     what: "Services that need Docker run on the Omen machine, not on Slurm: Langfuse (with its ClickHouse, Redis, MinIO and Postgres) and the thesis Postgres and Redis. The GPU node reaches them through chained SSH tunnels.",
@@ -955,8 +955,8 @@ const SOURCE_DETAILS = {
   },
   llmsetup: {
     what: "Our serving repository: one Slurm batch job that starts the vLLM backends, LiteLLM and a status API from a profile, watches them, restarts crashed services and stops cleanly.",
-    how: ["Included as the submodule related/final-final-llm-setup. The agent layout (profile agent-3x40.yaml with roles orch and sub, two sub replicas, extra vLLM flags) was added for round 2 and passed L1."],
-    differs: ["The agent-layout branch exists only on the GPU node so far; push it to GitHub and update the submodule pointer."],
+    how: ["Included as the submodule llm-setup. The agent layout (profile agent-3x40.yaml with roles orch and sub, two sub replicas, extra vLLM flags) was added for round 2 and passed L1."],
+    differs: ["The agent layout was merged into main of thesis-llm-setup on 10 Oct."],
   },
   minisweagent: {
     what: "A minimal agent from the SWE-agent team: about 200 lines of loop, bash as the only tool, the history as a plain list of messages, and pluggable model and environment classes (local, Docker, Singularity, bubblewrap).",
@@ -1029,29 +1029,29 @@ const ROLES = {
 /* ---- STATUS: the "Setup status" table under the diagram -----------------------------------------
    state: "works" | "partial" | "blocked" | "open"   stage: the box its name opens   tests: ids in tests/RESULTS.md
    ---------------------------------------------------------------------------------------------- */
-const STATUS_NOTE = "From tests/RESULTS.md after rounds 1 and 2 (8–9 Oct 2026). Click an area for its box in the diagram.";
+const STATUS_NOTE = "From tests/RESULTS.md after rounds 1–3 (8–10 Oct 2026); the final Slurm session is docs/slurm-final-runbook.md. Click an area for its box in the diagram.";
 const STATUS = [
-  { area: "Models",       stage: "orch",    state: "works",   tests: "A1–A5, L1",
-    evidence: "Qwen3.8-27B orchestrator (65k, 79,371 KV tokens) and two Qwen3-30B-A3B subagent replicas start from llm-setup in 11m14s; doctor passes.",
-    next: "Push the agent-layout branch of llm-setup; re-run C2 at 30k tokens for prefix caching." },
-  { area: "Gateway",      stage: "gateway", state: "partial", tests: "A7, L2–L4, S3",
-    evidence: "LiteLLM passes the thinking switch and all fields; no silent retries. One-block compliance 90% on long outputs; replica routing uneven (5/3, 8/0); raw vLLM ports open without auth.",
-    next: "Keep the lenient parser; fix or pin replica routing; close raw ports to agent commands." },
-  { area: "Tunnels",      stage: "omen",    state: "partial", tests: "T1–T4",
-    evidence: "Offset fix works (T1); all five Omen services reachable from the node, but only on the legacy mapping (T2); second start safe (T4).",
-    next: "Update omen-tunnels-external on the laptop, retest T2 with +1000, then run T3 (8 h)." },
-  { area: "Sandbox",      stage: "sandbox", state: "blocked", tests: "A6, S1, S3, S4",
-    evidence: "No bwrap, no Apptainer, no user namespaces; the node has direct internet. Only `timeout` per command works.",
-    next: "Ask the admins for Apptainer or bwrap, or a network-off Slurm step. Until then no model-written commands." },
+  { area: "Models",       stage: "orch",    state: "works",   tests: "A1–A5, L1, R3",
+    evidence: "Qwen3.8-27B orchestrator (65k, 79,371 KV tokens) and two Qwen3-30B-A3B subagent replicas start from llm-setup in 11m14s, pinned by revision, loaded offline.",
+    next: "C2b: prefix cache and prefill at 30k; decides whether to try Qwen3-30B-A3B as orchestrator." },
+  { area: "Gateway",      stage: "gateway", state: "partial", tests: "A7, L2–L4, L6",
+    evidence: "LiteLLM passes the thinking switch and all fields; no silent retries. The 120 s timeout is 7.5 s above the worst step; least-busy routing left one replica idle.",
+    next: "L7: timeout 600 s, fix routing or one alias per replica, check the seed; L8: over-context errors." },
+  { area: "Sandbox",      stage: "sandbox", state: "partial", tests: "S5a–S5c, S6, S1b, H1",
+    evidence: "Landlock ABI 8 blocks files, TCP and signals; read-only pinned toolchain; 2 GB limit; broker owns the log. UDP and pathname Unix sockets still allowed.",
+    next: "S7: seccomp for UDP and Unix sockets, broker through an inherited descriptor; F1 runs everything together." },
   { area: "Harness",      stage: "harness", state: "open",    tests: "B1–B4, C1, C2, S2",
     evidence: "Model behaviour, output cap, hash chain and job-end handling tested in isolation; the loop on mini-swe-agent is not built.",
-    next: "Build the minimal loop (parser, interceptor, claim), then run B5 and C3–C7 once a sandbox exists." },
+    next: "Build the minimal loop (parser, interceptor, claim) after the final Slurm session, then B5 and C3–C6." },
   { area: "Corpus",       stage: "md",      state: "partial", tests: "D1–D4",
-    evidence: "Docling chosen: tables 10/10, deterministic; anchor library 200/200; grep over the outlines under 1 s.",
-    next: "Decide the GROBID reference appendix, check column order on 3 papers, convert all 337 and freeze." },
+    evidence: "Docling chosen: tables 10/10, deterministic over two runs; grep over the outlines under 1 s. The anchor library needs a fix.",
+    next: "D5: convert all 337 PDFs and freeze them with hashes." },
   { area: "Evaluation",   stage: "faith",   state: "open",    tests: "—",
-    evidence: "Three-layer design with reused code identified (citation-guard, Text2KGBench, nuggetizer, AutoResearchBench).",
+    evidence: "RQ1: claim as you go vs sources attached afterwards, 8 concepts, gold D, claims judged by the author in Argilla.",
     next: "Starts after the first real run (C3)." },
+  { area: "Tunnels",      stage: "omen",    state: "partial", tests: "T1–T4",
+    evidence: "Optional. All five Omen services reachable from the node on the legacy mapping (T2); not on the critical path.",
+    next: "Only if the Langfuse copy is wanted: update omen-tunnels-external, retest T2, run T3." },
 ];
 const STATE_LABEL = { works: "Works", partial: "Partial", blocked: "Blocked", open: "Not built" };
 

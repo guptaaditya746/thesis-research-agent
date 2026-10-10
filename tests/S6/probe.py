@@ -49,7 +49,7 @@ home = os.environ.get("HOME", "")
 repo = "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent"
 for label, path in (
     ("ssh-key", os.path.join(home, ".ssh/id_ed25519_webis_tunnel")),
-    ("repo-env", os.path.join(repo, "related/final-final-llm-setup/.env")),
+    ("repo-env", os.path.join(repo, "llm-setup/.env")),
     ("git-credentials", os.path.join(home, ".git-credentials")),
 ):
     report_file(label, path)
