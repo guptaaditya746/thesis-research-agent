@@ -1,0 +1,93 @@
+[0:00:00] checking the profile and vLLM options
+[0:00:07] session 20261010T123448Z-afc165ce on gammaweb08; logs in runtime/20261010T123448Z-afc165ce
+[0:00:07] models: orch on GPU 0, sub on GPU 1, sub-2 on GPU 2 (loading in parallel; usually 5-20 min)
+[0:00:23] orch: initialising the engine (0:00:16) · sub: initialising the engine (0:00:16) · sub-2: initialising the engine (0:00:16)
+[0:00:39] orch: loading weights 0% (0:00:32) · sub: loading weights 0% (0:00:32) · sub-2: loading weights 0% (0:00:32)
+[0:00:55] orch: loading weights 8% (0:00:48) · sub: loading weights 0% (0:00:48) · sub-2: loading weights 0% (0:00:48)
+[0:01:12] orch: loading weights 20% (0:01:04) · sub: loading weights 0% (0:01:04) · sub-2: loading weights 0% (0:01:04)
+[0:01:28] orch: loading weights 30% (0:01:21) · sub: loading weights 0% (0:01:21) · sub-2: loading weights 0% (0:01:21)
+[0:01:44] orch: loading weights 42% (0:01:37) · sub: loading weights 50% (0:01:37) · sub-2: loading weights 50% (0:01:37)
+[0:02:00] orch: loading weights 50% (0:01:53) · sub: compiling (0:01:53) · sub-2: compiling (0:01:53)
+[0:02:09] sub: ready after 0:02:01
+[0:02:09] sub-2: ready after 0:02:01
+[0:02:17] orch: loading weights 59% (0:02:09)
+[0:02:33] orch: loading weights 79% (0:02:26)
+[0:02:49] orch: loading weights 97% (0:02:42)
+[0:03:05] orch: compiling (0:02:58)
+[0:03:21] orch: compiling (0:03:14)
+[0:03:37] orch: compiling (0:03:30)
+[0:03:53] orch: sizing the KV cache (0:03:46)
+[0:04:05] orch: ready after 0:03:58
+[0:04:09] gateway: ready after 0:00:04
+[0:04:11] status: ready after 0:00:02
+[0:04:11] ready: gateway http://127.0.0.1:4000/v1 · status http://127.0.0.1:8010/v1/status
+[0:04:11] watching 5 services; Ctrl-C or `scancel` stops the session
+[0:09:13] up 0:05:01 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:14:15] up 0:10:03 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:19:16] up 0:15:04 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:24:18] up 0:20:06 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:29:20] up 0:25:08 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:34:22] up 0:30:10 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:39:23] up 0:35:11 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:44:25] up 0:40:13 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:49:27] up 0:45:15 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:54:28] up 0:50:16 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[0:59:30] up 0:55:18 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:04:32] up 1:00:20 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:09:33] up 1:05:21 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:14:35] up 1:10:23 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:19:37] up 1:15:25 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:24:39] up 1:20:27 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:29:41] up 1:25:29 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:34:43] up 1:30:31 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:39:45] up 1:35:33 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:44:47] up 1:40:35 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:49:48] up 1:45:36 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:54:50] up 1:50:38 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[1:59:52] up 1:55:40 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:04:53] up 2:00:41 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:09:55] up 2:05:43 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:14:57] up 2:10:45 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:19:58] up 2:15:46 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:25:00] up 2:20:48 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:30:02] up 2:25:50 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:35:04] up 2:30:52 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:40:05] up 2:35:53 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:45:07] up 2:40:55 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:50:09] up 2:45:57 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[2:55:10] up 2:50:58 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:00:12] up 2:56:00 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:05:14] up 3:01:02 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:10:15] up 3:06:03 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:15:17] up 3:11:05 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:20:19] up 3:16:07 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:25:21] up 3:21:09 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:30:22] up 3:26:10 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:35:24] up 3:31:12 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:40:26] up 3:36:14 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:45:27] up 3:41:15 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:50:29] up 3:46:17 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[3:55:31] up 3:51:19 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:00:33] up 3:56:21 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:05:34] up 4:01:22 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:10:36] up 4:06:24 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:15:38] up 4:11:26 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:20:39] up 4:16:27 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:25:41] up 4:21:29 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:30:43] up 4:26:31 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:35:45] up 4:31:33 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:40:46] up 4:36:34 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:45:48] up 4:41:36 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:50:50] up 4:46:38 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[4:55:51] up 4:51:39 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:00:53] up 4:56:41 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 2 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:05:54] up 5:01:42 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 2 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:10:56] up 5:06:44 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:15:58] up 5:11:46 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:21:00] up 5:16:48 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:26:02] up 5:21:50 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:31:04] up 5:26:52 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:36:06] up 5:31:54 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:41:07] up 5:36:55 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:46:09] up 5:41:57 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 1 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0
+[5:51:11] up 5:46:59 · orch ready, sub ready, sub-2 ready, gateway ready, status ready · restarts 0 · orch-model healthy run 0 wait 0, sub-model@8002 healthy run 0 wait 0, sub-model@8004 healthy run 0 wait 0

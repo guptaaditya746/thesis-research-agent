@@ -1,0 +1,44 @@
+[
+  {
+    "case": "orch_prompt_over_65536",
+    "status": 400,
+    "error_type": "BadRequestError",
+    "message": "Error code: 400 - {'error': {'message': \"litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 65536 tokens. However, you requested 1 output tokens and your prompt contains at least 65536 input tokens, for a total of at least 65537 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=65536)\\nmodel=orch-model. context_window_fallbacks=None. fallbacks=None.\\n\\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks. Received Model Group=orch-model\\nAvailable Model Group Fallbacks=None\", 'type': 'invalid_request_error', 'param': None, 'code': '400'}}",
+    "body": {
+      "message": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 65536 tokens. However, you requested 1 output tokens and your prompt contains at least 65536 input tokens, for a total of at least 65537 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=65536)\nmodel=orch-model. context_window_fallbacks=None. fallbacks=None.\n\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks. Received Model Group=orch-model\nAvailable Model Group Fallbacks=None",
+      "type": "invalid_request_error",
+      "param": null,
+      "code": "400"
+    },
+    "prompt_content_tokens": 70000,
+    "max_tokens": 1
+  },
+  {
+    "case": "sub_prompt_over_32768",
+    "status": 400,
+    "error_type": "BadRequestError",
+    "message": "Error code: 400 - {'error': {'message': \"litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 1 output tokens and your prompt contains at least 32768 input tokens, for a total of at least 32769 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=32768)\\nmodel=sub-model. context_window_fallbacks=None. fallbacks=None.\\n\\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks. Received Model Group=sub-model\\nAvailable Model Group Fallbacks=None\", 'type': 'invalid_request_error', 'param': None, 'code': '400'}}",
+    "body": {
+      "message": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 32768 tokens. However, you requested 1 output tokens and your prompt contains at least 32768 input tokens, for a total of at least 32769 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=32768)\nmodel=sub-model. context_window_fallbacks=None. fallbacks=None.\n\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks. Received Model Group=sub-model\nAvailable Model Group Fallbacks=None",
+      "type": "invalid_request_error",
+      "param": null,
+      "code": "400"
+    },
+    "prompt_content_tokens": 34000,
+    "max_tokens": 1
+  },
+  {
+    "case": "orch_output_over_context",
+    "status": 400,
+    "error_type": "BadRequestError",
+    "message": "Error code: 400 - {'error': {'message': \"litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 65536 tokens. However, you requested 2000 output tokens and your prompt contains at least 63537 input tokens, for a total of at least 65537 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=63537)\\nmodel=orch-model. context_window_fallbacks=None. fallbacks=None.\\n\\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks. Received Model Group=orch-model\\nAvailable Model Group Fallbacks=None\", 'type': 'invalid_request_error', 'param': None, 'code': '400'}}",
+    "body": {
+      "message": "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 65536 tokens. However, you requested 2000 output tokens and your prompt contains at least 63537 input tokens, for a total of at least 65537 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=63537)\nmodel=orch-model. context_window_fallbacks=None. fallbacks=None.\n\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks. Received Model Group=orch-model\nAvailable Model Group Fallbacks=None",
+      "type": "invalid_request_error",
+      "param": null,
+      "code": "400"
+    },
+    "prompt_content_tokens": 64000,
+    "max_tokens": 2000
+  }
+]

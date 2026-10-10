@@ -1,0 +1,65 @@
+{
+  "requests": [
+    {
+      "request": 0,
+      "model": "sub-model-1",
+      "latency_seconds": 1.2986025549471378,
+      "completion_tokens": 9,
+      "response_model": "sub-model-1"
+    },
+    {
+      "request": 1,
+      "model": "sub-model-2",
+      "latency_seconds": 1.0858529680408537,
+      "completion_tokens": 12,
+      "response_model": "sub-model-2"
+    },
+    {
+      "request": 2,
+      "model": "sub-model-1",
+      "latency_seconds": 1.0991746899671853,
+      "completion_tokens": 10,
+      "response_model": "sub-model-1"
+    },
+    {
+      "request": 3,
+      "model": "sub-model-2",
+      "latency_seconds": 1.0857578492723405,
+      "completion_tokens": 12,
+      "response_model": "sub-model-2"
+    },
+    {
+      "request": 4,
+      "model": "sub-model-1",
+      "latency_seconds": 1.1017337809316814,
+      "completion_tokens": 12,
+      "response_model": "sub-model-1"
+    },
+    {
+      "request": 5,
+      "model": "sub-model-2",
+      "latency_seconds": 1.2542580990120769,
+      "completion_tokens": 12,
+      "response_model": "sub-model-2"
+    },
+    {
+      "request": 6,
+      "model": "sub-model-1",
+      "latency_seconds": 1.2568292613141239,
+      "completion_tokens": 12,
+      "response_model": "sub-model-1"
+    },
+    {
+      "request": 7,
+      "model": "sub-model-2",
+      "latency_seconds": 1.1605477752164006,
+      "completion_tokens": 18,
+      "response_model": "sub-model-2"
+    }
+  ],
+  "replica_deltas": {
+    "8002": 4.0,
+    "8004": 4.0
+  },
+  "balanced": true
+}

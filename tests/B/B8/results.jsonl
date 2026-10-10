@@ -1,0 +1,20 @@
+{"id": "t01", "content": "```bash\nls /corpus\n```", "block_count": 1, "finish_reason": "stop", "seconds": 1.8686974002048373, "prompt_tokens": 170, "completion_tokens": 10}
+{"id": "t02", "content": "```bash\ngrep -Rni 'dataset' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6004550312645733, "prompt_tokens": 197, "completion_tokens": 21}
+{"id": "t03", "content": "```bash\ngrep -Rni 'question answering' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.63490273617208, "prompt_tokens": 223, "completion_tokens": 22}
+{"id": "t04", "content": "```bash\ngrep -Rni 'contrastive' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6391703779809177, "prompt_tokens": 255, "completion_tokens": 22}
+{"id": "t05", "content": "```bash\ngrep -Rni 'recall' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6282884799875319, "prompt_tokens": 273, "completion_tokens": 21}
+{"id": "t06", "content": "```bash\ngrep -Rni 'multilingual' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 1.0901097101159394, "prompt_tokens": 304, "completion_tokens": 22}
+{"id": "t07", "content": "```bash\nls /corpus\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.32534930389374495, "prompt_tokens": 172, "completion_tokens": 10}
+{"id": "t08", "content": "```bash\ngrep -Rni 'ms marco' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.633150976151228, "prompt_tokens": 197, "completion_tokens": 22}
+{"id": "t09", "content": "```bash\ngrep -Rni 'zero-shot' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6334064332768321, "prompt_tokens": 222, "completion_tokens": 22}
+{"id": "t10", "content": "```bash\ngrep -Rni 'retrieval augmented generation' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.7110625049099326, "prompt_tokens": 251, "completion_tokens": 25}
+{"id": "t11", "content": "```bash\ngrep -Rni 'hard negative' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6509143677540123, "prompt_tokens": 271, "completion_tokens": 22}
+{"id": "t12", "content": "```bash\ngrep -Rni 'abstract' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6303973370231688, "prompt_tokens": 302, "completion_tokens": 21}
+{"id": "t13", "content": "```bash\ngrep -r \"nDCG@10\" /corpus --include=\"*.txt\" -l | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.8799874680116773, "prompt_tokens": 172, "completion_tokens": 33}
+{"id": "t14", "content": "```bash\ngrep -Rni 'hybrid' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6324591930024326, "prompt_tokens": 197, "completion_tokens": 22}
+{"id": "t15", "content": "```bash\ngrep -Rni 'DPR' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6332992040552199, "prompt_tokens": 222, "completion_tokens": 22}
+{"id": "t16", "content": "```bash\ngrep -Rni 'ablation' /corpus | grep -i 'query expansion' | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.8313986398279667, "prompt_tokens": 255, "completion_tokens": 30}
+{"id": "t17", "content": "```bash\ngrep -RniE 'conversational search|conversation search|multi-turn search|dialogue search' /corpus | head -40\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.988525194581598, "prompt_tokens": 271, "completion_tokens": 36}
+{"id": "t18", "content": "```bash\ngrep -Rni 'BEIR' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6542906789109111, "prompt_tokens": 303, "completion_tokens": 22}
+{"id": "t19", "content": "```bash\nls /corpus\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.32528273621574044, "prompt_tokens": 169, "completion_tokens": 10}
+{"id": "t20", "content": "```bash\ngrep -Rni 'human evaluation' /corpus | head -20\n```", "block_count": 1, "finish_reason": "stop", "seconds": 0.6317090019583702, "prompt_tokens": 196, "completion_tokens": 22}

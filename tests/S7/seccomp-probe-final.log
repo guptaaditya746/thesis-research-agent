@@ -1,0 +1,13 @@
+UDP=denied errno=1 expected=1
+TCP=denied errno=1 expected=1
+TCP_IPV6=denied errno=1 expected=1
+UNIX=denied errno=1 expected=1
+NETLINK=denied errno=1 expected=1
+SOCKETPAIR=denied errno=1 expected=1
+SYSCALL_SOCKETPAIR=denied errno=1
+TCP_1.1.1.1_443=denied errno=1
+TCP_127.0.0.1_8001=denied errno=1
+TCP_127.0.0.1_8002=denied errno=1
+TCP_127.0.0.1_8004=denied errno=1
+TCP_127.0.0.1_4000=denied errno=1
+TCP_127.0.0.1_8010=denied errno=1

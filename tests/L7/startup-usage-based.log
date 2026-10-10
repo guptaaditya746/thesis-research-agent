@@ -1,0 +1,31 @@
+[0:00:00] checking the profile and vLLM options
+[0:00:07] session 20261010T122726Z-efc72d16 on gammaweb08; logs in runtime/20261010T122726Z-efc72d16
+[0:00:07] models: orch on GPU 0, sub on GPU 1, sub-2 on GPU 2 (loading in parallel; usually 5-20 min)
+[0:00:23] orch: initialising the engine (0:00:16) · sub: initialising the engine (0:00:16) · sub-2: initialising the engine (0:00:16)
+[0:00:39] orch: loading weights 6% (0:00:32) · sub: loading weights 0% (0:00:32) · sub-2: loading weights 0% (0:00:32)
+[0:00:55] orch: loading weights 41% (0:00:48) · sub: loading weights 0% (0:00:48) · sub-2: loading weights 0% (0:00:48)
+[0:01:11] orch: loading weights 47% (0:01:04) · sub: loading weights 0% (0:01:04) · sub-2: loading weights 0% (0:01:04)
+[0:01:28] orch: loading weights 52% (0:01:21) · sub: weights loaded (0:01:21) · sub-2: weights loaded (0:01:21)
+[0:01:44] orch: loading weights 58% (0:01:37) · sub: capturing CUDA graphs (0:01:37) · sub-2: sizing the KV cache (0:01:37)
+[0:01:48] sub: ready after 0:01:41
+[0:01:48] sub-2: ready after 0:01:41
+[0:02:00] orch: loading weights 62% (0:01:53)
+[0:02:16] orch: loading weights 68% (0:02:09)
+[0:02:32] orch: loading weights 74% (0:02:25)
+[0:02:48] orch: loading weights 79% (0:02:41)
+[0:03:04] orch: loading weights 83% (0:02:57)
+[0:03:20] orch: loading weights 92% (0:03:13)
+[0:03:37] orch: loading weights 98% (0:03:29)
+[0:03:53] orch: loading weights 98% (0:03:46)
+[0:04:09] orch: compiling (0:04:02)
+[0:04:25] orch: compiling (0:04:18)
+[0:04:41] orch: compiling (0:04:34)
+[0:04:57] orch: capturing CUDA graphs (0:04:50)
+[0:05:13] orch: sizing the KV cache (0:05:06)
+[0:05:15] orch: ready after 0:05:08
+[0:05:19] gateway: ready after 0:00:04
+[0:05:21] status: ready after 0:00:02
+[0:05:21] ready: gateway http://127.0.0.1:4000/v1 · status http://127.0.0.1:8010/v1/status
+[0:05:21] watching 5 services; Ctrl-C or `scancel` stops the session
+[0:06:32] session: stopping (stopped with `llm-setup stop`)
+[0:06:33] session: stopped (sub-2, sub, orch)

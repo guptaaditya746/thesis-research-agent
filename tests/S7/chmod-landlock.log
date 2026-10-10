@@ -1,0 +1,3 @@
+CHMOD_SUCCEEDED
+/bin/bash: line 1: /mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final-2/bin/rg: Permission denied
+WRITE_DENIED

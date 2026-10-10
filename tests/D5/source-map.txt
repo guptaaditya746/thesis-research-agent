@@ -1,0 +1,6 @@
+source_pdf_count=337
+anthology_manifest_entries=300
+numeric_original_pdfs_in_source=37
+original_id_mapping=filename N.pdf -> outline id pN (strip leading zero)
+additional_samples_directory_pdfs=40 (not in corpus source; 37 originals already included in the 337)
+validated_unique_ids=337

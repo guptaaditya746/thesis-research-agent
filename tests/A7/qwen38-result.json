@@ -1,0 +1,122 @@
+{
+  "models": {
+    "direct-thinking-off": {
+      "elapsed_s": 0.4825856131501496,
+      "reasoning_content": null,
+      "content": "`echo ready`",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 5,
+        "prompt_tokens": 24,
+        "total_tokens": 29,
+        "completion_tokens_details": null,
+        "prompt_tokens_details": null
+      },
+      "raw_message": {
+        "content": "`echo ready`",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [],
+        "reasoning": null
+      }
+    },
+    "litellm-thinking-off": {
+      "elapsed_s": 0.21908942889422178,
+      "reasoning_content": null,
+      "content": "`echo ready`",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 5,
+        "prompt_tokens": 24,
+        "total_tokens": 29,
+        "completion_tokens_details": null,
+        "prompt_tokens_details": null
+      },
+      "raw_message": {
+        "content": "`echo ready`",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": null,
+        "provider_specific_fields": {
+          "reasoning": null,
+          "refusal": null
+        }
+      }
+    },
+    "direct-thinking-on": {
+      "elapsed_s": 1.0360942874103785,
+      "reasoning_content": "We need answer user: \"Return a one-line shell command that prints the word ready.\" Need final one-line shell command. Could be echo ready. Ensure one line.\n",
+      "content": "\n\necho ready",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 40,
+        "prompt_tokens": 64,
+        "total_tokens": 104,
+        "completion_tokens_details": null,
+        "prompt_tokens_details": null
+      },
+      "raw_message": {
+        "content": "\n\necho ready",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": [],
+        "reasoning": "We need answer user: \"Return a one-line shell command that prints the word ready.\" Need final one-line shell command. Could be echo ready. Ensure one line.\n"
+      }
+    },
+    "litellm-thinking-on": {
+      "elapsed_s": 1.0381874120794237,
+      "reasoning_content": "We need answer user: \"Return a one-line shell command that prints the word ready.\" Need final one-line shell command. Could be echo ready. Ensure one line.\n",
+      "content": "\n\necho ready",
+      "finish_reason": "stop",
+      "usage": {
+        "completion_tokens": 40,
+        "prompt_tokens": 64,
+        "total_tokens": 104,
+        "completion_tokens_details": null,
+        "prompt_tokens_details": null
+      },
+      "raw_message": {
+        "content": "\n\necho ready",
+        "refusal": null,
+        "role": "assistant",
+        "annotations": null,
+        "audio": null,
+        "function_call": null,
+        "tool_calls": null,
+        "reasoning_content": "We need answer user: \"Return a one-line shell command that prints the word ready.\" Need final one-line shell command. Could be echo ready. Ensure one line.\n",
+        "provider_specific_fields": {
+          "reasoning": "We need answer user: \"Return a one-line shell command that prints the word ready.\" Need final one-line shell command. Could be echo ready. Ensure one line.\n",
+          "refusal": null
+        }
+      }
+    }
+  },
+  "comparison": {
+    "off": {
+      "reasoning_content_equal": true,
+      "content_equal": true,
+      "finish_reason_equal": true,
+      "usage_equal": true,
+      "direct_has_reasoning": false,
+      "litellm_has_reasoning": false
+    },
+    "on": {
+      "reasoning_content_equal": true,
+      "content_equal": true,
+      "finish_reason_equal": true,
+      "usage_equal": true,
+      "direct_has_reasoning": true,
+      "litellm_has_reasoning": true
+    },
+    "enable_thinking_honoured_through_proxy": true
+  }
+}

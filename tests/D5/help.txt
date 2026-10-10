@@ -1,0 +1,12 @@
+usage: build-corpus.py [-h] --pdf-dir PDF_DIR
+                       --anthology-manifest ANTHOLOGY_MANIFEST
+                       --samples-manifest SAMPLES_MANIFEST --corpus CORPUS
+                       --manifest-copy MANIFEST_COPY
+
+options:
+  -h, --help            show this help message and exit
+  --pdf-dir PDF_DIR
+  --anthology-manifest ANTHOLOGY_MANIFEST
+  --samples-manifest SAMPLES_MANIFEST
+  --corpus CORPUS
+  --manifest-copy MANIFEST_COPY
