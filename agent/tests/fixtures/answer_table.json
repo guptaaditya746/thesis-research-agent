@@ -1,0 +1,24 @@
+{
+  "concept_sha256": "36b3ab7122cf5607509819f1d3bc2dc9829a588c2987cbdc191207bace097074",
+  "kind": "table",
+  "rows": [
+    {
+      "id": "r1",
+      "cells": {"author": "Author A", "first_author_papers": 2, "papers": ["p12", "p87"]},
+      "facts": [
+        {"id": "f1", "s": "p12", "p": "firstAuthor", "o": "Author A", "claims": ["claim-000003"], "origin": "research"},
+        {"id": "f2", "s": "p87", "p": "firstAuthor", "o": "Author A", "claims": ["claim-000007", "claim-000008"], "origin": "research"},
+        {"id": "f3", "s": "p12", "p": "publishedAt", "o": "ACL 2025", "claims": ["claim-000004"], "origin": "research"},
+        {"id": "f4", "s": "p87", "p": "publishedAt", "o": "ACL 2025", "claims": [], "origin": "research"}
+      ]
+    },
+    {
+      "id": "r2",
+      "cells": {"author": "Author B", "first_author_papers": 1, "papers": ["p40"]},
+      "facts": [
+        {"id": "f5", "s": "p40", "p": "firstAuthor", "o": "Author B", "claims": ["claim-000011"], "origin": "research"}
+      ]
+    }
+  ],
+  "notes": "Worked example, claim_on condition. f4 is an unsourced fact."
+}

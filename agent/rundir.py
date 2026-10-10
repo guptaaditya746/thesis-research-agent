@@ -10,6 +10,7 @@ from typing import Any
 
 from . import schema
 from .canonical import file_sha256, write_json
+from .concept import validate_answer, validate_concept
 
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")
 DIRS = ("out", "scratch")
@@ -93,8 +94,11 @@ class RunDir:
 
         `concept.json` is written in canonical form and its hash, and the hash of the corpus
         manifest file, go into config.json. `settings` are the remaining run_config() keywords.
-        Refuses to reuse an existing directory.
+        Refuses to reuse an existing directory or an invalid concept.
         """
+        problems = validate_concept(concept)
+        if problems:
+            raise ValueError(f"invalid concept: {problems}")
         run = cls(Path(runs_root) / run_id)
         run.root.mkdir(parents=True, exist_ok=False)
         for name in DIRS:
@@ -138,6 +142,12 @@ class RunDir:
         if config.get("hashes", {}).get("concept_sha256") != concept_sha:
             problems.append("concept.json hash differs from config.json")
         problems += self._concept_problems()
+        if self.answer.is_file() and not problems:
+            try:
+                answer = json.loads(self.answer.read_text(encoding="utf-8"))
+                problems += [f"answer.json {p}" for p in validate_answer(answer, self.load_concept())]
+            except ValueError as exc:
+                problems.append(f"answer.json: {exc}")
         for path in (self.events, self.claims):
             for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
                 try:
@@ -148,7 +158,7 @@ class RunDir:
 
     def _concept_problems(self) -> list[str]:
         try:
-            self.load_concept()
+            concept = self.load_concept()
         except ValueError as exc:
             return [f"concept.json: {exc}"]
-        return []
+        return [f"concept.json {p}" for p in validate_concept(concept)]

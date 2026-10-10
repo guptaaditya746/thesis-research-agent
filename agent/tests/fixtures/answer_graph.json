@@ -1,0 +1,28 @@
+{
+  "concept_sha256": "c9ee5264652bee36c072408974aa3b46a0116f27372671768fed3a38b2e32284",
+  "kind": "graph",
+  "rows": [
+    {
+      "id": "r1",
+      "source": "p12", "source_type": "Paper",
+      "predicate": "evaluatesOn",
+      "target": "HotpotQA", "target_type": "Dataset",
+      "attributes": {"metric": "exact match"},
+      "facts": [
+        {"id": "f1", "s": "p12", "p": "evaluatesOn", "o": "HotpotQA", "claims": ["claim-000001"], "origin": "attach"},
+        {"id": "f2", "s": "p12", "p": "reportsMetric", "o": "exact match", "claims": [], "origin": "attach"}
+      ]
+    },
+    {
+      "id": "r2",
+      "source": "p30", "source_type": "Paper",
+      "predicate": "evaluatesOn",
+      "target": "Natural Questions", "target_type": "Dataset",
+      "attributes": {"metric": null},
+      "facts": [
+        {"id": "f3", "s": "p30", "p": "evaluatesOn", "o": "Natural Questions", "claims": ["claim-000002"], "origin": "attach"}
+      ]
+    }
+  ],
+  "notes": "Worked example, baseline after the attach step (2.5). f2: the attach step answered 'no source found'."
+}

@@ -1,0 +1,21 @@
+{
+  "id": "c3",
+  "title": "Most first-author papers at ACL 2025",
+  "definition": "The author who appears as first author on the largest number of ACL 2025 papers in the corpus.",
+  "measure": {"operation": "count", "of": "Paper", "group_by": "first_author", "order": "desc"},
+  "scope": {"papers": "venue == ACL 2025"},
+  "answer_shape": {
+    "kind": "table",
+    "columns": [
+      {"name": "author", "type": "Person"},
+      {"name": "first_author_papers", "type": "integer"},
+      {"name": "papers", "type": "list<Paper>"}
+    ]
+  },
+  "competency_questions": [
+    "Which ACL 2025 papers list X as first author?",
+    "How many such papers does each author have?",
+    "Are two spellings of one name merged?"
+  ],
+  "needs": ["author order per paper", "venue per paper"]
+}

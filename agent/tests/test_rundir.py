@@ -9,14 +9,13 @@ from agent.canonical import canonical, file_sha256
 from agent.cli import main
 from agent.rundir import RunDir
 
-REPO = Path(__file__).resolve().parents[2]
-MANIFEST = REPO / "corpus" / "manifest.json"
+from .conftest import MANIFEST, fixture
 SETTINGS = dict(condition="claim_on", temperature=0.7, seed=1234, prompt_version="v1",
                 prompt_sha256="a" * 64, agent_root_manifest_sha256="b" * 64, git_commit="c" * 40)
 
 
 def make(tmp_path: Path, concept: dict | None = None) -> RunDir:
-    return RunDir.create(tmp_path / "runs", "q01-claim_on-r1", concept or {"title": "x"},
+    return RunDir.create(tmp_path / "runs", "q01-claim_on-r1", concept or fixture("concept_table.json"),
                          corpus_manifest=MANIFEST, **SETTINGS)
 
 
@@ -54,7 +53,7 @@ def test_create_refuses_existing(tmp_path: Path) -> None:
 
 def test_bad_settings_rejected(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="condition"):
-        RunDir.create(tmp_path, "r", {}, corpus_manifest=MANIFEST, **{**SETTINGS, "condition": "maybe"})
+        RunDir.create(tmp_path, "r", fixture("concept_table.json"), corpus_manifest=MANIFEST, **{**SETTINGS, "condition": "maybe"})
 
 
 def test_validate_catches_edits(tmp_path: Path) -> None:
