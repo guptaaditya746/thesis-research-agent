@@ -10,9 +10,11 @@ the files named at the end, history in git.
 - RQ1: recording each fact with a quote as it is found vs attaching sources to the answer afterwards
   (same agent, model and budget, `claim` off), measured as the share of claims judged supported, plus recall
   and tokens. Trace verifiability is reported as secondary measures, not as a second research question.
-- 8 concepts. Gold D built as the supervisor proposed. Claims judged by the author in Argilla.
-- Not yet decided: novelty against LEDGER and PROV-AGENT, model family for D, scoring of counts, the
-  pre-registered test. Proposed but not confirmed: a frontier API model on 2–3 concepts as an upper bound.
+- 8 concepts.
+- No novelty claim on provenance: adopt the approaches of LEDGER and PROV-AGENT and implement them here.
+- Evaluation as the supervisor designed it (`docs/context.md` §2): gold document D per question, its facts
+  reviewed by the author in Argilla into an answer key, system output matched against the key.
+- Not yet decided: model family for D, scoring of counts, the pre-registered test. Proposed but not confirmed: a frontier API model on 2–3 concepts as an upper bound.
 
 ## Decided
 
