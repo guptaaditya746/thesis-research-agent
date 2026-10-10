@@ -11,7 +11,8 @@ the files named at the end, history in git.
   (same agent, model and budget, `claim` off), measured as the share of claims judged supported, plus recall
   and tokens. Trace verifiability is reported as secondary measures, not as a second research question.
 - 8 concepts.
-- No novelty claim on provenance: adopt the approaches of LEDGER and PROV-AGENT and implement them here.
+- No novelty claim on provenance: adopt the approaches of LEDGER and PROV-AGENT and implement them here
+  (`docs/provenance-model.md`).
 - Evaluation as the supervisor designed it (`docs/context.md` §2): gold document D per question, its facts
   reviewed by the author in Argilla into an answer key, system output matched against the key.
 - Not yet decided: model family for D, scoring of counts, the pre-registered test. Proposed but not confirmed: a frontier API model on 2–3 concepts as an upper bound.
@@ -74,4 +75,4 @@ judging (H2). Optional: Omen tunnels and Langfuse copy (T2, T3); `save_tool` (C7
 ## Where the details are
 
 `tests/RESULTS.md` (every result) · `docs/decisions-after-tests.md` (why each decision) · `docs/plan.md` (the
-design, to be revised) · `thesis_pipeline.html` (overview page) · `llm-setup/` (the serving stack).
+design, to be revised) · `docs/provenance-model.md` (log and graph schema) · `thesis_pipeline.html` (overview page) · `llm-setup/` (the serving stack).
