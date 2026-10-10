@@ -10,7 +10,7 @@ the files named at the end, history in git.
 - RQ1: recording each fact with a quote as it is found vs attaching sources to the answer afterwards
   (same agent, model and budget, `claim` off), measured as the share of claims judged supported, plus recall
   and tokens. Trace verifiability is reported as secondary measures, not as a second research question.
-- Concepts per question: as many as the question needs, up to 5; the user picks one. Evaluation size (number of questions) not fixed yet; proposed 8.
+- Concepts per question: as many as the question needs, up to 5; the user picks one. Evaluation on 12 questions (6 corpus-wide, 6 ambiguous), each with its own gold D.
 - No novelty claim on provenance: adopt the approaches of LEDGER and PROV-AGENT and implement them here
   (`docs/provenance-model.md`).
 - Evaluation as the supervisor designed it (`docs/context.md` §2): gold document D per question, its facts
