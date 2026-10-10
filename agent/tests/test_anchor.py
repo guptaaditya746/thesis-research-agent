@@ -326,3 +326,75 @@ def test_resolve_flags_file_not_in_manifest() -> None:
     sel = find(text, quote)
     res = resolve(sel, text, "0" * 64)
     assert res.status == "relocated" and not res.file_matches_manifest
+
+
+# --- numbers: minus signs and number boundaries -----------------------------------------------------
+
+def reason(text: str, quote: str) -> str:
+    try:
+        find(text, quote)
+    except AnchorError as exc:
+        return exc.reason
+    return "ok"
+
+
+def test_quote_without_minus_does_not_match_negative_number() -> None:
+    assert reason("The drop was -0.5 points.", "0.5 points") == "partial_number"
+    assert reason("The drop was -0.5 points.", "was 0.5 points") == "not_found"
+    assert reason("The gain was 0.5 points.", "-0.5 points") == "not_found"
+    assert normalize("-0.5") != normalize("0.5")
+
+
+@pytest.mark.parametrize("raw", ["-0.5", "−0.5", "–0.5", "—0.5", "‐0.5", "－0.5"])
+@pytest.mark.parametrize("quote", ["-0.5", "−0.5", "–0.5"])
+def test_minus_forms_match_each_other(raw: str, quote: str) -> None:
+    text = f"The drop was {raw} points."
+    sel = find(text, f"was {quote} points")
+    assert sel.exact == f"was {raw} points"
+
+
+@pytest.mark.parametrize("raw,quote", [
+    ("3-5", "3–5"), ("3–5", "3-5"), ("3 - 5", "3-5"), ("3-5", "3 — 5"), ("GPT-4o", "GPT–4o"),
+])
+def test_ranges_and_model_names_match_across_dash_forms(raw: str, quote: str) -> None:
+    text = f"We use {raw} here."
+    assert find(text, f"use {quote} here").exact == f"use {raw} here"
+
+
+def test_dash_before_digit_is_not_dropped() -> None:
+    assert reason("We use 3-5 runs.", "use 35 runs") == "not_found"
+    assert reason("We use 35 runs.", "use 3-5 runs") == "not_found"
+
+
+def test_punctuation_dash_before_number_is_still_dropped() -> None:
+    # 2025-emnlp-main-1418 style: a spaced dash after a word is punctuation, not a sign.
+    text = "Seq2Seq models - 138.72% higher."
+    assert find(text, "138.72% higher").exact == "138.72% higher"
+    assert find(text, "models — 138.72%").exact == "models - 138.72%"
+    assert find("solu- tions and data-\nsets", "solutions and datasets").start == 0
+
+
+def test_quote_may_not_cut_a_number() -> None:
+    assert reason("Accuracy was 0.55 overall.", "Accuracy was 0.5") == "partial_number"
+    assert reason("Accuracy was 10.5 overall.", "0.5 overall") == "partial_number"
+    assert reason("Figure 15 shows", "5 shows") == "partial_number"
+    assert reason("in 2023. 15 papers", "2023.15 papers") == "not_found"
+    assert find("in 2023. 15 papers", "15 papers").exact == "15 papers"
+    assert reason("cells 0.51 2 here", "0.5 12") == "not_found"
+
+
+def test_whole_number_found_beside_a_cut_one() -> None:
+    text = "Scores -0.5 and 0.5."
+    sel = find(text, "0.5")
+    assert (sel.start, sel.end) == (text.rindex("0.5"), len(text) - 1)
+
+
+def test_negative_number_in_corpus_table() -> None:
+    name = "2025-acl-long-1031"
+    raw = "51.2 (-0.6)"
+    start = papers()[name].index(raw)
+    assert papers()[name].count(raw) == 1
+    assert located(name, "51.2 (−0.6)") == (start, start + len(raw))
+    assert located(name, "51.2 (0.6)") == "not_found"
+    assert located(name, "57.6 ( 1.2 )") == "not_found"
+    assert isinstance(located(name, "57.6 (-1.2)"), tuple)

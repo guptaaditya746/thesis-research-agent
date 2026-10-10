@@ -148,6 +148,7 @@ def test_forged_step_id_is_ignored(broker: InProcessBroker, env: tuple[RunDir, P
     (lambda c: c.update(quote="This sentence is not in the paper at all."), "not_found"),
     (lambda c: c.update(quote=c["quote"].replace(" ", " not ", 1)), "not_found"),
     (lambda c: c.update(quote="the"), "ambiguous"),
+    (lambda c: c.update(file=paper_file("2025-acl-long-1031"), quote="1.2 (-0.6)"), "partial_number"),
     (lambda c: c.update(file="p404.md"), "unknown_file"),
     (lambda c: c.update(file="p11.md"), "unknown_file"),  # the failed (scanned) paper is not usable
     (lambda c: c.update(file="../secrets/p1.md"), "file_outside_corpus"),
