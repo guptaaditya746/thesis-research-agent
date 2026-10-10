@@ -213,7 +213,7 @@
    =================================================================================== */
 
 const TITLE = "Thesis pipeline";
-const SUBTITLE = "A question becomes standalone concepts; the user picks one; a free agent researches the papers' Markdown files; the answer is a knowledge graph with full provenance. The \"Where it runs\" lane shows the Slurm and Omen setup, and the status table below says what is tested.";
+const SUBTITLE = "A question becomes standalone concepts; the user picks one; a free agent researches the papers' Markdown files; the answer is a knowledge graph with full provenance. The thesis tests one question (RQ1): does recording each fact with its quote while the agent researches give better-sourced answers than the same agent attaching sources afterwards? 12 questions, each scored against the supervisor's gold document D. The \"Where it runs\" lane is the tested Slurm setup.";
 
 const LLM_LABEL = "LLM call (Qwen)";
 const LLM_ICON_SRC = null;   // e.g. "data:image/png;base64,...."  (null = generic LLM icon)
@@ -227,6 +227,7 @@ const SOURCES = {
   codeact:  { short: "CodeAct",         kind: "paper", role: "build", cite: "Wang, Chen, Yuan, Zhang, et al. Executable Code Actions Elicit Better LLM Agents. ICML 2024. arXiv:2402.01030", url: "https://arxiv.org/abs/2402.01030" },
   latm:     { short: "Tool making",     kind: "paper", role: "build", cite: "Cai, Wang, Ma, Chen, Zhou. Large Language Models as Tool Makers. ICLR 2024 (venue to confirm on OpenReview). arXiv:2305.17126", url: "https://arxiv.org/abs/2305.17126" },
   skills:   { short: "Agent Skills",    kind: "tool",  role: "build", cite: "Zhang, Lazuka, Murag. Equipping agents for the real world with Agent Skills. Anthropic Engineering Blog, 16 Oct 2025; open standard at agentskills.io since 18 Dec 2025", url: "https://agentskills.io/specification" },
+  provagent:{ short: "PROV-AGENT",      kind: "paper", role: "build", cite: "Souza et al. PROV-AGENT: Unified Provenance for Tracking AI Agent Interactions in Agentic Workflows. IEEE e-Science 2025; code: ORNL/flowcept (MIT)", url: "https://arxiv.org/abs/2508.02866" },
   provo:    { short: "PROV-O",          kind: "tool",  role: "build", cite: "Lebo, Sahoo, McGuinness (eds.). PROV-O: The PROV Ontology. W3C Recommendation, 30 April 2013", url: "https://www.w3.org/TR/prov-o/" },
   webanno:  { short: "Web Annotation",  kind: "tool",  role: "build", cite: "Sanderson, Ciccarese, Young (eds.). Web Annotation Data Model. W3C Recommendation, 23 February 2017 (TextQuoteSelector, TextPositionSelector)", url: "https://www.w3.org/TR/annotation-model/" },
   edc:      { short: "EDC",             kind: "paper", role: "build", cite: "Zhang, Soh. Extract, Define, Canonicalize: An LLM-based Framework for Knowledge Graph Construction. EMNLP 2024, pp. 9820–9836. doi:10.18653/v1/2024.emnlp-main.548", url: "https://aclanthology.org/2024.emnlp-main.548/" },
@@ -254,7 +255,9 @@ const SOURCES = {
   sen2026:  { short: "Grep & harnesses", kind: "paper", role: "compare", cite: "Sen, Kasturi, Lumer, Gulati, Subbiah. Is Grep All You Need? How Agent Harnesses Reshape Agentic Search. arXiv:2605.15184, 2026 (preprint)", url: "https://arxiv.org/abs/2605.15184" },
   flyaoc:   { short: "FlyAOC",          kind: "paper", role: "compare", cite: "Zhang, Moylan, Xiong, Mei, Luo, Ma. FlyAOC: Evaluating Agentic Ontology Curation of Drosophila Scientific Knowledge Bases. NeurIPS 2026 Evaluations & Datasets. arXiv:2602.09163", url: "https://arxiv.org/abs/2602.09163" },
   intentrl: { short: "IntentRL",        kind: "paper", role: "compare", cite: "Luo, Li, Xie, Zhang, Li, Shen. IntentRL: Training Proactive User-intent Agents for Open-ended Deep Research via Reinforcement Learning. ICML 2026. arXiv:2602.03468", url: "https://arxiv.org/abs/2602.03468" },
-  ledger:   { short: "LEDGER",          kind: "paper", role: "compare", cite: "Kim, Miao, Liu. LEDGER: Claim-to-Evidence Trace Graphs for Auditing LLM Agents. arXiv:2608.18398, 2026 (preprint)", url: "https://arxiv.org/abs/2608.18398" },
+  rarr:     { short: "RARR",            kind: "paper", role: "compare", cite: "Gao, Dai, Pasupat, Chen, Chaganty, Fan, Zhao, Lao, Lee, Juan, Guu. RARR: Researching and Revising What Language Models Say, Using Language Models. ACL 2023", url: "https://arxiv.org/abs/2210.08726" },
+  alce:     { short: "ALCE",            kind: "paper", role: "compare", cite: "Gao, Yen, Yu, Chen. Enabling Large Language Models to Generate Text with Citations. EMNLP 2023", url: "https://arxiv.org/abs/2305.14627" },
+  ledger:   { short: "LEDGER",          kind: "paper", role: "build", cite: "Kim, Miao, Liu. LEDGER: Claim-to-Evidence Trace Graphs for Auditing LLM Agents. arXiv:2608.18398, 2026 (preprint)", url: "https://arxiv.org/abs/2608.18398" },
 
   // ---- we cite: findings and standards behind a design or evaluation choice
   underspec:{ short: "Underspecified Qs", kind: "paper", role: "cite", cite: "Huang, Barlacchi, Pezzelle. Who is the richest club in the championship? Detecting and Rewriting Underspecified Questions Improve QA Performance. arXiv:2602.11938, 2026 (preprint)", url: "https://arxiv.org/abs/2602.11938" },
@@ -275,14 +278,14 @@ const LANES = [
   { id: "system",  name: "Research system",  sub: "per question" },
   { id: "prov",    name: "Trace & provenance", sub: "per run, written by the harness" },
   { id: "infra",   name: "Where it runs",    sub: "one Slurm GPU job + Omen services", flow: false },
-  { id: "eval",    name: "Evaluation",       sub: "per run · proposed: three layers", open: true },
-  { id: "gold",    name: "Gold standard",    sub: "per concept", open: true },
+  { id: "eval",    name: "Evaluation",       sub: "RQ1: ours vs baseline · 12 questions" },
+  { id: "gold",    name: "Gold standard",    sub: "per question, built once" },
 ];
 
 const STAGES = [
   // Corpus
-  { id: "papers",   lane: "corpus",  col: 0, name: "Papers",          desc: "337 PDFs",                llm: false },
-  { id: "md",       lane: "corpus",  col: 1, name: "Markdown",        desc: "one .md file per paper",  llm: false, sources: ["docling"] },
+  { id: "papers",   lane: "corpus",  col: 0, name: "Papers",          desc: "337 PDFs, 336 used",      llm: false },
+  { id: "md",       lane: "corpus",  col: 1, name: "Markdown",        desc: "one .md per paper, frozen", llm: false, sources: ["docling"] },
   // Agent's toolbox (no arrows between them: the agent picks)
   { id: "grep",     lane: "toolbox", col: 1, name: "Shell",           desc: "grep, read, scripts", llm: false, sources: ["sweagent", "dcilite"] },
   { id: "scripts",  lane: "toolbox", col: 2, name: "Own scripts",     desc: "Python over the .md",     llm: false, sources: ["codeact"] },
@@ -298,28 +301,29 @@ const STAGES = [
   { id: "kg",       lane: "system",  col: 5, name: "Knowledge graph", desc: "claims → canonical triples", llm: true, sources: ["provo", "edc"], ours: "full provenance" },
   { id: "trace",    lane: "system",  col: 6, name: "Trace back",      desc: "node → step → .md text",  llm: false, people: true, ours: "user traces any fact" },
   // Trace & provenance (written by the harness, read by everything else)
-  { id: "log",      lane: "prov",    col: 4, name: "Event log",       desc: "events.jsonl, chained", llm: false, sources: ["qin2026"], ours: "logged outside the agent", oursTitle: "The interceptor runs in the harness process; the agent's sandbox cannot see or edit the log" },
-  { id: "views",    lane: "prov",    col: 5, name: "Trace views",     desc: "claims → steps → quotes", llm: false, sources: ["ledger"] },
+  { id: "log",      lane: "prov",    col: 4, name: "Event log",       desc: "PROV-AGENT records, chained", llm: false, sources: ["provagent", "qin2026"], ours: "logged outside the agent", oursTitle: "The interceptor runs in the harness process; the agent's sandbox cannot see or edit the log" },
+  { id: "views",    lane: "prov",    col: 5, name: "Trace views",     desc: "LEDGER edges: claim → quote", llm: false, sources: ["ledger"] },
   { id: "replay",   lane: "prov",    col: 6, name: "Replay",          desc: "offline · re-execute",    llm: false, ours: "computed facts re-run" },
   // Where it runs (one Slurm GPU job; Docker services on Omen through tunnels)
   { id: "slurm",    lane: "infra",   col: 0, name: "Slurm job",       desc: "3×A100 40 GB · 48 h",     llm: false, sources: ["llmsetup"] },
   { id: "orch",     lane: "infra",   col: 1, name: "Orchestrator",    desc: "Qwen3.8-27B · GPU 0 · 65k", llm: true, sources: ["vllm"] },
-  { id: "subs",     lane: "infra",   col: 2, name: "Subagent models", desc: "Qwen3-30B-A3B ×2 · 32k",  llm: true,  sources: ["vllm"] },
+  { id: "subs",     lane: "infra",   col: 2, name: "Subagent models", desc: "Qwen3-30B-A3B ×2 · pinned", llm: true,  sources: ["vllm"] },
   { id: "gateway",  lane: "infra",   col: 3, name: "LiteLLM gateway", desc: ":4000 · status :8010",    llm: false, sources: ["litellm"] },
-  { id: "harness",  lane: "infra",   col: 4, name: "Harness",         desc: "same node · srun --overlap", llm: false, sources: ["minisweagent"], ours: "parser + interceptor", oursTitle: "mini-swe-agent is installed and subclassed: our lenient reply parser, output cap, budgets and the interceptor that writes events.jsonl" },
-  { id: "sandbox",  lane: "infra",   col: 5, name: "Sandbox",         desc: "Landlock now, seccomp next", llm: false, current: true },
-  { id: "omen",     lane: "infra",   col: 6, name: "Omen services",   desc: "Langfuse · Postgres · Redis", llm: false, sources: ["langfuse"], ours: "omen-tunnels", oursTitle: "scripts/omen-tunnels chains Omen → laptop → Webis gateway → compute node, because Docker cannot run on Slurm and the node cannot reach Omen directly" },
+  { id: "harness",  lane: "infra",   col: 4, name: "Harness",         desc: "next to build", llm: false, current: true, sources: ["minisweagent"], ours: "parser + interceptor", oursTitle: "mini-swe-agent is installed and subclassed: our lenient reply parser, output cap, budgets and the interceptor that writes events.jsonl" },
+  { id: "sandbox",  lane: "infra",   col: 5, name: "Sandbox",         desc: "Landlock + seccomp", llm: false },
+  { id: "omen",     lane: "infra",   col: 6, name: "Omen services",   desc: "optional: Langfuse copy", llm: false, sources: ["langfuse"], ours: "omen-tunnels", oursTitle: "scripts/omen-tunnels chains Omen → laptop → Webis gateway → compute node, because Docker cannot run on Slurm and the node cannot reach Omen directly" },
   // Evaluation (proposed redesign: three layers)
+  { id: "baseline", lane: "eval",    col: 2, name: "Baseline run",    desc: "claim off · sources after", llm: true,  sources: ["rarr", "alce"], ours: "only the timing differs" },
   { id: "faith",    lane: "eval",    col: 3, name: "Faithfulness",    desc: "quote supports fact?",    llm: true,  sources: ["goo2026", "citeguard", "judge", "kappa"], ours: "needs no gold" },
   { id: "correct",  lane: "eval",    col: 4, name: "Correctness",     desc: "vs answer key, 3 levels", llm: true,  sources: ["webnlg", "euzenat", "text2kg", "trec"] },
   { id: "process",  lane: "eval",    col: 5, name: "Process",         desc: "cost · coverage of D",    llm: false, sources: ["trace2026"], ours: "compared by outcome" },
-  { id: "results",  lane: "eval",    col: 6, name: "Results",         desc: "concepts × repetitions",  llm: false, sources: ["bootstrap"] },
+  { id: "results",  lane: "eval",    col: 6, name: "Results",         desc: "12 questions × 2 × 3 runs", llm: false, sources: ["bootstrap"] },
   // Gold standard (to be redesigned: D per concept)
-  { id: "screen",   lane: "gold",    col: 0, name: "Screen papers",   desc: "every paper, per concept", llm: true,  ours: "coverage rows" },
+  { id: "screen",   lane: "gold",    col: 0, name: "Screen papers",   desc: "every paper, per question", llm: true,  ours: "coverage rows" },
   { id: "extract",  lane: "gold",    col: 1, name: "Extract",         desc: "into the answer shape",   llm: true,  sources: ["edc"] },
   { id: "D",        lane: "gold",    col: 2, name: "Document D",      desc: "filled answer shape",     llm: false, sources: ["zobel"], ours: "D: supervisor's idea" },
   { id: "triage",   lane: "gold",    col: 3, name: "Triage",          desc: "answers / context",       llm: true,  ours: "triage + sample" },
-  { id: "human",    lane: "gold",    col: 4, name: "Human review",    desc: "two reviewers",           llm: false, people: true, sources: ["argilla", "kappa"] },
+  { id: "human",    lane: "gold",    col: 4, name: "Human review",    desc: "the author, in Argilla",   llm: false, people: true, sources: ["argilla", "kappa"] },
   { id: "key",      lane: "gold",    col: 5, name: "Answer key",      desc: "gold triples",            llm: false, sources: ["benchie", "ambigqa"] },
 ];
 
@@ -333,10 +337,11 @@ const LINKS = [
   ["view",  "D",        "answer shape = gold template"],
   ["key",   "correct",  "gold"],
   ["harness", "log",    ""],
+  ["baseline","faith",  "sources attached after"],
   ["log",   "omen",     "copy to Langfuse"],
 ];
 
-const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. A box shows at most two chips; its panel lists every work it uses, and the list below groups all works by role. Greyed lanes show the proposed redesign of evaluation and gold (three layers; D per concept), not yet decided. The \"Where it runs\" lane is the infrastructure: its panels give the measured numbers and test ids from tests/RESULTS.md (rounds 1 and 2, 8–9 Oct 2026). Click a box, chip or reference for details (Esc closes); a link ending in #stage=agent or #source=codeact opens that panel directly.";
+const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. A box shows at most two chips; its panel lists every work it uses, and the list below groups all works by role. The \"Where it runs\" lane is the infrastructure: its panels give the measured numbers and test ids from tests/RESULTS.md (all rounds, 8–10 Oct 2026). The flagged box (Harness) is what gets built next. Click a box, chip or reference for details (Esc closes); a link ending in #stage=agent or #source=codeact opens that panel directly.";
 
 /* ---- STAGE_DETAILS / SOURCE_DETAILS: what the panel shows when a box, chip or lane is clicked -------------------------
    STAGE_DETAILS: one entry per STAGES id. SOURCE_DETAILS: one per SOURCES key. Every field is optional:
@@ -365,12 +370,12 @@ const STAGE_DETAILS = {
       "One .md file per paper, keeping headings, paragraphs, tables and references as text.",
       "Nothing is prepared for the agent: it decides itself how to find things in these files (see the toolbox).",
       "Every fact in the final graph must point back to a place in one of these files, so the conversion has to keep the text stable (a fact can be located again later).",
-      "Converter: Docling 2.110.0, OCR off, table structure on. D1 on 10 ACL/EMNLP papers: titles and author order match DBLP 9/10, headings and reference lists 10/10, table rows recovered 10/10 (GROBID: 0/10). D2: a second conversion gave identical SHA-256 hashes for all 10. About 100 s per paper, so ~9.5 h for all 337 as one Slurm job.",
-      "Converted once and frozen: hashes go into manifest.json and the files are never regenerated in place. Docling finds fewer reference entries than GROBID, so the GROBID reference list is to be appended as a final `## References (parsed)` section (decision pending).",
+      "Converter: Docling 2.110.0, OCR off, table structure on. D1 on 10 ACL/EMNLP papers: titles and author order match DBLP 9/10, headings and reference lists 10/10, table rows recovered 10/10 (GROBID: 0/10). D2: a second conversion gave identical SHA-256 hashes for all 10.",
+      "D5 (10 Oct): all 337 PDFs converted in 4 h 52 min as one Slurm job; 336 usable (28.6 MB of Markdown). p38 is a scanned PDF with no text layer and is left out. Every source and output hash is verified, the tree is read-only on Ceph, and the manifest is in the repo (corpus/manifest.json).",
     ],
     io: ["PDF", "paper.md (plain text with structure)"],
     differs: ["Two-column reading order has not been checked by eye yet; interleaved columns would break quotes across column breaks.", "A full paper is 45 to 230 KB (~35k tokens), so the agent and subagents must read sections with grep and sed, never whole files."],
-    code: ["tests/D1/convert_docling.py", "tests/D2/compare_hashes.py"],
+    code: ["scripts/build-corpus.py, scripts/build-corpus.sbatch", "corpus/manifest.json, tests/D5/"],
     ours: "No retrieval pipeline is imposed: the corpus is just files, and finding evidence is entirely the agent's job.",
   },
 
@@ -515,13 +520,14 @@ const STAGE_DETAILS = {
 
   // ---------------------------------------------------------------- Trace & provenance
   log: {
-    what: "One append-only JSONL file per run, one event per model call or command, hash-chained, written by an interceptor in the harness process that the agent's sandbox cannot see.",
+    what: "One append-only JSONL file per run, one record per model call, command or claim, hash-chained, written by a broker outside the sandbox. The record format is PROV-AGENT's; the links between records are LEDGER's (docs/provenance-model.md).",
     how: [
-      "Event types: model_call (model, input hash, full output, tokens), command (cmd, cwd, exit, stdout path and head, duration, tool name and hash if a saved tool), claim (triple, anchor, via), spawn / return (sub id, brief, files, result path), tool_created (name, path, hash, description).",
-      "Every event has id, t, agent (main or a subagent id), parent (the event that caused it: a command points at the model call that asked for it; a subagent's first event at the parent's spawn) and prev_hash, so a run can be checked for gaps.",
+      "Record fields from PROV-AGENT: task_id, subtype, used, generated, parent_task_id, group_id, agent_id, source_agent_id, started_at, ended_at, status, plus our step_id, prev_hash and hash.",
+      "Subtypes: ai_model_invocation (prompt hash, model and revision, seed; response hash, tokens), agent_tool (command, files read; output hash and file), claim (anchor; claim id), spawn (task; child agent), coverage (a model output that could not be parsed, or a cut output).",
+      "The broker assigns step ids itself; the sandboxed command reaches it only through an inherited descriptor (CLAIM_FD). S7: 100 claims with a forged step id were stored with the real one, and the chain verified.",
       "A step is one model call or one command: nothing smaller, nothing larger. Phases are labels the viewer infers, never written by the agent.",
       "Qin et al. (2026) found that every mainstream local agent harness but one let the agent delete its own traces when asked; keeping the log outside the agent's reach is their recommended fix and costs nothing here.",
-      "A copy goes to Langfuse on Omen as OpenTelemetry GenAI spans (invoke_agent, chat, execute_tool) for debugging in an existing UI; events.jsonl stays the source of truth, because the tunnel to Omen can drop and the conventions are still experimental.",
+      "Optional: a copy to Langfuse on Omen for debugging; events.jsonl stays the source of truth.",
       "Tested so far: the hash chain verifies after capped outputs (C1) and after a job is cancelled mid-run, ending with a run_aborted event (S2).",
       "Planned check: run the tampering scenarios released with Qin et al. (aisa-group/perfect-crime; no licence, so run it but copy nothing) against the harness.",
     ],
@@ -529,9 +535,10 @@ const STAGE_DETAILS = {
     ours: "Logging from outside the agent, with a hash chain, so a run is a self-verifying record.",
   },
   views: {
-    what: "Three views over events.jsonl and claims.jsonl; the claim-to-evidence graph is the primary one.",
+    what: "Views over events.jsonl and claims.jsonl; the claim-to-evidence graph is the primary one, the one the supervisor uses.",
     how: [
-      "Claim-to-evidence graph: nodes are claims, steps, scripts and quoted passages; edges are produced-by, derived-from, input-of. Clicking a fact in the knowledge graph opens this view centred on that claim (LEDGER, 2026, builds exactly this and argues it is what a reviewer needs).",
+      "Claim-to-evidence graph with LEDGER's edges: a model call informs the command it emitted; the command uses the files it read; the claim is produced by its step, supported by its quoted passage and checked_by the broker's anchor check. Clicking a fact in the knowledge graph opens this view centred on that claim.",
+      "Queries from PROV-AGENT: which command and model call produced this fact; all claims from one step or subagent; anchors that no longer resolve; answer facts with no claim behind them.",
       "Timeline: every event in order, subagents as collapsible bands, filterable by type. The debugging view.",
       "Subagent tree with dataflow: parent and children, the files each touched, what it returned (AgentTrails, 2026, shows provenance graphs of actions and artifacts reveal dependencies a chronological log hides).",
       "All three are projections of one data model, so the views are cheap once the model exists.",
@@ -572,19 +579,20 @@ const STAGE_DETAILS = {
       "Startup: 5m20s with the compile cache on Ceph (L5), 8m27s cold (A2), so the job is started once and kept alive.",
       "Qwen3.8 mixes 48 linear-attention (Gated DeltaNet) layers with 16 full-attention layers. vLLM 0.21 can reuse a cached prompt prefix only at block boundaries (\"align\" mode, marked experimental), so prefix caching helps less than for a pure-attention model, and masking an old output in the middle of the history invalidates everything after it.",
     ],
-    differs: ["C2 saw prefix-cache hits on only 24 of 60 steps with a 1.6k history. Re-run at 30k tokens, read the block size from the startup log (\"Setting attention block size to N\"), and try vLLM 0.28 or later, which adds finer prefix matching for hybrid models.",
+    differs: ["C2b (10 Oct): block size 784 tokens. At 30k tokens a cold prompt takes 12.0 s to the first token, a cached one 0.35 s (94% cache hits), so Qwen3.8 stays the orchestrator. Masking one output mid-history re-prefills what follows (estimated up to ~12 s at 30k), so mask rarely.",
+              "B8 (10 Oct): thinking off gave 50/50 one-block replies at 0.63 s; thinking on at low effort also 50/50 but 2.51 s. Thinking stays off unless a blind usefulness rating favours low effort.",
               "The thinking variant (Qwen3-30B-A3B-Thinking) is not used: 26% one-block compliance (B1, B2) and a repeated-command loop (B4)."],
     settings: ["`--max-model-len 65536 --reasoning-parser qwen3 --generation-config vllm --enable-prefix-caching`", "`chat_template_kwargs: {enable_thinking: false}` on every request", "`max_tokens 4096`"],
     code: ["tests/A2/serve_qwen38.sh", "tests/A3/, tests/A5/, tests/B/B3/, tests/C2/, tests/L2/"],
   },
   subs: {
-    what: "The models the subagents run on: two replicas of Qwen3-30B-A3B-Instruct-2507-FP8 (\"Heavy\"), one per GPU, behind one LiteLLM name, sub-model.",
+    what: "The models the subagents run on: two replicas of Qwen3-30B-A3B-Instruct-2507-FP8 (\"Heavy\"), one per GPU, reachable as sub-model-1 and sub-model-2 (one per replica) and as the shared name sub-model.",
     how: [
       "130 tokens/s for one sequence (A5), about 3× the orchestrator; 64,848 KV tokens per replica in the agent layout (L1).",
       "L3: four concurrent 32k requests ran without preemption. Eight concurrent 16k requests preempted until each replica was capped at 3 active sequences; with the cap, 8 of 8 completed without preemption.",
       "Under a burst, LiteLLM split the requests unevenly between the two replicas (5/3, then 8/0).",
     ],
-    differs: ["Routing balance is not solved: either fix LiteLLM's strategy or pin each subagent to a replica in the harness.", "Fan-out is effectively 6 concurrent 16k subagents until KV capacity is raised and measured again."],
+    differs: ["L7 (10 Oct): no LiteLLM routing strategy split concurrent requests evenly (least-busy 5/3, usage-based 8/0); one alias per replica gave 4/4. The harness therefore assigns each subagent a replica itself.", "Fan-out is 6 concurrent 16k subagents (3 per replica)."],
     settings: ["`max_num_active_seqs: 3` per replica", "`--max-model-len 32768`"],
     code: ["tests/A4/, tests/A5/, tests/L3/"],
   },
@@ -595,8 +603,10 @@ const STAGE_DETAILS = {
       "L2: the thinking switch and all response fields (content, reasoning, finish reason, usage) pass through unchanged.",
       "L4: stopping a replica during a request did not cause a silent retry, and the supervisor brought the backend back in 2m30s. Retries matter here: the event log must record every model call that actually ran.",
     ],
-    differs: ["S3: the raw vLLM ports (8001, 8002, 8004) and the status API answer without credentials, so any process on the node, an agent command included, could call a model outside the log until commands are isolated.",
-              "S3 also saw LiteLLM's /v1/models return 500 (missing prisma module); chat completions work."],
+    differs: ["L7 (10 Oct): request timeout raised from 120 s to 600 s (the worst measured step is 112.5 s); the seed reaches vLLM, so seeded runs repeat.",
+              "L8 (10 Oct): a prompt over the context limit returns HTTP 400 ContextWindowExceededError with the token counts; the harness treats it as \"context full\" and does not retry.",
+              "S3: the raw vLLM ports answer without credentials; agent commands cannot reach them because the sandbox blocks all sockets (S7).",
+              "Unauthenticated /v1/models returns 500 (missing prisma module); chat completions work, and the harness does not need model listing."],
     code: ["llm-setup/src/llm_setup/supervisor.py (render_litellm)", "tests/A7/passthrough.py, tests/L2/, tests/L4/, tests/S3/"],
   },
   harness: {
@@ -604,10 +614,12 @@ const STAGE_DETAILS = {
     how: [
       "Built on mini-swe-agent 2.4.6 (MIT), installed and subclassed rather than copied. Our model class replaces its reply format (it expects a ```mswea_bash_command block) with the lenient bash parser; our environment adds the output cap, budgets and loop notices; our interceptor writes events.jsonl.",
       "Runs as a job step on the same node as the models (`srun --overlap`), because LiteLLM and vLLM listen only on 127.0.0.1.",
-      "Parts already tested on their own: output cap and hash chain (C1), loop behaviour of the models (B4), job-end handling (S2). The loop itself is the next thing to build.",
+      "Parts already tested on their own: output cap and hash chain (C1), loop behaviour of the models (B4), job-end handling (S2), sandbox and broker (S7), over-context errors (L8). Everything around it is ready; the loop itself is the next thing to build.",
+      "A switch turns claim off for the baseline condition; everything else stays identical.",
+      "First check when the stack next starts: F1 (tests/F1/acceptance.py), one model reply run end to end through parser, sandbox, claim and broker on the frozen corpus.",
     ],
-    differs: ["mini-swe-agent's own trajectory file is kept only as a debugging aid; events.jsonl is the record.", "Its Apptainer environment uses --fakeroot, which needs user namespaces the node does not have."],
-    code: ["planned: src/thesis_agent/harness/", "tests/C1/capping.py, tests/C1/verify_chain.py"],
+    differs: ["mini-swe-agent's own trajectory file is kept only as a debugging aid; events.jsonl is the record."],
+    code: ["planned: src/thesis_agent/harness/", "tests/S5/sandbox.py, tests/S5/run_sandbox.py, tests/H1/broker.py, tests/F1/acceptance.py"],
   },
   sandbox: {
     what: "The boundary every agent command runs inside: corpus and toolchain read-only, one scratch directory writable, no network, no access to the model ports, the log or other processes, and time and memory limits.",
@@ -617,7 +629,7 @@ const STAGE_DETAILS = {
       "A pinned, hashed, read-only agent-venv plus ripgrep and jq; extra packages only from a local wheel store (S5c).",
       "A broker outside the sandbox owns events.jsonl and claims.jsonl and assigns step ids (H1).",
     ],
-    differs: ["Landlock does not cover UDP or pathname Unix sockets (S6). The final Slurm session adds a seccomp filter and passes the broker as an inherited descriptor (S7), then runs everything together (F1)."],
+    differs: ["S7 (10 Oct): a seccomp filter after no_new_privs closes what Landlock leaves open (UDP, pathname Unix and netlink sockets, socketpair); the broker is reached through an inherited descriptor. Writes stay blocked even after chmod. Toolchain build and check: scripts/build-agent-root.sh and verify-agent-root.sh (B0, 105 s)."],
     code: ["tests/S5/sandbox.py, tests/S5/run_sandbox.py, tests/H1/, tests/S6/findings.md, docs/slurm-final-runbook.md"],
   },
   omen: {
@@ -633,11 +645,23 @@ const STAGE_DETAILS = {
   },
 
   // ---------------------------------------------------------------- Evaluation (proposed: three layers)
+  baseline: {
+    what: "The comparison condition for RQ1: the same agent, model, budget and corpus, with claim switched off. It writes its answer; afterwards each fact in the answer gets a source found by a separate step. Only the moment provenance is made differs.",
+    how: [
+      "Order as in RARR: answer first, attribution afterwards. The attribution step splits the answer into facts, searches the corpus with the same grep tools, and lets the same model pick the supporting quote.",
+      "Both conditions are scored the same way: against the answer key from D (correct and wrong facts), the share of facts whose quote really supports them, facts with no source, and tokens and time.",
+      "Failure a post-hoc source can hide: a fact half-remembered from one paper gets a citation to another paper that only mentions the term. Recording at the moment of reading prevents that; the comparison measures how often it happens.",
+      "Every outcome is reportable: better-sourced answers (main result), no difference (post-hoc attribution suffices), or fewer facts but better sourced (a trade-off with its size).",
+    ],
+    io: ["question + picked concept", "an answer with sources attached afterwards"],
+    ours: "Only the timing of provenance differs, so the difference is attributable to it.",
+    settings: ["harness switch: claim off", "attribution script: same model, same search"],
+  },
   faith: {
-    what: "Layer 1: does the quoted text support each fact? Needs no gold, so it can start as soon as the harness runs.",
+    what: "Layer 1: does the quoted text support each fact? Needs no gold, so it can start as soon as the harness runs. Applied equally to our runs and to the baseline.",
     how: [
       "Three checks per claim, after Onweller et al. (2026): the anchor resolves (100% by construction), the passage is relevant, the passage supports the triple. Computed facts are checked mechanically by re-execution.",
-      "Support is judged by an LLM, but the judge is calibrated: two people label 200 to 300 claims in Argilla (Cohen's \u03ba), the threshold is picked on half, agreement is reported on the other half, and the judge and protocol are always named.",
+      "Support is judged by an LLM, calibrated on a sample of 200 to 300 claims the author labels in Argilla, blind to the condition. The threshold is picked on half and agreement is reported on the other half; the judge and protocol are always named.",
       "Goo et al. (2026) found the measured unsupported-citation rate moved from about 3% to 18% on identical outputs depending only on verifier strictness; Onweller et al. found deep-research agents keep links valid above 94% while factual accuracy against the cited source is 39% to 77%.",
       "Built from Goo et al.'s released code (citation-guard, MIT): their verifier prompts adapted to \"does this quote support this triple?\", their strictness-sensitivity protocol, and their split-conformal guard on the catch rate.",
     ],
@@ -663,18 +687,17 @@ const STAGE_DETAILS = {
     how: [
       "Steps, tokens, wall time, papers opened, coverage (papers opened out of D's relevant papers), commands per claim, tokens per claim, share of claims from subagents, whether a budget stop occurred, subagent count.",
       "The route itself is never scored; it is described from the trace views, with one or two runs shown in full in the thesis.",
-      "Ablations as harness switches: tool output inline vs in files; subagents on or off; tool invention on or off; corpus-blind vs corpus-aware concepts; a smaller orchestrator. The first two mirror Sen et al. and Li et al. on a scientific corpus.",
+      "The one tested comparison is ours vs the baseline. Other switches (subagents on or off, output inline vs in files) are described, not tested.",
     ],
     io: ["events.jsonl + D's paper list", "cost and coverage per run"],
     ours: "Comparing free agents by outcome and cost, never by route.",
   },
   results: {
-    what: "The final comparison across concepts and repetitions, with honest uncertainty.",
+    what: "RQ1's answer: ours vs the baseline on 12 questions (6 corpus-wide, 6 ambiguous), 3 runs each, 72 runs in all, with honest uncertainty.",
     how: [
-      "Each concept is run 3 to 5 times (the agent is stochastic); repetitions are averaged per concept first; every concept then counts once.",
-      "95% intervals by BCa bootstrap over runs and over concepts; ablation differences are paired on the same concepts, with a sign-flip permutation p-value.",
-      "Layer 0, concept quality, is reported alongside: concept recall against interpretations written by two or three people per question (AmbigQA-style), the two-procedure agreement rate, pairwise distinctness ratings.",
-      "Results by concept shape (count, list, graph) and difficulty (metadata-only vs full-text) instead of complexity \u00d7 path.",
+      "Each question is run 3 times per condition (the agent is stochastic); runs are averaged per question first, so every question counts once.",
+      "The difference between conditions is paired by question: 95% BCa bootstrap interval and a sign-flip permutation p-value. A difference under 5 points, or an interval that includes 0, counts as no effect.",
+      "Results also split by question kind (corpus-wide vs ambiguous). Budget: about 80 to 90 GPU-hours, two or three 48 h jobs.",
     ],
     io: ["per-run scores of the three layers", "tables with intervals; one or two runs shown in full"],
     code: ["packages/evaluation/src/harness_evaluation/stats.py (carried over)"],
@@ -686,7 +709,7 @@ const STAGE_DETAILS = {
     how: [
       "A reader (one LLM call per paper) sees the paper and says relevant or not, with findings. Without the old index, the reader gets the whole .md or its section headings plus matched passages from a plain grep; to be decided.",
       "Every paper gets a coverage row: relevant, not relevant, or error, so it is visible what was looked at.",
-      "A trial build (--max-papers N) screens only the N papers our search ranks highest for the question; the real build screens all 337.",
+      "A trial build (--max-papers N) screens only the N papers our search ranks highest for the question; the real build screens all 336.",
       "Screening check: a random sample of papers marked not relevant (5 per question) goes to people, giving the miss rate of screening with an interval.",
     ],
     io: ["question + every paper", "coverage rows (relevant / not relevant)"],
@@ -710,7 +733,7 @@ const STAGE_DETAILS = {
     how: [
       "Contents: the brief, a coverage row per paper, every extracted row or triple of the answer shape with its passage and evidence.",
       "Uses: reviewed, it becomes the answer key (Correctness, layer 2); its paper list defines coverage (Process, layer 3). Mode B (D as a run input) is dropped: the agent's job is to find things itself.",
-      "Budget: D for 6 to 10 concepts from 3 to 5 questions, chosen to differ in shape (count, list, graph) and difficulty (metadata-only vs full-text).",
+      "Budget: one D for each of the 12 evaluation questions (for the concept picked for it), chosen to differ in shape (count, list, ranking, comparison).",
       "Stored as evidence_docs/<question id>/doc.json, with a readable doc.md.",
       "Builder settings and versions are recorded in it, so a D can be reproduced.",
     ],
@@ -735,9 +758,8 @@ const STAGE_DETAILS = {
     what: "People decide what the gold is, in Argilla.",
     how: [
       "Each record: keep, drop, or partly right with a fix; mark vital facts; type other correct wordings (variants); add missing facts.",
-      "20% of questions are reviewed by two people independently; their agreement is Cohen's κ, taken from a snapshot before any discussion.",
-      "Disagreements are settled by a third person.",
-      "The LLM judge is checked the same way: people label a sample of its decisions; the judge is used for soft scores only if the (population-weighted) κ ≥ 0.61.",
+      "The author reviews alone (decided 10 Oct). Instead of a second annotator, a random 10% is reviewed again about two weeks later, blind to the first label, and self-agreement is reported as Cohen's κ.",
+      "The LLM judge is checked the same way: the author labels a sample of its decisions; the judge is used for soft scores only if κ ≥ 0.61.",
     ],
     io: ["triaged triples", "reviewed triples"],
     code: ["labelling: src/labelling/argilla_io.py, gold.py", "guidelines/annotation.md"],
@@ -866,9 +888,25 @@ const SOURCE_DETAILS = {
     differs: ["Their strongest recommendation is to log at a gateway between harness and model. Here the interceptor sits in the harness and LiteLLM is the gateway; that only holds once agent commands cannot reach the raw model ports (see Sandbox)."],
   },
   ledger: {
-    what: "LEDGER builds layered trace graphs from agent sessions: trace records grouped into evidence and workflow nodes, artifacts as evidence anchors, typed edges from claims to the actions, artifacts and checks that support them. Argues a chronological log hides which actions support which conclusion.",
-    how: ["The primary trace view is a claim-to-evidence graph in this sense: claims, steps, scripts and quoted passages, with produced-by, derived-from and input-of edges, opened from any fact in the knowledge graph."],
-    differs: ["Related: AgentTrails (Wu et al., 2026) turns trajectories into provenance graphs of actions and artifacts and aligns several runs on one canvas; Graph of Trace (ACL 2026 demo) visualises traces of scientific agents."],
+    what: "LEDGER builds layered trace graphs from agent sessions: trace records, evidence nodes (actions and artifacts as evidence anchors) and workflow phases, with typed edges from claims to the actions, artifacts and checks that support them. Two qualitative case studies, no metrics, no code released (paper CC BY 4.0).",
+    how: ["Adopted (decided 10 Oct): its edge types uses, produces, informs, supports and checked_by; one group id pairing each command with its output; explicit coverage records for any model output the harness could not parse.",
+          "The primary trace view walks from a claim along supports edges to the quoted passage and the step that made it. Mapping in docs/provenance-model.md."],
+    differs: ["LEDGER's links are inferred afterwards by an LLM tracer, and the paper calls the graph \"an audit aid rather than a source of truth\". Ours are written by the broker at the moment of the claim and checked against the frozen corpus; that difference is what RQ1 measures."],
+  },
+  provagent: {
+    what: "PROV-AGENT extends W3C PROV for agent workflows: model calls (AIModelInvocation with Prompt, ResponseData, AIModel), tool calls (AgentTool) and agents (AIAgent), all linked with used, wasGeneratedBy, wasInformedBy and wasAssociatedWith. Implemented in ORNL's Flowcept (MIT). One case study, no metrics.",
+    how: ["Adopted (decided 10 Oct): its record fields for every line of events.jsonl (task_id, subtype, used, generated, parent_task_id, group_id, agent_id, started_at, ended_at, status) and its subtypes ai_model_invocation and agent_tool, plus our claim, spawn and coverage.",
+          "Its five provenance queries become the supervisor's questions: which command and model call produced this fact, all claims of a step or subagent, anchors that no longer resolve."],
+    differs: ["Flowcept stores PROV-style JSON in a database and has no PROV-O export; we write the Turtle export ourselves with rdflib."],
+    code: ["docs/provenance-model.md", "reference: ORNL/flowcept src/flowcept/commons/flowcept_dataclasses/task_object.py, src/flowcept/commons/vocabulary.py"],
+  },
+  rarr: {
+    what: "RARR writes an answer first, then retrieves evidence for each statement and revises the answer to agree with it: attribution after generation.",
+    how: ["The baseline condition follows this order: the same agent answers with claim switched off, then each fact of the answer gets a source found afterwards with the same model and the same grep search."],
+  },
+  alce: {
+    what: "ALCE is a benchmark and method family for answers with citations; it measures citation recall and precision (does the cited passage support the statement) with an NLI judge.",
+    how: ["Its citation-support measures inform the faithfulness scoring that is applied equally to our runs and to the baseline."],
   },
   goo2026: {
     what: "Audits the verifiers used to check citations in agentic scientific synthesis (OpenScholar, PaperQA2): on identical outputs the measured unsupported-citation rate moved from about 3% to 18% depending only on verifier strictness. Proposes validating the verifier against human gold and a conformal guard on the catch rate.",
@@ -1000,7 +1038,7 @@ const BRIEFS = [
     title: "Most papers in the corpus",
     definition: "The author who appears, in any author position, on the largest number of papers in the corpus.",
     measure: { operation: "count", of: "Paper", group_by: "author", order: "desc" },
-    scope: { papers: "all 337 papers" },
+    scope: { papers: "all 336 papers" },
     answer_shape: { kind: "table", columns: [{ name: "author", type: "Person" }, { name: "papers_in_corpus", type: "integer" }, { name: "papers", type: "list<Paper>" }] },
     competency_questions: ["Which corpus papers list X as an author?", "How many corpus papers does each author have?", "Are two spellings of one name merged (one DBLP person)?"],
     needs: ["author list per paper"],
@@ -1029,29 +1067,29 @@ const ROLES = {
 /* ---- STATUS: the "Setup status" table under the diagram -----------------------------------------
    state: "works" | "partial" | "blocked" | "open"   stage: the box its name opens   tests: ids in tests/RESULTS.md
    ---------------------------------------------------------------------------------------------- */
-const STATUS_NOTE = "From tests/RESULTS.md after rounds 1–3 (8–10 Oct 2026); the final Slurm session is docs/slurm-final-runbook.md. Click an area for its box in the diagram.";
+const STATUS_NOTE = "From tests/RESULTS.md after all infrastructure rounds (8–10 Oct 2026). No further infrastructure session is planned. Click an area for its box in the diagram.";
 const STATUS = [
-  { area: "Models",       stage: "orch",    state: "works",   tests: "A1–A5, L1, R3",
-    evidence: "Qwen3.8-27B orchestrator (65k, 79,371 KV tokens) and two Qwen3-30B-A3B subagent replicas start from llm-setup in 11m14s, pinned by revision, loaded offline.",
-    next: "C2b: prefix cache and prefill at 30k; decides whether to try Qwen3-30B-A3B as orchestrator." },
-  { area: "Gateway",      stage: "gateway", state: "partial", tests: "A7, L2–L4, L6",
-    evidence: "LiteLLM passes the thinking switch and all fields; no silent retries. The 120 s timeout is 7.5 s above the worst step; least-busy routing left one replica idle.",
-    next: "L7: timeout 600 s, fix routing or one alias per replica, check the seed; L8: over-context errors." },
-  { area: "Sandbox",      stage: "sandbox", state: "partial", tests: "S5a–S5c, S6, S1b, H1",
-    evidence: "Landlock ABI 8 blocks files, TCP and signals; read-only pinned toolchain; 2 GB limit; broker owns the log. UDP and pathname Unix sockets still allowed.",
-    next: "S7: seccomp for UDP and Unix sockets, broker through an inherited descriptor; F1 runs everything together." },
-  { area: "Harness",      stage: "harness", state: "open",    tests: "B1–B4, C1, C2, S2",
-    evidence: "Model behaviour, output cap, hash chain and job-end handling tested in isolation; the loop on mini-swe-agent is not built.",
-    next: "Build the minimal loop (parser, interceptor, claim) after the final Slurm session, then B5 and C3–C6." },
-  { area: "Corpus",       stage: "md",      state: "partial", tests: "D1–D4",
-    evidence: "Docling chosen: tables 10/10, deterministic over two runs; grep over the outlines under 1 s. The anchor library needs a fix.",
-    next: "D5: convert all 337 PDFs and freeze them with hashes." },
-  { area: "Evaluation",   stage: "faith",   state: "open",    tests: "—",
-    evidence: "RQ1: claim as you go vs sources attached afterwards, 8 concepts, gold D, claims judged by the author in Argilla.",
-    next: "Starts after the first real run (C3)." },
+  { area: "Models",       stage: "orch",    state: "works",   tests: "A1–A5, L1, R3, B8, C2b",
+    evidence: "Qwen3.8-27B orchestrator (65k, thinking off, 50/50 one-block replies) and two Qwen3-30B-A3B subagent replicas, pinned by revision. At 30k tokens: 12 s cold, 0.35 s cached to the first token.",
+    next: "Nothing before the harness. Optional: blind usefulness rating of the 50 B8 commands." },
+  { area: "Gateway",      stage: "gateway", state: "works",   tests: "L2, L4, L6–L8",
+    evidence: "LiteLLM :4000 with a 600 s timeout; seed reaches vLLM; over-context prompts return a clear 400 error; one alias per subagent replica (4/4 balance).",
+    next: "The harness assigns subagents to sub-model-1 / sub-model-2." },
+  { area: "Sandbox",      stage: "sandbox", state: "works",   tests: "S5a–S5c, S6, S7, B0, H1",
+    evidence: "Landlock ABI 8 + seccomp: no network or sockets, read-only corpus and toolchain, 2 GB, 120 s; broker owns the log, claims arrive over an inherited descriptor; toolchain built and verified by script.",
+    next: "Run F1 (everything together) on the next stack start." },
+  { area: "Corpus",       stage: "md",      state: "works",   tests: "D1, D2, D5",
+    evidence: "336 of 337 papers converted with Docling 2.110.0 and frozen with hashes (p38 is a scanned PDF and is left out).",
+    next: "Fix the anchor library (file hash, positions, retyped quotes) during implementation." },
+  { area: "Harness",      stage: "harness", state: "open",    tests: "B1–B4, C1, S2, F1",
+    evidence: "All parts around it are tested; the loop on mini-swe-agent, the claim command, the PROV-AGENT/LEDGER log format and the baseline switch are not built.",
+    next: "Build next: the implementation plan starts here." },
+  { area: "Evaluation",   stage: "results", state: "open",    tests: "—",
+    evidence: "Decided: RQ1 ours vs baseline, 12 questions × 2 conditions × 3 runs, gold D per question reviewed by the author in Argilla.",
+    next: "Write the 12 questions; build D after the harness runs." },
   { area: "Tunnels",      stage: "omen",    state: "partial", tests: "T1–T4",
     evidence: "Optional. All five Omen services reachable from the node on the legacy mapping (T2); not on the critical path.",
-    next: "Only if the Langfuse copy is wanted: update omen-tunnels-external, retest T2, run T3." },
+    next: "Only if the Langfuse copy is wanted." },
 ];
 const STATE_LABEL = { works: "Works", partial: "Partial", blocked: "Blocked", open: "Not built" };
 
@@ -1485,7 +1523,7 @@ function legend() {
   add('<b class="key-chip k-paper">EDC</b>Idea from a paper');
   add('<b class="key-chip k-tool">DBLP</b>Tool or data');
   add('<b class="key-chip k-ours">full provenance</b>Our contribution');
-  add('<i class="key-open"></i>To be redesigned');
+  if (LANES.some(l => l.open)) add('<i class="key-open"></i>To be redesigned');
 }
 
 document.getElementById("title").textContent = TITLE;
