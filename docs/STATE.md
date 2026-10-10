@@ -34,6 +34,10 @@ the files named at the end, history in git.
 | Logs and claims | A broker outside the sandbox owns `events.jsonl` and `claims.jsonl` (single writer, hash chain, step id assigned by the harness); the sandbox submits claims over an inherited `CLAIM_FD`. | H1, R2, S7 |
 | Output cap | 8 KB of each command's output in context, full output in a file | C1 |
 | Corpus | Docling 2.110.0 (OCR off, tables on), 336/337 PDFs converted and hash-verified; omit scanned PDF `p38` per user decision; frozen with hashes in `manifest.json` | D1, D2, D5 |
+| Manifest hash | Take the `corpus/manifest.json` hash from an LF checkout (`22e9471b…`); `.gitattributes` now forces LF on the corpus, D1 papers, schemas, fixtures, `*.jsonl`, the prompt and scripts | D5, m1-core |
+| Column order | Docling keeps two-column reading order: 0/10 papers interleaved; a quote across one of the 4 footnote/caption splits at page breaks is rejected (`not_found`) | D1-col, `test_anchor` |
+| Anchors | Selector = file sha256 + raw offsets + exact/prefix/suffix; offsets are tried first, else the retyped quote is matched after normalising (NFKC, whitespace, dashes, quote marks, entities) and mapped back to raw offsets; minus signs are kept and a quote may not cut a number (`partial_number`); case-sensitive | `agent/anchor.py`, 1.5, `test_anchor` (82) |
+| Broker | One process per run; one hash chain over `events.jsonl`, `claims.jsonl` a checked copy of its claim records; claim ids `claim-NNNNNN`; rejection reason returned to the agent (`not_found`, `partial_number`, `ambiguous`, `unknown_file`, …) | `agent/broker.py`, 1.6, `test_broker` (30) |
 
 ## Numbers the design must respect
 
@@ -57,7 +61,7 @@ the files named at the end, history in git.
 | Item | State |
 |---|---|
 | F1: everything together | `tests/F1/acceptance.py` is written, but only the `claim` smoke test ran. Run it first on the next stack start; it is the first harness step |
-| Anchor library | `tests/D3/anchor.py` hashes the quote instead of the file and returns the quote instead of its position; matching must accept retyped quotes mapped back to raw offsets. Fixed in code during implementation |
+| Anchor library | Fixed in `agent/anchor.py` (row 1.5, m1-core); see Decided "Anchors". Open for B5: whether to relax case sensitivity and set a minimum quote length |
 
 No further infrastructure session is planned: B0, S7, L7, L8, C2b and D5 closed on 10 Oct.
 
@@ -65,7 +69,7 @@ No further infrastructure session is planned: B0, S7, L7, L8, C2b and D5 closed 
 
 Context overflow before 61,440 tokens (C8); `claim` quoting on real passages (B5); first end-to-end run (C3),
 then re-execution (C5) and replay (C6); `spawn` (C4) only if single-agent runs overflow; Argilla set-up for
-judging (H2); blind usefulness rating of the 50 B8 commands (B6 rubric); column order on 3 two-column papers (D1). Optional: Omen tunnels and Langfuse copy (T2, T3); `save_tool` (C7).
+judging (H2); blind usefulness rating of the 50 B8 commands (B6 rubric). Closed: column order (D1-col, now in Decided). Optional: Omen tunnels and Langfuse copy (T2, T3); `save_tool` (C7).
 
 ## Where the details are
 

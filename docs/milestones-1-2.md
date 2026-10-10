@@ -53,6 +53,28 @@ checks anchors.
 **Runs alongside the critical path:** the main loop 1.8 is built against a stub broker, and with 1.10 (about
 5 days in all) it must be ready by 1.13. Also in parallel: 1.1, 1.2, 1.3, then 1.14.
 
+### Progress (branch `m1-core`, merged into `main`)
+
+| # | Status | Commits | Tests |
+|---|---|---|---|
+| 1.2 | done | `6eba4ad` | `test_rundir` (6) |
+| 1.3 | done | `1d23fd1` | `test_concept` (35) |
+| 1.4 | done: 0/10 papers interleaved, nothing excluded | `cb54b53` | D1-col |
+| 1.5 | done; minus signs and number cuts fixed after review | `dd73ebb`, `5c91f85` | `test_anchor` (82) |
+| 1.6 | done | `cc22632` | `test_broker` (30; 2 POSIX-only, skipped on Windows) |
+
+Unit suite: 151 passed + 2 skipped on Windows, 153 passed on WSL Linux (2026-10-10, RESULTS `M1-unit`).
+`.gitattributes` (`07af190`) keeps every hashed file LF, so the manifest hash matches the Ceph copy.
+
+Small decisions made while building:
+- Claim ids are `claim-NNNNNN`, numbered per run by the broker; a claim's id fields sent by the sandbox are ignored and logged.
+- Claims are records in `events.jsonl`'s single hash chain; `claims.jsonl` is a copy of those records that `verify-chain` checks against it.
+- A claim's `file` may be `p12.md`, `p12` or an absolute path inside the corpus directory; anything else is `file_outside_corpus` or `unknown_file`.
+- Each answer fact has `origin` `research` (claimed during the run) or `attach` (baseline attach step, 2.5).
+- Answer cells (row values) may be `null`: the agent could not establish the value; `measure.operation` in the concept is a free word (count, list, rank, …), not an enum.
+- Anchor matching: case-sensitive; dashes and whitespace dropped, except a minus sign (a dash touching a digit, or between digits) is kept as U+2212 and whitespace between digits stays one space; a match that cuts a number or leaves out its sign is refused (`partial_number`).
+- Open for B5 (1.13): whether to relax case sensitivity, and whether to require a minimum quote length (today a quote of one word is accepted if it is unique in the file).
+
 ## Milestone 2: the full system and the baseline
 
 **Done when:** the 12 questions have frozen concepts, and one question runs in both conditions. Each condition
