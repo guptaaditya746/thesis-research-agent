@@ -1,7 +1,8 @@
 # Milestones 1 and 2: triaged work list
 
-Built from `docs/STATE.md` (10 Oct 2026). Milestone 3 (questions, gold D, Argilla) and 4 (72 runs, scoring)
-are planned separately.
+Built from `docs/STATE.md` (10 Oct 2026) and revised after a review the same day. Milestone 3 (gold D,
+Argilla, answer key) and milestone 4 (72 runs, scoring) are planned separately; what they need from 1 and 2 is
+listed at the end.
 
 **Priorities**
 - **P0:** the milestone is not done without it.
@@ -10,55 +11,88 @@ are planned separately.
 
 **Size:** working days. **Cluster** means the item needs the Slurm stack running.
 
+## Fixed run settings (recorded in every run's `config.json`)
+
+| Setting | Value | Source |
+|---|---|---|
+| Models | `orch-model` = Qwen3.8-27B-FP8 @ `017b9c7`, thinking off, `max_tokens` 4096; `sub-model-1`/`-2` = Qwen3-30B-A3B-Instruct-2507-FP8 @ `5a5a776` | STATE Decided |
+| Budget | 150 steps / 400k tokens to start, announced to the agent; adjusted once after 1.13, then frozen for both conditions | decisions §6 |
+| Sampling | Temperature and one seed per run, written to the config. L7 showed the seed reaches vLLM through the proxy | L7 |
+| Command limits | `timeout 120`, `ulimit -v 2G`, output capped at 8 KB in context | STATE Sandbox, Output cap |
+| Also recorded | Prompt version and hash, the concept file's hash, the `corpus/manifest.json` hash, the agent-root manifest hash, the git commit, the condition (`claim` on or off) | — |
+
 ## Milestone 1: the agent answers one question end to end
 
-**Done when:** one hand-written concept runs to a final answer, every claim's quote is found at its position in
-the frozen corpus file, the log chain verifies, and the run directory is complete.
+**Done when:** one frozen concept runs to a structured final answer, every claim's quote is found at its
+position in the frozen corpus file, the log chain verifies, and the run directory with its `config.json` is
+complete.
 
-| # | Pri | Item | What exactly | Reuses | Depends on | Size | Cluster |
+| # | Pri | Item | What exactly | Starts from (gap) | Depends on | Size | Cluster |
 |---|---|---|---|---|---|---|---|
 | 1.1 | P0 | F1 acceptance | Run `tests/F1/acceptance.py` once; it proves model → sandbox → broker → corpus as one path | `tests/F1/` | — | 0.5 | yes |
-| 1.2 | P0 | Package and run directory | `agent/` Python package. `runs/<run-id>/` holds `config.json`, `concept.json`, `events.jsonl`, `claims.jsonl`, `out/` (full command outputs), `scratch/`, `answer.json` | — | — | 0.5 | no |
-| 1.3 | P0 | Anchor library | Hash the **file**, not the quote. Return start and end positions. Match retyped quotes (whitespace, hyphenation, quote marks, ligatures) and map them back to raw offsets. Unit tests on 10 D1 papers, including two-column ones | `tests/D3/anchor.py` | — | 2 | no |
-| 1.4 | P0 | Broker | One process per run, outside the sandbox. The single writer of both logs. Writes PROV-AGENT records (`docs/provenance-model.md`) with a hash chain. The harness gives it the step id. Checks each claim's anchor against `corpus/manifest.json` and replies "accepted" with a claim id, or "rejected" with the reason. Chain head printed to the Slurm log | `tests/H1/broker.py`, `tests/C1/verify_chain.py` | 1.3 | 2 | no |
-| 1.5 | P0 | `claim` command | Executable in the sandbox. Reads JSON `{s, p, o, file, quote}` on stdin and sends it over `CLAIM_FD`. Prints the broker's reply, so the agent sees a rejection and can retry | `tests/H1/client.py` | 1.4 | 0.5 | no |
-| 1.6 | P0 | Harness loop | Subclass mini-swe-agent 2.4.6. Calls `orch-model` (thinking off, `max_tokens` 4096). Parser: strict one-block rule, then the lenient fallback. Each command runs through `run_sandbox.py`. Output capped at 8 KB, with the full output saved to a file. Repeated commands get the B4 notices. Step and token budgets are announced to the agent. HTTP 400 context errors become "context full, conclude now". The run ends with a final answer step | mini-swe-agent, `tests/S5/run_sandbox.py`, `tests/S5/sandbox.py`, `tests/B/B4/loop.py` | 1.4, 1.5 | 4 | no (mock model) |
-| 1.7 | P0 | Model-call records | Each call becomes an `ai_model_invocation` record: prompt hash, model name and revision, temperature, seed, token usage. Output that cannot be parsed becomes a `coverage` record; it is never run | — | 1.4, 1.6 | 1 | no |
-| 1.8 | P0 | Answer format | The final answer is a list of facts. Each fact lists the claim ids it rests on (or none). Facts are needed for scoring in milestone 4; the claim ids are needed for "facts with no claim" | — | 1.6 | 1 | no |
-| 1.9 | P0 | System prompt and one concept | Prompt v1: the tools, the `claim` rules, the budget, the answer format. One concept brief written by hand | `tests/B/system_prompt.txt` | 1.6, 1.8 | 1 | no |
-| 1.10 | P0 | `agent verify` | For one run: verify the chain, resolve every anchor, check every answer fact's claim ids exist. Print steps, claims, tokens and time | `tests/C1/verify_chain.py` | 1.3, 1.4 | 1 | no |
-| 1.11 | P0 | First real runs | C3: the concept from 1.9, 2–3 times. B5: are real quotes accepted, and what share is rejected? C8: does a run reach the 61k-token limit? | — | 1.1–1.10 | 2 | yes |
-| 1.12 | P1 | Trace timeline | Static HTML from `events.jsonl`: steps in order, the command, the first lines of output, claims marked. For debugging, not the final viewer | — | 1.4 | 1.5 | no |
-| 1.13 | P1 | Observation masking | Replace old outputs with a one-line stub. **Only if** C8 shows overflow. It costs a re-prefill of ~12 s at 30k tokens | — | 1.11 | 1 | no |
+| 1.2 | P0 | Package and run directory | An `agent/` package. Each run gets `runs/<run-id>/` with `config.json` (settings above), `concept.json`, `events.jsonl`, `claims.jsonl`, `out/` (full command outputs), `scratch/` and `answer.json`. One canonical-JSON function (sorted keys, `ensure_ascii=False`) shared by every writer and checker | — | — | 0.5 | no |
+| 1.3 | P0 | Concept and answer schema | Concept brief: title, definition with its measure, scope, answer shape, 2–3 competency questions (`docs/plan.md` §5.2, without `subschema`). Answer: rows that fit the concept's answer shape. Each row's facts are s/p/o triples, and each fact lists its claim ids (or none). This is what the milestone 3 answer key is built to match, so it is frozen here | `docs/plan.md` §5.2 | — | 1.5 | no |
+| 1.4 | P0 | Column-order check (D1) | Look at 3 two-column papers in the frozen corpus. If the text is interleaved, note which papers before the anchor tests are written | D1 | — | 0.5 | no |
+| 1.5 | P0 | Anchor library | Hash the **file**, not the quote. Return start and end positions. Match retyped quotes (whitespace, hyphenation, quote marks, ligatures, non-ASCII) and map them back to raw offsets. Unit tests on 10 corpus papers | `tests/D3/anchor.py` (hashes the quote, returns the quote, exact match only) | 1.4 | 2 | no |
+| 1.6 | P0 | Broker (rewrite) | One process per run, outside the sandbox. The single writer of `events.jsonl` and `claims.jsonl`. Writes PROV-AGENT records (`docs/provenance-model.md`) with one hash chain. Two inputs: the main loop's channel (model calls, commands, step ids) and a new `CLAIM_FD` socketpair for each command, tagged with its step id. Checks each claim's anchor against `corpus/manifest.json` and replies "accepted" with a claim id, or "rejected" with the reason. Chain head printed to the Slurm log | `tests/H1/broker.py` (starts once per command, truncates its log, acks every claim, `ensure_ascii=True`, claims only) | 1.2, 1.5 | 3 | no |
+| 1.7 | P0 | `claim` command | Executable in the sandbox. Reads JSON `{s, p, o, file, quote}` on stdin and sends it over `CLAIM_FD`. Prints the broker's reply, so the agent sees a rejection and can retry | `tests/H1/client.py` | 1.6 | 0.5 | no |
+| 1.8 | P0 | Main loop | Subclass mini-swe-agent 2.4.6 (pin it in a lock file). Calls `orch-model` with the settings above. Parser: strict one-block rule, then the lenient fallback. Runs each command through the sandbox with the command limits above (set them in the wrapper). Adds an 8 KB cap with a link to the full output, warnings on repeated commands (the B4 rule, new code), announced budgets, and "context full, conclude now" on HTTP 400. Ends with a final answer step in the 1.3 format. Built first against a stub broker | mini-swe-agent; `tests/S5/run_sandbox.py` (180 s timeout, no `ulimit`); `tests/S5/sandbox.py`; `tests/B/B4/loop.py` (measures repeats only) | 1.2, 1.3 | 4 | no (mock model) |
+| 1.9 | P0 | Model-call and command records | Each model call becomes an `ai_model_invocation` record (prompt hash, model and revision, temperature, seed, token usage). Each command becomes an `agent_tool` record. Output that cannot be parsed becomes a `coverage` record and is never run. A step spent on `claim` is marked, so cost can be compared with and without it | — | 1.6, 1.8 | 1 | no |
+| 1.10 | P0 | Prompt v1 and one concept | Start from `tests/B/system_prompt.txt`. Remove `spawn`, `save_tool` and the `/corpus` and `/work` paths; use `$CORPUS` and scratch. Add the `claim` rules, the budget and the answer format. The baseline prompt (2.3) is this prompt minus the `claim` part, kept as a diff. One concept brief written by hand | `tests/B/system_prompt.txt` | 1.3, 1.8 | 1 | no |
+| 1.11 | P0 | `agent verify` | For one run: verify the chain, resolve every anchor, check that every answer fact's claim ids exist. Print steps, claims, claim steps, tokens and time | `tests/C1/verify_chain.py` | 1.5, 1.6 | 1 | no |
+| 1.12 | P0 | Fact–quote export | `pairs.jsonl` per run: each answer fact with its claim's quote and file. This is the input for the quote-supports-fact judge in milestone 3/4 | — | 1.3, 1.11 | 0.5 | no |
+| 1.13 | P0 | First real runs | C3: the concept from 1.10, 2–3 times. B5: are real quotes accepted, and what share is rejected? C8: does a run reach the 61,440-token limit? Fix the budget after this | 1.1–1.12 | — | 2 | yes |
+| 1.14 | P1 | Trace timeline | Static HTML from `events.jsonl`: steps in order, the command, the first lines of output, claims marked. For debugging, not the final viewer | — | 1.6 | 1.5 | no |
+| 1.15 | P1 | Observation masking | Replace old outputs with a one-line stub. **Only if** C8 shows overflow. It costs a re-prefill of ~12 s at 30k tokens | — | 1.13 | 1 | no |
 
-**Total P0:** about 16 days, 2.5 of them on the cluster.
+**Total P0:** about 18 days, 2.5 of them on the cluster.
 
-**Critical path:** 1.3 → 1.4 → 1.5 → 1.6 → 1.8 → 1.11.
+**Critical path:** 1.4 → 1.5 → 1.6 → 1.9 → 1.13, about 9 days. The 1.6 broker comes from 1.5 because it
+checks anchors.
 
-**Can run in parallel with the critical path:** 1.1, 1.2, 1.7, 1.12.
+**Runs alongside the critical path:** the main loop 1.8 is built against a stub broker, and with 1.10 (about
+5 days in all) it must be ready by 1.13. Also in parallel: 1.1, 1.2, 1.3, then 1.14.
 
 ## Milestone 2: the full system and the baseline
 
-**Done when:** one question goes question → concepts → user's pick → run, in both conditions. Each condition
-produces an answer, a knowledge graph and a PROV-O file, and the five provenance queries return results on both.
+**Done when:** the 12 questions have frozen concepts, and one question runs in both conditions. Each condition
+produces an answer, a knowledge graph and a PROV-O file, and the five provenance queries run on both. In the
+baseline, queries 1–3 end at the attach step, not at the research step where the fact was found. That
+difference is what RQ1 measures, and it is expected.
 
 | # | Pri | Item | What exactly | Depends on | Size | Cluster |
 |---|---|---|---|---|---|---|
-| 2.1 | P0 | Concept step | Question → 1 to 5 briefs, corpus-blind. Each brief has a title, a one-line definition with its measure, scope, answer shape, and 2–3 competency questions (`docs/plan.md` §5.2, without `subschema`). Validated JSON. The count is the model's call, capped at 5 | — | 2 | for testing |
-| 2.2 | P0 | Pick a concept | CLI: show the briefs, the user picks one, `concept.json` is written. Logged as a record with the user as agent | 2.1, 1.4 | 0.5 | no |
-| 2.3 | P0 | Baseline switch | `--claim off`: no `claim` command and no claim rules in the prompt. Same model, budget and answer format. Afterwards a separate step attaches sources (RARR style): for each answer fact, search the corpus, pick a quote, check it with the same anchor check. Output has the same format as ours, so scoring treats both the same. Attach-step tokens and time are counted separately | 1.8, 1.3 | 3 | for testing |
-| 2.4 | P0 | Knowledge graph | Claims → triples. Paper ids come from the manifest. Predicates stay free text; a fixed list maps to CS-KG/DBLP names, and the rest go to `ours:`. Each edge points to its claim. Output `graph.json` | 1.11 | 2.5 | no |
-| 2.5 | P0 | PROV-O export | `events.jsonl`, `claims.jsonl` and `graph.json` → `graph.ttl` with rdflib, using the edge table in `provenance-model.md` | 2.4 | 2 | no |
-| 2.6 | P0 | Five provenance queries | The queries from `provenance-model.md`, as Python or SPARQL. Tested on one run of each condition | 2.5 | 1 | no |
-| 2.7 | P0 | One full run per condition | Question → concepts → pick → our run, then the baseline run. Then `agent verify`, the graph, the export and the queries | 2.1–2.6 | 1.5 | yes |
-| 2.8 | P1 | Claim walk view | Click an answer fact → its claim → the step → the quote, highlighted in the paper (LEDGER's walk). Builds on 1.12 | 2.6 | 2.5 | no |
-| 2.9 | P1 | `spawn` subagents | Subagents run on `sub-model-1`/`-2`, with their own claim stream tagged `source_agent_id`. **Only if** M1 runs overflow, or need more than ~60 steps per question | 1.11 | 3 | yes |
-| 2.10 | P2 | Concept cards UI | Side-by-side cards instead of the CLI | 2.1 | 2 | no |
-| 2.11 | P2 | Full canonicalisation | EDC Define/Canonicalise against CS-KG | 2.4 | 3+ | yes |
+| 2.1 | P0 | Concept step | Question → 1 to 5 briefs in the 1.3 schema, corpus-blind, validated. The count is the model's call, capped at 5 | 1.3 | 2 | for testing |
+| 2.2 | P0 | Pick a concept | CLI: show the briefs, the user picks one, `concept.json` is written. Logged as a record with the user as agent | 2.1, 1.6 | 0.5 | no |
+| 2.3 | P0 | Concepts for all 12 questions | Run 2.1 and 2.2 on the 12 questions and freeze the 12 `concept.json` files with their hashes. Every run of both conditions uses the frozen file. **Gates milestone 3:** gold D is built for the picked concept | 2.2, questions written (M3) | 1 | yes |
+| 2.4 | P0 | Baseline switch | `--claim off`: no `claim` command, prompt from the 1.10 diff, same model, budget, seed scheme and answer format | 1.8, 1.10 | 1 | no |
+| 2.5 | P0 | Attach step | Runs after the baseline answer. Fixed setup:<br>• model `orch-model`, the same sandbox and tools (`rg`, reading files)<br>• its own declared budget per fact, written to `config.json` with its prompt hash<br>• for each answer fact, either one quote or **"no source found"**<br>Each attached quote passes the same anchor check and is written as a `claim` record with `custom_metadata.origin = "attach"`, linked to an attach-step activity in the same chain. Its cost is logged on its own, and the total is reported both with and without it | 2.4, 1.6 | 2.5 | for testing |
+| 2.6 | P0 | Knowledge graph | Claims (both origins) → triples. Paper ids come from the manifest. Predicates stay free text; a fixed list maps to CS-KG/DBLP names, and the rest go to `ours:`. Each edge points to its claim. Output `graph.json` | 1.13 | 2.5 | no |
+| 2.7 | P0 | PROV-O export | `events.jsonl`, `claims.jsonl` and `graph.json` → `graph.ttl` with rdflib, using the edge table in `provenance-model.md`. Attach claims are derived from the attach activity | 2.6 | 2 | no |
+| 2.8 | P0 | Five provenance queries | The queries from `provenance-model.md`, as Python or SPARQL, tested on one run of each condition | 2.7 | 1 | no |
+| 2.9 | P0 | Batch runner | Reads a run manifest (question × condition × repeat, seed). Starts each run inside the job time limit, skips finished runs, and marks a run cut by the job limit with a `coverage` record so it is rerun. Needed for 72 runs of 30–45 min each, more than one 48-hour job | 1.8, 2.4 | 1.5 | for testing |
+| 2.10 | P0 | One full run per condition | One question, our run then the baseline run plus its attach step, both through the batch runner. Then `agent verify`, the graph, the export and the queries | 2.3–2.9 | 1.5 | yes |
+| 2.11 | P1 | Claim walk view | Click an answer fact → its claim → the step → the quote, highlighted in the paper (LEDGER's walk). Builds on 1.14 | 2.8 | 2.5 | no |
+| 2.12 | P1 | `spawn` subagents | Subagents run on `sub-model-1`/`-2`, with their own claim stream tagged `source_agent_id`. **Only if** M1 runs overflow, or need more than about 60 steps per question | 1.13 | 3 | yes |
+| 2.13 | P1 | Re-execution and replay (C5, C6) | Re-execution reruns a run's commands on the frozen corpus and compares outputs; replay re-renders a run from its log. Needed if the trace-verifiability measures in RQ1 report them | 1.11 | 2 | yes |
+| 2.14 | P2 | Concept cards UI | Side-by-side cards instead of the CLI | 2.1 | 2 | no |
+| 2.15 | P2 | Full canonicalisation | EDC Define/Canonicalise against CS-KG | 2.6 | 3+ | yes |
 
-**Total P0:** about 12.5 days, 2–3 of them on the cluster.
+**Total P0:** about 15.5 days, 3–4 of them on the cluster.
 
-**Can start before milestone 1 is done:** 2.1 and 2.3 (the attach step is separate).
+**Can start before milestone 1 is done:** 2.1 and 2.5 (the attach step needs only the anchor check and the
+model). 2.3 waits only for the 12 questions.
+
+## What milestones 3 and 4 get from 1 and 2
+
+| Milestone 3/4 needs | Comes from |
+|---|---|
+| The picked concept per question, to build gold D on | 2.3 |
+| A fixed answer format to build the key against | 1.3 |
+| Answer facts with claim ids, in both conditions | 1.3, 2.5 |
+| Fact–quote pairs for the quote-supports-fact judge. The judge itself and its check on 200–300 claims are milestone 3/4 work | 1.12 |
+| Cost per run: tokens and time, claim steps, attach step | 1.9, 2.5 |
+| 72 runs that restart cleanly across jobs | 2.9 |
 
 ## Not doing (cut, or later than milestone 4)
 
@@ -73,7 +107,9 @@ produces an answer, a knowledge graph and a PROV-O file, and the five provenance
 
 | Risk | Shows up in | Fallback |
 |---|---|---|
-| The model retypes quotes and most claims are rejected | 1.3 unit tests, 1.11 (B5) | Looser matching, plus a prompt rule to copy quotes with `rg -o` |
-| One agent cannot cover a corpus-wide question in 61k tokens | 1.11 (C8) | 1.13 masking first, then 2.9 `spawn` |
-| The baseline is unfair (more budget, or a different answer format) | 2.3 | One config shared by both conditions. The attach step's cost is reported separately |
-| Answer facts are too vague to score | 1.8, 2.7 | Tighten the answer format before milestone 3 fixes the key |
+| The model retypes quotes and most claims are rejected | 1.5 unit tests, 1.13 (B5) | Looser matching, plus a prompt rule to copy quotes with `rg -o` |
+| One agent cannot cover a corpus-wide question in 61k tokens | 1.13 (C8) | 1.15 masking first, then 2.12 `spawn` |
+| The baseline is unfair: more budget, a different answer format, or forced sources | 2.4, 2.5 | One config shared by both conditions. The attach step may answer "no source found". Cost is reported with and without it |
+| Answer facts are too vague to score | 1.3, 2.10 | Tighten the schema before milestone 3 fixes the key |
+| 72 runs do not fit in the job time limit | 2.9 | Resume across jobs; the cut runs are marked and rerun |
+| Two-column papers have interleaved text, so quotes span columns | 1.4 | Exclude or flag the affected papers in the manifest |
