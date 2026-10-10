@@ -9,7 +9,7 @@ dependencies = ["jsonschema==4.25.1"]
 agent = "agent.cli:main"
 
 [dependency-groups]
-dev = ["pytest==8.4.2"]
+dev = ["pytest==9.0.3"]
 
 [build-system]
 requires = ["uv_build>=0.9,<0.14"]
