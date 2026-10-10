@@ -69,5 +69,5 @@ judging (H2); blind usefulness rating of the 50 B8 commands (B6 rubric); column 
 
 ## Where the details are
 
-`tests/RESULTS.md` (every result) · `docs/decisions-after-tests.md` (why each decision) · `docs/plan.md` (the
+`docs/milestones-1-2.md` (triaged build plan, milestones 1–2) · `tests/RESULTS.md` (every result) · `docs/decisions-after-tests.md` (why each decision) · `docs/plan.md` (the
 design, to be revised) · `docs/provenance-model.md` (log and graph schema) · `docs/research-open-test-findings.md` (follow-ups for partial tests) · `thesis_pipeline.html` (overview page) · `llm-setup/` (the serving stack).

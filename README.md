@@ -8,6 +8,7 @@ quote while it researches, in a hash-chained log, and builds a knowledge graph w
 | Path | What |
 |---|---|
 | `docs/STATE.md` | The one page to plan from |
+| `docs/milestones-1-2.md` | Triaged build plan for milestones 1 and 2 |
 | `docs/slurm-final-runbook.md` | The final Slurm session (Codex runs it) |
 | `docs/plan.md` | The design; to be revised from STATE.md |
 | `docs/decisions-after-tests.md` | Why each decision was taken, test by test |
