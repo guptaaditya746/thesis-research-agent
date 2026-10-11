@@ -20,7 +20,6 @@ without a valid answer still gets an answer.json with no rows and the reason in 
 """
 from __future__ import annotations
 
-import json
 import logging
 import os
 import socket

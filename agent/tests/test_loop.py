@@ -421,6 +421,18 @@ def test_pairs_command_rewrites_the_file(tmp_path: Path, corpus: tuple[Path, Pat
 
 
 @posix_only
+def test_timeline_html(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    quote = unique_quote()
+    run, _, _, _ = go(tmp_path, corpus, main_script(quote))
+    assert cli(["timeline", str(run.root)]) == 0
+    page = (run.root / "timeline.html").read_text(encoding="utf-8")
+    assert page.count("<section id=step-") == 8 and "claim rejected: not_found" in page
+    assert "claim claim-000001 accepted" in page and "coverage: unparsed" in page and "final answer" in page
+    assert "print(&#x27;x&#x27; * 20000)" in page and "more lines" not in page  # escaped; 1-line output
+    assert "<script" not in page
+
+
+@posix_only
 @pytest.mark.skipif(sandbox.landlock_abi() is None, reason="kernel without Landlock")
 def test_landlock_mode(tmp_path: Path, corpus: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     # Landlock rules do not hold on WSL's /mnt/c (drvfs): copy the sandbox-side files to tmp.

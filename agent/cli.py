@@ -87,6 +87,13 @@ def cmd_pairs(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_timeline(args: argparse.Namespace) -> int:
+    from .timeline import write_timeline
+
+    print(f"wrote {write_timeline(RunDir(args.run_dir))}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -125,6 +132,10 @@ def main(argv: list[str] | None = None) -> int:
     pairs = sub.add_parser("pairs", help="write pairs.jsonl: answer facts with their claims' quotes (row 1.12)")
     pairs.add_argument("run_dir", type=Path)
     pairs.set_defaults(func=cmd_pairs)
+
+    timeline = sub.add_parser("timeline", help="write timeline.html: the run's steps as static HTML (row 1.14)")
+    timeline.add_argument("run_dir", type=Path)
+    timeline.set_defaults(func=cmd_timeline)
     args = parser.parse_args(argv)
     return args.func(args)
 
