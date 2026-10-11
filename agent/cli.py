@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 from pathlib import Path
 
+from .canonical import file_sha256, sha256_hex
 from .chain import verify
 from .rundir import RunDir
 
@@ -27,6 +30,63 @@ def cmd_verify_chain(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def _corpus_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--corpus", type=Path, default=os.environ.get("CORPUS"),
+                        help="frozen corpus directory (default: $CORPUS)")
+    parser.add_argument("--manifest", type=Path, help="corpus manifest (default: <corpus>/manifest.json)")
+
+
+def _corpus(args: argparse.Namespace) -> tuple[Path, Path]:
+    if args.corpus is None:
+        raise SystemExit("agent: give --corpus or set $CORPUS")
+    return Path(args.corpus), Path(args.manifest or Path(args.corpus) / "manifest.json")
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    from .loop import research_run  # imports LiteLLM and mini-swe-agent: slow, so only here
+    from .rundir import BUDGET, git_head
+
+    corpus, manifest = _corpus(args)
+    concept = json.loads(args.concept.read_text(encoding="utf-8"))
+    agent_root_sha = (file_sha256(args.agent_root / "agent-root.sha256") if args.agent_root
+                      else sha256_hex(b""))  # no agent root (tests, laptops): hash of nothing
+    _, outcome, head = research_run(
+        runs_root=args.runs_root, run_id=args.run_id, concept=concept, corpus=corpus, manifest=manifest,
+        condition=args.condition, temperature=args.temperature, seed=args.seed,
+        git_commit=git_head(Path(__file__).resolve().parents[1]), agent_root_manifest_sha256=agent_root_sha,
+        sandbox_mode=args.sandbox, agent_root=args.agent_root, base_url=args.base_url,
+        budget={**BUDGET, "steps": args.steps, "tokens": args.tokens}, broker=args.broker, extra_path=tuple(args.path_extra))
+    print(f"run {args.run_id}: exit={outcome.exit_status} steps={outcome.steps} tokens={outcome.tokens} "
+          f"rows={outcome.answer_rows} head={head.get('head')}")
+    return 0 if outcome.exit_status == "submitted" else 1
+
+
+def cmd_verify(args: argparse.Namespace) -> int:
+    from .verify import verify_run
+
+    corpus, manifest = _corpus(args)
+    report = verify_run(RunDir(args.run_dir), corpus, manifest)
+    for error in report.errors:
+        print(f"FAIL {error}")
+    s = report.stats
+    print(f"steps={s.get('steps', 0)} model_calls={s.get('model_calls', 0)} commands={s.get('commands', 0)} "
+          f"claims={s.get('claims_accepted', 0)} accepted / {s.get('claims_rejected', 0)} rejected "
+          f"claim_steps={s.get('claim_steps', 0)} tokens={s.get('tokens', 0)} "
+          f"(claim steps {s.get('claim_step_tokens', 0)}) time={s.get('seconds', 0)}s "
+          f"facts={s.get('facts', 0)} (with claims {s.get('facts_with_claims', 0)})")
+    if report.ok:
+        print(f"PASS {args.run_dir} records={s.get('records')} head={s.get('head')}")
+    return 0 if report.ok else 1
+
+
+def cmd_pairs(args: argparse.Namespace) -> int:
+    from .pairs import write_pairs
+
+    n = write_pairs(RunDir(args.run_dir))
+    print(f"wrote {n} pairs to {args.run_dir / 'pairs.jsonl'}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -38,6 +98,33 @@ def main(argv: list[str] | None = None) -> int:
     check.add_argument("run_dir", type=Path)
     check.add_argument("--complete", action="store_true", help="also require answer.json")
     check.set_defaults(func=cmd_check_run)
+
+    run = sub.add_parser("run", help="run the agent on one concept (row 1.8)")
+    run.add_argument("--concept", type=Path, required=True, help="concept brief JSON, e.g. agent/concepts/*.json")
+    run.add_argument("--run-id", required=True)
+    run.add_argument("--runs-root", type=Path, default=Path("runs"))
+    _corpus_args(run)
+    run.add_argument("--condition", choices=("claim_on", "claim_off"), default="claim_on")
+    run.add_argument("--temperature", type=float, required=True)
+    run.add_argument("--seed", type=int, required=True)
+    run.add_argument("--base-url", default="http://127.0.0.1:4000/v1", help="LiteLLM proxy; key from $LITELLM_MASTER_KEY")
+    run.add_argument("--sandbox", choices=("landlock", "unsandboxed"), default="landlock",
+                     help="unsandboxed runs commands without Landlock/seccomp: tests and machines without Landlock only")
+    run.add_argument("--agent-root", type=Path, help="pinned toolchain ($AGENT_ROOT); its agent-root.sha256 is hashed")
+    run.add_argument("--steps", type=int, default=150)
+    run.add_argument("--tokens", type=int, default=400_000)
+    run.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
+    run.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
+    run.set_defaults(func=cmd_run)
+
+    ver = sub.add_parser("verify", help="verify a finished run: chain, anchors, answer claim ids (row 1.11)")
+    ver.add_argument("run_dir", type=Path)
+    _corpus_args(ver)
+    ver.set_defaults(func=cmd_verify)
+
+    pairs = sub.add_parser("pairs", help="write pairs.jsonl: answer facts with their claims' quotes (row 1.12)")
+    pairs.add_argument("run_dir", type=Path)
+    pairs.set_defaults(func=cmd_pairs)
     args = parser.parse_args(argv)
     return args.func(args)
 
