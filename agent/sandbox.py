@@ -239,6 +239,42 @@ def _killpg(pgid: int, sig: int) -> bool:
         return False
 
 
+def session_pids(sid: int) -> list[int]:
+    """Live (not zombie) processes in session `sid`, from /proc (Linux)."""
+    pids = []
+    for entry in os.listdir("/proc"):
+        if not entry.isdigit():
+            continue
+        try:
+            with open(f"/proc/{entry}/stat", "rb") as stream:
+                data = stream.read()
+        except OSError:
+            continue
+        fields = data[data.rfind(b")") + 2:].split()  # after "pid (comm) ": state ppid pgrp session ...
+        if len(fields) > 3 and fields[0] != b"Z" and int(fields[3]) == sid:
+            pids.append(int(entry))
+    return pids
+
+
+def _kill_session(sid: int, sig: int) -> bool:
+    """Signal every process of the session the wrapper leads; True if any was found.
+
+    The wrapper starts the command in a process group of its own (supervise), so signalling the
+    wrapper's group alone would miss the command and anything it left running. Where /proc is
+    missing, only the wrapper's group is signalled.
+    """
+    if not os.path.isdir("/proc"):
+        return _killpg(sid, sig)
+    found = False
+    for pid in session_pids(sid):
+        try:
+            os.kill(pid, sig)
+            found = True
+        except ProcessLookupError:
+            pass
+    return found
+
+
 def run_command(argv: list[str], *, env: dict[str, str], cwd: str, timeout_s: int,
                 pass_fds: tuple[int, ...] = (), before_wait: object = None) -> Result:
     """Run the wrapper `argv` in a new session; return its combined output and exit status.
@@ -259,20 +295,26 @@ def run_command(argv: list[str], *, env: dict[str, str], cwd: str, timeout_s: in
         output, _ = process.communicate(timeout=timeout_s + 30)
         code = process.returncode
     except subprocess.TimeoutExpired:
-        _killpg(process.pid, signal.SIGKILL)
+        _kill_session(process.pid, signal.SIGKILL)
         output, _ = process.communicate()
         code = TIMEOUT_EXIT
+    except BaseException:
+        # The harness itself is stopping (e.g. SIGTERM at the job limit, row 2.9): take the command along,
+        # so nothing keeps running or holds the claim descriptor open.
+        _kill_session(process.pid, signal.SIGKILL)
+        process.wait()
+        raise
     timed_out = code == TIMEOUT_EXIT
     # Anything the command left behind in its session (e.g. `cmd &`) goes now.
     cleanup = "none-left"
-    if _killpg(process.pid, signal.SIGTERM):
+    if _kill_session(process.pid, signal.SIGTERM):
         cleanup = "sigterm"
         for _ in range(20):
-            if not _killpg(process.pid, 0):
+            if not _kill_session(process.pid, 0):
                 break
             time.sleep(0.1)
         else:
-            _killpg(process.pid, signal.SIGKILL)
+            _kill_session(process.pid, signal.SIGKILL)
             cleanup = "sigkill"
     return Result(output, code, timed_out, time.monotonic() - started, cleanup)
 

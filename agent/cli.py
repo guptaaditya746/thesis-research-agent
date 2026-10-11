@@ -43,9 +43,18 @@ def _corpus(args: argparse.Namespace) -> tuple[Path, Path]:
     return Path(args.corpus), Path(args.manifest or Path(args.corpus) / "manifest.json")
 
 
+def stop_on_sigterm() -> None:
+    """SIGTERM (the batch runner or Slurm at the job limit, row 2.9) ends the run cleanly (agent/stopping.py)."""
+    from . import stopping
+
+    stopping.install()
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     from .loop import research_run  # imports LiteLLM and mini-swe-agent: slow, so only here
     from .rundir import BUDGET, git_head
+
+    stop_on_sigterm()
 
     corpus, manifest = _corpus(args)
     concept = json.loads(args.concept.read_text(encoding="utf-8"))
@@ -65,6 +74,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 def cmd_attach(args: argparse.Namespace) -> int:
     from .attach import ATTACH_BUDGET, AttachError, attach_run  # imports the loop: slow, so only here
 
+    stop_on_sigterm()
     corpus, manifest = _corpus(args)
     budget = {**ATTACH_BUDGET, **{k: v for k, v in (("steps", args.steps_per_fact), ("tokens", args.tokens_per_fact))
                                   if v is not None}}
@@ -79,6 +89,24 @@ def cmd_attach(args: argparse.Namespace) -> int:
     print(f"attach {summary['run_id']}: facts={len(summary['facts'])} attached={summary['attached']} "
           f"no_source={summary['no_source']} tokens={c['tokens']} time={c['seconds']}s head={summary['chain_head']}")
     return 0
+
+
+def cmd_batch(args: argparse.Namespace) -> int:
+    from .batch import Batch, Manifest, job_deadline
+
+    try:
+        manifest = Manifest.load(args.manifest)
+        batch = Batch(manifest, deadline=job_deadline(args.deadline, args.time_limit), margin_s=args.margin,
+                      min_start_s=args.min_start, corpus=args.corpus)
+    except (OSError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        return 1
+    if args.status:
+        for key in batch.status():
+            runs = ", ".join(f"{a['run_id']}={a['state']}" for a in key["attempts"]) or "not started"
+            print(f"{key['key']} seed={key['seed']}: {runs}")
+        return 0
+    return batch.run()
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
@@ -278,7 +306,17 @@ def main(argv: list[str] | None = None) -> int:
     attach.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
     attach.set_defaults(func=cmd_attach)
 
-    ver = sub.add_parser("verify",help="verify a finished run: chain, anchors, answer claim ids (row 1.11)")
+    batch = sub.add_parser("batch", help="run a run manifest inside the job time limit; skip finished runs (row 2.9)")
+    batch.add_argument("manifest", type=Path, help="run manifest, e.g. agent/manifests/m4-72.json")
+    batch.add_argument("--deadline", help="job end: ISO time or epoch seconds (also read: $SLURM_JOB_END_TIME)")
+    batch.add_argument("--time-limit", type=float, help="job end in seconds from now")
+    batch.add_argument("--margin", type=float, default=300, help="stop a running run this many seconds before the end")
+    batch.add_argument("--min-start", type=float, default=900, help="start no run with less time than this left")
+    batch.add_argument("--corpus", type=Path, help="default: the manifest's corpus, else $CORPUS")
+    batch.add_argument("--status", action="store_true", help="list every run key and its attempts; run nothing")
+    batch.set_defaults(func=cmd_batch)
+
+    ver = sub.add_parser("verify", help="verify a finished run: chain, anchors, answer claim ids (row 1.11)")
     ver.add_argument("run_dir", type=Path)
     _corpus_args(ver)
     ver.set_defaults(func=cmd_verify)

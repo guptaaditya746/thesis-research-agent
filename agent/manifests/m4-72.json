@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "name": "m4-72",
+  "notes": "Sample for milestone 4: 12 questions x 2 conditions x 3 repeats = 72 runs. Question ids q01-q12 are placeholders until the 12 questions are written (M3); each concept path is the frozen concept.json from row 2.3. Temperature and budget are placeholders until 1.13 fixes them; the budget is the same for both conditions. Run from the repo root: agent batch agent/manifests/m4-72.json (the deadline comes from $SLURM_JOB_END_TIME, the toolchain from $AGENT_ROOT, the corpus from $CORPUS).",
+  "runs_root": "runs/m4-72",
+  "questions": [
+    {"id": "q01", "concept": "concepts/q01/concept.json"},
+    {"id": "q02", "concept": "concepts/q02/concept.json"},
+    {"id": "q03", "concept": "concepts/q03/concept.json"},
+    {"id": "q04", "concept": "concepts/q04/concept.json"},
+    {"id": "q05", "concept": "concepts/q05/concept.json"},
+    {"id": "q06", "concept": "concepts/q06/concept.json"},
+    {"id": "q07", "concept": "concepts/q07/concept.json"},
+    {"id": "q08", "concept": "concepts/q08/concept.json"},
+    {"id": "q09", "concept": "concepts/q09/concept.json"},
+    {"id": "q10", "concept": "concepts/q10/concept.json"},
+    {"id": "q11", "concept": "concepts/q11/concept.json"},
+    {"id": "q12", "concept": "concepts/q12/concept.json"}
+  ],
+  "conditions": ["claim_on", "claim_off"],
+  "repeats": 3,
+  "temperature": 0.7,
+  "seed_base": 1000,
+  "budget": {"steps": 150, "tokens": 400000},
+  "attach_budget": {"steps": 6, "tokens": 60000},
+  "sandbox": "landlock",
+  "base_url": "http://127.0.0.1:4000/v1",
+  "broker": "auto",
+  "max_attempts": 3
+}

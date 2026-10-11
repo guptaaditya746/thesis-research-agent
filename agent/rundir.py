@@ -25,6 +25,16 @@ BUDGET = {"steps": 150, "tokens": 400_000, "announced": True}
 COMMAND_LIMITS = {"timeout_s": 120, "ulimit_v_kib": 2 * 1024 * 1024, "output_cap_bytes": 8192}
 
 
+def attach_state(run: RunDir) -> str:
+    """The baseline's attach step (2.5): not_applicable (claim_on), pending, cut (started, no attach.json) or done."""
+    config = run.load_config()
+    if config["condition"] != "claim_off":
+        return "not_applicable"
+    if (run.root / ATTACH_FILE).is_file():
+        return "done"
+    return "cut" if "attach" in config else "pending"
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 

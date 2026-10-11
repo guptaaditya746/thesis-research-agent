@@ -39,7 +39,7 @@ from .concept import validate_answer
 from .loop import DEFAULT_BASE_URL, POSIX_BROKER, Broker, ContextFull, OrchestratorModel, SandboxEnvironment
 from .parse import files_read, normalise_command, parse_reply
 from .prompts import PROMPT_DIR
-from .rundir import ATTACH_FILE, RunDir, utc_now
+from .rundir import ATTACH_FILE, RunDir, attach_state, utc_now  # noqa: F401  (attach_state re-exported)
 
 ATTACH_BUDGET = {"steps": 6, "tokens": 60_000, "announced": True}  # per fact; frozen with the run budget after 1.13
 CONCLUDE_REPLIES = 1
@@ -312,16 +312,6 @@ class AttachStep:
 
 
 # --- the whole step ---------------------------------------------------------------------------------
-
-def attach_state(run: RunDir) -> str:
-    """not_applicable (claim_on), pending (no attach yet), cut (started, not finished) or done."""
-    config = run.load_config()
-    if config["condition"] != "claim_off":
-        return "not_applicable"
-    if (run.root / ATTACH_FILE).is_file():
-        return "done"
-    return "cut" if "attach" in config else "pending"
-
 
 def _last_step(run: RunDir) -> int:
     return max((json.loads(raw)["step_id"] for raw in run.events.read_bytes().splitlines()), default=0)

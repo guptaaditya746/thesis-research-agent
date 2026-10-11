@@ -42,7 +42,7 @@ from minisweagent.models.litellm_model import LitellmModel  # noqa: E402
 from minisweagent.models.litellm_textbased_model import LitellmTextbasedModel  # noqa: E402
 from minisweagent.models.utils.retry import retry  # noqa: E402
 
-from . import sandbox  # noqa: E402
+from . import sandbox, stopping  # noqa: E402
 from .canonical import canonical_bytes, sha256_hex, write_json  # noqa: E402
 from .answer import accepted_claim_ids, build_answer, empty_answer  # noqa: E402
 from .parse import Parsed, files_read, normalise_command, parse_reply  # noqa: E402
@@ -97,8 +97,9 @@ class OrchestratorModel(LitellmTextbasedModel):
     call time and kept out of the model config, so it never reaches trajectory.json or a record.
     """
 
-    # 400s are never retried (L8); everything mini aborts on stays aborted.
-    abort_exceptions = [*LitellmModel.abort_exceptions, litellm.exceptions.BadRequestError]
+    # 400s are never retried (L8); everything mini aborts on stays aborted. SystemExit is how SIGTERM
+    # at the job limit stops a run (cli.stop_on_sigterm, row 2.9); tenacity would retry it otherwise.
+    abort_exceptions = [*LitellmModel.abort_exceptions, litellm.exceptions.BadRequestError, SystemExit]
 
     def __init__(self, *, base_url: str = DEFAULT_BASE_URL, temperature: float, seed: int,
                  alias: str = ORCHESTRATOR["alias"], max_tokens: int = ORCHESTRATOR["max_tokens"],
@@ -113,6 +114,7 @@ class OrchestratorModel(LitellmTextbasedModel):
                          "temperature": temperature, "seed": seed, "max_tokens": max_tokens, "thinking": thinking}
 
     def _query(self, messages: list[dict[str, Any]], **kwargs: Any) -> Any:
+        stopping.check()  # also on every retry: a SIGTERM swallowed inside the HTTP call stops here
         key = os.environ.get(self.api_key_env) or "none"
         return litellm.completion(model=self.config.model_name, messages=messages, api_key=key,
                                   **(self.config.model_kwargs | kwargs))
@@ -213,7 +215,8 @@ class SandboxEnvironment:
     def execute(self, action: dict[str, Any], cwd: str = "", *, step_id: int,
                 broker: Broker | None = None) -> sandbox.Result:
         """Run `action["command"]`; with a broker and claim on, the command gets CLAIM_FD for this step."""
-        sock = broker.claim_channel(step_id, agent_id="main", origin=self.origin) if broker and self.claim else None
+        stopping.check()
+        sock =broker.claim_channel(step_id, agent_id="main", origin=self.origin) if broker and self.claim else None
         try:
             fds = (sock.fileno(),) if sock else ()
             return sandbox.run_command(self.argv(action["command"]), env=self.environment(fds[0] if fds else None),

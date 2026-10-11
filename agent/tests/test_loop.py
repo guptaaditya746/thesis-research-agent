@@ -432,6 +432,22 @@ def test_command_timeout(tmp_path: Path, corpus: tuple[Path, Path], monkeypatch:
 
 
 @posix_only
+@pytest.mark.skipif(not os.path.isdir("/proc"), reason="the session scan reads /proc")
+def test_processes_left_behind_are_removed(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A background process the command leaves (in the command's own process group) goes after the step."""
+    replies: list[Reply] = [bash("sleep 300 >/dev/null 2>&1 & echo $!"), final([row([])])]
+    run, _, _, _ = go(tmp_path, corpus, replies)
+    pid = int((run.out / "step-0001.txt").read_text(encoding="utf-8").strip())
+    try:
+        state = Path(f"/proc/{pid}/stat").read_bytes().rsplit(b") ", 1)[1][:1]
+    except OSError:
+        state = b"gone"
+    assert state in (b"gone", b"Z")  # killed (at most a zombie waiting for its new parent)
+    tool = next(r for r in records(run) if r["subtype"] == "agent_tool")
+    assert tool["custom_metadata"]["cleanup"] in ("sigterm", "sigkill")
+
+
+@posix_only
 def test_memory_limit_applies(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
     replies: list[Reply] = [bash("ulimit -v"), final([row([])])]
     run, _, _, _ = go(tmp_path, corpus, replies)
