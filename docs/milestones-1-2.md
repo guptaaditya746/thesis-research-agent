@@ -62,8 +62,15 @@ checks anchors.
 | 1.4 | done: 0/10 papers interleaved, nothing excluded | `cb54b53` | D1-col |
 | 1.5 | done; minus signs and number cuts fixed after review | `dd73ebb`, `5c91f85` | `test_anchor` (82) |
 | 1.6 | done | `cc22632` | `test_broker` (30; 2 POSIX-only, skipped on Windows) |
+| 1.8 | done against a scripted model; mini-swe-agent 2.4.6 pinned | `d08c70c` | `test_loop` |
+| 1.9 | done (records, `files_read`, claim steps, `final_answer` marker) | `6bde1bd` | `test_loop` |
+| 1.10 | done: `agent/prompts/system-v1.txt`, baseline = v1 minus the claim block (`system-v1.diff`, tested), concept `agent/concepts/rag-eval-datasets.json` | `06d790d` | `test_prompts` |
+| 1.11, 1.12 | done: `agent verify`, `agent pairs` | `bda4412` | `test_loop` |
+| 1.14 | done: `agent timeline` → `timeline.html` | `b7c98aa` | — |
+| 1.1, 1.13, 1.15 | open: need the cluster (1.15 only if C8 overflows) | — | — |
 
 Unit suite: 151 passed + 2 skipped on Windows, 153 passed on WSL Linux (2026-10-10, RESULTS `M1-unit`).
+After `m1-loop` and `m2-graph`: 232 passed + 1 skipped on WSL Linux (2026-10-11, RESULTS `M1-loop`).
 `.gitattributes` (`07af190`) keeps every hashed file LF, so the manifest hash matches the Ceph copy.
 
 Small decisions made while building:
@@ -104,6 +111,22 @@ difference is what RQ1 measures, and it is expected.
 
 **Can start before milestone 1 is done:** 2.1 and 2.5 (the attach step needs only the anchor check and the
 model). 2.3 waits only for the 12 questions.
+
+### Progress (milestone 2)
+
+| # | Status | Commits | Tests |
+|---|---|---|---|
+| 2.6 | done: `agent graph` → `graph.json`; predicate table `kg.PREDICATES` (CS-KG `uses`/`solves` seen only as inverses, to confirm) | `811cbe8` | `test_kg` (9) |
+| 2.7 | done: `agent export-prov` → `graph.ttl`, rdflib 7.6.0, deterministic | `e34e6ca` | `test_prov` (8) |
+| 2.8 | done: `agent query 1–5`; tested on a research-style and an attach-style run built through the real broker | `1ea345b` | `test_queries` (7) |
+| 2.1, 2.2, 2.4, 2.5, 2.9 | in progress on branch `m2-run` | — | — |
+| 2.3, 2.10 | open: need the 12 questions and the cluster | — | — |
+
+Small decisions made while building:
+- Attach-step records are ordinary records with `custom_metadata.origin = "attach"` (loop records carry `research`); the export groups them into one attach activity. Attach claims are `wasGeneratedBy` their attach command and `wasInfluencedBy` the attach activity.
+- A claim's step is the `agent_tool` record with the same agent and step id that follows it in the chain; the `checked_by` activity is the claim record itself (`ours:ClaimCheck`); rejected claims stay check activities with a reason.
+- One KG edge per accepted claim (`edge-NNNNNN` = claim number). Manifest ids become paper nodes, other strings `entity:<slug>`.
+- IRIs: run-scoped `urn:thesis-agent:run:<run_id>/…`, shared `urn:thesis-agent:{corpus,paper,entity}/…`.
 
 ## What milestones 3 and 4 get from 1 and 2
 

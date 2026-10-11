@@ -38,6 +38,10 @@ the files named at the end, history in git.
 | Column order | Docling keeps two-column reading order: 0/10 papers interleaved; a quote across one of the 4 footnote/caption splits at page breaks is rejected (`not_found`) | D1-col, `test_anchor` |
 | Anchors | Selector = file sha256 + raw offsets + exact/prefix/suffix; offsets are tried first, else the retyped quote is matched after normalising (NFKC, whitespace, dashes, quote marks, entities) and mapped back to raw offsets; minus signs are kept and a quote may not cut a number (`partial_number`); case-sensitive | `agent/anchor.py`, 1.5, `test_anchor` (82) |
 | Broker | One process per run; one hash chain over `events.jsonl`, `claims.jsonl` a checked copy of its claim records; claim ids `claim-NNNNNN`; rejection reason returned to the agent (`not_found`, `partial_number`, `ambiguous`, `unknown_file`, …) | `agent/broker.py`, 1.6, `test_broker` (30) |
+| Main loop | mini-swe-agent 2.4.6 subclass (`agent/loop.py`). A step is one model reply; the token budget sums `total_tokens` over all calls (check against 400k in 1.13). Repeats counted consecutively after collapsing whitespace. After the budget or a context-full 400: 2 more replies, no commands; on context-full, old outputs become stubs (claim replies kept), then old replies are shortened, the third 400 ends the run; never the same request twice. The wrapper times commands out itself (120 s, process group, exit 124) because uutils `timeout` fails under Landlock+seccomp; `ulimit -v` set in the shell. `agent run` defaults to Landlock and refuses without it; `unsandboxed` is for tests only and recorded in `config.json`. API key only from `$LITELLM_MASTER_KEY`, never logged | 1.8, `test_loop`, M1-loop |
+| Answer and records | The agent writes `{rows, notes}`; the harness adds concept hash, `claims: []`, `origin`, and rejects unaccepted claim ids. No valid answer → empty `answer.json` + `no_final_answer` coverage record. `agent_tool` records list `used.files_read` (from `p<N>.md` names in the command); the answer's model call has `custom_metadata.final_answer`; a claim step is a command that sent at least one claim | 1.9, 1.12 |
+| Prompts | `agent/prompts/system-v1.txt`; baseline = v1 minus the claim block (`system-v1.diff`, tested); a test fails if the broker gains a rejection reason the prompt does not explain | 1.10, `test_prompts` |
+| Graph and PROV-O | `graph.json` one edge per accepted claim, free predicates mapped to CS-KG/DBLP or `ours:`; `graph.ttl` deterministic (rdflib 7.6.0); attach records marked `origin = "attach"` | 2.6–2.8, `docs/milestones-1-2.md` |
 
 ## Numbers the design must respect
 
@@ -62,6 +66,7 @@ the files named at the end, history in git.
 |---|---|
 | F1: everything together | `tests/F1/acceptance.py` is written, but only the `claim` smoke test ran. Run it first on the next stack start; it is the first harness step |
 | Anchor library | Fixed in `agent/anchor.py` (row 1.5, m1-core); see Decided "Anchors". Open for B5: whether to relax case sensitivity and set a minimum quote length |
+| `claim` under Landlock on Ceph | Landlock rules failed on WSL `/mnt/c`, so `claim` was denied there. Check in 1.13 that `claim` works from the repo on Ceph; else install the claim client into the agent root |
 
 No further infrastructure session is planned: B0, S7, L7, L8, C2b and D5 closed on 10 Oct.
 
