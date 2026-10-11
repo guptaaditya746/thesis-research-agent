@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 
 from . import kg
+from .canonical import canonical
 from .chain import verify
 from .rundir import RunDir
 
@@ -50,6 +51,33 @@ def cmd_export_prov(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_query(args: argparse.Namespace) -> int:
+    from . import prov, queries
+
+    run = RunDir(args.run_dir)
+    if not (run.root / prov.TTL_FILE).is_file():
+        print(f"FAIL {run.root / prov.TTL_FILE} is missing; run `agent export-prov` first")
+        return 1
+    graph = prov.load(run)
+    try:
+        if args.n == 1:
+            rows = queries.edge_to_passage(graph, args.edge)
+        elif args.n == 2:
+            rows = queries.fact_producers(graph, args.fact, args.claim)
+        elif args.n == 3:
+            rows = queries.claims_from(graph, args.step, args.agent)
+        elif args.n == 4:
+            rows = queries.unresolved_anchors(graph, args.corpus, args.manifest)
+        else:
+            rows = queries.unsourced_facts(graph)
+    except (OSError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        return 1
+    for row in rows:
+        print(canonical(row))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -68,6 +96,19 @@ def main(argv: list[str] | None = None) -> int:
     export = sub.add_parser("export-prov", help="events, claims and graph.json -> PROV-O graph.ttl")
     export.add_argument("run_dir", type=Path)
     export.set_defaults(func=cmd_export_prov)
+    query = sub.add_parser("query", help="provenance queries 1-5 on graph.ttl; one JSON object per result")
+    query.add_argument("n", type=int, choices=range(1, 6), metavar="N",
+                       help="1 edge->passage, 2 fact->command+model call, 3 claims of a step/agent, "
+                            "4 anchors that no longer resolve, 5 facts with no claim")
+    query.add_argument("run_dir", type=Path)
+    query.add_argument("--edge", help="query 1: one KG edge id, e.g. edge-000001")
+    query.add_argument("--fact", help="query 2: one answer fact id, e.g. f1")
+    query.add_argument("--claim", help="query 2: one claim id, e.g. claim-000001")
+    query.add_argument("--step", type=int, help="query 3: step id")
+    query.add_argument("--agent", help="query 3: agent id, e.g. main or sub-01")
+    query.add_argument("--corpus", type=Path, default=Path("corpus"), help="query 4: corpus directory")
+    query.add_argument("--manifest", type=Path, default=Path("corpus/manifest.json"), help="query 4")
+    query.set_defaults(func=cmd_query)
     args = parser.parse_args(argv)
     return args.func(args)
 
