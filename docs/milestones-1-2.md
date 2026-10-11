@@ -119,7 +119,10 @@ model). 2.3 waits only for the 12 questions.
 | 2.6 | done: `agent graph` → `graph.json`; predicate table `kg.PREDICATES` (CS-KG `uses`/`solves` seen only as inverses, to confirm) | `811cbe8` | `test_kg` (9) |
 | 2.7 | done: `agent export-prov` → `graph.ttl`, rdflib 7.6.0, deterministic | `e34e6ca` | `test_prov` (8) |
 | 2.8 | done: `agent query 1–5`; tested on a research-style and an attach-style run built through the real broker | `1ea345b` | `test_queries` (7) |
-| 2.1, 2.2, 2.4, 2.5, 2.9 | in progress on branch `m2-run` | — | — |
+| 2.1, 2.2 | done: `agent concepts propose\|pick\|check`, prompt `concept-v1.txt`, corpus-blind, capped at 5, one repair round; pick is a `concept_pick` record by agent `user` | `18d5202` | `test_concept_step` |
+| 2.4 | done: the loop already had `claim_off`; tests pin no `claim`/`CLAIM_FD`, same config except condition and prompt | `259a4de` | `test_loop` |
+| 2.5 | done: `agent attach <run>`; per fact a fresh conversation using `claim` with `origin="attach"`, or `no_source`; 6 steps / 60k tokens per fact to start; appends to the run's chain; `answer.research.json` kept | `bb6b631` | `test_attach` |
+| 2.9 | done: `agent batch <manifest>`; sample `agent/manifests/m4-72.json` (placeholder q01–q12); cut runs rerun fresh as `<key>-a<N>` (max 3); exit 0 done / 2 out of time / 1 gave up | `8f17bd7`, `051f64b` | `test_batch` |
 | 2.3, 2.10 | open: need the 12 questions and the cluster | — | — |
 
 Small decisions made while building:
@@ -127,6 +130,10 @@ Small decisions made while building:
 - A claim's step is the `agent_tool` record with the same agent and step id that follows it in the chain; the `checked_by` activity is the claim record itself (`ours:ClaimCheck`); rejected claims stay check activities with a reason.
 - One KG edge per accepted claim (`edge-NNNNNN` = claim number). Manifest ids become paper nodes, other strings `entity:<slug>`.
 - IRIs: run-scoped `urn:thesis-agent:run:<run_id>/…`, shared `urn:thesis-agent:{corpus,paper,entity}/…`.
+- Concept sessions live in `concepts/<qid>/` (`session.json`, `events.jsonl`, `proposal.json`, `concept.json`, `concept.sha256`).
+- The attach step's claim must carry the fact's own s/p/o; its budget (6 steps / 60k per fact) is frozen with the run budget after 1.13.
+- Seeds: `seed_base + 100 × question + repeat`, the same in both conditions. Deadline = earliest of `--deadline`, `--time-limit`, `$SLURM_JOB_END_TIME`; use `#SBATCH --signal=B:TERM@<s>`.
+- Fixed while building: command cleanup now signals the wrapper's whole session (background children escaped before; `setsid` still escapes); SIGTERM is no longer retried as a model error (`agent/stopping.py`).
 
 ## What milestones 3 and 4 get from 1 and 2
 
