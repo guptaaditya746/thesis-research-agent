@@ -1,0 +1,24 @@
+{
+  "id": "c1",
+  "title": "Evaluation datasets of retrieval-augmented generation papers",
+  "definition": "Each dataset on which at least one corpus paper evaluates a retrieval-augmented generation (RAG) method, with the papers that report results on it.",
+  "measure": {"operation": "list", "of": "Dataset", "group_by": "dataset", "order": "desc"},
+  "scope": {
+    "papers": "corpus papers that propose or evaluate a method in which retrieved passages are given to a language model that generates the output",
+    "datasets": "datasets with reported results (tables or text) in those papers; datasets only cited or only used for training do not count"
+  },
+  "answer_shape": {
+    "kind": "table",
+    "columns": [
+      {"name": "dataset", "type": "Dataset"},
+      {"name": "papers", "type": "list<Paper>"},
+      {"name": "paper_count", "type": "integer"}
+    ]
+  },
+  "competency_questions": [
+    "Which datasets does a given RAG paper report results on?",
+    "How many corpus papers evaluate a RAG method on Natural Questions?",
+    "Are name variants of one dataset (NQ, Natural Questions, NaturalQuestions) counted as one dataset?"
+  ],
+  "needs": ["which papers propose or evaluate a RAG method", "the evaluation datasets per paper"]
+}
