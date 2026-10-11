@@ -144,6 +144,72 @@ def cmd_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_concepts_propose(args: argparse.Namespace) -> int:
+    from . import concept_step
+    from .loop import OrchestratorModel  # LiteLLM and mini-swe-agent: slow, so only here
+    from .rundir import git_head
+
+    question = args.question if args.question is not None else args.question_file.read_text(encoding="utf-8")
+    model = OrchestratorModel(base_url=args.base_url, temperature=args.temperature, seed=args.seed)
+    try:
+        session, proposal = concept_step.propose(
+            args.root, args.question_id, question, model, temperature=args.temperature, seed=args.seed,
+            git_commit=git_head(Path(__file__).resolve().parents[1]), base_url=args.base_url,
+            prompt_version=args.prompt_version, max_briefs=args.max_briefs)
+    except (concept_step.ConceptStepError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        for problem in getattr(exc, "problems", []):
+            print(f"  - {problem}")
+        return 1
+    print(concept_step.show(proposal["briefs"]))
+    if proposal["capped_from"]:
+        print(f"\n(the model gave {proposal['capped_from']} briefs; the first {len(proposal['briefs'])} are kept)")
+    print(f"\nPick one: agent concepts pick {session.root} --choice N")
+    return 0
+
+
+def cmd_concepts_pick(args: argparse.Namespace) -> int:
+    import sys
+
+    from . import concept_step
+
+    session = concept_step.Session(args.session_dir)
+    try:
+        briefs = session.load(concept_step.PROPOSAL_FILE)["briefs"]
+    except OSError as exc:
+        print(f"FAIL no proposal in {args.session_dir} ({exc})")
+        return 1
+    choice = args.choice
+    if choice is None:
+        print(concept_step.show(briefs))
+        if not sys.stdin.isatty():
+            print("FAIL no --choice given and no terminal to ask on")
+            return 1
+        while choice is None:
+            answer = input(f"\nPick a concept [1-{len(briefs)}]: ").strip()
+            if answer.isdigit() and 1 <= int(answer) <= len(briefs):
+                choice = int(answer)
+    try:
+        concept, sha = concept_step.pick(args.session_dir, choice)
+    except (concept_step.ConceptStepError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        return 1
+    print(f"PASS picked [{choice}] {concept['title']}\nconcept.json sha256={sha} -> "
+          f"{session.path(concept_step.CONCEPT_FILE)}")
+    return 0
+
+
+def cmd_concepts_check(args: argparse.Namespace) -> int:
+    from . import concept_step
+
+    problems = concept_step.check_session(args.session_dir)
+    for problem in problems:
+        print(f"FAIL {problem}")
+    if not problems:
+        print(f"PASS {args.session_dir} concept.json sha256={file_sha256(Path(args.session_dir) / 'concept.json')}")
+    return 1 if problems else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -207,6 +273,28 @@ def main(argv: list[str] | None = None) -> int:
     query.add_argument("--corpus", type=Path, default=Path("corpus"), help="query 4: corpus directory")
     query.add_argument("--manifest", type=Path, default=Path("corpus/manifest.json"), help="query 4")
     query.set_defaults(func=cmd_query)
+
+    concepts = sub.add_parser("concepts", help="concept step: propose briefs for a question, pick one (rows 2.1, 2.2)")
+    csub = concepts.add_subparsers(dest="concepts_command", required=True)
+    propose = csub.add_parser("propose", help="ask orch-model for 1-5 concept briefs (corpus-blind)")
+    propose.add_argument("question_id", help="e.g. q01; the session goes to <root>/<question_id>/")
+    given = propose.add_mutually_exclusive_group(required=True)
+    given.add_argument("--question", help="the question text")
+    given.add_argument("--question-file", type=Path, help="file holding the question text")
+    propose.add_argument("--root", type=Path, default=Path("concepts"), help="concept sessions directory")
+    propose.add_argument("--temperature", type=float, required=True)
+    propose.add_argument("--seed", type=int, required=True)
+    propose.add_argument("--base-url", default="http://127.0.0.1:4000/v1", help="LiteLLM proxy; key from $LITELLM_MASTER_KEY")
+    propose.add_argument("--prompt-version", default="v1")
+    propose.add_argument("--max-briefs", type=int, default=5)
+    propose.set_defaults(func=cmd_concepts_propose)
+    pick = csub.add_parser("pick", help="pick one proposed brief; writes concept.json and concept.sha256")
+    pick.add_argument("session_dir", type=Path, help="e.g. concepts/q01")
+    pick.add_argument("--choice", type=int, help="brief number (asked on the terminal when left out)")
+    pick.set_defaults(func=cmd_concepts_pick)
+    ccheck = csub.add_parser("check", help="verify a concept session: chain, pick record, concept hash")
+    ccheck.add_argument("session_dir", type=Path)
+    ccheck.set_defaults(func=cmd_concepts_check)
     args = parser.parse_args(argv)
     return args.func(args)
 
