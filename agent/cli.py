@@ -43,9 +43,18 @@ def _corpus(args: argparse.Namespace) -> tuple[Path, Path]:
     return Path(args.corpus), Path(args.manifest or Path(args.corpus) / "manifest.json")
 
 
+def stop_on_sigterm() -> None:
+    """SIGTERM (the batch runner or Slurm at the job limit, row 2.9) ends the run cleanly (agent/stopping.py)."""
+    from . import stopping
+
+    stopping.install()
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     from .loop import research_run  # imports LiteLLM and mini-swe-agent: slow, so only here
     from .rundir import BUDGET, git_head
+
+    stop_on_sigterm()
 
     corpus, manifest = _corpus(args)
     concept = json.loads(args.concept.read_text(encoding="utf-8"))
@@ -62,6 +71,44 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0 if outcome.exit_status == "submitted" else 1
 
 
+def cmd_attach(args: argparse.Namespace) -> int:
+    from .attach import ATTACH_BUDGET, AttachError, attach_run  # imports the loop: slow, so only here
+
+    stop_on_sigterm()
+    corpus, manifest = _corpus(args)
+    budget = {**ATTACH_BUDGET, **{k: v for k, v in (("steps", args.steps_per_fact), ("tokens", args.tokens_per_fact))
+                                  if v is not None}}
+    try:
+        summary = attach_run(args.run_dir, corpus, manifest, base_url=args.base_url, sandbox_mode=args.sandbox,
+                             agent_root=args.agent_root, budget=budget, broker=args.broker,
+                             extra_path=tuple(args.path_extra))
+    except AttachError as exc:
+        print(f"FAIL {exc}")
+        return 1
+    c = summary["cost"]
+    print(f"attach {summary['run_id']}: facts={len(summary['facts'])} attached={summary['attached']} "
+          f"no_source={summary['no_source']} tokens={c['tokens']} time={c['seconds']}s head={summary['chain_head']}")
+    return 0
+
+
+def cmd_batch(args: argparse.Namespace) -> int:
+    from .batch import Batch, Manifest, job_deadline
+
+    try:
+        manifest = Manifest.load(args.manifest)
+        batch = Batch(manifest, deadline=job_deadline(args.deadline, args.time_limit), margin_s=args.margin,
+                      min_start_s=args.min_start, corpus=args.corpus)
+    except (OSError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        return 1
+    if args.status:
+        for key in batch.status():
+            runs = ", ".join(f"{a['run_id']}={a['state']}" for a in key["attempts"]) or "not started"
+            print(f"{key['key']} seed={key['seed']}: {runs}")
+        return 0
+    return batch.run()
+
+
 def cmd_verify(args: argparse.Namespace) -> int:
     from .verify import verify_run
 
@@ -75,6 +122,13 @@ def cmd_verify(args: argparse.Namespace) -> int:
           f"claim_steps={s.get('claim_steps', 0)} tokens={s.get('tokens', 0)} "
           f"(claim steps {s.get('claim_step_tokens', 0)}) time={s.get('seconds', 0)}s "
           f"facts={s.get('facts', 0)} (with claims {s.get('facts_with_claims', 0)})")
+    if "attach" in s:
+        a, w = s["attach"], s["without_attach"]
+        print(f"attach step: steps={a['steps']} model_calls={a['model_calls']} commands={a['commands']} "
+              f"claims={a['claims_accepted']} accepted / {a['claims_rejected']} rejected tokens={a['tokens']} "
+              f"time={a['seconds']}s")
+        print(f"without attach: steps={w['steps']} tokens={w['tokens']} time={w['seconds']}s; "
+              f"with attach: tokens={s.get('tokens', 0)} time={s.get('seconds', 0)}s")
     if report.ok:
         print(f"PASS {args.run_dir} records={s.get('records')} head={s.get('head')}")
     return 0 if report.ok else 1
@@ -144,6 +198,72 @@ def cmd_query(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_concepts_propose(args: argparse.Namespace) -> int:
+    from . import concept_step
+    from .loop import OrchestratorModel  # LiteLLM and mini-swe-agent: slow, so only here
+    from .rundir import git_head
+
+    question = args.question if args.question is not None else args.question_file.read_text(encoding="utf-8")
+    model = OrchestratorModel(base_url=args.base_url, temperature=args.temperature, seed=args.seed)
+    try:
+        session, proposal = concept_step.propose(
+            args.root, args.question_id, question, model, temperature=args.temperature, seed=args.seed,
+            git_commit=git_head(Path(__file__).resolve().parents[1]), base_url=args.base_url,
+            prompt_version=args.prompt_version, max_briefs=args.max_briefs)
+    except (concept_step.ConceptStepError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        for problem in getattr(exc, "problems", []):
+            print(f"  - {problem}")
+        return 1
+    print(concept_step.show(proposal["briefs"]))
+    if proposal["capped_from"]:
+        print(f"\n(the model gave {proposal['capped_from']} briefs; the first {len(proposal['briefs'])} are kept)")
+    print(f"\nPick one: agent concepts pick {session.root} --choice N")
+    return 0
+
+
+def cmd_concepts_pick(args: argparse.Namespace) -> int:
+    import sys
+
+    from . import concept_step
+
+    session = concept_step.Session(args.session_dir)
+    try:
+        briefs = session.load(concept_step.PROPOSAL_FILE)["briefs"]
+    except OSError as exc:
+        print(f"FAIL no proposal in {args.session_dir} ({exc})")
+        return 1
+    choice = args.choice
+    if choice is None:
+        print(concept_step.show(briefs))
+        if not sys.stdin.isatty():
+            print("FAIL no --choice given and no terminal to ask on")
+            return 1
+        while choice is None:
+            answer = input(f"\nPick a concept [1-{len(briefs)}]: ").strip()
+            if answer.isdigit() and 1 <= int(answer) <= len(briefs):
+                choice = int(answer)
+    try:
+        concept, sha = concept_step.pick(args.session_dir, choice)
+    except (concept_step.ConceptStepError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        return 1
+    print(f"PASS picked [{choice}] {concept['title']}\nconcept.json sha256={sha} -> "
+          f"{session.path(concept_step.CONCEPT_FILE)}")
+    return 0
+
+
+def cmd_concepts_check(args: argparse.Namespace) -> int:
+    from . import concept_step
+
+    problems = concept_step.check_session(args.session_dir)
+    for problem in problems:
+        print(f"FAIL {problem}")
+    if not problems:
+        print(f"PASS {args.session_dir} concept.json sha256={file_sha256(Path(args.session_dir) / 'concept.json')}")
+    return 1 if problems else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -173,6 +293,28 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
     run.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
     run.set_defaults(func=cmd_run)
+
+    attach = sub.add_parser("attach", help="baseline attach step: one quote or 'no source found' per answer fact (row 2.5)")
+    attach.add_argument("run_dir", type=Path, help="a finished claim_off run")
+    _corpus_args(attach)
+    attach.add_argument("--base-url", help="LiteLLM proxy (default: the run's); key from $LITELLM_MASTER_KEY")
+    attach.add_argument("--sandbox", choices=("landlock", "unsandboxed"), help="default: the run's sandbox mode")
+    attach.add_argument("--agent-root", type=Path, help="default: the run's agent root")
+    attach.add_argument("--steps-per-fact", type=int)
+    attach.add_argument("--tokens-per-fact", type=int)
+    attach.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
+    attach.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
+    attach.set_defaults(func=cmd_attach)
+
+    batch = sub.add_parser("batch", help="run a run manifest inside the job time limit; skip finished runs (row 2.9)")
+    batch.add_argument("manifest", type=Path, help="run manifest, e.g. agent/manifests/m4-72.json")
+    batch.add_argument("--deadline", help="job end: ISO time or epoch seconds (also read: $SLURM_JOB_END_TIME)")
+    batch.add_argument("--time-limit", type=float, help="job end in seconds from now")
+    batch.add_argument("--margin", type=float, default=300, help="stop a running run this many seconds before the end")
+    batch.add_argument("--min-start", type=float, default=900, help="start no run with less time than this left")
+    batch.add_argument("--corpus", type=Path, help="default: the manifest's corpus, else $CORPUS")
+    batch.add_argument("--status", action="store_true", help="list every run key and its attempts; run nothing")
+    batch.set_defaults(func=cmd_batch)
 
     ver = sub.add_parser("verify", help="verify a finished run: chain, anchors, answer claim ids (row 1.11)")
     ver.add_argument("run_dir", type=Path)
@@ -207,6 +349,28 @@ def main(argv: list[str] | None = None) -> int:
     query.add_argument("--corpus", type=Path, default=Path("corpus"), help="query 4: corpus directory")
     query.add_argument("--manifest", type=Path, default=Path("corpus/manifest.json"), help="query 4")
     query.set_defaults(func=cmd_query)
+
+    concepts = sub.add_parser("concepts", help="concept step: propose briefs for a question, pick one (rows 2.1, 2.2)")
+    csub = concepts.add_subparsers(dest="concepts_command", required=True)
+    propose = csub.add_parser("propose", help="ask orch-model for 1-5 concept briefs (corpus-blind)")
+    propose.add_argument("question_id", help="e.g. q01; the session goes to <root>/<question_id>/")
+    given = propose.add_mutually_exclusive_group(required=True)
+    given.add_argument("--question", help="the question text")
+    given.add_argument("--question-file", type=Path, help="file holding the question text")
+    propose.add_argument("--root", type=Path, default=Path("concepts"), help="concept sessions directory")
+    propose.add_argument("--temperature", type=float, required=True)
+    propose.add_argument("--seed", type=int, required=True)
+    propose.add_argument("--base-url", default="http://127.0.0.1:4000/v1", help="LiteLLM proxy; key from $LITELLM_MASTER_KEY")
+    propose.add_argument("--prompt-version", default="v1")
+    propose.add_argument("--max-briefs", type=int, default=5)
+    propose.set_defaults(func=cmd_concepts_propose)
+    pick = csub.add_parser("pick", help="pick one proposed brief; writes concept.json and concept.sha256")
+    pick.add_argument("session_dir", type=Path, help="e.g. concepts/q01")
+    pick.add_argument("--choice", type=int, help="brief number (asked on the terminal when left out)")
+    pick.set_defaults(func=cmd_concepts_pick)
+    ccheck = csub.add_parser("check", help="verify a concept session: chain, pick record, concept hash")
+    ccheck.add_argument("session_dir", type=Path)
+    ccheck.set_defaults(func=cmd_concepts_check)
     args = parser.parse_args(argv)
     return args.func(args)
 

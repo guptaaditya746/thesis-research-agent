@@ -22,6 +22,10 @@ tests/B/system_prompt.txt text eol=lf
 # config.json; the claim shim runs on the Linux node.
 agent/prompts/** text eol=lf
 agent/concepts/** text eol=lf
+# Concept sessions (rows 2.1-2.3): concepts/<question-id>/ with the frozen concept.json and its chain.
+concepts/** text eol=lf
+# Batch run manifests (row 2.9).
+agent/manifests/** text eol=lf
 agent/bin/** text eol=lf
 
 # Shell and Slurm scripts run on the Linux node; CRLF breaks them.

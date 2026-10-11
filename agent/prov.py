@@ -56,7 +56,8 @@ CSKG = Namespace(kg.NAMESPACES["cskg"])
 DBLP = Namespace(kg.NAMESPACES["dblp"])
 
 CLASSES = {"ai_model_invocation": OURS.ModelInvocation, "agent_tool": OURS.ToolExecution,
-           "claim": OURS.ClaimCheck, "spawn": OURS.Spawn, "coverage": OURS.Coverage}
+           "claim": OURS.ClaimCheck, "spawn": OURS.Spawn, "coverage": OURS.Coverage,
+           "concept_pick": OURS.ConceptPick}
 
 
 def run_base(run_id: str) -> str:

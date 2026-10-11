@@ -10,8 +10,9 @@ object per message, one reply per message:
                                               -> {"ok": true}
   {"op": "head"}                              -> {"ok": true, "head": ..., "records": n, "claims": n}
   {"op": "close"}                             -> same as head, then the broker exits
-Harness records are ai_model_invocation, agent_tool, spawn and coverage; the harness assigns
-step ids. Claims cannot be sent on this channel.
+Harness records are ai_model_invocation, agent_tool, spawn and coverage, plus concept_pick (the
+user's pick of a concept brief, row 2.2); the harness assigns step ids. Claims cannot be sent on
+this channel. A broker without a corpus (the corpus-blind concept step) rejects every claim.
 
 Input B, one claim channel per command: a stream socket whose other end the sandbox gets as
 CLAIM_FD. Newline-delimited JSON {s, p, o, file, quote}; every request is tagged with the step id
@@ -39,7 +40,7 @@ from .canonical import canonical_bytes, sha256_hex
 from .chain import line, seal, task_id, verify
 from .rundir import RunDir, utc_now
 
-HARNESS_SUBTYPES = ("ai_model_invocation", "agent_tool", "spawn", "coverage")
+HARNESS_SUBTYPES = ("ai_model_invocation", "agent_tool", "spawn", "coverage", "concept_pick")
 HARNESS_KEYS = {"subtype", "step_id", "used", "generated", "parent_task_id", "group_id", "agent_id",
                 "source_agent_id", "started_at", "ended_at", "status", "custom_metadata"}
 CLAIM_KEYS = ("s", "p", "o", "file", "quote")
@@ -102,7 +103,7 @@ class Channel:
 class Broker:
     """Single writer of a run's events.jsonl and claims.jsonl. Thread-safe."""
 
-    def __init__(self, run: RunDir, corpus: Corpus) -> None:
+    def __init__(self, run: RunDir, corpus: Corpus | None) -> None:
         self.run = run
         self.corpus = corpus
         report = verify(run.events, run.claims)
@@ -185,6 +186,8 @@ class Broker:
             request = self._parse(raw, meta)
             meta.update({k: request[k] for k in ("s", "p", "o", "quote")})
             used = {"file": request["file"], "quote": request["quote"]}
+            if self.corpus is None:
+                raise Rejected("unknown_file")
             name = self.corpus.name(request["file"])
             selector = find(self.corpus.index(name), request["quote"], file=name)
             used = {"anchor": selector.json()}

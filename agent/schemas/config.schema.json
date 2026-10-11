@@ -120,6 +120,39 @@
         "conclude_replies": {"type": "integer", "minimum": 1,
                              "description": "replies allowed after the budget or the context runs out"}
       }
+    },
+    "attach": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "budget_per_fact", "conclude_replies", "first_step", "started_at"],
+      "description": "The baseline's attach step (row 2.5), added to a claim_off run's config when the step starts",
+      "properties": {
+        "prompt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "sha256", "files"],
+          "properties": {
+            "version": {"type": "string", "minLength": 1},
+            "sha256": {"$ref": "#/$defs/sha256", "description": "sha256 of the attach system prompt file"},
+            "files": {"type": "object", "additionalProperties": {"$ref": "#/$defs/sha256"}}
+          }
+        },
+        "budget_per_fact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["steps", "tokens", "announced"],
+          "properties": {
+            "steps": {"type": "integer", "minimum": 1},
+            "tokens": {"type": "integer", "minimum": 1},
+            "announced": {"type": "boolean"}
+          }
+        },
+        "conclude_replies": {"type": "integer", "minimum": 0},
+        "first_step": {"type": "integer", "minimum": 1, "description": "step id of the attach step's first model call"},
+        "started_at": {"type": "string", "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$"},
+        "base_url": {"type": "string", "minLength": 1},
+        "sandbox": {"enum": ["landlock", "unsandboxed"]}
+      }
     }
   },
   "$defs": {

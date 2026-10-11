@@ -368,6 +368,58 @@ def test_claim_off_baseline(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
     assert verify_run(run, *corpus).ok
 
 
+def test_claim_off_environment_has_no_claim_tool(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """2.4: the baseline sandbox has no claim shim on PATH, no agent code mounted and no CLAIM_FD."""
+    from agent.loop import AGENT_DIR, SandboxEnvironment
+    from agent.rundir import RunDir as Run
+    run = Run.create(tmp_path / "runs", "x", CONCEPT, corpus_manifest=corpus[1], condition="claim_off",
+                     prompt_version="v1", prompt_sha256="a" * 64, **SETTINGS)
+    on, off = (SandboxEnvironment(run, corpus=corpus[0], mode="unsandboxed", claim=c) for c in (True, False))
+    shim = str(AGENT_DIR / "bin")
+    assert on.path().startswith(shim + ":") and shim not in off.path()
+    assert str(AGENT_DIR) in on.readonly() and str(AGENT_DIR) not in off.readonly()
+    assert "CLAIM_FD" not in off.environment(None) and on.environment(7)["CLAIM_FD"] == "7"
+    assert on.path() == f"{shim}:{off.path()}"  # otherwise the same tools
+
+
+@posix_only
+def test_claim_off_run_sees_no_claim_and_no_fd(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    probe = 'command -v claim || echo NO_CLAIM; echo "fd=${CLAIM_FD:-unset}"; ls /proc/self/fd | wc -l'
+    run, outcome, _, _ = go(tmp_path, corpus, [bash(probe), final([row()])], condition="claim_off")
+    out = (run.out / "step-0001.txt").read_text(encoding="utf-8").split()
+    assert outcome.exit_status == "submitted" and out[:2] == ["NO_CLAIM", "fd=unset"]
+    assert int(out[2]) <= 5  # stdin, stdout, stderr, ls's own directory fd: nothing passed through
+    tool = next(r for r in records(run) if r["subtype"] == "agent_tool")
+    assert tool["custom_metadata"]["claim_step"] is False and tool["custom_metadata"]["claims"] == 0
+
+
+@posix_only
+def test_conditions_share_model_budget_seed_and_answer_format(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """2.4: claim_on and claim_off differ only in the condition, the system prompt's claim block and the tool."""
+    from agent import prompts
+    budget = {"steps": 40, "tokens": 90_000, "announced": True}
+    runs = {}
+    for condition in ("claim_on", "claim_off"):
+        runs[condition] = go(tmp_path, corpus, [bash("echo hi"), final([row()])], run_id=condition,
+                             condition=condition, budget=budget)
+    (on, _, _, m_on), (off, _, _, m_off) = runs["claim_on"], runs["claim_off"]
+    c_on, c_off = on.load_config(), off.load_config()
+    differ = {k for k in c_on if c_on[k] != c_off[k]}
+    assert differ == {"run_id", "created_at", "condition", "prompt"}
+    assert c_on["prompt"]["files"]["task-v1.txt"] == c_off["prompt"]["files"]["task-v1.txt"]
+    assert c_off["budget"] == budget and c_off["sampling"] == {"temperature": 0.7, "seed": 1234}
+    # The prompts the model saw: the same task message, the system prompt minus the claim block only.
+    assert m_on.prompts[0][1] == m_off.prompts[0][1]
+    assert prompts.baseline_from(m_on.prompts[0][0]["content"]) == m_off.prompts[0][0]["content"]
+    assert "40 steps" in m_off.prompts[0][0]["content"] and "90000" in m_off.prompts[0][0]["content"]
+    calls = [[r for r in records(run) if r["subtype"] == "ai_model_invocation"] for run in (on, off)]
+    keys = ("model", "model_name", "revision", "temperature", "seed", "max_tokens", "thinking")
+    assert [{k: c["used"][k] for k in keys} for c in calls[0]] == [{k: c["used"][k] for k in keys} for c in calls[1]]
+    # The same answer format: both validate against the concept, every fact unsourced and origin research.
+    a_on, a_off = (json.loads(r.answer.read_text(encoding="utf-8")) for r in (on, off))
+    assert a_on == a_off and a_off["rows"][0]["facts"][0]["claims"] == [] and a_off["rows"][0]["facts"][0]["origin"] == "research"
+
+
 @posix_only
 def test_command_timeout(tmp_path: Path, corpus: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     import agent.rundir
@@ -378,6 +430,22 @@ def test_command_timeout(tmp_path: Path, corpus: tuple[Path, Path], monkeypatch:
     assert tool["generated"]["exit_code"] == 124 and tool["generated"]["timed_out"] and tool["status"] == "timeout"
     assert "time limit" in model.prompts[1][-1]["content"]
     assert run.load_config()["command_limits"]["timeout_s"] == 1
+
+
+@posix_only
+@pytest.mark.skipif(not os.path.isdir("/proc"), reason="the session scan reads /proc")
+def test_processes_left_behind_are_removed(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A background process the command leaves (in the command's own process group) goes after the step."""
+    replies: list[Reply] = [bash("sleep 300 >/dev/null 2>&1 & echo $!"), final([row([])])]
+    run, _, _, _ = go(tmp_path, corpus, replies)
+    pid = int((run.out / "step-0001.txt").read_text(encoding="utf-8").strip())
+    try:
+        state = Path(f"/proc/{pid}/stat").read_bytes().rsplit(b") ", 1)[1][:1]
+    except OSError:
+        state = b"gone"
+    assert state in (b"gone", b"Z")  # killed (at most a zombie waiting for its new parent)
+    tool = next(r for r in records(run) if r["subtype"] == "agent_tool")
+    assert tool["custom_metadata"]["cleanup"] in ("sigterm", "sigkill")
 
 
 @posix_only

@@ -14,6 +14,7 @@ from .concept import validate_answer, validate_concept
 
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")
 DIRS = ("out", "scratch")
+ATTACH_FILE = "attach.json"  # the baseline's attach step (row 2.5) writes it when it finishes
 
 # Fixed run settings (milestones-1-2.md). Budget is adjusted once after 1.13, then frozen.
 ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
@@ -22,6 +23,16 @@ SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-25
               "revision": "5a5a776", "context_tokens": 32768} for i in (1, 2)]
 BUDGET = {"steps": 150, "tokens": 400_000, "announced": True}
 COMMAND_LIMITS = {"timeout_s": 120, "ulimit_v_kib": 2 * 1024 * 1024, "output_cap_bytes": 8192}
+
+
+def attach_state(run: RunDir) -> str:
+    """The baseline's attach step (2.5): not_applicable (claim_on), pending, cut (started, no attach.json) or done."""
+    config = run.load_config()
+    if config["condition"] != "claim_off":
+        return "not_applicable"
+    if (run.root / ATTACH_FILE).is_file():
+        return "done"
+    return "cut" if "attach" in config else "pending"
 
 
 def utc_now() -> str:
