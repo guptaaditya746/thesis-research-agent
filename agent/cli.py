@@ -38,6 +38,18 @@ def cmd_graph(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_export_prov(args: argparse.Namespace) -> int:
+    from . import prov  # rdflib loads slowly; only these subcommands need it
+
+    try:
+        path, graph = prov.write(RunDir(args.run_dir))
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"FAIL {exc}")
+        return 1
+    print(f"PASS triples={len(graph)} -> {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -53,6 +65,9 @@ def main(argv: list[str] | None = None) -> int:
     graph.add_argument("run_dir", type=Path)
     graph.add_argument("--manifest", type=Path, default=Path("corpus/manifest.json"))
     graph.set_defaults(func=cmd_graph)
+    export = sub.add_parser("export-prov", help="events, claims and graph.json -> PROV-O graph.ttl")
+    export.add_argument("run_dir", type=Path)
+    export.set_defaults(func=cmd_export_prov)
     args = parser.parse_args(argv)
     return args.func(args)
 
