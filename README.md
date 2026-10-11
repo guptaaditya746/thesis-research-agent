@@ -9,7 +9,8 @@ quote while it researches, in a hash-chained log, and builds a knowledge graph w
 |---|---|
 | `docs/STATE.md` | The one page to plan from |
 | `docs/milestones-1-2.md` | Triaged build plan for milestones 1 and 2 |
-| `docs/slurm-final-runbook.md` | The final Slurm session (Codex runs it) |
+| `docs/slurm-m1-runbook.md` | First real runs on Slurm, rows 1.1 and 1.13 (Codex runs it) |
+| `docs/slurm-final-runbook.md` | The final infrastructure session (done) |
 | `docs/plan.md` | The design; to be revised from STATE.md |
 | `docs/decisions-after-tests.md` | Why each decision was taken, test by test |
 | `docs/context.md` | The original context note |
