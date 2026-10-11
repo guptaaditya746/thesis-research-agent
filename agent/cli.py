@@ -62,6 +62,25 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0 if outcome.exit_status == "submitted" else 1
 
 
+def cmd_attach(args: argparse.Namespace) -> int:
+    from .attach import ATTACH_BUDGET, AttachError, attach_run  # imports the loop: slow, so only here
+
+    corpus, manifest = _corpus(args)
+    budget = {**ATTACH_BUDGET, **{k: v for k, v in (("steps", args.steps_per_fact), ("tokens", args.tokens_per_fact))
+                                  if v is not None}}
+    try:
+        summary = attach_run(args.run_dir, corpus, manifest, base_url=args.base_url, sandbox_mode=args.sandbox,
+                             agent_root=args.agent_root, budget=budget, broker=args.broker,
+                             extra_path=tuple(args.path_extra))
+    except AttachError as exc:
+        print(f"FAIL {exc}")
+        return 1
+    c = summary["cost"]
+    print(f"attach {summary['run_id']}: facts={len(summary['facts'])} attached={summary['attached']} "
+          f"no_source={summary['no_source']} tokens={c['tokens']} time={c['seconds']}s head={summary['chain_head']}")
+    return 0
+
+
 def cmd_verify(args: argparse.Namespace) -> int:
     from .verify import verify_run
 
@@ -75,6 +94,13 @@ def cmd_verify(args: argparse.Namespace) -> int:
           f"claim_steps={s.get('claim_steps', 0)} tokens={s.get('tokens', 0)} "
           f"(claim steps {s.get('claim_step_tokens', 0)}) time={s.get('seconds', 0)}s "
           f"facts={s.get('facts', 0)} (with claims {s.get('facts_with_claims', 0)})")
+    if "attach" in s:
+        a, w = s["attach"], s["without_attach"]
+        print(f"attach step: steps={a['steps']} model_calls={a['model_calls']} commands={a['commands']} "
+              f"claims={a['claims_accepted']} accepted / {a['claims_rejected']} rejected tokens={a['tokens']} "
+              f"time={a['seconds']}s")
+        print(f"without attach: steps={w['steps']} tokens={w['tokens']} time={w['seconds']}s; "
+              f"with attach: tokens={s.get('tokens', 0)} time={s.get('seconds', 0)}s")
     if report.ok:
         print(f"PASS {args.run_dir} records={s.get('records')} head={s.get('head')}")
     return 0 if report.ok else 1
@@ -240,7 +266,19 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
     run.set_defaults(func=cmd_run)
 
-    ver = sub.add_parser("verify", help="verify a finished run: chain, anchors, answer claim ids (row 1.11)")
+    attach = sub.add_parser("attach", help="baseline attach step: one quote or 'no source found' per answer fact (row 2.5)")
+    attach.add_argument("run_dir", type=Path, help="a finished claim_off run")
+    _corpus_args(attach)
+    attach.add_argument("--base-url", help="LiteLLM proxy (default: the run's); key from $LITELLM_MASTER_KEY")
+    attach.add_argument("--sandbox", choices=("landlock", "unsandboxed"), help="default: the run's sandbox mode")
+    attach.add_argument("--agent-root", type=Path, help="default: the run's agent root")
+    attach.add_argument("--steps-per-fact", type=int)
+    attach.add_argument("--tokens-per-fact", type=int)
+    attach.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
+    attach.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
+    attach.set_defaults(func=cmd_attach)
+
+    ver = sub.add_parser("verify",help="verify a finished run: chain, anchors, answer claim ids (row 1.11)")
     ver.add_argument("run_dir", type=Path)
     _corpus_args(ver)
     ver.set_defaults(func=cmd_verify)

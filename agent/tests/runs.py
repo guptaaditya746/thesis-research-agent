@@ -1,7 +1,7 @@
 """Two realistic finished runs for the graph, PROV-O and query tests (rows 2.6-2.8).
 
-The main loop (1.8) and the attach step (2.5) are not built yet, so these builders drive the real
-broker (InProcessBroker) the way they will: a model call, then the command it emitted (with
+Built before the main loop (1.8) and the attach step (2.5); test_attach.py runs the real attach
+step and the same queries. These builders drive the real broker (InProcessBroker) as those do: a model call, then the command it emitted (with
 `parent_task_id` pointing at the call, LEDGER `informs`), claims sent over the step's claim channel
 while the command runs, and a final answer.json that validates against the concept.
 

@@ -161,7 +161,7 @@ class SandboxEnvironment:
 
     def __init__(self, run: RunDir, *, corpus: Path, mode: str, claim: bool, agent_root: Path | None = None,
                  limits: dict[str, int] | None = None, extra_path: tuple[str, ...] = (),
-                 python: str = sys.executable) -> None:
+                 python: str = sys.executable, origin: str = "research") -> None:
         if mode not in sandbox.MODES:
             raise ValueError(f"sandbox mode must be one of {sandbox.MODES}")
         self.run = run
@@ -172,6 +172,7 @@ class SandboxEnvironment:
         self.limits = dict(limits or COMMAND_LIMITS)
         self.extra_path = tuple(extra_path)
         self.python = python
+        self.origin = origin  # the claim channel's origin: research, or attach for the attach step (2.5)
         self.config = {"mode": mode, "claim": claim}
 
     def path(self) -> str:
@@ -212,7 +213,7 @@ class SandboxEnvironment:
     def execute(self, action: dict[str, Any], cwd: str = "", *, step_id: int,
                 broker: Broker | None = None) -> sandbox.Result:
         """Run `action["command"]`; with a broker and claim on, the command gets CLAIM_FD for this step."""
-        sock = broker.claim_channel(step_id, agent_id="main", origin="research") if broker and self.claim else None
+        sock = broker.claim_channel(step_id, agent_id="main", origin=self.origin) if broker and self.claim else None
         try:
             fds = (sock.fileno(),) if sock else ()
             return sandbox.run_command(self.argv(action["command"]), env=self.environment(fds[0] if fds else None),

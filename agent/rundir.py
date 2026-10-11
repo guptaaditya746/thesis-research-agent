@@ -14,6 +14,7 @@ from .concept import validate_answer, validate_concept
 
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")
 DIRS = ("out", "scratch")
+ATTACH_FILE = "attach.json"  # the baseline's attach step (row 2.5) writes it when it finishes
 
 # Fixed run settings (milestones-1-2.md). Budget is adjusted once after 1.13, then frozen.
 ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
