@@ -375,10 +375,11 @@ def test_claim_off_environment_has_no_claim_tool(tmp_path: Path, corpus: tuple[P
     run = Run.create(tmp_path / "runs", "x", CONCEPT, corpus_manifest=corpus[1], condition="claim_off",
                      prompt_version="v1", prompt_sha256="a" * 64, **SETTINGS)
     on, off = (SandboxEnvironment(run, corpus=corpus[0], mode="unsandboxed", claim=c) for c in (True, False))
-    assert str(AGENT_DIR / "bin") in on.path().split(":") and str(AGENT_DIR / "bin") not in off.path().split(":")
+    shim = str(AGENT_DIR / "bin")
+    assert on.path().startswith(shim + ":") and shim not in off.path()
     assert str(AGENT_DIR) in on.readonly() and str(AGENT_DIR) not in off.readonly()
     assert "CLAIM_FD" not in off.environment(None) and on.environment(7)["CLAIM_FD"] == "7"
-    assert off.path().split(":")[-3:] == on.path().split(":")[-3:]  # otherwise the same tools
+    assert on.path() == f"{shim}:{off.path()}"  # otherwise the same tools
 
 
 @posix_only
