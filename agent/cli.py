@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from . import kg
 from .chain import verify
 from .rundir import RunDir
 
@@ -27,6 +28,16 @@ def cmd_verify_chain(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def cmd_graph(args: argparse.Namespace) -> int:
+    try:
+        path, graph = kg.write(RunDir(args.run_dir), args.manifest)
+    except (OSError, ValueError, KeyError) as exc:
+        print(f"FAIL {exc}")
+        return 1
+    print(f"PASS edges={len(graph['edges'])} nodes={len(graph['nodes'])} -> {path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -38,6 +49,10 @@ def main(argv: list[str] | None = None) -> int:
     check.add_argument("run_dir", type=Path)
     check.add_argument("--complete", action="store_true", help="also require answer.json")
     check.set_defaults(func=cmd_check_run)
+    graph = sub.add_parser("graph", help="claims (both origins) -> knowledge graph graph.json")
+    graph.add_argument("run_dir", type=Path)
+    graph.add_argument("--manifest", type=Path, default=Path("corpus/manifest.json"))
+    graph.set_defaults(func=cmd_graph)
     args = parser.parse_args(argv)
     return args.func(args)
 
