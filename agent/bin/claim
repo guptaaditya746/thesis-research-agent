@@ -1,0 +1,3 @@
+#!/bin/sh
+# The `claim` command on the sandbox PATH (row 1.7): runs agent/claim_client.py, standard library only.
+exec python3 -I "$(dirname "$0")/../claim_client.py" "$@"

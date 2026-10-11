@@ -18,6 +18,12 @@ agent/tests/fixtures/** text eol=lf
 # The system prompt (its sha256 goes into config.json).
 tests/B/system_prompt.txt text eol=lf
 
+# Main loop (rows 1.8, 1.10): versioned prompts and hand-written concepts are hashed into
+# config.json; the claim shim runs on the Linux node.
+agent/prompts/** text eol=lf
+agent/concepts/** text eol=lf
+agent/bin/** text eol=lf
+
 # Shell and Slurm scripts run on the Linux node; CRLF breaks them.
 *.sh text eol=lf
 *.sbatch text eol=lf

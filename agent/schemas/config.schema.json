@@ -80,7 +80,12 @@
       "required": ["version", "sha256"],
       "properties": {
         "version": {"type": "string", "minLength": 1},
-        "sha256": {"$ref": "#/$defs/sha256"}
+        "sha256": {"$ref": "#/$defs/sha256", "description": "sha256 of the system prompt file"},
+        "files": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/sha256"},
+          "description": "sha256 of every prompt file the run used, by file name (row 1.8)"
+        }
       }
     },
     "hashes": {
@@ -93,7 +98,29 @@
         "agent_root_manifest_sha256": {"$ref": "#/$defs/sha256"}
       }
     },
-    "git_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+    "git_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "sandbox": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "description": "Which sandbox ran the agent's commands (row 1.8). unsandboxed is for tests and machines without Landlock only",
+      "properties": {
+        "mode": {"enum": ["landlock", "unsandboxed"]},
+        "landlock_abi": {"type": ["integer", "null"]},
+        "agent_root": {"type": ["string", "null"]}
+      }
+    },
+    "loop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["harness", "base_url"],
+      "properties": {
+        "harness": {"type": "string", "minLength": 1, "description": "e.g. mini-swe-agent 2.4.6"},
+        "base_url": {"type": "string", "minLength": 1, "description": "the LiteLLM endpoint; never a key"},
+        "conclude_replies": {"type": "integer", "minimum": 1,
+                             "description": "replies allowed after the budget or the context runs out"}
+      }
+    }
   },
   "$defs": {
     "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"},
