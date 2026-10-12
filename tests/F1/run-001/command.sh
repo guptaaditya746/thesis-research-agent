@@ -1,0 +1,16 @@
+set -euo pipefail
+
+# Count distinct Markdown files containing "retrieval" (case-insensitive)
+count=$(rg -il --glob '*.md' 'retrieval' "$CORPUS" | wc -l | tr -d ' ')
+echo "RETRIEVAL_PAPER_COUNT=$count"
+
+# Pick one file and one exact line containing retrieval
+file=$(rg -il --glob '*.md' 'retrieval' "$CORPUS" | head -n1)
+quote=$(rg -i 'retrieval' "$file" | head -n1)
+
+echo "Selected file: $file"
+echo "Selected quote: $quote"
+
+# Record the claim
+FILE="$file" QUOTE="$quote" python3 -c 'import json,os; print(json.dumps({"s":"the paper","p":"mentions","o":"retrieval","file":os.path.basename(os.environ["FILE"]),"quote":os.environ["QUOTE"]}))' | claim
+

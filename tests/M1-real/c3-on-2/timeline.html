@@ -1,0 +1,409 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Trace c3-on-2</title><style>
+:root{--bg:#fff;--fg:#1d1d1f;--muted:#6b6b70;--line:#d8d8dc;--code:#f4f4f6;--ok:#11703a;--bad:#a4161a;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#ececf0;--muted:#a0a0a8;--line:#3a3a40;--code:#222226;
+--ok:#5fd38d;--bad:#ff7b7b;--warn:#f0b54a}}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,sans-serif;margin:0 auto;max-width:1000px;padding:16px}
+h1{font-size:20px}.meta{color:var(--muted)}section{border-top:1px solid var(--line);padding:10px 0}
+h2{font-size:15px;margin:0 0 6px}pre{background:var(--code);padding:8px;overflow-x:auto;white-space:pre-wrap;
+word-break:break-word;margin:4px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:6px}
+</style></head><body><h1>Trace c3-on-2</h1><p class=meta>condition claim_on · 60 records · 29 steps</p><section id=step-1><h2>Step 1</h2><div>model call t000001: 1683 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 16 bytes</div><pre>cat &quot;$CORPUS/manifest.json&quot; | jq -r &#x27;.[] | &quot;\(.id // .file // .) \(.title // &quot;&quot;)&quot;&#x27; 2&gt;/dev/null | head -60; echo &quot;---COUNT---&quot;; ls &quot;$CORPUS&quot; | wc -l</pre><pre class=meta>---COUNT---
+337</pre></section><section id=step-2><h2>Step 2</h2><div>model call t000003: 1840 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1670 bytes</div><pre>jq -r &#x27;type&#x27; &quot;$CORPUS/manifest.json&quot;; echo &quot;---&quot;; jq -r &#x27;if type==&quot;array&quot; then .[0] else . end&#x27; &quot;$CORPUS/manifest.json&quot; 2&gt;/dev/null | head -40</pre><pre class=meta>object
+---
+{
+  &quot;source&quot;: &quot;/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input&quot;,
+  &quot;paper_count&quot;: 337,
+  &quot;converted_count&quot;: 336,
+  &quot;failure_count&quot;: 1,
+  &quot;docling_version&quot;: &quot;2.110.0&quot;,
+  &quot;do_ocr&quot;: false,
+  &quot;do_table_structure&quot;: true,
+  &quot;papers&quot;: [
+    {
+... 30 more lines in out/step-0002.txt</pre></section><section id=step-3><h2>Step 3</h2><div>model call t000005: 2936 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 10 bytes</div><pre>cd &quot;$CORPUS&quot;
+for f in p*.md; do
+  # count mentions of RAG-related terms
+  c=$(rg -i -c &#x27;retrieval.augmented generation|retrieval.augmented|RAG &#x27; &quot;$f&quot; 2&gt;/dev/null)
+  if [ -n &quot;$c&quot; ] &amp;&amp; [ &quot;$c&quot; -ge 1 ]; then
+    echo &quot;$f: $c&quot;
+  fi
+done | sort -t: -k2 -rn</pre><pre class=meta>p49.md: 3</pre></section><section id=step-4><h2>Step 4</h2><div>model call t000007: 3099 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1503 bytes</div><pre>cd &quot;$CORPUS&quot;
+rg -il &#x27;retrieval.augmented&#x27; . 2&gt;/dev/null | sort
+echo &quot;=== count ===&quot;
+rg -il &#x27;retrieval.augmented&#x27; . 2&gt;/dev/null | wc -l</pre><pre class=meta>./2025-acl-long-1106.md
+./2025-acl-long-1127.md
+./2025-acl-long-1159.md
+./2025-acl-long-1191.md
+./2025-acl-long-1202.md
+./2025-acl-long-1352.md
+./2025-acl-long-1394.md
+./2025-acl-long-1437.md
+./2025-acl-long-1458.md
+./2025-acl-long-1490.md
+./2025-acl-long-1554.md
+./2025-acl-long-230.md
+... 51 more lines in out/step-0004.txt</pre></section><section id=step-5><h2>Step 5</h2><div>model call t000009: 4185 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 775 bytes</div><pre>cd &quot;$CORPUS&quot;
+ls | head -20
+echo &quot;=== sample RAG paper title ===&quot;
+head -5 2025-acl-long-1106.md</pre><pre class=meta>2025-acl-long-1010.md
+2025-acl-long-102.md
+2025-acl-long-1020.md
+2025-acl-long-1031.md
+2025-acl-long-1042.md
+2025-acl-long-1052.md
+2025-acl-long-1063.md
+2025-acl-long-1074.md
+2025-acl-long-1085.md
+2025-acl-long-1095.md
+2025-acl-long-1106.md
+2025-acl-long-1117.md
+... 14 more lines in out/step-0005.txt</pre></section><section id=step-6><h2>Step 6</h2><div>model call t000011: 4756 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 6631 bytes</div><pre>cd &quot;$CORPUS&quot;
+for f in $(rg -il &#x27;retrieval.augmented&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort); do
+  t=$(head -1 &quot;$f&quot; | sed &#x27;s/^## //&#x27;)
+  echo &quot;$f :: $t&quot;
+done</pre><pre class=meta>2025-acl-long-1106.md :: Retrieval-Augmented Fine-Tuning With Preference Optimization For Visual Program Generation
+2025-acl-long-1127.md :: DRAE: Dynamic Retrieval-Augmented Expert Networks for Lifelong Learning and Task Adaptation in Robotics
+2025-acl-long-1159.md :: Graph of Records: Boosting Retrieval Augmented Generation for Long-context Summarization with Graphs
+2025-acl-long-1191.md :: Dialogue-RAG: Enhancing Retrieval for LLMs via Node-Linking Utterance Rewriting
+2025-acl-long-1202.md :: Graph Counselor: Adaptive Graph Exploration via Multi-Agent Synergy to Enhance LLM Reasoning
+2025-acl-long-1352.md :: GRAT: Guiding Retrieval-Augmented Reasoning through Process Rewards Tree Search
+2025-acl-long-1394.md :: Pretraining Context Compressor for Large Language Models with Embedding-Based Memory
+2025-acl-long-1437.md :: Time-MQA: Time Series Multi-Task Question Answering with Context Enhancement
+2025-acl-long-1458.md :: Stochastic Chameleons
+2025-acl-long-1490.md :: Benchmarking LLMs and LLM-based Agents in Practical Vulnerability Detection for Code Repositories
+2025-acl-long-1554.md :: A Multi-Agent Framework for Mitigating Dialect Biases in Privacy Policy Question-Answering Systems
+2025-acl-long-230.md :: &lt;!-- image --&gt;
+... 49 more lines in out/step-0006.txt</pre></section><section id=step-7><h2>Step 7</h2><div>model call t000013: 6965 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 1, 618 bytes</div><pre>cd &quot;$CORPUS&quot;
+echo &quot;=== &#x27;RAG&#x27; token (word boundary) ===&quot;
+rg -ilw &#x27;RAG&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; /tmp/rag_token.txt
+wc -l /tmp/rag_token.txt
+echo &quot;=== &#x27;retrieval augmented&#x27; two-word ===&quot;
+rg -il &#x27;retrieval augmented&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; /tmp/ra_twoword.txt
+wc -l /tmp/ra_twoword.txt
+echo &quot;=== union of all three ===&quot;
+cat /tmp/rag_token.txt /tmp/ra_twoword.txt &lt;(rg -il &#x27;retrieval.augmented&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27;) | sort -u &gt; /tmp/all_rag.txt
+wc -l /tmp/all_rag.txt</pre><pre class=meta>=== &#x27;RAG&#x27; token (word boundary) ===
+bash: line 3: /tmp/rag_token.txt: Permission denied
+sed: couldn&#x27;t flush stdout: Broken pipe
+wc: /tmp/rag_token.txt: No such file or directory
+=== &#x27;retrieval augmented&#x27; two-word ===
+bash: line 6: /tmp/ra_twoword.txt: Permission denied
+sed: couldn&#x27;t flush stdout: Broken pipe
+wc: /tmp/ra_twoword.txt: No such file or directory
+=== union of all three ===
+bash: line 9: /tmp/all_rag.txt: Permission denied
+cat: /tmp/rag_token.txt: No such file or directory
+cat: /tmp/ra_twoword.txt: No such file or directory
+... 2 more lines in out/step-0007.txt</pre></section><section id=step-8><h2>Step 8</h2><div>model call t000015: 7468 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 815 bytes</div><pre>cd &quot;$CORPUS&quot;
+mkdir -p work
+rg -ilw &#x27;RAG&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; work/rag_token.txt
+rg -il &#x27;retrieval augmented&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; work/ra_twoword.txt
+rg -il &#x27;retrieval.augmented&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; work/ra_hyphen.txt
+cat work/rag_token.txt work/ra_twoword.txt work/ra_hyphen.txt | sort -u &gt; work/all_rag.txt
+echo &quot;token: $(wc -l &lt; work/rag_token.txt)  twoword: $(wc -l &lt; work/ra_twoword.txt)  hyphen: $(wc -l &lt; work/ra_hyphen.txt)  union: $(wc -l &lt; work/all_rag.txt)&quot;</pre><pre class=meta>mkdir: Permission denied
+bash: line 3: work/rag_token.txt: No such file or directory
+sed: couldn&#x27;t flush stdout: Broken pipe
+bash: line 4: work/ra_twoword.txt: No such file or directory
+sed: couldn&#x27;t flush stdout: Broken pipe
+bash: line 5: work/ra_hyphen.txt: No such file or directory
+sed: couldn&#x27;t flush stdout: Broken pipe
+bash: line 6: work/all_rag.txt: No such file or directory
+cat: work/rag_token.txt: No such file or directory
+cat: work/ra_twoword.txt: No such file or directory
+cat: work/ra_hyphen.txt: No such file or directory
+bash: line 7: work/rag_token.txt: No such file or directory
+... 4 more lines in out/step-0008.txt</pre></section><section id=step-9><h2>Step 9</h2><div>model call t000017: 7869 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 273 bytes</div><pre>pwd; echo &quot;---&quot;; echo &quot;HOME=$HOME SCRATCH=$SCRATCH WORKDIR=$WORKDIR&quot;; echo &quot;---&quot;; touch ./test_write 2&gt;&amp;1 &amp;&amp; echo &quot;cwd writable&quot; &amp;&amp; rm -f ./test_write; echo &quot;---&quot;; ls -la . | head</pre><pre class=meta>/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-on-2/scratch
+---
+HOME=/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-on-2/scratch SCRATCH= WORKDIR=
+---
+cwd writable
+---
+total 0
+drwxr-sr-x 2 11026 users     0 Oct 13 01:35 .
+drwxr-sr-x 4 11026 users 32559 Oct 13 01:35 ..</pre></section><section id=step-10><h2>Step 10</h2><div>model call t000019: 8386 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 208 bytes</div><pre>cd &quot;$CORPUS&quot;
+rg -ilw &#x27;RAG&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; ~/work/rag_token.txt 2&gt;/dev/null
+mkdir -p ~/work 2&gt;/dev/null
+cd &quot;$CORPUS&quot;
+rg -ilw &#x27;RAG&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; ~/work/rag_token.txt
+rg -il &#x27;retrieval augmented&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; ~/work/ra_twoword.txt
+rg -il &#x27;retrieval.augmented&#x27; . 2&gt;/dev/null | sed &#x27;s|^\./||&#x27; | sort &gt; ~/work/ra_hyphen.txt
+cat ~/work/rag_token.txt ~/work/ra_twoword.txt ~/work/ra_hyphen.txt | sort -u &gt; ~/work/all_rag.txt
+echo &quot;token: $(wc -l &lt; ~/work/rag_token.txt)  twoword: $(wc -l &lt; ~/work/ra_twoword.txt)  hyphen: $(wc -l &lt; ~/work/ra_hyphen.txt)  union: $(wc -l &lt; ~/work/all_rag.txt)&quot;</pre><pre class=meta>bash: line 2: /mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-on-2/scratch/work/rag_token.txt: No such file or directory
+sed: couldn&#x27;t flush stdout: Broken pipe
+token: 58  twoword: 31  hyphen: 61  union: 73</pre></section><section id=step-11><h2>Step 11</h2><div>model call t000021: 8631 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 7815 bytes</div><pre>cd &quot;$CORPUS&quot;
+while read f; do
+  t=$(head -1 &quot;$f&quot; | sed &#x27;s/^## //&#x27;)
+  echo &quot;$f :: $t&quot;
+done &lt; ~/work/all_rag.txt</pre><pre class=meta>2025-acl-long-1106.md :: Retrieval-Augmented Fine-Tuning With Preference Optimization For Visual Program Generation
+2025-acl-long-1127.md :: DRAE: Dynamic Retrieval-Augmented Expert Networks for Lifelong Learning and Task Adaptation in Robotics
+2025-acl-long-1159.md :: Graph of Records: Boosting Retrieval Augmented Generation for Long-context Summarization with Graphs
+2025-acl-long-1191.md :: Dialogue-RAG: Enhancing Retrieval for LLMs via Node-Linking Utterance Rewriting
+2025-acl-long-1202.md :: Graph Counselor: Adaptive Graph Exploration via Multi-Agent Synergy to Enhance LLM Reasoning
+2025-acl-long-1245.md :: On Many-Shot In-Context Learning for Long-Context Evaluation
+2025-acl-long-1352.md :: GRAT: Guiding Retrieval-Augmented Reasoning through Process Rewards Tree Search
+2025-acl-long-1394.md :: Pretraining Context Compressor for Large Language Models with Embedding-Based Memory
+2025-acl-long-1437.md :: Time-MQA: Time Series Multi-Task Question Answering with Context Enhancement
+2025-acl-long-1458.md :: Stochastic Chameleons
+2025-acl-long-1490.md :: Benchmarking LLMs and LLM-based Agents in Practical Vulnerability Detection for Code Repositories
+2025-acl-long-1554.md :: A Multi-Agent Framework for Mitigating Dialect Biases in Privacy Policy Question-Answering Systems
+... 61 more lines in out/step-0011.txt</pre></section><section id=step-12><h2>Step 12</h2><div>model call t000023: 11112 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 24495 bytes</div><pre>cd &quot;$CORPUS&quot;
+f=2025-acl-long-892.md
+echo &quot;=== first 40 lines ===&quot;
+sed -n &#x27;1,40p&#x27; &quot;$f&quot;
+echo &quot;=== grep for table markers / dataset names ===&quot;
+rg -n -i &#x27;natural questions|triviaqa|webquestions|musique|hotpot|nq|table|dataset|benchmark&#x27; &quot;$f&quot; | head -30</pre><pre class=meta>=== first 40 lines ===
+## The Distracting Effect: Understanding Irrelevant Passages in RAG
+
+Chen Amiraz 1 * , Florin Cuconasu 1,2 †‡ , Simone Filice 1 § , Zohar Karnin 1 ¶
+
+1 Technology Innovation Institute, 2 Sapienza University of Rome
+
+## Abstract
+
+A well-known issue with Retrieval Augmented Generation (RAG) is that retrieved passages that are irrelevant to the query sometimes distract the answer-generating LLM, causing it to provide an incorrect response. In this paper, we shed light on this core issue and formulate the distracting effect of a passage w.r.t. a query (and an LLM). We provide a quantifiable measure of the distracting effect of a passage and demonstrate its robustness across LLMs. Our research introduces novel methods for identifying and using hard distracting passages to improve RAG systems. By fine-tuning LLMs with these carefully selected distracting passages, we achieve up to a 7.5% increase in answering accuracy compared to counterparts fine-tuned on conventional RAG datasets. Our contribution is two-fold: first, we move beyond the simple binary classification of irrelevant passages as either completely unrelated vs. distracting , and second, we develop and analyze multiple methods for finding hard distracting passages. To our knowledge, no other research has provided such a comprehensive framework for identifying and utilizing hard distracting passages.
+
+## 1 Introduction
+... 60 more lines in out/step-0012.txt</pre></section><section id=step-13><h2>Step 13</h2><div>model call t000025: 13110 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 12575 bytes</div><pre>cd &quot;$CORPUS&quot;
+f=2025-acl-long-892.md
+echo &quot;=== pipe-delimited table lines ===&quot;
+rg -n &#x27;\|&#x27; &quot;$f&quot; | head -20
+echo &quot;=== dataset/benchmark mentions in experiment area ===&quot;
+rg -n -i &#x27;we (evaluate|report|test|use) .* (on|dataset|benchmark)|natural questions|trivia|web question|musique|hotpot|popqa|curated&#x27; &quot;$f&quot; | head -30</pre><pre class=meta>=== pipe-delimited table lines ===
+151:| LLM           |   Only Gold |   Gold+WD |   Gold + HD |
+152:|---------------|-------------|-----------|-------------|
+153:| Llama-3.2-3B  |        82.6 |      79.4 |        71.5 |
+154:| Llama-3.1-8B  |        80.6 |      80.1 |        73.9 |
+155:| Llama-3.3-70B |        81.1 |      80.1 |        75.2 |
+156:| Falcon-3-3B   |        78.5 |      74.1 |        67.1 |
+157:| Falcon-3-7B   |        84.1 |      81.5 |        73.3 |
+158:| Qwen-2.5-3B   |        80.9 |      75.5 |        69.4 |
+159:| Qwen-2.5-7B   |        82.4 |      80.4 |        73.7 |
+197:| Test Set   | Train Set   | Llama-3.2-3B   | Llama-3.2-3B   | Llama-3.2-3B   | Llama-3.1-8B   | Llama-3.1-8B   | Llama-3.1-8B   |
+198:|------------|-------------|----------------|----------------|----------------|----------------|----------------|----------------|
+... 37 more lines in out/step-0013.txt</pre></section><section id=step-14><h2>Step 14</h2><div>model call t000027: 15733 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 196 bytes</div><pre>which claim; echo &quot;---help---&quot;; claim --help 2&gt;&amp;1 | head -40</pre><pre class=meta>/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/agent/bin/claim
+---help---
+{&quot;ok&quot;: false, &quot;reason&quot;: &quot;stdin is not one JSON object: Expecting value: line 1 column 1 (char 0)&quot;}</pre></section><section id=step-15><h2>Step 15</h2><div>model call t000029: 16099 tokens, reply command (lenient_tool_call), phase research</div><div class=ok>claim claim-000001 accepted: (2025-acl-long-892, evaluates RAG on datasets, NQ, PopQA, TriviaQA, WebQA) in 2025-acl-long-892.md</div><pre>We make use of the following commonly used public question-answering benchmarks: NQ (Kwiatkowski et al., 2019), PopQA (Mallen et al., 2023), TriviaQA (Joshi et al., 2017) and WebQA (Berant et al., 2013).</pre><div>command, exit 0, 252 bytes<span class=tag>claims 1</span></div><pre>cd &quot;$CORPUS&quot;
+f=2025-acl-long-892.md
+q=$(rg -o -N -m1 &#x27;We make use of the following commonly used public question-answering benchmarks: NQ \(Kwiatkowski et al., 2019\), PopQA \(Mallen et al., 2023\), TriviaQA \(Joshi et al., 2017\) and WebQA \(Berant et al., 2013\)\.&#x27; &quot;$f&quot;)
+echo &quot;QUOTE: $q&quot;
+jq -n --arg q &quot;$q&quot; &#x27;{s:&quot;2025-acl-long-892&quot;, p:&quot;evaluates RAG on datasets&quot;, o:&quot;NQ, PopQA, TriviaQA, WebQA&quot;, file:&quot;2025-acl-long-892.md&quot;, quote:$q}&#x27; | claim</pre><pre class=meta>QUOTE: We make use of the following commonly used public question-answering benchmarks: NQ (Kwiatkowski et al., 2019), PopQA (Mallen et al., 2023), TriviaQA (Joshi et al., 2017) and WebQA (Berant et al., 2013).
+{&quot;claim_id&quot;: &quot;claim-000001&quot;, &quot;ok&quot;: true}</pre></section><section id=step-16><h2>Step 16</h2><div>model call t000032: 16479 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1503 bytes</div><pre>cd &quot;$CORPUS&quot;
+echo &quot;=== TITLE contains RAG-like (definitely RAG) ===&quot;
+while read f; do
+  t=$(head -1 &quot;$f&quot; | sed &#x27;s/^## //&#x27;)
+  if echo &quot;$t&quot; | rg -qi &#x27;retrieval.augmented|RAG|RAG-based&#x27;; then
+    echo &quot;$f :: $t&quot;
+  fi
+done &lt; ~/work/all_rag.txt
+echo &quot;&quot;
+echo &quot;=== count ===&quot;
+while read f; do
+  t=$(head -1 &quot;$f&quot; | sed &#x27;s/^## //&#x27;)
+  echo &quot;$t&quot; | rg -qi &#x27;retrieval.augmented|RAG&#x27; &amp;&amp; echo &quot;$f&quot;
+done &lt; ~/work/all_rag.txt | wc -l</pre><pre class=meta>=== TITLE contains RAG-like (definitely RAG) ===
+2025-acl-long-1106.md :: Retrieval-Augmented Fine-Tuning With Preference Optimization For Visual Program Generation
+2025-acl-long-1127.md :: DRAE: Dynamic Retrieval-Augmented Expert Networks for Lifelong Learning and Task Adaptation in Robotics
+2025-acl-long-1159.md :: Graph of Records: Boosting Retrieval Augmented Generation for Long-context Summarization with Graphs
+2025-acl-long-1191.md :: Dialogue-RAG: Enhancing Retrieval for LLMs via Node-Linking Utterance Rewriting
+2025-acl-long-1352.md :: GRAT: Guiding Retrieval-Augmented Reasoning through Process Rewards Tree Search
+2025-acl-long-358.md :: DRAG : Distilling RAG for SLMs from LLMs to Transfer Knowledge and Mitigate Hallucination via Evidence and Graph-based Distillation
+2025-acl-long-561.md :: Divide-Then-Align: Honest Alignment based on the Knowledge Boundary of RAG
+2025-acl-long-871.md :: Optimizing Question Semantic Space for Dynamic Retrieval-Augmented Multi-hop Question Answering
+2025-acl-long-892.md :: The Distracting Effect: Understanding Irrelevant Passages in RAG
+2025-emnlp-main-67.md :: Think Wider, Detect Sharper: Reinforced Reference Coverage for Document-Level Self-Contradiction Detection
+2025-emnlp-main-899.md :: ToM: Leveraging Tree-oriented MapReduce for Long-Context Reasoning in Large Language Models
+... 4 more lines in out/step-0016.txt</pre></section><section id=step-17><h2>Step 17</h2><div>model call t000034: 17227 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 1, 9198 bytes</div><pre>cd &quot;$CORPUS&quot;
+while read f; do
+  # count strong RAG-method signals in first 3000 chars (abstract+intro)
+  head -c 4000 &quot;$f&quot; &gt; /tmp/ab 2&gt;/dev/null
+  sig=$(rg -o -i &#x27;retrieval.augmented generation|retrieval.augmented|retrieving.{0,20}(passage|document|context|knowledge|chunk)&#x27; /tmp/ab 2&gt;/dev/null | wc -l)
+  rag=$(rg -o -iw &#x27;RAG&#x27; /tmp/ab 2&gt;/dev/null | wc -l)
+  t=$(head -1 &quot;$f&quot; | sed &#x27;s/^## //&#x27; | cut -c1-70)
+  printf &quot;%-28s rag=%-2 sig=%-2 | %s\n&quot; &quot;$f&quot; &quot;$rag&quot; &quot;$sig&quot; &quot;$t&quot;
+done &lt; ~/work/all_rag.txt</pre><pre class=meta>bash: line 4: /tmp/ab: Permission denied
+bash: line 8: printf: ` &#x27;: invalid format character
+2025-acl-long-1106.md        rag=bash: line 4: /tmp/ab: Permission denied
+bash: line 8: printf: ` &#x27;: invalid format character
+2025-acl-long-1127.md        rag=bash: line 4: /tmp/ab: Permission denied
+bash: line 8: printf: ` &#x27;: invalid format character
+2025-acl-long-1159.md        rag=bash: line 4: /tmp/ab: Permission denied
+bash: line 8: printf: ` &#x27;: invalid format character
+2025-acl-long-1191.md        rag=bash: line 4: /tmp/ab: Permission denied
+bash: line 8: printf: ` &#x27;: invalid format character
+2025-acl-long-1202.md        rag=bash: line 4: /tmp/ab: Permission denied
+bash: line 8: printf: ` &#x27;: invalid format character
+... 135 more lines in out/step-0017.txt</pre></section><section id=step-18><h2>Step 18</h2><div>model call t000036: 20429 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 7137 bytes</div><pre>cd &quot;$CORPUS&quot;
+while read f; do
+  head -c 4000 &quot;$f&quot; &gt; ~/work/ab
+  rag=$(rg -o -iw &#x27;RAG&#x27; ~/work/ab 2&gt;/dev/null | wc -l)
+  sig=$(rg -o -i &#x27;retrieval.augmented generation|retrieval.augmented|retrieving.{0,25}(passage|document|context|knowledge|chunk)&#x27; ~/work/ab 2&gt;/dev/null | wc -l)
+  t=$(head -1 &quot;$f&quot; | sed &#x27;s/^## //&#x27; | cut -c1-66)
+  printf &#x27;%s rag=%s sig=%s | %s\n&#x27; &quot;$f&quot; &quot;$rag&quot; &quot;$sig&quot; &quot;$t&quot;
+done &lt; ~/work/all_rag.txt</pre><pre class=meta>2025-acl-long-1106.md rag=0 sig=1 | Retrieval-Augmented Fine-Tuning With Preference Optimization For V
+2025-acl-long-1127.md rag=4 sig=5 | DRAE: Dynamic Retrieval-Augmented Expert Networks for Lifelong Lea
+2025-acl-long-1159.md rag=8 sig=3 | Graph of Records: Boosting Retrieval Augmented Generation for Long
+2025-acl-long-1191.md rag=13 sig=3 | Dialogue-RAG: Enhancing Retrieval for LLMs via Node-Linking Uttera
+2025-acl-long-1202.md rag=2 sig=3 | Graph Counselor: Adaptive Graph Exploration via Multi-Agent Synerg
+2025-acl-long-1245.md rag=0 sig=0 | On Many-Shot In-Context Learning for Long-Context Evaluation
+2025-acl-long-1352.md rag=3 sig=4 | GRAT: Guiding Retrieval-Augmented Reasoning through Process Reward
+2025-acl-long-1394.md rag=1 sig=2 | Pretraining Context Compressor for Large Language Models with Embe
+2025-acl-long-1437.md rag=0 sig=0 | Time-MQA: Time Series Multi-Task Question Answering with Context E
+2025-acl-long-1458.md rag=0 sig=0 | Stochastic Chameleons
+2025-acl-long-1490.md rag=0 sig=0 | Benchmarking LLMs and LLM-based Agents in Practical Vulnerability 
+2025-acl-long-1554.md rag=0 sig=0 | A Multi-Agent Framework for Mitigating Dialect Biases in Privacy P
+... 61 more lines in out/step-0018.txt</pre></section><section id=step-19><h2>Step 19</h2><div>model call t000038: 23152 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3038 bytes</div><pre>cd &quot;$CORPUS&quot;
+for f in 2025-acl-long-17.md 2025-acl-long-230.md 2025-acl-long-369.md 2025-acl-long-711.md 2025-emnlp-main-1116.md 2025-emnlp-main-730.md; do
+  echo &quot;=== $f ===&quot;
+  head -12 &quot;$f&quot; | grep -i -m3 -E &#x27;retrieval|RAG|##&#x27; 
+done</pre><pre class=meta>=== 2025-acl-long-17.md ===
+## FACT-AUDIT: An Adaptive Multi-Agent Framework for Dynamic Fact-Checking Evaluation of Large Language Models
+## Abstract
+Large Language Models (LLMs) have significantly advanced the fact-checking studies. However, existing automated fact-checking evaluation methods rely on static datasets and classification metrics, which fail to automatically evaluate the justification production and uncover the nuanced limitations of LLMs in fact-checking. In this work, we introduce FACTAUDIT, an agent-driven framework that adaptively and dynamically assesses LLMs&#x27; factchecking capabilities. Leveraging importance sampling principles and multi-agent collaboration, FACT-AUDIT generates adaptive and scalable datasets, performs iterative model-centric evaluations, and updates assessments based on model-specific responses. By incorporating justification production alongside verdict prediction, this framework provides a comprehensive and evolving audit of LLMs&#x27; factual reasoning capabilities, to investigate their trustworthiness. Extensive experiments demonstrate that FACT-AUDIT effectively differentiates among state-of-the-art LLMs, providing valuable insights into model strengths and limitations in model-centric fact-checking analysis.
+=== 2025-acl-long-230.md ===
+## SafeRAG: Benchmarking Security in Retrieval-Augmented Generation of Large Language Model
+## Abstract
+The indexing-retrieval-generation paradigm of retrieval-augmented generation (RAG) has been highly successful in solving knowledgeintensive tasks by integrating external knowledge into large language models (LLMs). However, the incorporation of external and unverified knowledge increases the vulnerability of LLMs because attackers can perform attack tasks by manipulating knowledge. In this paper, we introduce a benchmark named SafeRAG designed to evaluate the RAG security. First, we classify attack tasks into silver noise, intercontext conflict, soft ad, and white Denial-ofService. Next, we construct RAG security evaluation dataset (i.e., SafeRAG dataset) primarily manually for each task. We then utilize the SafeRAG dataset to simulate various attack scenarios that RAG may encounter. Experiments conducted on 14 representative RAG components demonstrate that RAG exhibits significant vulnerability to all attack tasks and even the most apparent attack task can easily bypass existing retrievers, filters, or advanced LLMs, resulting in the degradation of RAG service quality. Code is available at: https: //github.com/IAAR-Shanghai/SafeRAG .
+=== 2025-acl-long-369.md ===
+## OS Agents: A Survey on MLLM-based Agents for Computer, Phone and Browser Use
+=== 2025-acl-long-711.md ===
+## EAGLE : Expert-Guided Self-Enhancement for Preference Alignment in Pathology Large Vision-Language Model
+... 5 more lines in out/step-0019.txt</pre></section><section id=step-20><h2>Step 20</h2><div>model call t000040: 24183 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 1, 767 bytes</div><pre>cd &quot;$CORPUS&quot;
+echo &quot;=== emnlp-1116 title/abstract ===&quot;
+sed -n &#x27;1,8p&#x27; 2025-emnlp-main-1116.md | grep -iE &#x27;retrieval|RAG|## &#x27; | head
+echo &quot;--- emnlp-1116 RAG context ---&quot;
+rg -o -i -m5 &#x27;.{40}RAG.{40}&#x27; 2025-emnlp-main-1116.md | head
+echo &quot;&quot;
+echo &quot;=== acl-1458 Stochastic Chameleons RAG context ===&quot;
+rg -o -i -m5 &#x27;.{40}RAG.{40}&#x27; 2025-acl-long-1458.md | head
+echo &quot;&quot;
+echo &quot;=== acl-230 RAG count full ===&quot;
+rg -c -i &#x27;retrieval.augmented&#x27; 2025-acl-long-230.md
+echo &quot;=== acl-17 RAG count ===&quot;
+rg -c -i &#x27;retrieval.augmented&#x27; 2025-acl-long-17.md</pre><pre class=meta>=== emnlp-1116 title/abstract ===
+## Yaoyao Qian 1,* , Yifan Zeng 2,* , Yuchao Jiang 3 , Chelsi Jain 2 , Huazheng Wang 2
+--- emnlp-1116 RAG context ---
+ui Wang, and Jinyuan Jia. 2024. Poisonedrag: Knowledge poisoning attacks to retriev
+
+=== acl-1458 Stochastic Chameleons RAG context ===
+ng, LLMs can exhibit generalization leveraging abstractions, albeit in unreliable w
+hypothesis . Specifically, LLMs can leverage abstract class cues (e.g., &#x27;language&#x27;)
+hibit a form of generalization that leverages abstract class structures based on co
+supports our hypothesis that models leverage class-based information in shaping the
+rig.&#x27; = No intervention, &#x27;2 Rand.&#x27; = Average of interventions on two random layers 
+
+... 3 more lines in out/step-0020.txt</pre></section><section id=step-21><h2>Step 21</h2><div>model call t000042: 24792 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 2008 bytes</div><pre>cd &quot;$CORPUS&quot;
+echo &quot;=== emnlp-1116 title ===&quot;
+grep -iE &#x27;^## &#x27; 2025-emnlp-main-1116.md | head -3
+echo &quot;=== acl-935 MegaPairs RAG context (is it RAG method?) ===&quot;
+rg -o -i -m3 &#x27;.{50}retrieval.{0,3}augmented.{50}&#x27; 2025-acl-long-935.md | head
+echo &quot;=== acl-1202 Graph Counselor RAG context ===&quot;
+rg -o -i -m3 &#x27;.{40}RAG.{40}&#x27; 2025-acl-long-1202.md | head
+echo &quot;=== emnlp-947 TreeRare RAG context ===&quot;
+rg -o -i -m3 &#x27;.{40}retrieval.augmented.{40}&#x27; 2025-emnlp-main-947.md | head
+echo &quot;=== emnlp-549 dual-stream RAG context ===&quot;
+rg -o -i -m3 &#x27;.{30}RAG.{40}&#x27; 2025-emnlp-main-549.md | head</pre><pre class=meta>=== emnlp-1116 title ===
+## Yaoyao Qian 1,* , Yifan Zeng 2,* , Yuchao Jiang 3 , Chelsi Jain 2 , Huazheng Wang 2
+## Abstract
+## 1 Introduction
+=== acl-935 MegaPairs RAG context (is it RAG method?) ===
+) (Marino et al., 2019; Mathew et al., 2021), and retrieval-augmented generation (RAG) of vision language models (Chen 
+l with multimodal queries (Luo et al., 2023), and retrieval-augmented generation (Yasunaga et al., 2023; Yu et al., 202
+ga, and William W. Cohen. 2022. Murag: Multimodal retrieval-augmented generator for open question answering over images
+=== acl-1202 Graph Counselor RAG context ===
+ph Retrieval Augmented Generation (GraphRAG) effectively enhances external knowledg
+ns, we propose Graph Counselor, an GraphRAG method based on multi-agent collaborati
+ng et al., 2024). However, conventional RAG primarily retrieves independent text un
+... 15 more lines in out/step-0021.txt</pre></section><section id=step-22><h2>Step 22</h2><div>model call t000044: 25594 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 1, 509 bytes</div><pre>cd &quot;$CORPUS&quot;
+echo &quot;=== emnlp-1116 first non-empty lines ===&quot;
+grep -vE &#x27;^\s*$&#x27; 2025-emnlp-main-1116.md | head -6
+echo &quot;=== emnlp-1116: does it propose/evaluate RAG? search RAG in abstract/intro ===&quot;
+head -c 5000 2025-emnlp-main-1116.md | rg -o -i -m6 &#x27;.{30}RAG.{50}&#x27;</pre><pre class=meta>=== emnlp-1116 first non-empty lines ===
+&lt;!-- image --&gt;
+## Yaoyao Qian 1,* , Yifan Zeng 2,* , Yuchao Jiang 3 , Chelsi Jain 2 , Huazheng Wang 2
+1 Northeastern University, 2 Oregon State University, 3 University of Macau qian.ya@northeastern.edu
+{zengyif, jainc, huazheng.wang}@oregonstate.edu yuchao.jiang@connect.um.edu.mo
+[/globe Project Website](https://rankingblindspot.netlify.app/)
+## Abstract
+grep: write error: Broken pipe
+=== emnlp-1116: does it propose/evaluate RAG? search RAG in abstract/intro ===</pre></section><section id=step-23><h2>Step 23</h2><div>model call t000046: 25951 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1611 bytes</div><pre>cd &quot;$CORPUS&quot;
+sed -n &#x27;/## Abstract/,/## 1/p&#x27; 2025-emnlp-main-1116.md | head -20
+echo &quot;=== where RAG appears ===&quot;
+rg -n -i &#x27;RAG&#x27; 2025-emnlp-main-1116.md</pre><pre class=meta>## Abstract
+
+Large Language Models (LLMs) have demonstrated strong performance in information retrieval tasks like passage ranking. Our research examines how instruction-following capabilities in LLMs interact with multi-document comparison tasks, identifying what we term the &#x27;Ranking Blind Spot&#x27;-a characteristic of LLM decision processes during comparative evaluation. We analyze how this ranking blind spot affects LLM evaluation systems through two approaches: Decision Objective Hijacking , which alters the evaluation goal in pairwise ranking systems, and Decision Criteria Hijacking , which modifies relevance standards across ranking schemes. These approaches demonstrate how content providers could potentially influence LLM-based ranking systems to affect document positioning. These attacks aim to force the LLM ranker to prefer a specific passage and rank it at the top. Malicious content providers can exploit this weakness, which helps them gain additional exposure by attacking the ranker. In our experiment, We empirically show that the proposed attacks are effective in various LLMs and can be generalized to multiple ranking schemes. We apply these attack to realistic examples to show their effectiveness. We also found stronger LLMsare more vulnerable to these attacks. Our code is available at: https://github.com/ blindspotorg/RankingBlindSpot
+
+## 1 Introduction
+=== where RAG appears ===
+199:Wei Zou, Runpeng Geng, Binghui Wang, and Jinyuan Jia. 2024. Poisonedrag: Knowledge poisoning attacks to retrieval-augmented generation of large language models. arXiv preprint arXiv:2402.07867 .</pre></section><section id=step-24><h2>Step 24</h2><div>model call t000048: 26622 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 2388 bytes</div><pre>cd &quot;$CORPUS&quot;
+for pair in &quot;2025-acl-long-732.md:Chinese SafetyQA&quot; &quot;2025-acl-long-81.md:Real-time Factuality&quot; &quot;2025-emnlp-main-911.md:Speculative Decoding&quot; &quot;2025-emnlp-main-1393.md:TALON&quot; &quot;2025-acl-long-465.md:Activation Refilling&quot; &quot;2025-emnlp-main-1249.md:LLMs Meet KGs&quot; &quot;2025-emnlp-main-1683.md:MemInsight&quot; &quot;2025-emnlp-main-971.md:DivScore&quot;; do
+  f=&quot;${pair%%:*}&quot;; name=&quot;${pair##*:}&quot;
+  echo &quot;=== $f ($name) ===&quot;
+  rg -o -i -m2 &#x27;.{45}(retrieval.augmented|RAG).{45}&#x27; &quot;$f&quot; | head -3
+done</pre><pre class=meta>=== 2025-acl-long-732.md (Chinese SafetyQA) ===
+ capabilities relate to LLM abilities, e.g., RAG ability and robustness against attacks. 1 Wa
+nd natural sciences, and lack systematic coverage of safety-related knowledge. To address the
+=== 2025-acl-long-81.md (Real-time Factuality) ===
+is end, we develop a novel pipeline that leverages natural language feedback from a RAG-based
+AUC by an absolute 17.5 percent for a strong RAG-based GPT-4o detector. Our experiments revea
+and adversarial attacks, while feedback from RAG-based evaluation helps discover more deceitf
+=== 2025-emnlp-main-911.md (Speculative Decoding) ===
+culative Decoding, a novel approach that leverages the overlap between context and model outp
+ummarization, RetrievalAugmented Generation (RAG), and contextbased Question Answering (QA) t
+dapt to and perform on diverse tasks. By leveraging context information provided within the i
+=== 2025-emnlp-main-1393.md (TALON) ===
+... 17 more lines in out/step-0024.txt</pre></section><section id=step-25><h2>Step 25</h2><div>model call t000050: 27842 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1695 bytes</div><pre>cd &quot;$CORPUS&quot;
+echo &quot;=== emnlp-429 SEAL (retrieval, is it RAG?) ===&quot;
+rg -o -i -m3 &#x27;.{30}retrieval.augmented.{40}&#x27; 2025-emnlp-main-429.md | head
+echo &quot;=== acl-241 gist token (RAG role) ===&quot;
+rg -o -i -m3 &#x27;.{30}retrieval.augmented.{40}&#x27; 2025-acl-long-241.md | head
+echo &quot;=== acl-1490 vuln detection (RAG role) ===&quot;
+rg -o -i -m3 &#x27;.{30}retrieval.augmented.{40}&#x27; 2025-acl-long-1490.md | head
+echo &quot;=== confirm list of clear RAG papers ===&quot;
+for f in 2025-acl-long-1106 2025-acl-long-1127 2025-acl-long-1159 2025-acl-long-1191 2025-acl-long-1202 2025-acl-long-1352 2025-acl-long-230 2025-acl-long-358 2025-acl-long-561 2025-acl-long-871 2025-acl-long-892 2025-emnlp-main-549 2025-emnlp-main-730 2025-emnlp-main-899 2025-emnlp-main-923 2025-emnlp-main-947; do
+  printf &#x27;%s :: %s\n&#x27; &quot;$f&quot; &quot;$(head -1 $f.md | sed &#x27;s/^## //&#x27; | cut -c1-55)&quot;
+done</pre><pre class=meta>=== emnlp-429 SEAL (retrieval, is it RAG?) ===
+24. A comprehensive survey of retrieval-augmented generation (RAG): evolution, current la
+=== acl-241 gist token (RAG role) ===
+erformance loss on tasks like retrieval-augmented generation and long-document QA, it fac
+or advanced applications like retrieval-augmented generation (RAG), long-term memory syst
+=== acl-1490 vuln detection (RAG role) ===
+rating more context through a retrieval-augmented generation (RAG) pipeline and static an
+=== confirm list of clear RAG papers ===
+2025-acl-long-1106 :: Retrieval-Augmented Fine-Tuning With Preference Optimiz
+2025-acl-long-1127 :: DRAE: Dynamic Retrieval-Augmented Expert Networks for L
+2025-acl-long-1159 :: Graph of Records: Boosting Retrieval Augmented Generati
+2025-acl-long-1191 :: Dialogue-RAG: Enhancing Retrieval for LLMs via Node-Lin
+... 12 more lines in out/step-0025.txt</pre></section><section id=step-26><h2>Step 26</h2><div>model call t000052: 28840 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1941 bytes</div><pre>cd &quot;$CORPUS&quot;
+for f in 2025-acl-long-1106 2025-acl-long-1127 2025-acl-long-1159 2025-acl-long-1191 2025-acl-long-1202 2025-acl-long-1352 2025-acl-long-230 2025-acl-long-358 2025-acl-long-561 2025-acl-long-871 2025-acl-long-892 2025-emnlp-main-549 2025-emnlp-main-730 2025-emnlp-main-899 2025-emnlp-main-923 2025-emnlp-main-947; do
+  echo &quot;########## $f ##########&quot;
+  rg -o -i -N &#x27;(natural questions|TriviaQA|WebQuestions?|MuSiQue|HotpotQA|PopQA|2WikiMultihop|NQ|SQuAD|ASQA| Musique|CRISPE|ARC|OG-Bench|SQuAD|SQuAD|ARC|HellaSwag|ARC|ARC|ARC|ARC|ARC|ARC|ARC|ARC)&#x27; &quot;$f.md&quot; 2&gt;/dev/null | sort | uniq -c | sort -rn | head -12
+done 2&gt;/dev/null | head -120</pre><pre class=meta>########## 2025-acl-long-1106 ##########
+     15 arc
+      1 arC
+      1 Arc
+########## 2025-acl-long-1127 ##########
+     78 arc
+     18 Arc
+      2 nq
+########## 2025-acl-long-1159 ##########
+      9 arc
+      2 nq
+      1 Arc
+... 87 more lines in out/step-0026.txt</pre></section><section id=step-27><h2>Step 27</h2><div>model call t000054: 30152 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1605 bytes</div><pre>cd &quot;$CORPUS&quot;
+PAT=&#x27;Natural Questions|TriviaQA|WebQuestions?|MuSique|MuSiQue|HotpotQA|HotPotQA|PopQA|2WikiMultiHop|ASQA|SQuAD|SciQ|ARC-?C|ARC-?E|MMLU|ARC|CMMLU|TruthfulQA|ARC-|ARC |ARC,|ARC\.|ARC_|ARC benchmark|ARC dataset|ARC task&#x27;
+for f in 2025-acl-long-1106 2025-acl-long-1127 2025-acl-long-1159 2025-acl-long-1191 2025-acl-long-1202 2025-acl-long-1352 2025-acl-long-230 2025-acl-long-358 2025-acl-long-561 2025-acl-long-871 2025-acl-long-892 2025-emnlp-main-549 2025-emnlp-main-730 2025-emnlp-main-899 2025-emnlp-main-923 2025-emnlp-main-947; do
+  echo &quot;##### $f&quot;
+  rg -o -i &quot;$PAT&quot; &quot;$f.md&quot; 2&gt;/dev/null | tr &#x27; &#x27; &#x27;\t&#x27; | sed &#x27;s/^[ \t]*//&#x27; | sort | uniq -c | sort -rn | awk &#x27;$1&gt;=1&#x27; | head -20
+done 2&gt;/dev/null</pre><pre class=meta>##### 2025-acl-long-1106
+     15 arc
+      1 arC
+      1 Arc
+##### 2025-acl-long-1127
+     75 arc
+     18 Arc
+      3 arce
+##### 2025-acl-long-1159
+      9 arc
+      1 Arc
+##### 2025-acl-long-1191
+... 78 more lines in out/step-0027.txt</pre></section><section id=step-28><h2>Step 28</h2><div>model call t000056: 31529 tokens, reply command (lenient_tool_call), phase conclude</div><div class=warn>coverage: command_not_run — {&quot;phase&quot;: &quot;conclude&quot;}</div></section><section id=step-29><h2>Step 29</h2><div>model call t000058: 33413 tokens, reply command (lenient_bare_command), phase conclude</div><div class=warn>coverage: command_not_run — {&quot;phase&quot;: &quot;conclude&quot;}</div><div class=warn>coverage: no_final_answer — {&quot;exit_status&quot;: &quot;budget&quot;}</div></section></body></html>

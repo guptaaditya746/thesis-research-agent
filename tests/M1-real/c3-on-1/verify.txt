@@ -1,0 +1,2 @@
+steps=28 model_calls=28 commands=26 claims=0 accepted / 0 rejected claim_steps=0 tokens=474372 (claim steps 0) time=248.402s facts=0 (with claims 0)
+PASS /mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-on-1 records=57 head=e0259c1d83a3dea0b53208e7045d0cce7ac208a9a1ec91fa8a9830786eff96b1
