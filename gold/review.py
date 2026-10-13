@@ -174,7 +174,9 @@ def overlap_questions(root: Path, qids: list[str], *, share: float = OVERLAP_SHA
     kept = read_json(path)
     if kept is not None:
         return list(kept["overlap"])
-    n = min(len(qids), max(1, math.ceil(share * len(qids)))) if qids else 0
+    if not qids:  # nothing to choose from yet: choose later, not never
+        return []
+    n = min(len(qids), max(1, math.ceil(share * len(qids))))
     chosen = sorted(seeded_order(qids, f"{seed}:overlap")[:n])
     write_json(path, {"seed": seed, "share": share, "questions": sorted(qids), "overlap": chosen,
                       "chosen_at": utc_now()})

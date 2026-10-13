@@ -112,6 +112,8 @@ def cmd_export(args: argparse.Namespace) -> int:
     if args.pull:
         _pull(args, ("review", "overlap", "missing", "screening"))
     root, corpus, failed = _root(args), review.Corpus(args.corpus), 0
+    if args.corpus is None:
+        print("WARN no --corpus or $CORPUS: missing-fact lines cannot be anchored and will be rejected")
     for qid in review.select(root, args.qid):
         done = export.export(root, qid, corpus=corpus, concepts=args.concepts, adjudicator=args.adjudicator)
         for problem in done.problems:

@@ -139,3 +139,5 @@ def test_overlap_choice_is_made_once(env: Env, tmp_path: Path) -> None:
     assert len(first) == 3 and set(first) <= set(qids)  # ceil(0.2 x 12)
     assert review.overlap_questions(env.root, ["q01"]) == first  # kept in overlap.json
     assert review.overlap_questions(tmp_path / "other", qids) == first  # the same seed, the same choice
+    assert review.overlap_questions(tmp_path / "empty", []) == []
+    assert not (tmp_path / "empty" / review.OVERLAP_FILE).exists()  # no questions yet: nothing fixed
