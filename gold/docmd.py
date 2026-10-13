@@ -28,8 +28,10 @@ def row_title(doc: dict[str, Any], cells: dict[str, Any]) -> str:
 def _fact(c: dict[str, Any]) -> str:
     quote = " ".join(str(c["quote"]).split())
     status = c["anchor_status"]
-    where = f"{c['paper_id']} part {c['chunk'] + 1}"
+    where = f"{c['paper_id']} part {c['chunk'] + 1}" + (f" piece {'.'.join(c['piece'])}" if c.get("piece") else "")
     retry = f", first quote rejected ({c['first_reason']})" if c.get("first_reason") else ""
+    if (c.get("retry") or {}).get("error"):
+        retry += f", retry call failed ({c['retry']['error']})"
     return f"- `{c['id']}` {where} · {c['s']} — {c['p']} — {c['o']} · \"{quote}\" [{status}{retry}]"
 
 
@@ -57,9 +59,15 @@ def render(doc: dict[str, Any], candidates: list[dict[str, Any]], screening: lis
               f"{counts['chunks']} chunks: {counts['anchored']} anchored, rejected: {rejected}; "
               f"{counts['retried']} quotes retried, {counts['fixed_by_retry']} fixed by the retry. "
               f"{counts['rows']} rows after merging.", ""]
-    if counts["chunks_error"] or counts["extraction_errors"]:
+    retry_errors, too_long = counts.get("retry_errors", 0), counts.get("too_long", 0)
+    if counts["chunks_error"] or counts["extraction_errors"] or retry_errors:
         lines += [f"Failed calls: {counts['chunks_error']} chunk screenings, {counts['extraction_errors']} "
-                  "extractions. Run the build again to retry them.", ""]
+                  f"extractions, {retry_errors} facts whose quote retry failed. "
+                  + (f"{too_long} of the chunks are too long for one call even in pieces: a rerun cannot fix "
+                     "those, a smaller GOLD_CHUNK_CHARS can. " if too_long else "")
+                  + "Run the build again to retry the others.", ""]
+    if counts.get("split_chunks"):
+        lines += [f"{counts['split_chunks']} chunks were too long for one call and were read in halves.", ""]
 
     by_id = {c["id"]: c for c in candidates}
     lines += ["## Rows", ""]
@@ -86,6 +94,10 @@ def render(doc: dict[str, Any], candidates: list[dict[str, Any]], screening: lis
             if status == "relevant":
                 extra = f" · {r['candidates']} candidates" + (" · nothing extracted" if not r["candidates"] else "")
                 errors = f" · failed chunks {r['chunks_error']}" if r["chunks_error"] else ""
+                if r.get("extraction_errors"):
+                    errors += f" · extraction failed in chunks {r['extraction_errors']}"
+                if r.get("retry_errors"):
+                    errors += f" · quote retry failed in chunks {r['retry_errors']}"
                 lines.append(f"- {r['paper_id']}: relevant parts {[c + 1 for c in r['chunks_relevant']]} of "
                              f"{r['chunks']}{extra}{errors}")
                 lines += [f"  - {finding}" for finding in r["findings"]]

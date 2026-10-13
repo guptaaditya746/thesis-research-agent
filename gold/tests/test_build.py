@@ -3,16 +3,36 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import signal
+import socket
+import subprocess
 from dataclasses import replace
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from pydantic import BaseModel
+from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_ai.models.function import FunctionModel
 
 from agent.anchor import read_text
+from agent.canonical import sha256_hex
 from agent.concept import concept_sha256
+from gold import build as build_module
 from gold import calls, extract, llm, screen
-from gold.build import QuestionDir, build, read_jsonl
+from gold.build import (
+    BuildSettings,
+    BuildStopped,
+    FolderInUse,
+    QuestionDir,
+    append_jsonl,
+    build,
+    git_state,
+    live_stage,
+    outcome,
+    read_jsonl,
+)
+from gold.chunks import MIN_PIECE_CHARS
 
 from .scripted import (
     GSM8K_AMBIGUOUS,
@@ -34,12 +54,15 @@ CONTRACT = {
 }
 
 
+QUESTION = "Which benchmarks do the RAG papers evaluate on?"
+
+
 @pytest.fixture
 def built(tmp_path):
     c = corpus(tmp_path)
     script = Script()
     doc = build("q01", table_concept(), c, tmp_path / "gold", rotation=script.rotation(), settings=SETTINGS,
-                question="Which benchmarks do the RAG papers evaluate on?", log=lambda _: None)
+                question=QUESTION, log=lambda _: None)
     return {"corpus": c, "script": script, "doc": doc, "dir": QuestionDir(tmp_path / "gold" / "q01"), "tmp": tmp_path}
 
 
@@ -190,6 +213,208 @@ def test_failed_extraction_is_retried_on_rerun(tmp_path):
     assert "HotpotQA" in {r["cells"]["dataset"] for r in doc["rows"]}
 
 
+def test_a_failed_quote_retry_is_counted_and_retried_on_rerun(tmp_path):
+    c = corpus(tmp_path)
+    qdir = QuestionDir(tmp_path / "gold" / "q01")
+    down = Script(fail=lambda stage, paper, part: stage == "retry")
+    doc = build("q01", table_concept(), c, tmp_path / "gold", rotation=down.rotation(), settings=SETTINGS,
+                log=lambda _: None)
+    found = by_quote(qdir)
+    for quote in (GSM8K_AMBIGUOUS, INVENTED):
+        failed = found[quote]
+        assert failed["retry"]["kind"] == "failed" and "scripted failure" in failed["retry"]["error"]
+        assert failed["attempts"] == 1 and failed["anchor"] is None and failed["first_reason"]
+    assert (doc["counts"]["retry_errors"], doc["counts"]["retried"]) == (2, 0)
+    assert outcome(doc)[0] == 1 and "quote retries" in outcome(doc)[1]
+    records = {r["paper_id"]: r for r in read_jsonl(qdir.screening)}
+    assert records["p3"]["retry_errors"] and records["p5"]["retry_errors"]
+    assert "2 facts whose quote retry failed" in qdir.doc_md.read_text(encoding="utf-8")
+    ids = {q: c["id"] for q, c in found.items()}
+    up = Script()
+    doc = build("q01", table_concept(), c, tmp_path / "gold", rotation=up.rotation(), settings=SETTINGS,
+                log=lambda _: None)
+    assert up.calls == {"retry": 2}  # the failures were not cached; nothing else is asked again
+    assert doc["counts"]["retry_errors"] == 0 and outcome(doc) == (0, "")
+    again = by_quote(qdir)
+    assert again[GSM8K_AMBIGUOUS]["anchor_status"] == "ok" and {q: c["id"] for q, c in again.items()} == ids
+
+
+def test_a_chunk_too_long_for_one_call_is_read_in_halves(tmp_path):
+    c = corpus(tmp_path)
+    out = tmp_path / "gold"
+    only = replace(SETTINGS, only_papers=("p5", "p6"))
+    plain = build("q01", table_concept(), c, tmp_path / "plain", rotation=Script().rotation(), settings=only,
+                  log=lambda _: None)
+    long = Script(too_long=lambda stage, text: stage in ("screen", "extract") and len(text) > 25_000)
+    doc = build("q01", table_concept(), c, out, rotation=long.rotation(), settings=only, log=lambda _: None)
+    qdir = QuestionDir(out / "q01")
+    long_chunks = [r for r in read_jsonl(qdir.chunks) if r["chars"] > 25_000]
+    assert long_chunks and doc["counts"]["split_chunks"] == len(long_chunks)
+    assert doc["counts"]["too_long"] == 0 and outcome(doc) == (0, "")
+    assert doc["counts"]["model_calls"]["too_long"] >= len(long_chunks)
+    records = {r["paper_id"]: r for r in read_jsonl(qdir.screening)}
+    assert sorted(r["chunk"] for r in long_chunks if r["paper_id"] == "p5") == records["p5"]["chunks_split"]
+    pieces = [x for x in read_jsonl(qdir.candidates) if x.get("piece")]
+    assert pieces and all(x["piece"] in ("1", "2") for x in pieces)
+    spans = {(r["paper_id"], r["chunk"]): (r["start"], r["end"]) for r in read_jsonl(qdir.chunks)}
+    for x in pieces:
+        start, end = spans[(x["paper_id"], x["chunk"])]
+        assert start <= x["span"][0] < x["span"][1] <= end and x["anchor_in_chunk"] is not False
+    def cells(d):
+        return sorted(json.dumps(r["cells"], sort_keys=True) for r in d["rows"])
+
+    assert cells(doc) == cells(plain)  # the same rows, read in pieces
+    silent = Script(fail=lambda *_: True)
+    build("q01", table_concept(), c, out, rotation=silent.rotation(), settings=only, log=lambda _: None)
+    assert sum(silent.calls.values()) == 0  # the too-long verdicts are cached too
+
+
+def test_a_piece_still_too_long_is_a_failure_a_rerun_cannot_fix(tmp_path):
+    c = corpus(tmp_path)
+    only = replace(SETTINGS, only_papers=("p6",))
+    always = Script(too_long=lambda stage, text: stage == "extract")
+    doc = build("q01", table_concept(), c, tmp_path / "gold", rotation=always.rotation(), settings=only,
+                log=lambda _: None)
+    qdir = QuestionDir(tmp_path / "gold" / "q01")
+    record = read_jsonl(qdir.screening)[0]
+    assert record["status"] == "relevant" and len(record["chunks_relevant"]) == 1
+    assert record["extraction_too_long"] == record["extraction_errors"] == record["chunks_relevant"]
+    assert "too_long" in record["extraction_error"]
+    assert (doc["counts"]["too_long"], doc["counts"]["extraction_errors"]) == (1, 1)
+    assert outcome(doc)[0] == 3 and "cannot fix" in outcome(doc)[1]
+    size = read_jsonl(qdir.chunks)[record["chunks_relevant"][0]]["chars"]
+    assert always.calls["extract"] >= size // (2 * MIN_PIECE_CHARS)  # halved down to the smallest pieces
+    silent = Script(fail=lambda *_: True)
+    doc = build("q01", table_concept(), c, tmp_path / "gold", rotation=silent.rotation(), settings=only,
+                log=lambda _: None)
+    assert sum(silent.calls.values()) == 0 and outcome(doc)[0] == 3
+
+
+def test_a_build_for_another_concept_is_refused_unless_replaced(tmp_path):
+    from gold.triage import load_labels, triage
+
+    c = corpus(tmp_path)
+    out, qdir = tmp_path / "gold", QuestionDir(tmp_path / "gold" / "q01")
+    only = replace(SETTINGS, only_papers=("p5", "p6"))
+    build("q01", table_concept(), c, out, rotation=Script().rotation(), settings=only, log=lambda _: None)
+    triage("q01", out, c, Script().rotation(), settings=SETTINGS, log=lambda _: None)
+    first = {x["id"] for x in read_jsonl(qdir.candidates)}
+    assert len(load_labels(qdir)) == len(first) == 4
+    other = {**table_concept(), "title": "Another reading", "definition": "Datasets named in the papers."}
+    with pytest.raises(FolderInUse, match="another concept"):
+        build("q01", other, c, out, rotation=Script().rotation(), settings=only, log=lambda _: None)
+    assert json.loads(qdir.doc.read_text(encoding="utf-8"))["concept_sha256"] == concept_sha256(table_concept())
+    logged = []
+    doc = build("q01", other, c, out, rotation=Script().rotation(), settings=only, log=logged.append, replace=True)
+    assert doc["concept_sha256"] == concept_sha256(other)
+    [moved] = list(qdir.superseded.iterdir())
+    assert moved.name.startswith(concept_sha256(table_concept())[:12]) and any("moved to" in line for line in logged)
+    assert (moved / "doc.json").exists() and (moved / "triage.jsonl").exists() and not qdir.triage.exists()
+    assert qdir.cache.exists() and qdir.ids.exists()
+    second = {x["id"] for x in read_jsonl(qdir.candidates)}
+    assert len(second) == 4 and not first & second  # same facts, new concept: new ids
+    assert load_labels(qdir) == {}
+    assert len(doc["built"]["invocations"]) == 1  # the old concept's builds went with it
+
+
+def test_a_trial_does_not_silently_replace_a_whole_corpus_d(built):
+    out = built["tmp"] / "gold"
+    trial = replace(SETTINGS, only_papers=("p6",))
+    with pytest.raises(FolderInUse, match="whole corpus"):
+        build("q01", table_concept(), built["corpus"], out, rotation=Script().rotation(), settings=trial,
+              log=lambda _: None)
+    doc = build("q01", table_concept(), built["corpus"], out, rotation=Script().rotation(), settings=trial,
+                log=lambda _: None, replace=True)
+    assert doc["coverage"]["partial"] is True and doc["coverage"]["papers"] == 1
+
+
+def test_invocations_add_up_what_d_cost(built):
+    first = built["doc"]["counts"]["model_calls"]
+    assert first["made"] > 0 and first["total"]["calls"] == first["made"] + first["cached"]
+    doc = build("q01", table_concept(), built["corpus"], built["tmp"] / "gold", rotation=Script().rotation(),
+                settings=SETTINGS, question=QUESTION, log=lambda _: None)
+    again = doc["counts"]["model_calls"]
+    assert again["made"] == 0 and again["cached"] == first["made"]
+    assert again["total"] == first["total"]  # every call D rests on, with what it cost when it was made
+    runs = doc["built"]["invocations"]
+    assert [r["made"] for r in runs] == [first["made"], 0]
+    assert runs[0]["started_at"] == built["doc"]["built"]["started_at"]
+    assert doc["counts"]["cost"]["calls_made"] == first["made"] and doc["counts"]["cost"]["invocations"] == 2
+    assert doc["counts"]["cost"]["input_tokens"] == first["input_tokens"] > 0
+
+
+@pytest.mark.skipif(os.name != "posix", reason="loop signal handlers and SIGTERM are POSIX")
+def test_sigterm_stops_the_build_and_progress_says_so(tmp_path):
+    c = corpus(tmp_path)
+    qdir = QuestionDir(tmp_path / "gold" / "q01")
+    sent = []
+
+    def term(stage, paper, part):
+        if stage == "extract" and not sent:
+            sent.append(stage)
+            os.kill(os.getpid(), signal.SIGTERM)
+        return False
+
+    with pytest.raises(BuildStopped, match="SIGTERM"):
+        build("q01", table_concept(), c, tmp_path / "gold", rotation=Script(fail=term).rotation(), settings=SETTINGS,
+              log=lambda _: None)
+    progress = json.loads(qdir.progress.read_text(encoding="utf-8"))
+    assert (progress["stage"], progress["reason"], progress["pid"]) == ("stopped", "SIGTERM", os.getpid())
+    assert not qdir.doc.exists()
+    doc = build("q01", table_concept(), c, tmp_path / "gold", rotation=Script().rotation(), settings=SETTINGS,
+                log=lambda _: None)
+    assert outcome(doc) == (0, "") and doc["coverage"]["relevant"] == 3
+
+
+def test_live_stage_tells_a_dead_or_stale_build_from_a_running_one():
+    now = datetime.now(timezone.utc)
+    stamp = (lambda t: t.strftime("%Y-%m-%dT%H:%M:%S.%fZ"))
+    running = {"stage": "building", "pid": os.getpid(), "host": socket.gethostname(), "updated_at": stamp(now),
+               "call_timeout_s": 300}
+    assert live_stage(running, now) == "building"
+    elsewhere = {**running, "host": "elsewhere"}
+    assert live_stage({**elsewhere, "updated_at": stamp(now - timedelta(minutes=12))}, now) == "stale"
+    assert live_stage({**elsewhere, "updated_at": stamp(now - timedelta(minutes=10))}, now) == "building"
+    assert live_stage({**running, "stage": "done", "updated_at": stamp(now - timedelta(days=3))}, now) == "done"
+    if os.name == "posix":
+        gone = subprocess.Popen(["true"])
+        gone.wait()
+        assert live_stage({**running, "pid": gone.pid}, now) == "dead"
+
+
+def test_settings_refuse_values_that_mean_something_else():
+    for bad in ({"max_papers": 0}, {"max_papers": -2}, {"chunk_chars": 0}, {"concurrency": 0}, {"call_timeout_s": 0}):
+        with pytest.raises(ValueError):
+            BuildSettings(**bad)
+    assert BuildSettings(max_papers=1).max_papers == 1
+
+
+def test_git_state_records_a_dirty_tree_and_warns_when_git_cannot_tell(monkeypatch):
+    outputs = {"rev-parse": b"abc123\n", "status": b" M gold/build.py\n", "diff": b"diff --git a b\n"}
+
+    def fake(args, **kw):
+        return subprocess.CompletedProcess(args, 0, outputs[args[3]], b"")
+
+    monkeypatch.setattr(build_module.subprocess, "run", fake)
+    assert git_state(None) == {"commit": "abc123", "dirty": True, "diff_sha256": sha256_hex(b"diff --git a b\n")}
+
+    def refuse(args, **kw):
+        raise subprocess.CalledProcessError(128, args, b"", b"fatal: detected dubious ownership in repository\n")
+
+    monkeypatch.setattr(build_module.subprocess, "run", refuse)
+    logged = []
+    assert git_state(logged.append) == {"commit": None, "dirty": None, "diff_sha256": None}
+    assert "dubious ownership" in logged[0] and logged[0].startswith("WARNING")
+
+
+def test_jsonl_files_survive_a_cut_last_line(tmp_path):
+    path = tmp_path / "triage.jsonl"
+    path.write_bytes(b'{"id": "a", "label": "answers"}\n{"id": "b", "lab')
+    assert read_jsonl(path) == [{"id": "a", "label": "answers"}]
+    append_jsonl(path, [{"id": "c", "label": "context"}])
+    assert [r["id"] for r in read_jsonl(path)] == ["a", "c"]
+
+
 def test_trial_then_full_build_keeps_candidate_ids(tmp_path):
     c = corpus(tmp_path)
     out = tmp_path / "gold"
@@ -252,6 +477,46 @@ def test_caller_times_out_and_does_not_cache_failures(tmp_path):
 
     error, caller, cache = asyncio.run(go())
     assert error.reason == "timeout" and caller.counters.failed == 1
+    assert not (tmp_path / "c.jsonl").exists()
+
+
+def test_a_context_window_400_is_too_long_and_its_verdict_cached(tmp_path):
+    def full(messages, info):
+        raise ModelHTTPError(400, "sub-model-1", body={"error": {"message": "litellm.ContextWindowExceededError: "
+                                                                 "maximum context length is 32768 tokens"}})
+
+    async def go():
+        caller = calls.Caller(llm.Rotation([FunctionModel(full)]), llm.JsonlCache(tmp_path / "c.jsonl"))
+        errors = []
+        for _ in range(2):
+            with pytest.raises(calls.CallError) as exc:
+                await caller.call("extract", screen.PROMPT, screen.Screening, "x", max_tokens=10)
+            errors.append(exc.value)
+        return errors, caller
+
+    (first, again), caller = asyncio.run(go())
+    assert first.kind == again.kind == "too_long" and "context window" in first.reason
+    assert (first.cached, again.cached) == (False, True)
+    assert (caller.counters.too_long, caller.counters.failed, caller.counters.made) == (2, 0, 0)
+
+
+def test_failure_reasons_never_carry_the_key(tmp_path, monkeypatch):
+    key = "sk-test-0123456789abcdef"
+    monkeypatch.setenv("LITELLM_MASTER_KEY", key)
+
+    def denied(messages, info):
+        raise RuntimeError(f"Authentication Error, Received API Key = {key[:9]}...cdef, Key Hash (Token) = "
+                           f"{sha256_hex(key.encode())}; key {key}")
+
+    async def go():
+        caller = calls.Caller(llm.Rotation([FunctionModel(denied)]), llm.JsonlCache(tmp_path / "c.jsonl"))
+        with pytest.raises(calls.CallError) as exc:
+            await caller.call("screen", screen.PROMPT, screen.Screening, "x", max_tokens=10)
+        return exc.value
+
+    error = asyncio.run(go())
+    assert error.kind == "failed" and "Authentication Error" in error.reason
+    assert key not in error.reason and key[:9] not in error.reason and sha256_hex(key.encode()) not in error.reason
     assert not (tmp_path / "c.jsonl").exists()
 
 

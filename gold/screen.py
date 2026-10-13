@@ -12,6 +12,10 @@ A paper's status comes from its chunks:
 - `not_relevant`: every chunk was screened and none is relevant;
 - `no_text`: the manifest records a failed conversion (the scanned p38), or the file is empty.
 A relevant paper can still have failed chunks: `chunks_error` lists them, and they are retried too.
+A chunk too long for one call is screened in halves (gold/chunks.py `halve`; relevant when a half
+is, findings of both): `chunks_split` lists those. `chunks_too_long` lists the failed chunks a rerun
+cannot fix (too long even in the smallest pieces); the others in `chunks_error` failed for reasons
+that may pass on the next build.
 """
 from __future__ import annotations
 
@@ -49,6 +53,8 @@ def part_prompt(task: Task, chunk: Chunk, parts: int, text: str, *, extra: str =
     """The user prompt for one chunk: question, concept, which part of which paper, then its text verbatim
     between marker lines (not JSON-escaped, so a quote can be copied from it as it stands in the file)."""
     where = f"part {chunk.chunk + 1} of {parts}"
+    if chunk.piece:  # a half of a part that was too long for one call
+        where += f" (piece {'.'.join(chunk.piece)}: the part was cut in halves)"
     if chunk.heading:
         where += f', starting in the section "{chunk.heading}"'
     question = task.question or "(not given; the concept says what is asked)"
@@ -80,6 +86,8 @@ def paper_record(paper_id: str, file: str, chunk_results: list[dict[str, Any]], 
     """One screening.jsonl line from a paper's chunk results (see the module docstring for the status)."""
     relevant = [r["chunk"] for r in chunk_results if r["status"] == "relevant"]
     failed = [r["chunk"] for r in chunk_results if r["status"] == "error"]
+    too_long = [r["chunk"] for r in chunk_results if r["status"] == "error" and r.get("too_long")]
+    split = [r["chunk"] for r in chunk_results if r.get("pieces")]
     if no_text is not None:
         status = "no_text"
     elif error is not None:
@@ -92,7 +100,7 @@ def paper_record(paper_id: str, file: str, chunk_results: list[dict[str, Any]], 
         status = "not_relevant"
     record = {
         "paper_id": paper_id, "file": file, "status": status, "chunks": len(chunk_results),
-        "chunks_relevant": relevant, "chunks_error": failed,
+        "chunks_relevant": relevant, "chunks_error": failed, "chunks_too_long": too_long, "chunks_split": split,
         "findings": [f for r in chunk_results for f in r.get("findings", [])],
         "model": _joined([r.get("model") for r in chunk_results]),
         "served_model": _joined([r.get("served_model") for r in chunk_results]),

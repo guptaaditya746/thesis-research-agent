@@ -9,12 +9,19 @@ temperature and seed fixed) and the sub-model replicas in turn (`llm.Rotation`).
   with LF line ends whatever the checkout, so a hash is the same on Windows and on the cluster.
 - A call is keyed by the sha256 of its whole input: stage, prompt hash, the user prompt, the model
   identity and the sampling settings (llm.cache_key). The key leaves out which replica answered:
-  sub-model-1 and -2 serve the same pinned model, so a rerun that happens to rotate differently, or
-  runs on one replica, still hits the cache. A rerun with the same inputs makes no model call; a
-  stopped build resumes where it stopped (cache.jsonl). Failures are never cached, so the next run
-  retries exactly them.
+  sub-model-1 and -2 serve the same pinned model (llm.model_identity), so a rerun that happens to
+  rotate differently, or runs on one replica, still hits the cache. A rerun with the same inputs
+  makes no model call; a stopped build resumes where it stopped (cache.jsonl).
+- Failures come in two kinds (`CallError.kind`). `failed` (a timeout, a server error, a reply the
+  caller's `accept` check refuses) may pass on the next try, so it is never cached and the next run
+  retries exactly those calls. `too_long` (the reply hit max_tokens, or the prompt and max_tokens do
+  not fit the context: HTTP 400 context window exceeded) fails the same way every time at
+  temperature 0, so the verdict is cached and the caller cuts its input instead (gold/build.py).
 - At most `concurrency` calls are in flight (GOLD_CONCURRENCY, default 6: the 3 sequences per replica
   that ran without preemption in L3), and each has its own timeout; waiting for a slot does not count.
+- Error reasons are short and pass llm.redact, so no key or key hash reaches a file or a log.
+
+This module is model-agnostic apart from the gold prompts directory: C2's judge can use `Caller` too.
 """
 from __future__ import annotations
 
@@ -25,6 +32,9 @@ from pathlib import Path
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
+from pydantic_ai import capture_run_messages
+from pydantic_ai.exceptions import IncompleteToolCall, ModelHTTPError
+from pydantic_ai.messages import ModelResponse
 
 from agent.canonical import sha256_hex
 from agent.rundir import utc_now
@@ -33,6 +43,9 @@ from . import llm
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 T = TypeVar("T", bound=BaseModel)
+# Words of a context-window 400 from LiteLLM (ContextWindowExceededError, STATE.md L8) or vLLM
+# ("maximum context length is 32768 tokens"), compared without spaces and underscores.
+CONTEXT_MARKERS = ("contextwindowexceeded", "contextlengthexceeded", "maximumcontextlength", "contextlength")
 
 
 @dataclass(frozen=True)
@@ -53,33 +66,64 @@ def load_prompt(name: str, output_type: type[BaseModel]) -> PromptFile:
 
 
 def model_key(models: list[Any]) -> str:
-    """The model identity in cache keys: the pinned sub-model for its replicas, else the model names."""
-    names = sorted({llm.model_name(m) for m in models})
-    if set(names) <= set(llm.SUB_ALIASES):
-        return f"{llm.SUB_MODEL['name']}@{llm.SUB_MODEL['revision']}"
-    return "+".join(names)
+    """The model identity in cache keys (llm.model_identity)."""
+    return llm.model_identity(models)
 
 
 class CallError(Exception):
-    """A model call failed or timed out; `reason` is short and safe to record (never the API key)."""
+    """A model call failed; `reason` is short and redacted. `kind` is `failed` (try again later) or
+    `too_long` (the same input fails every time: cut it); `cached` when the verdict came from the cache."""
 
-    def __init__(self, stage: str, reason: str) -> None:
+    def __init__(self, stage: str, reason: str, kind: str = "failed", cached: bool = False) -> None:
         super().__init__(f"{stage}: {reason}")
         self.stage = stage
         self.reason = reason
+        self.kind = kind
+        self.cached = cached
+
+
+def classify(exc: BaseException, messages: list[Any]) -> tuple[str, str]:
+    """(kind, reason) of a failed call, from the exception and the messages the run exchanged."""
+    if isinstance(exc, TimeoutError):
+        return "failed", "timeout"
+    cut = any(isinstance(m, ModelResponse) and m.finish_reason == "length" for m in messages)
+    if cut or isinstance(exc, IncompleteToolCall):
+        return "too_long", "too_long: the reply reached max_tokens"
+    text = f"{type(exc).__name__}: {exc}"
+    squashed = text.casefold().replace(" ", "").replace("_", "")
+    if isinstance(exc, ModelHTTPError) and exc.status_code == 400 and any(m in squashed for m in CONTEXT_MARKERS):
+        return "too_long", "too_long: the prompt and max_tokens exceed the context window (HTTP 400)"
+    return "failed", llm.redact(text)[:300]
+
+
+class _Failed(Exception):
+    """A failed structured call with the messages its run exchanged (for `classify`)."""
+
+    def __init__(self, exc: Exception, messages: list[Any]) -> None:
+        super().__init__(str(exc))
+        self.exc, self.messages = exc, messages
 
 
 @dataclass
 class Counters:
+    """Calls of one process. `made` and `cached` are results; `total` is every result D rests on with
+    what it cost when it was made. `failed` (retried next time) and `too_long` (made now or a cached
+    verdict; the input is cut instead) are not results."""
     made: int = 0
     cached: int = 0
     failed: int = 0
+    too_long: int = 0
     in_flight: int = 0
-    input_tokens: int = 0
+    input_tokens: int = 0          # calls made by this process (refused replies too)
     output_tokens: int = 0
+    cached_input_tokens: int = 0   # what the cached results cost when they were made
+    cached_output_tokens: int = 0
 
-    def json(self) -> dict[str, int]:
-        return asdict(self)
+    def json(self) -> dict[str, Any]:
+        out: dict[str, Any] = asdict(self)
+        out["total"] = {"calls": self.made + self.cached, "input_tokens": self.input_tokens + self.cached_input_tokens,
+                        "output_tokens": self.output_tokens + self.cached_output_tokens}
+        return out
 
 
 @dataclass(frozen=True)
@@ -111,16 +155,39 @@ class Caller:
             "model": self.model_key, "temperature": self.temperature, "seed": self.seed, "max_tokens": max_tokens,
         })
 
+    def settings(self) -> dict[str, Any]:
+        return {"model_key": self.model_key, "concurrency": self.concurrency, "timeout_s": self.timeout_s,
+                "temperature": self.temperature, "seed": self.seed}
+
     def _changed(self) -> None:
         if self.on_change is not None:
             self.on_change()
 
+    async def _ask(self, prompt: PromptFile, output_type: type[T], user_prompt: str, model: Any,
+                   max_tokens: int) -> llm.Reply[T]:
+        with capture_run_messages() as messages:
+            try:
+                return await llm.structured_reply(
+                    prompt.text, user_prompt, output_type, model=model,
+                    model_settings=llm.settings(temperature=self.temperature, seed=self.seed, max_tokens=max_tokens))
+            except Exception as exc:
+                raise _Failed(exc, list(messages)) from exc
+
     async def call(self, stage: str, prompt: PromptFile, output_type: type[T], user_prompt: str, *,
-                   max_tokens: int) -> Result[T]:
+                   max_tokens: int, accept: Callable[[T], str | None] | None = None) -> Result[T]:
+        """One structured call. `accept(output)` may return a reason to refuse a reply: it then counts
+        as a failed call and is not cached (a rerun asks again)."""
         key = self.key(stage, prompt, user_prompt, max_tokens)
         hit = self.cache.get(key)
+        if hit is not None and hit.get("too_long"):
+            self.counters.too_long += 1
+            self._changed()
+            raise CallError(stage, hit["reason"], kind="too_long", cached=True)
         if hit is not None:
             self.counters.cached += 1
+            usage = hit.get("usage") or {}
+            self.counters.cached_input_tokens += usage.get("input_tokens", 0)
+            self.counters.cached_output_tokens += usage.get("output_tokens", 0)
             if hit.get("served_model"):
                 self.served.add(hit["served_model"])
             self._changed()
@@ -131,21 +198,28 @@ class Caller:
             self.counters.in_flight += 1
             self._changed()
             try:
-                reply = await asyncio.wait_for(
-                    llm.structured_reply(prompt.text, user_prompt, output_type, model=model,
-                                         model_settings=llm.settings(temperature=self.temperature, seed=self.seed,
-                                                                     max_tokens=max_tokens)),
-                    timeout=self.timeout_s)
-            except Exception as exc:  # noqa: BLE001 - any failure is recorded and retried on the next run
-                self.counters.failed += 1
-                reason = "timeout" if isinstance(exc, TimeoutError) else f"{type(exc).__name__}: {exc}"
-                raise CallError(stage, reason[:300]) from exc
+                reply = await asyncio.wait_for(self._ask(prompt, output_type, user_prompt, model, max_tokens),
+                                               timeout=self.timeout_s)
+            except Exception as exc:  # noqa: BLE001 - any failure is recorded, and retried or cut
+                kind, reason = classify(exc.exc, exc.messages) if isinstance(exc, _Failed) else classify(exc, [])
+                if kind == "too_long":
+                    self.counters.too_long += 1
+                    self.cache.put(key, {"too_long": True, "reason": reason, "model": llm.model_name(model),
+                                         "prompt_sha256": prompt.sha256, "at": utc_now()})
+                else:
+                    self.counters.failed += 1
+                raise CallError(stage, reason, kind=kind) from exc
             finally:
                 self.counters.in_flight -= 1
                 self._changed()
-        self.counters.made += 1
         self.counters.input_tokens += reply.input_tokens
         self.counters.output_tokens += reply.output_tokens
+        refused = accept(reply.output) if accept is not None else None
+        if refused:
+            self.counters.failed += 1
+            self._changed()
+            raise CallError(stage, llm.redact(refused)[:300])
+        self.counters.made += 1
         if reply.served_model:
             self.served.add(reply.served_model)
         value = {"output": reply.output.model_dump(mode="json"), "model": reply.model,

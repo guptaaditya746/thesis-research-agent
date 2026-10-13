@@ -6,7 +6,8 @@ It plays every stage from the prompt it gets, as the real model would see it:
 - retry: a new quote from `fixes` (rejected quote -> new quote), else the same quote again;
 - triage: a label per fact from `labels` (object -> label), else "irrelevant".
 `fail(stage, paper_id, part)` makes a call raise, as a dead server would (part is 1-based, None for
-triage). Calls are counted per stage.
+triage). `too_long(stage, text)` makes a call stop at max_tokens (a cut reply, finish_reason
+"length"), as a chunk with too many facts does. Calls are counted per stage.
 
 Quotes are from the D1 papers as agent/tests/conftest.write_corpus names them
 (p3 = 2025-acl-long-625, p5 = 2025-acl-long-999, p6 = 2025-emnlp-main-1032).
@@ -94,7 +95,8 @@ GRAPH_RULES = [
 
 
 def _prompt(messages: list[Any]) -> str:
-    parts = [p.content for p in messages[-1].parts if isinstance(p, UserPromptPart)]
+    """The user prompt of the run (an output retry's request carries none of its own)."""
+    parts = [p.content for m in messages for p in getattr(m, "parts", []) if isinstance(p, UserPromptPart)]
     return parts[-1] if parts else ""
 
 
@@ -116,6 +118,7 @@ class Script:
     fixes: dict[str, str] = field(default_factory=lambda: dict(FIXES))
     labels: dict[str, str] = field(default_factory=lambda: dict(LABELS))
     fail: Callable[[str, str | None, int | None], bool] | None = None
+    too_long: Callable[[str, str], bool] | None = None
     calls: Counter = field(default_factory=Counter)
 
     def __post_init__(self) -> None:
@@ -153,6 +156,11 @@ class Script:
         paper, part = (_paper(prompt), _part(prompt)) if stage != "triage" else (None, None)
         if self.fail is not None and self.fail(stage, paper, part):
             raise RuntimeError(f"scripted failure: {stage} {paper}")
+        if self.too_long is not None and self.too_long(stage, _text(prompt) if stage != "triage" else prompt):
+            cut = '{"rows": [{"cells": {"dataset": "MM'
+            if info.output_tools:
+                return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, cut)], finish_reason="length")
+            return ModelResponse(parts=[TextPart(cut)], finish_reason="length")
         reply = self.reply(stage, prompt)
         if info.output_tools:  # tool output mode
             return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, reply)])

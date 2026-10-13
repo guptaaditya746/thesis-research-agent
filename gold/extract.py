@@ -13,6 +13,12 @@ rejected for a reason a new quote can fix (QUOTE_REASONS) gets one retry: one ca
 (gold/prompts/extract-retry-v1.md) lists the rejected facts with the broker's reason, explained in
 the words the agent's prompt uses, and the new quotes are checked again. What still fails keeps its
 reason as `anchor_status` with `anchor` null: it stays in D, flagged, and never reaches the key.
+A retry call that fails is recorded on its facts (`retry.error`, `retry.kind`); one that may pass
+later (`retry.kind` failed) is counted in doc.json `counts.retry_errors`, and `gold build` exits 1
+until a rerun has made it (failures are not cached, so the rerun asks again).
+
+A chunk the builder had to cut (gold/chunks.py `halve`) is extracted piece by piece; its candidates
+record the piece and its span (`piece`, `span`), and the quote check is the same.
 """
 from __future__ import annotations
 
@@ -138,18 +144,19 @@ async def _retry(caller: Caller, task: Task, chunk: Chunk, parts: int, text: str
                 "reason": it["anchor_status"]} for n, it in enumerate(failed, 1)]
     extra = "Rejected quotes:\n" + json.dumps(listing, ensure_ascii=False, indent=1)
     for item in failed:
-        item.update(attempts=2, first_quote=item["quote"], first_reason=item["anchor_status"])
+        item.update(first_quote=item["quote"], first_reason=item["anchor_status"])
     try:
         result = await caller.call("retry", RETRY_PROMPT, Retry, part_prompt(task, chunk, parts, text, extra=extra),
                                    max_tokens=RETRY_MAX_TOKENS)
-    except CallError as exc:
+    except CallError as exc:  # no second attempt was made: `attempts` stays 1
         for item in failed:
-            item["retry"] = {"error": exc.reason}
+            item["retry"] = {"error": exc.reason, "kind": exc.kind}
         return
     quotes = {q.id: q.quote for q in result.output.quotes}
     meta = {k: result.meta[k] for k in ("model", "served_model", "prompt_sha256")}
     again = []
     for n, item in enumerate(failed, 1):
+        item["attempts"] = 2
         item["retry"] = dict(meta)
         if f"q{n}" in quotes:
             item["quote"] = quotes[f"q{n}"]
@@ -179,5 +186,12 @@ async def extract_chunk(caller: Caller, task: Task, prompt: PromptFile, output_t
         await _retry(caller, task, chunk, parts, text, corpus, file, failed)
     meta = {"model": result.meta["model"], "served_model": result.meta["served_model"],
             "prompt_sha256": result.meta["prompt_sha256"]}
+    where = {"piece": chunk.piece, "span": [chunk.start, chunk.end]} if chunk.piece else {}
     return [{"qid": task.qid, "paper_id": chunk.paper_id, "file": file, "chunk": chunk.chunk,
-             "heading": chunk.heading, **item, **meta} for item in items]
+             "heading": chunk.heading, **where, **item, **meta} for item in items]
+
+
+def retry_failed(candidate: dict[str, Any]) -> bool:
+    """The candidate's retry call failed for a reason a rerun may fix (not a too-long verdict)."""
+    retry = candidate.get("retry") or {}
+    return "error" in retry and retry.get("kind", "failed") != "too_long"
