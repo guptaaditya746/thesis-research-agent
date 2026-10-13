@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import sys
 import types
 from pathlib import Path
@@ -13,6 +15,7 @@ from agent.anchor import read_text
 from agent.tests.runs import SPIDER_BIRD
 from webapp.app import create_app
 
+from .test_stream import events
 from .world import KEY_DRAFT, OUTPUT, SCORE, World
 
 
@@ -32,9 +35,9 @@ def test_questions(client: TestClient) -> None:
     assert q01["id"] == "q01" and q01["category"] == "corpus_wide"
     assert q01["concept"] == {"status": "picked", "title": "Benchmarks used by RAG papers", "picked_by": "user"}
     assert q01["runs"] == {"claim_on": 1, "claim_off": 1}  # both fixture runs use q01's picked concept
-    assert q01["gold"] == {"status": "none", "rows": None, "facts": None}
+    assert q01["gold"] == {"status": "none", "rows": None, "facts": None, "stage": None}
     assert q02["concept"]["status"] == "none" and q02["runs"] == {"claim_on": 0, "claim_off": 0}
-    assert q02["gold"] == {"status": "draft", "rows": 1, "facts": 1}
+    assert q02["gold"] == {"status": "draft", "rows": 1, "facts": 1, "stage": None}
 
 
 def test_question_detail(client: TestClient) -> None:
@@ -52,9 +55,11 @@ def test_runs_list_and_filters(client: TestClient) -> None:
     assert set(runs) == {"baseline-r1", "research-r1"}
     r = runs["research-r1"]
     assert (r["qid"], r["condition"], r["seed"], r["exit_status"], r["live"]) == ("q01", "claim_on", 1234, "submitted", False)
+    assert (r["batch"], r["concept_current"], r["answer_from"], r["post_processing"]) == (None, True, "final", False)
     assert (r["steps"], r["model_calls"], r["claims_accepted"], r["claims_rejected"]) == (6, 6, 6, 1)
     assert (r["rows"], r["facts"], r["attach"]) == (5, 5, "not_applicable")
-    assert r["score"] == {"support_share": 0.6, "fact_f1": 0.889, "row_f1": 0.667}  # soft fact F1
+    assert r["score"] == {"support_share": 0.6, "fact_f1": 0.889, "row_f1": 0.667,  # soft fact F1
+                          "key_version": "v1", "provisional": False}
     b = runs["baseline-r1"]
     assert (b["condition"], b["exit_status"], b["attach"], b["score"]) == ("claim_off", "submitted", "pending", None)
     assert b["tokens_without_attach"] is not None and b["claims_accepted"] == 3
@@ -139,8 +144,8 @@ def test_graph_of_a_run_without_graph_json(fresh: World) -> None:
 
 
 def test_walk(client: TestClient, world: World) -> None:
-    walk = client.get("/api/runs/research-r1/facts/f1/walk", params={"judge": False}).json()
-    assert (walk["fact"]["id"], walk["row_id"], walk["support"]) == ("f1", "r1", None)
+    walk = client.get("/api/runs/research-r1/facts/f1/walk").json()  # no judge by default: no model call
+    assert (walk["fact"]["id"], walk["row_id"], walk["support"], walk["label"]) == ("f1", "r1", None, None)
     [item] = walk["claims"]
     assert item["claim_id"] == "claim-000001" and item["anchor_status"] == "ok"
     assert item["step"]["step"] == 1 and item["step"]["command"].startswith('rg -n "Spider"')
@@ -149,31 +154,79 @@ def test_walk(client: TestClient, world: World) -> None:
     assert passage["text"][lo:hi] == SPIDER_BIRD.text and passage["paper_id"] == "p1"
     text = read_text(world.corpus / "p1.md")
     assert text[passage["offset"]:passage["offset"] + len(passage["text"])] == passage["text"]
-    sub = client.get("/api/runs/research-r1/facts/f4/walk", params={"judge": False}).json()
+    sub = client.get("/api/runs/research-r1/facts/f4/walk").json()
     assert sub["claims"][0]["step"]["agent_id"] == "sub-01"
-    assert client.get("/api/runs/research-r1/facts/f5/walk", params={"judge": False}).json()["claims"] == []
+    unsourced = client.get("/api/runs/research-r1/facts/f5/walk").json()
+    assert (unsourced["claims"], unsourced["label"]) == ([], "unsourced")
     assert client.get("/api/runs/research-r1/facts/f9/walk").status_code == 404
 
 
-def test_walk_with_the_judge(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+def scored(label: str, claims: list[tuple[str, str | None]]) -> dict:
+    """score.json's detail.support entry of fact f1 (scoring/support.py writes it)."""
+    return {"row_id": "r1", "fact_id": "f1", "origin": "research", "label": label,
+            "claims": [{"claim_id": c, "file": "p1.md", "label": lab, "rationale": "scored" if lab else None,
+                        "model": "Qwen3-30B-A3B" if lab else None} for c, lab in claims]}
+
+
+def test_walk_shows_the_verdicts_scoring_counted(fresh: World) -> None:
     asked = []
 
-    def support(fact, quote, *, context=None):
-        asked.append((fact, quote))
-        return {"label": "supports" if "Spider" in quote else "no", "rationale": "the quote names it",
-                "model": "sub-model-1", "prompt_sha256": "a" * 64, "cached": True}
+    def judge(fact, quote, *, context=None):
+        asked.append((fact, quote, context))
+        return {"label": "no", "rationale": "live", "model": "m", "prompt_sha256": "a" * 64, "cached": False}
 
-    monkeypatch.setitem(sys.modules, "gold.judge", types.SimpleNamespace(support=support))
-    walk = client.get("/api/runs/research-r1/facts/f1/walk").json()
-    assert walk["support"]["label"] == "supports" and walk["claims"][0]["support"]["cached"] is True
-    assert asked == [({"s": "p1", "p": "evaluatesOn", "o": "Spider"}, SPIDER_BIRD.text)]
+    score = fresh.research.run.root / "score.json"
+    with TestClient(create_app(fresh.settings, judge=judge)) as c:
+        score.write_text(json.dumps(SCORE | {"detail": {"support": [scored("supports", [("claim-000001", "supports")])]}}),
+                         encoding="utf-8")
+        for params in ({}, {"judge": True}):  # a scored verdict is never asked again
+            walk = c.get("/api/runs/research-r1/facts/f1/walk", params=params).json()
+            assert (walk["label"], walk["support"]["label"], walk["support"]["source"]) == ("supports", "supports", "score")
+            assert walk["claims"][0]["support"] == {"label": "supports", "rationale": "scored", "model": "Qwen3-30B-A3B",
+                                                    "prompt_sha256": None, "cached": None, "source": "score"}
+        assert asked == []
+        # Scored while the judge was unreachable: pending, and only asked when the request says so.
+        score.write_text(json.dumps(SCORE | {"detail": {"support": [scored("pending", [("claim-000001", None)])]}}),
+                         encoding="utf-8")
+        walk = c.get("/api/runs/research-r1/facts/f1/walk").json()
+        assert (walk["label"], walk["support"], walk["claims"][0]["support"]) == ("pending", None, None)
+        walk = c.get("/api/runs/research-r1/facts/f1/walk", params={"judge": True}).json()
+        assert (walk["label"], walk["support"]["source"], walk["support"]["rationale"]) == ("no", "judge", "live")
+    assert [a[:2] for a in asked] == [({"s": "p1", "p": "evaluatesOn", "o": "Spider"}, SPIDER_BIRD.text)]
+
+
+def test_walk_asks_the_judge_with_scorings_context(fresh: World, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unscored runs: the judge is asked live, per quote, with the context line scoring gives it."""
+    asked = []
+
+    async def judge(fact, quote, *, context=None):
+        asked.append(context)
+        return {"label": "supports", "rationale": "names it", "model": "m", "prompt_sha256": "b" * 64, "cached": True}
+
+    monkeypatch.setitem(sys.modules, "scoring.support",
+                        types.SimpleNamespace(quote_context=lambda file, corpus: f"from {file} in {corpus.name}"))
+    with TestClient(create_app(fresh.settings, judge=judge)) as c:
+        walk = c.get("/api/runs/baseline-r1/facts/f1/walk", params={"judge": True}).json()
+    assert (walk["label"], walk["support"]["source"], walk["claims"][0]["support"]["cached"]) == ("supports", "judge", True)
+    assert asked == [f"from {walk['claims'][0]['claim']['file']} in corpus"]
+
+
+def test_the_default_judge_is_found_through_sys_modules(fresh: World, monkeypatch: pytest.MonkeyPatch) -> None:
+    """gold.judge as importlib finds it (a test's stand-in in sys.modules), never a `gold.judge`
+    attribute another test's import left on the package; and a judge that fails leaves no verdict."""
+    import gold
+
+    def real(*args, **kwargs):
+        raise AssertionError("the real judge was called")
 
     def broken(fact, quote, *, context=None):
         raise ConnectionError("no model")
 
+    monkeypatch.setattr(gold, "judge", types.SimpleNamespace(support=real), raising=False)
     monkeypatch.setitem(sys.modules, "gold.judge", types.SimpleNamespace(support=broken))
-    walk = client.get("/api/runs/research-r1/facts/f1/walk").json()
-    assert walk["support"] is None and walk["claims"][0]["passage"] is not None
+    with TestClient(create_app(fresh.settings)) as c:
+        walk = c.get("/api/runs/research-r1/facts/f1/walk", params={"judge": True}).json()
+    assert (walk["support"], walk["label"]) == (None, "pending") and walk["claims"][0]["passage"] is not None
 
 
 def test_score(client: TestClient) -> None:
@@ -230,11 +283,60 @@ def test_gold(client: TestClient) -> None:
     assert client.get("/api/gold/q01/key").status_code == 404
 
 
+def test_gold_lists_question_directories_only(fresh: World) -> None:
+    gold = fresh.root / "gold-data"
+    for name, file in (("_calibration", "notes.txt"), ("judge", "sample.jsonl"), ("q07", "progress.json")):
+        (gold / name).mkdir()
+        (gold / name / file).write_text('{"stage": "failed"}', encoding="utf-8")
+    (gold / "judge-cache.jsonl").write_text("", encoding="utf-8")
+    with TestClient(create_app(fresh.settings)) as c:
+        response = c.get("/api/gold")
+    assert response.status_code == 200
+    entries = {g["qid"]: g for g in response.json()}
+    assert list(entries) == ["q01", "q02", "q07"]  # C2's judge/ sample and other directories are not questions
+    assert (entries["q07"]["status"], entries["q07"]["stage"]) == ("building", "failed")  # stopped, not running
+
+
 def test_results(client: TestClient, fresh: World) -> None:
     assert client.get("/api/results").json() == {"primary": {"p_value": 0.03}}
     (fresh.runs / "report" / "report.json").unlink()
     with TestClient(create_app(fresh.settings)) as c:
         assert c.get("/api/results").status_code == 404
+        for n, (batch, p) in enumerate((("e2e-smoke", 0.5), ("m4-72", 0.01))):  # `score report` on each batch root
+            report = fresh.runs / batch / "report" / "report.json"
+            report.parent.mkdir(parents=True)
+            report.write_text(json.dumps({"p": p}), encoding="utf-8")
+            os.utime(report, (1_800_000_000 + n, 1_800_000_000 + n))
+        assert c.get("/api/results").json() == {"p": 0.01}  # the newest
+        assert c.get("/api/results", params={"batch": "e2e-smoke"}).json() == {"p": 0.5}
+        assert c.get("/api/results", params={"batch": "nope"}).status_code == 404
+        assert c.get("/api/results", params={"batch": ".."}).status_code == 404
+
+
+def test_runs_of_batch_roots(fresh: World) -> None:
+    """$RUNS/<manifest name>/<key>-aN, as the batch runner writes them; two batches share run names."""
+    for batch in ("e2e-smoke", "m4-72"):
+        shutil.copytree(fresh.research.run.root, fresh.runs / batch / "q01-claim_on-r1-a1")
+    (fresh.runs / "m4-72" / "manifest.json").write_text("{}", encoding="utf-8")
+    query = "PREFIX ours: <urn:thesis-agent:vocab#>\nSELECT (COUNT(?c) AS ?n) WHERE { ?c a ours:Claim }"
+    with TestClient(create_app(fresh.settings)) as c:
+        runs = {r["run_id"]: r for r in c.get("/api/runs").json()}
+        assert list(runs) == ["baseline-r1", "research-r1", "e2e-smoke~q01-claim_on-r1-a1", "m4-72~q01-claim_on-r1-a1"]
+        m4 = runs["m4-72~q01-claim_on-r1-a1"]
+        assert (m4["batch"], m4["qid"], m4["concept_current"], m4["exit_status"]) == ("m4-72", "q01", True, "submitted")
+        assert c.get("/api/questions").json()[0]["runs"] == {"claim_on": 3, "claim_off": 1}
+        assert len(c.get("/api/runs/m4-72~q01-claim_on-r1-a1/steps").json()) == 6
+        assert c.get("/api/runs/m4-72~q01-claim_on-r1-a1/facts/f1/walk").json()["run_id"] == "m4-72~q01-claim_on-r1-a1"
+        with c.stream("GET", "/api/runs/m4-72~q01-claim_on-r1-a1/stream") as response:
+            done = [e for e in events(response) if e.get("event") == "done"]
+        assert json.loads(done[0]["data"])["run_id"] == "m4-72~q01-claim_on-r1-a1"
+        assert c.get("/api/queries/1", params={"run_id": "m4-72~q01-claim_on-r1-a1"}).json()["rows"]
+        one = c.post("/api/sparql", json={"query": query, "run_id": "e2e-smoke~q01-claim_on-r1-a1"})
+        assert int(one.json()["rows"][0]["n"]) == 6
+        # One graph per directory name in the store: the first batch's run holds it.
+        assert c.post("/api/sparql", json={"query": query, "run_id": "m4-72~q01-claim_on-r1-a1"}).status_code == 409
+        for bad in ("m4-72~nope", "m4-72~q01-claim_on-r1-a1~x", "nope~q01-claim_on-r1-a1"):
+            assert c.get(f"/api/runs/{bad}").status_code == 404, bad
 
 
 def test_nothing_there_yet(tmp_path: Path) -> None:

@@ -13,13 +13,18 @@
 | `WEBAPP_DIST`          | `web_dist`         | `<repo>/webapp/web/dist`                 |
 | `WEBAPP_PYTHON`        | `python`           | the server's interpreter                 |
 | `WEBAPP_CHAT_MODEL`    | `chat_model`       | `sub-model-1`                            |
-| `WEBAPP_LIVE_WINDOW_S` | `live_window_s`    | 300                                      |
+| `WEBAPP_LIVE_WINDOW_S` | `live_window_s`    | 900                                      |
 | `WEBAPP_POLL_S`        | `poll_s`           | 0.5                                      |
 
 Relative paths are resolved against the working directory when the settings are made, so the job
 subprocesses (which run in the repo) get absolute paths; an empty variable counts as unset. The
 API keys ($LITELLM_MASTER_KEY, $ARGILLA_API_KEY) are never settings: they are read from the
 environment at call time only.
+
+$RUNS is the root of everything run-shaped: single runs ($RUNS/<run>), batch roots one level down
+($RUNS/<manifest name>/<key>-aN, as scripts/e2e-batch.sh and agent/manifests/m4-72.json write
+them, each with its own report/), and the web app's own runs in $RUNS/web/, so they never mix
+into a manifest's runs root.
 """
 from __future__ import annotations
 
@@ -53,9 +58,11 @@ class Settings(BaseSettings):
                         description="interpreter for the job subprocesses (`python -m agent.cli ...`)")
     chat_model: str = Field("sub-model-1", validation_alias="WEBAPP_CHAT_MODEL",
                             description="LiteLLM alias of the chat agent's model")
-    live_window_s: float = Field(300.0, validation_alias="WEBAPP_LIVE_WINDOW_S",
+    live_window_s: float = Field(900.0, validation_alias="WEBAPP_LIVE_WINDOW_S",
                                  description="a run with no answer.json whose events.jsonl changed this "
-                                             "recently is live (a model call or a command can take ~2 min)")
+                                             "recently is live: longer than the longest quiet spell of a run, "
+                                             "one model call (timeout 600 s, OrchestratorModel) after a command "
+                                             "(120 s, COMMAND_LIMITS), with a margin for the proxy's queue")
     poll_s: float = Field(0.5, validation_alias="WEBAPP_POLL_S", description="how often the SSE streams look "
                                                                             "for new lines")
 
@@ -75,6 +82,11 @@ class Settings(BaseSettings):
     @property
     def report_dir(self) -> Path:
         return self.runs / "report"
+
+    @property
+    def web_runs(self) -> Path:
+        """Where runs started from the web app go (their ids are web~<name>)."""
+        return self.runs / "web"
 
 
 def llm_key_set() -> bool:

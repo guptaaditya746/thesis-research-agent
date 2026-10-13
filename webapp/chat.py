@@ -6,10 +6,11 @@ in the AI SDK's UI-message stream protocol. The model is `sub-model-1` through L
 (gold/llm.py; the key is read when the model is made, per request), thinking off.
 
 The agent's tools only read, through the same code as the API: list_runs, get_run, get_answer,
-get_claims, walk_fact (with the judge's verdict when it has one), sparql (read-only),
-read_passage and get_results. Each returns plain JSON, cut to a size a 32k-context model can
-take; a tool error comes back as {"error": ...} so the model can correct its call. When the user
-is on a run page the frontend scopes the chat to that run (`?run_id=` or `run_id` in the body).
+get_claims, walk_fact (with the verdicts score.json counted, when the run is scored; the chat never
+calls the judge model), sparql (read-only), read_passage and get_results. Each returns plain JSON,
+cut to a size a 32k-context model can take; a tool error comes back as {"error": ...} so the model
+can correct its call. When the user is on a run page the frontend scopes the chat to that run
+(`?run_id=` or `run_id` in the body).
 """
 from __future__ import annotations
 
@@ -20,7 +21,6 @@ from pydantic_ai import Agent, RunContext
 
 from gold import llm
 
-from . import judge
 from .files import BadRequest, Conflict, NotFound
 
 if TYPE_CHECKING:
@@ -71,7 +71,7 @@ def build_agent() -> Agent[ChatDeps, str]:
     @agent.tool
     def list_runs(ctx: RunContext[ChatDeps], qid: str | None = None, condition: str | None = None) -> Any:
         """Runs (by run id) with question id, condition, exit status, cost, claims and score; filter by
-        question id (q01..q12) and condition (claim_on or claim_off)."""
+        question id (q01..q12: its runs on the current concept) and condition (claim_on or claim_off)."""
         runs = ctx.deps.services.runs.summaries(qid=qid, condition=condition)
         return [r.model_dump(mode="json") for r in runs[-MAX_ITEMS:]]
 
@@ -108,14 +108,14 @@ def build_agent() -> Agent[ChatDeps, str]:
         return [{k: _cut(v, 600) for k, v in c.items()} for c in rows[:MAX_ITEMS]]
 
     @agent.tool
-    async def walk_fact(ctx: RunContext[ChatDeps], run_id: str, fact_id: str) -> Any:
+    def walk_fact(ctx: RunContext[ChatDeps], run_id: str, fact_id: str) -> Any:
         """Walk one answer fact back: its claims, the step (command) each came from, the passage around
-        each quote, and the judge's verdict on whether the quote supports the fact (when available)."""
+        each quote, and whether each quote supports the fact (the judge's verdict scoring counted; none
+        before the run is scored)."""
         try:
             walk = ctx.deps.services.runs.walk(run_id, fact_id)
         except ERRORS as exc:
             return _error(exc)
-        await add_verdicts(walk)
         data = walk.model_dump(mode="json")
         for item in data["claims"]:
             if item.get("passage"):
@@ -157,14 +157,6 @@ def build_agent() -> Agent[ChatDeps, str]:
             return _error(exc)
 
     return agent
-
-
-async def add_verdicts(walk: Any) -> None:
-    """Ask the judge about each claim's quote; the fact's verdict is the best of them."""
-    for item in walk.claims:
-        if item.claim is not None and item.claim.quote:
-            item.support = await judge.support(walk.fact.model_dump(), item.claim.quote)
-    walk.support = judge.best([item.support for item in walk.claims])
 
 
 def chat_model(services: Services) -> Any:

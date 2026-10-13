@@ -240,8 +240,10 @@
                   "type": "null"
                 }
               ],
+              "description": "the question's runs on its current concept",
               "title": "Qid"
-            }
+            },
+            "description": "the question's runs on its current concept"
           },
           {
             "name": "condition",
@@ -270,6 +272,18 @@
               "title": "Verify"
             },
             "description": "run `agent verify` on runs not checked yet (slow)"
+          },
+          {
+            "name": "include_stale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "with qid: also runs on a replaced concept",
+              "default": false,
+              "title": "Include Stale"
+            },
+            "description": "with qid: also runs on a replaced concept"
           }
         ],
         "responses": {
@@ -652,11 +666,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
-              "description": "ask the judge (gold/judge.py) about each quote",
-              "default": true,
+              "description": "also ask the judge (gold/judge.py, a model call per quote it has not cached) about quotes score.json has no verdict for",
+              "default": false,
               "title": "Judge"
             },
-            "description": "ask the judge (gold/judge.py) about each quote"
+            "description": "also ask the judge (gold/judge.py, a model call per quote it has not cached) about quotes score.json has no verdict for"
           }
         ],
         "responses": {
@@ -819,6 +833,7 @@
           "gold"
         ],
         "summary": "Gold",
+        "description": "The questions, then any other question directory in $GOLD (a plain id holding gold files).",
         "operationId": "gold",
         "responses": {
           "200": {
@@ -929,6 +944,26 @@
         ],
         "summary": "Results",
         "operationId": "results",
+        "parameters": [
+          {
+            "name": "batch",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "the batch root ($RUNS/<batch>) whose report to show; default $RUNS/report, else the newest batch's",
+              "title": "Batch"
+            },
+            "description": "the batch root ($RUNS/<batch>) whose report to show; default $RUNS/report, else the newest batch's"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -936,6 +971,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Results"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -1954,7 +1999,8 @@
                 "type": "null"
               }
             ],
-            "title": "Picked By"
+            "title": "Picked By",
+            "description": "user, claude or provisional-first (the pick record's)"
           }
         },
         "type": "object",
@@ -2189,7 +2235,26 @@
                 "type": "null"
               }
             ],
-            "description": "the best verdict over the fact's quotes (judge), or null"
+            "description": "the best verdict over the fact's quotes, or null"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "supports",
+                  "partial",
+                  "no",
+                  "unsourced",
+                  "pending"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "description": "the fact's support label as scoring defines it (best verdict over its claims; unsourced: no accepted claim; pending: a verdict is missing); null: nothing judged"
           }
         },
         "type": "object",
@@ -2218,6 +2283,18 @@
               "reviewed"
             ],
             "title": "Status"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage",
+            "description": "the gold builder's stage (progress.json), when it wrote one"
           },
           "coverage": {
             "anyOf": [
@@ -2329,6 +2406,18 @@
               }
             ],
             "title": "Facts"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage",
+            "description": "the gold builder's own stage (progress.json: starting, building, failed, writing, done), when it wrote one; `building` with stage done or failed and no job running means D is there but triage, pool or draft have not run"
           }
         },
         "type": "object",
@@ -3006,7 +3095,8 @@
           },
           "picked_by": {
             "type": "string",
-            "title": "Picked By"
+            "title": "Picked By",
+            "description": "user, claude or provisional-first"
           },
           "reason": {
             "anyOf": [
@@ -3029,6 +3119,18 @@
               }
             ],
             "title": "Concept Sha256"
+          },
+          "replaces_concept_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replaces Concept Sha256",
+            "description": "the concept this pick replaced, if it changed one"
           }
         },
         "type": "object",
@@ -3036,7 +3138,8 @@
           "choice",
           "picked_by"
         ],
-        "title": "Pick"
+        "title": "Pick",
+        "description": "The current pick: the last `concept_pick` record of the session's hash chain."
       },
       "PickRequest": {
         "properties": {
@@ -3048,8 +3151,11 @@
           },
           "picked_by": {
             "type": "string",
-            "maxLength": 64,
-            "minLength": 1,
+            "enum": [
+              "user",
+              "claude",
+              "provisional-first"
+            ],
             "title": "Picked By",
             "default": "user"
           },
@@ -3064,6 +3170,12 @@
               }
             ],
             "title": "Reason"
+          },
+          "force": {
+            "type": "boolean",
+            "title": "Force",
+            "description": "change the pick although runs use the current concept (they then show as concept_current false)",
+            "default": false
           }
         },
         "type": "object",
@@ -3465,6 +3577,12 @@
             "title": "Attach",
             "description": "claim_off: run the attach step after the run",
             "default": true
+          },
+          "force": {
+            "type": "boolean",
+            "title": "Force",
+            "description": "start although a run the web app did not start (a batch on the cluster) is live: both then share the orchestrator, which slows the batch runs and inflates their recorded time",
+            "default": false
           }
         },
         "type": "object",
@@ -3474,7 +3592,20 @@
         "properties": {
           "run_id": {
             "type": "string",
-            "title": "Run Id"
+            "title": "Run Id",
+            "description": "the run directory's name, or <batch>~<name> for a run one level down ($RUNS/<batch>/<name>, e.g. m4-72~q01-claim_on-r1-a1, web~...)"
+          },
+          "batch": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch",
+            "description": "the directory the run is in below $RUNS (a batch manifest's name, or `web` for runs the web app started)"
           },
           "qid": {
             "anyOf": [
@@ -3486,6 +3617,29 @@
               }
             ],
             "title": "Qid"
+          },
+          "concept_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concept Sha256"
+          },
+          "concept_current": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concept Current",
+            "description": "the run used the question's current pick; false: a replaced or another concept (left out of the question's counts); null: the question has no pick"
           },
           "condition": {
             "type": "string",
@@ -3528,6 +3682,23 @@
             "type": "string",
             "title": "Exit Status",
             "description": "submitted, budget, context_full, error, cut, running, incomplete, or another exit status the harness recorded"
+          },
+          "answer_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "final",
+                  "draft",
+                  "none"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer From",
+            "description": "final: the model's final answer; draft: the agent's draft file, taken by the harness (answer_from_draft); none: the harness wrote an answer with no rows (no_final_answer); null: no answer yet or not recorded"
           },
           "steps": {
             "type": "integer",
@@ -3628,7 +3799,14 @@
           },
           "live": {
             "type": "boolean",
-            "title": "Live"
+            "title": "Live",
+            "description": "the agent is still writing the run (research, or the attach step)"
+          },
+          "post_processing": {
+            "type": "boolean",
+            "title": "Post Processing",
+            "description": "a web-app job still runs verify, pairs, graph, export-prov or score on the finished run",
+            "default": false
           }
         },
         "type": "object",
@@ -3811,6 +3989,30 @@
               }
             ],
             "title": "Row F1"
+          },
+          "key_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Version",
+            "description": "the answer key's version (v1, or v1-draft)"
+          },
+          "provisional": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provisional",
+            "description": "scored against the draft key: tests the pipeline, never a result"
           }
         },
         "type": "object",
@@ -4149,6 +4351,22 @@
               }
             ],
             "title": "Cached"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "score",
+                  "judge"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "score: the verdict score.json counted (the primary outcome's); judge: asked live (?judge=true) because the run has no scored verdict"
           }
         },
         "additionalProperties": true,

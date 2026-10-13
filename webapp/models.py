@@ -46,13 +46,17 @@ class AppConfig(BaseModel):
 class ConceptStatus(BaseModel):
     status: Literal["none", "proposed", "picked"]
     title: str | None = None
-    picked_by: str | None = None
+    picked_by: str | None = Field(None, description="user, claude or provisional-first (the pick record's)")
 
 
 class GoldStatus(BaseModel):
-    status: Literal["none", "building", "draft", "reviewed"]
+    status: GoldState
     rows: int | None = None
     facts: int | None = None
+    stage: str | None = Field(None, description="the gold builder's own stage (progress.json: starting, building, "
+                                                "failed, writing, done), when it wrote one; `building` with "
+                                                "stage done or failed and no job running means D is there but "
+                                                "triage, pool or draft have not run")
 
 
 class RunCounts(BaseModel):
@@ -119,11 +123,14 @@ class ConceptBrief(Open):
 
 
 class Pick(BaseModel):
+    """The current pick: the last `concept_pick` record of the session's hash chain."""
+
     choice: int
     title: str | None = None
-    picked_by: str
+    picked_by: str = Field(description="user, claude or provisional-first")
     reason: str | None = None
     concept_sha256: str | None = None
+    replaces_concept_sha256: str | None = Field(None, description="the concept this pick replaced, if it changed one")
 
 
 class QuestionDetail(Question):
@@ -139,8 +146,10 @@ class ProposeRequest(BaseModel):
 
 class PickRequest(BaseModel):
     choice: int = Field(ge=1, le=5)
-    picked_by: str = Field("user", min_length=1, max_length=64)
+    picked_by: PickedBy = "user"
     reason: str | None = Field(None, max_length=2000)
+    force: bool = Field(False, description="change the pick although runs use the current concept (they then "
+                                           "show as concept_current false)")
 
 
 # --- runs --------------------------------------------------------------------------------------------
@@ -149,17 +158,31 @@ class ScoreSummary(BaseModel):
     support_share: float | None = None
     fact_f1: float | None = None
     row_f1: float | None = None
+    key_version: str | None = Field(None, description="the answer key's version (v1, or v1-draft)")
+    provisional: bool | None = Field(None, description="scored against the draft key: tests the pipeline, never "
+                                                       "a result")
 
 
 class RunSummary(BaseModel):
-    run_id: str
+    run_id: str = Field(description="the run directory's name, or <batch>~<name> for a run one level down "
+                                    "($RUNS/<batch>/<name>, e.g. m4-72~q01-claim_on-r1-a1, web~...)")
+    batch: str | None = Field(None, description="the directory the run is in below $RUNS (a batch manifest's "
+                                                "name, or `web` for runs the web app started)")
     qid: str | None
+    concept_sha256: str | None = None
+    concept_current: bool | None = Field(None, description="the run used the question's current pick; false: a "
+                                                           "replaced or another concept (left out of the question's "
+                                                           "counts); null: the question has no pick")
     condition: str
     seed: int | None
     temperature: float | None
     created_at: str | None
     exit_status: str = Field(description="submitted, budget, context_full, error, cut, running, incomplete, "
                                          "or another exit status the harness recorded")
+    answer_from: Literal["final", "draft", "none"] | None = Field(
+        None, description="final: the model's final answer; draft: the agent's draft file, taken by the harness "
+                          "(answer_from_draft); none: the harness wrote an answer with no rows (no_final_answer); "
+                          "null: no answer yet or not recorded")
     steps: int
     model_calls: int
     tokens: int
@@ -173,7 +196,9 @@ class RunSummary(BaseModel):
     attach: Literal["not_applicable", "pending", "cut", "done"]
     verify: Literal["ok", "failed", "unknown"]
     score: ScoreSummary | None
-    live: bool
+    live: bool = Field(description="the agent is still writing the run (research, or the attach step)")
+    post_processing: bool = Field(False, description="a web-app job still runs verify, pairs, graph, export-prov or "
+                                                     "score on the finished run")
 
 
 class Verification(BaseModel):
@@ -314,6 +339,9 @@ class Verdict(Open):
     model: str | None = None
     prompt_sha256: str | None = None
     cached: bool | None = None
+    source: Literal["score", "judge"] | None = Field(
+        None, description="score: the verdict score.json counted (the primary outcome's); judge: asked live "
+                          "(?judge=true) because the run has no scored verdict")
 
 
 class WalkClaim(BaseModel):
@@ -331,7 +359,10 @@ class FactWalk(BaseModel):
     row_id: str
     row: AnswerRow
     claims: list[WalkClaim]
-    support: Verdict | None = Field(description="the best verdict over the fact's quotes (judge), or null")
+    support: Verdict | None = Field(description="the best verdict over the fact's quotes, or null")
+    label: Literal["supports", "partial", "no", "unsourced", "pending"] | None = Field(
+        None, description="the fact's support label as scoring defines it (best verdict over its claims; "
+                          "unsourced: no accepted claim; pending: a verdict is missing); null: nothing judged")
 
 
 class GraphNode(Open):
@@ -409,13 +440,17 @@ class RunRequest(BaseModel):
     tokens: int | None = Field(None, ge=1)
     sandbox: Literal["landlock", "unsandboxed"] = "landlock"
     attach: bool = Field(True, description="claim_off: run the attach step after the run")
+    force: bool = Field(False, description="start although a run the web app did not start (a batch on the "
+                                           "cluster) is live: both then share the orchestrator, which slows "
+                                           "the batch runs and inflates their recorded time")
 
 
 # --- gold, results, provenance ---------------------------------------------------------------------
 
 class GoldEntry(BaseModel):
     qid: str
-    status: Literal["none", "building", "draft", "reviewed"]
+    status: GoldState
+    stage: str | None = Field(None, description="the gold builder's stage (progress.json), when it wrote one")
     coverage: dict[str, Any] | None = None
     counts: dict[str, Any] | None = None
     key_version: str | None = None

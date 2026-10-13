@@ -1,17 +1,27 @@
-"""Picking a concept brief in the web app, and changing the pick until the gold build starts (row 2.2)."""
+"""Picking a concept brief in the web app (row 2.2): every pick goes through agent/concept_step.py.
+
+The chain is the record of every pick, so `agent concepts check` (concept_step.check_session) must
+pass after each one. Changing a pick needs WP B's `pick(..., replace=True)`; the tests of that path
+are skipped with a concept_step.py that does not have it.
+"""
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
+from agent import concept_step
 from agent.canonical import file_sha256
-from agent.chain import verify
 from webapp.app import create_app
+from webapp.questions import pick_parameters
 
 from .world import build_world, propose_q01
+
+B = pytest.mark.skipif("replace" not in pick_parameters(), reason="needs WP B's concept_step.pick(replace=...)")
+BASE = pytest.mark.skipif("replace" in pick_parameters(), reason="concept_step.pick can change picks (WP B)")
 
 
 @pytest.fixture
@@ -24,42 +34,25 @@ def pick_records(session: Path) -> list[dict]:
     return [r for r in map(json.loads, lines) if r["subtype"] == "concept_pick"]
 
 
-def test_pick_then_change_the_pick(unpicked) -> None:
+def test_pick(unpicked) -> None:
     session = unpicked.root / "concepts" / "q01"
     with TestClient(create_app(unpicked.settings)) as c:
         assert c.get("/api/questions/q01").json()["concept"]["status"] == "proposed"
         assert c.get("/api/runs/research-r1").json()["summary"]["qid"] is None  # no concept picked yet
-        q = c.post("/api/questions/q01/concepts/pick", json={"choice": 2, "picked_by": "claude",
-                                                               "reason": "a table is easier to score"}).json()
-        assert q["concept"] == {"status": "picked", "title": "Most first-author papers at ACL 2025", "picked_by": "claude"}
-        assert q["picked"]["choice"] == 2 and q["picked"]["reason"] == "a table is easier to score"
+        q = c.post("/api/questions/q01/concepts/pick", json={"choice": 2}).json()
+        assert q["concept"] == {"status": "picked", "title": "Most first-author papers at ACL 2025", "picked_by": "user"}
+        assert q["picked"]["choice"] == 2 and q["picked"]["concept_sha256"] == file_sha256(session / "concept.json")
         assert q["concept_brief"]["answer_shape"]["kind"] == "table"
-        picks = json.loads((unpicked.root / "concepts" / "picks.json").read_text(encoding="utf-8"))
-        assert picks == {"q01": {"choice": 2, "title": "Most first-author papers at ACL 2025", "picked_by": "claude",
-                                 "reason": "a table is easier to score",
-                                 "concept_sha256": file_sha256(session / "concept.json")}}
-        first_sha = picks["q01"]["concept_sha256"]
-        # The user changes it: the runs' concept (brief 1) becomes q01's concept.
-        q = c.post("/api/questions/q01/concepts/pick", json={"choice": 1}).json()
-        assert (q["picked"]["choice"], q["picked"]["picked_by"], q["concept"]["title"]) == \
-            (1, "user", "Benchmarks used by RAG papers")
-        assert c.get("/api/runs/research-r1").json()["summary"]["qid"] == "q01"
-        # Picking the same brief again only records who confirmed it.
-        c.post("/api/questions/q01/concepts/pick", json={"choice": 1, "picked_by": "supervisor"})
-        assert c.get("/api/questions").json()[0]["concept"]["picked_by"] == "supervisor"
-    records = pick_records(session)
-    assert [(r["used"]["choice"], r["agent_id"]) for r in records] == [(2, "user"), (1, "user")]
-    assert records[-1]["generated"]["concept_sha256"] == file_sha256(session / "concept.json")
-    assert file_sha256(session / "concept.replaced-1.json") == first_sha  # the replaced pick is kept
-    assert (session / "concept.sha256").read_text().split()[0] == file_sha256(session / "concept.json")
-    report = verify(session / "events.jsonl", session / "claims.jsonl")
-    assert report.ok, report.errors
+    [record] = pick_records(session)
+    assert (record["used"]["choice"], record["agent_id"]) == (2, "user")
+    assert concept_step.check_session(session) == []  # `agent concepts check` passes
 
 
 def test_pick_problems(unpicked) -> None:
     with TestClient(create_app(unpicked.settings)) as c:
         assert c.post("/api/questions/q01/concepts/pick", json={"choice": 3}).status_code == 400  # 2 briefs
         assert c.post("/api/questions/q01/concepts/pick", json={"choice": 0}).status_code == 422
+        assert c.post("/api/questions/q01/concepts/pick", json={"choice": 1, "picked_by": "supervisor"}).status_code == 422
         assert c.post("/api/questions/q02/concepts/pick", json={"choice": 1}).status_code == 409  # nothing proposed
         assert c.post("/api/questions/q99/concepts/pick", json={"choice": 1}).status_code == 404
         assert c.post("/api/questions/q01/concepts/pick", json={"choice": 1}).status_code == 200
@@ -68,10 +61,66 @@ def test_pick_problems(unpicked) -> None:
         response = c.post("/api/questions/q01/concepts/pick", json={"choice": 2})
         assert response.status_code == 409 and "gold" in response.json()["detail"]
         assert c.get("/api/questions/q01").json()["picked"]["choice"] == 1  # unchanged
+    assert concept_step.check_session(unpicked.root / "concepts" / "q01") == []
+
+
+@BASE
+def test_without_replace_a_pick_is_final(unpicked) -> None:
+    """Before WP B, concept_step.pick freezes the first pick and records only the user."""
+    session = unpicked.root / "concepts" / "q01"
+    with TestClient(create_app(unpicked.settings)) as c:
+        claude = c.post("/api/questions/q01/concepts/pick", json={"choice": 1, "picked_by": "claude"})
+        assert claude.status_code == 409 and "picked_by" in claude.json()["detail"]
+        assert c.post("/api/questions/q01/concepts/pick", json={"choice": 1}).status_code == 200
+        for choice in (2, 1):
+            response = c.post("/api/questions/q01/concepts/pick", json={"choice": choice})
+            assert response.status_code == 409 and "replace" in response.json()["detail"]
+    assert len(pick_records(session)) == 1 and concept_step.check_session(session) == []
+    assert not list(session.glob("concept.replaced-*")) and not (unpicked.root / "concepts" / "picks.json").exists()
+
+
+@B
+def test_change_the_pick(unpicked) -> None:
+    """Each pick, a confirmation too, is a concept_pick record; B rewrites picks.json from the chains."""
+    session = unpicked.root / "concepts" / "q01"
+    with TestClient(create_app(unpicked.settings)) as c:
+        q = c.post("/api/questions/q01/concepts/pick", json={"choice": 2, "picked_by": "claude",
+                                                               "reason": "a table is easier to score"}).json()
+        assert q["concept"]["picked_by"] == "claude" and q["picked"]["reason"] == "a table is easier to score"
+        first = q["picked"]["concept_sha256"]
+        q = c.post("/api/questions/q01/concepts/pick", json={"choice": 1}).json()  # no run uses brief 2
+        assert (q["picked"]["choice"], q["picked"]["picked_by"], q["picked"]["replaces_concept_sha256"]) == (1, "user", first)
+        assert c.get("/api/runs/research-r1").json()["summary"]["qid"] == "q01"
+        q = c.post("/api/questions/q01/concepts/pick", json={"choice": 1, "picked_by": "claude", "reason": "checked"}).json()
+        assert (q["concept"]["picked_by"], q["picked"]["reason"]) == ("claude", "checked")  # a confirmation
+    records = pick_records(session)
+    assert [(r["used"]["choice"], r["agent_id"]) for r in records] == [(2, "claude"), (1, "user"), (1, "claude")]
+    assert records[1]["used"]["replaces_concept_sha256"] == first
+    assert concept_step.check_session(session) == []
+    picks = json.loads((unpicked.root / "concepts" / "picks.json").read_text(encoding="utf-8"))
+    assert picks["q01"] | {"concept_sha256": None} == {"choice": 1, "title": "Benchmarks used by RAG papers",
+                                                       "picked_by": "claude", "reason": "checked", "concept_sha256": None}
+
+
+@B
+def test_a_pick_runs_used_changes_only_with_force(unpicked) -> None:
+    with TestClient(create_app(unpicked.settings)) as c:
+        c.post("/api/questions/q01/concepts/pick", json={"choice": 1})  # the fixture runs' concept
+        assert c.get("/api/questions").json()[0]["runs"] == {"claim_on": 1, "claim_off": 1}
+        refused = c.post("/api/questions/q01/concepts/pick", json={"choice": 2})
+        assert refused.status_code == 409 and "2 run(s)" in refused.json()["detail"]
+        q = c.post("/api/questions/q01/concepts/pick", json={"choice": 2, "reason": "user", "force": True}).json()
+        assert q["picked"]["reason"] == "user [changed with 2 run(s) on the replaced concept]"
+        assert q["runs"] == {"claim_on": 0, "claim_off": 0}  # the runs are on the replaced concept now
+        runs = c.get("/api/runs").json()
+        assert {(r["qid"], r["concept_current"]) for r in runs} == {("q01", False)}  # found by the replaced pick
+        assert c.get("/api/runs", params={"qid": "q01"}).json() == []
+        assert len(c.get("/api/runs", params={"qid": "q01", "include_stale": True}).json()) == 2
+    assert concept_step.check_session(unpicked.root / "concepts" / "q01") == []
 
 
 def test_a_pick_made_on_the_command_line(tmp_path: Path) -> None:
-    """`agent concepts pick` writes no picks.json entry: the pick shows as the user's."""
+    """`agent concepts pick`: the pick record says who picked."""
     propose_q01(tmp_path / "concepts", pick=2)
     from webapp.settings import Settings
 
@@ -82,3 +131,20 @@ def test_a_pick_made_on_the_command_line(tmp_path: Path) -> None:
         assert (q["id"], q["question"].startswith("Which benchmarks")) == ("q01", True)
         assert q["concept"] == {"status": "picked", "title": "Most first-author papers at ACL 2025", "picked_by": "user"}
         assert c.get("/api/questions/q01").json()["picked"]["choice"] == 2
+
+
+def test_runs_on_another_concept_are_not_the_questions(tmp_path: Path) -> None:
+    """A run whose concept is not the question's current pick: listed, flagged, left out of its counts."""
+    world = build_world(tmp_path)
+    old = world.runs / "q01-claim_on-r1-a1"  # a batch run on a concept q01 no longer has
+    shutil.copytree(world.research.run.root, old)
+    config = json.loads((old / "config.json").read_text(encoding="utf-8"))
+    config["hashes"]["concept_sha256"] = "9" * 64
+    (old / "config.json").write_text(json.dumps(config), encoding="utf-8")
+    with TestClient(create_app(world.settings)) as c:
+        runs = {r["run_id"]: r for r in c.get("/api/runs").json()}
+        assert (runs["q01-claim_on-r1-a1"]["qid"], runs["q01-claim_on-r1-a1"]["concept_current"]) == ("q01", False)
+        assert runs["research-r1"]["concept_current"] is True
+        assert c.get("/api/questions").json()[0]["runs"] == {"claim_on": 1, "claim_off": 1}
+        assert {r["run_id"] for r in c.get("/api/runs", params={"qid": "q01"}).json()} == {"research-r1", "baseline-r1"}
+        assert len(c.get("/api/runs", params={"qid": "q01", "include_stale": True}).json()) == 3

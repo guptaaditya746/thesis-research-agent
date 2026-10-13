@@ -5,17 +5,21 @@ SDK UI-message stream, and the built frontend (webapp/web/dist) at / with every 
 falling back to index.html (client-side routes), when that directory exists.
 
 The server reads run directories, the corpus, concept sessions, gold files and reports; it writes
-only job state and logs ($RUNS/.jobs/) and concept picks ($CONCEPTS). It has no authentication:
-it binds to 127.0.0.1 and is reached through an SSH tunnel (webapp/README.md). Request paths are
-checked against their roots (webapp/files.py); SPARQL is read-only (scoring/store.py).
+only job state and logs ($RUNS/.jobs/) and concept picks ($CONCEPTS, through agent/concept_step.py),
+and the jobs it starts write what their commands write. One GET can cause a write elsewhere: a
+claim walk with `?judge=true` asks the judge, which appends its verdicts to $GOLD/judge-cache.jsonl.
+It has no authentication: it binds to 127.0.0.1 and is reached through an SSH tunnel
+(webapp/README.md). Request paths are checked against their roots (webapp/files.py); SPARQL is
+read-only (scoring/store.py).
 """
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, FastAPI, Query, Request
@@ -23,9 +27,11 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from pydantic_ai.ui.vercel_ai import VercelAIAdapter
 from sse_starlette import EventSourceResponse
 
-from . import chat, commands, goldstate
+from agent.canonical import file_sha256
+
+from . import chat, commands, goldstate, judge
 from .corpus import Corpus
-from .files import BadRequest, Conflict, NotFound, inside, read_json
+from .files import ID, BadRequest, Conflict, NotFound, check_id, inside, read_json
 from .jobs import JobManager
 from .models import (AnswerKey, AppConfig, Claim, FactWalk, GoldEntry, Health, Job, KnowledgeGraph, Passage,
                      PickRequest, ProposeRequest, Question, QuestionDetail, QueryResult, Results, RunDetail,
@@ -51,6 +57,7 @@ class Services:
 
     settings: Settings
     chat_model: Any = None  # tests put a pydantic-ai FunctionModel here
+    judge: Callable[..., Any] | None = None  # support(fact, quote, *, context); default gold.judge.support
     corpus: Corpus = field(init=False)
     jobs: JobManager = field(init=False)
     runs: Runs = field(init=False)
@@ -61,21 +68,39 @@ class Services:
     def __post_init__(self) -> None:
         self.corpus = Corpus(self.settings.corpus)
         self.jobs = JobManager(self.settings)
-        self.runs = Runs(self.settings, self.corpus, active_run=self.jobs.active_run)
+        self.runs = Runs(self.settings, self.corpus, job_steps=self.jobs.run_steps)
         self.questions = Questions(self.settings, self.runs.index,
                                    gold_building=lambda qid: bool(self.jobs.active("gold", qid=qid)))
-        self.provenance = Provenance(self.settings.runs)
+        self.provenance = Provenance(self.runs)
         self.agent = chat.build_agent()
 
-    def results(self) -> dict[str, Any]:
-        data = read_json(self.settings.report_dir / "report.json")
+    def judge_support(self) -> Callable[..., Any] | None:
+        return self.judge if self.judge is not None else judge.default_support()
+
+    def reports(self) -> list[Path]:
+        """report.json files: $RUNS/report/, then each batch root's report/, newest first."""
+        root = self.settings.runs
+        nested = [p / "report" / "report.json" for p in (sorted(root.iterdir()) if root.is_dir() else [])
+                  if p.is_dir() and ID.fullmatch(p.name) and (p / "report" / "report.json").is_file()]
+        nested.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        top = self.settings.report_dir / "report.json"
+        return ([top] if top.is_file() else []) + nested
+
+    def results(self, batch: str | None = None) -> dict[str, Any]:
+        """`score report`'s report.json: of the batch root $RUNS/<batch>/, or $RUNS's own, else the newest."""
+        if batch is not None:
+            found = [inside(self.settings.runs, check_id(batch, "batch"), "report", "report.json")]
+        else:
+            found = self.reports()
+        data = read_json(found[0]) if found else None
         if not isinstance(data, dict):
-            raise NotFound("no results report yet ($RUNS/report/report.json)")
+            raise NotFound("no results report yet (`score report` writes <runs root>/report/report.json)")
         return data
 
 
-def create_app(settings: Settings | None = None, *, chat_model: Any = None) -> FastAPI:
-    services = Services(settings or Settings(), chat_model=chat_model)
+def create_app(settings: Settings | None = None, *, chat_model: Any = None,
+               judge: Callable[..., Any] | None = None) -> FastAPI:
+    services = Services(settings or Settings(), chat_model=chat_model, judge=judge)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -145,17 +170,27 @@ def api_router(services: Services) -> APIRouter:  # noqa: C901 (one route per en
     # --- runs ------------------------------------------------------------------------------------------
 
     @api.get("/runs", response_model=list[RunSummary], tags=["runs"])
-    def runs(qid: str | None = None, condition: str | None = None,
-             verify: bool = Query(False, description="run `agent verify` on runs not checked yet (slow)")
+    def runs(qid: str | None = Query(None, description="the question's runs on its current concept"),
+             condition: str | None = None,
+             verify: bool = Query(False, description="run `agent verify` on runs not checked yet (slow)"),
+             include_stale: bool = Query(False, description="with qid: also runs on a replaced concept")
              ) -> list[RunSummary]:
-        return services.runs.summaries(qid=qid, condition=condition, verify=verify)
+        return services.runs.summaries(qid=qid, condition=condition, verify=verify, include_stale=include_stale)
 
     @api.post("/runs", response_model=Job, status_code=202, tags=["runs"])
     async def start_run(request: RunRequest) -> Job:
         concept, prefix = commands.concept_for(s, request)
-        run_id = commands.new_run_id(s, prefix, request)
-        steps = commands.run_steps(s, concept, run_id, request)
-        return services.jobs.submit("run", request.model_dump(), steps, run_id=run_id, qid=request.qid)
+        live = services.runs.live_elsewhere()
+        if live and not request.force:
+            raise Conflict(f"{len(live)} run(s) the web app did not start are live ({', '.join(live[:3])}"
+                           f"{', ...' if len(live) > 3 else ''}): a batch shares the orchestrator; set force to "
+                           "start anyway")
+        sha = file_sha256(concept)
+        qid = next((q for q, current in services.runs.concept_index().current.items() if current == sha), None)
+        name = commands.new_run_name(s, prefix, request)
+        steps = commands.run_steps(s, concept, name, request, qid)
+        return services.jobs.submit("run", request.model_dump(), steps, run_id=commands.run_id_of(name),
+                                    qid=request.qid or qid)
 
     @api.get("/runs/{run_id}", response_model=RunDetail, tags=["runs"])
     def run(run_id: str) -> RunDetail:
@@ -187,10 +222,13 @@ def api_router(services: Services) -> APIRouter:  # noqa: C901 (one route per en
 
     @api.get("/runs/{run_id}/facts/{fact_id}/walk", response_model=FactWalk, tags=["runs"])
     async def walk(run_id: str, fact_id: str,
-                   judge: bool = Query(True, description="ask the judge (gold/judge.py) about each quote")) -> FactWalk:
+                   judge_live: bool = Query(False, alias="judge",
+                                            description="also ask the judge (gold/judge.py, a model call per quote "
+                                                        "it has not cached) about quotes score.json has no "
+                                                        "verdict for")) -> FactWalk:
         result = services.runs.walk(run_id, fact_id)
-        if judge:
-            await chat.add_verdicts(result)
+        if judge_live:
+            await judge.add_live(result, services.judge_support(), s.corpus)
         return result
 
     @api.get("/runs/{run_id}/score", response_model=Score, tags=["runs"])
@@ -211,6 +249,7 @@ def api_router(services: Services) -> APIRouter:  # noqa: C901 (one route per en
 
     @api.get("/gold", response_model=list[GoldEntry], tags=["gold"])
     def gold() -> list[GoldEntry]:
+        """The questions, then any other question directory in $GOLD (a plain id holding gold files)."""
         qids = list(dict.fromkeys([q["id"] for q in services.questions.load()] + goldstate.qids(s.gold)))
         return [goldstate.entry(s.gold, qid, bool(services.jobs.active("gold", qid=qid))) for qid in qids]
 
@@ -226,8 +265,9 @@ def api_router(services: Services) -> APIRouter:  # noqa: C901 (one route per en
         return services.jobs.submit("gold", {"qid": qid}, commands.gold_steps(s, qid), qid=qid)
 
     @api.get("/results", response_model=Results, tags=["results"])
-    def results() -> Any:
-        return services.results()
+    def results(batch: str | None = Query(None, description="the batch root ($RUNS/<batch>) whose report to show; "
+                                                            "default $RUNS/report, else the newest batch's")) -> Any:
+        return services.results(batch)
 
     # --- provenance ----------------------------------------------------------------------------------
 

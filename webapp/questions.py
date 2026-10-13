@@ -2,21 +2,26 @@
 
 The question list is questions/questions.json (`{"schema_version": 1, "questions": [...]}`); while
 it does not exist, the questions are those with a concept session ($CONCEPTS/<qid>/session.json).
-A session is `proposed` once it has proposal.json and `picked` once it has concept.json; who
-picked, and why, is in $CONCEPTS/picks.json (`{"<qid>": {choice, title, picked_by, reason,
-concept_sha256}}`), and a pick without an entry there was made with `agent concepts pick`, by
-the user.
+A session is `proposed` once it has proposal.json and `picked` once it has concept.json.
 
-Picking goes through agent.concept_step.pick, which freezes the brief as concept.json and logs a
-`concept_pick` record in the session's hash chain. The user may change a pick until the gold
-build for the question has started: the frozen concept.json and concept.sha256 are kept as
-concept.replaced-<n>.json / .sha256 and the new brief is picked the same way, so the chain holds
-one `concept_pick` record per pick, in order, and the last one names the current concept.json.
+Picking belongs to agent/concept_step.py (WP B), and this module only calls it: `pick(session,
+choice, picked_by=, reason=, replace=)` freezes the brief as concept.json and logs a `concept_pick`
+record (who picked, why, and the concept it replaces) in the session's hash chain, and rewrites
+$CONCEPTS/picks.json from the chains. So the chain is the one record of every pick, `agent
+concepts check` passes after any of them, and the pick shown here is read from the last
+`concept_pick` record. A confirmation of the current brief is a pick like any other.
+
+The user may change a pick until the gold build for the question has started, and only with
+`force` once runs used the current concept (they would then be runs on a replaced concept,
+webapp/runs.py). Changing a pick needs B's `replace`; with a concept_step.py that has no such
+parameter (before WP B) a second pick is refused, as is a pick by anyone but the user, which that
+version cannot record.
 """
 from __future__ import annotations
 
 import inspect
 import threading
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -24,16 +29,20 @@ from agent import concept_step
 from agent.canonical import canonical_bytes, file_sha256
 
 from . import goldstate
-from .files import BadRequest, Conflict, NotFound, check_id, inside, read_json, write_json_atomic
+from .files import ID, BadRequest, Conflict, NotFound, check_id, inside, read_json, read_jsonl
 from .models import ConceptBrief, ConceptStatus, Pick, PickRequest, Question, QuestionDetail, RunCounts
 from .settings import Settings
 
-PICKS_FILE = "picks.json"
+
+def pick_parameters() -> set[str]:
+    return set(inspect.signature(concept_step.pick).parameters)
 
 
 class Questions:
-    def __init__(self, settings: Settings, run_index: Any, gold_building: Any = lambda qid: False) -> None:
-        """`run_index()` gives (run_id, qid, condition) per run; `gold_building(qid)` whether a gold job runs."""
+    def __init__(self, settings: Settings, run_index: Callable[[], list[Any]],
+                 gold_building: Callable[[str], bool] = lambda qid: False) -> None:
+        """`run_index()` gives (run_id, qid, condition, concept_current) per run (webapp/runs.py
+        Runs.index); `gold_building(qid)` whether a gold job runs."""
         self.settings = settings
         self.run_index = run_index
         self.gold_building = gold_building
@@ -46,13 +55,15 @@ class Questions:
     # --- reading ---------------------------------------------------------------------------------------
 
     def load(self) -> list[dict[str, Any]]:
+        """The questions (plain ids only: anything else could not be addressed)."""
         data = read_json(self.settings.questions)
         if isinstance(data, dict) and isinstance(data.get("questions"), list):
-            return [q for q in data["questions"] if isinstance(q, dict) and q.get("id")]
+            return [q for q in data["questions"] if isinstance(q, dict) and ID.fullmatch(str(q.get("id") or ""))]
         found = []
         for session in sorted(self.concepts.glob("*/session.json")) if self.concepts.is_dir() else []:
-            info = read_json(session) or {}
-            found.append({"id": session.parent.name, "question": info.get("question", "")})
+            if ID.fullmatch(session.parent.name):
+                info = read_json(session) or {}
+                found.append({"id": session.parent.name, "question": info.get("question", "")})
         return found
 
     def find(self, qid: str) -> dict[str, Any]:
@@ -65,23 +76,23 @@ class Questions:
     def session(self, qid: str) -> Path:
         return inside(self.concepts, check_id(qid, "question"))
 
-    def picks(self) -> dict[str, Any]:
-        data = read_json(self.concepts / PICKS_FILE)
-        return data if isinstance(data, dict) else {}
-
     def picked(self, qid: str, briefs: list[dict[str, Any]] | None = None) -> Pick | None:
+        """The current pick: concept.json, as the session's last concept_pick record names it."""
         session = self.session(qid)
         concept = read_json(session / concept_step.CONCEPT_FILE)
-        entry = self.picks().get(qid)
         if not isinstance(concept, dict):
             return None
         sha = file_sha256(session / concept_step.CONCEPT_FILE)
-        if isinstance(entry, dict) and entry.get("concept_sha256") in (None, sha):
-            return Pick(choice=int(entry.get("choice") or choice_of(concept, briefs or [])),
-                        title=entry.get("title") or concept.get("title"), picked_by=str(entry.get("picked_by") or "user"),
-                        reason=entry.get("reason"), concept_sha256=sha)
-        return Pick(choice=choice_of(concept, briefs or self.briefs(qid)), title=concept.get("title"), picked_by="user",
-                    reason=None, concept_sha256=sha)
+        records = [r for r in read_jsonl(session / "events.jsonl") if r.get("subtype") == "concept_pick"]
+        last = records[-1] if records else {}
+        used, generated = last.get("used") or {}, last.get("generated") or {}
+        if generated.get("concept_sha256") != sha:  # no record names this concept.json (`agent concepts check` fails)
+            used, last = {}, {}
+        return Pick(choice=int(used.get("choice") or choice_of(concept, briefs if briefs is not None else self.briefs(qid))),
+                    title=(last.get("custom_metadata") or {}).get("title") or concept.get("title"),
+                    picked_by=str(used.get("picked_by") or last.get("agent_id") or "user"),
+                    reason=used.get("reason") or None, concept_sha256=sha,
+                    replaces_concept_sha256=used.get("replaces_concept_sha256"))
 
     def briefs(self, qid: str) -> list[dict[str, Any]]:
         proposal = read_json(self.session(qid) / concept_step.PROPOSAL_FILE)
@@ -104,11 +115,12 @@ class Questions:
                         runs=counts.get(qid, RunCounts()))
 
     def run_counts(self) -> dict[str, RunCounts]:
+        """Runs per question and condition, on the question's current concept only."""
         out: dict[str, RunCounts] = {}
-        for _, qid, condition in self.run_index():
-            if qid and condition in ("claim_on", "claim_off"):
-                counts = out.setdefault(qid, RunCounts())
-                setattr(counts, condition, getattr(counts, condition) + 1)
+        for r in self.run_index():
+            if r.qid and r.condition in ("claim_on", "claim_off") and r.current is not False:
+                counts = out.setdefault(r.qid, RunCounts())
+                setattr(counts, r.condition, getattr(counts, r.condition) + 1)
         return out
 
     def list(self) -> list[Question]:
@@ -136,41 +148,38 @@ class Questions:
             raise BadRequest(f"choice must be 1..{len(briefs)}")
         if goldstate.started(self.settings.gold, qid) or self.gold_building(qid):
             raise Conflict(f"the gold build for {qid} has started on the current pick; it can no longer change")
+        params = pick_parameters()
         with self._lock:
             current = self.picked(qid, briefs)
-            if current is None or current.choice != request.choice:
-                moved = self._set_aside(session) if current is not None else []
-                try:
-                    _pick(session, request.choice, request.picked_by, request.reason)
-                except (concept_step.ConceptStepError, ValueError, RuntimeError) as exc:
-                    for old, new in moved:  # put the current pick back
-                        new.rename(old)
-                    raise Conflict(str(exc)) from exc
-            concept = read_json(session / concept_step.CONCEPT_FILE) or {}
-            picks = self.picks()
-            picks[qid] = {"choice": request.choice, "title": concept.get("title"), "picked_by": request.picked_by,
-                          "reason": request.reason,
-                          "concept_sha256": file_sha256(session / concept_step.CONCEPT_FILE)}
-            write_json_atomic(self.concepts / PICKS_FILE, picks)
+            kwargs: dict[str, Any] = {}
+            if "picked_by" in params:
+                kwargs.update(picked_by=request.picked_by, reason=self._reason(qid, request, current))
+            elif request.picked_by != "user":
+                raise Conflict("this agent/concept_step.py records every pick as the user's; "
+                               f"picked_by={request.picked_by!r} needs its picked_by parameter (WP B)")
+            if current is not None:
+                if "replace" not in params:
+                    raise Conflict(f"{qid} is picked and this agent/concept_step.py keeps the first pick "
+                                   "(changing it needs its replace parameter, WP B)")
+                kwargs["replace"] = True
+            try:
+                concept_step.pick(session, request.choice, **kwargs)
+            except (concept_step.ConceptStepError, ValueError) as exc:
+                raise Conflict(str(exc)) from exc
         return self.detail(qid)
 
-    @staticmethod
-    def _set_aside(session: Path) -> list[tuple[Path, Path]]:
-        """Keep the replaced concept.json and concept.sha256 as concept.replaced-<n>.*; returns the moves."""
-        n = 1 + sum(1 for _ in session.glob("concept.replaced-*.json"))
-        moved = []
-        for name, suffix in ((concept_step.CONCEPT_FILE, "json"), (concept_step.CONCEPT_HASH_FILE, "sha256")):
-            path = session / name
-            if path.exists():
-                moved.append((path, path.rename(session / f"concept.replaced-{n}.{suffix}")))
-        return moved
-
-
-def _pick(session: Path, choice: int, picked_by: str, reason: str | None) -> None:
-    """agent.concept_step.pick, passing who picked and why when its signature takes them."""
-    params = inspect.signature(concept_step.pick).parameters
-    extra = {k: v for k, v in (("picked_by", picked_by), ("reason", reason)) if k in params}
-    concept_step.pick(session, choice, **extra)
+    def _reason(self, qid: str, request: PickRequest, current: Pick | None) -> str:
+        """The request's reason; changing a pick that runs used needs `force`, and says so."""
+        reason = request.reason or ""
+        if current is None or request.choice == current.choice:
+            return reason
+        used = [r for r in self.run_index() if r.qid == qid and r.current is True]
+        if not used:
+            return reason
+        if not request.force:
+            raise Conflict(f"{len(used)} run(s) used {qid}'s current concept; changing the pick leaves them on a "
+                           "replaced concept (set force to change it anyway)")
+        return f"{reason} [changed with {len(used)} run(s) on the replaced concept]".strip()
 
 
 def choice_of(concept: dict[str, Any], briefs: list[dict[str, Any]]) -> int:

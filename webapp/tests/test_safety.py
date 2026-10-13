@@ -31,6 +31,12 @@ def secret(world: World) -> Path:
     "/api/runs/%2e%2e%2fruns%2fresearch-r1/claims",
     "/api/runs/.jobs/steps",
     "/api/runs/report/claims",
+    "/api/runs/..~research-r1/claims",
+    "/api/runs/web~..%2F..%2Fsecret.txt/claims",
+    "/api/runs/research-r1~..%2F..%2Fsecret.txt/stream",
+    "/api/runs/.jobs~x/steps",
+    "/api/runs/a~b~c/claims",
+    "/api/runs/~research-r1/claims",
     "/api/runs/research-r1/facts/..%2F..%2Fsecret/walk",
     "/api/corpus/..%2Fsecret.txt",
     "/api/corpus/%2e%2e%2fsecret",
@@ -41,6 +47,9 @@ def secret(world: World) -> Path:
     "/api/jobs/..%2F..%2Fsecret",
     "/api/jobs/%2e%2e/log",
     "/api/queries/1?run_id=..%2Fsecret.txt",
+    "/api/queries/1?run_id=..~secret.txt",
+    "/api/results?batch=..",
+    "/api/results?batch=..%2F..",
 ])
 def test_paths_outside_the_roots_are_refused(client: TestClient, secret: Path, url: str) -> None:
     response = client.get(url)
