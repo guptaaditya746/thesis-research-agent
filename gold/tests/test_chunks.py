@@ -5,7 +5,7 @@ import pytest
 
 from agent.broker import Rejected
 from agent.tests.conftest import papers
-from gold.chunks import MAX_CHARS, GoldCorpus, paper_chunks, sections, split
+from gold.chunks import MAX_CHARS, MIN_PIECE_CHARS, Chunk, GoldCorpus, halve, paper_chunks, sections, split
 
 from .scripted import corpus
 
@@ -61,6 +61,41 @@ def test_text_before_the_first_heading_and_empty_files():
     chunks = split("preamble\n# One\nbody\n# Two\nmore\n", 12)
     assert chunks[0] == (0, 9, None)
     assert split("", 100) == [] and split(" \n\n ", 100) == []
+
+
+def test_hashes_in_code_are_not_headings_and_setext_headings_are():
+    text = ("# Paper\nintro\n\n```\n# not a heading\n### Background You are\n```\n\n"
+            "    # indented code\n\nSetext Title\n============\nbody\n\n> # quoted\n\nSub\n---\nend\n")
+    assert [(text[start:start + 12], heading) for start, _, heading in sections(text)] == [
+        ("# Paper\nintr", "Paper"), ("Setext Title", "Setext Title"), ("Sub\n---\nend\n", "Sub")]
+    crlf = text.replace("\n", "\r\n")
+    assert [h for _, _, h in sections(crlf)] == ["Paper", "Setext Title", "Sub"]
+    assert [crlf[s:s + 3] for s, _, _ in sections(crlf)] == ["# P", "Set", "Sub"]
+
+
+def test_no_section_of_a_d1_paper_starts_inside_a_code_fence():
+    text = papers()["2025-acl-long-625"]  # its appendix prints prompt templates with '### ...' lines in fences
+    fenced = [n for n, line in enumerate(text.split("\n")) if line.startswith("```")]
+    assert fenced, "the fixture paper has fenced blocks"
+    for start, _, heading in sections(text):
+        inside = sum(1 for n in fenced if n < text.count("\n", 0, start)) % 2 == 1
+        assert not inside, heading
+        assert not (heading or "").startswith("Reference Answer")
+
+
+def test_halve_cuts_a_chunk_at_the_paragraph_nearest_its_middle():
+    para = "word " * 100  # 500 characters
+    text = "# A\n\n" + "\n\n".join([para.strip()] * 10) + "\n"
+    whole = paper_chunks("p1", text, len(text))[0]
+    first, second = halve(text, whole)
+    assert (first.start, second.end, first.end) == (whole.start, whole.end, second.start)
+    assert text[first.end - 2:first.end] == "\n\n" and abs(first.end - len(text) // 2) < 300
+    assert (first.piece, second.piece, first.chunk, second.chunk) == ("1", "2", 0, 0)
+    assert halve(text, first)[1].piece == "12"
+    assert halve(text, Chunk("p1", 0, 0, 2 * MIN_PIECE_CHARS - 1, None)) is None
+    with_heading = "# A\n" + "x " * 700 + "\n## B\n" + "y " * 700 + "\n"
+    _, later = halve(with_heading, paper_chunks("p1", with_heading, len(with_heading))[0])
+    assert later.heading == "B" and with_heading[later.start:].startswith("## B")
 
 
 def test_corpus_lists_failures_and_checks_hashes(tmp_path):

@@ -8,10 +8,21 @@ reply fit the sub-model's 32,768-token context). A section longer than that is c
 breaks (blank lines), a paragraph longer than that at the last line break or space before the
 limit, and only failing those at the limit itself.
 
+Headings are found by a CommonMark parser (markdown-it-py), not a pattern: a `#` line inside a fenced
+or indented code block (the prompt templates papers print in their appendices) is not a heading,
+and setext headings (a line underlined with === or ---) are. Only top-level headings start sections
+(not one quoted in a block quote or a list).
+
 Offsets are raw code-point offsets into the file text exactly as stored (agent/anchor.read_text),
 the offsets anchors use. Chunks are contiguous and cover the file, so the chunk texts in order give
-the file back. `heading` is the heading line the chunk starts in (without the #s); a chunk that
+the file back. `heading` is the heading text the chunk starts in (without the #s); a chunk that
 continues a cut section repeats that section's heading.
+
+When a chunk is too long for a call (gold/calls.py `too_long`: the reply hit max_tokens, or the
+prompt did not fit the context), the builder cuts that chunk alone in two (`halve`, at the paragraph
+break nearest its middle) and asks again for each piece, so the other chunks keep their boundaries,
+cache entries and candidate ids. A piece keeps its chunk's number; `piece` says which half ("1",
+"2", "21" for the first half of the second half).
 
 The corpus is the broker's `Corpus` (agent/broker.py): file names, manifest hashes, the hash check on
 read, the same anchoring a claim gets. The broker keeps every index it built, which suits a run that
@@ -28,12 +39,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from markdown_it import MarkdownIt
+
 from agent.anchor import Index
 from agent.broker import Corpus, Rejected
 from agent.canonical import file_sha256, sha256_hex
 
 MAX_CHARS = 40_000
-HEADING = re.compile(r"^#{1,6}[ \t]+(.*)$", re.M)
+MIN_PIECE_CHARS = 1_000  # `halve` does not cut a chunk into pieces smaller than this
+LINE_BREAK = re.compile(r"\r\n?|\n")  # markdown-it's line breaks, so its line numbers map to offsets
+SEPARATORS = ("\n\n", "\n", " ")
 
 
 @dataclass(frozen=True)
@@ -43,6 +58,7 @@ class Chunk:
     start: int
     end: int
     heading: str | None
+    piece: str = ""     # "" for a whole chunk; "1", "2", "12", ... for the halves `halve` cut
 
     @property
     def chars(self) -> int:
@@ -53,10 +69,25 @@ class Chunk:
                 "heading": self.heading, "chars": self.chars}
 
 
+_PARSER = MarkdownIt("commonmark")
+
+
+def headings(text: str) -> list[tuple[int, str | None]]:
+    """(offset of the heading's first line, heading text) of every top-level heading, in order."""
+    starts = [0] + [m.end() for m in LINE_BREAK.finditer(text)]
+    tokens = _PARSER.parse(text)
+    found = []
+    for n, token in enumerate(tokens):
+        if token.type == "heading_open" and token.level == 0 and token.map:
+            inline = tokens[n + 1] if n + 1 < len(tokens) and tokens[n + 1].type == "inline" else None
+            found.append((starts[token.map[0]], (inline.content.strip() if inline else "") or None))
+    return found
+
+
 def sections(text: str) -> list[tuple[int, int, str | None]]:
     """(start, end, heading) of each section: a heading line up to the next one; text before the first
     heading is a section without a heading."""
-    found = [(m.start(), m.group(1).strip().strip("#").strip() or None) for m in HEADING.finditer(text)]
+    found = headings(text)
     if not found or found[0][0] != 0:
         found.insert(0, (0, None))
     ends = [start for start, _ in found[1:]] + [len(text)]
@@ -69,7 +100,7 @@ def _cut(text: str, start: int, end: int, max_chars: int) -> list[tuple[int, int
     pieces = []
     while end - start > max_chars:
         limit = start + max_chars
-        for sep in ("\n\n", "\n", " "):
+        for sep in SEPARATORS:
             at = text.rfind(sep, start + 1, limit)
             if at > start:
                 cut = at + len(sep)
@@ -80,6 +111,26 @@ def _cut(text: str, start: int, end: int, max_chars: int) -> list[tuple[int, int
         start = cut
     pieces.append((start, end))
     return pieces
+
+
+def halve(text: str, chunk: Chunk) -> tuple[Chunk, Chunk] | None:
+    """`chunk` (of the paper `text`) cut in two near its middle: at the blank line nearest the middle,
+    else a line break, else a space, else the middle itself; None when a half would be shorter than
+    MIN_PIECE_CHARS. The second half's heading is the last section heading at or before its start."""
+    if chunk.chars < 2 * MIN_PIECE_CHARS:
+        return None
+    middle = chunk.start + chunk.chars // 2
+    low, high = chunk.start + MIN_PIECE_CHARS, chunk.end - MIN_PIECE_CHARS
+    cut = middle
+    for sep in SEPARATORS:
+        before, after = text.rfind(sep, low, middle), text.find(sep, middle, high)
+        options = [at + len(sep) for at in (before, after) if at >= 0 and low <= at + len(sep) <= high]
+        if options:
+            cut = min(options, key=lambda at: abs(at - middle))
+            break
+    heading = next((h for start, h in reversed(headings(text)) if start <= cut and chunk.start <= start), None)
+    return (Chunk(chunk.paper_id, chunk.chunk, chunk.start, cut, chunk.heading, chunk.piece + "1"),
+            Chunk(chunk.paper_id, chunk.chunk, cut, chunk.end, heading or chunk.heading, chunk.piece + "2"))
 
 
 def split(text: str, max_chars: int = MAX_CHARS) -> list[tuple[int, int, str | None]]:
