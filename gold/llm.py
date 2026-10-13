@@ -11,6 +11,7 @@ from __future__ import annotations
 import itertools
 import json
 import os
+import re
 import threading
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
@@ -91,18 +92,31 @@ def cache_key(payload: dict[str, Any]) -> str:
 
 
 class JsonlCache:
-    """Append-only `{key, value}` lines; a rerun with the same inputs costs no model call."""
+    """Append-only `{key, value}` lines; a rerun with the same inputs costs no model call.
+
+    A process killed in the middle of an append (a Slurm time limit, a full quota) leaves a cut last
+    line. Loading skips lines that do not parse (counted in `skipped`; their calls are simply made
+    again), and the first append after such a load starts on a new line, so the cut line never
+    swallows a good one."""
 
     def __init__(self, path: os.PathLike[str] | str) -> None:
         self.path = os.fspath(path)
         self._lock = threading.Lock()
         self._data: dict[str, Any] = {}
+        self.skipped = 0
+        self._newline = False  # the file does not end with a line break: start the next append with one
         if os.path.exists(self.path):
-            with open(self.path, encoding="utf-8") as fh:
-                for line in fh:
-                    if line.strip():
-                        row = json.loads(line)
-                        self._data[row["key"]] = row["value"]
+            with open(self.path, "rb") as fh:
+                data = fh.read()
+            self._newline = bool(data) and not data.endswith(b"\n")
+            for line in data.split(b"\n"):
+                if not line.strip():
+                    continue
+                try:
+                    row = json.loads(line)
+                    self._data[row["key"]] = row["value"]
+                except (ValueError, KeyError, TypeError):
+                    self.skipped += 1
 
     def get(self, key: str) -> Any | None:
         return self._data.get(key)
@@ -111,8 +125,38 @@ class JsonlCache:
         with self._lock:
             self._data[key] = value
             os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-            with open(self.path, "a", encoding="utf-8") as fh:
-                fh.write(json.dumps({"key": key, "value": value}, ensure_ascii=False, sort_keys=True) + "\n")
+            line = json.dumps({"key": key, "value": value}, ensure_ascii=False, sort_keys=True) + "\n"
+            with open(self.path, "a", encoding="utf-8", newline="\n") as fh:
+                fh.write(("\n" if self._newline else "") + line)
+            self._newline = False
+
+
+def model_identity(models: list[Model]) -> str:
+    """The model identity for cache keys: the pinned sub-model (name@revision, agent/rundir.SUBAGENTS)
+    for its replicas, so it does not matter which replica answered; else the sorted model names.
+
+    The identity is the pin, not observed from the server: the serving profile pins the same revision
+    and serves it as `sub-model` (vLLM's served name), which names no weights. Serving other weights
+    behind the aliases needs a new pin in agent/rundir.SUBAGENTS, which changes every key."""
+    names = sorted({model_name(m) for m in models})
+    if set(names) <= set(SUB_ALIASES):
+        return f"{SUB_MODEL['name']}@{SUB_MODEL['revision']}"
+    return "+".join(names)
+
+
+_SECRET_PATTERNS = (re.compile(r"sk-[A-Za-z0-9._\-]{4,}"), re.compile(r"\b[0-9a-fA-F]{64}\b"))
+
+
+def redact(text: str) -> str:
+    """`text` with the API key, its sha256 and anything shaped like a key or a key hash replaced by
+    `***`: provider error bodies (LiteLLM's auth errors) can echo a shortened key and its hash, and
+    error reasons are written to output files and logs."""
+    key = os.environ.get("LITELLM_MASTER_KEY") or ""
+    if len(key) >= 4:
+        text = text.replace(key, "***").replace(sha256_hex(key.encode("utf-8")), "***")
+    for pattern in _SECRET_PATTERNS:
+        text = pattern.sub("***", text)
+    return text
 
 
 @dataclass(frozen=True)
