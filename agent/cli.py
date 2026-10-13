@@ -167,9 +167,12 @@ def cmd_replay(args: argparse.Namespace) -> int:
     if len(report["errors"]) > 50:
         print(f"... and {len(report['errors']) - 50} more in replay.json")
     skipped = ", ".join(f"{k} {n}" for k, n in sorted(report["skipped"].items()))
-    print(f"{'PASS' if report['ok'] else 'FAIL'} replay {report['run_id']}: {report['matched']}/{report['calls']} model "
+    # PARTIAL: the research loop replays, but some calls (the attach step's) are not in the trajectory.
+    verdict = "FAIL" if not report["ok"] else ("PASS" if report["complete"] else "PARTIAL")
+    print(f"{verdict} replay {report['run_id']}: {report['matched']}/{report['calls']} model "
           f"calls rebuilt from trajectory.json, {report['outputs_ok']}/{report['commands']} outputs match"
-          + (f"; not in the trajectory: {skipped}" if skipped else "") + f" -> {args.run_dir / 'replay.json'}")
+          + (f"; {report['unchecked_calls']} calls not checked (not in the trajectory: {skipped})" if skipped else "")
+          + f" -> {args.run_dir / 'replay.json'}")
     return 0 if report["ok"] else 1
 
 

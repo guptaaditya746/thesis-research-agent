@@ -91,7 +91,8 @@ def test_reexec_against_a_changed_corpus(tmp_path: Path, corpus: tuple[Path, Pat
 
 
 @posix_only
-def test_reexec_baseline_and_its_attach_step(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+def test_reexec_baseline_and_its_attach_step(tmp_path: Path, corpus: tuple[Path, Path],
+                                             capsys: pytest.CaptureFixture[str]) -> None:
     """claim_off: no claim tool for the research commands; the attach step's commands have it (origin attach)."""
     probe = 'command -v claim >/dev/null || echo NO_CLAIM; echo "fd=${CLAIM_FD:-unset}"'
     run, _, _, _ = go(tmp_path, corpus, [bash(probe), final([row()])], condition="claim_off")
@@ -104,9 +105,13 @@ def test_reexec_baseline_and_its_attach_step(tmp_path: Path, corpus: tuple[Path,
     [dry] = jsonl(run.root / "reexec.jsonl")
     assert (dry["step_id"], dry["origin"], dry["claim_id"]) == (3, "attach", "claim-000001")
     assert (run.out / "step-0001.txt").read_text(encoding="utf-8") == "NO_CLAIM\nfd=unset\n"
-    # The attach step's calls are not in trajectory.json: replay counts them and checks the research loop.
+    # The attach step's calls are not in trajectory.json: replay counts them and checks the research loop,
+    # and says that the run replayed only partly.
     result = replay.replay_run(run.root)
     assert result["ok"] and result["skipped"] == {"main/attach": 2} and result["calls"] == 2
+    assert (result["complete"], result["unchecked_calls"], result["scope"]) == (False, 2, "research")
+    assert cli(["replay", str(run.root)]) == 0
+    assert "PARTIAL replay r1: 2/2 model calls" in capsys.readouterr().out
 
 
 def test_parse_steps_and_first_diff() -> None:

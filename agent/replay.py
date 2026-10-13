@@ -5,30 +5,39 @@ copy of the messages, rewritten after every step) and out/ (each command's full 
 it against the hash chain in events.jsonl:
 
 - each `ai_model_invocation` of the main research loop (agent `main`, origin `research`): the prompt
-  was the first `used.messages` messages of the conversation. Prepared as OrchestratorModel.query
-  prepares them (mini's `_prepare_messages_for_api`: the `extra` field dropped) and hashed in
-  canonical JSON, they must give the recorded `prompt_sha256`. For a call that returned, the next
-  message is the reply and hashes to `response_sha256`; every reply in the trajectory is a
-  recorded call;
+  was the first `used.messages` messages of the conversation, each as the model saw it in that call
+  (below). Prepared as OrchestratorModel.query prepares them (mini's `_prepare_messages_for_api`:
+  the `extra` field dropped) and hashed in canonical JSON, they must give the recorded
+  `prompt_sha256`. For a call that returned, the next message is the reply and hashes to
+  `response_sha256`; every reply in the trajectory is a recorded call;
 - each command of the main loop (`agent_tool`): out/<file> hashes to the recorded `output_sha256`,
   and the observation the model saw for that step shows the first `output_cap_bytes` of it.
+
+What the model saw in each call. The loop (agent/loop.py, rows 1.15 and C8) changes some messages
+after the model has seen them, for good, and keeps the text first shown in the message's
+`extra.original_content` (never sent: mini drops `extra`):
+- observation masking and the context-full stubs turn command outputs into one-line stubs, always
+  the oldest outputs first and never back. Each call record says how many outputs of its prompt
+  were stubs (`custom_metadata.masked_observations`), so in that call the first that many outputs
+  show their stub and the later ones the text first shown;
+- after the second context-full 400 the loop shortens its earlier replies; the calls up to that
+  failed call saw them whole, the later ones shortened.
+A loop that overwrites a message without keeping `original_content` (the M1 loop's context-full
+stubs did) leaves the calls that saw the earlier text unrebuildable, and the replay names them.
 
 When every call matches, the log names every message the model saw, in order and byte for byte,
 so the run can be shown again exactly as it happened (the trace viewer and the claim walk rely on
 that). The result goes to <run>/replay.json.
 
-Messages the loop changes after the model has seen them (observation masking, row 1.15; the stubs
-after a context-full 400) must keep what the model saw: `rewrite()` moves the earlier content into
-extra.content_history with the last step that saw it, and the replay uses it for the calls up to
-that step. A loop that overwrites without it breaks the replay of every call that saw the earlier
-text; the replay reports those calls as "same messages, other content".
-
-Calls outside the main conversation (the attach step's per-fact conversations, subagents) are not
-in trajectory.json; they are counted under `skipped`.
+Scope: the research loop only. Calls outside the main conversation (the attach step's per-fact
+conversations, subagents) are not in trajectory.json; they are counted under `skipped` and
+`unchecked_calls`, and `complete` is false, so a claim_off run after attach replays only partly
+(the CLI says PARTIAL, not PASS).
 """
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -38,47 +47,45 @@ from .rundir import COMMAND_LIMITS, RunDir, utc_now
 
 TRAJECTORY_FILE = "trajectory.json"
 REPLAY_FILE = "replay.json"
-HISTORY = "content_history"
+ORIGINAL = "original_content"  # extra key holding the text first shown (agent/loop.py, ResearchAgent._stub)
+CONTEXT_FULL = "context_window_exceeded"  # generated.error of a call refused as too long (C8)
+SHORTENED_AFTER = 2  # context-full 400s after which the loop shortens its earlier replies (ResearchAgent._overflow)
 
 
-# --- the contract with the loop: changing a message the model has already seen ------------------------------
+# --- what the model saw --------------------------------------------------------------------------------
 
-def rewrite(message: dict[str, Any], content: str, *, last_step: int) -> None:
-    """Replace a sent message's content, keeping the old content for replay.
-
-    `last_step` is the last step (main loop call number) whose prompt carried the old content.
-    `extra` never reaches the model (mini drops it before the call), so the kept text costs no tokens.
-    """
-    if message.get("content") == content:
-        return
-    extra = message.setdefault("extra", {})
-    extra.setdefault(HISTORY, []).append({"content": message.get("content"), "until_step": last_step})
-    message["content"] = content
-
-
-def content_at(message: dict[str, Any], step: int) -> Any:
-    """The content the model saw in this message at `step`."""
-    for old in (message.get("extra") or {}).get(HISTORY, []):
-        if step <= old["until_step"]:
-            return old["content"]
-    return message.get("content")
+@dataclass(frozen=True)
+class View:
+    """What one call's prompt showed of the messages the loop changed later."""
+    masked: int = 0  # the oldest `masked` command outputs were stubs
+    shortened: bool = False  # the earlier replies were shortened (after the second context-full 400)
 
 
 def first_content(message: dict[str, Any]) -> Any:
     """The content the model saw first in this message."""
-    history = (message.get("extra") or {}).get(HISTORY, [])
-    return history[0]["content"] if history else message.get("content")
+    extra = message.get("extra") or {}
+    return extra[ORIGINAL] if ORIGINAL in extra else message.get("content")
 
 
-def prepared(messages: list[dict[str, Any]], step: int) -> list[dict[str, Any]]:
-    """The messages as they went to the model at `step`: each as sent then, without `extra`."""
-    return [{k: (content_at(m, step) if k == "content" else v) for k, v in m.items() if k != "extra"}
-            for m in messages]
+def prepared(messages: list[dict[str, Any]], view: View = View()) -> list[dict[str, Any]]:
+    """The messages as they went to the model in a call with this view, without `extra`."""
+    out, outputs = [], 0
+    for m in messages:
+        extra = m.get("extra") or {}
+        content = m.get("content")
+        if extra.get("kind") == "observation":
+            outputs += 1
+            if outputs > view.masked:
+                content = extra.get(ORIGINAL, content)
+        elif m.get("role") == "assistant" and not view.shortened:
+            content = extra.get(ORIGINAL, content)
+        out.append({k: (content if k == "content" else v) for k, v in m.items() if k != "extra"})
+    return out
 
 
-def prompt_sha256(messages: list[dict[str, Any]], step: int) -> str:
-    """What OrchestratorModel.query records as prompt_sha256 for these messages at `step`."""
-    return sha256_hex(canonical_bytes(prepared(messages, step)))
+def prompt_sha256(messages: list[dict[str, Any]], view: View = View()) -> str:
+    """What OrchestratorModel.query records as prompt_sha256 for these messages in a call with this view."""
+    return sha256_hex(canonical_bytes(prepared(messages, view)))
 
 
 # --- the check ----------------------------------------------------------------------------------------
@@ -100,20 +107,26 @@ def _records(run: RunDir) -> list[dict[str, Any]]:
 
 def _check_calls(messages: list[dict[str, Any]], calls: list[dict[str, Any]], report: dict[str, Any]) -> None:
     replies = set()
-    previous = 0
+    previous, previous_failed, overflows = 0, False, 0
     for record in calls:
         step, n = record["step_id"], record["used"].get("messages")
         entry: dict[str, Any] = {"step": step, "task_id": record["task_id"], "status": record["status"],
                                  "messages": n, "prompt": "missing", "reply": None}
         report["steps"].append(entry)
+        failed = record["status"] == "failed"
+        view = View(masked=int((record.get("custom_metadata") or {}).get("masked_observations") or 0),
+                    shortened=overflows >= SHORTENED_AFTER)
+        if failed and (record.get("generated") or {}).get("error") == CONTEXT_FULL:
+            overflows += 1  # the calls after this one saw what the loop stubbed after it
         if not isinstance(n, int) or not 0 < n <= len(messages):
             report["errors"].append(f"step {step}: the call's prompt had {n} messages, the trajectory has "
                                     f"{len(messages)}")
             continue
-        if n <= previous:
+        # A call after one that got no reply may send the same messages again (a refused reply schema).
+        if n < previous or (n == previous and not previous_failed):
             report["errors"].append(f"step {step}: {n} messages after a call with {previous}: calls out of order")
-        previous = n
-        rebuilt = prompt_sha256(messages[:n], step)
+        previous, previous_failed = n, failed
+        rebuilt = prompt_sha256(messages[:n], view)
         if rebuilt == record["used"].get("prompt_sha256"):
             entry["prompt"] = "match"
         else:
@@ -121,9 +134,9 @@ def _check_calls(messages: list[dict[str, Any]], calls: list[dict[str, Any]], re
             entry["rebuilt_sha256"] = rebuilt
             report["errors"].append(
                 f"step {step}: the first {n} messages of the trajectory do not hash to the recorded prompt; a "
-                "message was changed after this call without keeping what the model saw (agent.replay.rewrite), "
+                f"message was changed after this call without keeping what the model saw (extra.{ORIGINAL}), "
                 "or the trajectory is not the run's")
-        if record["status"] == "failed":  # e.g. the context-full 400: no reply came back
+        if failed:  # e.g. the context-full 400: no reply came back
             continue
         reply = messages[n] if n < len(messages) else None
         replies.add(n)
@@ -171,8 +184,9 @@ def replay_run(run_dir: Path) -> dict[str, Any]:
     """Rebuild and check the run's conversation; write and return replay.json's content."""
     run = RunDir(Path(run_dir))
     report: dict[str, Any] = {"schema_version": 1, "run_id": run.run_id, "replayed_at": utc_now(),
-                              "trajectory_sha256": None, "calls": 0, "matched": 0, "commands": 0, "outputs_ok": 0,
-                              "skipped": {}, "steps": [], "errors": []}
+                              "scope": "research", "trajectory_sha256": None, "calls": 0, "matched": 0,
+                              "commands": 0, "outputs_ok": 0, "masked": 0, "skipped": {}, "unchecked_calls": 0,
+                              "steps": [], "errors": []}
     chain = verify(run.events, run.claims)
     report["errors"] += [f"chain: {e}" for e in chain.errors]
     records = _records(run)
@@ -181,6 +195,7 @@ def replay_run(run_dir: Path) -> dict[str, Any]:
         if not is_main(r):
             key = f"{r['agent_id']}/{(r.get('custom_metadata') or {}).get('origin')}"
             report["skipped"][key] = report["skipped"].get(key, 0) + 1
+    report["unchecked_calls"] = sum(report["skipped"].values())
     main_calls = [r for r in calls if is_main(r)]
     tools = [r for r in records if r["subtype"] == "agent_tool" and is_main(r)]
     report["calls"], report["commands"] = len(main_calls), len(tools)
@@ -190,6 +205,7 @@ def replay_run(run_dir: Path) -> dict[str, Any]:
     else:
         report["trajectory_sha256"] = file_sha256(trajectory)
         messages = json.loads(trajectory.read_text(encoding="utf-8")).get("messages", [])
+        report["masked"] = sum(bool((m.get("extra") or {}).get("masked")) for m in messages)  # stubs at the end
         try:
             cap = int(run.load_config()["command_limits"]["output_cap_bytes"])
         except (OSError, ValueError, KeyError):
@@ -198,5 +214,6 @@ def replay_run(run_dir: Path) -> dict[str, Any]:
         _check_outputs(run, messages, tools, cap, report)
     report["matched"] = sum(e["prompt"] == "match" and e["reply"] in ("match", None) for e in report["steps"])
     report["ok"] = not report["errors"] and report["matched"] == report["calls"]
+    report["complete"] = report["ok"] and not report["unchecked_calls"]  # every model call of the run checked
     write_json(run.root / REPLAY_FILE, report)
     return report
