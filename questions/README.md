@@ -13,7 +13,8 @@ spans many papers) and six ambiguous (more than one reasonable reading; the conc
 ```
 
 The schema is `agent/schemas/questions.schema.json`; `agent/tests/test_questions.py` checks the file against it
-and against the plan (12 questions, q01–q12, 6 + 6). Code reads it with `agent.concept_step.load_questions`.
+and against the plan (q01–q06 corpus-wide, q07–q12 ambiguous). Code reads it with
+`agent.concept_step.load_questions`.
 
 ## Where they come from
 
@@ -44,9 +45,9 @@ Only as far as the Markdown corpus needs; each entry's `notes` holds the origina
 The set is provisional: a later session with access to the corpus may replace questions that the corpus cannot
 answer. Do it **before gold is built**:
 
-1. Edit the entry in `questions.json`: keep the id (the ids are slots: the run manifests in `agent/manifests/`
-   and the scripts name q01–q12), the category balance (6 + 6) and the schema; set `source` (a labelling id, or
-   `own`) and say in `notes` what changed and why.
+1. Edit the entry in `questions.json`: keep its id and its category (the ids are slots that the run manifests in
+   `agent/manifests/` name; q01–q06 are corpus-wide, q07–q12 ambiguous) and the schema; set `source` (a
+   labelling id, or `own`) and say in `notes` what changed and why.
 2. Update the table in `docs/e2e-build-plan.md` ("The 12 questions") to match, and run
    `uv run pytest agent/tests/test_questions.py` (one test compares the file with that table).
 3. Propose concepts for it: `agent concepts propose-all questions/questions.json --root "$CONCEPTS" ...` skips

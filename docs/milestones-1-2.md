@@ -123,7 +123,10 @@ model). 2.3 waits only for the 12 questions.
 | 2.4 | done: the loop already had `claim_off`; tests pin no `claim`/`CLAIM_FD`, same config except condition and prompt | `259a4de` | `test_loop` |
 | 2.5 | done: `agent attach <run>`; per fact a fresh conversation using `claim` with `origin="attach"`, or `no_source`; 6 steps / 60k tokens per fact to start; appends to the run's chain; `answer.research.json` kept | `bb6b631` | `test_attach` |
 | 2.9 | done: `agent batch <manifest>`; sample `agent/manifests/m4-72.json` (placeholder q01–q12); cut runs rerun fresh as `<key>-a<N>` (max 3); exit 0 done / 2 out of time / 1 gave up | `8f17bd7`, `051f64b` | `test_batch` |
-| 2.3, 2.10 | open: need the 12 questions and the cluster | — | — |
+| 2.3 | built: the 12 questions in `questions/questions.json` (6 corpus-wide, 6 ambiguous, from the labelling repo; `questions/README.md`); `agent concepts propose-all\|pick-all\|status`, `pick --picked-by --reason --replace`, `$CONCEPTS/picks.json`; manifests `m4-72` and `e2e-smoke` on them. Open: proposing and picking the 12 on Slurm (`scripts/e2e-concepts.sh`) | `da7b45f`, `a1be5cd`, `59e981d` | `test_questions`, `test_concept_step` |
+| 2.10 | open: needs the cluster (`scripts/e2e-batch.sh agent/manifests/e2e-smoke.json`) | — | — |
+| 2.13 | done: `agent reexec <run> [--steps]` (C5) and `agent replay <run>` (C6); first real use on Slurm (`scripts/e2e-replay.sh --reexec`) | `0085b29`, `f389ea6` | `test_reexec`, `test_replay` |
+| Slurm scripts | `scripts/e2e-env.sh`, `e2e-concepts.sh`, `e2e-batch.sh`, `e2e-replay.sh` | `aebdadc` | `test_e2e_scripts` |
 
 Small decisions made while building:
 - Attach-step records are ordinary records with `custom_metadata.origin = "attach"` (loop records carry `research`); the export groups them into one attach activity. Attach claims are `wasGeneratedBy` their attach command and `wasInfluencedBy` the attach activity.
@@ -134,6 +137,10 @@ Small decisions made while building:
 - The attach step's claim must carry the fact's own s/p/o; its budget (6 steps / 60k per fact) is frozen with the run budget after 1.13.
 - Seeds: `seed_base + 100 × question + repeat`, the same in both conditions. Deadline = earliest of `--deadline`, `--time-limit`, `$SLURM_JOB_END_TIME`; use `#SBATCH --signal=B:TERM@<s>`.
 - Fixed while building: command cleanup now signals the wrapper's whole session (background children escaped before; `setsid` still escapes); SIGTERM is no longer retried as a model error (`agent/stopping.py`).
+- 2.3: a pick records who picked (`picked_by`: user, claude, provisional-first, also the record's agent) and why; a pick is frozen unless replaced on purpose (`--replace`, before gold is built), and the new pick names the concept it replaces. `picks.json` is rebuilt from the sessions' chains after every pick. A session whose question text has changed is `stale` and is never reused.
+- 2.13 re-execution: every `agent_tool` record in chain order, one fresh scratch for the sequence, the run's sandbox mode, agent root, limits and claim setting (attach commands always claim); claims go to a dry broker that numbers claim ids on from the run's count, so a claiming command reprints its output byte for byte; nothing is appended to the run's chain. Exit 0 identical, 1 differing, 2 errors.
+- 2.13 replay: a call's prompt is the first `used.messages` messages of trajectory.json, hashed as `OrchestratorModel.query` hashes them. Masking (1.15) must keep what the model saw: `agent.replay.rewrite(message, stub, last_step=n)` puts the old text in `extra.content_history` (never sent to the model); the current context-full stubbing does not yet, so a run with a context-full 400 replays only partly.
+- Slurm: `scripts/e2e-batch.sh` writes runs to `$RUNS/<manifest name>/` through an effective manifest (runs_root, concepts from `$CONCEPTS`, `base_url` from `$LITELLM_BASE_URL`) and refuses a root whose manifest or concepts changed since its runs started.
 
 ## What milestones 3 and 4 get from 1 and 2
 
