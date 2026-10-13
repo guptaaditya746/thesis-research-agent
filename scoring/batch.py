@@ -122,10 +122,14 @@ def from_tree(runs_root: Path, corpus: Path | None, corpus_manifest: Path | None
 
 
 def up_to_date(old: dict[str, Any] | None, key: Key, judge: Judge | None) -> bool:
+    """A score.json against this key file, with nothing the judge (if there is one now) could add."""
     if not old or old.get("schema_version") != SCHEMA_VERSION or old.get("key_sha256") != key.sha256:
         return False
+    if judge is None:
+        return True
+    used = (old.get("judge") or {}).get("used")
     pending = (old.get("judge") or {}).get("pending", 0) or (old.get("support") or {}).get("pending", 0)
-    return not (pending and judge is not None)
+    return bool(used) and not pending
 
 
 def score_batch(runs_root: Path, gold: Path, *, manifest: Path | None = None, corpus: Path | None = None,

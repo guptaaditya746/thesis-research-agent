@@ -8,9 +8,11 @@ gold.judge caches every decision in $GOLD/judge-cache.jsonl, keyed by its input,
 hash, so a rescore costs no model calls.
 
 `Judge` wraps any object with those callables (the gold.judge module, or a fake in tests). It accepts a
-pydantic model or a dict as the reply, runs a coroutine to completion, and turns a failed call into a
-pending decision: scoring never stops because the judge is unreachable, it reports what is pending
-(the labelling repo's `judge_pending`), and the soft level and support share stay open until then.
+pydantic model or a dict as the reply and turns a failed call into a pending decision: scoring never
+stops because the judge is unreachable, it reports what is pending (the labelling repo's
+`judge_pending`), and the soft level and support share stay open until then. If the calls are
+coroutines, they all run on one event loop in a background thread, so an HTTP client the judge keeps
+between calls is never used from a second loop.
 """
 from __future__ import annotations
 
@@ -49,6 +51,15 @@ class Judge:
         self.errors: list[str] = []
         self.models: set[str] = set()
         self._lock = threading.Lock()
+        self._loop: asyncio.AbstractEventLoop | None = None
+
+    def _wait(self, awaitable: Any) -> Any:
+        """Run a coroutine on the judge's own event loop (started on first use) and wait for it."""
+        with self._lock:
+            if self._loop is None:
+                self._loop = asyncio.new_event_loop()
+                threading.Thread(target=self._loop.run_forever, name="judge-loop", daemon=True).start()
+        return asyncio.run_coroutine_threadsafe(_wait(awaitable), self._loop).result()
 
     def _call(self, method: str, *args: Any, **kwargs: Any) -> dict[str, Any] | None:
         fn = getattr(self.impl, method, None)
@@ -57,7 +68,7 @@ class Judge:
                 raise AttributeError(f"{self.name} has no {method}()")
             reply = fn(*args, **kwargs)
             if inspect.isawaitable(reply):
-                reply = asyncio.run(_wait(reply))
+                reply = self._wait(reply)
             reply = plain(reply)
             if isinstance(reply, bool):  # a bare yes/no from same_fact or same_row
                 reply = {"match": reply}

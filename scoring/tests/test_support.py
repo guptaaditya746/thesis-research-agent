@@ -1,9 +1,16 @@
 """scoring/support.py: each fact's quotes judged, unsourced facts, the support share, a missing judge."""
 from __future__ import annotations
 
+import asyncio
+import sys
+import types
+
+import pytest
+from pydantic import BaseModel
+
 from agent.pairs import write_pairs
 from agent.tests.runs import Built, baseline, corpus_env, research  # noqa: F401  (pytest fixtures)
-from scoring.judge import Judge
+from scoring.judge import Judge, load
 from scoring.support import fact_label, judge_support, quote_context
 
 from .helpers import judge
@@ -62,6 +69,40 @@ def test_bad_labels_are_not_trusted(research: Built) -> None:
 
     j = Judge(Odd())
     assert judge_support(research.run, j)["pending"] == 4 and "not one of" in j.errors[0]
+
+
+def test_an_async_judge_returning_models_runs_on_one_loop(research: Built) -> None:
+    class Verdict(BaseModel):
+        label: str
+        rationale: str
+        model: str
+
+    class AsyncJudge:  # how a pydantic-ai based gold.judge may look
+        def __init__(self) -> None:
+            self.loops: set[int] = set()
+
+        async def support(self, fact, quote, *, context=None):
+            self.loops.add(id(asyncio.get_running_loop()))
+            await asyncio.sleep(0)
+            return Verdict(label="supports", rationale="ok", model="sub-model-1")
+
+    impl = AsyncJudge()
+    j = Judge(impl)
+    result = judge_support(research.run, j, workers=4)
+    assert (result["supports"], result["pending"]) == (4, 0) and len(impl.loops) == 1
+    assert j.summary()["models"] == ["sub-model-1"] and j.calls == 4
+
+
+def test_load_imports_gold_judge_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
+    module = types.ModuleType("gold.judge")
+    module.support = lambda fact, quote, *, context=None: {"label": "no"}
+    monkeypatch.setitem(sys.modules, "gold.judge", module)
+    j = load()
+    assert j is not None and j.impl is module and j.support({"s": 1, "p": 2, "o": 3}, "q") == {"label": "no"}
+    assert load(False) is None
+    said: list[str] = []
+    monkeypatch.setitem(sys.modules, "gold.judge", None)  # as if C2's module were not there
+    assert load(log=said.append) is None and "no judge" in said[0]
 
 
 def test_fact_label_rules() -> None:
