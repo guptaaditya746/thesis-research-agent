@@ -19,7 +19,7 @@ started_at, ended_at, status, custom_metadata`, plus our `step_id`, `prev_hash`,
 | `ai_model_invocation` | one model call | prompt hash, model (name, revision, temperature, seed) | response hash, token usage |
 | `agent_tool` | one bash command | command, files read | output hash, output file |
 | `claim` | one `claim` through the broker | anchor (file, start, end, exact, prefix, suffix, file hash) | claim id |
-| `spawn` | a subagent start | task text | child `agent_id` |
+| `spawn` | a subagent start (and its return, or a refused request; row 2.12) | task text, files, steps | child `agent_id` and sub-model; on return its exit status and the sha256 of `sub/<id>/result.json` |
 | `coverage` | a model output that could not be parsed, a dropped or truncated output | raw output hash | reason |
 
 ## Edges (PROV-O in the export, LEDGER names in the viewer)
