@@ -56,6 +56,13 @@ def test_the_whole_c1_pipeline_from_the_command_line(env, capsys):
     assert found[0]["coverage"]["relevant"] == 3 and found[0]["pool"]["records"] == 6
 
 
+def test_build_exits_1_while_calls_failed(env):
+    env["script"].fail = lambda stage, paper, part: stage == "screen" and paper == "p5" and part == 2
+    assert cli.main(["build", "q01", "--only-papers", "p5"]) == 1
+    env["script"].fail = None
+    assert cli.main(["build", "q01", "--only-papers", "p5"]) == 0
+
+
 def test_build_without_a_concept_says_what_to_do(env):
     with pytest.raises(SystemExit, match="no concept"):
         cli.main(["build", "q09"])

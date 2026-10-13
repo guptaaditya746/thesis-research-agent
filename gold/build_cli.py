@@ -75,7 +75,8 @@ def cmd_build(args: argparse.Namespace) -> int:
     doc = build(args.qid, concept, _corpus(args), _gold_root(args), rotation=_rotation(args), settings=settings,
                 question=args.question or question_text(args.qid, concept_path),
                 log=lambda line: print(line, flush=True))
-    return 1 if doc["coverage"]["error"] or doc["counts"]["extraction_errors"] else 0
+    counts = doc["counts"]  # a relevant paper can still have failed chunks: rerun until none failed
+    return 1 if doc["coverage"]["error"] or counts["chunks_error"] or counts["extraction_errors"] else 0
 
 
 def cmd_triage(args: argparse.Namespace) -> int:
