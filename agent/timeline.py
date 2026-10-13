@@ -56,7 +56,9 @@ def render(run: RunDir) -> str:
              f"<h1>Trace {_e(run.run_id)}</h1><p class=meta>condition {_e(config.get('condition', '?'))} · "
              f"{len(records)} records · {len(steps)} steps</p>"]
     for step in sorted(steps):
-        parts.append(f"<section id=step-{step}><h2>Step {step}</h2>")
+        agents = sorted({r["agent_id"] for r in steps[step]} - {"main", "batch"})  # a subagent's step (row 2.12)
+        tag = "".join(f"<span class=tag>{_e(a)}</span>" for a in agents)
+        parts.append(f"<section id=step-{step}><h2>Step {step}{tag}</h2>")
         for r in steps[step]:
             meta, gen, used = r["custom_metadata"], r["generated"], r["used"]
             kind = r["subtype"]
@@ -91,6 +93,13 @@ def render(run: RunDir) -> str:
                 else:
                     parts.append(f"<div class=bad>claim rejected: {_e(meta.get('reason'))}</div>"
                                  f"<pre>{_e(meta.get('quote', used.get('quote', '')))}</pre>")
+            elif kind == "spawn":  # row 2.12: a subagent started, returned, or a request refused
+                event = meta.get("event", "spawn")
+                who = gen.get("agent_id", "")
+                what = (f"task: {used.get('task', '')}" if event == "start" else
+                        f"exit {gen.get('exit_status')}, claims {', '.join(gen.get('claims', [])) or 'none'}"
+                        if event == "return" else gen.get("reason", ""))
+                parts.append(f"<div class=warn>spawn {_e(event)} {_e(who)}: {_e(what)}</div>")
             elif kind == "coverage":
                 parts.append(f"<div class=warn>coverage: {_e(gen.get('reason'))}"
                              f"{' — ' + _e(json.dumps(gen['detail'], ensure_ascii=False)) if 'detail' in gen else ''}"

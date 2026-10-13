@@ -15,7 +15,9 @@ Figures: steps (model replies), commands, claims (accepted / rejected), claim st
 sent at least one claim), tokens (sum of total_tokens over model calls), and wall time from the
 first record's start to the last record's end. With an attach step, the same figures for the
 attach step alone (`attach`) and for the run without it (`without_attach`), so cost can be reported
-with and without it.
+with and without it. With subagents (row 2.12) the figures are the run's total, and `agents` has
+them per agent (main, sub-01, ...), `subagents` how many ran; and each subagent's result.json is
+the one its spawn record holds the sha256 of.
 """
 from __future__ import annotations
 
@@ -66,13 +68,21 @@ ATTACH_COST = ("steps", "model_calls", "commands", "claims_accepted", "claims_re
 
 
 def stats(records: list[dict[str, Any]]) -> dict[str, Any]:
-    """cost() of all records; with an attach step also `attach` (its own cost) and `without_attach`."""
+    """cost() of all records; with an attach step also `attach` (its own cost) and `without_attach`.
+
+    With subagents (row 2.12), `agents` holds cost() per agent that made model calls (the main
+    agent's is what its budget counted) and `subagents` their number; the totals stay the run's.
+    """
     out = cost(records)
     attach = [r for r in records if is_attach(r)]
     if attach:
         mine, rest = cost(attach), cost([r for r in records if not is_attach(r)])
         out["attach"] = {k: mine[k] for k in ATTACH_COST}
         out["without_attach"] = {k: rest[k] for k in ATTACH_COST}
+    callers = list(dict.fromkeys(r["agent_id"] for r in records if r["subtype"] == "ai_model_invocation"))
+    if any(a != "main" for a in callers):
+        out["agents"] = {a: cost([r for r in records if r["agent_id"] == a]) for a in callers}
+        out["subagents"] = sum(a != "main" for a in callers)
     return out
 
 
@@ -156,7 +166,28 @@ def verify_run(run: RunDir, corpus: Path, manifest: Path) -> RunReport:
         answer = None
     report.errors += _attach_problems(run, records, answer)
     report.errors += _draft_problems(run, records)
+    report.errors += _spawn_problems(run, records)
     return report
+
+
+def _spawn_problems(run: RunDir, records: list[dict[str, Any]]) -> list[str]:
+    """Subagents (row 2.12): each started one returned, and its result.json is the result its return record hashed."""
+    spawns = [r for r in records if r["subtype"] == "spawn"]
+    started = {r["generated"]["agent_id"] for r in spawns if r["status"] == "started"}
+    problems = []
+    for record in spawns:
+        if record["custom_metadata"].get("event") != "return":
+            continue
+        gen = record["generated"]
+        started.discard(gen.get("agent_id"))
+        path = run.root / str(gen.get("result_file", ""))
+        if not path.is_file():
+            problems.append(f"spawn: {gen.get('result_file')} of {gen.get('agent_id')} is missing")
+        elif file_sha256(path) != gen.get("result_sha256"):
+            problems.append(f"spawn: {gen.get('result_file')} is not the result {gen.get('agent_id')} returned "
+                            "(sha256 differs)")
+    problems += [f"spawn: {agent} started but has no return record" for agent in sorted(started)]
+    return problems
 
 
 def _draft_problems(run: RunDir, records: list[dict[str, Any]]) -> list[str]:

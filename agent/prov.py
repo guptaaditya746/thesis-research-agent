@@ -210,6 +210,8 @@ def build(run: RunDir) -> Graph:
             child = agent(generated["agent_id"])
             g.add((child, PROV.actedOnBehalfOf, agent(rec["agent_id"])))
             g.add((act, OURS.spawnedAgent, child))
+            if "model_name" in generated:  # a subagent's start record names its sub-model (row 2.12)
+                g.add((child, OURS.model, Literal(f"{generated['model_name']}@{generated.get('revision', '')}")))
         if sub != "claim":
             g.add((act, OURS.usedJson, _json(used)))
             g.add((act, OURS.generatedJson, _json(generated)))
