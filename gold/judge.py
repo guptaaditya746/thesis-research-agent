@@ -7,17 +7,28 @@ API (contract in docs/e2e-build-plan.md):
   fact matching;
 - `same_row(run_row, key_row, concept) -> {match, ...}`: row matching when cells differ in wording.
 The module functions use a default `Judge` over $GOLD and the LiteLLM sub-models; `Judge` has the same
-calls plus async twins (`asupport`, ...) and `gather` to run many with bounded concurrency.
+calls plus async twins (`asupport`, ...) and `gather` to run many. Sync calls may come from any thread
+(scoring's workers) and block the caller; async code (a FastAPI handler) should await the async twins.
+
+One event loop: every model call, sync or async, runs on one loop in a daemon thread (`run_sync`,
+`on_judge_loop`). pydantic-ai's OpenAI models share one cached httpx client per process, and a pooled
+keep-alive connection belongs to the loop that opened it; a fresh `asyncio.run` per call would reuse a
+connection of a closed loop and lose the verdict after the server answered ("Event loop is closed").
+On that loop a Judge bounds model calls to `concurrency` at a time and runs identical inputs that are in
+flight together as one call.
 
 Calls go through gold/llm.py: pydantic-ai, the reply decoded under the output's JSON schema (rationale
 first, then the label), temperature 0, seed 0, thinking off, round robin over sub-model-1/-2. Both
 replicas serve the same weights, so the model identity is the pinned name and revision, not the alias.
-Every result is cached in $GOLD/judge-cache.jsonl (llm.JsonlCache), keyed by sha256 of the canonical
-input, the model identity, the prompt hash and the settings: a rescore costs no model call, and a changed
-prompt or model never reuses an old answer. `Judge(cache_only=True)` never calls a model and returns None
-for an input it has not seen (pending), so the web app can read verdicts without spending tokens. The
-prompts are gold/prompts/judge-*.txt; a verdict records its prompt_sha256 (llm.prompt_sha256 of the text
-and the output schema).
+Every result is cached in $GOLD/judge-cache.jsonl (llm.JsonlCache), keyed by sha256 of the task, the
+prompt hash (instructions and output schema), the sha256 of the exact user prompt the model got, the
+model identity and the settings (temperature, seed, max_tokens): a rescore costs no model call, and a
+changed prompt, rendering, model or setting never reuses an old answer. A cache line records the call:
+task, input, prompt and user-prompt hashes, model and the model the server says answered, settings,
+token usage and time. `Judge(cache_only=True)` never calls a model and returns None for an input it has
+not seen (pending), so the web app can read verdicts without spending tokens. The prompts are
+gold/prompts/judge-*.txt; a verdict records its prompt_sha256 (llm.prompt_sha256 of the text and the
+output schema) and `served_model`; `render_sha256()` fingerprints how inputs are rendered into prompts.
 
 Context: the calibration judges each quote with `context_for(...)`, the paper id and CONTEXT_CHARS of
 text on each side of the quote. Scoring should pass the same context so that the judge it uses is the
@@ -40,15 +51,17 @@ import asyncio
 import hashlib
 import json
 import re
+import threading
 from collections import Counter
 from collections.abc import Awaitable, Coroutine, Iterable
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, TypedDict, TypeVar
 
 from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
+
+from agent.canonical import sha256_hex
 
 from . import argilla_io, llm, review
 from .agreement import KAPPA_BAR, kappa, wilson
@@ -80,6 +93,7 @@ class Verdict(TypedDict):
     label: str
     rationale: str
     model: str
+    served_model: str | None
     prompt_sha256: str
     cached: bool
 
@@ -158,23 +172,72 @@ def row_match_prompt(run_row: dict[str, Any], key_row: dict[str, Any], concept: 
                       f"Key row: {_json(row_fields(key_row))}"])
 
 
+def context_text(paper_id: str, file: str, passage: str) -> str:
+    return f"Paper {paper_id} ({file}):\n{passage}"
+
+
 def context_for(corpus: review.Corpus, file: str, start: int, end: int, chars: int = CONTEXT_CHARS) -> str | None:
     """The paper id and about `chars` characters on each side of the quote (cut at line ends)."""
     if not file or not corpus.has(file):
         return None
     text = corpus.text(file)
     a, b = argilla_io.window(text, start, end, chars)
-    return f"Paper {corpus.paper_id(file)} ({corpus.file_name(file)}):\n{text[a:b]}"
+    return context_text(corpus.paper_id(file), corpus.file_name(file), text[a:b])
+
+
+# A fixed input rendered by each task: its hash changes whenever the rendering of inputs into the user
+# prompt does (the cache keys hold the exact prompt anyway; the report records which rendering it used).
+PROBE_FACT = {"s": "p1", "p": "evaluatesOn", "o": "Spider"}
+PROBE_CONCEPT = {"title": "T", "definition": "D", "answer_shape": {"kind": "graph", "edges": []}}
+
+
+def render_sha256() -> dict[str, str]:
+    row = {"id": "r1", "source": "p1", "target": "Spider", "facts": []}
+    probes = {"support": support_prompt(PROBE_FACT, "quote", context_text("p1", "p1.md", "passage")),
+              "same-fact": fact_match_prompt(PROBE_FACT, PROBE_FACT, PROBE_CONCEPT),
+              "same-row": row_match_prompt(row, row, PROBE_CONCEPT)}
+    return {task: sha256_hex(text.encode("utf-8")) for task, text in probes.items()}
+
+
+# --- one event loop for every model call (see the module docstring) ------------------------------------
+
+_loop: asyncio.AbstractEventLoop | None = None
+_loop_lock = threading.Lock()
+
+
+def judge_loop() -> asyncio.AbstractEventLoop:
+    """The loop all judge calls run on: started at first use in a daemon thread, never closed."""
+    global _loop
+    with _loop_lock:
+        if _loop is None:
+            _loop = asyncio.new_event_loop()
+            threading.Thread(target=_loop.run_forever, name="gold-judge-loop", daemon=True).start()
+        return _loop
+
+
+def _running() -> asyncio.AbstractEventLoop | None:
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return None
 
 
 def run_sync(coro: Coroutine[Any, Any, T]) -> T:
-    """Run a coroutine from sync code, also when an event loop is already running (FastAPI, notebooks)."""
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
-    with ThreadPoolExecutor(1) as pool:
-        return pool.submit(asyncio.run, coro).result()
+    """Run a coroutine on the judge loop and wait for it: from sync code in any thread, or from inside
+    another running loop (which then waits too; async code should await the async calls instead)."""
+    loop = judge_loop()
+    if _running() is loop:
+        coro.close()
+        raise RuntimeError("a sync judge call on the judge's own loop would wait for itself; await the async call")
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+
+
+async def on_judge_loop(coro: Coroutine[Any, Any, T]) -> T:
+    """Await a coroutine on the judge loop from any loop (directly when already on it)."""
+    loop = judge_loop()
+    if _running() is loop:
+        return await coro
+    return await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(coro, loop))
 
 
 # --- the judge ------------------------------------------------------------------------------------------
@@ -193,10 +256,12 @@ class Judge:
         self.model_id = model_id or (llm.model_name(models[0]) if models
                                      else f"{llm.SUB_MODEL['name']}@{llm.SUB_MODEL['revision']}")
         self.cache_only = cache_only
-        self.settings = {"temperature": temperature, "seed": seed}
+        self.settings = {"temperature": temperature, "seed": seed, "max_tokens": MAX_TOKENS}
         self.prompts = {task: load_prompt(task) for task in TASKS}
         self.concurrency = concurrency
         self.calls = 0  # model calls made by this object
+        self._gate = asyncio.Semaphore(concurrency)  # used on the judge loop only
+        self._inflight: dict[str, asyncio.Future[dict[str, Any]]] = {}
 
     def prompt_hashes(self) -> dict[str, str]:
         return {task: p.sha256 for task, p in self.prompts.items()}
@@ -207,21 +272,48 @@ class Judge:
         return self._rotation.next()
 
     async def _ask(self, task: str, payload: dict[str, Any], user_prompt: str) -> dict[str, Any] | None:
+        return await on_judge_loop(self._ask_here(task, payload, user_prompt))
+
+    async def _ask_here(self, task: str, payload: dict[str, Any], user_prompt: str) -> dict[str, Any] | None:
+        """On the judge loop: the cached answer, else one model call per distinct input in flight."""
         prompt = self.prompts[task]
-        key = llm.cache_key({"task": task, "input": payload, "model": self.model_id,
-                             "prompt_sha256": prompt.sha256, "settings": self.settings})
-        meta = {"model": self.model_id, "prompt_sha256": prompt.sha256}
+        user_sha = sha256_hex(user_prompt.encode("utf-8"))
+        key = llm.cache_key({"task": task, "prompt_sha256": prompt.sha256, "user_prompt_sha256": user_sha,
+                             "model": self.model_id, "settings": self.settings})
         hit = self.cache.get(key)
         if hit is not None:
-            return {**hit, **meta, "cached": True}
+            return self._verdict(task, hit, cached=True)
         if self.cache_only:
             return None
-        reply = await llm.structured(prompt.text, user_prompt, prompt.output, model=self._model(),
-                                     model_settings=llm.settings(**self.settings, max_tokens=MAX_TOKENS))
+        pending = self._inflight.get(key)
+        mine = pending is None
+        if pending is None:
+            pending = asyncio.ensure_future(self._call(task, payload, user_prompt, user_sha, key))
+            self._inflight[key] = pending
+            pending.add_done_callback(lambda _: self._inflight.pop(key, None))
+        value = await asyncio.shield(pending)
+        return self._verdict(task, value, cached=not mine)
+
+    async def _call(self, task: str, payload: dict[str, Any], user_prompt: str, user_sha: str,
+                    key: str) -> dict[str, Any]:
+        prompt = self.prompts[task]
+        async with self._gate:
+            reply = await llm.structured_reply(prompt.text, user_prompt, prompt.output, model=self._model(),
+                                               model_settings=llm.settings(**self.settings))
         self.calls += 1
-        value = reply.model_dump()
+        value = {**reply.output.model_dump(), "task": task, "input": payload, "model": self.model_id,
+                 "alias": reply.model, "served_model": reply.served_model, "prompt_sha256": prompt.sha256,
+                 "user_prompt_sha256": user_sha, "settings": self.settings,
+                 "usage": {"input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens},
+                 "created_at": review.utc_now()}
         self.cache.put(key, value)
-        return {**value, **meta, "cached": False}
+        return value
+
+    def _verdict(self, task: str, value: dict[str, Any], *, cached: bool) -> dict[str, Any]:
+        """What a caller gets: the reply's fields plus model, served_model, prompt_sha256 and cached."""
+        reply = {k: value[k] for k in self.prompts[task].output.model_fields}
+        return {**reply, "model": value["model"], "served_model": value.get("served_model"),
+                "prompt_sha256": value["prompt_sha256"], "cached": cached}
 
     async def asupport(self, fact: dict[str, Any], quote: str, *, context: str | None = None) -> Verdict | None:
         return await self._ask("support", {"fact": _spo(fact), "quote": quote, "context": context},
@@ -262,25 +354,22 @@ class Judge:
         return run_sync(self.asupport_pair(pair, corpus))
 
     async def gather(self, calls: Iterable[Awaitable[T]]) -> list[T]:
-        """Await many judge calls, at most `concurrency` at a time, results in order."""
-        gate = asyncio.Semaphore(self.concurrency)
-
-        async def one(call: Awaitable[T]) -> T:
-            async with gate:
-                return await call
-
-        return list(await asyncio.gather(*(one(c) for c in calls)))
+        """Await many judge calls, results in order (at most `concurrency` model calls at a time: the
+        bound is in the judge itself, so it also holds across callers and threads)."""
+        return list(await asyncio.gather(*calls))
 
 
 _defaults: dict[str, Judge] = {}
+_defaults_lock = threading.Lock()
 
 
 def default_judge() -> Judge:
-    """One Judge per $GOLD, on the LiteLLM sub-models."""
+    """One Judge per $GOLD, on the LiteLLM sub-models (one also when worker threads ask at once)."""
     root = str(review.gold_root())
-    if root not in _defaults:
-        _defaults[root] = Judge(root)
-    return _defaults[root]
+    with _defaults_lock:
+        if root not in _defaults:
+            _defaults[root] = Judge(root)
+        return _defaults[root]
 
 
 def support(fact: dict[str, Any], quote: str, *, context: str | None = None, judge: Judge | None = None) -> Verdict | None:
@@ -499,7 +588,10 @@ def calibration_report(root: Path, corpus: review.Corpus, *, judge: Judge, seed:
     found = run_sync(judge.gather([judge.asupport_pair(by_id[i], corpus) for i in ids]))
     report = calibrate(sample, manifest, answered, dict(zip(ids, found)), seed=seed)
     prompt = judge.prompts["support"]
-    report = {**report, "model": judge.model_id, "prompt_file": prompt.file, "prompt_sha256": prompt.sha256,
+    report = {**report, "model": judge.model_id,
+              "served_models": sorted({str(v.get("served_model")) for v in found if v and v.get("served_model")}),
+              "prompt_file": prompt.file, "prompt_sha256": prompt.sha256,
+              "render_sha256": render_sha256()["support"], "settings": judge.settings,
               "context_chars": CONTEXT_CHARS, "model_calls": judge.calls}
     review.write_json(Path(root) / REPORT_FILE, report)
     return report

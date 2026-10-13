@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +15,7 @@ from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCall
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from agent import anchor
+from agent.canonical import sha256_hex
 from agent.pairs import write_pairs
 from agent.tests.runs import baseline_run, research_run
 from gold import judge, llm, review
@@ -57,8 +61,14 @@ def test_support_verdict_and_cache(tmp_path: Path) -> None:
     first = j.support(SPIDER, QUOTE)
     prompt = (judge.PROMPT_DIR / "judge-support.txt").read_text(encoding="utf-8")
     assert first == {"label": "supports", "rationale": "the quote names Spider", "model": "scripted-judge",
-                     "prompt_sha256": llm.prompt_sha256(prompt, judge.SupportReply), "cached": False}
+                     "served_model": "scripted-judge", "prompt_sha256": llm.prompt_sha256(prompt, judge.SupportReply),
+                     "cached": False}
     assert j.support(SPIDER, QUOTE) == {**first, "cached": True} and len(calls) == 1
+    line = json.loads((tmp_path / judge.CACHE_FILE).read_text(encoding="utf-8"))["value"]  # what was asked, of whom
+    assert line["task"] == "support" and line["input"] == {"fact": SPIDER, "quote": QUOTE, "context": None}
+    assert line["settings"] == {"temperature": 0.0, "seed": 0, "max_tokens": judge.MAX_TOKENS}
+    assert line["user_prompt_sha256"] == sha256_hex(calls[0].encode("utf-8"))
+    assert line["served_model"] == "scripted-judge" and line["usage"]["input_tokens"] > 0 and line["created_at"]
     again = judge.Judge(tmp_path, [scripted(calls)])  # a rescore reads the cache file
     assert again.support(SPIDER, QUOTE)["cached"] and again.calls == 0 and len(calls) == 1
     assert j.support(SPIDER, QUOTE, context="Paper p1")["cached"] is False  # the context is input
@@ -103,6 +113,78 @@ def test_sync_calls_work_inside_a_running_loop(tmp_path: Path) -> None:
     assert asyncio.run(endpoint())["label"] == "supports"
 
 
+class FakeOpenAI(ThreadingHTTPServer):
+    """An OpenAI-compatible chat endpoint with HTTP/1.1 keep-alive (as LiteLLM): every reply is a
+    SupportReply JSON, `supports` when the object is in the prompt's quote, else `no`."""
+
+    daemon_threads = True
+
+    def __init__(self) -> None:
+        self.requests: list[dict[str, Any]] = []
+        server = self
+
+        class Handler(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"  # keep the connection open between requests
+
+            def do_POST(self) -> None:
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                server.requests.append(body)
+                prompt = body["messages"][-1]["content"]
+                obj = prompt.split("object: ", 1)[1].split("\n", 1)[0]
+                label = "supports" if obj in prompt.split("Quote:", 1)[1] else "no"
+                content = json.dumps({"rationale": f"about {obj}", "label": label})
+                data = json.dumps({
+                    "id": f"chatcmpl-{len(server.requests)}", "object": "chat.completion", "created": 0,
+                    "model": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+                    "choices": [{"index": 0, "finish_reason": "stop",
+                                 "message": {"role": "assistant", "content": content}}],
+                    "usage": {"prompt_tokens": 50, "completion_tokens": 7, "total_tokens": 57}}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+
+            def log_message(self, *args: Any) -> None:
+                pass
+
+        super().__init__(("127.0.0.1", 0), Handler)
+        threading.Thread(target=self.serve_forever, daemon=True).start()
+
+    @property
+    def url(self) -> str:
+        return f"http://127.0.0.1:{self.server_address[1]}/v1"
+
+
+@pytest.fixture
+def openai_server() -> Any:
+    server = FakeOpenAI()
+    yield server
+    server.shutdown()
+    server.server_close()
+
+
+def test_sync_calls_reuse_the_http_client(tmp_path: Path, openai_server: FakeOpenAI) -> None:
+    """The real model class over keep-alive HTTP: one sync call after another, from this thread and
+    from inside other event loops, all reach the server and all succeed (a pooled connection is only
+    ever used by the loop that opened it)."""
+    j = judge.Judge(tmp_path, [llm.openai_model("sub-model-1", url=openai_server.url)])
+    verdicts = [j.support({**SPIDER, "o": o}, QUOTE) for o in ("Spider", "Bird", "WikiSQL", "Spider")]
+    assert [v["label"] for v in verdicts] == ["supports", "supports", "no", "supports"]
+    assert len(openai_server.requests) == 3 and j.calls == 3  # the last one came from the cache
+    assert verdicts[0]["model"] == "sub-model-1" and verdicts[0]["served_model"] == "Qwen/Qwen3-30B-A3B-Instruct-2507"
+
+    async def handler(o: str) -> dict:  # a sync call inside a running loop (a FastAPI handler)
+        return j.support({**SPIDER, "o": o}, QUOTE)
+
+    assert asyncio.run(handler("CoSQL"))["label"] == "no"
+    assert asyncio.run(j.asupport({**SPIDER, "o": "SParC"}, QUOTE))["label"] == "no"  # another caller loop
+    assert judge.support({**SPIDER, "o": "KaggleDBQA"}, QUOTE, judge=j)["label"] == "no"
+    assert len(openai_server.requests) == 6
+    sent = openai_server.requests[0]
+    assert sent["model"] == "sub-model-1" and sent["temperature"] == 0.0 and sent["seed"] == 0
+
+
 def test_gather_bounds_concurrency(tmp_path: Path) -> None:
     state = {"now": 0, "peak": 0}
 
@@ -116,6 +198,25 @@ def test_gather_bounds_concurrency(tmp_path: Path) -> None:
     j = judge.Judge(tmp_path, [FunctionModel(slow, model_name="slow")], concurrency=2)
     out = asyncio.run(j.gather([j.asupport({**SPIDER, "o": f"D{n}"}, QUOTE) for n in range(7)]))
     assert [v["label"] for v in out] == ["no"] * 7 and state["peak"] == 2 and j.calls == 7
+    state["peak"] = 0  # the bound holds across sync callers in threads too (scoring's workers)
+    with ThreadPoolExecutor(5) as pool:
+        labels = list(pool.map(lambda n: j.support({**SPIDER, "o": f"E{n}"}, QUOTE)["label"], range(5)))
+    assert labels == ["no"] * 5 and state["peak"] == 2 and j.calls == 12
+
+
+def test_identical_inputs_in_flight_make_one_call(tmp_path: Path) -> None:
+    calls: list[int] = []
+
+    async def slow(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
+        calls.append(1)
+        await asyncio.sleep(0.02)  # the others arrive while this one waits for the model
+        return respond(info, {"rationale": "r", "label": "supports"})
+
+    j = judge.Judge(tmp_path, [FunctionModel(slow, model_name="slow")])
+    out = asyncio.run(j.gather([j.asupport(SPIDER, QUOTE) for _ in range(4)]))
+    assert len(calls) == 1 and j.calls == 1 and [v["cached"] for v in out] == [False, True, True, True]
+    assert len((tmp_path / judge.CACHE_FILE).read_text(encoding="utf-8").splitlines()) == 1
+    assert {v["label"] for v in out} == {"supports"}
 
 
 def test_support_pair_gives_the_paper_and_context(env: Env) -> None:
@@ -233,6 +334,8 @@ def test_calibration_report_end_to_end(env: Env) -> None:
     assert report["answered"] == report["judged"] == 4 and report["model_calls"] == 4 and len(calls) == 4
     assert report["model"] == "scripted-judge" and report["prompt_file"] == "gold/prompts/judge-support.txt"
     assert report["prompt_sha256"] == judge.load_prompt("support").sha256
+    assert report["served_models"] == ["scripted-judge"] and report["settings"]["max_tokens"] == judge.MAX_TOKENS
+    assert report["render_sha256"] == judge.render_sha256()["support"]
     assert review.read_json(env.root / judge.REPORT_FILE) == report
     again = judge.calibration_report(env.root, corpus, judge=judge.Judge(env.root, [scripted(calls)]), seed="s")
     assert again["model_calls"] == 0 and again["test"] == report["test"]

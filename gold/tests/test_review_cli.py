@@ -117,9 +117,12 @@ def test_judge_round(env: Env, fake: FakeArgilla, monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(judge, "Judge", functools.partial(judge.Judge, models=[scripted(calls)]))
     assert gold(env, "pull") == 0 and gold(env, "judge-agreement") == 0
     report = review.read_json(env.root / judge.REPORT_FILE)
-    # Both runs cite the same quote for "p1 evaluatesOn Spider": one input, one model call, one cache hit.
-    assert report["answered"] == report["judged"] == 7 and report["model_calls"] == 6 == len(calls)
+    # Both runs cite the same quotes for Spider, GSM8K and HotpotQA: 4 distinct inputs, one model call each,
+    # also for the duplicates judged at the same time (they wait for the call in flight).
+    assert report["answered"] == report["judged"] == 7 and report["model_calls"] == 4 == len(calls)
     assert report["split"]["calibration"] + report["split"]["test"] == 7
+    assert report["settings"] == {"temperature": 0.0, "seed": 0, "max_tokens": judge.MAX_TOKENS}
+    assert report["render_sha256"] == judge.render_sha256()["support"]
     capsys.readouterr()
     fact = json.dumps({"s": "p1", "p": "evaluatesOn", "o": "Spider"})
     assert gold(env, "judge", fact, "benchmark datasets like Spider and Bird") == 0
