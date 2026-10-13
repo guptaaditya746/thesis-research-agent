@@ -49,13 +49,13 @@ Any new dependency: pin an exact version, say why in the commit.
 | A agent fix (1.13, 1.15) | `e2e/agent-fix` | `agent/loop.py`, `agent/prompts/*-v2*`, `agent/prompts.py`, `agent/rundir.py` (BUDGET), `agent/parse.py`, budget fields of `agent/manifests/*.json`, `agent cli run` defaults, tests | gold/, scoring/, webapp/ |
 | A2 subagents (2.12) | `e2e/spawn` (after A) | `agent/spawn.py`, `agent/bin/spawn`, loop/broker hooks for spawn, tests | as A |
 | B questions, concepts, re-exec, Slurm scripts (2.3, 2.13) | `e2e/questions` | `questions/`, `agent/concept_step.py`, `agent/reexec.py`, `agent/replay.py`, concept/reexec/replay subcommands in `agent/cli.py`, question/concept fields of `agent/manifests/m4-72.json`, `slurm/`, `scripts/e2e-*.sh` | loop.py, budgets |
-| C1 gold builder (M3) | `e2e/gold-build` | `gold/{chunks,llm,screen,extract,build,triage,pool,draft,docmd}.py`, `gold/prompts/`, its `gold` subcommands, `gold/tests/` | agent/ (import only) |
+| C1 gold builder (M3) | `e2e/gold-build` | `gold/{chunks,screen,extract,build,triage,pool,draft,docmd}.py`, `gold/prompts/`, its `gold` subcommands, `gold/tests/` | agent/ (import only) |
 | C2 review and judge (M3) | `e2e/gold-review` | `gold/{argilla_io,review,export,agreement,screening_check,judge}.py`, its `gold` subcommands, `gold/tests/` | agent/ (import only) |
 | D scoring (M4) | `e2e/scoring` | `scoring/` | agent/, gold/ (import only) |
 | E backend | `e2e/webapp-api` | `webapp/*.py`, `webapp/tests/` | everything else (import only) |
 | F frontend | `e2e/webapp-ui` | `webapp/web/` | everything else |
 
-`gold/cli.py`, `scoring/cli.py`, `webapp/cli.py` exist as stubs. Two packages adding subcommands to the same
+`gold/llm.py` (pydantic-ai on LiteLLM: model per alias, round-robin `Rotation`, `structured()` call with schema-constrained output, `prompt_sha256`, `JsonlCache`) is shared and already written; extend it only additively. `gold/cli.py`, `scoring/cli.py`, `webapp/cli.py` exist as stubs. Two packages adding subcommands to the same
 `cli.py` (C1 and C2) each put theirs in a `register(subparsers)` function in their own module and add one
 import line to `gold/cli.py`; the merge resolves the two lines.
 
