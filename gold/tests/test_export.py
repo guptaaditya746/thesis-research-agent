@@ -128,17 +128,33 @@ def test_graph_rows_merge_and_unknown_predicate_is_left_out() -> None:
             "target_type": "Dataset", "attributes": {"metric": "EM"}}
     rows, merged, problems = export.merge_rows(CONCEPT, [
         (edge, fact(1, "p1", "evaluatesOn", "Spider")),
-        ({**edge, "attributes": {}}, fact(2, "p1", "evaluates on", "Spider")),  # same row, same fact
+        ({**edge, "attributes": {}}, fact(2, "p1", "evaluates on", "Spider")),  # same row, same fact (C1's norm)
         ({**edge, "predicate": "cites"}, fact(3, "p1", "cites", "p2")),
         (None, fact(4, "p9", "evaluates on", "MMLU")),  # an added fact: the only edge type fits
+        ({**edge, "target": "spider."}, fact(5, "p1", "evaluatesOn", "Spider.")),  # C1's norm: the same row
     ])
     assert [(r["id"], r["source"], r["target"], r["attributes"]) for r in rows] == [
         ("r1", "p1", "Spider", {"metric": "EM"}), ("r2", "p9", "MMLU", {"metric": None})]
-    assert len(rows[0]["facts"]) == 2  # "evaluatesOn" and "evaluates on" differ in wording, not normalised away
-    assert merged == [] and "no edge type" in problems[0]
-    rows, merged, _ = export.merge_rows(CONCEPT, [(edge, fact(1, "p1", "evaluatesOn", "Spider")),
-                                                  (edge, fact(2, "p1", "evaluatesOn", " spider "))])
-    assert len(rows[0]["facts"]) == 1 and rows[0]["facts"][0]["vital"] and merged[0]["merged"] == "c2"
+    assert len(rows[0]["facts"]) == 1 and rows[0]["facts"][0]["vital"]  # c2 merged into c1, vital from c2
+    assert [m["merged"] for m in merged] == ["c2", "c5"] and "no edge type" in problems[0]
+
+
+def test_edge_type_follows_the_row_types() -> None:
+    """One predicate between two type pairs: the row's types pick the edge, not the name alone."""
+    concept = {**CONCEPT, "answer_shape": {**CONCEPT["answer_shape"], "nodes": [
+        {"type": "Paper"}, {"type": "Model"}, {"type": "Dataset"}, {"type": "Metric"}], "edges": [
+        {"source": "Paper", "predicate": "evaluatesOn", "target": "Dataset", "attributes": []},
+        {"source": "Model", "predicate": "evaluatesOn", "target": "Dataset", "attributes": []}]}}
+    row = {"source": "GPT-4", "source_type": "Model", "predicate": "evaluatesOn", "target": "MMLU",
+           "target_type": "Dataset"}
+    fact = {"s": "GPT-4", "p": "evaluatesOn", "o": "MMLU", "paper_id": "p1", "quote": "q", "vital": False,
+            "candidate_id": "c1"}
+    rows, _, problems = export.merge_rows(concept, [(row, fact), (None, {**fact, "candidate_id": None})])
+    assert rows[0]["source_type"] == "Model" and not problems[:-1]
+    assert rows[1]["source_type"] == "Paper"  # no types given: the first of the two, said so
+    assert "several edge types fit" in problems[-1]
+    edge, problem = export.pick_edge(concept["answer_shape"]["edges"], {**row, "source_type": "Person"}, fact)
+    assert edge is None and "no edge type Person -evaluatesOn-> Dataset" in problem
 
 
 def test_table_rows_merge_by_first_column() -> None:
@@ -151,14 +167,16 @@ def test_table_rows_merge_by_first_column() -> None:
         ({"cells": {"author": "Author A", "first_author_papers": "2", "papers": "p12"}}, fact(1, "p12", "firstAuthor", "Author A")),
         ({"author": "author a", "papers": ["p87"]}, fact(2, "p87", "firstAuthor", "Author A")),
         ({"author": "Author B", "first_author_papers": "many"}, fact(3, "p40", "firstAuthor", "Author B")),
-        (None, fact(4, "Author B", "papers", "p41")),  # joins the row its subject names
+        (None, fact(4, "Author B", "papers", "p41")),  # joins the row its subject names, and adds to its cells
         (None, fact(5, "Author C", "papers", "p50")),  # a new row from the fact
+        (None, fact(6, "p88", "papers", "Author A")),  # only its object names a row: it joins that row
     ])
+    # C1's rule: the key column normalised (Author A = author a), lists unioned, a count of a list recomputed.
     assert [r["cells"] for r in rows] == [
-        {"author": "Author A", "first_author_papers": 2, "papers": ["p12", "p87"]},
-        {"author": "Author B", "first_author_papers": None, "papers": None},
-        {"author": "Author C", "first_author_papers": None, "papers": ["p50"]}]
-    assert [len(r["facts"]) for r in rows] == [2, 2, 1] and not problems
+        {"author": "Author A", "first_author_papers": 3, "papers": ["p12", "p87", "p88"]},
+        {"author": "Author B", "first_author_papers": 1, "papers": ["p41"]},
+        {"author": "Author C", "first_author_papers": 1, "papers": ["p50"]}]
+    assert [len(r["facts"]) for r in rows] == [3, 2, 1] and not problems
     answer = {"concept_sha256": concept_sha256(concept), "kind": "table",
               "rows": [{**r, "facts": [{k: v for k, v in f.items() if k not in export.GOLD_ONLY} for f in r["facts"]]}
                        for r in rows]}

@@ -19,12 +19,15 @@ the corpus file with agent/anchor.py, the check the agent's claims pass. An anch
 fact (its quote the exact text in the file, vital false, candidate_id null); a line that does not parse or
 anchor is listed in export.json `rejected` and not added.
 
-Rows (`merge_rows`): kept facts are grouped into rows of the concept's answer shape by the merge rule of
-C1's draft key, implemented here until C1's module is merged: one graph row per (source, predicate,
-target) of the candidate's row; one table row per value of the concept's first column, other cells the
-first value given, list cells the union. A fact without a row (an added one) joins the row its subject or
-object names, else it gets a row built from it. Facts with the same s/p/o in one row are one fact (vital
-if any copy is).
+Rows (`merge_rows`) follow the rule of C1's draft key and doc.json (gold/build.py on e2e/gold-build: norm,
+key_column, count_columns, merge_cells, row_key, copied below until the branches meet), so key.draft.json
+and key.json group the same facts the same way: table rows with the same normalised value (NFKC,
+casefold, letters and digits) in the first string column are one row, list cells unioned, a count column
+of a list recomputed, other cells the first value given, rows without a key value never merged; graph
+rows are one per (source type, normalised source, predicate, target type, normalised target), the edge
+type picked by predicate and node types. A fact without a row (an added one) gets a row built from it,
+which joins the row its subject (or, failing that, its object) names. Facts with the same normalised
+s/p/o in one row are one fact (vital if any copy is), as in the draft.
 
 The key (plan "Gold", "Answer key"): `{qid, concept_sha256, kind, version: "v1", reviewed: true, rows,
 notes, review}`, `review` counting what was decided. Facts carry the answer schema's fields, with
@@ -36,11 +39,13 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
 from agent import anchor
+from agent.canonical import canonical
 from agent.concept import concept_sha256 as concept_hash
 from agent.concept import validate_answer
 
@@ -50,10 +55,12 @@ VERSION = "v1"
 KEY_FILE = "key.json"
 EXPORT_FILE = "export.json"
 GOLD_ONLY = ("paper_id", "quote", "vital", "candidate_id")
+EDGE_FIELDS = ("source", "source_type", "predicate", "target", "target_type")
 MISSING_PARTS = 5  # s | p | o | file | quote; the quote is the rest of the line and may hold "|"
 
 
-def norm(value: Any) -> str:
+def strict(value: Any) -> str:
+    """Whitespace and case only: whether two people kept the same fact, or a correction changed it."""
     return " ".join(str(value).split()).casefold()
 
 
@@ -63,7 +70,7 @@ def _name(value: Any) -> str:
 
 
 def spo_key(fact: dict[str, Any]) -> tuple[str, str, str]:
-    return norm(fact["s"]), norm(fact["p"]), norm(fact["o"])
+    return strict(fact["s"]), strict(fact["p"]), strict(fact["o"])
 
 
 # --- one answer -------------------------------------------------------------------------------------------
@@ -211,7 +218,104 @@ def added_facts(records: list[dict[str, Any]], corpus: review.Corpus) -> tuple[l
     return added, rejected
 
 
-# --- rows (the draft key's merge rule) ------------------------------------------------------------------
+# --- C1's row rule (gold/build.py on e2e/gold-build at 31c9f0b, copied unchanged) --------------------------
+# TODO(integration): delete this block and `from .build import count_columns, key_column, merge_cells, norm,
+# row_key` (and _edge_spec), so that doc.json, key.draft.json and key.json share one implementation.
+
+NUMERIC = ("integer", "number", "boolean")
+
+
+def norm(value: Any) -> str:
+    """Key form of a value: NFKC, casefold, letters and digits only; the casefolded text if none."""
+    text = unicodedata.normalize("NFKC", str(value)).casefold()
+    return "".join(ch for ch in text if ch.isalnum()) or text.strip()
+
+
+def _is_list(type_name: str) -> bool:
+    return type_name.startswith("list<")
+
+
+def key_column(columns: list[dict[str, str]]) -> str | None:
+    """The first string-valued column (string, date or a class label), the table's merge key."""
+    return next((c["name"] for c in columns if not _is_list(c["type"]) and c["type"] not in NUMERIC), None)
+
+
+def count_columns(columns: list[dict[str, str]]) -> dict[str, str]:
+    """integer column -> the list column it counts (see the module docstring)."""
+    lists = [c for c in columns if _is_list(c["type"])]
+    out: dict[str, str] = {}
+    for col in columns:
+        if col["type"] != "integer":
+            continue
+        tokens = set(col["name"].split("_"))
+        hits = [lst["name"] for lst in lists
+                if tokens & {lst["name"], lst["name"].rstrip("s"), lst["type"][5:-1].lower()}]
+        if not hits and len(lists) == 1 and tokens & {"count", "n", "num", "number", "total"}:
+            hits = [lists[0]["name"]]
+        if hits:
+            out[col["name"]] = hits[0]
+    return out
+
+
+def _union(values: list[Any]) -> list[Any]:
+    seen: dict[str, Any] = {}
+    for listed in values:
+        for item in listed or []:
+            seen.setdefault(norm(item), item)
+    return list(seen.values())
+
+
+def merge_cells(columns: list[dict[str, str]], rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, list]]:
+    """Cells of several rows as one: list columns unioned, counts of a list recomputed, else first non-null."""
+    counts = count_columns(columns)
+    cells: dict[str, Any] = {}
+    conflicts: dict[str, list[Any]] = {}
+    for col in columns:
+        name = col["name"]
+        values = [row.get(name) for row in rows]
+        if _is_list(col["type"]):
+            cells[name] = _union(values)
+            continue
+        present = [v for v in values if v is not None]
+        cells[name] = present[0] if present else None
+        distinct = list({norm(v): v for v in reversed(present)}.values())[::-1]
+        if len(distinct) > 1:
+            conflicts[name] = distinct
+    for name, listed in counts.items():
+        if cells[listed]:
+            cells[name] = len(cells[listed])
+            conflicts.pop(name, None)
+    return cells, conflicts
+
+
+def _edge_spec(shape: dict[str, Any], row: dict[str, Any]) -> dict[str, Any]:
+    wanted = (row["source_type"], row["predicate"], row["target_type"])
+    for edge in shape["edges"]:
+        if (edge["source"], edge["predicate"], edge["target"]) == wanted:
+            return edge
+    return {"attributes": [{"name": n, "type": "string"} for n in row.get("attributes") or {}]}
+
+
+def row_key(shape: dict[str, Any], row: dict[str, Any]) -> str | None:
+    """The merge key of an extracted row; None for a row that is never merged (no key value)."""
+    if shape["kind"] == "graph":
+        if row.get("source") is None or row.get("target") is None:
+            return None
+        return (f"{row['source_type']}:{norm(row['source'])} {row['predicate']} "
+                f"{row['target_type']}:{norm(row['target'])}")
+    column = key_column(shape["columns"])
+    if column is None:
+        return canonical({k: [norm(x) for x in v] if isinstance(v, list) else (None if v is None else norm(v))
+                          for k, v in row.items()})
+    return None if row.get(column) is None else norm(row[column])
+
+
+# --- rows of the key ----------------------------------------------------------------------------------------
+
+def fact_key(fact: dict[str, Any]) -> tuple[str, str, str]:
+    """One fact per row and normalised s/p/o, as in C1's draft key."""
+    return norm(fact["s"]), norm(fact["p"]), norm(fact["o"])
+
 
 def coerce(value: Any, type_name: str) -> Any:
     """A cell or attribute value in the column's type; None when it cannot be one (null = not established)."""
@@ -232,92 +336,81 @@ def coerce(value: Any, type_name: str) -> Any:
             return number
         return int(number) if number.is_integer() else None
     if type_name == "boolean":
-        return value if isinstance(value, bool) else {"true": True, "false": False}.get(norm(value))
+        return value if isinstance(value, bool) else {"true": True, "false": False}.get(strict(value))
     if isinstance(value, (dict, list)):
         return json.dumps(value, ensure_ascii=False)
     return str(value).strip() or None
 
 
-def _pick_edge(edges: list[dict[str, Any]], raw: dict[str, Any], fact: dict[str, Any]) -> dict[str, Any] | None:
-    """The edge type named by the row's predicate (which must then match), else by the fact's predicate,
-    else by the row's node types, else the concept's only edge type."""
-    if raw.get("predicate"):
-        return next((e for e in edges if _name(e["predicate"]) == _name(raw["predicate"])), None)
-    if found := [e for e in edges if _name(e["predicate"]) == _name(fact.get("p", ""))]:
-        return found[0]
-    typed = [e for e in edges if (e["source"], e["target"]) == (raw.get("source_type"), raw.get("target_type"))]
-    if len(typed) == 1:
-        return typed[0]
-    return edges[0] if len(edges) == 1 else None
+def pick_edge(edges: list[dict[str, Any]], raw: dict[str, Any], fact: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    """(edge type, problem) for a row: named by the row's predicate (which must then match), else by the
+    fact's; among those, the one whose node types are the row's (the concept may use one predicate
+    between several type pairs). Name alone decides only when the row has no types; when several still
+    fit, the first is taken and the problem says so."""
+    named = raw.get("predicate") or fact.get("p", "")
+    fits = [e for e in edges if _name(e["predicate"]) == _name(named)]
+    if raw.get("predicate") and not fits:
+        return None, f"no edge type of the concept is called {named!r}"
+    fits = fits or edges
+    types = (raw.get("source_type"), raw.get("target_type"))
+    if any(types):
+        fits = [e for e in fits if all(t is None or t == have for t, have in zip(types, (e["source"], e["target"])))]
+        if not fits:
+            return None, f"no edge type {types[0]} -{named}-> {types[1]} in the concept"
+    if len(fits) > 1:
+        options = ", ".join(f"{e['source']} -{e['predicate']}-> {e['target']}" for e in fits)
+        return fits[0], f"several edge types fit predicate {named!r} ({options}); took the first"
+    return fits[0], None
 
 
-def row_content(concept: dict[str, Any], raw: dict[str, Any] | None, fact: dict[str, Any]) -> dict[str, Any] | None:
-    """A row's fields (no id, no facts) in the concept's answer shape; None when no edge type fits."""
+def row_content(concept: dict[str, Any], raw: dict[str, Any] | None,
+                fact: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    """(a row's fields in the concept's answer shape, without id and facts; a problem or None). The row
+    is None when no edge type fits. Values are coerced to their column types."""
     shape = concept["answer_shape"]
     raw = raw or {}
     if shape["kind"] == "table":
         cells = raw["cells"] if isinstance(raw.get("cells"), dict) else raw
-        if not cells:  # an added fact: the first column names the subject, a column named like p the object
-            first = shape["columns"][0]["name"]
-            cells = {first: fact["s"], **{c["name"]: fact["o"] for c in shape["columns"][1:]
-                                           if _name(c["name"]) == _name(fact["p"])}}
-        return {"cells": {c["name"]: coerce(cells.get(c["name"]), c["type"]) for c in shape["columns"]}}
-    edge = _pick_edge(shape["edges"], raw, fact)
+        return {"cells": {c["name"]: coerce(cells.get(c["name"]), c["type"]) for c in shape["columns"]}}, None
+    edge, problem = pick_edge(shape["edges"], raw, fact)
     if edge is None:
-        return None
+        return None, problem
     attrs = raw.get("attributes") if isinstance(raw.get("attributes"), dict) else {}
     return {"source": str(raw.get("source") or fact["s"]), "source_type": edge["source"],
             "predicate": edge["predicate"], "target": str(raw.get("target") or fact["o"]),
             "target_type": edge["target"],
-            "attributes": {a["name"]: coerce(attrs.get(a["name"]), a["type"]) for a in edge.get("attributes", [])}}
+            "attributes": {a["name"]: coerce(attrs.get(a["name"]), a["type"]) for a in edge.get("attributes", [])}}, problem
 
 
-def _cell_key(value: Any) -> str:
-    return norm(json.dumps(value, ensure_ascii=False, sort_keys=True))
-
-
-def row_key(concept: dict[str, Any], content: dict[str, Any]) -> str:
-    if concept["answer_shape"]["kind"] == "graph":
-        return "\x1f".join((norm(content["source"]), content["predicate"], norm(content["target"])))
-    cells = content["cells"]
-    first = cells[concept["answer_shape"]["columns"][0]["name"]]
-    return _cell_key(first if first is not None else cells)
-
-
-def _merge_values(old: dict[str, Any], new: dict[str, Any], where: str, problems: list[str]) -> None:
-    for name, value in new.items():
-        if value is None:
-            continue
-        if old.get(name) is None:
-            old[name] = value
-        elif isinstance(old[name], list):
-            old[name] += [v for v in value if norm(v) not in {norm(x) for x in old[name]}]
-        elif norm(old[name]) != norm(value):
-            problems.append(f"{where}: {name} is {old[name]!r} in one candidate and {value!r} in another; kept the first")
+def added_cells(shape: dict[str, Any], fact: dict[str, Any], keys: set[Any]) -> dict[str, Any]:
+    """Table cells for an added fact: the key column names its subject (or its object, when only the
+    object names a row already there), a column named like the predicate the other side."""
+    columns = shape["columns"]
+    key = key_column(columns) or columns[0]["name"]
+    own, other = fact["s"], fact["o"]
+    if norm(own) not in keys and norm(other) in keys:
+        own, other = other, own
+    return {key: own, **{c["name"]: other for c in columns if c["name"] != key and _name(c["name"]) == _name(fact["p"])}}
 
 
 def substitute(value: Any, old: dict[str, Any], new: dict[str, Any]) -> Any:
     """Row values equal to the old subject or object, replaced by the corrected ones."""
-    swap = {norm(old[k]): new[k] for k in ("s", "o") if norm(old[k]) != norm(new[k])}
+    swap = {strict(old[k]): new[k] for k in ("s", "o") if strict(old[k]) != strict(new[k])}
     if not swap:
         return value
     if isinstance(value, dict):
         return {k: substitute(v, old, new) for k, v in value.items()}
     if isinstance(value, list):
         return [substitute(v, old, new) for v in value]
-    return swap.get(norm(value), value) if isinstance(value, str) else value
+    return swap.get(strict(value), value) if isinstance(value, str) else value
 
 
 def merge_rows(concept: dict[str, Any], items: list[tuple[dict[str, Any] | None, dict[str, Any]]],
                ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
-    """Rows of the key from (raw row | None, fact) pairs in order: (rows, merged duplicates, problems).
-
-    TODO(integration): C1's draft key (gold/draft.py) groups candidates into rows; once it is merged, call
-    its rule here so key.draft.json and key.json group facts the same way.
-    """
-    graph = concept["answer_shape"]["kind"] == "graph"
-    rows: dict[str, dict[str, Any]] = {}
-    facts: dict[str, dict[tuple[str, str, str], dict[str, Any]]] = {}
+    """Rows of the key from (raw row | None, fact) pairs in order: (rows, merged duplicates, problems)."""
+    shape = concept["answer_shape"]
+    graph = shape["kind"] == "graph"
+    groups: dict[Any, dict[str, Any]] = {}
     merged: list[dict[str, Any]] = []
     problems: list[str] = []
     for raw, fact in items:
@@ -325,37 +418,43 @@ def merge_rows(concept: dict[str, Any], items: list[tuple[dict[str, Any] | None,
         if not str(fact["s"]).strip() or not str(fact["p"]).strip():
             problems.append(f"{label}: empty subject or predicate; left out")
             continue
-        key = None
-        if raw is None and not graph:  # an added table fact joins the row its subject or object names
-            key = next((k for k in rows if k in (_cell_key(fact["s"]), _cell_key(fact["o"]))), None)
-        if key is None:
-            content = row_content(concept, raw, fact)
-            if content is None:
-                problems.append(f"{label}: no edge type of the concept fits predicate {fact['p']!r}; left out")
-                continue
-            key = row_key(concept, content)
-            if key in rows:
-                _merge_values(rows[key]["attributes" if graph else "cells"],
-                              content["attributes" if graph else "cells"], label, problems)
-            else:
-                rows[key], facts[key] = content, {}
-        same = facts[key].get(spo_key(fact))
+        if raw is None and not graph:
+            raw = added_cells(shape, fact, set(groups))
+        content, problem = row_content(concept, raw, fact)
+        if problem:
+            problems.append(f"{label}: {problem}" + ("; left out" if content is None else ""))
+        if content is None:
+            continue
+        key = row_key(shape, content if graph else content["cells"])
+        group = groups.setdefault(key if key is not None else ("unkeyed", len(groups)), {"rows": [], "facts": {}})
+        group["rows"].append(content)
+        same = group["facts"].get(fact_key(fact))
         if same is None:
-            facts[key][spo_key(fact)] = dict(fact)
+            group["facts"][fact_key(fact)] = dict(fact)
         else:
             same["vital"] = same["vital"] or fact["vital"]
             merged.append({"kept": same.get("candidate_id"), "merged": fact.get("candidate_id"),
                            "fact": f"{fact['s']} | {fact['p']} | {fact['o']}"})
     out, n = [], 0
-    for r, (key, content) in enumerate(rows.items(), 1):
+    for r, group in enumerate(groups.values(), 1):
+        rows = group["rows"]
+        if graph:
+            attributes, conflicts = merge_cells(_edge_spec(shape, rows[0]).get("attributes", []),
+                                                [row["attributes"] for row in rows])
+            fields: dict[str, Any] = {**{k: rows[0][k] for k in EDGE_FIELDS}, "attributes": attributes}
+        else:
+            cells, conflicts = merge_cells(shape["columns"], [row["cells"] for row in rows])
+            fields = {"cells": cells}
+        for name, values in conflicts.items():
+            problems.append(f"row r{r}: {name} is {values!r} in different candidates; kept the first")
         row_facts = []
-        for fact in facts[key].values():
+        for fact in group["facts"].values():
             n += 1
             o = fact["o"] if isinstance(fact["o"], (str, int, float, bool)) else json.dumps(fact["o"])
             row_facts.append({"id": f"f{n}", "s": str(fact["s"]), "p": str(fact["p"]), "o": o, "claims": [],
                               "origin": "research", "paper_id": fact.get("paper_id"), "quote": fact.get("quote"),
                               "vital": bool(fact["vital"]), "candidate_id": fact.get("candidate_id")})
-        out.append({"id": f"r{r}", **content, "facts": row_facts})
+        out.append({"id": f"r{r}", **fields, "facts": row_facts})
     return out, merged, problems
 
 
