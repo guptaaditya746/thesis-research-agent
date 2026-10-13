@@ -65,6 +65,7 @@ def test_reexec_reproduces_the_run(tmp_path: Path, corpus: tuple[Path, Path], ca
     report = reexec_run(run.root, *corpus, steps=[6])
     assert (report["steps"], report["identical_steps"], report["differing"]) == (1, [6], [])
     assert jsonl(run.root / "reexec.jsonl")[0]["claim_id"] == "claim-000002"
+    assert not (run.root / "reexec").exists()  # the earlier re-execution's differing output went with it
     # A command that reads what a skipped command wrote differs: the scratch directory is fresh.
     report = reexec_run(run.root, *corpus, steps=[3])
     assert report["differing"][0]["step"] == 3 and "No such file" in report["differing"][0]["now_line"]

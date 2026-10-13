@@ -216,6 +216,7 @@ def reexec_run(run_dir: Path, corpus: Path, manifest: Path, *, steps: list[int] 
     scratch = Path(tempfile.mkdtemp(prefix=f"reexec-{run.run_id}-"))
     envs: dict[bool, Any] = {}  # one sandbox environment per claim setting
     out_dir = run.root / OUT_DIR
+    shutil.rmtree(out_dir, ignore_errors=True)  # only this re-execution's differing outputs are kept
     report: dict[str, Any] = {
         "schema_version": 1, "run_id": run.run_id, "started_at": utc_now(), "ended_at": None,
         "sandbox": sandbox_mode, "agent_root": str(agent_root) if agent_root else None,
