@@ -113,13 +113,16 @@ def table_key() -> dict[str, Any]:
                     gold_fact(4, "p40", "firstAuthor", "Author B", vital=True),
                     gold_fact(5, "p41", "firstAuthor", "Author B")]),
                 table_row(3, "Author C", 1, ["p50"], [gold_fact(6, "p50", "firstAuthor", "Author C")]),
-            ],
-            "rejected": [{"s": "p87", "p": "publishedAt", "o": "ACL 2025", "verdict": "wrong"}]}
+            ]}
+
+
+# Facts the reviewers rejected as wrong (run_score.wrong_facts reads them from the review export).
+WRONG = [{"s": "p87", "p": "publishedAt", "o": "ACL 2025", "verdict": "wrong"}]
 
 
 def test_table_facts_at_three_levels() -> None:
     j, fake = judge(same_facts={("ACL 2025 main", "ACL 2025")})
-    facts = match(table_answer(), table_key(), TABLE, j)["facts"]
+    facts = match(table_answer(), table_key(), TABLE, j, WRONG)["facts"]
     # 5 run facts (f6 is f1 again), 6 gold facts of which 3 vital.
     s, n, soft = facts["levels"]["strict"], facts["levels"]["normalised"], facts["levels"]["soft"]
     assert (s["tp"], s["fp"], s["fn"], s["vital_tp"], s["vital"]) == (2, 3, 4, 2, 3)
@@ -129,6 +132,7 @@ def test_table_facts_at_three_levels() -> None:
     assert n["f1"] == pytest.approx(2 * 0.6 * 0.5 / 1.1)
     assert (soft["tp"], soft["precision"], soft["recall"]) == (4, pytest.approx(0.8), pytest.approx(4 / 6))
     assert soft["f1"] == pytest.approx(2 * 0.8 * (4 / 6) / (0.8 + 4 / 6))
+    assert (soft["asked"], soft["pending"]) == (4, 0)
     levels = {p["run"]["fact"]: (p["key"]["fact"], p["level"]) for p in facts["pairs"]}
     assert levels == {"f1": ("f1", "strict"), "f2": ("f2", "normalised"), "f3": ("f3", "soft"), "f5": ("f4", "strict")}
     assert facts["duplicates"] == 2 and [p["run_same"] for p in facts["pairs"] if p["run"]["fact"] == "f1"] == [
@@ -153,7 +157,7 @@ def test_table_rows_set_f1() -> None:
     assert rows["duplicates"] == 1
     assert rows["levels"]["normalised"] == {"tp": 1, "fp": 1, "fn": 2, "precision": 0.5, "recall": pytest.approx(1 / 3),
                                             "f1": pytest.approx(0.4)}
-    assert rows["levels"]["soft"] == rows["levels"]["normalised"]
+    assert rows["levels"]["soft"] == rows["levels"]["normalised"] | {"asked": 1, "pending": 0}
     assert rows["pairs"] == [{"run": "r1", "key": "r1", "level": "normalised", "run_same": ["r3"]}]
     assert (rows["missed"], rows["extra"]) == (["r2", "r3"], ["r2"])
     # Only r2 and the key's Author B row share a value; the judge sees the rows without their facts.
@@ -172,12 +176,31 @@ def test_null_key_cell_is_not_compared() -> None:
     assert rows["levels"]["normalised"]["tp"] == 2
 
 
-def test_no_judge_means_soft_equals_normalised_and_no_rejected_list() -> None:
-    key = table_key()
-    del key["rejected"]
-    facts = match(table_answer(), key, TABLE, None)["facts"]
-    assert facts["levels"]["soft"] == facts["levels"]["normalised"]
+def test_no_judge_leaves_the_soft_asks_pending_and_no_wrong_list_leaves_judged_precision_open() -> None:
+    result = match(table_answer(), table_key(), TABLE, None)
+    facts, rows = result["facts"], result["rows"]
+    soft, normalised = facts["levels"]["soft"], facts["levels"]["normalised"]
+    # The same four pairs the judge would be asked are counted as pending: soft is a lower bound.
+    assert (soft["asked"], soft["pending"]) == (4, 4)
+    assert {k: soft[k] for k in normalised} == normalised
+    assert (rows["levels"]["soft"]["asked"], rows["levels"]["soft"]["pending"]) == (1, 1)
     assert facts["judged_precision"]["precision"] is None and facts["judged_precision"]["wrong"] is None
+    # A failing judge leaves them pending too; a list entry without verdict "wrong" is not a wrong fact.
+    j, _ = judge()
+    j.impl.same_fact = lambda *a: (_ for _ in ()).throw(TimeoutError("slow"))
+    failed = match(table_answer(), table_key(), TABLE, j, [{"s": "p87", "p": "publishedAt", "o": "ACL 2025"}])
+    assert failed["facts"]["levels"]["soft"]["pending"] == 4 and failed["rows"]["levels"]["soft"]["pending"] == 0
+    assert failed["facts"]["judged_precision"]["wrong"] == 0
+
+
+def test_soft_without_asks_is_complete_without_a_judge() -> None:
+    answer, key = table_answer(), table_key()
+    answer["rows"] = answer["rows"][:1]
+    answer["rows"][0]["facts"] = answer["rows"][0]["facts"][:2]  # both match at the normalised level
+    key["rows"] = key["rows"][:1]
+    key["rows"][0]["facts"] = key["rows"][0]["facts"][:2]
+    soft = match(answer, key, TABLE, None)["facts"]["levels"]["soft"]
+    assert (soft["tp"], soft["asked"], soft["pending"]) == (2, 0, 0)
 
 
 # --- graph answers ---------------------------------------------------------------------------------------

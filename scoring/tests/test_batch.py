@@ -11,8 +11,9 @@ from agent.batch import mark_cut
 from agent.tests.runs import baseline_run, corpus_env, research_run  # noqa: F401  (pytest fixtures)
 from scoring.batch import find_keys, score_batch
 from scoring.cli import main as cli
+from scoring.judge import Judge
 
-from .helpers import finish_attach, graph_key, judge, write_key
+from .helpers import C2Judge, finish_attach, graph_key, judge, write_key
 
 
 @pytest.fixture
@@ -120,3 +121,71 @@ def test_find_keys_prefers_the_reviewed_key(tmp_path: Path) -> None:
     (tmp_path / "q03").mkdir()
     keys = find_keys(tmp_path)
     assert {q: k.path.name for q, k in keys.items()} == {"q01": "key.draft.json", "q02": "key.json"}
+    # A key.json that does not parse falls back to the draft, and says so.
+    (tmp_path / "q01" / "key.json").write_text("{not json", encoding="utf-8")
+    problems: list[str] = []
+    assert find_keys(tmp_path, problems)["q01"].path.name == "key.draft.json"
+    assert len(problems) == 1 and "q01" in problems[0] and "key.json" in problems[0]
+
+
+def test_manifest_runs_root_below_the_report_root(tmp_path: Path, corpus_env: tuple[Path, Path],
+                                                  capsys: pytest.CaptureFixture[str],
+                                                  monkeypatch: pytest.MonkeyPatch) -> None:
+    """scripts/e2e-batch.sh: runs in $RUNS/<name>/ (the effective manifest's runs_root), report in $RUNS/report/."""
+    runs = tmp_path / "RUNS"
+    on1 = research_run(runs / "m4", *corpus_env, run_id="q01-claim_on-r1-a1").run  # -> RUNS/m4/runs/<id>
+    manifest = runs / "m4" / "manifest.json"
+    manifest.write_text(json.dumps({
+        "schema_version": 1, "name": "m4", "runs_root": str(on1.root.parent), "questions": [{"id": "q01", "concept": "c"}],
+        "conditions": ["claim_on"], "repeats": 1, "temperature": 0.7, "seed_base": 1000}), encoding="utf-8")
+    gold = tmp_path / "gold"
+    write_key(gold / "q01" / "key.json", graph_key(on1))
+    summary = score_batch(runs, gold, manifest=manifest, judge=judge()[0], log=lambda _: None)
+    assert summary["counts"]["scored"] == 1 and summary["attempts_root"] == str(on1.root.parent)
+    assert [s["run_id"] for s in lines(runs)] == ["q01-claim_on-r1-a1"]
+    # Without the manifest the nested run is found too, and an ad hoc run only with --all.
+    adhoc = research_run(runs / "web", *corpus_env, run_id="run-20261013-1").run
+    write_key(gold / "q01" / "key.json", graph_key(adhoc))
+    tree = score_batch(runs, gold, judge=judge()[0], log=lambda _: None)
+    assert {i["key"]: i["state"] for i in tree["items"]} == {"q01-claim_on-r1-a1": "finished",
+                                                              "run-20261013-1": "not_a_batch_run"}
+    assert score_batch(runs, gold, judge=judge()[0], include_all=True, log=lambda _: None)["counts"]["scored"] == 1
+    # A manifest whose runs_root does not exist is an error, not "every run not started".
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    manifest.write_text(json.dumps(data | {"runs_root": str(tmp_path / "elsewhere")}), encoding="utf-8")
+    monkeypatch.delenv("CORPUS", raising=False)
+    assert cli(["batch", str(runs), "--gold", str(gold), "--manifest", str(manifest), "--no-judge"]) == 1
+    assert "runs_root" in capsys.readouterr().out
+
+
+def test_a_malformed_run_does_not_stop_the_batch(batch: dict[str, Any]) -> None:
+    config = json.loads(batch["on1"].config.read_text(encoding="utf-8"))
+    del config["hashes"]
+    batch["on1"].config.write_text(json.dumps(config), encoding="utf-8")
+    summary = score_batch(batch["runs"], batch["gold"], manifest=batch["manifest"], judge=judge()[0],
+                          log=lambda _: None)
+    assert summary["counts"] == {"scored": 1, "reused": 0, "skipped": 2, "failed": 1}
+    failed = next(i for i in summary["items"] if i["state"] == "score_failed")
+    assert failed["run_id"] == "q01-claim_on-r1-a1" and failed["detail"].startswith("KeyError")
+    assert [s["run_id"] for s in lines(batch["runs"])] == ["q01-claim_off-r1-a1"]
+
+
+def test_scores_are_redone_when_the_judge_or_its_calibration_change(batch: dict[str, Any]) -> None:
+    impl = C2Judge()
+    j = Judge(impl, "gold.judge")
+    run = lambda judge, **kw: score_batch(batch["runs"], batch["gold"], manifest=batch["manifest"], judge=judge,  # noqa: E731
+                                          log=lambda _: None, **kw)["counts"]
+    assert run(j)["scored"] == 2 and run(j)["reused"] == 2
+    impl.prompt = "p2"  # the judge's prompt changed: its old verdicts are not comparable
+    assert run(j)["scored"] == 2 and run(j)["reused"] == 2
+    (batch["gold"] / "judge-report.json").write_text(json.dumps({"calibration": {"partial_counts_as": "yes"}}),
+                                                     encoding="utf-8")
+    assert run(j)["scored"] == 2
+    assert {s["support"]["partial_counts_as"] for s in lines(batch["runs"])} == {"yes"}
+    # A corpus now at hand: the scores were not verified, so they are redone, with the calibrated context.
+    corpus, manifest = batch["corpus"]
+    assert run(j, corpus=corpus, corpus_manifest=manifest)["scored"] == 2
+    assert all(s["verify_ok"] is True and s["support"]["context"] == "calibrated" for s in lines(batch["runs"]))
+    # Without a judge nothing judged is thrown away.
+    assert run(None)["reused"] == 2
+    assert all(s["judge"]["used"] for s in lines(batch["runs"]))

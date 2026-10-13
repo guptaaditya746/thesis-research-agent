@@ -1,12 +1,15 @@
 """`score` command line (milestone 4; scoring/README.md).
 
-  score run <run> --key <key.json>                        -> <run>/score.json
+  score run <run> [--key <key.json>]                      -> <run>/score.json
   score batch <runs_root> --gold $GOLD [--manifest m.json] -> <runs_root>/report/scores.jsonl, batch.json
   score report <runs_root>                                -> <runs_root>/report/report.json, report.md, *.csv
   score store <runs_root> [--path $RUNS/.oxigraph]        -> every run's graph.ttl in the SPARQL store
   score sparql <query-file> [--run ID] [--path ...]        -> {vars, rows} as JSON
 
-The judge (gold/judge.py) is used unless --no-judge; its cache lives in $GOLD (`--gold` sets it).
+The judge (gold/judge.py) is used unless --no-judge; its cache and calibration live in $GOLD (`--gold`
+sets it). It judges each quote with the context it was calibrated on, which needs the corpus: with
+the judge on, `run` and `batch` refuse to start without --corpus or $CORPUS. `run` without --key
+takes $GOLD/<qid>/key.json, else key.draft.json, for the run's question (by run id or concept hash).
 """
 from __future__ import annotations
 
@@ -20,6 +23,10 @@ if TYPE_CHECKING:
     from .judge import Judge
 
 
+class Usage(ValueError):
+    pass
+
+
 def _runs_env() -> Path:
     return Path(os.environ.get("RUNS", "runs"))
 
@@ -29,8 +36,10 @@ def _gold_env() -> Path:
 
 
 def _judge_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--gold", type=Path, default=_gold_env(),
+                        help="gold directory: keys, judge cache and calibration (default: $GOLD)")
     parser.add_argument("--corpus", type=Path, default=os.environ.get("CORPUS") or None,
-                        help="frozen corpus (default: $CORPUS): `agent verify` and paper titles for the judge")
+                        help="frozen corpus (default: $CORPUS): `agent verify` and the judge's context")
     parser.add_argument("--corpus-manifest", type=Path, help="default: <corpus>/manifest.json")
     parser.add_argument("--no-judge", action="store_true",
                         help="no LLM judge: soft matches and support verdicts stay pending")
@@ -40,22 +49,36 @@ def _judge_args(parser: argparse.ArgumentParser) -> None:
 def _judge(args: argparse.Namespace) -> Judge | None:
     from .judge import load
 
-    if getattr(args, "gold", None):
-        os.environ["GOLD"] = str(args.gold)  # gold.judge keeps its cache in $GOLD/judge-cache.jsonl
-    return load(not args.no_judge)
+    if args.no_judge:
+        return None
+    os.environ["GOLD"] = str(args.gold)  # gold.judge keeps its cache and calibration in $GOLD
+    judge = load(workers=args.workers)
+    if judge is not None and args.corpus is None and judge.has("support_pair"):
+        raise Usage("the judge needs the corpus (--corpus or $CORPUS) to see each quote with the context it was "
+                    "calibrated on; or pass --no-judge")
+    return judge
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    from agent.rundir import RunDir
+
+    from .batch import key_for
     from .run_score import ScoreError, line, score_run
 
     try:
-        score = score_run(args.run_dir, args.key, judge=_judge(args), corpus=args.corpus,
-                          manifest=args.corpus_manifest, workers=args.workers)
-    except (ScoreError, OSError, ValueError, KeyError) as exc:
+        key = args.key
+        if key is None:
+            found = key_for(args.gold, RunDir(args.run_dir))
+            if found is None:
+                raise ScoreError(f"no key yet: no key.json or key.draft.json in {args.gold} for this run's question")
+            key = found.path
+        score = score_run(args.run_dir, key, judge=_judge(args), corpus=args.corpus,
+                          manifest=args.corpus_manifest, gold=args.gold)
+    except (ScoreError, Usage, OSError, ValueError, KeyError) as exc:
         print(f"FAIL {exc}")
         return 1
     print(line(score))
-    print(f"wrote {Path(args.run_dir) / 'score.json'}")
+    print(f"wrote {Path(args.run_dir) / 'score.json'} (key {key})")
     return 0
 
 
@@ -65,8 +88,8 @@ def cmd_batch(args: argparse.Namespace) -> int:
     try:
         summary = score_batch(args.runs_root, args.gold, manifest=args.manifest, corpus=args.corpus,
                               corpus_manifest=args.corpus_manifest, force=args.force, judge=_judge(args),
-                              workers=args.workers)
-    except (OSError, ValueError) as exc:
+                              include_all=args.all)
+    except (Usage, OSError, ValueError) as exc:
         print(f"FAIL {exc}")
         return 1
     c = summary["counts"]
@@ -87,7 +110,7 @@ def cmd_report(args: argparse.Namespace) -> int:
     except ReportError as exc:
         print(f"FAIL {exc}")
         return 1
-    p = report["primary"]
+    p, c = report["primary"], report["completeness"]
     if p["computed"]:
         print(f"primary: support share claim_on - claim_off = {p['mean_difference']:.3f} over {p['n_pairs']} "
               f"questions, Wilcoxon p = {p['p_value']:.4g}")
@@ -95,6 +118,15 @@ def cmd_report(args: argparse.Namespace) -> int:
         print(f"primary: not computed ({p['reason']})")
     if report["provisional"]:
         print("PROVISIONAL: draft keys used; do not report these numbers")
+    if c["pending_support_runs"] or c["pending_soft_runs"]:
+        print(f"INCOMPLETE: judge decisions pending in {len(set(c['pending_support_runs'] + c['pending_soft_runs']))} "
+              "runs; run `score batch` with the judge")
+    if c["unverified_runs"] or c["verify_failed_runs"]:
+        print(f"UNVERIFIED: {len(c['unverified_runs'])} runs not verified, {len(c['verify_failed_runs'])} failed")
+    if c["key_problem_runs"]:
+        print(f"KEY PROBLEMS: {len(c['key_problem_runs'])} runs scored against keys that do not validate")
+    if c["settings_differ"]:
+        print(f"SETTINGS DIFFER: {', '.join(c['settings_differ'])}")
     print(f"wrote {Path(args.runs_root) / REPORT_DIR}/report.json, report.md and CSV tables")
     return 0
 
@@ -127,16 +159,17 @@ def main(argv: list[str] | None = None) -> int:
 
     run = sub.add_parser("run", help="score one run against an answer key -> <run>/score.json")
     run.add_argument("run_dir", type=Path)
-    run.add_argument("--key", type=Path, required=True, help="key.json, or key.draft.json (provisional)")
-    run.add_argument("--gold", type=Path, help="gold directory for the judge cache (default: $GOLD)")
+    run.add_argument("--key", type=Path, help="key.json, or key.draft.json (provisional); default: the run's "
+                                              "question's key in --gold")
     _judge_args(run)
     run.set_defaults(func=cmd_run)
 
     batch = sub.add_parser("batch", help="score every finished run; write report/scores.jsonl")
-    batch.add_argument("runs_root", type=Path)
-    batch.add_argument("--gold", type=Path, default=_gold_env(), help="keys in <gold>/<qid>/ (default: $GOLD)")
-    batch.add_argument("--manifest", type=Path, help="the batch run manifest (agent/manifests/*.json); without it "
-                                                     "every run directory, matched to a key by concept hash")
+    batch.add_argument("runs_root", type=Path, help="where report/ goes (the web app reads $RUNS/report/)")
+    batch.add_argument("--manifest", type=Path, help="the run manifest agent batch ran ($RUNS/<name>/manifest.json "
+                                                     "from scripts/e2e-batch.sh): its runs_root holds the attempts; "
+                                                     "without it every batch run below runs_root, keyed by concept")
+    batch.add_argument("--all", action="store_true", help="without --manifest: also runs whose id is not a batch key")
     batch.add_argument("--force", action="store_true", help="rescore runs that already have a current score.json")
     _judge_args(batch)
     batch.set_defaults(func=cmd_batch)

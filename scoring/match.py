@@ -26,20 +26,26 @@ make, in this order, more pairs, more vital gold facts and stricter pairs win. A
 edges, so its counts and its vital recall never fall below the stricter level's; each pair is reported
 at the strictest level it has.
 
+Pending: the pairs the soft level would ask the judge about are found with or without a judge. Each one
+the judge did not decide (no judge, a failed call) is counted in the soft level's `pending`; while it is
+above 0 the soft numbers are a lower bound (EVALUATION.md 3.3, `judge_pending`), and the report leaves
+them out instead of averaging them with complete ones. With nothing to ask, soft is complete without a
+judge.
+
 Judged precision (EVALUATION.md 3.5): correct = run facts matched at the soft level; wrong = left-over
-run facts equal (normalised) to a fact the reviewers rejected as wrong, listed in the key's optional
-`rejected` array. A key without that array leaves judged precision open (null).
+run facts equal (normalised) to a fact the reviewers rejected as wrong (`wrong`: from the review export,
+scoring/run_score.py `wrong_facts`; each entry must say `verdict: "wrong"`). Without that list judged
+precision is open (null).
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import partial
 from typing import Any
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from .judge import Judge, run_all
+from .judge import Judge
 from .normalise import fact_norm, fact_strict, norm, words
 
 RANK = {"strict": 3, "normalised": 2, "soft": 1}
@@ -124,23 +130,29 @@ def rows_equal(run: Row, key: Row, kind: str) -> bool:
     return run.key == key.key
 
 
-def match_rows(answer: dict[str, Any], key: dict[str, Any], concept: dict[str, Any], judge: Judge | None = None,
-               workers: int = 1) -> dict[str, Any]:
+def ask_judge(judge: Judge | None, method: str, pairs: list[tuple[dict[str, Any], dict[str, Any]]],
+           concept: dict[str, Any]) -> list[bool | None]:
+    """The judge's same_fact / same_row on each pair; None (pending) for every pair without a judge."""
+    return judge.matches(method, pairs, concept) if judge is not None else [None] * len(pairs)
+
+
+def match_rows(answer: dict[str, Any], key: dict[str, Any], concept: dict[str, Any],
+               judge: Judge | None = None) -> dict[str, Any]:
     kind, cols = concept["answer_shape"]["kind"], columns(concept)
     run, gold = unique_rows(answer["rows"], kind, cols), unique_rows(key["rows"], kind, cols)
     edges = {(i, j): RANK["normalised"] for i, r in enumerate(run) for j, k in enumerate(gold) if rows_equal(r, k, kind)}
     normalised = assign(len(run), len(gold), edges, RANK["normalised"])
-    if judge is not None:
-        taken_run, taken_key = {i for i, _, _ in normalised}, {j for _, j, _ in normalised}
-        asks = [(i, j) for i, r in enumerate(run) for j, k in enumerate(gold)
-                if (i, j) not in edges and (i not in taken_run or j not in taken_key) and r.shared & k.shared]
-        answers = run_all([partial(judge.same_row, run[i].view, gold[j].view, concept) for i, j in asks], workers)
-        edges |= {ij: RANK["soft"] for ij, yes in zip(asks, answers) if yes}
+    taken_run, taken_key = {i for i, _, _ in normalised}, {j for _, j, _ in normalised}
+    asks = [(i, j) for i, r in enumerate(run) for j, k in enumerate(gold)
+            if (i, j) not in edges and (i not in taken_run or j not in taken_key) and r.shared & k.shared]
+    answers = ask_judge(judge, "same_row", [(run[i].view, gold[j].view) for i, j in asks], concept)
+    edges |= {ij: RANK["soft"] for ij, yes in zip(asks, answers) if yes}
     soft = assign(len(run), len(gold), edges, RANK["soft"])
     matched_run, matched_key = {i for i, _, _ in soft}, {j for _, j, _ in soft}
     return {
         "levels": {"normalised": prf(len(normalised), len(run), len(gold)),
-                   "soft": prf(len(soft), len(run), len(gold))},
+                   "soft": prf(len(soft), len(run), len(gold)) | {"asked": len(asks),
+                                                                   "pending": answers.count(None)}},
         "pairs": [{"run": run[i].id, "key": gold[j].id, "level": LEVEL[rank], "run_same": run[i].same}
                   for i, j, rank in soft],
         "missed": [k.id for j, k in enumerate(gold) if j not in matched_key],
@@ -185,7 +197,7 @@ def level_counts(pairs: list[tuple[int, int, int]], run: list[Fact], gold: list[
 
 
 def match_facts(answer: dict[str, Any], key: dict[str, Any], concept: dict[str, Any], judge: Judge | None = None,
-                workers: int = 1) -> dict[str, Any]:
+                wrong: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     run, gold = unique_facts(answer["rows"], gold=False), unique_facts(key["rows"], gold=True)
     vital = [f.vital for f in gold]
     by_key = {f.key: j for j, f in enumerate(gold)}
@@ -196,50 +208,54 @@ def match_facts(answer: dict[str, Any], key: dict[str, Any], concept: dict[str, 
             edges[(i, j)] = RANK["strict"] if f.strict & gold[j].strict else RANK["normalised"]
     levels = {"strict": assign(len(run), len(gold), edges, RANK["strict"], vital),
               "normalised": assign(len(run), len(gold), edges, RANK["normalised"], vital)}
-    if judge is not None:
-        taken_run, taken_key = {i for i, _, _ in levels["normalised"]}, {j for _, j, _ in levels["normalised"]}
-        asks = [(i, j) for i, f in enumerate(run) for j, g in enumerate(gold)
-                if (i, j) not in edges and (i not in taken_run or j not in taken_key) and f.key[0] in g.subjects]
-        answers = run_all([partial(judge.same_fact, run[i].spo, gold[j].spo, concept) for i, j in asks], workers)
-        edges |= {ij: RANK["soft"] for ij, yes in zip(asks, answers) if yes}
+    taken_run, taken_key = {i for i, _, _ in levels["normalised"]}, {j for _, j, _ in levels["normalised"]}
+    asks = [(i, j) for i, f in enumerate(run) for j, g in enumerate(gold)
+            if (i, j) not in edges and (i not in taken_run or j not in taken_key) and f.key[0] in g.subjects]
+    answers = ask_judge(judge, "same_fact", [(run[i].spo, gold[j].spo) for i, j in asks], concept)
+    edges |= {ij: RANK["soft"] for ij, yes in zip(asks, answers) if yes}
     levels["soft"] = assign(len(run), len(gold), edges, RANK["soft"], vital)
     soft = levels["soft"]
     matched_run, matched_key = {i for i, _, _ in soft}, {j for _, j, _ in soft}
-    rejected = rejected_keys(key)
+    rejected = wrong_keys(wrong)
     extra = [{"run": f.members[0], "same": f.members[1:], "spo": f.spo,
               "wrong": None if rejected is None else f.key in rejected}
              for i, f in enumerate(run) if i not in matched_run]
-    wrong = None if rejected is None else sum(bool(e["wrong"]) for e in extra)
+    n_wrong = None if rejected is None else sum(bool(e["wrong"]) for e in extra)
+    counts = {name: level_counts(pairs, run, gold) for name, pairs in levels.items()}
+    counts["soft"] |= {"asked": len(asks), "pending": answers.count(None)}
     return {
-        "levels": {name: level_counts(pairs, run, gold) for name, pairs in levels.items()},
+        "levels": counts,
         "pairs": [{"run": run[i].members[0], "run_same": run[i].members[1:], "key": gold[j].members[0],
                    "level": LEVEL[rank], "vital": gold[j].vital} for i, j, rank in soft],
         "missed": [{"key": g.members[0], "spo": g.spo, "vital": g.vital}
                    for j, g in enumerate(gold) if j not in matched_key],
         "extra": extra,
-        "judged_precision": judged_precision(len(soft), wrong, len(run)),
+        "judged_precision": judged_precision(len(soft), n_wrong, len(run)),
         "duplicates": sum(len(f.members) - 1 for f in run),
     }
 
 
-def rejected_keys(key: dict[str, Any]) -> set[tuple[Any, Any, Any]] | None:
-    """Normalised keys of the facts reviewers rejected as wrong; None when the key does not list them."""
-    if "rejected" not in key:
+def wrong_keys(wrong: list[dict[str, Any]] | None) -> set[tuple[Any, Any, Any]] | None:
+    """Normalised keys of the facts reviewers rejected as wrong; None when they are not known.
+
+    Each entry must say `verdict: "wrong"`: a list of other rejections (such as the review export's
+    unanchorable lines) never counts as wrong facts by default."""
+    if wrong is None:
         return None
-    return {fact_norm(f) for f in key["rejected"] or [] if f.get("verdict", "wrong") == "wrong"}
+    return {fact_norm(f) for f in wrong if f.get("verdict") == "wrong" and all(k in f for k in "spo")}
 
 
 def judged_precision(correct: int, wrong: int | None, scored: int) -> dict[str, Any]:
     if wrong is None:
         return {"correct": correct, "wrong": None, "precision": None, "coverage": None,
-                "note": "the key lists no rejected facts"}
+                "note": "no review export lists the facts reviewers rejected as wrong"}
     judged = correct + wrong
     return {"correct": correct, "wrong": wrong, "precision": correct / judged if judged else None,
             "coverage": judged / scored if scored else None}
 
 
 def match(answer: dict[str, Any], key: dict[str, Any], concept: dict[str, Any], judge: Judge | None = None,
-          workers: int = 1) -> dict[str, Any]:
+          wrong: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """Rows and facts of one answer against one key."""
-    return {"rows": match_rows(answer, key, concept, judge, workers),
-            "facts": match_facts(answer, key, concept, judge, workers)}
+    return {"rows": match_rows(answer, key, concept, judge),
+            "facts": match_facts(answer, key, concept, judge, wrong)}
