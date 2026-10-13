@@ -15,8 +15,8 @@ Each attempt at a key is its own run directory <runs_root>/<key>-a<N>. Per key, 
   attempt in a fresh run directory, up to `max_attempts` per key. A partly done run or attach step
   is never resumed in place: a cut run's chain stays as it was, ends with the cut, and is kept.
 
-Runs and attach steps run sequentially as child processes (`python -m agent.cli run|attach`),
-inside the job's time limit: `--deadline` (ISO time or epoch seconds), `--time-limit` (seconds from
+Runs and attach steps run sequentially as child processes (`python -m agent.cli run|attach`,
+with the manifest's budget and prompt version when it gives them), inside the job's time limit: `--deadline` (ISO time or epoch seconds), `--time-limit` (seconds from
 now) or $SLURM_JOB_END_TIME (epoch seconds, set by Slurm), whichever comes first. A child still
 running `--margin` seconds before the deadline gets SIGTERM (which `agent run` and `agent attach`
 turn into a clean stop: broker closed, sandboxed command killed), then SIGKILL after a grace
@@ -246,6 +246,8 @@ class Batch:
         for key in ("steps", "tokens"):
             if key in budget:
                 argv += [f"--{key}", str(budget[key])]
+        if "prompt_version" in d:
+            argv += ["--prompt-version", d["prompt_version"]]
         return argv
 
     def attach_argv(self, run: RunDir) -> list[str]:

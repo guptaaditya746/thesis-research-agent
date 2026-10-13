@@ -34,6 +34,8 @@
       "type": "object", "additionalProperties": false,
       "properties": {"steps": {"type": "integer", "minimum": 1}, "tokens": {"type": "integer", "minimum": 1}}
     },
+    "prompt_version": {"type": "string", "pattern": "^v[0-9]+$",
+                       "description": "agent/prompts/system-<version>.txt for every run (default: agent run's)"},
     "attach_budget": {
       "type": "object", "additionalProperties": false,
       "description": "the attach step's budget per fact (row 2.5)",
