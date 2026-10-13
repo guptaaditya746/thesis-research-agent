@@ -70,7 +70,7 @@ def build_agent() -> Agent[ChatDeps, str]:
 
     @agent.tool
     def list_runs(ctx: RunContext[ChatDeps], qid: str | None = None, condition: str | None = None) -> Any:
-        """Runs (newest last) with question id, condition, exit status, cost, claims and score; filter by
+        """Runs (by run id) with question id, condition, exit status, cost, claims and score; filter by
         question id (q01..q12) and condition (claim_on or claim_off)."""
         runs = ctx.deps.services.runs.summaries(qid=qid, condition=condition)
         return [r.model_dump(mode="json") for r in runs[-MAX_ITEMS:]]

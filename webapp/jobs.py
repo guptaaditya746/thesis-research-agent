@@ -132,9 +132,13 @@ class JobManager:
                 return
             job.state, job.started_at = "running", utc_now()
             self._save(job)
-            with open(self.dir / f"{job.id}.log", "ab", buffering=0) as log:
-                for s in job.steps:
-                    await self._step(job, s, log)
+            try:
+                with open(self.dir / f"{job.id}.log", "ab", buffering=0) as log:
+                    for s in job.steps:
+                        await self._step(job, s, log)
+            except OSError as exc:  # the log or the state file cannot be written
+                self._finish(job, error=f"{type(exc).__name__}: {exc}")
+                return
             failed = [s for s in job.steps if s.required and s.state == "failed"]
             self._finish(job, exit_code=failed[0].exit_code if failed else 0,
                          error=self._cancelled.get(job_id))

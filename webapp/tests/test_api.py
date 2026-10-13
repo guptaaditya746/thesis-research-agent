@@ -235,5 +235,7 @@ def test_nothing_there_yet(tmp_path: Path) -> None:
 def test_openapi_file_is_current() -> None:
     """webapp/web/openapi.json (the frontend's types come from it) is what `webapp openapi` prints."""
     path = Path(__file__).resolve().parents[1] / "web" / "openapi.json"
-    assert json.loads(path.read_text(encoding="utf-8")) == create_app().openapi(), \
-        "run `uv run webapp openapi -o webapp/web/openapi.json`"
+    committed, current = json.loads(path.read_text(encoding="utf-8")), create_app().openapi()
+    for schema in (committed, current):
+        schema["info"].pop("version")  # the package version; a bump alone changes no type
+    assert committed == current, "run `uv run webapp openapi -o webapp/web/openapi.json`"
