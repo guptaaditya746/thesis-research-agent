@@ -89,18 +89,20 @@ def test_steps_run_in_order_with_needs_and_optional_failures(tmp_path: Path) -> 
         job = manager.submit("demo", {"n": 1}, [
             step("hello", py("print('hello from step 1')")),
             step("optional", py("import sys; print('broken'); sys.exit(3)"), required=False),
-            step("needs", py("print('never')"), needs=tmp_path / "missing.json"),
-            step("last", py("import sys; print('last', sys.argv[1])", "arg with spaces")),
+            step("needs", py("print('never')"), needs=[tmp_path, tmp_path / "missing.json"]),
+            step("last", py("import sys; print('last', sys.argv[1])", "arg with spaces"), needs=tmp_path),
         ])
         assert job.state == "queued" and (settings.jobs_dir / f"{job.id}.json").is_file()
         return await finished(manager, job)
 
     job = asyncio.run(main())
     assert (job.state, job.exit_code, job.error) == ("done", 0, None)
+    assert job.warnings == ["optional failed (exit 3); see the log"]  # done, but not silently
     assert [(s.name, s.state, s.exit_code) for s in job.steps] == [
         ("hello", "done", 0), ("optional", "failed", 3), ("needs", "skipped", None), ("last", "done", 0)]
     log = (settings.jobs_dir / f"{job.id}.log").read_text(encoding="utf-8")
     assert "hello from step 1\n" in log and "# optional exit 3" in log and "never" not in log
+    assert f"# skipped needs: {tmp_path / 'missing.json'} does not exist" in log
     assert "last arg with spaces" in log and "'arg with spaces'" in log  # the command line, shell-quoted
     saved = Job.model_validate_json((settings.jobs_dir / f"{job.id}.json").read_text(encoding="utf-8"))
     assert saved == job

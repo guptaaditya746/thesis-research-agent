@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Condition = Literal["claim_on", "claim_off"]
 JobState = Literal["queued", "running", "done", "failed"]
 StepState = Literal["pending", "running", "done", "failed", "skipped"]
+PickedBy = Literal["user", "claude", "provisional-first"]  # agent/concept_step.py PICKED_BY (WP B)
+GoldState = Literal["none", "building", "draft", "reviewed"]
 
 
 class Open(BaseModel):
@@ -461,12 +463,18 @@ class JobStep(BaseModel):
     name: str
     argv: list[str]
     command: str = Field(description="argv as one shell-quoted line, for reading")
-    required: bool = Field(True, description="a failure fails the job (optional steps only log it)")
-    needs: str | None = Field(None, description="a file the step needs; skipped when it is missing")
+    required: bool = Field(True, description="a failure fails the job (an optional step's failure is a warning)")
+    needs: list[str] = Field([], description="files the step needs; it is skipped when one is missing")
     state: StepState = "pending"
     exit_code: int | None = None
     started_at: str | None = None
     ended_at: str | None = None
+
+    @field_validator("needs", mode="before")
+    @classmethod
+    def _one_or_more(cls, value: Any) -> Any:
+        """State files of earlier servers hold one path or null."""
+        return [] if value is None else [value] if isinstance(value, str) else value
 
 
 class Job(BaseModel):
@@ -481,4 +489,5 @@ class Job(BaseModel):
     qid: str | None = None
     exit_code: int | None = None
     error: str | None = None
+    warnings: list[str] = Field([], description="optional steps that failed (the job can still be done)")
     steps: list[JobStep] = []

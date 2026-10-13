@@ -8,10 +8,14 @@ line; the job's state is $RUNS/.jobs/<id>.json, rewritten (atomically) at every 
 restarted server still lists old jobs. A job that was queued or running when the server stopped
 is marked failed when the next server starts: its subprocess is no longer ours to watch.
 
-A step whose `needs` file is missing is skipped (e.g. no post steps when the run never started);
-a failed step does not stop the next ones (the post steps of a run that ran out of budget are
-still useful), but a failed `required` step fails the job. Cancelling sends SIGTERM to the
-running step (`agent run` and `agent attach` stop cleanly on it) and skips the rest.
+A step one of whose `needs` files is missing is skipped (e.g. no post steps when the run never
+started, no score without an answer key); a failed step does not stop the next ones (the post
+steps of a run that ran out of budget are still useful), but a failed `required` step fails the
+job, and a failed optional one adds a warning to it. Cancelling sends SIGTERM to the running step
+(`agent run` and `agent attach` stop cleanly on it) and skips the rest.
+
+The request handlers read the jobs from the server's thread pool while the event loop adds
+them, so every read iterates over a snapshot (`list(...)`, which copies without yielding).
 
 Commands are argv lists (no shell). The subprocess environment is the server's plus the roots of
 the settings; API keys reach the children only through that inherited environment and never
@@ -39,13 +43,15 @@ from .models import Job, JobStep
 from .settings import REPO, Settings
 
 ACTIVE = ("queued", "running")
+STEP_ACTIVE = ("pending", "running")
 STOP_GRACE_S = 30
 
 
-def step(name: str, argv: list[str], *, required: bool = True, needs: Path | str | None = None) -> JobStep:
+def step(name: str, argv: list[str], *, required: bool = True,
+         needs: Path | str | list[Path | str] | None = None) -> JobStep:
     argv = [str(a) for a in argv]
-    return JobStep(name=name, argv=argv, command=shlex.join(argv), required=required,
-                   needs=str(needs) if needs is not None else None)
+    needs = [] if needs is None else [needs] if isinstance(needs, (str, Path)) else needs
+    return JobStep(name=name, argv=argv, command=shlex.join(argv), required=required, needs=[str(n) for n in needs])
 
 
 class JobManager:
@@ -91,7 +97,7 @@ class JobManager:
         write_json_atomic(self.dir / f"{job.id}.json", job.model_dump(mode="json"))
 
     def list(self) -> list[Job]:
-        return sorted(self.jobs.values(), key=lambda j: (j.created_at, j.id), reverse=True)
+        return sorted(list(self.jobs.values()), key=lambda j: (j.created_at, j.id), reverse=True)
 
     def get(self, job_id: str) -> Job:
         job = self.jobs.get(check_id(job_id, "job"))
@@ -99,15 +105,20 @@ class JobManager:
             raise NotFound(f"no such job: {job_id!r}")
         return job
 
-    def log_path(self, job_id: str) -> Path:
-        return self.dir / f"{self.get(job_id).id}.log"
+    def log_path(self, job: Job) -> Path:
+        return self.dir / f"{job.id}.log"
 
     def active(self, kind: str | None = None, *, run_id: str | None = None, qid: str | None = None) -> list[Job]:
-        return [j for j in self.jobs.values() if j.state in ACTIVE and kind in (None, j.kind)
+        return [j for j in list(self.jobs.values()) if j.state in ACTIVE and kind in (None, j.kind)
                 and run_id in (None, j.run_id) and qid in (None, j.qid)]
 
     def active_run(self, run_id: str) -> bool:
         return bool(self.active(run_id=run_id))
+
+    def run_steps(self, run_id: str) -> dict[str, str] | None:
+        """{step name: state} of the queued or running job that works on the run; None if there is none."""
+        jobs = self.active(run_id=run_id)
+        return {s.name: s.state for s in jobs[0].steps} if jobs else None
 
     # --- running ---------------------------------------------------------------------------------------
 
@@ -133,7 +144,7 @@ class JobManager:
             job.state, job.started_at = "running", utc_now()
             self._save(job)
             try:
-                with open(self.dir / f"{job.id}.log", "ab", buffering=0) as log:
+                with open(self.log_path(job), "ab", buffering=0) as log:
                     for s in job.steps:
                         await self._step(job, s, log)
             except OSError as exc:  # the log or the state file cannot be written
@@ -147,9 +158,10 @@ class JobManager:
         if job.id in self._cancelled:
             s.state = "skipped"
             return
-        if s.needs and not Path(s.needs).exists():
+        missing = [n for n in s.needs if not Path(n).exists()]
+        if missing:
             s.state = "skipped"
-            log.write(f"# skipped {s.name}: {s.needs} does not exist\n".encode())
+            log.write(f"# skipped {s.name}: {', '.join(missing)} does not exist\n".encode())
             self._save(job)
             return
         log.write(f"$ {s.command}\n".encode())
@@ -171,6 +183,8 @@ class JobManager:
         log.write(f"# {s.name} exit {code}\n".encode())
         s.exit_code, s.ended_at = code, utc_now()
         s.state = "done" if code == 0 else "failed"
+        if code != 0 and not s.required and job.id not in self._cancelled:
+            job.warnings.append(f"{s.name} failed (exit {code}); see the log")
         self._save(job)
 
     def _finish(self, job: Job, *, exit_code: int | None = None, error: str | None = None) -> None:
@@ -214,7 +228,7 @@ class JobManager:
     async def log_stream(self, job_id: str, after: int = 0) -> AsyncIterator[ServerSentEvent]:
         """`line` per log line (id = line number) as it is written, then `done` with the job."""
         job = self.get(job_id)
-        path = self.dir / f"{job.id}.log"
+        path = self.log_path(job)
         offset, line_no, pending = 0, 0, b""
         while True:
             finished = job.state not in ACTIVE

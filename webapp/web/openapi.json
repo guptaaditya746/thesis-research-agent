@@ -2583,6 +2583,15 @@
             ],
             "title": "Error"
           },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "optional steps that failed (the job can still be done)",
+            "default": []
+          },
           "steps": {
             "items": {
               "$ref": "#/components/schemas/JobStep"
@@ -2623,20 +2632,17 @@
           "required": {
             "type": "boolean",
             "title": "Required",
-            "description": "a failure fails the job (optional steps only log it)",
+            "description": "a failure fails the job (an optional step's failure is a warning)",
             "default": true
           },
           "needs": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
             "title": "Needs",
-            "description": "a file the step needs; skipped when it is missing"
+            "description": "files the step needs; it is skipped when one is missing",
+            "default": []
           },
           "state": {
             "type": "string",
