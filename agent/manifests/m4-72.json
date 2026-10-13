@@ -23,6 +23,7 @@
   "seed_base": 1000,
   "budget": {"steps": 60, "tokens": 2000000},
   "prompt_version": "v2",
+  "spawn": "off",
   "attach_budget": {"steps": 6, "tokens": 60000},
   "sandbox": "landlock",
   "base_url": "http://127.0.0.1:4000/v1",
