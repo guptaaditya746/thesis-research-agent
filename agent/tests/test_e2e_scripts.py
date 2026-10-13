@@ -180,13 +180,16 @@ def test_concepts_batch_and_replay_scripts(session: tuple[Path, Proxy]) -> None:
     run = runs / "q10-claim_off-r1-a1"
     assert all((run / f).is_file() for f in ("attach.json", "graph.ttl", "graph.json", "timeline.html", "pairs.jsonl"))
     assert "== done: 1 finished runs" in done.stdout and "PASS edges=1" in done.stdout
+    assert done.stdout.rstrip().endswith(f"RUNS_ROOT={runs}")  # what scoring and the web app take as RUNS
     # The next job: nothing runs again, nothing is exported again.
     done = script("e2e-batch.sh", str(manifest))
     assert done.returncode == 0 and "q10-claim_off-r1-a1: checked and exported before" in done.stdout
 
+    # A claim_off run: its attach calls are not in trajectory.json, so the replay is partial (said, not hidden).
     done = script("e2e-replay.sh", str(manifest), "--reexec")
     assert done.returncode == 0, done.stdout + done.stderr
-    assert "q10-claim_off-r1-a1 replay ok, reexec identical" in done.stdout and "PASS 1 runs" in done.stdout
+    assert "q10-claim_off-r1-a1 replay partial (2 calls not checked), reexec identical\n" in done.stdout
+    assert "PASS 1 runs" in done.stdout
 
     # A changed concept (e.g. a pick replaced) stops the batch instead of mixing two concepts' runs in one root.
     concept = concepts / "q10" / "concept.json"
@@ -194,3 +197,29 @@ def test_concepts_batch_and_replay_scripts(session: tuple[Path, Proxy]) -> None:
     done = script("e2e-batch.sh", str(manifest))
     assert done.returncode == 1 and "the concept of q10 changed" in done.stderr
     assert model.requests == 12 + 2 + 2  # 12 concept proposals, the run's 2 replies, the attach step's 2
+
+
+@needs_tools
+def test_concepts_script_says_how_to_retry(session: tuple[Path, Proxy], monkeypatch: pytest.MonkeyPatch) -> None:
+    """A question without valid briefs stops the script with the way out; the rerun retries only it."""
+    tmp, model = session
+    broken = Proxy.reply
+
+    def no_briefs_for_q03(self: Proxy, messages: list[dict[str, Any]]) -> str:
+        if "Which low-resource languages" in messages[1]["content"]:
+            return "I cannot answer that."
+        return broken(self, messages)
+    monkeypatch.setattr(Proxy, "reply", no_briefs_for_q03)
+    done = script("e2e-concepts.sh")
+    assert done.returncode == 1 and "== pick" not in done.stdout
+    assert "FAIL 1 failed, 11 proposed (needs action: q03)" in done.stdout
+    assert "run the script again to retry only those, with another seed" in done.stderr
+    assert "E2E_CONCEPT_SEED=2" in done.stderr
+    monkeypatch.setattr(Proxy, "reply", broken)
+    monkeypatch.setenv("E2E_CONCEPT_SEED", "2")
+    done = script("e2e-concepts.sh")
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert "PASS 1 proposed, 11 skipped" in done.stdout and "PASS 12 picked" in done.stdout
+    attempts = json.loads((tmp / "concepts" / "q03" / "session.json").read_text(encoding="utf-8"))["attempts"]
+    assert [a["sampling"]["seed"] for a in attempts] == [1, 2]
+    assert model.requests == 11 + 2 + 1  # 11 proposals, q03's two rounds without briefs, q03's retry

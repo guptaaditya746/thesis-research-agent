@@ -5,7 +5,10 @@
 # Per finished run: agent replay (replay.json); with --reexec also agent reexec (reexec.json, reexec.jsonl), which
 # runs every command again and takes about as long as the run's commands did. A missing setup stops the script at
 # once; the per-run results are measurements, so every run is done and the summary at the end says which failed
-# (exit 1 if a replay failed or a re-execution could not run; differing outputs alone are reported, exit 0).
+# (exit 1 if a replay failed or a re-execution could not run; differing outputs or claims alone are reported,
+# exit 0). "replay partial": the research loop replays, but the attach step's calls (claim_off) are not in
+# trajectory.json and stay unchecked. "toolchain differs": the agent root is not the run's, so a difference may
+# be the toolchain's.
 set -euo pipefail
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 manifest=$(realpath "${1:?usage: scripts/e2e-replay.sh <run manifest> [--reexec]}")
@@ -26,16 +29,32 @@ summary=()
 for run_id in $finished; do
   R="$root/$run_id"
   echo "== $run_id: replay"
-  if uv run agent replay "$R"; then line="$run_id replay ok"; else line="$run_id replay FAILED"; failed+=("$run_id"); fi
+  code=0
+  out=$(uv run agent replay "$R") || code=$?
+  echo "$out"
+  if [[ $code != 0 ]]; then
+    line="$run_id replay FAILED"
+    failed+=("$run_id")
+  elif [[ "$out" == *PARTIAL* ]]; then
+    line="$run_id replay partial ($(grep -o '[0-9]* calls not checked' <<<"$out" || echo 'calls not checked'))"
+  else
+    line="$run_id replay ok"
+  fi
   if [[ $reexec == 1 ]]; then
     echo "== $run_id: reexec"
     code=0
-    uv run agent reexec "$R" --corpus "$CORPUS" || code=$?
+    out=$(uv run agent reexec "$R" --corpus "$CORPUS") || code=$?
+    echo "$out"
     case $code in
       0) line="$line, reexec identical" ;;
-      1) line="$line, reexec differs (see $R/reexec.json)" ;;
+      1)
+        what=()
+        if [[ "$out" == *"DIFF step"* ]]; then what+=(outputs); fi
+        if [[ "$out" == *"DIFF claim"* ]]; then what+=(claims); fi
+        line="$line, reexec differs: ${what[*]} (see $R/reexec.json)" ;;
       *) line="$line, reexec FAILED"; failed+=("$run_id") ;;
     esac
+    if [[ "$out" == *"WARN toolchain differs"* ]]; then line="$line (toolchain differs)"; fi
   fi
   summary+=("$line")
 done

@@ -8,7 +8,8 @@
 # 2. agent batch on it, inside the job's time limit (from $SLURM_JOB_END_TIME, else scontrol); a batch that runs
 #    out of time (exit 2) or gives up on a key (exit 1) still gets step 3, and the script ends with its exit code;
 # 3. for every finished run not done before: agent verify, pairs, timeline, graph, export-prov.
-# Stops at the first failure.
+# The last line, RUNS_ROOT=$RUNS/<name>, is the runs root of this manifest: give it as RUNS to the scoring and the
+# web app (one level above it, they would not see these runs). Stops at the first failure.
 set -euo pipefail
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 manifest=$(realpath "${1:?usage: scripts/e2e-batch.sh <run manifest, e.g. agent/manifests/e2e-smoke.json>}")
@@ -97,4 +98,7 @@ for run_id in $finished; do
   uv run agent export-prov "$R"
 done
 echo "== done: $n finished runs in $root; batch exit $rc"
+# Each manifest has its own runs root, so the M4 report never mixes in smoke runs: scoring and the web app
+# take this directory as their RUNS (docs/e2e-build-plan.md, Environment).
+echo "RUNS_ROOT=$root"
 exit "$rc"
