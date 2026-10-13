@@ -51,7 +51,7 @@ Any new dependency: pin an exact version, say why in the commit.
 | B questions, concepts, re-exec, Slurm scripts (2.3, 2.13) | `e2e/questions` | `questions/`, `agent/concept_step.py`, `agent/reexec.py`, `agent/replay.py`, concept/reexec/replay subcommands in `agent/cli.py`, question/concept fields of `agent/manifests/m4-72.json`, `slurm/`, `scripts/e2e-*.sh` | loop.py, budgets |
 | C1 gold builder (M3) | `e2e/gold-build` | `gold/{chunks,screen,extract,build,triage,pool,draft,docmd}.py`, `gold/prompts/`, its `gold` subcommands, `gold/tests/` | agent/ (import only) |
 | C2 review and judge (M3) | `e2e/gold-review` | `gold/{argilla_io,review,export,agreement,screening_check,judge}.py`, its `gold` subcommands, `gold/tests/` | agent/ (import only) |
-| D scoring (M4) | `e2e/scoring` | `scoring/` | agent/, gold/ (import only) |
+| D scoring (M4) | `e2e/scoring` | `scoring/` (`scoring/store.py` exists: `RunStore(path).load_run/load_all/runs/query(sparql, run_id=)`; extend additively) | agent/, gold/ (import only) |
 | E backend | `e2e/webapp-api` | `webapp/*.py`, `webapp/tests/` | everything else (import only) |
 | F frontend | `e2e/webapp-ui` | `webapp/web/` | everything else |
 
