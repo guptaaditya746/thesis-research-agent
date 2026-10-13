@@ -35,18 +35,63 @@ def test_key_and_count_columns():
     assert key_column([{"name": "n", "type": "integer"}, {"name": "xs", "type": "list<string>"}]) is None
 
 
+def shape(key, listed, list_type, integer):
+    return [{"name": key, "type": "string"}, {"name": listed, "type": f"list<{list_type}>"},
+            {"name": integer, "type": "integer"}]
+
+
+def test_count_columns_are_named_as_counts_of_their_list():
+    for name in ("paper_count", "papers_count", "num_papers", "n_papers", "number_of_papers", "total_papers",
+                 "first_author_papers", "count", "total"):
+        assert count_columns(shape("model", "papers", "Paper", name)) == {name: "papers"}, name
+    assert count_columns(shape("venue", "studies", "Paper", "study_count")) == {"study_count": "studies"}
+
+
+def test_integers_that_only_share_a_word_with_a_list_are_not_counts():
+    for key, listed, list_type, name in (
+            ("language", "tasks", "string", "num_speakers"), ("benchmark", "datasets", "Dataset", "dataset_size"),
+            ("model", "papers", "Paper", "num_parameters"), ("benchmark", "measures", "string", "num_tasks"),
+            ("model", "papers", "Paper", "paper_year"), ("model", "papers", "Paper", "num_examples"),
+            ("model", "papers", "Paper", "total_params"), ("model", "papers", "Paper", "n_samples"),
+            ("model", "datasets", "Dataset", "dataset_rank")):
+        assert count_columns(shape(key, listed, list_type, name)) == {}, name
+    two_lists = [{"name": "a", "type": "string"}, {"name": "xs", "type": "list<string>"},
+                 {"name": "ys", "type": "list<string>"}, {"name": "count", "type": "integer"}]
+    assert count_columns(two_lists) == {}  # which list? none
+
+
+def test_a_value_that_is_not_a_count_is_kept_as_extracted():
+    concept = {"answer_shape": {"kind": "table", "columns": shape("language", "tasks", "string", "num_speakers")}}
+    rows = merge_rows(concept, [item({"language": "Swahili", "tasks": ["NER", "MT"], "num_speakers": 200000000})])
+    assert rows[0]["cells"]["num_speakers"] == 200000000 and "conflicts" not in rows[0]
+    concept = {"answer_shape": {"kind": "table", "columns": shape("model", "papers", "Paper", "num_parameters")}}
+    rows = merge_rows(concept, [item({"model": "Llama-3-8B", "papers": ["p1"], "num_parameters": 8}),
+                                item({"model": "llama-3-8b", "papers": ["p2"], "num_parameters": 8})])
+    assert rows[0]["cells"] == {"model": "Llama-3-8B", "papers": ["p1", "p2"], "num_parameters": 8}
+
+
 def test_table_rows_merge_by_key_with_lists_unioned_and_counts_recomputed():
     concept = table_concept()
     items = [item(cells("Natural Questions", ["p1"], 1), "p1"),
              item(cells("HotpotQA", ["p1"], 1), "p1", extracted_row=1),
-             item(cells("natural-questions", ["p2", "p1"], 1), "p2"),
+             item(cells("natural-questions", ["p2", "p1"], 2), "p2"),
              item(cells("NaturalQuestions", ["P2"], None), "p2", chunk=3)]
     rows = merge_rows(concept, items)
     assert [r["key"] for r in rows] == ["naturalquestions", "hotpotqa"]
     nq = rows[0]
     assert nq["cells"] == {"dataset": "Natural Questions", "papers": ["p1", "p2"], "paper_count": 2}
     assert nq["candidates"] == [items[0]["id"], items[2]["id"], items[3]["id"]]
-    assert nq["papers"] == ["p1", "p2"] and "conflicts" not in nq
+    assert nq["papers"] == ["p1", "p2"] and "conflicts" not in nq  # 1 and 2 differ only by the merge
+
+
+def test_a_count_that_disagrees_with_its_own_row_is_kept_as_a_conflict():
+    rows = merge_rows(table_concept(), [item(cells("MMLU", ["p1"], 5), "p1"), item(cells("mmlu", ["p2"], 1), "p2")])
+    assert rows[0]["cells"]["paper_count"] == 2
+    assert rows[0]["conflicts"] == {"paper_count": [2, 5]}
+    alone = merge_rows(table_concept(), [item(cells("GSM8K", ["p1", "p2"], 3), "p1")])
+    assert alone[0]["cells"]["paper_count"] == 2 and alone[0]["conflicts"] == {"paper_count": [2, 3]}
+    unlisted = merge_rows(table_concept(), [item(cells("NQ", ["p1"], 1), "p1"), item(cells("nq", [], 4), "p2")])
+    assert unlisted[0]["conflicts"] == {"paper_count": [1, 4]}  # listed nothing, counted 4
 
 
 def test_other_cells_keep_the_first_value_and_list_conflicts():

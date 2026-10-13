@@ -25,9 +25,12 @@ doc.json `rows` merges the candidates across papers by a generic rule (`merge_ro
 - table shapes: rows with the same normalised value in the first string column (the key; NFKC,
   casefold, letters and digits only, so "Natural Questions" = "natural-questions") are one row; list
   columns are unioned (same normalisation, first spelling kept); an integer column that counts a list
-  column (`count_columns`: its name contains the list's name, singular, or element type, or it is a
-  plain count/n/num/total and there is one list column) is recomputed as the length of the union;
-  other cells keep the first non-null value, and differing values are listed under `conflicts`.
+  column is recomputed as the length of the union (`count_columns`: the column is named as a count of
+  that list, `paper_count`, `num_papers`, `n_papers`, `number_of_papers`, `total_papers`, or ends in
+  the list's own name, `first_author_papers`; or it is named just `count`/`n`/`num`/`number`/`total`
+  and there is one list column; a shared word alone, as in `paper_year` or `num_parameters`, is not
+  enough); an extracted count that disagrees with its own row's list is kept under `conflicts`; other
+  cells keep the first non-null value, and differing values are listed under `conflicts`.
   Rows without a key value are never merged; a shape without a string column merges identical rows.
 - graph shapes: identical edges (same types and predicate, same normalised source and target) are one
   row; attributes merge as table cells do.
@@ -59,6 +62,7 @@ from .screen import Task
 REPO = Path(__file__).resolve().parents[1]
 STATUSES = ("relevant", "not_relevant", "no_text", "error")
 NUMERIC = ("integer", "number", "boolean")
+COUNT_WORDS = frozenset({"count", "n", "num", "number", "total"})
 
 
 # --- settings and files ----------------------------------------------------------------------------
@@ -191,19 +195,35 @@ def key_column(columns: list[dict[str, str]]) -> str | None:
     return next((c["name"] for c in columns if not _is_list(c["type"]) and c["type"] not in NUMERIC), None)
 
 
+def _forms(name: str) -> set[str]:
+    """A list column's name and its singular (papers -> paper, studies -> study)."""
+    if name.endswith("ies"):
+        return {name, name[:-3] + "y"}
+    return {name, name[:-1]} if name.endswith("s") else {name}
+
+
+def counts_list(column: str, list_name: str) -> bool:
+    """Is the integer column `column` named as the count of the list column `list_name`?
+    paper_count, papers_count, num_papers, n_papers, number_of_papers, total_papers; or a name that
+    ends in the plural list name itself (first_author_papers)."""
+    tokens = [t for t in column.split("_") if t and t != "of"]
+    forms = _forms(list_name)
+    if len(tokens) == 2 and ({tokens[0], tokens[1]} & COUNT_WORDS) and ({tokens[0], tokens[1]} & forms):
+        return True
+    return list_name.endswith("s") and len(tokens) > 1 and tokens[-1] == list_name
+
+
 def count_columns(columns: list[dict[str, str]]) -> dict[str, str]:
     """integer column -> the list column it counts (see the module docstring)."""
-    lists = [c for c in columns if _is_list(c["type"])]
+    lists = [c["name"] for c in columns if _is_list(c["type"])]
     out: dict[str, str] = {}
     for col in columns:
         if col["type"] != "integer":
             continue
-        tokens = set(col["name"].split("_"))
-        hits = [lst["name"] for lst in lists
-                if tokens & {lst["name"], lst["name"].rstrip("s"), lst["type"][5:-1].lower()}]
-        if not hits and len(lists) == 1 and tokens & {"count", "n", "num", "number", "total"}:
-            hits = [lists[0]["name"]]
-        if hits:
+        hits = [name for name in lists if counts_list(col["name"], name)]
+        if not hits and col["name"] in COUNT_WORDS and len(lists) == 1:
+            hits = lists
+        if len(hits) == 1:
             out[col["name"]] = hits[0]
     return out
 
@@ -217,7 +237,12 @@ def _union(values: list[Any]) -> list[Any]:
 
 
 def merge_cells(columns: list[dict[str, str]], rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, list]]:
-    """Cells of several rows as one: list columns unioned, counts of a list recomputed, else first non-null."""
+    """Cells of several rows as one: list columns unioned, counts of a list recomputed, else first non-null.
+
+    A recomputed count lists under `conflicts` (after the recomputed value, which is kept) every
+    extracted count that disagrees with its own row: with the length of that row's list, or, for a
+    row that listed nothing, with the recomputed count. Counts that differ only because rows were
+    merged (1 and 1 from two papers, 2 after the union) are not conflicts."""
     counts = count_columns(columns)
     cells: dict[str, Any] = {}
     conflicts: dict[str, list[Any]] = {}
@@ -233,9 +258,18 @@ def merge_cells(columns: list[dict[str, str]], rows: list[dict[str, Any]]) -> tu
         if len(distinct) > 1:
             conflicts[name] = distinct
     for name, listed in counts.items():
-        if cells[listed]:
-            cells[name] = len(cells[listed])
-            conflicts.pop(name, None)
+        if not cells[listed]:
+            continue  # nothing listed: the extracted count stands (first value, conflicts as above)
+        recomputed = len(cells[listed])
+        odd: list[Any] = []
+        for row in rows:
+            own, value = _union([row.get(listed)]), row.get(name)
+            if value is not None and value != (len(own) if own else recomputed) and value not in odd:
+                odd.append(value)
+        cells[name] = recomputed
+        conflicts.pop(name, None)
+        if odd:
+            conflicts[name] = [recomputed, *odd]
     return cells, conflicts
 
 
