@@ -13,9 +13,14 @@ It is the method of [`guptaaditya746/labelling`](https://github.com/guptaaditya7
 
 1. **Chunks** (`chunks.py`). Each paper of `$CORPUS/manifest.json` is cut at its Markdown headings into
    chunks of whole sections, packed up to 40,000 characters (`GOLD_CHUNK_CHARS`; about 10-16k tokens,
-   so a chunk, the prompt and the reply fit the sub-model's 32,768-token context). A longer section is
+   so a chunk, the prompt and the reply fit the sub-model's 32,768-token context). Headings come from
+   a CommonMark parser (markdown-it-py), so a `#` line inside a fenced code block (the prompt templates
+   papers print in appendices) does not start a section and setext headings do. A longer section is
    cut at blank lines. Offsets are raw character offsets into the file, the ones anchors use, and the
-   chunks cover the file exactly.
+   chunks cover the file exactly. A chunk too long for one call (the reply hit `max_tokens`, or the
+   prompt did not fit the context: a results table over 60 datasets, digit-heavy tables) is cut in
+   halves at the paragraph break nearest its middle and each half asked again, down to pieces of
+   1,000 characters; only that chunk changes, so every other chunk keeps its cache entries and ids.
 2. **Screening, every chunk of every paper** (`screen.py`, `prompts/screen-v1.md`). Is this part
    relevant to the concept, and what does it say? When unsure the model answers relevant. A paper is
    `relevant` if any chunk is, `not_relevant` if all were screened and none is, `no_text` for a failed
@@ -29,28 +34,51 @@ It is the method of [`guptaaditya746/labelling`](https://github.com/guptaaditya7
    exactly the test an agent's claim passes. A quote rejected for a reason a new quote can fix
    (`not_found`, `ambiguous`, `partial_number`, `empty_quote`) is sent back once with the reason,
    explained in the words of the agent's prompt (`prompts/extract-retry-v1.md`); what still fails
-   stays in D with its reason and never reaches the key.
+   stays in D with its reason and never reaches the key. A retry call that fails is recorded on its
+   facts (`retry.error`) and counted (`counts.retry_errors`), and the build asks for a rerun.
 4. **Rows** (`build.py`, `merge_rows`). Candidates are merged across papers by one generic rule. Table
    shapes: the first string column is the key (normalised: NFKC, casefold, letters and digits, so
-   "Natural Questions" = "natural-questions"); list columns are unioned; an integer column that counts
-   a list column (`paper_count` and `papers`) is recomputed as the length of the union; other cells
-   keep the first value and list conflicting ones. Graph shapes: identical edges (types, predicate,
-   normalised source and target) are one row; attributes merge like cells. Name variants that the
-   normalisation does not catch (NQ vs Natural Questions) are left for review.
+   "Natural Questions" = "natural-questions"); list columns are unioned; an integer column named as
+   the count of a list column (`paper_count`, `num_papers`, `n_papers`, `number_of_papers`,
+   `total_papers`, `first_author_papers` for `papers`; or plain `count`/`total` beside a single list)
+   is recomputed as the length of the union. A shared word is not enough: `paper_year`,
+   `num_parameters`, `dataset_size` keep their extracted values. An extracted count that disagrees
+   with its own row's list is kept under `conflicts`. Other cells keep the first value and list
+   conflicting ones. Graph shapes: identical edges (types, predicate, normalised source and target)
+   are one row; attributes merge like cells. Name variants that the normalisation does not catch (NQ
+   vs Natural Questions) are left for review.
 5. **Triage** (`triage.py`, `prompts/triage-v1.md`, ported). Each candidate is sorted into `answers`,
    `context` or `irrelevant` against the concept, 20 per call, given its row, quote and the passage
-   around it. When unsure: context. Labels order the review; they are never gold.
+   around it. When unsure: context. Labels order the review; they are never gold. A label holds for
+   the concept and triage prompt it was given under (both hashes on every line); a rebuilt D for
+   another concept, or a new prompt, is triaged again. A reply that labels none of its batch is not
+   cached, so a rerun asks again.
 6. **Pool** (`pool.py`, ported). Every `answers` and `context` candidate (and any unsorted one) plus a
    seeded random sample of 50 `irrelevant` ones, shuffled, without label or stratum: what people
-   review in Argilla (C2). `pool.strata.json` keeps the strata for the triage-miss estimate.
+   review in Argilla (C2). `pool.strata.json` keeps the strata for the triage-miss estimate and the D
+   it was drawn from.
 7. **Draft key** (`draft.py`, ported). Before review: every `answers`/`context` candidate whose quote
    passed the check, merged into rows, in the answer-key format, `version: "v1-draft"`,
    `reviewed: false`. Its rows validate against `agent.concept.answer_schema_for(concept)` once the
    gold-only fact fields are stripped (`draft.validate_key`); C2's reviewed `key.json` replaces it.
 
+Pool and draft key come from a complete D only: a trial or a D with failed calls is refused unless
+`--allow-partial`, and a draft with untriaged candidates unless `--allow-untriaged`; both record the
+D they came from (`built.doc` / `doc`: coverage, failures, trial settings, doc.json's hash) and say
+`partial`, so scoring never reads a 20-paper key as the full one.
+
 Models: `sub-model-1`/`-2` (Qwen3-30B-A3B-Instruct), used in turn, never the agent's orchestrator, to
 keep gold apart from the system it scores; thinking off, temperature 0, seed 0
-(`gold/llm.py`, pydantic-ai on LiteLLM, schema-constrained output).
+(`gold/llm.py`, pydantic-ai on LiteLLM, schema-constrained output). The model identity in cache keys
+and in `doc.json.built.models.model_key` is the pinned name@revision (`agent/rundir.SUBAGENTS`,
+`llm.model_identity`), as in the agent's own run records: the server reports only its served name
+(`sub-model`), which names no weights. Serving other weights behind the aliases needs a new pin,
+which changes every cache key.
+
+Modules: `chunks.py`, `screen.py`, `extract.py`, `build.py` (D), `docmd.py` (doc.md), `triage.py`,
+`pool.py`, `draft.py`; `calls.py` is the call layer under all of them (prompt files and hashes,
+cache keyed by the full input, concurrency, timeout, failure kinds, cost counters; model-agnostic, so
+C2's judge can use its `Caller`); `build_cli.py` registers the subcommands in `gold/cli.py`.
 
 ## What changed from the labelling repo, and why
 
@@ -82,23 +110,46 @@ gold draft q01
 `gold build` options: `--concept` (default `$CONCEPTS/<qid>/concept.json`), `--question` (default the
 concept session's `session.json`, else `questions/questions.json`), `--corpus`/`--manifest`, `--out`
 (default `$GOLD`), `--models sub-model-1,sub-model-2`, `--concurrency` (`GOLD_CONCURRENCY`, 6),
-`--timeout` seconds per call (`GOLD_CALL_TIMEOUT_S`, 300), `--chunk-chars` (`GOLD_CHUNK_CHARS`, 40000).
-It exits 1 while any screening or extraction call failed: run it again. A stopped build resumes;
-delete `$GOLD/<qid>/cache.jsonl` to pay for everything again.
+`--timeout` seconds per call (`GOLD_CALL_TIMEOUT_S`, 300), `--chunk-chars` (`GOLD_CHUNK_CHARS`, 40000),
+`--replace`. Exit codes: 0 D complete; 1 calls failed that a rerun retries (screening, extraction or
+quote retry; failures are never cached), so run it again; 3 only failures a rerun cannot fix are left
+(a chunk too long even in 1,000-character pieces: lower `GOLD_CHUNK_CHARS`; a paper that fails its
+hash: fix the corpus); 143 stopped by SIGTERM (Slurm's time limit), resumable. A stopped build
+resumes; delete `$GOLD/<qid>/cache.jsonl` to pay for everything again.
+
+A folder holds D for one concept. `gold build` refuses a concept other than the one its doc.json was
+built for (a re-pick after a provisional one): with `--replace` it moves that D and everything made
+from it (triage, pool, keys, review files) to `superseded/<concept sha256[:12]>-<time>/`, keeping the
+call cache and `ids.jsonl`. It also refuses a trial over a whole-corpus D, which triage, pool and
+draft would then read: run trials with their own `--out`, or pass `--replace` (a full build after it
+restores the whole D from the cache without model calls).
+
+`gold triage` and `gold pool` need the corpus (passages). `gold pool` and `gold draft` refuse a
+partial D unless `--allow-partial`; `gold draft` refuses untriaged candidates unless
+`--allow-untriaged`. `gold status` reports a build whose process is gone as `dead` (same host) or
+`stale` (no progress for twice the call timeout plus a minute), and a pool or key made for another
+concept than D's as `stale`.
 
 ## Files (`$GOLD/<qid>/`)
 
 | File | Content |
 |---|---|
 | `chunks.jsonl` | `{paper_id, chunk, start, end, heading, chars}` |
-| `screening.jsonl` | per paper `{paper_id, file, status, chunks, chunks_relevant, chunks_error, findings, model, served_model, prompt_sha256, candidates, error?, extraction_errors?}` |
-| `candidates.jsonl` | per fact `{id, qid, paper_id, file, row, s, p, o, quote, anchor, anchor_status, anchor_in_chunk, chunk, heading, extracted_row, fact, attempts, first_quote?, first_reason?, retry?, model, served_model, prompt_sha256}` |
-| `doc.json` | `{qid, question, concept_sha256, kind, concept, built: {git_commit, models, prompts, settings, started_at, ended_at, corpus, ...}, coverage: {papers, relevant, not_relevant, no_text, error, papers_in_corpus, partial}, rows: [{key, cells, candidates, papers, anchored, conflicts?}], counts}` |
+| `screening.jsonl` | per paper `{paper_id, file, status, chunks, chunks_relevant, chunks_error, chunks_too_long, chunks_split, findings, model, served_model, prompt_sha256, candidates, error?, extraction_errors?, extraction_too_long?, retry_errors?}` |
+| `candidates.jsonl` | per fact `{id, qid, paper_id, file, row, s, p, o, quote, anchor, anchor_status, anchor_in_chunk, chunk, piece?, span?, heading, extracted_row, fact, attempts, first_quote?, first_reason?, retry?: {model, served_model, prompt_sha256} \| {error, kind}, model, served_model, prompt_sha256}` |
+| `doc.json` | `{qid, question, concept_sha256, kind, concept, built: {git_commit, git: {commit, dirty, diff_sha256}, models, prompts, settings, started_at, ended_at, invocations, corpus, ...}, coverage: {papers, relevant, not_relevant, no_text, error, papers_in_corpus, partial}, rows: [{key, cells, candidates, papers, anchored, conflicts?}], counts: {..., retry_errors, too_long, split_chunks, model_calls: {made, cached, failed, too_long, ..., total}, cost}}` |
 | `doc.md` | D for people: coverage, every row with its facts, quotes and anchor status, papers by status |
-| `triage.jsonl` | `{id, label, model, served_model, prompt_sha256}` (last line per id wins) |
-| `pool.jsonl`, `pool.strata.json` | review records (fact, quote, passage with the quote highlighted); strata, seed, sizes |
-| `key.draft.json` | draft key: `{qid, concept_sha256, kind, version: "v1-draft", reviewed: false, rows, notes, merged_facts, counts, built}` |
-| `cache.jsonl`, `ids.jsonl`, `progress.json` | call results; candidate ids (stable across trial and full builds); live progress |
+| `triage.jsonl`, `triage.json` | `{id, label, model, served_model, prompt_sha256, concept_sha256}` (last line per id wins); every triage run with its settings, models, corpus manifest |
+| `pool.jsonl`, `pool.strata.json` | review records (fact, quote, passage with the quote highlighted); strata, seed, sizes, the D drawn from, `partial` |
+| `key.draft.json` | draft key: `{qid, concept_sha256, kind, version: "v1-draft", reviewed: false, rows, notes, merged_facts, counts, built: {partial, doc, untriaged, git, ...}}` |
+| `cache.jsonl`, `ids.jsonl`, `progress.json` | call results and too-long verdicts; candidate ids (stable across trial and full builds, new for a new concept); live progress with pid and host |
+| `superseded/` | D and what was made from it for an earlier concept (`--replace`) |
+
+`doc.json.counts.model_calls.total` counts every call D rests on, the cached ones with what they cost
+when they were made; `built.invocations` lists each build of this D (calls, tokens, seconds), so a
+trial, a full build and a resumed one add up. `built.git` records a dirty tree with the hash of its
+diff; when git cannot tell (a shared checkout with "dubious ownership"), the build warns and records
+null.
 
 Every output line records `prompt_sha256` (template plus output schema), the model alias and the
 served model name; `doc.json.built.prompts` has each template's file and hashes. Key facts carry
@@ -114,14 +165,20 @@ plus extraction for the relevant share. The corpus (336 converted papers, 28.6 M
 screening calls and 7-8 M prompt tokens per question (the text once, plus about 1,000 tokens of
 instructions and concept per call), and about 12,000 screening calls and 90-100 M prompt tokens for
 the 12 questions. Screening replies are short, so screening is prefill-bound. Extraction adds the
-relevant chunks again with longer replies (up to 8,192 tokens). `doc.json.counts.model_calls` and
-`progress.json` record calls made, cached and failed and the tokens used: a 20-paper trial gives the
-real rate before the full build.
+relevant chunks again with longer replies (up to 8,192 tokens). A chunk too long for one call costs
+that call plus two per halving (its verdict is cached, so a rerun does not pay for it again).
+`doc.json.counts.model_calls` and `progress.json` record calls made, cached, failed and too long and
+the tokens used, `counts.cost` the sum over every build of this D: a 20-paper trial gives the real
+rate before the full build.
 
 ## Tests
 
 `gold/tests/` (no network, GPU or cluster): a scripted pydantic-ai `FunctionModel` plays the sub-model
-on the 10 D1 papers (`agent/tests/conftest.write_corpus`): chunk offsets round trip, screening
-statuses (relevant, not relevant, no text, error retried on the rerun), anchors accepted, rejected
-and retried, a rerun with no model call, stable ids across a trial and a full build, row merging,
-triage and pool determinism with a seed, and the draft key validating as an answer.
+on the 10 D1 papers (`agent/tests/conftest.write_corpus`): chunk offsets round trip, headings in code
+fences ignored, screening statuses (relevant, not relevant, no text, error retried on the rerun),
+anchors accepted, rejected and retried, failed quote retries counted and retried, too-long chunks read
+in halves (and a piece too long even then: exit 3), a rerun with no model call, stable ids across a
+trial and a full build, new ids and no old labels for a new concept, SIGTERM and dead builds in
+progress, a cut cache line, row merging (and integers that are not counts), triage and pool
+determinism with a seed, labels tied to concept and prompt, partial D refused by pool and draft, and
+the draft key validating as an answer.
