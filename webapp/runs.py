@@ -16,7 +16,8 @@ Nothing here writes into a run directory.
   hash, else the run id's prefix (`q01-claim_on-r1-a1`, the batch runner's names).
 - `verify` runs agent.verify.verify_run, which re-reads the corpus files the claims cite, so its
   result is cached by the signature of the files it reads; the run list only shows cached results
-  unless asked to compute them (`?verify=true`).
+  unless asked to compute them (`?verify=true`). What a summary needs from events.jsonl (a
+  Digest) is cached too, until the file changes, so listing many runs reads each log once.
 """
 from __future__ import annotations
 
@@ -26,6 +27,7 @@ import re
 import threading
 import time
 from collections.abc import AsyncIterator, Callable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -50,6 +52,33 @@ WALK_CONTEXT = 1500
 QID_PREFIX = re.compile(r"^(q\d+)[-_]")
 
 
+@dataclass(frozen=True)
+class Digest:
+    """What a run summary needs from events.jsonl: small enough to cache for every run."""
+
+    cost: dict[str, Any]  # agent.verify.stats
+    reasons: tuple[str, ...]  # coverage reasons, in chain order
+    no_answer_exit: str | None  # the exit status a no_final_answer coverage record carries
+    final_answer: bool  # a model call's reply became answer.json
+
+    @property
+    def cut(self) -> bool:
+        return any(r in CUT_REASONS for r in self.reasons)
+
+    @classmethod
+    def of(cls, records: list[dict[str, Any]]) -> Digest:
+        reasons, no_answer = [], None
+        for r in records:
+            if r.get("subtype") == "coverage":
+                reasons.append(str(_coverage(r)))
+                if reasons[-1] == "no_final_answer" and no_answer is None:
+                    detail = r["generated"].get("detail")
+                    no_answer = str((detail if isinstance(detail, dict) else {}).get("exit_status") or "no_answer")
+        final = any(r.get("subtype") == "ai_model_invocation" and (r.get("custom_metadata") or {}).get("final_answer")
+                    for r in records)
+        return cls(stats(records), tuple(reasons), no_answer, final)
+
+
 class Runs:
     """The runs root ($RUNS). `active_run(run_id)` tells whether a web-app job works on a run."""
 
@@ -59,6 +88,7 @@ class Runs:
         self.corpus = corpus
         self.active_run = active_run
         self._verify: dict[str, tuple[tuple, Verification]] = {}
+        self._digests: dict[str, tuple[tuple, Digest]] = {}
         self._concepts: tuple[tuple, dict[str, str]] | None = None
         self._lock = threading.Lock()
 
@@ -112,17 +142,28 @@ class Runs:
 
     # --- state ---------------------------------------------------------------------------------------
 
+    def digest(self, run: RunDir) -> Digest:
+        """What the summary needs from events.jsonl, cached until the file changes."""
+        key = signature(run.events)
+        with self._lock:
+            hit = self._digests.get(run.run_id)
+        if hit and hit[0] == key:
+            return hit[1]
+        found = Digest.of(read_jsonl(run.events))
+        with self._lock:
+            self._digests[run.run_id] = (key, found)
+        return found
+
     def attach_running(self, run: RunDir, config: dict[str, Any]) -> bool:
         return config.get("condition") == "claim_off" and "attach" in config and not (run.root / ATTACH_FILE).is_file()
 
-    def live(self, run: RunDir, config: dict[str, Any] | None = None, records: list[dict[str, Any]] | None = None) -> bool:
+    def live(self, run: RunDir, config: dict[str, Any] | None = None) -> bool:
         if self.active_run(run.run_id):
             return True
         config = config if config is not None else (read_json(run.config) or {})
         if run.answer.is_file() and not self.attach_running(run, config):
             return False
-        records = records if records is not None else read_jsonl(run.events)
-        if any(_coverage(r) in CUT_REASONS for r in records):
+        if self.digest(run).cut:
             return False
         try:
             return time.time() - run.events.stat().st_mtime < self.settings.live_window_s
@@ -130,22 +171,16 @@ class Runs:
             return False
 
     @staticmethod
-    def exit_status(run: RunDir, records: list[dict[str, Any]], live: bool) -> str:
-        reasons = [_coverage(r) for r in records if r.get("subtype") == "coverage"]
-        if any(r in CUT_REASONS for r in reasons):
+    def exit_status(run: RunDir, digest: Digest, live: bool) -> str:
+        if digest.cut:
             return "cut"
         if not run.answer.is_file():
             return "running" if live else "incomplete"
-        if "run_error" in reasons:
+        if "run_error" in digest.reasons:
             return "error"
-        for r in records:
-            if r.get("subtype") == "coverage" and _coverage(r) == "no_final_answer":
-                detail = r["generated"].get("detail") or {}
-                return str(detail.get("exit_status") or "no_answer") if isinstance(detail, dict) else "no_answer"
-        if any(r.get("subtype") == "ai_model_invocation" and (r.get("custom_metadata") or {}).get("final_answer")
-               for r in records):
-            return "submitted"
-        return "unknown"
+        if digest.no_answer_exit is not None:
+            return digest.no_answer_exit
+        return "submitted" if digest.final_answer else "unknown"
 
     def verification(self, run: RunDir, *, compute: bool = True) -> Verification | None:
         """agent verify's result (cached by file signatures); None without a corpus or while live."""
@@ -169,9 +204,9 @@ class Runs:
 
     def summary(self, run: RunDir, *, verify: bool = False, by_concept: dict[str, str] | None = None) -> RunSummary:
         config = read_json(run.config) or {}
-        records = read_jsonl(run.events)
-        live = self.live(run, config, records)
-        cost = stats(records)
+        digest = self.digest(run)
+        live = self.live(run, config)
+        cost = digest.cost
         answer = read_json(run.answer) if run.answer.is_file() else None
         rows = answer.get("rows") if isinstance(answer, dict) else None
         check = self.verification(run, compute=verify)
@@ -183,7 +218,7 @@ class Runs:
         return RunSummary(
             run_id=run.run_id, qid=self.qid(run.run_id, config, by_concept), condition=str(config.get("condition", "")),
             seed=sampling.get("seed"), temperature=sampling.get("temperature"), created_at=config.get("created_at"),
-            exit_status=self.exit_status(run, records, live), steps=cost["steps"], model_calls=cost["model_calls"],
+            exit_status=self.exit_status(run, digest, live), steps=cost["steps"], model_calls=cost["model_calls"],
             tokens=cost["tokens"], seconds=cost["seconds"],
             tokens_without_attach=cost["without_attach"]["tokens"] if "without_attach" in cost else None,
             seconds_without_attach=cost["without_attach"]["seconds"] if "without_attach" in cost else None,
@@ -338,9 +373,9 @@ class Runs:
                 if line_no > after and raw.strip():
                     yield ServerSentEvent(raw.decode("utf-8", errors="replace"), event="record", id=str(line_no))
             if finished:
-                records = read_jsonl(run.events)
                 yield ServerSentEvent(json.dumps({"run_id": run.run_id, "records": line_no,
-                                                  "exit_status": self.exit_status(run, records, False)}), event="done")
+                                                  "exit_status": self.exit_status(run, self.digest(run), False)}),
+                                      event="done")
                 return
             await asyncio.sleep(self.settings.poll_s)
 
