@@ -33,11 +33,13 @@ output schema) and `served_model`; `render_sha256()` fingerprints how inputs are
 Context: the calibration judges each quote with `context_for(...)`, the paper id and CONTEXT_CHARS of
 text on each side of the quote. Scoring should pass the same context so that the judge it uses is the
 one that was calibrated; `Judge.support_pair(pair, corpus)` does it for a line of a run's pairs.jsonl.
+A pair whose file the corpus cannot give is an error, never judged without its context.
 
 Calibration (labelling README step 11, adapted from "same fact?" to support): `gold judge-sample` draws
 SAMPLE_SIZE fact-quote pairs from the runs' pairs.jsonl, stratified by condition (equal allocation; the
-population of each condition is recorded); `gold judge-push` loads them into `<name>-judge`, where people
-answer supports / partial / no without seeing the judge; `gold judge-agreement` asks the judge (cached),
+population of each condition, its runs and the sha256 of every pairs.jsonl are recorded; an existing
+sample is never redrawn without `--force`); `gold judge-push` loads them into `<name>-judge`, where people
+answer supports / partial / no without seeing the judge or the condition; `gold judge-agreement` asks the judge (cached),
 splits the answered pairs into two seeded halves, picks on the first half whether the judge's `partial`
 counts as yes or no (the higher kappa; a tie: no), and reports on the other half Cohen's kappa, raw and
 weighted to the conditions' population shares (N_h / n_h), the judge's yes-precision P(person yes | judge
@@ -61,7 +63,7 @@ from typing import Any, Literal, TypedDict, TypeVar
 from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
 
-from agent.canonical import sha256_hex
+from agent.canonical import file_sha256, sha256_hex
 
 from . import argilla_io, llm, review
 from .agreement import KAPPA_BAR, kappa, wilson
@@ -176,13 +178,13 @@ def context_text(paper_id: str, file: str, passage: str) -> str:
     return f"Paper {paper_id} ({file}):\n{passage}"
 
 
-def context_for(corpus: review.Corpus, file: str, start: int, end: int, chars: int = CONTEXT_CHARS) -> str | None:
-    """The paper id and about `chars` characters on each side of the quote (cut at line ends)."""
-    if not file or not corpus.has(file):
-        return None
+def context_for(corpus: review.Corpus, file: str, start: int, end: int, chars: int = CONTEXT_CHARS) -> str:
+    """The paper id and about `chars` characters on each side of the quote (cut at line ends). Raises
+    review.Rejected when the corpus cannot give the file: a quote is never judged without its context."""
     text = corpus.text(file)
+    name = corpus.resolve(file)
     a, b = argilla_io.window(text, start, end, chars)
-    return context_text(corpus.paper_id(file), corpus.file_name(file), text[a:b])
+    return context_text(corpus.paper_id(name), name, text[a:b])
 
 
 # A fixed input rendered by each task: its hash changes whenever the rendering of inputs into the user
@@ -332,7 +334,8 @@ class Judge:
                                row_match_prompt(run_row, key_row, brief))
 
     async def asupport_pair(self, pair: dict[str, Any], corpus: review.Corpus) -> Verdict | None:
-        """A pairs.jsonl line (or a calibration sample row): None for an unsourced fact."""
+        """A pairs.jsonl line (or a calibration sample row): None for an unsourced fact; review.Rejected
+        when its file is not in the corpus."""
         if not pair.get("quote"):
             return None
         fact = pair.get("fact") or _spo(pair)
@@ -396,10 +399,14 @@ def _qid(run_id: str, config: dict[str, Any]) -> str | None:
     return match.group(1) if match else None
 
 
+def pairs_files(runs_root: Path) -> list[Path]:
+    return sorted(Path(runs_root).rglob("pairs.jsonl"))
+
+
 def population(runs_root: Path) -> list[dict[str, Any]]:
     """Every fact-quote pair with a quote in the runs under `runs_root` (any depth: batch roots nest)."""
     rows = []
-    for path in sorted(Path(runs_root).rglob("pairs.jsonl")):
+    for path in pairs_files(runs_root):
         config = review.read_json(path.parent / "config.json") or {}
         for line in review.read_jsonl(path):
             if not line.get("quote") or not line.get("claim_id"):
@@ -443,14 +450,25 @@ def sample_pairs(runs_root: Path, *, size: int = SAMPLE_SIZE, seed: str = SAMPLE
         by_id = {r["id"]: r for r in group}
         chosen += [by_id[i] for i in review.seeded_order(by_id, f"{seed}:{condition}")[:taken[condition]]]
     chosen = sorted(chosen, key=lambda r: hashlib.sha256(f"{seed}:{r['id']}".encode()).hexdigest())
+    root = Path(runs_root)
     manifest = {"seed": seed, "size": size, "runs_root": str(runs_root), "drawn_at": review.utc_now(),
-                "runs": len({r["run_id"] for r in rows}), "population": sizes, "sampled": taken}
+                "runs": len({r["run_id"] for r in rows}), "run_ids": sorted({r["run_id"] for r in rows}),
+                "pairs_files": {p.relative_to(root).as_posix(): file_sha256(p) for p in pairs_files(root)},
+                "population": sizes, "sampled": taken}
     return chosen, manifest
 
 
-def write_sample(root: Path, rows: list[dict[str, Any]], manifest: dict[str, Any]) -> None:
-    review.write_jsonl(Path(root) / JUDGE_DIR / "sample.jsonl", rows)
-    review.write_json(Path(root) / JUDGE_DIR / "sample.json", manifest)
+class SampleExists(Exception):
+    """A calibration sample is drawn once: answers already given in Argilla belong to it."""
+
+
+def write_sample(root: Path, rows: list[dict[str, Any]], manifest: dict[str, Any], *, force: bool = False) -> None:
+    folder = Path(root) / JUDGE_DIR
+    if (folder / "sample.jsonl").is_file() and not force:
+        raise SampleExists(f"{folder / 'sample.jsonl'} exists; a new draw would change which pairs people "
+                           "check while their answers on the old ones stay (pass --force to redraw anyway)")
+    review.write_jsonl(folder / "sample.jsonl", rows)
+    review.write_json(folder / "sample.json", manifest)
 
 
 def load_sample(root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -458,18 +476,18 @@ def load_sample(root: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             review.read_json(Path(root) / JUDGE_DIR / "sample.json") or {})
 
 
+def missing_files(rows: list[dict[str, Any]], corpus: review.Corpus) -> list[str]:
+    """`<pair id>: <file>` for sampled pairs whose file the corpus cannot give."""
+    return [f"{r['id']}: {r.get('file')}" for r in rows if not corpus.has(r.get("file") or "")]
+
+
 def records(rows: list[dict[str, Any]], corpus: review.Corpus) -> list[dict[str, Any]]:
-    """Argilla records for the sample: fact, quote and the passage around it (the judge's answer is
-    never in a record)."""
-    out = []
-    for row in rows:
-        file = row.get("file") or ""
-        if corpus.has(file) and row.get("end"):
-            passage = argilla_io.passage_markdown(corpus.text(file), int(row["start"]), int(row["end"]))
-        else:
-            passage = f"_`{file}` is not in the corpus directory._"
-        out.append(argilla_io.judge_record(row, passage_md=passage))
-    return out
+    """Argilla records for the sample: fact, quote and the passage around it (the judge's answer and the
+    run's condition are never in a record). Raises review.Rejected for a pair whose file the corpus
+    cannot give: people and the judge must see the same passage."""
+    return [argilla_io.judge_record(row, passage_md=argilla_io.passage_markdown(
+                corpus.text(row.get("file") or ""), int(row["start"]), int(row["end"])))
+            for row in rows]
 
 
 # --- calibration report ------------------------------------------------------------------------------------
@@ -585,6 +603,9 @@ def calibration_report(root: Path, corpus: review.Corpus, *, judge: Judge, seed:
     answered = people(review.read_jsonl(Path(root) / JUDGE_DIR / "responses.jsonl"))
     by_id = {r["id"]: r for r in sample}
     ids = [i for i in sorted(answered) if i in by_id]
+    if missing := missing_files([by_id[i] for i in ids], corpus):
+        raise FileNotFoundError(f"{len(missing)} answered pairs have no file in the corpus, e.g. {missing[:3]}: "
+                                "they cannot be judged with the context people saw")
     found = run_sync(judge.gather([judge.asupport_pair(by_id[i], corpus) for i in ids]))
     report = calibrate(sample, manifest, answered, dict(zip(ids, found)), seed=seed)
     prompt = judge.prompts["support"]

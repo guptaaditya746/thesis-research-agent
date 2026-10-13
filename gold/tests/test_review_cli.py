@@ -13,7 +13,7 @@ from agent.tests.runs import baseline_run, research_run
 from gold import judge, review
 from gold.cli import main
 
-from .fixtures import ANSWERS, MISSING_LINES, NQ, QID, Env, FakeArgilla, cid, env, fake  # noqa: F401
+from .fixtures import ANSWERS, MISSING_LINES, NQ, QID, Env, FakeArgilla, cid, env, fake, rids  # noqa: F401
 from .test_judge import scripted
 
 
@@ -36,21 +36,33 @@ def test_review_round_trip(env: Env, fake: FakeArgilla, capsys: pytest.CaptureFi
     assert gold(env, "push", "all") == 0 and gold(env, "push", QID) == 0  # the second push changes nothing
     assert len(fake.dataset("review").rows) == 7 and len(fake.dataset("missing").rows) == 1
     assert ("thesis", "gold-v1-overlap") not in fake.store
-    record = fake.dataset("review").rows[cid(3)]
+    ids = rids(env)
+    record = fake.dataset("review").rows[ids[cid(3)]]
     assert record["fields"]["question"] == "Which benchmarks do the RAG papers evaluate on?"
-    assert record["metadata"] == {"question_id": QID, "paper_id": "p5", "stratum": "triaged"}
-    for rid, values in ANSWERS.items():
-        fake.dataset("review").answer(rid, "aditya", **values)
+    assert record["metadata"] == {"question_id": QID, "paper_id": "p5"}  # no stratum: an owner sees hidden metadata
+    for c, values in ANSWERS.items():
+        fake.dataset("review").answer(ids[c], "aditya", **values)
     fake.dataset("missing").answer(f"missing-{QID}", "aditya", missing=MISSING_LINES, done="yes")
     assert gold(env, "pull") == 0
     assert len(review.read_jsonl(env.root / QID / "review" / "review.jsonl")) == 7
     assert gold(env, "export", QID) == 0
     key = review.read_json(env.root / QID / "key.json")
     assert key["review"]["kept"] == 4 and key["review"]["added"] == 2 and key["review"]["reviewers"] == ["aditya"]
+    assert key["review"]["complete"] is True
     assert gold(env, "agreement") == 0
     assert review.read_json(env.root / QID / "report.json")["triage"]["estimated_missed"] == 1.0
     out = capsys.readouterr().out
-    assert f"{QID}: 7 records -> review" in out and "key.json rows=6 facts=6 kept=4/7" in out
+    assert f"{QID}: 7 of 7 records -> review" in out and "key.json rows=6 facts=6 kept=4/7" in out
+
+
+def test_push_leaves_out_records_whose_file_is_not_in_the_corpus(env: Env, fake: FakeArgilla,
+                                                                 capsys: pytest.CaptureFixture[str]) -> None:
+    overlap_on(env, [])
+    (env.corpus / "p5.md").write_bytes(b"another text")  # c3's file no longer matches the manifest
+    assert gold(env, "push", QID) == 1
+    assert len(fake.dataset("review").rows) == 6
+    out = capsys.readouterr().out
+    assert f"SKIP {cid(3)} (p5.md): corpus_file_hash_mismatch" in out and "FAIL 1 record(s) not pushed" in out
 
 
 def test_overlap_snapshot_and_adjudication(env: Env, fake: FakeArgilla, capsys: pytest.CaptureFixture[str]) -> None:
@@ -58,26 +70,29 @@ def test_overlap_snapshot_and_adjudication(env: Env, fake: FakeArgilla, capsys: 
     assert gold(env, "push", QID) == 0
     overlap = fake.dataset("overlap")
     assert len(overlap.rows) == 7 and overlap.settings.distribution.min_submitted == 2
+    ids = rids(env)
     bob = {**ANSWERS, cid(4): {"label": "incorrect"}, cid(6): {"label": "correct"}}
-    for rid in ANSWERS:
-        overlap.answer(rid, "ann", **ANSWERS[rid])
-        overlap.answer(rid, "bob", **bob[rid])
+    for c in ANSWERS:
+        overlap.answer(ids[c], "ann", **ANSWERS[c])
+        overlap.answer(ids[c], "bob", **bob[c])
     assert gold(env, "snapshot") == 0 and len(review.snapshots(env.root, QID)) == 1
-    overlap.answer(cid(4), "bob", label="correct")  # settled by talking it over, after the snapshot
+    overlap.answer(ids[cid(4)], "bob", label="correct")  # settled by talking it over, after the snapshot
     assert gold(env, "pull") == 0
     assert gold(env, "export", QID) == 0
     report = review.read_json(env.root / QID / "export.json")
     assert [d["candidate_id"] for d in report["disagreements"]] == [cid(6)]  # c4 is settled, c6 is not
     assert cid(4) in {f["candidate_id"] for r in review.read_json(env.root / QID / "key.json")["rows"] for f in r["facts"]}
-    overlap.answer(cid(6), "carol", label="incorrect")
+    overlap.answer(ids[cid(6)], "carol", label="incorrect")
     assert gold(env, "pull") == 0 and gold(env, "export", QID, "--adjudicator", "carol") == 0
     report = review.read_json(env.root / QID / "export.json")
     assert report["disagreements"][0]["resolved_by"] == "carol" and report["counts"]["unresolved"] == 0
     assert gold(env, "agreement") == 0
     kappa = review.read_json(env.root / "report.json")["kappa"]
-    assert kappa["reviewers"] == ["ann", "bob"] and kappa["items"] == 7
+    assert kappa["reviewers"] == ["ann", "bob"] and kappa["items"] == 7 and kappa["independent"] is True
     # From the snapshot: ann and bob differ on c4 and c6, so label agreement is 5/7, not 6/7.
     assert kappa["label"]["raw_agreement"] == round(5 / 7, 4)
+    # The stratum comes from the pool: c4 and c5 (triage: irrelevant) are the sample.
+    assert kappa["label"]["by_stratum"]["sample"]["items"] == 2
 
 
 def test_screening_round(env: Env, fake: FakeArgilla) -> None:
@@ -94,9 +109,21 @@ def test_screening_round(env: Env, fake: FakeArgilla) -> None:
     assert gold(env, "pull") == 0 and gold(env, "export", QID) == 0
     key = review.read_json(env.root / QID / "key.json")
     assert [f["o"] for r in key["rows"] for f in r["facts"]] == ["NQ"]  # nothing reviewed yet but this
+    assert (key["review"]["screening_checked"], key["review"]["screening_sampled"]) == (2, 2)
     assert gold(env, "agreement") == 0
     s = review.read_json(env.root / QID / "report.json")["screening"]
     assert (s["checked"], s["found_relevant"], s["estimated_missed_papers"]) == (2, 1, 2.0)
+    assert gold(env, "screening-sample", QID, "--size", "4") == 0  # drawn once: the answers belong to it
+    assert review.read_json(env.root / QID / "screening.sample.json")["papers"] == drawn["papers"]
+
+
+def test_screening_push_leaves_out_papers_not_in_the_corpus(env: Env, fake: FakeArgilla,
+                                                            capsys: pytest.CaptureFixture[str]) -> None:
+    assert gold(env, "screening-sample", QID, "--size", "4") == 0
+    (env.corpus / "p7.md").unlink()
+    assert gold(env, "screening-push", QID) == 1
+    assert f"screening-{QID}-p7" not in fake.dataset("screening").rows and len(fake.dataset("screening").rows) == 3
+    assert f"SKIP {QID} p7: missing_file" in capsys.readouterr().out
 
 
 def test_judge_round(env: Env, fake: FakeArgilla, monkeypatch: pytest.MonkeyPatch,
@@ -107,10 +134,13 @@ def test_judge_round(env: Env, fake: FakeArgilla, monkeypatch: pytest.MonkeyPatc
     assert gold(env, "judge-sample", "--runs", str(env.tmp / "runs")) == 0
     rows, sample = judge.load_sample(env.root)
     assert sample["population"] == {"claim_on": 4, "claim_off": 3} and len(rows) == 7
+    assert len(sample["run_ids"]) == 2 and len(sample["pairs_files"]) == 2
+    with pytest.raises(SystemExit, match="--force"):  # drawn once
+        gold(env, "judge-sample", "--runs", str(env.tmp / "runs"))
     assert gold(env, "judge-push") == 0
     dataset = fake.dataset("judge")
     assert all("<mark>" in r["fields"]["passage"] for r in dataset.rows.values())
-    assert {r["metadata"]["condition"] for r in dataset.rows.values()} == {"claim_on", "claim_off"}
+    assert all("condition" not in r["metadata"] for r in dataset.rows.values())  # never sent
     for n, rid in enumerate(sorted(dataset.rows)):
         dataset.answer(rid, "ann", support="supports" if n % 3 else "no")
     calls: list[str] = []
@@ -130,10 +160,21 @@ def test_judge_round(env: Env, fake: FakeArgilla, monkeypatch: pytest.MonkeyPatc
     assert verdict["label"] == "supports" and verdict["model"] == "scripted-judge"
 
 
-def test_push_needs_a_corpus(env: Env, fake: FakeArgilla, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_push_and_export_need_a_corpus(env: Env, fake: FakeArgilla, monkeypatch: pytest.MonkeyPatch,
+                                       tmp_path: Path) -> None:
     monkeypatch.delenv("CORPUS", raising=False)
     with pytest.raises(SystemExit, match="--corpus"):
         main(["push", "all", "--gold", str(env.root)])
+    with pytest.raises(SystemExit, match="--corpus"):
+        main(["export", "all", "--gold", str(env.root)])
+    (tmp_path / "elsewhere").mkdir()
+    with pytest.raises(SystemExit, match="manifest.json"):
+        main(["push", "all", "--gold", str(env.root), "--corpus", str(tmp_path / "elsewhere")])
+
+
+def test_pull_before_any_push(env: Env, fake: FakeArgilla) -> None:
+    with pytest.raises(SystemExit, match="no workspace 'thesis'"):
+        gold(env, "pull")
 
 
 def test_overlap_choice_is_made_once(env: Env, tmp_path: Path) -> None:
@@ -144,3 +185,20 @@ def test_overlap_choice_is_made_once(env: Env, tmp_path: Path) -> None:
     assert review.overlap_questions(tmp_path / "other", qids) == first  # the same seed, the same choice
     assert review.overlap_questions(tmp_path / "empty", []) == []
     assert not (tmp_path / "empty" / review.OVERLAP_FILE).exists()  # no questions yet: nothing fixed
+
+
+def test_overlap_is_chosen_from_the_whole_question_list(env: Env, fake: FakeArgilla, monkeypatch: pytest.MonkeyPatch,
+                                                        capsys: pytest.CaptureFixture[str]) -> None:
+    """Never from the questions that have a gold directory so far (here only q01): that would fix 1 of 1."""
+    monkeypatch.delenv("QUESTIONS", raising=False)
+    nowhere = env.tmp / "no-questions.json"
+    with pytest.raises(SystemExit, match="no-questions.json"):
+        main(["push", QID, "--gold", str(env.root), "--corpus", str(env.corpus), "--questions", str(nowhere)])
+    assert not (env.root / review.OVERLAP_FILE).exists()
+    assert gold(env, "push", QID) == 0
+    kept = review.read_json(env.root / review.OVERLAP_FILE)
+    assert kept["questions"] == ["q01", "q02"] and kept["source"] == str(env.questions)
+    assert "overlap questions fixed now" in capsys.readouterr().out
+    assert review.questions_path() == review.REPO / "questions" / "questions.json"
+    monkeypatch.setenv("QUESTIONS", str(env.questions))
+    assert review.questions_path() == env.questions

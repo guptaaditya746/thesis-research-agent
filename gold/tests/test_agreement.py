@@ -9,7 +9,7 @@ import pytest
 
 from gold import agreement, review, screening_check
 
-from .fixtures import ANSWERS, QID, Env, env, pulled  # noqa: F401
+from .fixtures import ANSWERS, QID, Env, cid, env, pulled, rids  # noqa: F401
 
 Z = 1.959963984540054  # the 97.5 % normal quantile
 
@@ -40,23 +40,26 @@ def test_kappa_against_a_hand_table() -> None:
     assert agreement.kappa(["y", "y"], ["n", "n"]) == 0.0
 
 
+STRATA = {f"r{n}": "sample" if n in (4, 5) else "triaged" for n in range(1, 11)}  # from the pool, by record id
+
+
 def overlap() -> list[dict]:
-    """ann and bob on 8 records of q01/q02 (labels a/b), one record ann alone, one ann with carol."""
-    def rec(n: int, qid: str, stratum: str, a: dict, b: dict, other: str = "bob") -> dict:
-        return pulled(f"r{n}", "overlap", {"ann": a, other: b} if b else {"ann": a}, qid=qid, stratum=stratum)
+    """ann and bob on 8 records of q01/q02 (labels a/b), one record ann alone, one ann with carol, and one
+    stale record (its id is not a current record) that both answered."""
+    def rec(n: int | str, qid: str, a: dict, b: dict, other: str = "bob") -> dict:
+        return pulled(f"r{n}", "overlap", {"ann": a, other: b} if b else {"ann": a}, qid=qid)
 
     c, i, u = {"label": "correct"}, {"label": "incorrect"}, {"label": "unsure"}
-    return [rec(1, "q01", "triaged", c, c), rec(2, "q01", "triaged", c, i), rec(3, "q01", "triaged", i, i),
-            rec(4, "q01", "sample", i, i), rec(5, "q01", "sample", u, i),
-            rec(6, "q02", "triaged", {**c, "vital": "yes"}, {**c, "vital": "yes"}),
-            rec(7, "q02", "triaged", {**c, "vital": "yes"}, {**c, "vital": "no"}),
-            rec(8, "q02", "triaged", i, c), rec(9, "q02", "triaged", c, {}), rec(10, "q02", "triaged", c, c, "carol")]
+    return [rec(1, "q01", c, c), rec(2, "q01", c, i), rec(3, "q01", i, i), rec(4, "q01", i, i), rec(5, "q01", u, i),
+            rec(6, "q02", {**c, "vital": "yes"}, {**c, "vital": "yes"}),
+            rec(7, "q02", {**c, "vital": "yes"}, {**c, "vital": "no"}),
+            rec(8, "q02", i, c), rec(9, "q02", c, {}), rec(10, "q02", c, c, "carol"), rec("-old", "q02", c, i)]
 
 
 def test_agreement_per_field_and_stratum() -> None:
-    k = agreement.agreement(overlap())
+    k = agreement.agreement(overlap(), STRATA)
     assert k["reviewers"] == ["ann", "bob"] and k["items"] == 8 and k["questions"] == 2
-    assert (k["records_one_reviewer"], k["records_other_reviewers"]) == (1, 1)
+    assert (k["records_one_reviewer"], k["records_other_reviewers"], k["records_stale"]) == (1, 1, 1)
     # label: p_o = 5/8; ann c4 i3 u1, bob c4 i4 -> p_e = 28/64; (5/8 - 28/64) / (36/64) = 1/3
     assert k["label"]["kappa"] == pytest.approx(1 / 3, abs=1e-4)
     # keep (unsure -> drop): p_o = 6/8, both 4 keep 4 drop -> p_e = 0.5 -> 0.5
@@ -100,9 +103,12 @@ def test_screening_false_negative_rate() -> None:
     records = [pulled(f"screening-q01-p{n}", "screening", {"ann": {"relevant": "yes" if n == 1 else "no"}},
                       paper_id=f"p{n}", not_relevant_total=40) for n in range(1, 6)]
     records.append(pulled("screening-q01-p6", "screening", {}, paper_id="p6"))  # not checked yet
-    out = screening_check.report(records, {"not_relevant": 40, "sampled": 6, "unread": 3})
+    records.append(pulled("screening-q01-p7", "screening", {"ann": {"relevant": "yes"}}, paper_id="p7"))  # an old draw
+    drawn = {"not_relevant": 40, "sampled": 6, "unread": 3, "papers": [f"p{n}" for n in range(1, 7)]}
+    out = screening_check.report(records, drawn)
     low, high = hand_wilson(1, 5)
     assert (out["checked"], out["found_relevant"], out["false_negative_rate"]) == (5, 1, 0.2)
+    assert out["outside_sample"] == 1
     assert out["false_negative_rate_95"] == [round(low, 4), round(high, 4)] == [0.0362, 0.6245]
     assert out["estimated_missed_papers"] == 8.0 and out["estimated_missed_papers_95"] == [1.4, 25.0]
     assert out["papers_found_relevant"] == ["p1"]
@@ -115,8 +121,10 @@ def test_screening_sample_is_seeded(env: Env) -> None:
     first = screening_check.sample(env.root, QID, size=2)
     assert first["not_relevant"] == 4 and first["unread"] == 1 and first["sampled"] == 2
     assert set(first["papers"]) <= {"p2", "p7", "p8", "p9"}
-    assert screening_check.sample(env.root, QID, size=2)["papers"] == first["papers"]
-    assert screening_check.sample(env.root, QID, size=10)["sampled"] == 4
+    again = screening_check.sample(env.root, QID, size=10)  # drawn once: kept
+    assert again["kept"] is True and again["papers"] == first["papers"] and first["kept"] is False
+    assert screening_check.sample(env.root, QID, size=10, force=True)["sampled"] == 4
+    assert screening_check.sample(env.root, QID, size=2, force=True)["papers"] == first["papers"]  # seeded
 
 
 def test_kappa_comes_from_the_first_complete_snapshot(env: Env) -> None:
@@ -135,8 +143,24 @@ def test_kappa_comes_from_the_first_complete_snapshot(env: Env) -> None:
     assert labels == {"q01-c000001": "incorrect", "q01-c000002": "correct"}  # the first complete version each
 
 
+def test_overall_kappa_says_whether_it_is_independent(env: Env) -> None:
+    ids = rids(env)
+    both = [pulled(ids[cid(n)], "overlap", {"ann": {"label": "correct"}, "bob": {"label": label}})
+            for n, label in ((1, "correct"), (2, "incorrect"), (3, "correct"), (4, "incorrect"))]
+    review.store(env.root, {"overlap": both})  # pulled, never snapshotted
+    kappa = agreement.write_reports(env.root, [QID])["kappa"]
+    assert kappa["items"] == 4 and kappa["records_from_live"] == 4 and kappa["independent"] is False
+    assert "gold snapshot" in kappa["warning"]
+    review.snapshot(env.root, both)
+    kappa = agreement.write_reports(env.root, [QID])["kappa"]
+    assert kappa["records_from_snapshots"] == 4 and kappa["independent"] is True and "warning" not in kappa
+    mine = review.read_json(env.root / QID / "report.json")["kappa"]
+    assert mine["independent"] is True and mine["label"]["by_stratum"]["triaged"]["items"] == 3  # c4: sample
+
+
 def test_write_reports(env: Env) -> None:
-    review.store(env.root, {"review": [pulled(rid, "review", {"aditya": v}) for rid, v in ANSWERS.items()]})
+    ids = rids(env)
+    review.store(env.root, {"review": [pulled(ids[c], "review", {"aditya": v}) for c, v in ANSWERS.items()]})
     drawn = screening_check.sample(env.root, QID, size=2)
     review.store(env.root, {"screening": [
         pulled(f"screening-{QID}-{p}", "screening", {"aditya": {"relevant": "yes" if n == 0 else "no"}},

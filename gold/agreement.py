@@ -4,7 +4,8 @@
   dataset, on the independent round (gold/review.py overlap_records: the earliest snapshot in which both
   had answered a record), for `label` (correct / incorrect / unsure), `keep` (keep/drop by the export's
   own rule, so an unparseable correction counts as dropped) and `vital` (on facts both kept), overall and
-  per stratum (triaged / sample), with a 95 % percentile bootstrap interval over questions
+  per stratum (triaged / sample, taken from the pool: Argilla never has it), on records that still show
+  a current fact (stale ones are counted, not used), with a 95 % percentile bootstrap interval over questions
   (`scipy.stats.bootstrap`, whole questions resampled since the records of one question are not
   independent; resamples where kappa is undefined are counted and left out).
 - Triage miss estimate per question, exactly the labelling README formula (triage.miss_report): the kept
@@ -96,22 +97,26 @@ def _values(field: str, answer: dict[str, Any]) -> Any:
     return answer.get(field)
 
 
-def overlap_pairs(records: list[dict[str, Any]]) -> dict[str, Any]:
+def overlap_pairs(records: list[dict[str, Any]], strata: dict[str, str]) -> dict[str, Any]:
     """The two most active reviewers (ties by name) and their answers on the records both submitted:
-    `pairs` = [(qid, stratum, answer_a, answer_b)]."""
-    answered = [(r, review.submitted(r)) for r in records]
+    `pairs` = [(qid, stratum, answer_a, answer_b)]. `strata`: the stratum of each current record id
+    (from the pool: Argilla never sees it); a record not in it shows a fact D no longer has (stale) and
+    is left out."""
+    stale = sum(1 for r in records if r["id"] not in strata and review.submitted(r))
+    answered = [(r, review.submitted(r)) for r in records if r["id"] in strata]
     answered = [(r, a) for r, a in answered if a]
     activity = Counter(user for _, answers in answered for user in answers)
     reviewers = sorted(activity, key=lambda user: (-activity[user], user))[:2]
     if len(reviewers) < 2:
         return {"reviewers": reviewers, "pairs": [], "records_with_responses": len(answered),
-                "records_one_reviewer": len(answered), "records_other_reviewers": 0}
+                "records_one_reviewer": len(answered), "records_other_reviewers": 0, "records_stale": stale}
     a, b = reviewers
-    pairs = [(review.record_qid(r) or "_unknown", str((r.get("metadata") or {}).get("stratum") or "triaged"),
-              answers[a], answers[b]) for r, answers in answered if a in answers and b in answers]
+    pairs = [(review.record_qid(r) or "_unknown", strata[r["id"]], answers[a], answers[b])
+             for r, answers in answered if a in answers and b in answers]
     single = sum(1 for _, answers in answered if len(answers) == 1)
     return {"reviewers": reviewers, "pairs": pairs, "records_with_responses": len(answered),
-            "records_one_reviewer": single, "records_other_reviewers": len(answered) - len(pairs) - single}
+            "records_one_reviewer": single, "records_other_reviewers": len(answered) - len(pairs) - single,
+            "records_stale": stale}
 
 
 def _field_kappa(field: str, pairs: list[tuple[str, str, dict[str, Any], dict[str, Any]]], *,
@@ -137,9 +142,9 @@ def _field_kappa(field: str, pairs: list[tuple[str, str, dict[str, Any], dict[st
     return out
 
 
-def agreement(records: list[dict[str, Any]], *, interval: bool = True) -> dict[str, Any]:
+def agreement(records: list[dict[str, Any]], strata: dict[str, str], *, interval: bool = True) -> dict[str, Any]:
     """Kappa per field, overall and per stratum (with the bootstrap interval over questions)."""
-    found = overlap_pairs(records)
+    found = overlap_pairs(records, strata)
     pairs = found.pop("pairs")
     out = {**found, "items": len(pairs), "questions": len({p[0] for p in pairs}),
            **{field: _field_kappa(field, pairs, interval=interval) for field in FIELDS}}
@@ -192,21 +197,35 @@ def triage_miss(items: dict[str, dict[str, Any]], decisions: list[Any], sizes: d
 
 # --- reports -----------------------------------------------------------------------------------------------
 
+def sources_note(sources: dict[str, Any]) -> dict[str, Any]:
+    """Whether the kappa rests on the independent round only: `independent` false (and a warning) when a
+    record pair came from the last pull rather than a snapshot, i.e. possibly after people talked."""
+    live = sources.get("records_from_live", 0)
+    out: dict[str, Any] = {"independent": live == 0}
+    if live:
+        out["warning"] = (f"{live} overlap record(s) have no snapshot with both answers and come from the last pull, "
+                          "which may already reflect discussion or adjudication: run `gold snapshot` when both have "
+                          "finished, before they talk (gold/REVIEW.md step 5)")
+    return out
+
+
 def question_report(root: Path, qid: str, *, adjudicator: str | None = None) -> dict[str, Any]:
     """One question: review counts, its overlap kappa (no interval: one question), triage miss, screening."""
     from . import screening_check  # it imports wilson from here
 
-    items = {item["id"]: item for item in review.pool(root, qid)}
+    current = review.current_records(root, qid)
     pulled = review.reviews(root, qid)
-    decided = decide(items, pulled["review"] + pulled["overlap"], adjudicator)
+    decided = decide(current, pulled["review"] + pulled["overlap"], adjudicator)
     overlap, sources = review.overlap_records(root, qid)
+    strata = {rid: item["stratum"] for rid, item in current.items()}
     return {
         "qid": qid, "generated_at": review.utc_now(),
-        "review": {"records": len(items), "decided": len(decided.decisions),
+        "review": {"records": len(current), "decided": len(decided.decisions),
                    "kept": sum(d.keep for d in decided.decisions), "unreviewed": len(decided.unreviewed),
-                   "disagreements": len(decided.disagreements)},
-        "kappa": {**agreement(overlap, interval=False), **sources} if overlap else None,
-        "triage": triage_miss(items, decided.decisions, review.strata(root, qid)),
+                   "disagreements": len(decided.disagreements), "stale": len(decided.stale)},
+        "kappa": ({**agreement(overlap, strata, interval=False), **sources, **sources_note(sources)}
+                  if overlap else None),
+        "triage": triage_miss({i["id"]: i for i in current.values()}, decided.decisions, review.strata(root, qid)),
         "screening": screening_check.report(pulled["screening"], screening_check.load_sample(root, qid)),
     }
 
@@ -218,13 +237,22 @@ def write_reports(root: Path, qids: list[str], *, adjudicator: str | None = None
     reports = {qid: question_report(root, qid, adjudicator=adjudicator) for qid in qids}
     for qid, report in reports.items():
         review.write_json(review.qdir(root, qid) / "report.json", report)
-    overlap = [r for qid in qids for r in review.overlap_records(root, qid)[0]]
+    overlap: list[dict[str, Any]] = []
+    strata: dict[str, str] = {}
+    sources = {"snapshots": 0, "records_from_snapshots": 0, "records_from_live": 0}
+    for qid in qids:
+        records, found = review.overlap_records(root, qid)
+        overlap += records
+        strata |= {rid: item["stratum"] for rid, item in review.current_records(root, qid).items()}
+        sources["snapshots"] += len(found["snapshots"])
+        for name in ("records_from_snapshots", "records_from_live"):
+            sources[name] += found[name]
     triage = {q: r["triage"] for q, r in reports.items() if r["triage"]}
     screening = {q: r["screening"] for q, r in reports.items() if r["screening"]["sampled"]}
     overall = {
         "generated_at": review.utc_now(), "questions": qids,
         "overlap_questions": (review.read_json(Path(root) / "overlap.json") or {}).get("overlap", []),
-        "kappa": agreement(overlap),
+        "kappa": {**agreement(overlap, strata), **sources, **sources_note(sources)},
         "triage": {"questions": triage,
                    "estimated_missed": round(sum(t["estimated_missed"] or 0.0 for t in triage.values()), 1),
                    "estimated_missed_bounds": [round(sum(t["estimated_missed_95"][i] for t in triage.values()), 1)

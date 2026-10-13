@@ -4,11 +4,13 @@ repo's argilla_io.py to facts with quotes from Markdown papers.
 Five datasets per gold version `<name>` (default `gold-v1`), in one workspace (default `thesis`):
 
 - `<name>-review`: one record per pool record of C1's pool.jsonl (every candidate fact triage put in
-  answers or context plus a seeded sample of the rest; the stratum is hidden metadata, the order a seeded
-  shuffle). A record shows the question, the concept, the fact s/p/o (and the row it belongs to), its
-  quote and the passage around the quote in the corpus file. Questions: `label` correct / incorrect /
-  unsure, `correction` (optional, `s | p | o`, an empty part keeps the candidate's), `vital` yes / no
-  (optional), `note`. One reviewer.
+  answers or context plus a seeded sample of the rest, in a seeded shuffle). A record shows the
+  question, the concept, the fact s/p/o (and the row it belongs to), its quote and the passage around
+  the quote in the corpus file. Questions: `label` correct / incorrect / unsure, `correction` (optional,
+  `s | p | o`, an empty part keeps the candidate's), `vital` yes / no (optional), `note`. One reviewer.
+  The stratum is not sent at all: Argilla hides "hidden" metadata from annotators only, and the owner
+  who reviews would see which facts triage called irrelevant (gold/agreement.py takes the stratum from
+  the pool instead).
 - `<name>-overlap`: the same records for the agreement subset (about 20 % of the questions, a seeded
   choice kept in $GOLD/overlap.json), two reviewers each, answered independently. Those questions'
   records are only here, so nobody reviews a record twice.
@@ -17,11 +19,13 @@ Five datasets per gold version `<name>` (default `gold-v1`), in one workspace (d
 - `<name>-screening`: a seeded sample of the papers C1's screening marked not relevant
   (gold/screening_check.py): is the paper relevant after all, and which facts are missing.
 - `<name>-judge`: fact-quote pairs sampled from runs to calibrate the judge (gold/judge.py), answered
-  supports / partial / no without seeing the judge's answer.
+  supports / partial / no without seeing the judge's answer or the run's condition (not sent; the
+  calibration reads it from the sample file).
 
-Record ids are stable (candidate ids, `missing-<qid>`, `screening-<qid>-<paper>`, `judge-<hash>`), so a
-second push updates records in place and people's responses stay. Record dicts never use a question's
-name as a key: Argilla would take it as a suggestion and show it to the reviewer.
+Record ids are stable (`<candidate id>-<fact digest>` (gold/review.py record_id), `missing-<qid>`,
+`screening-<qid>-<paper>`, `judge-<hash>`), so a second push updates records in place and people's
+responses stay; a candidate id that comes to name another fact gets a new record. Record dicts never
+use a question's name as a key: Argilla would take it as a suggestion and show it to the reviewer.
 
 The client reads $ARGILLA_API_URL and $ARGILLA_API_KEY when it is made; the key is never logged or
 written. Argilla runs on Omen and is reached through `scripts/omen-tunnels` (gold/REVIEW.md).
@@ -32,7 +36,9 @@ import os
 from dataclasses import dataclass, replace
 from typing import Any
 
-from .review import Corpus
+from agent import anchor
+
+from .review import Corpus, record_id
 
 DEFAULT_NAME = "gold-v1"
 DEFAULT_WORKSPACE = "thesis"
@@ -85,9 +91,7 @@ _REVIEW = Spec(
                ("correction", f"Corrected fact ({CORRECTION_FORMAT}), optional", None, False),
                ("vital", "If correct: is it vital?", VITAL, False),
                ("note", "Note (optional)", None, False)),
-    # The stratum is there to follow progress; hidden, so the triage label cannot sway the reviewer.
-    metadata=(("question_id", "Question", "terms", True), ("paper_id", "Paper", "terms", True),
-              ("stratum", None, "terms", False)),
+    metadata=(("question_id", "Question", "terms", True), ("paper_id", "Paper", "terms", True)),
 )
 
 SPECS: dict[str, Spec] = {
@@ -125,8 +129,8 @@ SPECS: dict[str, Spec] = {
         fields=(("fact", "Fact"), ("quote", "Quote"), ("passage", "Passage around the quote")),
         questions=(("support", "Does the quote support the fact?", SUPPORT, True),
                    ("note", "Note (optional)", None, False)),
-        # Hidden, so the condition (claim_on / claim_off) cannot sway the answer.
-        metadata=(("question_id", "Question", "terms", True), ("condition", None, "terms", False)),
+        # No condition (claim_on / claim_off): it must not sway the answer, and an owner sees hidden metadata.
+        metadata=(("question_id", "Question", "terms", True),),
     ),
 }
 
@@ -221,6 +225,9 @@ def plain_record(record: Any, dataset: str, usernames: dict[str, str]) -> dict[s
 def pull(api: Any, *, name: str = DEFAULT_NAME, workspace: str = DEFAULT_WORKSPACE,
          datasets: tuple[str, ...] = DATASETS) -> dict[str, list[dict[str, Any]]]:
     """Every record of each existing dataset with its responses (all statuses; readers keep submitted ones)."""
+    if api.workspaces(workspace) is None:  # the SDK would fail on it with an AttributeError
+        raise SystemExit(f"Argilla has no workspace {workspace!r} (--workspace or $ARGILLA_WORKSPACE): a mistyped "
+                         "name, or nothing pushed yet (`gold push` creates it).")
     usernames = _usernames(api)
     out: dict[str, list[dict[str, Any]]] = {}
     for dataset in datasets:
@@ -288,19 +295,27 @@ def passage_markdown(text: str, start: int, end: int, chars: int = PASSAGE_CHARS
 
 
 def candidate_passage(corpus: Corpus, item: dict[str, Any], chars: int = PASSAGE_CHARS) -> str:
-    found = corpus.locate(item)
-    if found is None:
-        status = item.get("anchor_status") or "not_found"
-        return f"_The quote could not be found in `{item.get('file')}` ({status}); judge it as not stated._"
-    return passage_markdown(*found, chars=chars)
+    """The passage around a candidate's quote, the quote marked. Only a quote that is really not in the
+    file (anchor.AnchorError) gets "judge it as not stated"; a quote found several times shows the
+    occurrence review.Corpus.locate picked, with a note. A file the corpus cannot give raises
+    review.Rejected: the push leaves such a record out rather than show a reviewer a wrong instruction."""
+    try:
+        found = corpus.locate(item)
+    except anchor.AnchorError as exc:
+        return f"_The quote could not be found in `{corpus.file_name(item.get('file') or '')}` ({exc.reason}); judge it as not stated._"
+    note = ""
+    if found.occurrences > 1:
+        which = "the one in the part of the paper the fact was read from" if found.how == "chunk" else "the first"
+        note = f"_The quote occurs {found.occurrences} times in `{found.file}`; {which} is marked._\n\n"
+    return note + passage_markdown(found.text, found.start, found.end, chars=chars)
 
 
 def review_record(item: dict[str, Any], *, question: str, concept_md: str, passage_md: str) -> dict[str, Any]:
-    """A review (or overlap) record for one pool record; its id is the candidate id."""
-    return {"id": item["id"], "question": question, "concept": concept_md,
+    """A review (or overlap) record for one pool record; its id is review.record_id (candidate id and
+    fact digest). Neither the triage label nor the stratum is in it."""
+    return {"id": record_id(item), "question": question, "concept": concept_md,
             "fact": fact_markdown(item, item.get("row")), "quote": quote_markdown(item.get("quote", ""), item.get("file")),
-            "passage": passage_md, "question_id": item["qid"], "paper_id": item.get("paper_id") or "unknown",
-            "stratum": item.get("stratum") or "triaged"}
+            "passage": passage_md, "question_id": item["qid"], "paper_id": item.get("paper_id") or "unknown"}
 
 
 def scope_markdown(doc: dict[str, Any] | None, screening: list[dict[str, Any]], *, max_rows: int = 200) -> str:
@@ -338,4 +353,4 @@ def judge_record(pair: dict[str, Any], *, passage_md: str) -> dict[str, Any]:
     """A calibration record for one sampled fact-quote pair (gold/judge.py sample_pairs)."""
     return {"id": pair["id"], "fact": fact_markdown(pair["fact"]),
             "quote": quote_markdown(pair["quote"], pair.get("file")), "passage": passage_md,
-            "question_id": pair.get("qid") or "unknown", "condition": pair.get("condition") or "unknown"}
+            "question_id": pair.get("qid") or "unknown"}

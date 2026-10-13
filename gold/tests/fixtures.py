@@ -69,6 +69,11 @@ def cid(n: int) -> str:
     return f"{QID}-c{n:06d}"
 
 
+def rids(e: Env) -> dict[str, str]:
+    """Candidate id -> its review record id (candidate id and fact digest) in the built pool."""
+    return {item["id"]: review.record_id(item) for item in review.pool(e.root, QID)}
+
+
 @dataclass
 class Env:
     tmp: Path
@@ -215,6 +220,8 @@ class FakeArgilla:
         return name if name in self._workspaces else None
 
     def datasets(self, name: str, workspace: str | None = None) -> FakeDataset | None:
+        if workspace not in self._workspaces:  # as argilla 2.8.0: it looks the workspace up and dereferences it
+            raise AttributeError("'NoneType' object has no attribute 'datasets'")
         return self.store.get((workspace or "", name))
 
     def create_dataset(self, api: Any, name: str, workspace: str, settings: Any) -> FakeDataset:

@@ -9,12 +9,18 @@ Per question, `$GOLD/<qid>/` (contracts in docs/e2e-build-plan.md):
 - snapshots/overlap-<time>.json: the overlap records as they stood at a pull. Agreement is computed from
   the earliest snapshot in which both people had answered a record, so editing an answer to settle a
   disagreement afterwards does not raise kappa (labelling README, step 6b);
-- screening.sample.json, key.json, export.json, report.json (written by C2's other modules).
+- screening.sample.json, key.json (key.stale.json: a key a later export could not confirm), export.json,
+  report.json (written by C2's other modules).
 At the root: overlap.json (which questions two people review), judge/ (the calibration sample and its
 pulled responses), judge-cache.jsonl, judge-report.json and report.json.
 
 C1 writes its files in parallel on another branch, so readers here take only the contract's fields and
 fill what a file leaves out (the stratum of a pool record, the stratum sizes) from the others.
+
+A review record's id is the candidate id plus a digest of what the record shows (`record_id`): s, p, o,
+quote, file and row. Answers are kept by record id, so if D is rebuilt and a candidate id comes to name
+another fact (a fresh $GOLD without C1's ids.jsonl), the new fact gets a new record and the old answers
+stay with the old one, which the export and the agreement list as stale instead of using.
 """
 from __future__ import annotations
 
@@ -23,21 +29,32 @@ import json
 import math
 import os
 from collections import Counter, OrderedDict, defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from agent import anchor
+from agent import anchor, broker
+from agent.canonical import canonical_bytes, sha256_hex
 
+REPO = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = "gold-data"
 REVIEW_DIR = "review"
 SNAPSHOT_DIR = "snapshots"
 QUESTION_DATASETS = ("review", "overlap", "missing", "screening")
 TIERS = ("answers", "context")  # triage labels whose candidates are all reviewed; the rest is sampled
+RECORD_FIELDS = ("s", "p", "o", "quote", "file", "row")  # what a review record shows of a candidate
+DIGEST_CHARS = 12
 
 
 def gold_root(path: str | os.PathLike[str] | None = None) -> Path:
     return Path(path or os.environ.get("GOLD") or DEFAULT_ROOT)
+
+
+def questions_path(path: str | os.PathLike[str] | None = None) -> Path:
+    """questions.json: `path`, else $QUESTIONS, else the repository's questions/questions.json (not the
+    working directory's, so a command run from elsewhere still finds it)."""
+    return Path(path or os.environ.get("QUESTIONS") or REPO / "questions" / "questions.json")
 
 
 def utc_now() -> str:
@@ -132,15 +149,51 @@ def stratum(item: dict[str, Any], labels: dict[str, str] | None = None) -> str:
     return "sample" if label is not None and label not in TIERS else "triaged"
 
 
+def chunk_spans(root: Path, qid: str) -> dict[tuple[str, int], tuple[int, int]]:
+    """(paper_id, chunk) -> (start, end) from C1's chunks.jsonl: where a candidate was extracted."""
+    return {(str(c["paper_id"]), int(c["chunk"])): (int(c["start"]), int(c["end"]))
+            for c in read_jsonl(qdir(root, qid) / "chunks.jsonl")}
+
+
 def pool(root: Path, qid: str) -> list[dict[str, Any]]:
-    """The review records of one question: each pool line over its candidate, with `stratum` set."""
+    """The review records of one question: each pool line over its candidate, with `stratum` set (from
+    the line, else pool.strata.json's id lists, else the triage label) and `chunk_span` where known."""
     by_id = candidates(root, qid)
     labels = triage(root, qid)
+    listed = (read_json(qdir(root, qid) / "pool.strata.json") or {}).get("strata")
+    member = {i: s for s, ids in listed.items() for i in ids} if isinstance(listed, dict) else {}
+    spans = chunk_spans(root, qid)
     out = []
     for line in read_jsonl(qdir(root, qid) / "pool.jsonl"):
         item = {"qid": qid, **by_id.get(line["id"], {}), **line}
-        out.append({**item, "stratum": stratum(item, labels)})
+        if not item.get("stratum") and line["id"] in member:
+            item["stratum"] = member[line["id"]]
+        span = spans.get((str(item.get("paper_id")), int(item["chunk"]))) if item.get("chunk") is not None else None
+        out.append({**item, "stratum": stratum(item, labels), "chunk_span": list(span) if span else None})
     return out
+
+
+def fact_digest(item: dict[str, Any]) -> str:
+    """A short sha256 of what a review record shows of a candidate (RECORD_FIELDS)."""
+    return sha256_hex(canonical_bytes({k: item.get(k) for k in RECORD_FIELDS}))[:DIGEST_CHARS]
+
+
+def record_id(item: dict[str, Any]) -> str:
+    """The Argilla id of a candidate's review (or overlap) record: `<candidate id>-<fact digest>`."""
+    return f"{item['id']}-{fact_digest(item)}"
+
+
+def split_record_id(rid: str) -> tuple[str, str | None]:
+    """(candidate id, fact digest) of a review record id; the digest None when the id carries none."""
+    head, _, tail = str(rid).rpartition("-")
+    if head and len(tail) == DIGEST_CHARS and all(c in "0123456789abcdef" for c in tail):
+        return head, tail
+    return str(rid), None
+
+
+def current_records(root: Path, qid: str) -> dict[str, dict[str, Any]]:
+    """The pool records of one question by the record id they have now."""
+    return {record_id(item): item for item in pool(root, qid)}
 
 
 def strata(root: Path, qid: str) -> dict[str, Any]:
@@ -167,9 +220,12 @@ OVERLAP_FILE = "overlap.json"
 OVERLAP_SHARE = 0.2
 
 
-def overlap_questions(root: Path, qids: list[str], *, share: float = OVERLAP_SHARE, seed: str = "gold-v1") -> list[str]:
+def overlap_questions(root: Path, qids: list[str], *, share: float = OVERLAP_SHARE, seed: str = "gold-v1",
+                      source: str | None = None) -> list[str]:
     """The agreement subset: ceil(share x questions) of `qids`, a seeded choice made once and kept in
-    $GOLD/overlap.json, so a later push of one question puts it in the same dataset."""
+    $GOLD/overlap.json (with `source`, where the frame came from), so a later push of one question puts
+    it in the same dataset. The frame must be the whole question list (gold/review_cli.py takes it from
+    questions.json only): a choice made from part of it would stay too small for good."""
     path = Path(root) / OVERLAP_FILE
     kept = read_json(path)
     if kept is not None:
@@ -178,70 +234,136 @@ def overlap_questions(root: Path, qids: list[str], *, share: float = OVERLAP_SHA
         return []
     n = min(len(qids), max(1, math.ceil(share * len(qids))))
     chosen = sorted(seeded_order(qids, f"{seed}:overlap")[:n])
-    write_json(path, {"seed": seed, "share": share, "questions": sorted(qids), "overlap": chosen,
-                      "chosen_at": utc_now()})
+    write_json(path, {"seed": seed, "share": share, "questions": sorted(qids), "source": source,
+                      "overlap": chosen, "chosen_at": utc_now()})
     return chosen
 
 
 # --- corpus -------------------------------------------------------------------------------------------
 
-class Corpus:
-    """The frozen Markdown corpus as the review reads it: file text exactly as stored (anchor offsets
-    refer to it) and anchor Indexes, the last INDEXES of them kept (one holds two ints per character)."""
+Rejected = broker.Rejected  # a file the corpus cannot give: unknown_file, missing_file, corpus_file_hash_mismatch, no_file
+
+
+@dataclass(frozen=True)
+class Located:
+    """Where a candidate's quote is: `how` = offsets (its selector still holds), quote (anchored again),
+    or, for a quote that occurs `occurrences` > 1 times, chunk (the one inside the chunk it was
+    extracted from) or first."""
+    file: str
+    text: str
+    start: int
+    end: int
+    how: str = "offsets"
+    occurrences: int = 1
+
+    @property
+    def exact(self) -> str:
+        return self.text[self.start:self.end]
+
+
+class Corpus(broker.Corpus):
+    """The frozen Markdown corpus as the review reads it: agent/broker.py's Corpus, so only files that
+    manifest.json lists are read and each is checked against its manifest hash first (the check the
+    agent's claims pass), with bounded caches: the last TEXTS texts and INDEXES anchor indexes (one
+    index holds two ints per character)."""
 
     INDEXES = 8
+    TEXTS = 32
 
-    def __init__(self, root: Path | str | None) -> None:
-        self.root = Path(root) if root else None
-        self._texts: dict[str, str] = {}
-        self._indexes: OrderedDict[str, anchor.Index] = OrderedDict()
+    def __init__(self, root: Path | str, manifest: Path | str | None = None) -> None:
+        root = Path(root)
+        manifest = Path(manifest) if manifest else root / "manifest.json"
+        if not manifest.is_file():
+            raise FileNotFoundError(f"{manifest} not found: the corpus directory (--corpus or $CORPUS) must be the "
+                                    "frozen corpus with its manifest.json")
+        super().__init__(root, manifest)
+        self._texts: OrderedDict[str, str] = OrderedDict()
+        self._recent: OrderedDict[str, anchor.Index] = OrderedDict()
 
     @staticmethod
     def file_name(file_or_paper: str) -> str:
         """`p12`, `p12.md` and `corpus/p12.md` all name `p12.md`."""
-        name = Path(file_or_paper.strip()).name
+        name = Path(str(file_or_paper).strip()).name
         return name if name.endswith(".md") else f"{name}.md"
 
     @staticmethod
     def paper_id(file: str) -> str:
         return Path(file).stem
 
+    def resolve(self, file: str) -> str:
+        """The manifest's name for `file`; Rejected unknown_file when the manifest does not list it (a
+        failed conversion, another corpus) and missing_file when it is not on disk."""
+        if not file:
+            raise Rejected("no_file")
+        name = self.name(self.file_name(file))
+        if not (self.root / name).is_file():
+            raise Rejected("missing_file")
+        return name
+
     def has(self, file: str) -> bool:
-        return self.root is not None and (self.root / self.file_name(file)).is_file()
+        try:
+            self.resolve(file)
+        except Rejected:
+            return False
+        return True
+
+    @staticmethod
+    def _keep(cache: OrderedDict[str, Any], name: str, value: Any, size: int) -> None:
+        cache[name] = value
+        cache.move_to_end(name)
+        while len(cache) > size:
+            cache.popitem(last=False)
 
     def text(self, file: str) -> str:
-        name = self.file_name(file)
-        if name not in self._texts:
-            if self.root is None:
-                raise FileNotFoundError("no corpus directory: give --corpus or set $CORPUS")
-            self._texts[name] = anchor.read_text(self.root / name)
-        return self._texts[name]
+        """The file's text exactly as stored (anchor offsets refer to it), after the hash check."""
+        name = self.resolve(file)
+        with self._lock:
+            if name in self._texts:
+                self._texts.move_to_end(name)
+                return self._texts[name]
+        data = (self.root / name).read_bytes()
+        if sha256_hex(data) != self.hashes[name]:
+            raise Rejected("corpus_file_hash_mismatch")
+        text = data.decode("utf-8")
+        with self._lock:
+            self._keep(self._texts, name, text, self.TEXTS)
+        return text
 
     def index(self, file: str) -> anchor.Index:
-        name = self.file_name(file)
-        if name in self._indexes:
-            self._indexes.move_to_end(name)
-        else:
-            self._indexes[name] = anchor.Index(self.text(name))
-            while len(self._indexes) > self.INDEXES:
-                self._indexes.popitem(last=False)
-        return self._indexes[name]
+        name = self.resolve(file)
+        with self._lock:
+            if name in self._recent:
+                self._recent.move_to_end(name)
+                return self._recent[name]
+        index = anchor.Index(self.text(name))
+        with self._lock:
+            self._keep(self._recent, name, index, self.INDEXES)
+        return index
 
-    def locate(self, item: dict[str, Any]) -> tuple[str, int, int] | None:
-        """(file text, start, end) of a candidate's quote: its selector when the offsets still hold the
-        exact text, else the quote anchored again; None when the file or the quote is not found."""
-        file = item.get("file") or (f"{item['paper_id']}.md" if item.get("paper_id") else None)
-        if not file or not self.has(file):
-            return None
-        text = self.text(file)
+    def locate(self, item: dict[str, Any]) -> Located:
+        """Where a candidate's quote is in its file: its selector when the offsets still hold the exact
+        text, else the quote anchored again (the selector's prefix and suffix break ties). A quote that
+        still occurs several times is not an error here (C1 leaves such candidates unanchored): the
+        occurrence inside the candidate's chunk (`chunk_span`) is taken, else the first.
+        Raises Rejected for a file the corpus cannot give, anchor.AnchorError when the quote is not in it."""
+        name = self.resolve(item.get("file") or item.get("paper_id") or "")
+        text = self.text(name)
         sel = item.get("anchor") or {}
-        if sel and text[sel.get("start", 0):sel.get("end", 0)] == sel.get("exact") and sel.get("exact"):
-            return text, int(sel["start"]), int(sel["end"])
+        if sel.get("exact") and text[int(sel.get("start", 0)):int(sel.get("end", 0))] == sel["exact"]:
+            return Located(name, text, int(sel["start"]), int(sel["end"]))
+        quote = str(item.get("quote") or sel.get("exact") or "")
+        index = self.index(name)
         try:
-            found = anchor.find(self.index(file), str(item.get("quote") or ""), file=self.file_name(file))
-        except anchor.AnchorError:
-            return None
-        return text, found.start, found.end
+            found = anchor.find(index, quote, file=name, prefix=sel.get("prefix") or "", suffix=sel.get("suffix") or "")
+            return Located(name, text, found.start, found.end, "quote")
+        except anchor.AnchorError as exc:
+            if exc.reason != "ambiguous":
+                raise
+        spans = index.spans(anchor.normalize(quote))
+        chunk = item.get("chunk_span")
+        inside = [s for s in spans if chunk and chunk[0] <= s[0] and s[1] <= chunk[1]]
+        start, end = inside[0] if len(inside) == 1 else spans[0]
+        return Located(name, text, start, end, "chunk" if len(inside) == 1 else "first", len(spans))
 
 
 # --- pulled responses ----------------------------------------------------------------------------------

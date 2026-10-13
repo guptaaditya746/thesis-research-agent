@@ -8,16 +8,25 @@ Decision rule for one person's answer on a review or overlap record (`decide_one
 - `incorrect`: dropped; `unsure`: dropped and listed in export.json for a second look.
 A kept fact is vital when the person answered vital yes.
 
+Answers count only on records that still show the candidate's current fact: a record id carries a
+digest of the fact (gold/review.py record_id), and answers on a record whose id no candidate has now
+(D rebuilt, the id re-used for another fact) are listed as `stale` and not used.
+
 Several answers on one record (the overlap): people disagree when they differ on keep/drop or keep
 different facts. The adjudicator (`--adjudicator NAME`: a third person, or the outcome of a recorded
 discussion entered under a separate user) decides with their own answer; if the adjudicator is one of the
 two raters, that rater's answer wins and the export says so. Unresolved disagreements stay out of the key
 and are listed in export.json. A fact both keep is vital only if both said vital.
 
-Missing facts: each line `s | p | o | file | quote` of the missing and screening records is anchored in
-the corpus file with agent/anchor.py, the check the agent's claims pass. An anchored line becomes a key
-fact (its quote the exact text in the file, vital false, candidate_id null); a line that does not parse or
-anchor is listed in export.json `rejected` and not added.
+Quotes: every key fact's quote is text that occurs in its corpus file, read through review.Corpus (the
+manifest hash check of agent/broker.py). A kept candidate is located again (review.Corpus.locate) and its
+quote is the exact text found there; one whose quote is not in the file, or whose file the corpus cannot
+give, is left out and listed under `unanchored`. A quote that occurs several times is kept (the reviewer
+saw it marked; C1's draft leaves such candidates out because they have no single anchor). Missing facts:
+each line `s | p | o | file | quote` of the missing and screening records is anchored with
+agent/anchor.py, as the broker anchors the agent's claims (an ambiguous quote is rejected there too, so
+the reviewer quotes more). An anchored line becomes a key fact (vital false, candidate_id null); a line
+that does not parse or anchor is listed in export.json `rejected` and not added.
 
 Rows (`merge_rows`) follow the rule of C1's draft key and doc.json (gold/build.py on e2e/gold-build: norm,
 key_column, count_columns, merge_cells, row_key, copied below until the branches meet), so key.draft.json
@@ -30,33 +39,41 @@ which joins the row its subject (or, failing that, its object) names. Facts with
 s/p/o in one row are one fact (vital if any copy is), as in the draft.
 
 The key (plan "Gold", "Answer key"): `{qid, concept_sha256, kind, version: "v1", reviewed: true, rows,
-notes, review}`, `review` counting what was decided. Facts carry the answer schema's fields, with
-`claims: []` and `origin: "research"` (the key has no broker claims; its quote is in `quote`), plus the
-gold-only fields `paper_id, quote, vital, candidate_id`. `as_answer(key)` strips those and the result
-validates against `agent.concept.answer_schema_for(concept)`; export writes no key that does not.
+notes, key_sha256, review}`, `review` counting what was decided and recording what the key was built from
+(`inputs`: D's build, the sha256 of C1's files and of the pulled reviews, the exporting commit);
+`key_sha256` is the hash of the rows, for scoring to record next to the version. Facts carry the answer
+schema's fields, with `claims: []` and `origin: "research"` (the key has no broker claims; its quote is in
+`quote`), plus the gold-only fields `paper_id, quote, vital, candidate_id`. `as_answer(key)` strips those
+and the result validates against `agent.concept.answer_schema_for(concept)`. Export writes no key that does
+not validate or that was built on a D for another concept; it then moves an older key.json aside to
+key.stale.json, so readers never take a key the current review no longer gives.
 """
 from __future__ import annotations
 
 import json
 import re
+import subprocess
 import unicodedata
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
 from agent import anchor
-from agent.canonical import canonical
+from agent.canonical import canonical, canonical_bytes, file_sha256, sha256_hex
 from agent.concept import concept_sha256 as concept_hash
 from agent.concept import validate_answer
+from agent.rundir import git_head
 
 from . import review
 
 VERSION = "v1"
 KEY_FILE = "key.json"
+STALE_KEY_FILE = "key.stale.json"
 EXPORT_FILE = "export.json"
 GOLD_ONLY = ("paper_id", "quote", "vital", "candidate_id")
 EDGE_FIELDS = ("source", "source_type", "predicate", "target", "target_type")
 MISSING_PARTS = 5  # s | p | o | file | quote; the quote is the rest of the line and may hold "|"
+INPUT_FILES = ("doc.json", "candidates.jsonl", "chunks.jsonl", "triage.jsonl", "pool.jsonl", "pool.strata.json")
 
 
 def strict(value: Any) -> str:
@@ -131,6 +148,7 @@ class Decided:
     disagreements: list[dict[str, Any]] = field(default_factory=list)
     unsure: list[dict[str, Any]] = field(default_factory=list)
     unreviewed: list[str] = field(default_factory=list)
+    stale: list[dict[str, Any]] = field(default_factory=list)  # answered records that show no current fact
     problems: list[str] = field(default_factory=list)
     adjudicated: int = 0
     adjudicated_by_a_rater: int = 0  # disagreements the adjudicator had answered as one of the two raters
@@ -138,15 +156,21 @@ class Decided:
 
 def decide(items: dict[str, dict[str, Any]], records: list[dict[str, Any]],
            adjudicator: str | None = None) -> Decided:
-    """Decisions for review and overlap records (`items`: pool records by candidate id)."""
+    """Decisions for review and overlap records. `items`: the pool records by their current record id
+    (review.current_records); a record with another id is stale and its answers are not used."""
     out = Decided()
+    candidates = {item["id"] for item in items.values()}
     for record in records:
-        cid = record["id"]
-        item = items.get(cid)
-        if item is None:
-            out.problems.append(f"record {cid} has no pool record here")
-            continue
+        item = items.get(record["id"])
         answers = review.submitted(record)
+        if item is None:
+            cid, _ = review.split_record_id(record["id"])
+            if answers:
+                why = ("the candidate's fact changed since it was pushed" if cid in candidates
+                       else "no candidate of the current D has this id")
+                out.stale.append({"record": record["id"], "candidate_id": cid, "reason": why, "answers": answers})
+            continue
+        cid = item["id"]
         if not answers:
             out.unreviewed.append(cid)
             continue
@@ -178,6 +202,9 @@ def decide(items: dict[str, dict[str, Any]], records: list[dict[str, Any]],
         first = outcomes[min(outcomes)]
         vital = first.keep and all(o.vital for o in outcomes.values())
         out.decisions.append(Decision(cid, first.keep, first.fact, vital, reviewers, first.reason))
+    if out.stale:
+        out.problems.append(f"{len(out.stale)} answered record(s) show a fact the current D does not have; "
+                            "their answers are not used (export.json `stale`)")
     return out
 
 
@@ -204,12 +231,12 @@ def added_facts(records: list[dict[str, Any]], corpus: review.Corpus) -> tuple[l
                 if parsed is None:
                     rejected.append({**base, "reason": "format", "detail": "want `s | p | o | file | quote`"})
                     continue
-                file = corpus.file_name(parsed["file"])
-                if not corpus.has(file):
-                    rejected.append({**base, "reason": "unknown_file", "detail": file})
-                    continue
                 try:
+                    file = corpus.resolve(parsed["file"])
                     sel = anchor.find(corpus.index(file), parsed["quote"], file=file)
+                except review.Rejected as exc:  # unknown_file, missing_file, corpus_file_hash_mismatch
+                    rejected.append({**base, "reason": exc.reason, "detail": corpus.file_name(parsed["file"])})
+                    continue
                 except anchor.AnchorError as exc:
                     rejected.append({**base, "reason": exc.reason, "detail": str(exc)})
                     continue
@@ -472,6 +499,45 @@ def validate_key(key: dict[str, Any], concept: dict[str, Any]) -> list[str]:
     return validate_answer(as_answer(key), concept)
 
 
+def rows_sha256(rows: list[dict[str, Any]]) -> str:
+    return sha256_hex(canonical_bytes(rows))
+
+
+def git_commit() -> str | None:
+    try:
+        return git_head(review.REPO)
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def inputs(root: Path, qid: str) -> dict[str, Any]:
+    """What a key was built from: D's build, the sha256 of C1's files and of the pulled reviews, the code."""
+    folder = review.qdir(root, qid)
+
+    def sha(path: Path) -> str | None:
+        return file_sha256(path) if path.is_file() else None
+
+    doc = review.read_json(folder / "doc.json") or {}
+    return {"doc_built": doc.get("built"), "doc_concept_sha256": doc.get("concept_sha256"),
+            "files": {name: sha(folder / name) for name in INPUT_FILES},
+            "reviews": {f"{review.REVIEW_DIR}/{d}.jsonl": sha(folder / review.REVIEW_DIR / f"{d}.jsonl")
+                        for d in review.QUESTION_DATASETS},
+            "git_commit": git_commit()}
+
+
+def checks(root: Path, qid: str, pulled: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
+    """The passes besides the fact records: the missing-facts record marked done, the screening sample checked."""
+    from . import screening_check  # it imports gold/agreement.py, which imports this module
+
+    missing_done = any(answer.get("done") == "yes" for record in pulled["missing"]
+                       for answer in review.submitted(record).values())
+    drawn = screening_check.load_sample(root, qid)
+    papers = {str(p) for p in (drawn or {}).get("papers", [])}
+    checked = {str((r.get("metadata") or {}).get("paper_id")) for r in pulled["screening"]
+               if screening_check.verdicts(r)} & papers
+    return {"missing_done": missing_done, "screening_sampled": len(papers), "screening_checked": len(checked)}
+
+
 @dataclass
 class Export:
     qid: str
@@ -480,28 +546,51 @@ class Export:
     problems: list[str]
 
 
+def _set_aside(folder: Path) -> str | None:
+    """Move a key.json the current review no longer gives to key.stale.json; its new path, if any."""
+    key = folder / KEY_FILE
+    if not key.is_file():
+        return None
+    return str(key.replace(folder / STALE_KEY_FILE))
+
+
 def export(root: Path, qid: str, *, corpus: review.Corpus, concepts: Path | None,
            adjudicator: str | None = None, write: bool = True) -> Export:
-    """Decide every pulled record of one question and build its key; write key.json (only when it
-    validates) and export.json."""
+    """Decide every pulled record of one question and build its key; write export.json, and key.json
+    only when the key validates for the picked concept (else an older key.json is set aside)."""
     concept = review.concept(concepts, qid)
     if concept is None:
-        return Export(qid, None, {}, [f"{qid}: no concept.json under {concepts}"])
-    items = {item["id"]: item for item in review.pool(root, qid)}
+        return Export(qid, None, {}, [f"{qid}: no concept.json under {concepts}; nothing exported"])
+    current = review.current_records(root, qid)
+    by_candidate = {item["id"]: item for item in current.values()}
     pulled = review.reviews(root, qid)
-    decided = decide(items, pulled["review"] + pulled["overlap"], adjudicator)
+    decided = decide(current, pulled["review"] + pulled["overlap"], adjudicator)
     added, rejected = added_facts(pulled["missing"] + pulled["screening"], corpus)
     pairs: list[tuple[dict[str, Any] | None, dict[str, Any]]] = []
+    unanchored: list[dict[str, Any]] = []
+    repeated: list[dict[str, Any]] = []
     for d in sorted(decided.decisions, key=lambda d: d.candidate_id):
-        if d.keep and d.fact:
-            item = items[d.candidate_id]
-            pairs.append((substitute(item.get("row"), item, d.fact),
-                          {**d.fact, "paper_id": item.get("paper_id"), "quote": item.get("quote"),
-                           "vital": d.vital, "candidate_id": d.candidate_id}))
+        if not (d.keep and d.fact):
+            continue
+        item = by_candidate[d.candidate_id]
+        try:
+            found = corpus.locate(item)
+        except (review.Rejected, anchor.AnchorError) as exc:
+            unanchored.append({"candidate_id": d.candidate_id, "file": item.get("file"), "reason": exc.reason,
+                               "anchor_status": item.get("anchor_status")})
+            continue
+        if found.occurrences > 1:
+            repeated.append({"candidate_id": d.candidate_id, "occurrences": found.occurrences, "chosen": found.how})
+        pairs.append((substitute(item.get("row"), item, d.fact),
+                      {**d.fact, "paper_id": item.get("paper_id") or corpus.paper_id(found.file),
+                       "quote": found.exact, "vital": d.vital, "candidate_id": d.candidate_id}))
     pairs += [(None, {"s": a["s"], "p": a["p"], "o": a["o"], "paper_id": a["paper_id"], "quote": a["quote"],
                       "vital": False, "candidate_id": None}) for a in added]
     rows, merged, problems = merge_rows(concept, pairs)
     problems = decided.problems + problems
+    if unanchored:
+        problems.append(f"{len(unanchored)} kept candidate(s) left out: their quote is not in their file "
+                        "(export.json `unanchored`)")
     sha = concept_hash(concept)
     doc = review.read_json(review.qdir(root, qid) / "doc.json") or {}
     stale = bool(doc.get("concept_sha256")) and doc["concept_sha256"] != sha
@@ -509,35 +598,48 @@ def export(root: Path, qid: str, *, corpus: review.Corpus, concepts: Path | None
         problems.append(f"{qid}: D was built for concept {doc['concept_sha256'][:12]}, the picked concept is "
                         f"{sha[:12]}; rebuild D before exporting")
     unresolved = sum(1 for d in decided.disagreements if "resolved_by" not in d)
-    counts = {"records": len(items), "decided": len(decided.decisions),
+    passes = checks(root, qid, pulled)
+    counts = {"records": len(current), "decided": len(decided.decisions),
               "kept": sum(d.keep for d in decided.decisions), "dropped": sum(not d.keep for d in decided.decisions),
               "unsure": len({u["candidate_id"] for u in decided.unsure}), "unreviewed": len(decided.unreviewed),
               "disagreements": len(decided.disagreements), "unresolved": unresolved,
               "adjudicated": decided.adjudicated, "adjudicated_by_a_rater": decided.adjudicated_by_a_rater,
-              "added": len(added), "added_rejected": len(rejected),
+              "stale": len(decided.stale), "unanchored": len(unanchored),
+              "added": len(added), "added_rejected": len(rejected), **passes,
               "facts": sum(len(r["facts"]) for r in rows), "rows": len(rows)}
+    complete = (not decided.unreviewed and not unresolved and passes["missing_done"]
+                and passes["screening_checked"] == passes["screening_sampled"])
     reviewers = sorted({u for d in decided.decisions for u in d.reviewers}
                        | {a["user"] for a in added})
     exported_at = review.utc_now()
+    built_from = inputs(root, qid)
     key = {"qid": qid, "concept_sha256": sha, "kind": concept["answer_shape"]["kind"], "version": VERSION,
            "reviewed": True, "rows": rows,
            "notes": (f"Answer key of D reviewed in Argilla by {', '.join(reviewers) or 'nobody yet'}: "
                      f"{counts['kept']} of {counts['records']} candidate facts kept, {counts['added']} added "
                      "by reviewers. Details in export.json."),
+           "key_sha256": rows_sha256(rows),
            "review": {"exported_at": exported_at, "reviewers": reviewers, "adjudicator": adjudicator,
-                      **counts, "complete": not decided.unreviewed and not unresolved}}
+                      **counts, "complete": complete, "inputs": built_from}}
     invalid = validate_key(key, concept)
     problems += invalid
     if decided.adjudicated_by_a_rater:
         problems.append(f"{qid}: {decided.adjudicated_by_a_rater} disagreement(s) settled by {adjudicator}, "
                         "one of the two raters: their own answer won (prefer a third person)")
-    report = {"qid": qid, "exported_at": exported_at, "adjudicator": adjudicator, "counts": counts,
-              "decisions": [asdict(d) for d in decided.decisions], "disagreements": decided.disagreements,
-              "unsure": decided.unsure, "unreviewed": decided.unreviewed, "added": added, "rejected": rejected,
-              "merged": merged, "problems": problems}
     ok = not invalid and not stale
+    report = {"qid": qid, "exported_at": exported_at, "status": "ok" if ok else "failed", "key_written": ok and write,
+              "key_sha256": key["key_sha256"] if ok else None, "adjudicator": adjudicator, "counts": counts,
+              "complete": complete, "inputs": built_from,
+              "decisions": [asdict(d) for d in decided.decisions], "disagreements": decided.disagreements,
+              "unsure": decided.unsure, "unreviewed": decided.unreviewed, "stale": decided.stale,
+              "unanchored": unanchored, "repeated_quotes": repeated, "added": added, "rejected": rejected,
+              "merged": merged, "problems": problems}
     if write:
-        review.write_json(review.qdir(root, qid) / EXPORT_FILE, report)
+        folder = review.qdir(root, qid)
         if ok:
-            review.write_json(review.qdir(root, qid) / KEY_FILE, key)
+            review.write_json(folder / KEY_FILE, key)
+        elif (moved := _set_aside(folder)) is not None:
+            report["stale_key"] = moved
+            problems.append(f"{qid}: the earlier key.json no longer holds; moved to {STALE_KEY_FILE}")
+        review.write_json(folder / EXPORT_FILE, report)
     return Export(qid, key if ok else None, report, problems)

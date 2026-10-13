@@ -227,6 +227,9 @@ def test_support_pair_gives_the_paper_and_context(env: Env) -> None:
     assert j.support_pair(pair, review.Corpus(env.corpus))["label"] == "supports"
     assert "Context:" in calls[0] and "Paper p6 (p6.md):" in calls[0] and "HotpotQA (Yang et al., 2018)" in calls[0]
     assert j.support_pair({**pair, "quote": None}, review.Corpus(env.corpus)) is None
+    with pytest.raises(review.Rejected, match="unknown_file"):  # never judged without the context people saw
+        j.support_pair({**pair, "file": "p77.md"}, review.Corpus(env.corpus))
+    assert len(calls) == 1
 
 
 def test_allocate() -> None:
@@ -261,6 +264,13 @@ def test_sample_pairs_stratified_by_condition(tmp_path: Path) -> None:
     assert {r["qid"] for r in rows} == {"q01", "q02", "q03"}
     assert [r["id"] for r in judge.sample_pairs(tmp_path / "runs", size=60, seed="s")[0]] == [r["id"] for r in rows]
     assert [r["id"] for r in judge.sample_pairs(tmp_path / "runs", size=60, seed="t")[0]] != [r["id"] for r in rows]
+    assert manifest["run_ids"] == sorted(p.parent.name for p in (tmp_path / "runs").rglob("pairs.jsonl"))
+    assert set(manifest["pairs_files"]) == {f"m4-72/{r}/pairs.jsonl" for r in manifest["run_ids"]}
+    judge.write_sample(tmp_path / "gold", rows, manifest)
+    with pytest.raises(judge.SampleExists):  # drawn once: answers in Argilla belong to this sample
+        judge.write_sample(tmp_path / "gold", rows[:10], manifest)
+    judge.write_sample(tmp_path / "gold", rows[:10], manifest, force=True)
+    assert len(judge.load_sample(tmp_path / "gold")[0]) == 10
 
 
 def test_population_from_real_runs(tmp_path: Path, corpus_env: tuple[Path, Path]) -> None:

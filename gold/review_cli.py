@@ -7,6 +7,9 @@ Order of use (gold/REVIEW.md; labelling README steps 4-11):
   gold snapshot                    when both have finished the overlap, before discussing it
   gold pull                        every dataset into $GOLD/<qid>/review/ (and an overlap snapshot)
   gold export all [--adjudicator NAME]   key.json + export.json; adjudicate, pull, export again
+
+Trial pushes (the Slurm test session) go to their own datasets, `--name gold-e2etest`, so that answers
+given there never meet the real review's records.
   gold agreement                   report.json per question and overall
   gold judge-sample; gold judge-push; (people answer); gold pull; gold judge-agreement
   gold judge FACT_JSON QUOTE       one verdict, e.g. to try a prompt
@@ -47,8 +50,8 @@ def _add(sub: Any, name: str, func: Any, help: str, *, argilla: bool = False, co
     if concepts:
         p.add_argument("--concepts", type=Path, default=_env_path("CONCEPTS", "concepts"),
                        help="concept sessions (default: $CONCEPTS or concepts)")
-        p.add_argument("--questions", type=Path, default=Path("questions/questions.json"),
-                       help="question list (default: %(default)s)")
+        p.add_argument("--questions", type=Path, default=review.questions_path(),
+                       help="question list (default: $QUESTIONS or the repository's questions/questions.json)")
     return p
 
 
@@ -63,16 +66,34 @@ def _pull(args: argparse.Namespace, datasets: tuple[str, ...] = argilla_io.DATAS
 def _need_corpus(args: argparse.Namespace) -> review.Corpus:
     if args.corpus is None:
         raise SystemExit("gold: give --corpus or set $CORPUS")
-    return review.Corpus(args.corpus)
+    try:
+        return review.Corpus(args.corpus)
+    except FileNotFoundError as exc:
+        raise SystemExit(f"gold: {exc}") from None
+
+
+def _overlap(args: argparse.Namespace, root: Path) -> list[str]:
+    """The overlap questions: kept in overlap.json, else chosen now from the whole questions.json, never
+    from the questions that happen to have a gold directory yet (the choice is fixed for good)."""
+    if (root / review.OVERLAP_FILE).is_file():
+        return review.overlap_questions(root, [])
+    frame = sorted(review.questions(args.questions))
+    if not frame:
+        raise SystemExit(f"gold push: the overlap questions are chosen once, from the whole question list, and "
+                         f"{args.questions} was not found or lists no questions: give --questions or set $QUESTIONS")
+    chosen = review.overlap_questions(root, frame, share=args.overlap_share, seed=args.seed, source=str(args.questions))
+    print(f"overlap questions fixed now: {', '.join(chosen)} of {len(frame)} in {args.questions} "
+          f"({root / review.OVERLAP_FILE})")
+    return chosen
 
 
 # --- Argilla ----------------------------------------------------------------------------------------------
 
 def cmd_push(args: argparse.Namespace) -> int:
     root, corpus = _root(args), _need_corpus(args)
-    every = sorted(review.questions(args.questions)) or review.question_ids(root)
-    overlap = review.overlap_questions(root, every, share=args.overlap_share, seed=args.seed)
+    overlap = _overlap(args, root)
     batches: dict[str, list[dict[str, Any]]] = {"review": [], "overlap": [], "missing": []}
+    skipped: list[str] = []
     for qid in review.select(root, args.qid):
         items = {item["id"]: item for item in review.pool(root, qid)}
         if not items:
@@ -81,19 +102,30 @@ def cmd_push(args: argparse.Namespace) -> int:
         question = review.question_text(qid, questions_file=args.questions, concepts=args.concepts)
         concept_md = argilla_io.concept_markdown(review.concept(args.concepts, qid))
         target = "overlap" if qid in overlap else "review"
+        n = 0
         for cid in review.seeded_order(items, f"{args.seed}:order:{qid}"):  # strata mixed, order fixed
             item = items[cid]
-            batches[target].append(argilla_io.review_record(
-                item, question=question, concept_md=concept_md, passage_md=argilla_io.candidate_passage(corpus, item)))
+            try:
+                passage = argilla_io.candidate_passage(corpus, item)
+            except review.Rejected as exc:  # the file, not the quote: nothing true to show the reviewer
+                skipped.append(f"{cid} ({item.get('file')}): {exc.reason}")
+                continue
+            batches[target].append(argilla_io.review_record(item, question=question, concept_md=concept_md,
+                                                            passage_md=passage))
+            n += 1
         scope = argilla_io.scope_markdown(review.read_json(review.qdir(root, qid) / "doc.json"), review.screening(root, qid))
         batches["missing"].append(argilla_io.missing_record(qid, question=question, concept_md=concept_md, scope_md=scope))
-        print(f"{qid}: {len(items)} records -> {target}")
+        print(f"{qid}: {n} of {len(items)} records -> {target}")
     api = argilla_io.client()
     for dataset, records in batches.items():
         n = argilla_io.push(api, dataset, records, name=args.name, workspace=args.workspace)
         print(f"{args.name}-{dataset}: {n} records pushed")
     print(f"overlap questions: {', '.join(overlap) or 'none'}")
-    return 0
+    for line in skipped:
+        print(f"SKIP {line}")
+    if skipped:
+        print(f"FAIL {len(skipped)} record(s) not pushed: the corpus ({args.corpus}) cannot give their file")
+    return 1 if skipped else 0
 
 
 def cmd_pull(args: argparse.Namespace) -> int:
@@ -109,11 +141,9 @@ def cmd_snapshot(args: argparse.Namespace) -> int:
 
 
 def cmd_export(args: argparse.Namespace) -> int:
+    root, corpus, failed = _root(args), _need_corpus(args), 0  # every key quote is checked in its file
     if args.pull:
         _pull(args, ("review", "overlap", "missing", "screening"))
-    root, corpus, failed = _root(args), review.Corpus(args.corpus), 0
-    if args.corpus is None:
-        print("WARN no --corpus or $CORPUS: missing-fact lines cannot be anchored and will be rejected")
     for qid in review.select(root, args.qid):
         done = export.export(root, qid, corpus=corpus, concepts=args.concepts, adjudicator=args.adjudicator)
         for problem in done.problems:
@@ -125,7 +155,9 @@ def cmd_export(args: argparse.Namespace) -> int:
         c = done.key["review"]
         print(f"{qid}: key.json rows={c['rows']} facts={c['facts']} kept={c['kept']}/{c['records']} "
               f"added={c['added']} rejected={c['added_rejected']} unreviewed={c['unreviewed']} "
-              f"disagreements={c['disagreements']} (unresolved {c['unresolved']})")
+              f"disagreements={c['disagreements']} (unresolved {c['unresolved']}) "
+              f"missing done={c['missing_done']} screening checked={c['screening_checked']}/{c['screening_sampled']} "
+              f"complete={c['complete']}")
     return 1 if failed else 0
 
 
@@ -135,7 +167,10 @@ def cmd_agreement(args: argparse.Namespace) -> int:
     root = _root(args)
     overall = agreement.write_reports(root, review.select(root, args.qid), adjudicator=args.adjudicator)
     k = overall["kappa"]
-    print(f"overlap: reviewers={k['reviewers']} items={k['items']} questions={k['questions']}")
+    print(f"overlap: reviewers={k['reviewers']} items={k['items']} questions={k['questions']} "
+          f"independent={k['independent']} stale={k['records_stale']}")
+    if k.get("warning"):
+        print(f"WARN {k['warning']}")
     for field in agreement.FIELDS:
         print(f"  {field}: kappa={k[field]['kappa']} 95%={k[field].get('kappa_95')} items={k[field]['items']}")
     print(f"triage: estimated missed={overall['triage']['estimated_missed']} "
@@ -152,29 +187,40 @@ def cmd_agreement(args: argparse.Namespace) -> int:
 def cmd_screening_sample(args: argparse.Namespace) -> int:
     root = _root(args)
     for qid in review.select(root, args.qid):
-        s = screening_check.sample(root, qid, size=args.size, seed=args.seed)
-        print(f"{qid}: {s['sampled']} of {s['not_relevant']} not relevant drawn ({s['unread']} unread)")
+        s = screening_check.sample(root, qid, size=args.size, seed=args.seed, force=args.force)
+        state = "kept (drawn before; --force redraws)" if s["kept"] else "drawn"
+        print(f"{qid}: {s['sampled']} of {s['not_relevant']} not relevant {state} ({s['unread']} unread)")
     return 0
 
 
 def cmd_screening_push(args: argparse.Namespace) -> int:
     root, corpus = _root(args), _need_corpus(args)
-    records = []
+    records, skipped = [], []
     for qid in review.select(root, args.qid):
         question = review.question_text(qid, questions_file=args.questions, concepts=args.concepts)
         concept_md = argilla_io.concept_markdown(review.concept(args.concepts, qid))
-        records += screening_check.records(root, qid, corpus, question=question, concept_md=concept_md)
+        found, left_out = screening_check.records(root, qid, corpus, question=question, concept_md=concept_md)
+        records += found
+        skipped += [f"{qid} {paper}" for paper in left_out]
     n = argilla_io.push(argilla_io.client(), "screening", records, name=args.name, workspace=args.workspace)
     print(f"{args.name}-screening: {n} records pushed")
-    return 0
+    for line in skipped:
+        print(f"SKIP {line}")
+    if skipped:
+        print(f"FAIL {len(skipped)} sampled paper(s) not pushed: the corpus ({args.corpus}) cannot give them")
+    return 1 if skipped else 0
 
 
 # --- judge ---------------------------------------------------------------------------------------------
 
 def cmd_judge_sample(args: argparse.Namespace) -> int:
     rows, manifest = judge.sample_pairs(args.runs, size=args.size, seed=args.seed)
-    judge.write_sample(_root(args), rows, manifest)
-    print(f"population {manifest['population']} -> sampled {manifest['sampled']} ({len(rows)} pairs)")
+    try:
+        judge.write_sample(_root(args), rows, manifest, force=args.force)
+    except judge.SampleExists as exc:
+        raise SystemExit(f"gold judge-sample: {exc}") from None
+    print(f"population {manifest['population']} from {manifest['runs']} runs -> sampled {manifest['sampled']} "
+          f"({len(rows)} pairs)")
     return 0
 
 
@@ -182,8 +228,12 @@ def cmd_judge_push(args: argparse.Namespace) -> int:
     rows, _ = judge.load_sample(_root(args))
     if not rows:
         raise SystemExit("gold: no judge sample; run `gold judge-sample` first")
-    records = judge.records(rows, _need_corpus(args))
-    n = argilla_io.push(argilla_io.client(), "judge", records, name=args.name, workspace=args.workspace)
+    corpus = _need_corpus(args)
+    if missing := judge.missing_files(rows, corpus):
+        raise SystemExit(f"gold judge-push: {len(missing)} sampled pairs have no file in the corpus "
+                         f"({args.corpus}), e.g. {missing[:3]}; nothing pushed")
+    n = argilla_io.push(argilla_io.client(), "judge", judge.records(rows, corpus), name=args.name,
+                        workspace=args.workspace)
     print(f"{args.name}-judge: {n} records pushed")
     return 0
 
@@ -192,7 +242,10 @@ def cmd_judge_agreement(args: argparse.Namespace) -> int:
     if args.pull:
         _pull(args, ("judge",))
     root = _root(args)
-    report = judge.calibration_report(root, _need_corpus(args), judge=judge.Judge(root), seed=args.seed)
+    try:
+        report = judge.calibration_report(root, _need_corpus(args), judge=judge.Judge(root), seed=args.seed)
+    except (FileNotFoundError, review.Rejected) as exc:
+        raise SystemExit(f"gold judge-agreement: {exc}") from None
     t = report["test"]
     print(f"answered={report['answered']} split={report['split']} partial counts as "
           f"{report['calibration']['partial_counts_as']}")
@@ -236,15 +289,18 @@ def register(sub: Any) -> None:
     p.add_argument("qid", nargs="?", default="all")
     p.add_argument("--size", type=int, default=screening_check.DEFAULT_SIZE)
     p.add_argument("--seed", default=DEFAULT_SEED)
+    p.add_argument("--force", action="store_true", help="redraw a sample drawn before (answers on it stay in Argilla)")
 
     p = _add(sub, "screening-push", cmd_screening_push, "push the screening sample to Argilla",
              argilla=True, corpus=True, concepts=True)
     p.add_argument("qid", nargs="?", default="all")
 
     p = _add(sub, "judge-sample", cmd_judge_sample, "sample fact-quote pairs from runs for judge calibration")
-    p.add_argument("--runs", type=Path, default=_env_path("RUNS", "runs"), help="runs root (default: $RUNS or runs)")
+    p.add_argument("--runs", type=Path, default=_env_path("RUNS", "runs"),
+                   help="runs to sample from, e.g. $RUNS/m4-72 (default: $RUNS or runs, every run under it)")
     p.add_argument("--size", type=int, default=judge.SAMPLE_SIZE)
     p.add_argument("--seed", default=judge.SAMPLE_SEED)
+    p.add_argument("--force", action="store_true", help="redraw a sample drawn before (answers on it stay in Argilla)")
 
     _add(sub, "judge-push", cmd_judge_push, "push the judge sample to Argilla", argilla=True, corpus=True)
 

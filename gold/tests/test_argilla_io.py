@@ -1,11 +1,13 @@
 """gold/argilla_io.py without a server: settings from the specs, record content, idempotent push, pull."""
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
 import pytest
 
+from agent import anchor
 from agent.tests.conftest import fixture
 from gold import argilla_io, review
 
@@ -21,8 +23,9 @@ def test_settings_follow_the_specs(fake: FakeArgilla) -> None:
         assert labels == {n: list(lab) for n, _, lab, _ in spec.questions if lab}
         assert [(m.name, m.visible_for_annotators) for m in built.metadata] == [(n, v) for n, _, _, v in spec.metadata]
         assert built.distribution.min_submitted == (2 if dataset == "overlap" else 1)
-    hidden = {d: [n for n, _, _, v in s.metadata if not v] for d, s in argilla_io.SPECS.items()}
-    assert hidden["review"] == ["stratum"] and hidden["judge"] == ["condition"]
+    # Argilla hides "hidden" metadata from annotators only: what could sway an answer is never sent.
+    sent = {n for s in argilla_io.SPECS.values() for n, *_ in s.metadata}
+    assert not sent & {"stratum", "condition", "triage", "label"}
     assert set(argilla_io.SPECS) == set(argilla_io.DATASETS)
 
 
@@ -37,13 +40,48 @@ def test_review_record_shows_the_quote_in_its_passage(env: Env) -> None:
     assert "<mark>math reasoning using GSM8K</mark>" in passage
     record = argilla_io.review_record(item, question="Q?", concept_md=argilla_io.concept_markdown(CONCEPT),
                                       passage_md=passage)
-    assert record["id"] == cid(3) and record["question_id"] == QID and record["stratum"] == "triaged"
+    assert record["id"] == review.record_id(item) and record["id"].startswith(f"{cid(3)}-")
+    assert record["question_id"] == QID and "stratum" not in record
     assert record["fact"].startswith("**p5** — _evaluatesOn_ — **GSM8K**") and "target = GSM8K" in record["fact"]
     assert record["quote"] == "`p5.md`\n\n> math reasoning using GSM8K"
     moved = {**item, "anchor": {**item["anchor"], "start": item["anchor"]["start"] + 3}}  # offsets no longer hold
     assert argilla_io.candidate_passage(corpus, moved) == passage  # found again by its quote
     missing = argilla_io.candidate_passage(corpus, review_items(env)[cid(6)])
     assert "could not be found in `p3.md` (not_found)" in missing
+
+
+def test_a_repeated_quote_is_shown_not_called_missing(env: Env) -> None:
+    """C1 leaves a quote that occurs several times unanchored (`ambiguous`); the reviewer still sees it."""
+    corpus = review.Corpus(env.corpus)
+    text = corpus.text("p1.md")
+    spans = corpus.index("p1.md").spans(anchor.normalize("Spider"))
+    assert len(spans) > 2
+    item = {**review_items(env)[cid(1)], "quote": "Spider", "anchor": None, "anchor_status": "ambiguous"}
+    first = argilla_io.candidate_passage(corpus, item)
+    assert "judge it as not stated" not in first
+    assert f"occurs {len(spans)} times in `p1.md`; the first is marked" in first and "<mark>Spider</mark>" in first
+    found = corpus.locate({**item, "chunk_span": [spans[1][0] - 5, spans[1][1] + 5]})  # the chunk it came from
+    assert (found.start, found.end, found.how, found.occurrences) == (*spans[1], "chunk", len(spans))
+    assert text[found.start:found.end] == "Spider"
+    assert "the one in the part of the paper the fact was read from" in argilla_io.candidate_passage(
+        corpus, {**item, "chunk_span": [spans[1][0], spans[1][1]]})
+
+
+def test_corpus_checks_the_manifest(env: Env, tmp_path: Path) -> None:
+    corpus = review.Corpus(env.corpus)
+    assert corpus.has("p1") and corpus.has("p1.md") and corpus.has("corpus/p1.md")
+    assert not corpus.has("p99.md")  # in the manifest, but its conversion failed
+    assert not corpus.has("p77.md")
+    with pytest.raises(review.Rejected, match="unknown_file"):
+        corpus.text("p77")
+    (env.corpus / "p2.md").write_bytes(b"changed")
+    with pytest.raises(review.Rejected, match="corpus_file_hash_mismatch"):
+        review.Corpus(env.corpus).text("p2.md")
+    with pytest.raises(review.Rejected, match="corpus_file_hash_mismatch"):
+        argilla_io.candidate_passage(review.Corpus(env.corpus), {"file": "p2.md", "quote": "x"})
+    (tmp_path / "bare").mkdir()
+    with pytest.raises(FileNotFoundError, match="manifest.json"):
+        review.Corpus(tmp_path / "bare")
 
 
 def test_passage_window_cuts_at_line_ends() -> None:
@@ -71,10 +109,13 @@ def test_push_is_idempotent_and_keeps_responses(env: Env, fake: FakeArgilla) -> 
                for i in review_items(env).values()]
     assert argilla_io.push(fake, "review", records) == 7
     dataset = fake.dataset("review")
-    dataset.answer(cid(1), "aditya", **ANSWERS[cid(1)])
+    first = review.record_id(review_items(env)[cid(1)])
+    dataset.answer(first, "aditya", **ANSWERS[cid(1)])
     assert argilla_io.push(fake, "review", [{**r, "question": "Q, reworded?"} for r in records]) == 7
-    assert len(dataset.rows) == 7 and dataset.rows[cid(1)]["fields"]["question"] == "Q, reworded?"
-    assert len(dataset.responses[cid(1)]) == 2  # label and vital stay
+    assert len(dataset.rows) == 7 and dataset.rows[first]["fields"]["question"] == "Q, reworded?"
+    assert len(dataset.responses[first]) == 2  # label and vital stay
+    changed = {**review_items(env)[cid(1)], "o": "Spider 2.0"}  # D rebuilt: the id now names another fact
+    assert review.record_id(changed) != first and review.split_record_id(review.record_id(changed))[0] == cid(1)
     assert argilla_io.push(fake, "missing", []) == 0 and ("thesis", "gold-v1-missing") not in fake.store
 
 
@@ -88,6 +129,8 @@ def test_pull_gives_plain_records_with_user_names(env: Env, fake: FakeArgilla) -
     assert sorted((r["question"], r["user"], r["status"]) for r in record["responses"]) == [
         ("done", "aditya", "submitted"), ("missing", "aditya", "submitted")]
     assert review.submitted(record) == {"aditya": {"missing": "a | b | c | p1.md | q", "done": "yes"}}
+    with pytest.raises(SystemExit, match="no workspace 'elsewhere'"):
+        argilla_io.pull(fake, workspace="elsewhere")
 
 
 def test_client_reads_the_environment_when_made(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -13,6 +13,10 @@ key like missing facts (gold/export.py).
 A paper counts as relevant when anyone who checked it says so (the conservative reading for a
 completeness claim). Papers left unread (`no_text`, `error`) are outside the sampling frame; the sample
 file counts them.
+
+A sample is drawn once: drawing again (after a re-screen, say) would change which papers are checked
+while the answers already given in Argilla stay, so `sample` keeps an existing one unless `force`, and
+`report` counts only answers on the papers of the sample it is given.
 """
 from __future__ import annotations
 
@@ -27,8 +31,13 @@ DEFAULT_SEED = "gold-v1"
 SAMPLE_FILE = "screening.sample.json"
 
 
-def sample(root: Path, qid: str, *, size: int = DEFAULT_SIZE, seed: str = DEFAULT_SEED) -> dict[str, Any]:
-    """Draw `size` papers at random (fixed by `seed`) from those screened not relevant; write the sample."""
+def sample(root: Path, qid: str, *, size: int = DEFAULT_SIZE, seed: str = DEFAULT_SEED,
+           force: bool = False) -> dict[str, Any]:
+    """Draw `size` papers at random (fixed by `seed`) from those screened not relevant and write the
+    sample; an existing sample is returned as it is (`kept` true) unless `force`."""
+    kept = load_sample(root, qid)
+    if kept is not None and not force:
+        return {**kept, "kept": True}
     rows = review.screening(root, qid)
     status = [str(r.get("status")) for r in rows]
     frame = sorted(str(r["paper_id"]) for r in rows if r.get("status") == "not_relevant")
@@ -37,26 +46,33 @@ def sample(root: Path, qid: str, *, size: int = DEFAULT_SIZE, seed: str = DEFAUL
            "relevant": status.count("relevant"), "unread": status.count("no_text") + status.count("error"),
            "sampled": len(drawn), "papers": sorted(drawn), "drawn_at": review.utc_now()}
     review.write_json(review.qdir(root, qid) / SAMPLE_FILE, out)
-    return out
+    return {**out, "kept": False}
 
 
 def load_sample(root: Path, qid: str) -> dict[str, Any] | None:
     return review.read_json(review.qdir(root, qid) / SAMPLE_FILE)
 
 
-def records(root: Path, qid: str, corpus: review.Corpus, *, question: str, concept_md: str) -> list[dict[str, Any]]:
-    """Argilla records for the drawn papers: the question, the concept and the whole paper."""
+def records(root: Path, qid: str, corpus: review.Corpus, *, question: str, concept_md: str,
+            ) -> tuple[list[dict[str, Any]], list[str]]:
+    """Argilla records for the drawn papers (the question, the concept and the whole paper), and the
+    papers left out because the corpus cannot give their text (`<paper>: <reason>`): a stand-in text
+    would be answered "not relevant" and bias the false-negative rate towards 0."""
     drawn = load_sample(root, qid)
     if not drawn:
-        return []
-    out = []
+        return [], []
+    out, skipped = [], []
     for paper in drawn["papers"]:
-        file = corpus.file_name(paper)
-        text = corpus.text(file) if corpus.has(file) else "_This paper is not in the corpus directory._"
+        try:
+            text = corpus.text(paper)
+        except review.Rejected as exc:
+            skipped.append(f"{paper}: {exc.reason}")
+            continue
         out.append(argilla_io.screening_record(
-            qid, paper, question=question, concept_md=concept_md, paper_md=argilla_io.paper_markdown(text, file),
+            qid, paper, question=question, concept_md=concept_md,
+            paper_md=argilla_io.paper_markdown(text, corpus.file_name(paper)),
             not_relevant=drawn["not_relevant"], sampled=drawn["sampled"]))
-    return out
+    return out, skipped
 
 
 def verdicts(record: dict[str, Any]) -> list[str]:
@@ -69,9 +85,14 @@ def _r(value: float | None, digits: int = 4) -> float | None:
 
 def report(records: list[dict[str, Any]], drawn: dict[str, Any] | None) -> dict[str, Any]:
     """One question: papers checked, found relevant, the false-negative rate with a 95 % Wilson interval,
-    and the relevant papers estimated among all marked not relevant (rate x N, interval x N)."""
+    and the relevant papers estimated among all marked not relevant (rate x N, interval x N). With a
+    sample, only records of its papers count (others: `outside_sample`)."""
     n_total = int((drawn or {}).get("not_relevant") or max(
         [int((r.get("metadata") or {}).get("not_relevant_total") or 0) for r in records] or [0]))
+    every = len(records)
+    if (drawn or {}).get("papers") is not None:
+        papers = {str(p) for p in drawn["papers"]}  # type: ignore[index]
+        records = [r for r in records if str((r.get("metadata") or {}).get("paper_id")) in papers]
     checked = [(r, v) for r in records if (v := verdicts(r))]
     found = sorted(str((r.get("metadata") or {}).get("paper_id") or r["id"]) for r, v in checked if "yes" in v)
     k, n = len(found), len(checked)
@@ -82,7 +103,7 @@ def report(records: list[dict[str, Any]], drawn: dict[str, Any] | None) -> dict[
             "false_negative_rate": _r(rate), "false_negative_rate_95": [_r(low), _r(high)],
             "estimated_missed_papers": _r(n_total * rate, 1) if rate is not None else None,
             "estimated_missed_papers_95": [_r(n_total * low, 1), _r(n_total * high, 1)],
-            "papers_found_relevant": found}
+            "papers_found_relevant": found, "outside_sample": every - len(records)}
 
 
 def overall(sections: dict[str, dict[str, Any]]) -> dict[str, Any]:

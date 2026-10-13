@@ -10,13 +10,15 @@ from agent.concept import answer_schema_for, concept_sha256, validate_answer
 from agent.tests.conftest import fixture
 from gold import export, review
 
-from .fixtures import ANSWERS, CONCEPT, MISSING_LINES, NQ, OCR_VQA, QID, Env, cid, env, pulled  # noqa: F401
+from .fixtures import ANSWERS, CONCEPT, MISSING_LINES, NQ, OCR_VQA, QID, Env, cid, env, pulled, rids  # noqa: F401
 
 
-def store_answers(e: Env, answers: dict[str, dict] = ANSWERS, missing: str = MISSING_LINES) -> None:
+def store_answers(e: Env, answers: dict[str, dict] = ANSWERS, missing: str = MISSING_LINES,
+                  done: str = "yes") -> None:
+    ids = rids(e)
     review.store(e.root, {
-        "review": [pulled(rid, "review", {"aditya": values}) for rid, values in answers.items()],
-        "missing": [pulled(f"missing-{QID}", "missing", {"aditya": {"missing": missing, "done": "yes"}})]})
+        "review": [pulled(ids[c], "review", {"aditya": values}) for c, values in answers.items()],
+        "missing": [pulled(f"missing-{QID}", "missing", {"aditya": {"missing": missing, "done": done}})]})
 
 
 def run(e: Env, **kw) -> export.Export:
@@ -42,6 +44,11 @@ def test_key_validates_as_an_answer_after_stripping_gold_only_fields(env: Env) -
     assert schema.errors(answer_schema_for(CONCEPT), stripped) == []
     assert validate_answer(stripped, CONCEPT) == []
     assert export.as_answer(key) == stripped
+    # What the key was built from, and the hash scoring records next to the version.
+    assert key["key_sha256"] == export.rows_sha256(key["rows"])
+    inputs = key["review"]["inputs"]
+    assert inputs["doc_built"]["git_commit"] == "c" * 40 and inputs["files"]["pool.jsonl"]
+    assert inputs["reviews"]["review/review.jsonl"] and inputs["reviews"]["review/overlap.jsonl"] is None
 
 
 def test_kept_corrected_vital_and_dropped(env: Env) -> None:
@@ -58,6 +65,47 @@ def test_kept_corrected_vital_and_dropped(env: Env) -> None:
     assert key["review"]["kept"] == 4 and key["review"]["unsure"] == 1 and key["review"]["complete"]
     report = json.loads((env.root / QID / "export.json").read_text(encoding="utf-8"))
     assert report["unsure"] == [{"candidate_id": cid(7), "user": "aditya", "note": "authorship, not a dataset"}]
+
+
+def test_complete_needs_the_missing_facts_pass(env: Env) -> None:
+    store_answers(env, done="no")
+    review_ = run(env).key["review"]
+    assert review_["unreviewed"] == 0 and review_["missing_done"] is False and review_["complete"] is False
+
+
+def test_a_kept_quote_must_be_in_its_file(env: Env) -> None:
+    """c6's quote is not in p3: a reviewer's `correct` cannot put it in the key."""
+    store_answers(env, {**ANSWERS, cid(6): {"label": "correct"}})
+    done = run(env)
+    assert cid(6) not in facts_by_candidate(done.key)
+    assert done.report["unanchored"] == [{"candidate_id": cid(6), "file": "p3.md", "reason": "not_found",
+                                          "anchor_status": "not_found"}]
+    assert done.key["review"]["unanchored"] == 1 and any("quote is not in their file" in p for p in done.problems)
+
+
+def test_a_repeated_quote_stays_in_the_key(env: Env) -> None:
+    """C1 leaves a quote found several times in its paper unanchored; people saw it and kept the fact."""
+    cands = review.read_jsonl(env.root / QID / "candidates.jsonl")
+    cands[0] = {**cands[0], "quote": "Spider", "anchor": None, "anchor_status": "ambiguous"}
+    review.write_jsonl(env.root / QID / "candidates.jsonl", cands)
+    store_answers(env)
+    done = run(env)
+    assert facts_by_candidate(done.key)[cid(1)][1]["quote"] == "Spider"
+    assert done.report["repeated_quotes"][0]["candidate_id"] == cid(1)
+    assert done.report["repeated_quotes"][0]["chosen"] == "first" and done.report["unanchored"] == []
+
+
+def test_answers_on_another_fact_are_stale(env: Env) -> None:
+    """A record pushed for an earlier D whose candidate id now names another fact: its answers stay out."""
+    store_answers(env)
+    old = {**review.pool(env.root, QID)[0], "o": "an earlier object"}
+    pulled_ = review.reviews(env.root, QID)["review"]
+    review.store(env.root, {"review": pulled_ + [pulled(review.record_id(old), "review",
+                                                        {"aditya": {"label": "correct", "vital": "yes"}})]})
+    done = run(env)
+    assert [s["candidate_id"] for s in done.report["stale"]] == [old["id"]]
+    assert done.report["stale"][0]["reason"] == "the candidate's fact changed since it was pushed"
+    assert done.key["review"]["stale"] == 1 and "an earlier object" not in json.dumps(done.key)
 
 
 def test_missing_facts_are_anchored_or_rejected(env: Env) -> None:
@@ -112,12 +160,15 @@ def test_unanswered_drafts_do_not_count() -> None:
 
 def test_stale_concept_writes_no_key(env: Env) -> None:
     store_answers(env)
+    assert run(env).key is not None and (env.root / QID / "key.json").exists()
     doc = review.read_json(env.root / QID / "doc.json")
     review.write_json(env.root / QID / "doc.json", {**doc, "concept_sha256": "f" * 64})
     done = run(env)
-    assert done.key is None and not (env.root / QID / "key.json").exists()
+    assert done.key is None and not (env.root / QID / "key.json").exists()  # the earlier key is set aside
+    assert review.read_json(env.root / QID / export.STALE_KEY_FILE)["reviewed"] is True
     assert any("rebuild D" in p for p in done.problems)
-    assert (env.root / QID / "export.json").exists()
+    report = review.read_json(env.root / QID / "export.json")
+    assert report["status"] == "failed" and report["key_written"] is False and report["stale_key"]
 
 
 def test_graph_rows_merge_and_unknown_predicate_is_left_out() -> None:
