@@ -15,7 +15,19 @@ the files named at the end, history in git.
   (`docs/provenance-model.md`).
 - Evaluation as the supervisor designed it (`docs/context.md` §2): gold document D per question, its facts
   reviewed by the author in Argilla into an answer key, system output matched against the key.
-- Not yet decided: model family for D, scoring of counts, the pre-registered test. Proposed but not confirmed: a frontier API model on 2–3 concepts as an upper bound.
+- Not yet decided: model family for D. Proposed but not confirmed: a frontier API model on 2–3 concepts as an upper bound.
+- Scoring of counts (decided 13 Oct, e2e build): a count cell is compared exactly after normalisation (number formats
+  only; no tolerance), so a row with a wrong count is a wrong row and its facts carry the partial credit (`scoring/`).
+- Pre-registered test (decided 13 Oct, e2e build, before any scored run): primary outcome the support share, the
+  share of a run's answer facts whose quote the LLM judge says supports them (partial and unsourced count as not
+  supported), claim_on vs claim_off after the attach step. Per question the mean over its repeats (a run without
+  answer facts is left out of the mean); questions with a mean in both conditions are paired. Wilcoxon
+  signed-rank on the paired per-question means, two-sided, α = 0.05, with the 95 % BCa bootstrap interval of the
+  mean difference (2,000 resamples over questions, fixed seed) and the rank-biserial correlation as effect size.
+  With fewer than 6 paired questions the test is reported as not computed (p ≤ 0.05 is then unattainable).
+  Sensitivity: runs without facts counted as 0. Secondary outcomes (fact and row precision/recall/F1, vital
+  recall, judged precision, unsourced share, tokens and time with and without attach) get intervals, no tests.
+  Scores against draft keys are provisional and never reported. Exact settings: `scoring/README.md`.
 
 ## Decided
 
