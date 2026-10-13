@@ -8,11 +8,17 @@ place of `entailed`: rules in code, no model, nothing to dispute.
   as in agent/attach.py `_same`.
 - normalised: Unicode NFKC, case folded, punctuation and spacing dropped, so "evaluatesOn",
   "evaluates on" and "evaluates_on" are one predicate and "Natural Questions" equals "NaturalQuestions".
-  Numbers stay apart from the words around them and compare by value: thousands separators go, "12.50"
-  is 12.5, "−3" keeps its sign, "85 %" equals "85 percent". Count cells therefore compare exactly after
-  normalisation, with no tolerance. A value that names a corpus paper ("p12", "p012.md", "$CORPUS/p12.md",
-  "2025.acl-long.892", "2025-acl-long-892.md") becomes that paper's id: the paper-id aliasing. Lists
-  (list<...> cells) compare as sets of their normalised items.
+  Words are letters with their combining marks (Indic vowel signs and viramas are part of the word, so
+  "कि" is not "क"); "+" and "#" are kept, so "C++", "C#" and "C" differ. Numbers stay apart from the
+  words around them and compare by value: thousands separators go, "12.50" is 12.5, ".5" is 0.5,
+  "1e-5" is 0.00001, "−3" keeps its sign, "85 %" equals "85 percent". "100,200" reads as one number
+  with a thousands separator (the usual reading in English papers). Count cells therefore compare
+  exactly after normalisation, with no tolerance. A value that names a corpus paper ("p12", "p012.md",
+  "$CORPUS/p12.md", "2025.acl-long.892", "2025-acl-long-892.md") becomes that paper's id: the paper-id
+  aliasing. Lists (list<...> cells) compare as sets of their normalised items.
+
+The tokeniser uses the `regex` module for the Unicode classes \\p{L} (letters), \\p{M} (combining
+marks) and \\p{N}, which the standard `re` lacks.
 """
 from __future__ import annotations
 
@@ -21,10 +27,19 @@ import unicodedata
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+import regex
+
 DASHES = str.maketrans({c: "-" for c in "−‐‑‒–—﹣－"})
-# A number: a sign only where no word character precedes it ("GPT-4" is not minus four), digits with
-# thousands separators or plain, an optional fraction. Words are runs of letters; "%" is a word.
-TOKEN = re.compile(r"(?:(?<![\w.])-)?(?:\d{1,3}(?:,\d{3})+(?!\d)|\d+)(?:\.\d+)?|[^\W\d_]+|%")
+# A number: a sign only where no letter, digit or dot precedes it ("GPT-4" is not minus four); digits
+# with thousands separators or plain and an optional fraction, or a bare fraction (".5") where no
+# letter or digit precedes it; an optional exponent ("1e-5"). Words are letters with their combining
+# marks; "%", "+" and "#" are tokens of their own.
+_NOT_AFTER_WORD = r"(?<![\p{L}\p{M}\p{N}_])"
+TOKEN = regex.compile(
+    r"(?:(?<![\p{L}\p{M}\p{N}_.])[-+])?"
+    r"(?:(?:\d{1,3}(?:,\d{3})+(?!\d)|\d+)(?:\.\d+)?|" + _NOT_AFTER_WORD + r"\.\d+)"
+    r"(?:e[-+]?\d+(?![\p{L}\p{M}]))?"
+    r"|[\p{L}\p{M}]+|[%+#]")
 PAPER_P = re.compile(r"p0*(\d+)", re.I)
 PAPER_ANTHOLOGY = re.compile(r"(\d{4})[.-]((?:[a-z]+[.-])*[a-z]+)[.-]0*(\d+)", re.I)
 
@@ -69,7 +84,7 @@ def text(item: str) -> str:
     for token in TOKEN.findall(folded):
         if token == "%":
             out.append("percent")
-        elif token[0].isdigit() or token[0] == "-":
+        elif token[0].isdigit() or (token[0] in "-+." and len(token) > 1):
             out.append(f"<{number(token)}>")  # delimited, so "1 5" never equals "15"
         else:
             out.append(token)

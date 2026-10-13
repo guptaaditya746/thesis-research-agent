@@ -30,8 +30,18 @@ def test_normalised_equal(a: Any, b: Any) -> None:
 
 
 @pytest.mark.parametrize("a, b", [
+    (".5", "0.5"), ("1e-5", "0.00001"), ("1E5", 100000), ("+3", "3"), ("C ++", "c++"), ("हिन्दी", "हिन्दी "),
+])
+def test_normalised_equal_numbers_and_scripts(a: Any, b: Any) -> None:
+    assert norm(a) == norm(b)
+
+
+@pytest.mark.parametrize("a, b", [
     ("1 5", "15"), ("-3.2", "3.2"), ("12.5", "125"), ("p12", "p120"), ("Llama 3 8B", "Llama 38B"),
     (2, 3), (["p12"], ["p12", "p87"]), ("GPT-4", "GPT 4o"),
+    # Combining marks are part of the word (Devanagari vowel signs and virama), symbols are kept,
+    # an exponent keeps its sign.
+    ("कि", "क"), ("हिन्दी", "हन्द"), ("C++", "C#"), ("C++", "C"), ("C#", "C"), ("1e-5", "1e5"),
 ])
 def test_normalised_different(a: Any, b: Any) -> None:
     assert norm(a) != norm(b)
