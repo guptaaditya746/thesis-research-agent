@@ -299,7 +299,7 @@ def cmd_concepts_pick(args: argparse.Namespace) -> int:
                 choice = int(answer)
     try:
         concept, sha = concept_step.pick(args.session_dir, choice, picked_by=args.picked_by, reason=args.reason,
-                                         replace=args.replace)
+                                         replace=args.replace, force=args.force)  # gold: $GOLD
     except (concept_step.ConceptStepError, ValueError) as exc:
         print(f"FAIL {exc}")
         return 1
@@ -528,7 +528,10 @@ def main(argv: list[str] | None = None) -> int:
     pick.add_argument("--picked-by", choices=PICKED_BY, default="user", help="who picked (recorded as the agent)")
     pick.add_argument("--reason", default="", help="why this brief (recorded)")
     pick.add_argument("--replace", action="store_true",
-                      help="change an earlier pick (only before gold is built for the question)")
+                      help="change an earlier pick; refused once $GOLD/<question id>/ holds anything of its gold build")
+    pick.add_argument("--force", action="store_true",
+                      help="with --replace: replace even though gold exists (the pick records its files; move that "
+                           "gold aside or rebuild it)")
     pick.set_defaults(func=cmd_concepts_pick)
     pick_all = csub.add_parser("pick-all", help="pick by a rule in every proposed question not yet picked")
     questions_arg(pick_all, required=False)
