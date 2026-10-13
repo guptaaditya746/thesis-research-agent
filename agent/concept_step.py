@@ -9,14 +9,26 @@ to the first MAX_BRIEFS (`capped_from` records how many came). Output that does 
 REPAIR_ROUNDS repair round(s) with the problems listed; if it still does not validate the step
 fails with ConceptStepError and writes no proposal.
 
-`pick`: the user picks one brief by number; it is written as concept.json (canonical JSON, the
-bytes RunDir.create writes, so its hash is the run's concept_sha256) and concept.sha256.
+`pick`: one brief is picked by number; it is written as concept.json (canonical JSON, the bytes
+RunDir.create writes, so its hash is the run's concept_sha256) and concept.sha256. Who picked is
+recorded (`picked_by`: user, claude, or provisional-first, the rule that takes brief 1 until the
+user has looked; e2e-build-plan.md, "Concept pick"), with a reason. A pick is frozen; only an
+explicit `replace` changes it (the web app's "change the pick before gold is built"), and the new
+pick record names the concept it replaces.
+
+All 12 questions (row 2.3): `load_questions` reads questions/questions.json
+(agent/schemas/questions.schema.json); `propose_all` proposes for every question whose session has
+no proposal yet (one failure does not stop the rest), `pick_all` applies a rule to every proposed
+question not yet picked, and `status` gives one line per question. $CONCEPTS/picks.json indexes
+the current pick of every session (e2e-build-plan.md, "Concepts"); it is rebuilt from the sessions'
+chains after each pick, so it never disagrees with them.
 
 Everything is logged as PROV-AGENT records in one hash chain, through the broker core
 (agent/broker.py), in the concept-session directory concepts/<question-id>/:
 - each model call: `ai_model_invocation`, agent `main`, custom_metadata.origin "concept";
 - output that does not validate: `coverage` (reason invalid_concepts, with the problems);
-- the pick: `concept_pick`, agent `user`, parent = the model call whose briefs were shown.
+- the pick: `concept_pick`, agent = who picked (`user` by default), parent = the model call whose
+  briefs were shown.
 
 Files: session.json (question, model settings, prompt hashes), events.jsonl, claims.jsonl (always
 empty), proposal.json (the briefs), concept.json and concept.sha256 after the pick.
@@ -24,11 +36,13 @@ empty), proposal.json (the briefs), concept.json and concept.sha256 after the pi
 from __future__ import annotations
 
 import json
+import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
+from . import schema
 from .broker import Broker
 from .canonical import canonical_bytes, file_sha256, sha256_hex, write_json
 from .chain import verify
@@ -44,7 +58,13 @@ SESSION_FILE = "session.json"
 PROPOSAL_FILE = "proposal.json"
 CONCEPT_FILE = "concept.json"
 CONCEPT_HASH_FILE = "concept.sha256"
+PICKS_FILE = "picks.json"  # in the concepts root: the current pick of every session
+QUESTIONS_FILE = Path("questions/questions.json")
 QUESTION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+PICKED_BY = ("user", "claude", "provisional-first")
+PICK_RULES = ("first",)
+RULE_REASON = {"first": "provisional: rule 'first' takes brief 1 until the user has looked at the briefs "
+                        "(e2e-build-plan.md, Concept pick)"}
 
 
 class Model(Protocol):
@@ -264,13 +284,25 @@ def propose(concepts_root: Path, question_id: str, question: str, model: Model, 
         broker.close()
 
 
-def pick(session_dir: Path, choice: int) -> tuple[dict[str, Any], str]:
-    """Write the chosen brief (1-based `choice`) as concept.json and log the pick. Returns (concept, sha256)."""
+def pick(session_dir: Path, choice: int, *, picked_by: str = "user", reason: str = "",
+         replace: bool = False) -> tuple[dict[str, Any], str]:
+    """Write the chosen brief (1-based `choice`) as concept.json and log the pick. Returns (concept, sha256).
+
+    `picked_by` is recorded as the pick record's agent. A picked concept is frozen: picking again
+    needs `replace=True`, which is for changing a pick before gold is built (the caller checks
+    that; gold lives outside the session). $CONCEPTS/picks.json is rewritten afterwards.
+    """
+    if picked_by not in PICKED_BY:
+        raise ValueError(f"picked_by must be one of {PICKED_BY}")
     session = Session(Path(session_dir))
     if not session.path(PROPOSAL_FILE).is_file():
         raise ValueError(f"{session.root} has no proposal; run `agent concepts propose` first")
+    replaces = None
     if session.path(CONCEPT_FILE).exists():
-        raise ValueError(f"{session.path(CONCEPT_FILE)} exists: the concept is frozen")
+        if not replace:
+            raise ValueError(f"{session.path(CONCEPT_FILE)} exists: the concept is frozen "
+                             "(change it only before gold is built, with replace)")
+        replaces = file_sha256(session.path(CONCEPT_FILE))
     proposal = session.load(PROPOSAL_FILE)
     briefs = proposal["briefs"]
     if not 1 <= choice <= len(briefs):
@@ -284,21 +316,30 @@ def pick(session_dir: Path, choice: int) -> tuple[dict[str, Any], str]:
         sha = write_json(session.path(CONCEPT_FILE), concept)
         session.path(CONCEPT_HASH_FILE).write_bytes(f"{sha}  {CONCEPT_FILE}\n".encode("ascii"))
         now = utc_now()
+        used = {"proposal_sha256": file_sha256(session.path(PROPOSAL_FILE)), "briefs": len(briefs),
+                "choice": choice, "brief_id": concept["id"], "brief_sha256": sha256_hex(canonical_bytes(concept)),
+                "picked_by": picked_by, "reason": reason}
+        if replaces:
+            used["replaces_concept_sha256"] = replaces
         _record(broker, {
-            "subtype": "concept_pick", "step_id": _last_step(session) + 1, "agent_id": "user",
-            "parent_task_id": proposal["model_call"],
-            "used": {"proposal_sha256": file_sha256(session.path(PROPOSAL_FILE)), "briefs": len(briefs),
-                     "choice": choice, "brief_id": concept["id"], "brief_sha256": sha256_hex(canonical_bytes(concept))},
+            "subtype": "concept_pick", "step_id": _last_step(session) + 1, "agent_id": picked_by,
+            "parent_task_id": proposal["model_call"], "used": used,
             "generated": {"concept_file": CONCEPT_FILE, "concept_sha256": sha},
             "started_at": now, "ended_at": now, "custom_metadata": {"title": concept["title"]},
         })
     finally:
         broker.close()
+    write_picks(session.root.parent)
     return concept, sha
 
 
+def _pick_records(session: Session) -> list[dict[str, Any]]:
+    lines = session.run.events.read_bytes().splitlines() if session.run.events.is_file() else []
+    return [r for r in map(json.loads, lines) if r["subtype"] == "concept_pick"]
+
+
 def check_session(session_dir: Path) -> list[str]:
-    """Problems with a concept session: chain, proposal, and the frozen concept against its hash and pick."""
+    """Problems with a concept session: chain, proposal, and the frozen concept against its hash and last pick."""
     session = Session(Path(session_dir))
     report = verify(session.run.events, session.run.claims)
     problems = [f"chain: {e}" for e in report.errors]
@@ -311,9 +352,161 @@ def check_session(session_dir: Path) -> list[str]:
         if session.path(CONCEPT_HASH_FILE).is_file() else None
     if recorded != sha:
         problems.append("concept.sha256 differs from concept.json")
-    picks = [json.loads(raw) for raw in session.run.events.read_bytes().splitlines()]
-    picks = [r for r in picks if r["subtype"] == "concept_pick"]
-    if len(picks) != 1 or picks[0]["generated"].get("concept_sha256") != sha:
+    picks = _pick_records(session)
+    if not picks or picks[-1]["generated"].get("concept_sha256") != sha:
         problems.append("concept.json is not the one the pick record names")
     problems += [f"concept.json {p}" for p in validate_concept(session.load(CONCEPT_FILE))]
     return problems
+
+
+# --- all questions (row 2.3) ---------------------------------------------------------------------------
+
+def load_questions(path: Path = QUESTIONS_FILE) -> list[dict[str, Any]]:
+    """The questions of questions/questions.json, checked against agent/schemas/questions.schema.json."""
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    problems = schema.check("questions", data)
+    if problems:
+        raise ValueError(f"invalid questions file {path}: {problems}")
+    ids = [q["id"] for q in data["questions"]]
+    if len(ids) != len(set(ids)):
+        raise ValueError(f"invalid questions file {path}: duplicate question ids")
+    return data["questions"]
+
+
+def question_sha256(question: str) -> str:
+    return sha256_hex(question.encode("utf-8"))
+
+
+@dataclass
+class Result:
+    """What happened to one question in propose_all, pick_all or status."""
+    id: str
+    state: str
+    detail: str = ""
+    problems: list[str] = field(default_factory=list)
+
+    def line(self) -> str:
+        return f"{self.id} {self.state:<9}{self.detail}".rstrip()
+
+
+def _stale(session: Session, question: dict[str, Any]) -> bool:
+    """The session was started for another wording of the question (questions/README.md)."""
+    if not session.path(SESSION_FILE).is_file():
+        return False
+    return session.load(SESSION_FILE).get("question_sha256") != question_sha256(question["question"])
+
+
+STALE = "the question changed since its session started: move the session, its gold and its runs aside"
+
+
+def propose_all(questions: list[dict[str, Any]], concepts_root: Path, model: Model, *, temperature: float,
+                seed: int, git_commit: str, base_url: str, prompt_version: str = "v1",
+                max_briefs: int = MAX_BRIEFS, log: Any = None) -> list[Result]:
+    """Propose briefs for every question whose session has no proposal yet.
+
+    A question that fails (invalid briefs after the repair round, a model or proxy error) is
+    reported and the next one is tried; running it again retries only those (a failed session is
+    continued, propose()). `log` (e.g. print) gets one line per question as it finishes.
+    """
+    results = []
+    for q in questions:
+        session = Session(Path(concepts_root) / q["id"])
+        if _stale(session, q):
+            result = Result(q["id"], "stale", STALE)
+        elif session.path(PROPOSAL_FILE).is_file():
+            result = Result(q["id"], "skipped", f"has a proposal ({len(session.load(PROPOSAL_FILE)['briefs'])} briefs)")
+        else:
+            try:
+                _, proposal = propose(concepts_root, q["id"], q["question"], model, temperature=temperature,
+                                      seed=seed, git_commit=git_commit, base_url=base_url,
+                                      prompt_version=prompt_version, max_briefs=max_briefs)
+                capped = f", capped from {proposal['capped_from']}" if proposal["capped_from"] else ""
+                result = Result(q["id"], "proposed", f"{len(proposal['briefs'])} briefs in {proposal['rounds']} "
+                                f"round(s){capped}")
+            except Exception as exc:  # one question's failure must not stop the others
+                result = Result(q["id"], "failed", f"{type(exc).__name__}: {exc}"[:300],
+                                list(getattr(exc, "problems", [])))
+        results.append(result)
+        if log:
+            log(result.line())
+    return results
+
+
+def pick_all(questions: list[dict[str, Any]], concepts_root: Path, *, rule: str = "first",
+             picked_by: str = "provisional-first", reason: str | None = None) -> list[Result]:
+    """Pick by `rule` in every question that has a proposal and no pick yet; picked ones are left as they are."""
+    if rule not in PICK_RULES:
+        raise ValueError(f"rule must be one of {PICK_RULES}")
+    results = []
+    for q in questions:
+        session = Session(Path(concepts_root) / q["id"])
+        if _stale(session, q):
+            results.append(Result(q["id"], "stale", STALE))
+        elif session.path(CONCEPT_FILE).is_file():
+            current = picks(concepts_root).get(q["id"], {})
+            results.append(Result(q["id"], "skipped", f"already picked [{current.get('choice')}] by "
+                                  f"{current.get('picked_by')}"))
+        elif not session.path(PROPOSAL_FILE).is_file():
+            results.append(Result(q["id"], "missing", "no proposal: run `agent concepts propose-all` first"))
+        else:
+            try:
+                concept, sha = pick(session.root, 1, picked_by=picked_by, reason=reason or RULE_REASON[rule])
+                results.append(Result(q["id"], "picked", f"[1] {concept['title']} sha256={sha[:12]}"))
+            except (ConceptStepError, ValueError, OSError) as exc:
+                results.append(Result(q["id"], "failed", str(exc), list(getattr(exc, "problems", []))))
+    return results
+
+
+def picks(concepts_root: Path) -> dict[str, dict[str, Any]]:
+    """The current pick of every session under `concepts_root`: the last concept_pick record of each."""
+    out: dict[str, dict[str, Any]] = {}
+    root = Path(concepts_root)
+    for directory in sorted(p for p in root.iterdir() if p.is_dir()) if root.is_dir() else []:
+        session = Session(directory)
+        if not session.path(CONCEPT_FILE).is_file():
+            continue
+        records = _pick_records(session)
+        if not records:
+            continue
+        last = records[-1]
+        out[session.question_id] = {
+            "choice": last["used"]["choice"], "title": last["custom_metadata"].get("title"),
+            "picked_by": last["used"].get("picked_by", last["agent_id"]), "reason": last["used"].get("reason", ""),
+            "concept_sha256": last["generated"]["concept_sha256"]}
+    return out
+
+
+def write_picks(concepts_root: Path) -> Path:
+    """Rewrite $CONCEPTS/picks.json from the sessions (atomically: readers never see half a file)."""
+    path = Path(concepts_root) / PICKS_FILE
+    tmp = path.with_name(f".{PICKS_FILE}.{os.getpid()}.tmp")
+    write_json(tmp, picks(concepts_root))
+    os.replace(tmp, path)
+    return path
+
+
+def status(questions: list[dict[str, Any]], concepts_root: Path) -> list[Result]:
+    """One Result per question: none, failed (tried, no proposal), proposed, picked or stale."""
+    current = picks(concepts_root)
+    results = []
+    for q in questions:
+        session = Session(Path(concepts_root) / q["id"])
+        if not session.path(SESSION_FILE).is_file():
+            results.append(Result(q["id"], "none"))
+        elif _stale(session, q):
+            results.append(Result(q["id"], "stale", STALE))
+        elif not session.path(PROPOSAL_FILE).is_file():
+            calls = sum(1 for raw in session.run.events.read_bytes().splitlines()
+                        if json.loads(raw)["subtype"] == "ai_model_invocation")
+            results.append(Result(q["id"], "failed", f"{calls} model call(s), no valid briefs yet"))
+        elif not session.path(CONCEPT_FILE).is_file():
+            results.append(Result(q["id"], "proposed", f"{len(session.load(PROPOSAL_FILE)['briefs'])} briefs, "
+                                  "none picked"))
+        else:
+            p = current.get(q["id"], {})
+            problems = check_session(session.root)
+            n = len(session.load(PROPOSAL_FILE)["briefs"])
+            results.append(Result(q["id"], "picked", f"[{p.get('choice')}/{n}] {p.get('title')} (by "
+                                  f"{p.get('picked_by')}) sha256={str(p.get('concept_sha256'))[:12]}"
+                                  + (" CHECK FAILED" if problems else ""), problems))
+    return results
