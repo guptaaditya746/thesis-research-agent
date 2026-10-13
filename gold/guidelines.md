@@ -17,7 +17,10 @@ Each record shows:
 - the **quote**, and the **passage** around it in the paper with the quote highlighted.
 
 Judge each fact **against its quote only**. The passage is there to see what the quote refers to
-("we", "our method", "Table 2"), not as a second source. Do not use outside knowledge.
+("we", "our method", "Table 2"), not as a second source. Do not use outside knowledge. When the quote
+occurs several times in the paper, a note above the passage says so and one occurrence is marked; judge
+the quote itself. Only when the record says the quote could not be found in the paper is the fact not
+stated (incorrect).
 
 ## 1. Is the fact correct and part of the answer? (`label`)
 
@@ -64,9 +67,10 @@ subject | predicate | object | file | quote
 
 `file` is the paper's file (`p12.md`; `p12` is fine too). The `quote` is copied from that file: it must
 occur there word for word (whitespace, line breaks, dashes and quote marks may differ; a quote may not
-cut a number). The export anchors it with the same check the agent's claims pass (`agent/anchor.py`);
-a line whose quote is not found, or that is not in this format, is listed in `export.json` and **not**
-added, so check that list after exporting. The quote is the rest of the line, so it may contain `|`.
+cut a number), and only once, so copy enough of the sentence. The export anchors it with the same check
+the agent's claims pass (`agent/anchor.py`); a line whose quote is not found or occurs more than once,
+or that is not in this format, is listed in `export.json` and **not** added, so check that list after
+exporting. The quote is the rest of the line, so it may contain `|`.
 Mark **Reviewed** even when nothing is missing. This step is what keeps the gold from being only what
 the builder found.
 
