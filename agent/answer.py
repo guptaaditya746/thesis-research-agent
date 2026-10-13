@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 from typing import Any
 
 from .concept import answer_schema_for, concept_sha256, validate_answer
@@ -62,13 +63,55 @@ def accepted_claim_ids(run: RunDir) -> set[str]:
     return ids
 
 
+def _finite(text: str) -> float:
+    """json.loads reads NaN, Infinity and 1e400 (inf) as numbers; answer.json (canonical()) cannot hold them."""
+    value = float(text)
+    if not math.isfinite(value):
+        raise ValueError(f"{text} is not a finite number")
+    return value
+
+
+def _not_a_number(name: str) -> float:
+    raise ValueError(f"{name} is not a JSON number")
+
+
+def _depth(value: Any) -> int:
+    """Nesting depth of parsed JSON, without recursion."""
+    deepest, stack = 0, [(value, 1)]
+    while stack:
+        node, depth = stack.pop()
+        deepest = max(deepest, depth)
+        children = node.values() if isinstance(node, dict) else node if isinstance(node, list) else ()
+        stack += [(child, depth + 1) for child in children]
+    return deepest
+
+
+MAX_DEPTH = 32  # an answer is 7 levels deep (answer, rows, row, facts, fact, claims, id); the schema check recurses
+MAX_PROBLEM = 300  # characters: a schema message quotes the value, which may be the agent's whole draft
+
+
 def build_answer(text: str, concept: dict[str, Any], known_claims: set[str] | None = None
                  ) -> tuple[dict[str, Any] | None, list[str]]:
-    """Complete and check the agent's answer. Returns (answer, []) or (None, problems)."""
+    """Complete and check the agent's answer. Returns (answer, []) or (None, problems).
+
+    The text is the agent's (a reply, or its draft file), so nothing in it may raise: wrong types,
+    non-finite numbers (NaN, Infinity, 1e400) and deep nesting are problems like any other, an
+    answer that passes can always be written as canonical JSON, and each problem is short.
+    """
+    answer, problems = _build(text, concept, known_claims)
+    return answer, [p if len(p) <= MAX_PROBLEM else p[:MAX_PROBLEM - 3] + "..." for p in problems]
+
+
+def _build(text: str, concept: dict[str, Any], known_claims: set[str] | None
+           ) -> tuple[dict[str, Any] | None, list[str]]:
     try:
-        given = json.loads(text)
+        given = json.loads(text, parse_float=_finite, parse_constant=_not_a_number)
+    except RecursionError:
+        return None, ["the json block is nested too deeply"]
     except ValueError as exc:
         return None, [f"the json block is not valid JSON: {exc}"]
+    if _depth(given) > MAX_DEPTH:
+        return None, ["the json block is nested too deeply"]
     if not isinstance(given, dict):
         return None, ['the json block must be one object {"rows": [...], "notes": "..."}']
     # concept_sha256 and kind are the harness's to set; anything else is a mistake worth reporting.
@@ -78,7 +121,8 @@ def build_answer(text: str, concept: dict[str, Any], known_claims: set[str] | No
     if not isinstance(rows, list):
         return None, problems + ['"rows" must be a list']
     for row in rows:
-        for fact in (row.get("facts") if isinstance(row, dict) else None) or []:
+        facts = row.get("facts") if isinstance(row, dict) else None
+        for fact in facts if isinstance(facts, list) else []:  # anything else: the schema check says so
             if isinstance(fact, dict):
                 fact.setdefault("claims", [])
                 fact.setdefault("origin", "research")

@@ -219,10 +219,29 @@ def test_build_answer_completes_and_checks() -> None:
     ("[1]", "must be one object"),
     ('{"answer": 1}', "unexpected key 'answer'"),
     ('{"rows": [{"id": "r1", "cells": {}, "facts": []}]}', "rows/0"),
+    # The agent's text never makes the check raise (a reply, or the draft file the harness falls back to).
+    ('{"rows": [{"id": "r1", "facts": 3}], "notes": "n"}', "rows/0"),
+    ('{"rows": [{"id": "r1", "facts": true}, 7], "notes": "n"}', "rows/0"),
+    ('{"rows": [], "notes": NaN}', "NaN is not a JSON number"),
+    ('{"rows": [], "notes": "n", "x": -Infinity}', "-Infinity is not a JSON number"),
+    ('{"rows": [], "notes": 1e400}', "1e400 is not a finite number"),
+    ('{"rows": [], "notes": ' + "9" * 5_000 + "}", "not valid JSON"),
+    # nesting: deeper than the parser goes, and deeper than an answer but within the parser's reach
+    ('{"rows": ' + "[" * 200_000 + "]" * 200_000 + "}", "nested too deeply"),
+    ('{"rows": [{"id": "r1", "cells": ' + "[" * 500 + "]" * 500 + ', "facts": []}], "notes": "n"}',
+     "nested too deeply"),
 ])
 def test_build_answer_problems(text: str, problem: str) -> None:
     answer, problems = build_answer(text, fixture("concept_table.json"))
     assert answer is None and any(problem in p for p in problems), problems
+
+
+def test_build_answer_keeps_problems_short() -> None:
+    """A schema message quotes the value; a long one would end up in a record and in the prompt."""
+    text = json.dumps({"rows": ["x" * 100_000], "notes": "n"})
+    answer, problems = build_answer(text, fixture("concept_table.json"))
+    assert answer is None and problems and all(len(p) <= 300 for p in problems)
+    assert problems[0].startswith("rows/0: 'xxx") and problems[0].endswith("...")
 
 
 def test_empty_answer_is_valid() -> None:
