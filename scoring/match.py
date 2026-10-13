@@ -226,7 +226,7 @@ def rejected_keys(key: dict[str, Any]) -> set[tuple[Any, Any, Any]] | None:
     """Normalised keys of the facts reviewers rejected as wrong; None when the key does not list them."""
     if "rejected" not in key:
         return None
-    return {fact_norm(f) for f in key["rejected"] if f.get("verdict", "wrong") == "wrong"}
+    return {fact_norm(f) for f in key["rejected"] or [] if f.get("verdict", "wrong") == "wrong"}
 
 
 def judged_precision(correct: int, wrong: int | None, scored: int) -> dict[str, Any]:

@@ -116,8 +116,13 @@ def from_tree(runs_root: Path, corpus: Path | None, corpus_manifest: Path | None
     for d in sorted(Path(runs_root).iterdir()) if Path(runs_root).is_dir() else []:
         if d.is_dir() and not d.name.startswith(".") and d.name != REPORT_DIR and (d / "config.json").is_file():
             run = RunDir(d)
+            try:
+                condition = run.load_config().get("condition")
+            except ValueError as exc:
+                items.append(Item(d.name, None, None, None, run, "failed", f"config.json: {exc}"))
+                continue
             state, detail = run_state(run, corpus, corpus_manifest)
-            items.append(Item(d.name, None, run.load_config().get("condition"), None, run, state, detail))
+            items.append(Item(d.name, None, condition, None, run, state, detail))
     return items
 
 

@@ -96,7 +96,8 @@ def exit_status(run: RunDir, recs: list[dict[str, Any]]) -> str:
         return "error"
     for r in coverage:
         if (r.get("generated") or {}).get("reason") == "no_final_answer":
-            return str(((r["generated"].get("detail") or {}).get("exit_status")) or "no_answer")
+            detail = r["generated"].get("detail")
+            return str((detail.get("exit_status") if isinstance(detail, dict) else None) or "no_answer")
     if any((r.get("custom_metadata") or {}).get("final_answer") for r in recs
            if r.get("subtype") == "ai_model_invocation"):
         return "submitted"
