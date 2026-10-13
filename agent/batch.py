@@ -16,7 +16,8 @@ Each attempt at a key is its own run directory <runs_root>/<key>-a<N>. Per key, 
   is never resumed in place: a cut run's chain stays as it was, ends with the cut, and is kept.
 
 Runs and attach steps run sequentially as child processes (`python -m agent.cli run|attach`,
-with the manifest's budget and prompt version when it gives them), inside the job's time limit: `--deadline` (ISO time or epoch seconds), `--time-limit` (seconds from
+with the manifest's budget, prompt version and conclude decoding when it gives them), inside the
+job's time limit: `--deadline` (ISO time or epoch seconds), `--time-limit` (seconds from
 now) or $SLURM_JOB_END_TIME (epoch seconds, set by Slurm), whichever comes first. A child still
 running `--margin` seconds before the deadline gets SIGTERM (which `agent run` and `agent attach`
 turn into a clean stop: broker closed, sandboxed command killed), then SIGKILL after a grace
@@ -246,9 +247,7 @@ class Batch:
         for key in ("steps", "tokens"):
             if key in budget:
                 argv += [f"--{key}", str(budget[key])]
-        if "prompt_version" in d:
-            argv += ["--prompt-version", d["prompt_version"]]
-        return argv
+        return argv + self._loop_args()
 
     def attach_argv(self, run: RunDir) -> list[str]:
         budget = self.manifest.data.get("attach_budget", {})
@@ -258,7 +257,16 @@ class Batch:
         for key in ("steps", "tokens"):
             if key in budget:
                 argv += [f"--{key}-per-fact", str(budget[key])]
-        return argv
+        return argv + self._loop_args()
+
+    def _loop_args(self) -> list[str]:
+        """Prompt version and conclude decoding, for the run and its attach step alike (rows 1.13)."""
+        d, out = self.manifest.data, []
+        if "prompt_version" in d:
+            out += ["--prompt-version", d["prompt_version"]]
+        if "conclude_decoding" in d:  # e.g. guided_json if the cluster's vLLM predates structured_outputs
+            out += ["--conclude-decoding", d["conclude_decoding"]]
+        return out
 
     def _child(self, argv: list[str]) -> tuple[int | None, str]:
         """Run one child; (exit code, "") or (None, why it was stopped)."""

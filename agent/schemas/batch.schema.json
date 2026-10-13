@@ -35,7 +35,9 @@
       "properties": {"steps": {"type": "integer", "minimum": 1}, "tokens": {"type": "integer", "minimum": 1}}
     },
     "prompt_version": {"type": "string", "pattern": "^v[0-9]+$",
-                       "description": "agent/prompts/system-<version>.txt for every run (default: agent run's)"},
+                       "description": "agent/prompts/system-<version>.txt (and attach-<version>.txt) for every run (default: agent run's)"},
+    "conclude_decoding": {"enum": ["structured_outputs", "guided_json", "free"],
+                          "description": "how conclude replies are decoded, in runs and attach steps (default: the prompt version's)"},
     "attach_budget": {
       "type": "object", "additionalProperties": false,
       "description": "the attach step's budget per fact (row 2.5)",

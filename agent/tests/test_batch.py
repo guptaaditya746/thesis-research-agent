@@ -66,6 +66,28 @@ def test_sample_manifest_budget_and_prompt(tmp_path: Path) -> None:
         Manifest.load(tmp_path / "m.json")
 
 
+def test_manifest_prompt_and_decoding_reach_run_and_attach(tmp_path: Path) -> None:
+    """The attach step gets the run's prompt version; the conclude decoding can be switched from the manifest
+    (e.g. guided_json if the cluster's vLLM predates structured_outputs) without a code change."""
+    data = json.loads(SAMPLE.read_text(encoding="utf-8")) | {"conclude_decoding": "guided_json"}
+    (tmp_path / "m.json").write_text(json.dumps(data), encoding="utf-8")
+    batch = Batch(Manifest.load(tmp_path / "m.json"), deadline=None, corpus=tmp_path)
+    run_argv = batch.run_argv(batch.manifest.plan()[0], "x")
+    attach_argv = batch.attach_argv(RunDir(tmp_path / "runs" / "x"))
+    for argv in (run_argv, attach_argv):
+        assert argv[argv.index("--prompt-version") + 1] == "v2"
+        assert argv[argv.index("--conclude-decoding") + 1] == "guided_json"
+    assert "attach" in attach_argv and "--steps-per-fact" in attach_argv
+    for bad in ("regex", 3):
+        (tmp_path / "m.json").write_text(json.dumps(data | {"conclude_decoding": bad}), encoding="utf-8")
+        with pytest.raises(ValueError, match="conclude_decoding"):
+            Manifest.load(tmp_path / "m.json")
+    del data["conclude_decoding"]
+    (tmp_path / "m.json").write_text(json.dumps(data), encoding="utf-8")
+    assert "--conclude-decoding" not in Batch(Manifest.load(tmp_path / "m.json"), deadline=None,
+                                              corpus=tmp_path).run_argv(batch.manifest.plan()[0], "x")
+
+
 def test_manifest_problems(tmp_path: Path) -> None:
     data = json.loads(SAMPLE.read_text(encoding="utf-8"))
     for change, problem in [({"repeats": 0}, "repeats"), ({"conditions": ["claim_maybe"]}, "conditions"),
