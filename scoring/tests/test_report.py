@@ -1,5 +1,6 @@
 """scoring/report.py: per-question means, paired differences, BCa intervals and the primary test,
-against numbers computed by hand (and scipy called directly with the same seed)."""
+against numbers computed by hand (and scipy called directly with the same seed); pending verdicts,
+coverage, settings and inputs that must show in the report."""
 from __future__ import annotations
 
 import json
@@ -23,19 +24,39 @@ SHARES = {
 }
 ON = np.array([0.7, 0.9, 0.5, 0.5, 0.8, 0.6])
 OFF = np.array([0.4, 0.4, 0.25, 0.15, 0.2, 0.5])
+SETTINGS = {"budget": {"steps": 60, "tokens": 2000000}, "temperature": 0.7, "prompt_version": "v2",
+            "prompt_sha256": "p" * 64, "model": "Qwen/Qwen3.8-27B-FP8@017b9c7", "corpus_manifest_sha256": "m" * 64,
+            "git_commit": "c" * 40}
 
 
 def score(qid: str, condition: str, repeat: int, share: float | None, *, attempt: int = 1, exit_status: str = "submitted",
-          provisional: bool = False, f1: float = 0.5) -> dict[str, Any]:
+          provisional: bool = False, f1: float = 0.5, pending: int = 0, soft_pending: int = 0,
+          verify_ok: bool | None = True, **settings: Any) -> dict[str, Any]:
+    """A score.json as run_score writes it (the fields the report reads). claim_off's other partial mapping
+    adds 0.1 to its share; claim_on's first-claim share is 0.2 lower."""
     on = condition == "claim_on"
     facts = 0 if share is None else 4
+    known = share is not None and not pending
     return {
-        "run_id": f"{qid}-{condition}-r{repeat}-a{attempt}", "qid": qid, "condition": condition, "repeat": repeat,
-        "attempt": attempt, "seed": 1000 + repeat, "exit_status": exit_status, "provisional": provisional,
+        "schema_version": 2, "run_id": f"{qid}-{condition}-r{repeat}-a{attempt}", "qid": qid, "condition": condition,
+        "repeat": repeat, "attempt": attempt, "seed": 1000 + repeat, "exit_status": exit_status,
+        "answer_from": "final" if facts else "none", "provisional": provisional, "verify_ok": verify_ok,
+        "key_problems": [], "key_sha256": f"key-{qid}", "scorer": {"version": 2, "git_commit": "s" * 40},
         "rows": {"tp": 1, "fp": 1, "fn": 1, "precision": 0.5, "recall": 0.5, "f1": f1},
+        "rows_by_level": {"normalised": {"f1": f1}},
         "facts": {level: {"precision": f1, "recall": f1, "f1": f1} for level in ("strict", "normalised", "soft")},
         "vital_recall": 1.0, "judged_precision": {"precision": None},
-        "support": {"facts": facts, "support_share": share, "unsourced_share": 0.0 if on else 0.25},
+        "support": {"facts": facts, "pending": pending, "partial_counts_as": "no", "context": "calibrated",
+                    "support_share": share if known else None,
+                    "support_share_partial_no": share if known else None,
+                    "support_share_partial_yes": (share if on else share + 0.1) if known else None,
+                    "support_share_first_claim": (share - 0.2 if on else share) if known else None,
+                    "claims_per_fact": (2.0 if on else 1.0) if facts else None,
+                    "unsourced_share": 0.0 if on else 0.25},
+        "pending": {"support": pending, "same_fact": soft_pending, "same_row": 0},
+        "judge": {"used": True, "identity": {"name": "gold.judge", "model": "judge-model", "prompts": {"support": "h"}},
+                  "models": ["judge-model"], "prompt_sha256": ["h" * 64]},
+        "run_settings": SETTINGS | settings,
         "cost": {"tokens": 1000 if on else 1500, "tokens_without_attach": 1000 if on else 1200,
                  "seconds": 60.0 if on else 90.0, "seconds_without_attach": 60.0 if on else 70.0},
     }
@@ -47,7 +68,7 @@ def write_scores(root: Path, scores: list[dict[str, Any]]) -> Path:
     return root
 
 
-def sample(**changes: Any) -> list[dict[str, Any]]:
+def sample() -> list[dict[str, Any]]:
     out = []
     for qid, (on, off) in SHARES.items():
         for r in (1, 2):
@@ -58,11 +79,18 @@ def sample(**changes: Any) -> list[dict[str, Any]]:
     return out
 
 
+def md_row(md: str, first: str) -> list[str]:
+    """The cells of the Markdown table row that starts with `first`."""
+    line = next(line for line in md.splitlines() if line.startswith(f"| {first} "))
+    return [cell.strip() for cell in line.strip("|").split("|")]
+
+
 def test_report_numbers_against_hand_computed(tmp_path: Path) -> None:
     report = build(write_scores(tmp_path, sample()))["report"]
     per_q = {(r["qid"], r["condition"]): r for r in report["per_question"]}
     assert per_q[("q04", "claim_on")]["support_share"] == pytest.approx(0.5) and per_q[("q04", "claim_on")]["runs"] == 2
     assert per_q[("q07", "claim_off")]["support_share"] is None  # no answer facts in either repeat
+    assert (per_q[("q07", "claim_off")]["answered"], per_q[("q07", "claim_off")]["primary_runs"]) == (0, 0)
     assert [r["qid"] for r in report["paired"]] == [f"q0{n}" for n in range(1, 8)]
     q01 = next(r for r in report["paired"] if r["qid"] == "q01")["support_share"]
     assert (q01["claim_on"], q01["claim_off"], q01["difference"]) == pytest.approx((0.7, 0.4, 0.3))
@@ -70,6 +98,8 @@ def test_report_numbers_against_hand_computed(tmp_path: Path) -> None:
     summary = report["summary"]["support_share"]
     assert summary["claim_on"]["mean"] == pytest.approx((ON.sum() + 0.5) / 7) and summary["claim_on"]["n"] == 7
     assert summary["claim_off"]["mean"] == pytest.approx(OFF.mean()) and summary["claim_off"]["n"] == 6
+    assert (summary["claim_on"]["runs"], summary["claim_off"]["runs"], summary["claim_off"]["runs_without_value"]) == (
+        14, 12, 2)
     assert summary["difference"]["mean"] == pytest.approx(0.35) and summary["difference"]["n"] == 6
     # BCa over questions, paired: the same numbers scipy gives for the same data and seed.
     direct = stats.bootstrap((ON, OFF), lambda a, b, axis: np.mean(a - b, axis=axis), paired=True,
@@ -85,15 +115,78 @@ def test_report_numbers_against_hand_computed(tmp_path: Path) -> None:
     # Sensitivity: q07's claim_off runs had no facts; counted as 0 they pair q07 with difference 0.5.
     s = p["sensitivity_empty_as_zero"]
     assert s["n_pairs"] == 7 and s["mean_difference"] == pytest.approx((2.1 + 0.5) / 7)
+    # The other partial mapping adds 0.1 to claim_off; the first claim alone takes 0.2 off claim_on.
+    assert p["sensitivity_other_mapping"]["mean_difference"] == pytest.approx(0.25)
+    assert p["sensitivity_first_claim"]["mean_difference"] == pytest.approx(0.15)
+    assert p["sensitivity_first_claim"]["computed"] and p["sensitivity_first_claim"]["n_pairs"] == 6
 
     tokens = report["summary"]["tokens"]["difference"]
     assert (tokens["mean"], tokens["low"], tokens["high"], tokens["method"]) == (-500.0, -500.0, -500.0,
                                                                                  "degenerate (all equal)")
     assert report["summary"]["tokens_without_attach"]["difference"]["mean"] == -200.0
     assert report["summary"]["seconds_without_attach"]["claim_off"]["mean"] == 70.0
+    assert report["summary"]["claims_per_fact"]["difference"]["mean"] == 1.0
     assert report["runs"]["scored"] == 28  # the earlier attempt is dropped
     assert report["runs"]["by_exit_status"] == {"claim_off": {"budget": 1, "submitted": 13}, "claim_on": {"submitted": 14}}
+    assert report["runs"]["by_answer_from"] == {"claim_off": {"final": 12, "none": 2}, "claim_on": {"final": 14}}
+    assert report["coverage"]["claim_off"] == {"scored": 14, "answered": 12, "answered_share": 12 / 14, "not_scored": 0}
     assert report["provisional"] is False and report["secondary"][0] == "fact_precision"
+    assert report["complete"] is True and report["completeness"]["settings_differ"] == {}
+    inputs = report["inputs"]
+    assert len(inputs["scores_sha256"]) == 64 and inputs["batch_sha256"] is None
+    assert inputs["keys"]["q01"] == ["key-q01"] and inputs["scorer_commits"] == ["s" * 40]
+    assert inputs["judge"]["models"] == ["judge-model"] and inputs["judge"]["prompt_sha256"] == ["h" * 64]
+
+
+def test_pending_verdicts_block_the_primary_test_and_show(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A run whose verdicts are pending is never averaged away silently."""
+    scores = sample()
+    scores[2] = score("q01", "claim_on", 2, 0.6, pending=2)  # q01 claim_on r2: judge failed on two quotes
+    root = write_scores(tmp_path, scores)
+    report = build(root)["report"]
+    per_q = {(r["qid"], r["condition"]): r for r in report["per_question"]}
+    q01 = per_q[("q01", "claim_on")]
+    assert (q01["runs"], q01["primary_runs"], q01["pending_runs"], q01["support_share"]) == (2, 1, 1, 0.8)
+    p = report["primary"]
+    assert not p["computed"] and p["p_value"] is None and "1 scored run has pending judge verdicts" in p["reason"]
+    assert "q01-claim_on-r2-a1" in p["reason"]
+    assert not p["sensitivity_empty_as_zero"]["computed"] and not p["sensitivity_first_claim"]["computed"]
+    assert report["complete"] is False and report["completeness"]["pending_support_runs"] == ["q01-claim_on-r2-a1"]
+    assert cli(["report", str(root)]) == 0
+    out = capsys.readouterr().out
+    assert "primary: not computed (1 scored run has pending judge verdicts" in out and "INCOMPLETE" in out
+    md = (root / "report" / "report.md").read_text(encoding="utf-8")
+    assert "**INCOMPLETE: 1 runs have pending judge verdicts (q01-claim_on-r2-a1)" in md
+    assert md_row(md, "q01")[1:3] == ["2/2", "1/2"]  # runs, and runs in the primary
+
+
+def test_soft_outcomes_with_pending_decisions_are_left_out(tmp_path: Path) -> None:
+    scores = sample()
+    scores[0] = score("q01", "claim_on", 1, 0.8, f1=0.9, soft_pending=3)  # unjudged soft level: a lower bound
+    report = build(write_scores(tmp_path, scores))["report"]
+    per_q = {(r["qid"], r["condition"]): r for r in report["per_question"]}
+    assert per_q[("q01", "claim_on")]["fact_f1"] == 0.5  # only r2's complete number
+    assert per_q[("q01", "claim_on")]["fact_f1_normalised"] == pytest.approx(0.7)  # needs no judge
+    assert report["summary"]["fact_f1"]["claim_on"]["runs"] == 13
+    assert report["summary"]["fact_f1"]["claim_on"]["runs_without_value"] == 1
+    assert report["primary"]["computed"]  # the support share is complete
+    assert report["completeness"]["pending_soft_runs"] == ["q01-claim_on-r1-a1"] and report["complete"] is False
+
+
+def test_unverified_runs_key_problems_and_differing_settings_are_flagged(tmp_path: Path) -> None:
+    scores = sample()
+    scores[0] = score("q01", "claim_on", 1, 0.8, verify_ok=None, budget={"steps": 150, "tokens": 400000})
+    scores[1]["key_problems"] = ["rows/0: 'facts' is a required property"]
+    scores[3]["verify_ok"] = False
+    root = write_scores(tmp_path, scores)
+    report = write(root)
+    c = report["completeness"]
+    assert (c["unverified_runs"], c["verify_failed_runs"], c["key_problem_runs"]) == (
+        ["q01-claim_on-r1-a1"], ["q01-claim_off-r2-a1"], ["q01-claim_off-r1-a1"])
+    assert list(c["settings_differ"]) == ["budget"] and sum(c["settings_differ"]["budget"].values()) == 28
+    md = (root / "report" / "report.md").read_text(encoding="utf-8")
+    assert "**UNVERIFIED: 1 runs were scored without `agent verify` (no corpus) and 1 failed it.**" in md
+    assert "**KEY PROBLEMS: 1 runs" in md and "**SETTINGS DIFFER between runs: budget**" in md
 
 
 def test_wilcoxon_on_a_known_example() -> None:
@@ -106,6 +199,8 @@ def test_wilcoxon_on_a_known_example() -> None:
     assert zeros["computed"] and zeros["p_value"] == 1.0 and zeros["n_nonzero"] == 0
     # Equal means computed in another order differ by rounding error only: still a zero difference.
     assert wilcoxon_test(np.array([1e-17, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]))["n_nonzero"] == 6
+    blocked = wilcoxon_test(d, blocked="verdicts pending")
+    assert not blocked["computed"] and blocked["reason"] == "verdicts pending" and blocked["n_pairs"] == 15
 
 
 def test_fewer_than_six_pairs_is_not_computed(tmp_path: Path) -> None:
@@ -135,13 +230,17 @@ def test_provisional_report_and_files(tmp_path: Path, capsys: pytest.CaptureFixt
     assert cli(["report", str(root)]) == 0
     out = capsys.readouterr().out
     assert "primary: support share claim_on - claim_off = 0.350 over 6 questions, Wilcoxon p = 0.03125" in out
-    assert "PROVISIONAL" in out
+    assert "PROVISIONAL" in out and "INCOMPLETE" not in out
     report = json.loads((root / "report" / "report.json").read_text(encoding="utf-8"))
     assert report["provisional"] is True and report["provisional_questions"] == ["q01"]
+    assert len(report["inputs"]["batch_sha256"]) == 64
     md = (root / "report" / "report.md").read_text(encoding="utf-8")
-    assert "**PROVISIONAL" in md and "## Primary outcome (pre-registered)" in md
+    assert md.splitlines()[2].startswith("**PROVISIONAL") and "## Primary outcome (pre-registered)" in md
     assert "| Support share (judge) " in md and "0.350 [" in md and "p = 0.03125 (significant" in md
-    assert "| q04        | 2/2           | 0.500        | 0.150         | 0.350" in md  # per question, formatted
+    assert md_row(md, "q04")[:6] == ["q04", "2/2", "2/2", "0.500", "0.150", "0.350"]  # per question, formatted
+    assert "Coverage (scored runs with answer facts, the runs the primary rests on): claim_on 14/14 (100%); " \
+           "claim_off 12/14 (86%), 1 planned runs not scored." in md
+    assert "- `partial` under the other mapping than the calibrated one: mean difference 0.250" in md
     assert report["runs"]["batch"] == {"items": 3, "scored": 2, "not_scored": {"claim_off": {"cut": 1}}}
     assert "## Planned runs not scored" in md
     for name in ("per_run", "per_question", "paired", "summary", "exit_status"):
@@ -156,4 +255,4 @@ def test_missing_scores(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> N
     assert cli(["report", str(tmp_path)]) == 1
     assert "run `score batch" in capsys.readouterr().out
     report = write(write_scores(tmp_path, []))
-    assert report["runs"]["scored"] == 0 and not report["primary"]["computed"]
+    assert report["runs"]["scored"] == 0 and not report["primary"]["computed"] and report["complete"] is True
