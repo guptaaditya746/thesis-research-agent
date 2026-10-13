@@ -46,15 +46,23 @@ default with their budget (budget_for).
 A run that ends without a valid answer or a usable draft still gets an answer.json with no rows
 and the reason in `notes`, plus a `coverage` record (`no_final_answer`, with why the draft was not
 taken), so every run directory is complete.
+
+Subagents (row 2.12, agent/spawn.py; `spawn` off unless asked for): the same ResearchAgent runs
+them, with hooks for another agent id, its record metadata and its result; the agent's commands
+get a SPAWN_FD channel and, when they call spawn, a longer time limit (SandboxEnvironment);
+step ids come from one StepCounter per run, so they stay unique while subagents run.
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
+import re
 import socket
 import stat
 import sys
 import tempfile
+import threading
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -179,7 +187,8 @@ class Broker(Protocol):
     """BrokerProcess or InProcessBroker (agent/broker_client.py)."""
 
     def record(self, record: dict[str, Any]) -> dict[str, Any]: ...
-    def claim_channel(self, step_id: int, agent_id: str = "main", origin: str = "research") -> Any: ...
+    def claim_channel(self, step_id: int, agent_id: str = "main", origin: str = "research",
+                      source_agent_id: str | None = None, spawned_by_step: int | None = None) -> Any: ...
     def head(self) -> dict[str, Any]: ...
     def close(self, timeout: float = 60) -> dict[str, Any]: ...
 
@@ -242,13 +251,17 @@ class OrchestratorModel(LitellmTextbasedModel):
     def __init__(self, *, base_url: str = DEFAULT_BASE_URL, temperature: float, seed: int,
                  alias: str = ORCHESTRATOR["alias"], max_tokens: int = ORCHESTRATOR["max_tokens"],
                  thinking: bool = ORCHESTRATOR["thinking"], timeout_s: float = 600,
-                 api_key_env: str = "LITELLM_MASTER_KEY") -> None:
+                 api_key_env: str = "LITELLM_MASTER_KEY", name: str = ORCHESTRATOR["name"],
+                 revision: str = ORCHESTRATOR["revision"], context_tokens: int = ORCHESTRATOR["context_tokens"]) -> None:
+        # name, revision and context_tokens default to the orchestrator's; a subagent (row 2.12,
+        # agent/spawn.py) passes a sub-model's from rundir.SUBAGENTS.
         super().__init__(model_name=f"openai/{alias}", cost_tracking="ignore_errors", model_kwargs={
             "api_base": base_url, "temperature": temperature, "seed": seed, "max_tokens": max_tokens,
             "timeout": timeout_s, "extra_body": {"chat_template_kwargs": {"enable_thinking": thinking}}})
         self.base_url = base_url
         self.api_key_env = api_key_env
-        self.settings = {"model": alias, "model_name": ORCHESTRATOR["name"], "revision": ORCHESTRATOR["revision"],
+        self.context_tokens = int(context_tokens)
+        self.settings = {"model": alias, "model_name": name, "revision": revision,
                          "temperature": temperature, "seed": seed, "max_tokens": max_tokens, "thinking": thinking}
 
     def _query(self, messages: list[dict[str, Any]], **kwargs: Any) -> Any:
@@ -307,12 +320,25 @@ class OrchestratorModel(LitellmTextbasedModel):
 
 # --- sandbox environment ---------------------------------------------------------------------------
 
+SPAWN_WORD = re.compile(r"(?<![\w./-])spawn(?![\w.-])")  # `spawn --task ...`, not respawn, spawned or spawn.py
+
+
 class SandboxEnvironment:
-    """Runs one agent command per step through agent/sandbox.py (mini's Environment protocol)."""
+    """Runs one agent command per step through agent/sandbox.py (mini's Environment protocol).
+
+    Subagents (row 2.12, agent/spawn.py) use the same class: `agent_id` and `channel_meta`
+    (source_agent_id, spawned_by_step) tag their claim channels, `scratch` is their own working
+    directory and `cancel` stops their running command when they are cancelled. The parent's
+    environment gets `spawn` (a SpawnService): each command then also gets a SPAWN_FD channel,
+    and a command that calls spawn the service's longer time limit (`timeout_for`), so the
+    parent's 120 s never kills a running subagent.
+    """
 
     def __init__(self, run: RunDir, *, corpus: Path, mode: str, claim: bool, agent_root: Path | None = None,
                  limits: dict[str, int] | None = None, extra_path: tuple[str, ...] = (),
-                 python: str = sys.executable, origin: str = "research") -> None:
+                 python: str = sys.executable, origin: str = "research", agent_id: str = "main",
+                 channel_meta: dict[str, Any] | None = None, scratch: Path | None = None, spawn: Any = None,
+                 cancel: threading.Event | None = None) -> None:
         if mode not in sandbox.MODES:
             raise ValueError(f"sandbox mode must be one of {sandbox.MODES}")
         self.run = run
@@ -324,18 +350,27 @@ class SandboxEnvironment:
         self.extra_path = tuple(extra_path)
         self.python = python
         self.origin = origin  # the claim channel's origin: research, or attach for the attach step (2.5)
-        self.config = {"mode": mode, "claim": claim}
+        self.agent_id = agent_id
+        self.channel_meta = dict(channel_meta or {})
+        self.scratch = Path(scratch) if scratch else run.scratch
+        self.spawn = spawn
+        self.cancel = cancel
+        self.last_spawned: list[str] = []  # subagents the last command started (row 2.12)
+        self.config = {"mode": mode, "claim": claim} | ({"spawn": True} if spawn else {})
 
     def path(self) -> str:
-        dirs = [str(AGENT_DIR / "bin")] if self.claim else []
+        if self.claim:  # bin/claim, and bin/spawn, which refuses without SPAWN_FD
+            dirs = [str(AGENT_DIR / "bin")]
+        else:  # the baseline (2.4) has no claim command, with or without spawn
+            dirs = [str(AGENT_DIR / "bin" / "spawn-only")] if self.spawn else []
         if self.agent_root:
             dirs += [str(self.agent_root / "bin"), str(self.agent_root / "agent-venv" / "bin")]
         return ":".join([*dirs, *self.extra_path, "/usr/local/bin", "/usr/bin", "/bin"])
 
     def readonly(self) -> list[str]:
         paths = [*SYSTEM_DIRS, str(self.corpus), str(self.run.out.resolve()), *self.extra_path]
-        if self.claim:
-            paths.append(str(AGENT_DIR))  # bin/claim and claim_client.py
+        if self.claim or self.spawn:
+            paths.append(str(AGENT_DIR))  # bin/claim, bin/spawn and their clients
         if self.agent_root:
             paths.append(str(self.agent_root))
             venv_python = self.agent_root / "agent-venv" / "bin" / "python"
@@ -343,37 +378,63 @@ class SandboxEnvironment:
                 paths.append(str(Path(os.path.realpath(venv_python)).parent.parent))
         return [p for p in dict.fromkeys(paths) if os.path.exists(p)]
 
-    def argv(self, command: str) -> list[str]:
-        scratch = str(self.run.scratch.resolve())
+    def timeout_for(self, command: str) -> int:
+        """The command's time limit: the spawn service's (1,800 s) for a command that calls spawn, else 120 s."""
+        if self.spawn is not None and SPAWN_WORD.search(command):
+            return int(self.spawn.settings.command_timeout_s)
+        return int(self.limits["timeout_s"])
+
+    def argv(self, command: str, timeout_s: int | None = None) -> list[str]:
+        scratch = str(self.scratch.resolve())
+        timeout = self.limits["timeout_s"] if timeout_s is None else timeout_s
         argv = [self.python, "-I", str(AGENT_DIR / "sandbox.py"), "--mode", self.mode, "--workdir", scratch,
-                "--timeout", str(self.limits["timeout_s"]), "--ulimit-v-kib", str(self.limits["ulimit_v_kib"])]
+                "--timeout", str(timeout), "--ulimit-v-kib", str(self.limits["ulimit_v_kib"])]
         if self.mode == "landlock":
             for path in self.readonly():
                 argv += ["--readonly", path]
             argv += ["--writable", scratch, "--writefile", "/dev/null"]
         return [*argv, "--", command]
 
-    def environment(self, claim_fd: int | None) -> dict[str, str]:
-        scratch = str(self.run.scratch.resolve())
+    def environment(self, claim_fd: int | None, spawn_fd: int | None = None) -> dict[str, str]:
+        scratch = str(self.scratch.resolve())
         env = {"PATH": self.path(), "CORPUS": str(self.corpus), "HOME": scratch, "TMPDIR": scratch,
                "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
         if claim_fd is not None:
             env["CLAIM_FD"] = str(claim_fd)
+        if spawn_fd is not None:
+            env["SPAWN_FD"] = str(spawn_fd)
         return env
 
     def execute(self, action: dict[str, Any], cwd: str = "", *, step_id: int,
-                broker: Broker | None = None) -> sandbox.Result:
-        """Run `action["command"]`; with a broker and claim on, the command gets CLAIM_FD for this step."""
+                broker: Broker | None = None, parent_task_id: str | None = None) -> sandbox.Result:
+        """Run `action["command"]`; with a broker and claim on, the command gets CLAIM_FD for this step.
+
+        With spawn on it also gets SPAWN_FD; when the command has ended, subagents it started and
+        left running (no `wait`, or the time limit) are cancelled, and `last_spawned` names those
+        it started. `parent_task_id` (the model call that asked for the command) is what their
+        spawn records point to.
+        """
         stopping.check()
-        sock =broker.claim_channel(step_id, agent_id="main", origin=self.origin) if broker and self.claim else None
+        command = action["command"]
+        timeout = self.timeout_for(command)
+        sock = (broker.claim_channel(step_id, agent_id=self.agent_id, origin=self.origin, **self.channel_meta)
+                if broker and self.claim else None)
+        spawns = self.spawn.channel(step_id, parent_task_id) if self.spawn is not None else None
+        socks = [s for s in (sock, spawns.sandbox_end if spawns else None) if s is not None]
+        self.last_spawned = []
+
+        def close_ours() -> None:  # the sandbox now holds the only copies
+            for s in socks:
+                s.close()
         try:
-            fds = (sock.fileno(),) if sock else ()
-            return sandbox.run_command(self.argv(action["command"]), env=self.environment(fds[0] if fds else None),
-                                       cwd=str(self.run.scratch.resolve()), timeout_s=self.limits["timeout_s"],
-                                       pass_fds=fds, before_wait=sock.close if sock else None)
+            env = self.environment(sock.fileno() if sock else None, spawns.sandbox_end.fileno() if spawns else None)
+            return sandbox.run_command(self.argv(command, timeout), env=env, cwd=str(self.scratch.resolve()),
+                                       timeout_s=timeout, pass_fds=tuple(s.fileno() for s in socks),
+                                       before_wait=close_ours, cancel=self.cancel.is_set if self.cancel else None)
         finally:
-            if sock:
-                sock.close()  # no-op after before_wait; closes it if Popen failed
+            close_ours()  # no-op after before_wait; closes them if Popen failed
+            if spawns:
+                self.last_spawned = spawns.finish()
 
     def get_template_vars(self, **kwargs: Any) -> dict[str, Any]:
         return {}
@@ -393,23 +454,72 @@ class Outcome:
     tokens: int
     answer_rows: int
     answer_from: str = "none"  # final (the agent's answer), draft (its draft file) or none (no rows)
+    # Row 2.12: subagents started and their tokens. steps, model_calls and tokens above are the
+    # agent's own (its budget); the run's total is tokens + subagent_tokens (agent verify).
+    subagents: int = 0
+    subagent_tokens: int = 0
 
 
 PLAN_SHARE = 0.75  # prompt v2: finish research by this share of the budget
 
 
+class StepCounter:
+    """Step ids of one run, shared by the agent and its subagents (row 2.12), so a step id names one step.
+
+    A step is one model reply of one agent; with no subagents the ids are the agent's model
+    calls 1, 2, 3, ... as before. While a spawn command runs, its subagents take the next ids, so
+    out/step-NNNN.txt, (agent, step) and step alone all stay unique in the run.
+    """
+
+    def __init__(self, last: int = 0) -> None:
+        self.last = last
+        self._lock = threading.Lock()
+
+    def __call__(self) -> int:
+        with self._lock:
+            self.last += 1
+            return self.last
+
+
+def claim_records(run: RunDir) -> list[dict[str, Any]]:
+    """The run's claim records so far. Another agent may be claiming right now (row 2.12): a last
+    line without its newline is still being written, and is left out."""
+    return [json.loads(raw) for raw in run.claims.read_bytes().split(b"\n")[:-1]]
+
+
+def claims_sent(run: RunDir, agent_id: str, step: int) -> int:
+    """Claim records (accepted or not) of one agent's step: subagents claim while the parent's spawn command runs."""
+    return sum(r["agent_id"] == agent_id and r["step_id"] == step for r in claim_records(run))
+
+
 class ResearchAgent(DefaultAgent):
-    """mini-swe-agent's DefaultAgent with records, sandboxed commands, budgets and a final answer."""
+    """mini-swe-agent's DefaultAgent with records, sandboxed commands, budgets and a final answer.
+
+    Row 2.12: a subagent (agent/spawn.py SubAgent) is this class with another `agent_id`,
+    `record_meta` (spawned_by_step) on every record, `parent_task_id` on its first model call
+    (the parent's spawn record), its own `trajectory` file and step ids from the run's
+    `next_step` counter; it overrides the answer hooks (_check_answer, _submit, reply_shape).
+    """
+
+    reply_shape = '{"rows": [...], "notes": "..."}'  # the answer object, as the conclude notice names it
 
     def __init__(self, model: OrchestratorModel, env: SandboxEnvironment, *, broker: Broker, run: RunDir,
                  concept: dict[str, Any], prompt: Prompt, budget: dict[str, Any],
-                 settings: LoopSettings | None = None) -> None:
+                 settings: LoopSettings | None = None, agent_id: str = "main", source_agent_id: str | None = None,
+                 record_meta: dict[str, Any] | None = None, parent_task_id: str | None = None,
+                 next_step: Callable[[], int] | None = None, trajectory: Path | None = None) -> None:
         super().__init__(model, env, system_template=prompt.system, instance_template=prompt.task,
                          step_limit=0, cost_limit=0.0, max_consecutive_format_errors=0,
-                         output_path=run.root / "trajectory.json")
+                         output_path=trajectory or run.root / "trajectory.json")
         self.broker = broker
         self.run_dir = run
         self.concept = concept
+        self.agent_id = agent_id
+        self.source_agent_id = source_agent_id
+        self.record_meta = dict(record_meta or {})
+        self.pending_parent = parent_task_id  # the first model call's parent_task_id
+        self.next_step = next_step or StepCounter()
+        self.step_id = 0  # the current step id (DefaultAgent.step is a method)
         self.budget = {"steps": int(budget["steps"]), "tokens": int(budget["tokens"])}
         self.settings = settings or settings_for(prompt.version)  # as research_run resolves it
         self.cap = int(env.limits["output_cap_bytes"])
@@ -441,8 +551,12 @@ class ResearchAgent(DefaultAgent):
 
     def _record(self, record: dict[str, Any]) -> dict[str, Any]:
         # origin "research" marks the research loop; the baseline's attach step (2.5) writes "attach".
-        meta = {"origin": "research", **record.get("custom_metadata", {})}
-        return self.broker.record({"agent_id": "main", **record, "custom_metadata": meta})
+        meta = {"origin": "research", **self.record_meta, **record.get("custom_metadata", {})}
+        if self.pending_parent and record["subtype"] == "ai_model_invocation":  # a subagent's first call
+            record = {"parent_task_id": self.pending_parent, **record}
+            self.pending_parent = None
+        return self.broker.record({"agent_id": self.agent_id, "source_agent_id": self.source_agent_id, **record,
+                                   "custom_metadata": meta})
 
     def _record_call(self, step: int, call: dict[str, Any], parsed: dict[str, Any], final_answer: bool,
                      masked: int) -> str:
@@ -513,8 +627,7 @@ class ResearchAgent(DefaultAgent):
         if self.conclude_decoding == "free":
             ask = " Reply now with your reasoning and the final answer in EXACTLY ONE fenced json block; no further commands run."
         else:  # decoded under the reply schema: the reply can only be the answer object
-            ask = (' Reply now with the final answer alone, as one JSON object {"rows": [...], "notes": "..."}; '
-                   "no further commands run.")
+            ask = f" Reply now with the final answer alone, as one JSON object {self.reply_shape}; no further commands run."
         return {"role": "user", "content": text + ask + self._draft_shown(),
                 "extra": {"kind": "conclude", "reason": reason}}
 
@@ -631,7 +744,7 @@ class ResearchAgent(DefaultAgent):
             return None
         usual = int(self.model.settings["max_tokens"])
         added = sum(len(m.get("content") or "") for m in self.messages[self.last_call_messages + 1:]) // 3
-        room = (int(ORCHESTRATOR["context_tokens"]) - self.last_prompt_tokens - self.last_completion_tokens
+        room = (self.model.context_tokens - self.last_prompt_tokens - self.last_completion_tokens
                 - added - CONTEXT_MARGIN)
         return max(usual, min(want, room))
 
@@ -651,7 +764,7 @@ class ResearchAgent(DefaultAgent):
         if self.phase == "conclude" and self.conclude_used >= self.settings.conclude_replies:
             raise LimitsExceeded(self._exit(self.conclude_reason))
         self.n_calls += 1
-        step = self.n_calls
+        step = self.step_id = self.next_step()  # = n_calls unless subagents share the counter (row 2.12)
         if self.phase == "research":
             self.research_steps += 1
         else:
@@ -675,15 +788,23 @@ class ResearchAgent(DefaultAgent):
         self.last_call_messages = call["messages"]
         # A final answer is checked before its model call is recorded, so the record can say
         # whether this reply is the one that became answer.json.
-        self._checked = (build_answer(parsed["answer"], self.concept, accepted_claim_ids(self.run_dir))
-                         if parsed["kind"] == "answer" else (None, []))
+        self._checked = self._check_answer(parsed["answer"]) if parsed["kind"] == "answer" else (None, [])
         self.model_task_id = self._record_call(step, call, parsed, final_answer=self._checked[0] is not None,
                                                masked=masked)
         self.add_messages(message)
         return message
 
+    def _check_answer(self, text: str) -> tuple[dict[str, Any] | None, list[str]]:
+        """(answer, []) or (None, problems) for the agent's json block; a subagent checks its own result."""
+        return build_answer(text, self.concept, accepted_claim_ids(self.run_dir))
+
+    def _submit(self, answer: dict[str, Any]) -> None:
+        """Keep the checked answer: answer.json for the agent; a subagent's result goes to its parent."""
+        write_json(self.run_dir.answer, answer)
+        self.answer, self.answer_from = answer, "final"
+
     def execute_actions(self, message: dict[str, Any]) -> list[dict[str, Any]]:
-        step = self.n_calls
+        step = self.step_id
         parsed = Parsed(**message["extra"]["parsed"])
         content = message.get("content") or ""
         if parsed.kind == "none":
@@ -693,8 +814,7 @@ class ResearchAgent(DefaultAgent):
         if parsed.kind == "answer":
             answer, problems = self._checked
             if answer is not None:
-                write_json(self.run_dir.answer, answer)
-                self.answer, self.answer_from = answer, "final"
+                self._submit(answer)
                 raise Submitted({"role": "exit", "content": "answer.json written",
                                  "extra": {"exit_status": "submitted", "submission": parsed.answer}})
             call = message["extra"]["call"]
@@ -719,14 +839,24 @@ class ResearchAgent(DefaultAgent):
         normal = normalise_command(command)
         self.repeats = self.repeats + 1 if normal == self.last_command else 1
         self.last_command = normal
-        claims_before = self.broker.head()["claims"] if self.env.claim else 0
         started = utc_now()
-        result = self.env.execute({"command": command}, step_id=step, broker=self.broker)
-        claims = (self.broker.head()["claims"] - claims_before) if self.env.claim else 0
+        timeout = self.env.timeout_for(command)
+        result = self.env.execute({"command": command}, step_id=step, broker=self.broker,
+                                  parent_task_id=self.model_task_id)
+        # This agent's claims at this step only: subagents claim in the same run while a spawn command runs.
+        claims = claims_sent(self.run_dir, self.agent_id, step) if self.env.claim else 0
         name = f"step-{step:04d}.txt"
         (self.run_dir.out / name).write_bytes(result.output)
         shown = result.output[:self.cap].decode("utf-8", errors="replace")
         read, corpus_dir = files_read(command)
+        meta = {"claim_step": claims > 0, "claims": claims,
+                "claim_in_command": "claim" in command.split() or "| claim" in normal,
+                "repeat": self.repeats, "sandbox": self.env.mode, "seconds": round(result.seconds, 3),
+                "cleanup": result.cleanup}
+        if self.env.spawn is not None:  # row 2.12: the subagents this command started, under which time limit
+            meta |= {"spawned": list(self.env.last_spawned), "timeout_s": timeout}
+        if self.env.scratch != self.run_dir.scratch:  # a subagent's command ran in its own scratch directory
+            meta["workdir"] = self.env.scratch.relative_to(self.run_dir.root).as_posix()
         self._record({
             "subtype": "agent_tool", "step_id": step, "parent_task_id": self.model_task_id,
             # files_read: corpus files named in the command (heuristic, parse.files_read), for PROV `uses`.
@@ -735,10 +865,7 @@ class ResearchAgent(DefaultAgent):
                           "output_bytes": len(result.output), "exit_code": result.exit_code,
                           "timed_out": result.timed_out, "truncated": len(result.output) > self.cap},
             "started_at": started, "status": "timeout" if result.timed_out else "finished",
-            "custom_metadata": {"claim_step": claims > 0, "claims": claims,
-                                "claim_in_command": "claim" in command.split() or "| claim" in normal,
-                                "repeat": self.repeats, "sandbox": self.env.mode, "seconds": round(result.seconds, 3),
-                                "cleanup": result.cleanup},
+            "custom_metadata": meta,
         })
         notes = []
         if parsed.notice:
@@ -747,7 +874,7 @@ class ResearchAgent(DefaultAgent):
             notes.append(f"[Output cut at {self.cap:,} of {len(result.output):,} bytes. Full output: "
                          f"{(self.run_dir.out / name).resolve()} (read it with sed -n or rg).]")
         if result.timed_out:
-            notes.append(f"[The command hit the {self.env.limits['timeout_s']} s time limit and was stopped.]")
+            notes.append(f"[The command hit the {timeout} s time limit and was stopped.]")
         stop = self.settings.repeat_stop
         if self.repeats == 2:
             notes.append("[Notice: you ran this same command in the previous step; its output will not change. "
@@ -793,7 +920,7 @@ class ResearchAgent(DefaultAgent):
 
     def outcome(self, status: str) -> Outcome:
         return Outcome(status, self.research_steps, self.n_calls, self.tokens,
-                       len(self.answer["rows"]) if self.answer else 0, self.answer_from)
+                       len((self.answer or {}).get("rows", [])), self.answer_from)
 
 
 # --- one run ---------------------------------------------------------------------------------------
@@ -820,10 +947,10 @@ def finish_without_answer(agent: ResearchAgent, status: str) -> None:
         answer["notes"] = draft_notes(status, answer.get("notes"))
         write_json(agent.run_dir.answer, answer)
         agent.answer, agent.answer_from = answer, "draft"
-        agent._coverage(agent.n_calls, "answer_from_draft", "", {"exit_status": status, "draft": draft,
+        agent._coverage(agent.step_id, "answer_from_draft", "", {"exit_status": status, "draft": draft,
                                                                   "rows": len(answer["rows"])})
         return
-    agent._coverage(agent.n_calls, "no_final_answer", "", {"exit_status": status} | ({"draft": draft} if draft else {}))
+    agent._coverage(agent.step_id, "no_final_answer", "", {"exit_status": status} | ({"draft": draft} if draft else {}))
     write_json(agent.run_dir.answer, empty_answer(agent.concept, f"exit status {status}"))
 
 
@@ -836,7 +963,7 @@ def run_agent(agent: ResearchAgent) -> Outcome:
         logger.exception("run failed")
         status = "error"
         try:
-            agent._coverage(agent.n_calls, "run_error", "", {"error": f"{type(exc).__name__}: {exc}"[:500]})
+            agent._coverage(agent.step_id, "run_error", "", {"error": f"{type(exc).__name__}: {exc}"[:500]})
         finally:
             finish_without_answer(agent, status)
         raise
@@ -850,19 +977,26 @@ def research_run(*, runs_root: Path, run_id: str, concept: dict[str, Any], corpu
                  sandbox_mode: str, model: OrchestratorModel | None = None, agent_root: Path | None = None,
                  base_url: str = DEFAULT_BASE_URL, budget: dict[str, Any] | None = None,
                  prompt_version: str = "v2", broker: str = "auto", extra_path: tuple[str, ...] = (),
-                 settings: LoopSettings | None = None) -> tuple[RunDir, Outcome, dict[str, Any]]:
+                 settings: LoopSettings | None = None, spawn: Any = None,
+                 sub_model: Callable[..., OrchestratorModel] | None = None) -> tuple[RunDir, Outcome, dict[str, Any]]:
     """Create runs/<run_id>/, start the broker, run the agent, write pairs.jsonl, close the broker.
 
     `broker` is "process" (BrokerProcess, POSIX), "inprocess" (InProcessBroker) or "auto" (the
     process where SEQPACKET and descriptor passing exist). `settings` and `budget` default to the
-    prompt version's (settings_for, budget_for). Returns the run directory, the outcome and the
-    broker's final head; the head is also printed, for the Slurm log.
+    prompt version's (settings_for, budget_for). `spawn` (agent/spawn.py SpawnSettings, row 2.12)
+    is off by default and recorded in config.json either way; when on, the system prompt gets the
+    spawn block and the agent's commands a SPAWN_FD channel served by a SpawnService, which runs
+    the subagents (`sub_model(job, slot, seed)` builds their models; tests script them). Returns
+    the run directory, the outcome and the broker's final head; the head is also printed, for
+    the Slurm log.
     """
     from . import prompts
     from .broker_client import BrokerProcess, InProcessBroker
     from .pairs import write_pairs
+    from .spawn import SpawnService, SpawnSettings
 
-    prompt = prompts.load(prompt_version, condition)
+    spawn = spawn or SpawnSettings()
+    prompt = prompts.load(prompt_version, condition, spawn=spawn.enabled)
     settings = settings or settings_for(prompt_version)
     budget = dict(budget or budget_for(prompt_version))
     abi = sandbox.landlock_abi()
@@ -874,21 +1008,34 @@ def research_run(*, runs_root: Path, run_id: str, concept: dict[str, Any], corpu
         agent_root_manifest_sha256=agent_root_manifest_sha256, git_commit=git_commit, budget=budget,
         sandbox={"mode": sandbox_mode, "landlock_abi": abi if sandbox_mode == "landlock" else None,
                  "agent_root": str(agent_root) if agent_root else None},
-        loop={"harness": HARNESS, "base_url": base_url, **settings.config()})
+        loop={"harness": HARNESS, "base_url": base_url, **settings.config()},
+        spawn=spawn.config(condition, settings))
     use_process = broker == "process" or (broker == "auto" and POSIX_BROKER)
     channel: Any = (BrokerProcess.start(run.root, corpus, manifest) if use_process
                     else InProcessBroker(run.root, corpus, manifest))
     head: dict[str, Any] = {}
+    service: SpawnService | None = None
     try:
         model = model or OrchestratorModel(base_url=base_url, temperature=temperature, seed=seed)
+        steps = StepCounter()
+        if spawn.enabled:
+            service = SpawnService(run, channel, spawn, concept=concept, corpus=corpus, manifest=manifest,
+                                   condition=condition, sandbox_mode=sandbox_mode, agent_root=agent_root,
+                                   extra_path=extra_path, base_url=base_url, temperature=temperature, seed=seed,
+                                   loop=settings, next_step=steps, model_factory=sub_model)
         env = SandboxEnvironment(run, corpus=corpus, mode=sandbox_mode, claim=condition == "claim_on",
-                                 agent_root=agent_root, extra_path=extra_path)
+                                 agent_root=agent_root, extra_path=extra_path, spawn=service)
         agent = ResearchAgent(model, env, broker=channel, run=run, concept=concept, prompt=prompt, budget=budget,
-                              settings=settings)
+                              settings=settings, next_step=steps)
+        agent.extra_template_vars |= spawn.template_vars()
         outcome = run_agent(agent)
     finally:
+        if service is not None:
+            service.close()  # subagents still running stop (cancelled) before the broker closes
         head = channel.close()
         print(f"run {run.run_id}: broker head={head.get('head')} records={head.get('records')} "
               f"claims={head.get('claims')}", flush=True)
+    if service is not None:
+        outcome.subagents, outcome.subagent_tokens = service.started, service.tokens
     write_pairs(run)
     return run, outcome, head

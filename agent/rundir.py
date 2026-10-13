@@ -56,11 +56,13 @@ def run_config(run_id: str, *, condition: str, temperature: float, seed: int, pr
                prompt_sha256: str, concept_sha256: str, corpus_manifest_sha256: str,
                agent_root_manifest_sha256: str, git_commit: str,
                budget: dict[str, Any] | None = None, prompt_files: dict[str, str] | None = None,
-               sandbox: dict[str, Any] | None = None, loop: dict[str, Any] | None = None) -> dict[str, Any]:
+               sandbox: dict[str, Any] | None = None, loop: dict[str, Any] | None = None,
+               spawn: dict[str, Any] | None = None) -> dict[str, Any]:
     """A complete config.json; the fixed settings come from the constants above.
 
     The main loop (row 1.8) adds `prompt_files` (sha256 of each prompt file), `sandbox` (which
-    sandbox mode ran the commands) and `loop` (harness version and model endpoint); all optional.
+    sandbox mode ran the commands), `loop` (harness version and model endpoint) and `spawn`
+    (whether the agent may start subagents and with what, row 2.12); all optional.
     """
     config = {
         "schema_version": 1, "run_id": run_id, "created_at": utc_now(), "condition": condition,
@@ -79,6 +81,8 @@ def run_config(run_id: str, *, condition: str, temperature: float, seed: int, pr
         config["sandbox"] = dict(sandbox)
     if loop is not None:
         config["loop"] = dict(loop)
+    if spawn is not None:
+        config["spawn"] = dict(spawn)
     return config
 
 

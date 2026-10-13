@@ -178,6 +178,43 @@
         "base_url": {"type": "string", "minLength": 1},
         "sandbox": {"enum": ["landlock", "unsandboxed"]}
       }
+    },
+    "spawn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "description": "Row 2.12: the spawn command (subagents on sub-model-1/-2, agent/spawn.py); agent run --spawn on|off, off by default. The rest is set only when enabled",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["steps", "tokens", "announced"],
+          "description": "each subagent's own budget; spawn --steps may lower the steps",
+          "properties": {
+            "steps": {"type": "integer", "minimum": 1},
+            "tokens": {"type": "integer", "minimum": 1},
+            "announced": {"type": "boolean"}
+          }
+        },
+        "max_concurrent": {"type": "integer", "minimum": 1, "description": "subagents running at once (one per sub-model replica); the rest wait"},
+        "max_subagents": {"type": "integer", "minimum": 1, "description": "subagents one run may start"},
+        "command_timeout_s": {"type": "integer", "minimum": 1, "description": "time limit of a command that calls spawn (others keep command_limits.timeout_s)"},
+        "models": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "the sub-model aliases, one per worker"},
+        "max_tokens": {"type": "integer", "minimum": 1, "description": "a subagent's reply limit"},
+        "claim": {"type": "boolean", "description": "subagents have claim iff the run is claim_on"},
+        "prompt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "sha256", "files"],
+          "properties": {
+            "version": {"type": "string", "minLength": 1},
+            "sha256": {"$ref": "#/$defs/sha256", "description": "sha256 of the subagent system prompt file"},
+            "files": {"type": "object", "additionalProperties": {"$ref": "#/$defs/sha256"}}
+          }
+        },
+        "loop": {"type": "object", "description": "the subagents' loop settings (loop.LoopSettings.config())"}
+      }
     }
   },
   "$defs": {

@@ -74,12 +74,18 @@ class BrokerProcess:
         """Append a harness record; returns {"ok": true, "task_id", "hash"} or raises BrokerError."""
         return _checked(self._call({"op": "record", "record": record}))
 
-    def claim_channel(self, step_id: int, agent_id: str = "main", origin: str = "research") -> socket.socket:
-        """A fresh claim socketpair for one step; returns the end to hand to the sandbox as CLAIM_FD."""
+    def claim_channel(self, step_id: int, agent_id: str = "main", origin: str = "research",
+                      source_agent_id: str | None = None, spawned_by_step: int | None = None) -> socket.socket:
+        """A fresh claim socketpair for one step; returns the end to hand to the sandbox as CLAIM_FD.
+
+        A subagent's channel (row 2.12) names its parent and the parent's spawning step too.
+        """
         broker_end, sandbox_end = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM)
+        extra = {k: v for k, v in (("source_agent_id", source_agent_id), ("spawned_by_step", spawned_by_step))
+                 if v is not None}
         try:
             _checked(self._call({"op": "claim_channel", "step_id": step_id, "agent_id": agent_id,
-                                 "origin": origin}, [broker_end.fileno()]))
+                                 "origin": origin, **extra}, [broker_end.fileno()]))
         finally:
             broker_end.close()
         return sandbox_end
@@ -105,10 +111,11 @@ class InProcessBroker:
     def record(self, record: dict[str, Any]) -> dict[str, Any]:
         return _checked(self.broker.record(record))
 
-    def claim_channel(self, step_id: int, agent_id: str = "main", origin: str = "research") -> socket.socket:
+    def claim_channel(self, step_id: int, agent_id: str = "main", origin: str = "research",
+                      source_agent_id: str | None = None, spawned_by_step: int | None = None) -> socket.socket:
         broker_end, sandbox_end = socket.socketpair()
-        thread = threading.Thread(target=serve_claims, daemon=True,
-                                  args=(self.broker, broker_end, Channel(step_id, agent_id, origin)))
+        channel = Channel(step_id, agent_id, origin, source_agent_id, spawned_by_step)
+        thread = threading.Thread(target=serve_claims, daemon=True, args=(self.broker, broker_end, channel))
         thread.start()
         self._threads.append(thread)
         return sandbox_end

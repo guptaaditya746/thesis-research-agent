@@ -57,6 +57,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     from .loop import budget_for, research_run, settings_for  # imports LiteLLM and mini-swe-agent: slow, so only here
     from .rundir import git_head
+    from .spawn import SpawnSettings
 
     stop_on_sigterm()
 
@@ -69,15 +70,26 @@ def cmd_run(args: argparse.Namespace) -> int:
         settings = dataclasses.replace(settings, conclude_decoding=args.conclude_decoding)
     budget = budget_for(args.prompt_version)  # v1: the M1-real runs' 150 steps / 400k tokens
     budget |= {k: v for k, v in (("steps", args.steps), ("tokens", args.tokens)) if v is not None}
+    spawn = SpawnSettings(enabled=args.spawn == "on")
+    if spawn.enabled:
+        from . import prompts
+        try:  # v1 (the M1-real runs) has no spawn block
+            prompts.load(args.prompt_version, args.condition, spawn=True)
+        except ValueError as exc:
+            print(f"FAIL {exc}")
+            return 1
     _, outcome, head = research_run(
         runs_root=args.runs_root, run_id=args.run_id, concept=concept, corpus=corpus, manifest=manifest,
         condition=args.condition, temperature=args.temperature, seed=args.seed,
         git_commit=git_head(Path(__file__).resolve().parents[1]), agent_root_manifest_sha256=agent_root_sha,
         sandbox_mode=args.sandbox, agent_root=args.agent_root, base_url=args.base_url,
         budget=budget, broker=args.broker, extra_path=tuple(args.path_extra),
-        prompt_version=args.prompt_version, settings=settings)
+        prompt_version=args.prompt_version, settings=settings, spawn=spawn)
+    # steps and tokens are the agent's own (its budget); with subagents the run's total is reported too.
+    subagents = (f" subagents={outcome.subagents} run_tokens={outcome.tokens + outcome.subagent_tokens}"
+                 if args.spawn == "on" else "")
     print(f"run {args.run_id}: exit={outcome.exit_status} steps={outcome.steps} tokens={outcome.tokens} "
-          f"rows={outcome.answer_rows} answer={outcome.answer_from} head={head.get('head')}")
+          f"rows={outcome.answer_rows} answer={outcome.answer_from}{subagents} head={head.get('head')}")
     return 0 if outcome.exit_status == "submitted" else 1
 
 
@@ -141,6 +153,9 @@ def cmd_verify(args: argparse.Namespace) -> int:
               f"time={a['seconds']}s")
         print(f"without attach: steps={w['steps']} tokens={w['tokens']} time={w['seconds']}s; "
               f"with attach: tokens={s.get('tokens', 0)} time={s.get('seconds', 0)}s")
+    for agent_id, a in s.get("agents", {}).items():  # row 2.12: the totals above are the run's, these each agent's
+        print(f"agent {agent_id}: steps={a['steps']} model_calls={a['model_calls']} commands={a['commands']} "
+              f"claims={a['claims_accepted']} accepted / {a['claims_rejected']} rejected tokens={a['tokens']}")
     if report.ok:
         print(f"PASS {args.run_dir} records={s.get('records')} head={s.get('head')}")
     return 0 if report.ok else 1
@@ -312,6 +327,9 @@ def main(argv: list[str] | None = None) -> int:
                           "vLLM >= 0.10's extra_body key, guided_json older vLLM's, free no schema)")
     run.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
     run.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
+    run.add_argument("--spawn", choices=("on", "off"), default="off",
+                     help="the spawn command: subagents on sub-model-1/-2 with their own budget (row 2.12; "
+                          "recorded in config.json; off for the 72 runs unless decided otherwise)")
     run.set_defaults(func=cmd_run)
 
     attach = sub.add_parser("attach", help="baseline attach step: one quote or 'no source found' per answer fact (row 2.5)")
