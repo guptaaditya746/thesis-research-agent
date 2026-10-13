@@ -9,7 +9,7 @@ from pathlib import Path
 from . import kg
 from .canonical import canonical, file_sha256, sha256_hex
 from .chain import verify
-from .rundir import RunDir
+from .rundir import BUDGET as RUN_BUDGET, RunDir
 
 
 def cmd_check_run(args: argparse.Namespace) -> int:
@@ -51,7 +51,9 @@ def stop_on_sigterm() -> None:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    from .loop import research_run  # imports LiteLLM and mini-swe-agent: slow, so only here
+    import dataclasses
+
+    from .loop import research_run, settings_for  # imports LiteLLM and mini-swe-agent: slow, so only here
     from .rundir import BUDGET, git_head
 
     stop_on_sigterm()
@@ -60,14 +62,18 @@ def cmd_run(args: argparse.Namespace) -> int:
     concept = json.loads(args.concept.read_text(encoding="utf-8"))
     agent_root_sha = (file_sha256(args.agent_root / "agent-root.sha256") if args.agent_root
                       else sha256_hex(b""))  # no agent root (tests, laptops): hash of nothing
+    settings = settings_for(args.prompt_version)  # v1: the loop of the M1-real runs
+    if args.conclude_decoding:
+        settings = dataclasses.replace(settings, conclude_decoding=args.conclude_decoding)
     _, outcome, head = research_run(
         runs_root=args.runs_root, run_id=args.run_id, concept=concept, corpus=corpus, manifest=manifest,
         condition=args.condition, temperature=args.temperature, seed=args.seed,
         git_commit=git_head(Path(__file__).resolve().parents[1]), agent_root_manifest_sha256=agent_root_sha,
         sandbox_mode=args.sandbox, agent_root=args.agent_root, base_url=args.base_url,
-        budget={**BUDGET, "steps": args.steps, "tokens": args.tokens}, broker=args.broker, extra_path=tuple(args.path_extra))
+        budget={**BUDGET, "steps": args.steps, "tokens": args.tokens}, broker=args.broker, extra_path=tuple(args.path_extra),
+        prompt_version=args.prompt_version, settings=settings)
     print(f"run {args.run_id}: exit={outcome.exit_status} steps={outcome.steps} tokens={outcome.tokens} "
-          f"rows={outcome.answer_rows} head={head.get('head')}")
+          f"rows={outcome.answer_rows} answer={outcome.answer_from} head={head.get('head')}")
     return 0 if outcome.exit_status == "submitted" else 1
 
 
@@ -288,8 +294,13 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--sandbox", choices=("landlock", "unsandboxed"), default="landlock",
                      help="unsandboxed runs commands without Landlock/seccomp: tests and machines without Landlock only")
     run.add_argument("--agent-root", type=Path, help="pinned toolchain ($AGENT_ROOT); its agent-root.sha256 is hashed")
-    run.add_argument("--steps", type=int, default=150)
-    run.add_argument("--tokens", type=int, default=400_000)
+    run.add_argument("--steps", type=int, default=RUN_BUDGET["steps"])
+    run.add_argument("--tokens", type=int, default=RUN_BUDGET["tokens"])
+    run.add_argument("--prompt-version", default="v2",
+                     help="agent/prompts/system-<version>.txt; v1 reproduces the M1-real runs (with their loop settings)")
+    run.add_argument("--conclude-decoding", choices=("structured_outputs", "guided_json", "free"),
+                     help="how conclude replies are decoded (default: the prompt version's; structured_outputs is "
+                          "vLLM >= 0.10's extra_body key, guided_json older vLLM's, free no schema)")
     run.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
     run.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
     run.set_defaults(func=cmd_run)

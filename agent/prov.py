@@ -30,6 +30,13 @@ prov:wasInfluencedBy that attach activity, so walking back from them ends at the
 Anchors use the W3C Web Annotation vocabulary: an oa:SpecificResource on the corpus file with an
 oa:TextQuoteSelector (exact, prefix, suffix) and an oa:TextPositionSelector (start, end).
 
+The answer (answer.json) is prov:wasGeneratedBy what made it, named by ours:answerSource
+(agent/loop.py): `final_answer`, the main agent's model call marked custom_metadata.final_answer;
+`draft`, no such call: the harness took the agent's draft file (the `answer_from_draft` coverage
+record, which prov:used an ours:AnswerDraft entity carrying the draft's sha256, and the answer
+prov:wasDerivedFrom it); `none`, an answer with no rows (the `no_final_answer` coverage record).
+A run with none of these records (built by hand) gets no such link.
+
 IRIs are fixed by the run id and the record, claim, edge and fact ids, so the same run always
 exports the same triples, and rdflib's Turtle serialiser sorts subjects and predicates.
 """
@@ -280,7 +287,47 @@ def build(run: RunDir) -> Graph:
     _add_kg(g, iri, kgraph, claims)
     if run.answer.is_file():
         _add_answer(g, iri, json.loads(run.answer.read_text(encoding="utf-8")))
+        _add_answer_source(g, iri, records)
     return g
+
+
+ANSWER_SOURCES = {"answer_from_draft": "draft", "no_final_answer": "none"}  # coverage reason -> answerSource
+
+
+def answer_source(records: list[dict[str, Any]]) -> tuple[str, dict[str, Any] | None]:
+    """How answer.json came about: (final_answer | draft | none, the record that made it), or ("unknown", None).
+
+    Only the main agent's research records count: attach-step, batch and subagent records do not
+    make the run's answer.
+    """
+    for rec in reversed(records):
+        meta = rec.get("custom_metadata") or {}
+        if rec["agent_id"] != "main" or meta.get("origin", "research") != "research":
+            continue
+        if rec["subtype"] == "ai_model_invocation" and meta.get("final_answer"):
+            return "final_answer", rec
+        if rec["subtype"] == "coverage" and rec["generated"].get("reason") in ANSWER_SOURCES:
+            return ANSWER_SOURCES[rec["generated"]["reason"]], rec
+    return "unknown", None
+
+
+def _add_answer_source(g: Graph, iri: Iris, records: list[dict[str, Any]]) -> None:
+    source, rec = answer_source(records)
+    node = iri("answer")
+    g.add((node, OURS.answerSource, Literal(source)))
+    if rec is None:  # no model call and no harness record made it (a run built by hand)
+        return
+    act = iri("task", rec["task_id"])
+    g.add((node, PROV.wasGeneratedBy, act))
+    draft = (rec["generated"].get("detail") or {}).get("draft") if source == "draft" else None
+    if draft:  # no model call made this answer: the harness took it from the agent's draft file
+        entity = iri("draft")
+        g.add((entity, RDF.type, PROV.Entity))
+        g.add((entity, RDF.type, OURS.AnswerDraft))
+        g.add((entity, OURS.fileName, Literal(draft["file"])))
+        g.add((entity, OURS.sha256, Literal(draft["sha256"])))
+        g.add((act, PROV.used, entity))
+        g.add((node, PROV.wasDerivedFrom, entity))
 
 
 def _add_kg(g: Graph, iri: Iris, kgraph: dict[str, Any], claims: dict[str, URIRef]) -> None:

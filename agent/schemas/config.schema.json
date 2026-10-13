@@ -118,7 +118,26 @@
         "harness": {"type": "string", "minLength": 1, "description": "e.g. mini-swe-agent 2.4.6"},
         "base_url": {"type": "string", "minLength": 1, "description": "the LiteLLM endpoint; never a key"},
         "conclude_replies": {"type": "integer", "minimum": 1,
-                             "description": "replies allowed after the budget or the context runs out"}
+                             "description": "replies allowed after the budget or the context runs out"},
+        "conclude_decoding": {"enum": ["free", "structured_outputs", "guided_json"],
+                              "description": "conclude replies decoded freely or under the reply schema (extra_body key; rows 1.13)"},
+        "masking": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["keep", "keep_tight", "tight_above_prompt_tokens"],
+          "description": "row 1.15: outputs older than the last `keep` commands become stubs; `keep_tight` after a prompt over `tight_above_prompt_tokens`; null = off",
+          "properties": {
+            "keep": {"type": "integer", "minimum": 1},
+            "keep_tight": {"type": "integer", "minimum": 1},
+            "tight_above_prompt_tokens": {"type": "integer", "minimum": 1}
+          }
+        },
+        "budget_warnings": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 99},
+                            "description": "percent of either budget at which the agent gets a one-time notice"},
+        "repeat_stop": {"type": "integer", "minimum": 0,
+                        "description": "identical commands in a row that end research; 0 = never"},
+        "draft_file": {"type": ["string", "null"],
+                       "description": "the agent's draft answer in scratch/, taken when the run ends without an answer"}
       }
     },
     "attach": {

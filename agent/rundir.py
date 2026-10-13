@@ -21,7 +21,10 @@ ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision
                 "thinking": False, "max_tokens": 4096, "context_tokens": 65536}
 SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
               "revision": "5a5a776", "context_tokens": 32768} for i in (1, 2)]
-BUDGET = {"steps": 150, "tokens": 400_000, "announced": True}
+# Provisional (e2e-build-plan.md, 13 Oct; the user freezes it after the Slurm test). The token sum
+# counts the whole prompt again at every step, so the M1-real runs' 150 steps / 400k lasted only
+# ~26 steps: 2M tokens over 60 steps is ~33k per step, about what a masked context costs.
+BUDGET = {"steps": 60, "tokens": 2_000_000, "announced": True}
 COMMAND_LIMITS = {"timeout_s": 120, "ulimit_v_kib": 2 * 1024 * 1024, "output_cap_bytes": 8192}
 
 

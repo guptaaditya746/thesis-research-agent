@@ -63,6 +63,10 @@ def render(run: RunDir) -> str:
             if kind == "ai_model_invocation":
                 tokens = (gen.get("usage") or {}).get("total_tokens", "-")
                 tags = "<span class=tag>final answer</span>" if meta.get("final_answer") else ""
+                if used.get("decoding", "free") != "free":  # conclude reply decoded under the answer schema
+                    tags += f"<span class=tag>{_e(used['decoding'])}</span>"
+                if meta.get("masked_observations"):  # row 1.15: outputs shown as stubs in this prompt
+                    tags += f"<span class=tag>{_e(meta['masked_observations'])} outputs masked</span>"
                 status = "" if r["status"] == "finished" else f" <span class=bad>{_e(gen.get('error', r['status']))}</span>"
                 parts.append(f"<div>model call {_e(r['task_id'])}: {_e(tokens)} tokens, reply "
                              f"{_e(gen.get('reply', '-'))} ({_e(gen.get('parse', '-'))}), phase "

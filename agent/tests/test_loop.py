@@ -42,28 +42,38 @@ Reply = str | Exception | Callable[[list[dict[str, Any]]], str]
 
 
 class ScriptedModel(OrchestratorModel):
-    """OrchestratorModel whose LiteLLM call returns scripted replies (or raises scripted errors)."""
+    """OrchestratorModel whose LiteLLM call returns scripted replies (or raises scripted errors).
+
+    `kwargs` keeps what each call added to the model's settings (extra_body under guided
+    decoding); `prompt_tokens` and `finish_reasons`, if given, are each call's reported prompt
+    size and finish reason in turn (default: a quarter of the prompt's characters, "stop").
+    """
 
     abort_exceptions = [*OrchestratorModel.abort_exceptions, IndexError]  # script ran out: fail, never retry
 
-    def __init__(self, replies: list[Reply], reasoning: str = "") -> None:
+    def __init__(self, replies: list[Reply], reasoning: str = "", prompt_tokens: list[int] | None = None,
+                 finish_reasons: list[str] | None = None) -> None:
         super().__init__(base_url="http://mock.invalid/v1", temperature=0.7, seed=1234)
         self.replies = list(replies)
         self.reasoning = reasoning
+        self.prompt_tokens = list(prompt_tokens or [])
+        self.finish_reasons = list(finish_reasons or [])
         self.prompts: list[list[dict[str, Any]]] = []
+        self.kwargs: list[dict[str, Any]] = []
 
     def _query(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         self.prompts.append(json.loads(json.dumps(messages)))
-        assert kwargs == {} and self.config.model_kwargs["seed"] == 1234
+        self.kwargs.append(json.loads(json.dumps(kwargs)))
+        assert set(kwargs) <= {"extra_body"} and self.config.model_kwargs["seed"] == 1234
         reply = self.replies.pop(0)
         if callable(reply):
             reply = reply(messages)
         if isinstance(reply, Exception):
             raise reply
-        prompt = len(canonical(messages)) // 4
+        prompt = self.prompt_tokens.pop(0) if self.prompt_tokens else len(canonical(messages)) // 4
         return {"model": "orch-model",
                 "choices": [{"message": {"content": reply, "reasoning_content": self.reasoning or None},
-                             "finish_reason": "stop"}],
+                             "finish_reason": self.finish_reasons.pop(0) if self.finish_reasons else "stop"}],
                 "usage": {"prompt_tokens": prompt, "completion_tokens": 25, "total_tokens": prompt + 25}}
 
 
@@ -210,7 +220,7 @@ def check_main_run(run: RunDir, outcome: Any, head: dict[str, Any], model: Scrip
     assert '"reason": "not_found"' in model.prompts[4][-1]["content"]
     assert "Nothing ran" in model.prompts[3][-1]["content"]
     assert "claim-000009 is not an accepted claim" in model.prompts[7][-1]["content"]
-    assert "[Budget: 1 of 150 steps" in model.prompts[1][-1]["content"]
+    assert "[Budget: 1 of 60 steps" in model.prompts[1][-1]["content"]
     # answer.json, pairs.jsonl, verify
     answer = json.loads(run.answer.read_text(encoding="utf-8"))
     assert [f["claims"] for r in answer["rows"] for f in r["facts"]] == [["claim-000001"], []]
@@ -227,7 +237,9 @@ def check_main_run(run: RunDir, outcome: Any, head: dict[str, Any], model: Scrip
         "facts": 2, "facts_with_claims": 1}
     config = run.load_config()
     assert config["sandbox"]["mode"] == "unsandboxed" and config["loop"]["harness"] == "mini-swe-agent 2.4.6"
-    assert config["prompt"]["files"]["system-v1.txt"] == config["prompt"]["sha256"]
+    assert config["prompt"]["version"] == "v2" and config["prompt"]["files"]["system-v2.txt"] == config["prompt"]["sha256"]
+    assert config["loop"]["conclude_decoding"] == "structured_outputs" and config["loop"]["masking"]["keep"] == 8
+    assert config["budget"] == {"steps": 60, "tokens": 2_000_000, "announced": True}
 
 
 @posix_only
@@ -235,8 +247,10 @@ def test_end_to_end_in_process_broker(tmp_path: Path, corpus: tuple[Path, Path])
     quote = unique_quote()
     run, outcome, head, model = go(tmp_path, corpus, main_script(quote))
     check_main_run(run, outcome, head, model, corpus, quote)
-    # The system prompt is v1 with the budget filled in; the task names the concept.
-    assert "150 steps" in model.prompts[0][0]["content"] and "Recording facts with claim" in model.prompts[0][0]["content"]
+    # The system prompt is v2 with the budget, the plan and the loop settings filled in; the task names the concept.
+    system = model.prompts[0][0]["content"]
+    assert "60 steps" in system and "Recording facts with claim" in system and "{{" not in system
+    assert "by step 45 or 1500000 tokens" in system and "your last 8 is" in system and "same command 6 times" in system
     assert CONCEPT["title"] in model.prompts[0][1]["content"]
     assert (run.root / "trajectory.json").is_file()
 
@@ -272,7 +286,8 @@ def test_repeated_commands_get_notices(tmp_path: Path, corpus: tuple[Path, Path]
     assert outcome.exit_status == "submitted"
     second, third, other = (model.prompts[i][-1]["content"] for i in (2, 3, 4))
     assert "same command in the previous step" in second and "You have" not in second
-    assert "same command 3 times in a row. You have 147 steps and" in third
+    assert "same command 3 times in a row. You have 57 steps and" in third
+    assert "At 6 in a row the research ends." in third
     assert "Notice" not in other
     tools = [r for r in records(run) if r["subtype"] == "agent_tool"]
     assert [t["custom_metadata"]["repeat"] for t in tools] == [1, 2, 3, 1]
@@ -287,6 +302,9 @@ def test_step_budget_runs_out_then_the_answer(tmp_path: Path, corpus: tuple[Path
     assert "2 steps" in model.prompts[0][0]["content"]
     calls = [r for r in records(run) if r["subtype"] == "ai_model_invocation"]
     assert [c["custom_metadata"]["phase"] for c in calls] == ["research", "research", "conclude"]
+    # A fenced json block still counts when the server ignored the schema.
+    assert [c["used"]["decoding"] for c in calls] == ["free", "free", "structured_outputs"]
+    assert calls[2]["generated"]["parse"] == "answer_json_block" and calls[2]["custom_metadata"]["final_answer"]
     assert run.load_config()["budget"]["steps"] == 2
 
 
@@ -325,7 +343,8 @@ def test_context_full_concludes_without_retry(tmp_path: Path, corpus: tuple[Path
     last = model.prompts[3]
     assert "Context full" in last[-1]["content"]
     outputs = [m["content"] for m in last if m["role"] == "user"][1:-1]
-    assert all(o.startswith("[output removed: context full]") for o in outputs)
+    assert all(o.startswith("[output removed: context full] Full output: ") for o in outputs)
+    assert "step-0001.txt" in outputs[0] and "step-0002.txt" in outputs[1]
     assert '"claim_id": "claim-000001"' in outputs[0] and "yyyy" not in "".join(outputs)
     failed = [r for r in records(run) if r["subtype"] == "ai_model_invocation" and r["status"] == "failed"]
     assert len(failed) == 1 and failed[0]["generated"] == {"error": "context_window_exceeded"}
@@ -364,7 +383,7 @@ def test_claim_off_baseline(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
     assert "claim" in out and "not found" in out  # bash: claim: command not found
     assert run.claims.read_bytes() == b""
     config = run.load_config()
-    assert config["condition"] == "claim_off" and config["prompt"]["files"]["system-v1-baseline.txt"] == config["prompt"]["sha256"]
+    assert config["condition"] == "claim_off" and config["prompt"]["files"]["system-v2-baseline.txt"] == config["prompt"]["sha256"]
     assert verify_run(run, *corpus).ok
 
 
@@ -406,7 +425,7 @@ def test_conditions_share_model_budget_seed_and_answer_format(tmp_path: Path, co
     c_on, c_off = on.load_config(), off.load_config()
     differ = {k for k in c_on if c_on[k] != c_off[k]}
     assert differ == {"run_id", "created_at", "condition", "prompt"}
-    assert c_on["prompt"]["files"]["task-v1.txt"] == c_off["prompt"]["files"]["task-v1.txt"]
+    assert c_on["prompt"]["files"]["task-v2.txt"] == c_off["prompt"]["files"]["task-v2.txt"]
     assert c_off["budget"] == budget and c_off["sampling"] == {"temperature": 0.7, "seed": 1234}
     # The prompts the model saw: the same task message, the system prompt minus the claim block only.
     assert m_on.prompts[0][1] == m_off.prompts[0][1]
