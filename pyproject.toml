@@ -12,6 +12,7 @@ dependencies = [
     "numpy==2.5.4",
     "pandas==3.0.6",
     "pydantic-ai-slim[openai]==2.55.0",
+    "pydantic-settings==2.15.0",
     "pyoxigraph==0.5.11",
     "rdflib==7.6.0",
     "scikit-learn==1.9.1",
