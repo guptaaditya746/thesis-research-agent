@@ -64,7 +64,7 @@ import line to `gold/cli.py`; the merge resolves the two lines.
 | Variable | Meaning | Default |
 |---|---|---|
 | `CORPUS` | frozen Markdown corpus with `manifest.json` (read-only) | — |
-| `RUNS` | runs root | `runs` |
+| `RUNS` | runs root; `scripts/e2e-batch.sh <manifest>` puts a manifest's runs in `$RUNS/<manifest name>/` (its last line `RUNS_ROOT=...`), which is the RUNS that scoring and the web app take for that manifest, so the M4 report never mixes in smoke runs | `runs` |
 | `GOLD` | gold working directory (D, review exports, keys, judge cache) | `gold-data` |
 | `CONCEPTS` | concept sessions | `concepts` |
 | `LITELLM_BASE_URL` | LiteLLM proxy | `http://127.0.0.1:4000/v1` |
@@ -98,8 +98,17 @@ Format: `{"schema_version": 1, "questions": [{"id", "category", "question", "sou
 
 ### Concepts (B → C1, D, E)
 `$CONCEPTS/<qid>/` as `agent/concept_step.py` writes it (`proposal.json`, `concept.json`, `concept.sha256`,
-`events.jsonl`, `session.json`). B adds `$CONCEPTS/picks.json`:
+`events.jsonl`, `session.json` with `attempts`: each proposal attempt's sampling, commit and proxy). B adds `$CONCEPTS/picks.json`:
 `{"<qid>": {"choice": 1, "title": "...", "picked_by": "provisional-first" | "user" | "claude", "reason": "...", "concept_sha256": "..."}}`.
+`concept_step.pick(..., replace=True)` refuses once `$GOLD/<qid>/` holds anything (`concept_step.gold_files`), unless forced;
+`propose`, `pick` and the `picks.json` rebuild lock their directory, so callers in threads or processes need no lock of their own.
+
+### Trajectory (A → B)
+`agent replay` (C6) rebuilds every prompt from `trajectory.json`, so the loop keeps what the model saw: a message
+changed after a call keeps its first text in `extra.original_content`; stubs are always the oldest command outputs
+and never change back, and each `ai_model_invocation` records `custom_metadata.masked_observations`; replies are
+shortened only after the second context-full 400. `agent/tests/test_replay.py` (`test_a_long_run_replays`,
+`test_context_full_run`) checks this on the real loop once `e2e/agent-fix` is merged.
 
 ### Gold (C1 → C2 → D, E)
 Per question, `$GOLD/<qid>/`:
