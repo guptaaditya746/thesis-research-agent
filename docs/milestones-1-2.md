@@ -67,7 +67,9 @@ checks anchors.
 | 1.10 | done: `agent/prompts/system-v1.txt`, baseline = v1 minus the claim block (`system-v1.diff`, tested), concept `agent/concepts/rag-eval-datasets.json` | `06d790d` | `test_prompts` |
 | 1.11, 1.12 | done: `agent verify`, `agent pairs` | `bda4412` | `test_loop` |
 | 1.14 | done: `agent timeline` → `timeline.html` | `b7c98aa` | — |
-| 1.1, 1.13, 1.15 | open: need the cluster (1.15 only if C8 overflows) | — | — |
+| 1.1 | passed on Slurm 7288 (RESULTS `F1`) | — | — |
+| 1.13 | first real runs done (RESULTS `M1-real`: verified, no answers, 400k spent in ~26 steps, conclude replies were commands); fix built against a scripted model on `e2e/agent-fix`: prompt v2 (real file names, claim where found, `answer-draft.json`), conclude replies decoded under the reply schema (`structured_outputs`), draft answer taken when a run ends without one, notices at 50/75/90 %, six identical commands end research, provisional budget 60 steps / 2M tokens; rerun on Slurm and freeze the budget | `fa77e4a`, `1e09eee`, `952c5be`, `991f1d4` | `test_loop_v2`, `test_prompts` |
+| 1.15 | done against a scripted model, before C8 overflowed (2M-token runs would): outputs older than the last 8 commands become stubs naming `out/step-NNNN.txt` (last 4 after a prompt over 45k tokens), claim replies kept; masked count in each model call record | `1e09eee` | `test_loop_v2` |
 
 Unit suite: 151 passed + 2 skipped on Windows, 153 passed on WSL Linux (2026-10-10, RESULTS `M1-unit`).
 After `m1-loop` and `m2-graph`: 232 passed + 1 skipped on WSL Linux (2026-10-11, RESULTS `M1-loop`).
