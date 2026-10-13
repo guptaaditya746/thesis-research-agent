@@ -134,6 +134,45 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def cmd_reexec(args: argparse.Namespace) -> int:
+    from .reexec import ReexecError, parse_steps, reexec_run
+
+    stop_on_sigterm()
+    corpus, manifest = _corpus(args)
+    try:
+        steps = parse_steps(args.steps) if args.steps else None
+        report = reexec_run(args.run_dir, corpus, manifest, steps=steps, sandbox_mode=args.sandbox,
+                            agent_root=args.agent_root, extra_path=tuple(args.path_extra), keep_scratch=args.keep_scratch)
+    except (ReexecError, ValueError, OSError) as exc:
+        print(f"FAIL {exc}")
+        return 2
+    for d in report["differing"]:
+        print(f"DIFF step {d['step']} ({d['agent_id']}) line {d['first_diff_line']}: recorded {d['recorded_line']!r}, "
+              f"now {d['now_line']!r} -> {d['output_file']}")
+    for error in report["errors"]:
+        print(f"FAIL {error}")
+    c = report["claims"]
+    print(f"reexec {report['run_id']}: {report['identical']}/{report['steps']} outputs identical, "
+          f"{len(report['differing'])} differing; claims {c.get('same_as_recorded', 0)}/{c.get('sent', 0)} as recorded "
+          f"-> {args.run_dir / 'reexec.json'}")
+    return 2 if report["errors"] else (1 if report["differing"] else 0)
+
+
+def cmd_replay(args: argparse.Namespace) -> int:
+    from .replay import replay_run
+
+    report = replay_run(args.run_dir)
+    for error in report["errors"][:50]:
+        print(f"FAIL {error}")
+    if len(report["errors"]) > 50:
+        print(f"... and {len(report['errors']) - 50} more in replay.json")
+    skipped = ", ".join(f"{k} {n}" for k, n in sorted(report["skipped"].items()))
+    print(f"{'PASS' if report['ok'] else 'FAIL'} replay {report['run_id']}: {report['matched']}/{report['calls']} model "
+          f"calls rebuilt from trajectory.json, {report['outputs_ok']}/{report['commands']} outputs match"
+          + (f"; not in the trajectory: {skipped}" if skipped else "") + f" -> {args.run_dir / 'replay.json'}")
+    return 0 if report["ok"] else 1
+
+
 def cmd_pairs(args: argparse.Namespace) -> int:
     from .pairs import write_pairs
 
@@ -393,6 +432,21 @@ def main(argv: list[str] | None = None) -> int:
     ver.add_argument("run_dir", type=Path)
     _corpus_args(ver)
     ver.set_defaults(func=cmd_verify)
+
+    reexec = sub.add_parser("reexec", help="run a run's recorded commands again in a fresh scratch dir and compare "
+                                           "outputs; claims go to a dry broker (row 2.13, C5)")
+    reexec.add_argument("run_dir", type=Path)
+    _corpus_args(reexec)
+    reexec.add_argument("--steps", help="only these step ids, e.g. 1,2,5-7 (default: every command)")
+    reexec.add_argument("--sandbox", choices=("landlock", "unsandboxed"), help="default: the run's sandbox mode")
+    reexec.add_argument("--agent-root", type=Path, help="default: the run's agent root")
+    reexec.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
+    reexec.add_argument("--keep-scratch", action="store_true", help="keep the fresh scratch directory")
+    reexec.set_defaults(func=cmd_reexec)
+    replay = sub.add_parser("replay", help="rebuild the conversation from trajectory.json and out/ and check every "
+                                           "recorded prompt hash (row 2.13, C6)")
+    replay.add_argument("run_dir", type=Path)
+    replay.set_defaults(func=cmd_replay)
 
     pairs = sub.add_parser("pairs", help="write pairs.jsonl: answer facts with their claims' quotes (row 1.12)")
     pairs.add_argument("run_dir", type=Path)
