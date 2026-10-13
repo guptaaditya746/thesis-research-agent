@@ -12,8 +12,13 @@ the size of the rest, how many were sampled, and which ids are in which stratum.
 
 A record shows the fact (s, p, o, the answer row), its quote and anchor status, and the passage:
 for an anchored quote PASSAGE_CHARS of the file on each side with the quote's span as `highlight`
-(offsets into `passage.text`); for a quote that failed the check, the whole chunk it was extracted
-from, without highlight, so a reviewer can still find (or not find) the fact.
+(offsets into `passage.text`); for a quote that failed the check, the whole chunk (or piece) it was
+extracted from, without highlight, so a reviewer can still find (or not find) the fact.
+
+The pool is drawn from a complete D only: a trial (`--max-papers`, `--only-papers`) or a D with
+failed calls is refused unless `allow_partial` (`--allow-partial`), and pool.strata.json records the
+D it came from either way (`doc`: coverage, failures, trial settings, doc.json's sha256), the corpus
+manifest and whether passages were included (the CLI needs the corpus; library use may leave it out).
 """
 from __future__ import annotations
 
@@ -25,7 +30,7 @@ from typing import Any
 
 from agent.rundir import utc_now
 
-from .build import QuestionDir, file_hash, load_doc, read_jsonl, write_json, write_jsonl
+from .build import QuestionDir, doc_state, file_hash, incomplete, load_doc, read_jsonl, write_json, write_jsonl
 from .chunks import GoldCorpus
 from .triage import Texts, load_labels
 
@@ -52,10 +57,14 @@ def record_passage(texts: Texts, chunks: dict[tuple[str, int], dict[str, Any]], 
         start, end = max(0, c["anchor"]["start"] - chars), min(len(text), c["anchor"]["end"] + chars)
         return {"text": text[start:end], "start": start, "end": end,
                 "highlight": {"start": c["anchor"]["start"] - start, "end": c["anchor"]["end"] - start}}
-    chunk = chunks.get((c["paper_id"], c["chunk"]))
-    if chunk is None:
-        return None
-    return {"text": text[chunk["start"]:chunk["end"]], "start": chunk["start"], "end": chunk["end"], "highlight": None}
+    if c.get("span"):  # extracted from a piece of a chunk that was too long for one call
+        start, end = c["span"]
+    else:
+        chunk = chunks.get((c["paper_id"], c["chunk"]))
+        if chunk is None:
+            return None
+        start, end = chunk["start"], chunk["end"]
+    return {"text": text[start:end], "start": start, "end": end, "highlight": None}
 
 
 def record(doc: dict[str, Any], c: dict[str, Any], passage: dict[str, Any] | None) -> dict[str, Any]:
@@ -68,12 +77,17 @@ def record(doc: dict[str, Any], c: dict[str, Any], passage: dict[str, Any] | Non
 
 
 def build_pool(qid: str, out_root: Path, corpus: GoldCorpus | None, *, sample: int = SAMPLE, seed: int | str = 0,
-               tiers: Iterable[str] = TIERS) -> dict[str, Any]:
+               tiers: Iterable[str] = TIERS, allow_partial: bool = False) -> dict[str, Any]:
     """Write pool.jsonl and pool.strata.json for one question; returns the strata."""
     qdir = QuestionDir(Path(out_root) / qid)
     doc = load_doc(qdir)
+    state = doc_state(doc)
+    why = incomplete(state)
+    if why and not allow_partial:
+        raise ValueError(f"{qid}: D is not complete ({why}); finish `gold build {qid}` first, or pass "
+                         "--allow-partial for a pool that says it is partial")
     candidates = read_jsonl(qdir.candidates)
-    labels = load_labels(qdir)
+    labels = load_labels(qdir, doc["concept_sha256"])
     tiers = tuple(tiers)
     reviewed = [c for c in candidates if labels.get(c["id"]) in tiers or c["id"] not in labels]
     rest = [c for c in candidates if c["id"] in labels and labels[c["id"]] not in tiers]
@@ -89,6 +103,9 @@ def build_pool(qid: str, out_root: Path, corpus: GoldCorpus | None, *, sample: i
         "candidates": len(candidates), "unsorted": sum(c["id"] not in labels for c in candidates),
         "reviewed_tiers": len(reviewed), "rest": len(rest), "sampled": len(picked), "records": len(chosen),
         "strata": {"triaged": [c["id"] for c in reviewed], "sample": sorted(picked)},
+        "concept_sha256": doc["concept_sha256"], "doc": {**state, "sha256": file_hash(qdir.doc)},
+        "partial": bool(why), "partial_reason": why,
+        "passages": corpus is not None, "corpus_manifest_sha256": corpus.manifest_sha256 if corpus else None,
         "candidates_sha256": file_hash(qdir.candidates), "triage_sha256": file_hash(qdir.triage),
         "created_at": utc_now(),
     }

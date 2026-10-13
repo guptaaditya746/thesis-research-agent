@@ -55,6 +55,43 @@ def test_a_failed_triage_batch_is_retried_on_rerun(built):
     assert script.calls["triage"] == 1
 
 
+def test_a_reply_that_labels_none_of_its_batch_is_not_cached(built):
+    wrong = Script()
+    original = wrong.reply
+    wrong.reply = lambda stage, prompt: ({"labels": [{"id": "q01-c999999", "label": "answers"}]}
+                                         if stage == "triage" else original(stage, prompt))
+    assert run_triage(built, wrong)["unsorted"] == 6
+    good = Script()
+    assert run_triage(built, good)["unsorted"] == 0 and good.calls["triage"] == 1  # asked again, not cached
+
+
+def test_labels_hold_for_their_concept_and_prompt_only(built):
+    run_triage(built)
+    qdir = built["dir"]
+    lines = read_jsonl(qdir.triage)
+    assert {line["concept_sha256"] for line in lines} == {concept_sha256(table_concept())}
+    assert len(load_labels(qdir)) == 6
+    lines[0]["concept_sha256"] = "0" * 64  # judged under another concept
+    lines[1]["prompt_sha256"] = "f" * 64   # under another triage prompt
+    qdir.triage.write_text("".join(json.dumps(line) + "\n" for line in lines), encoding="utf-8")
+    assert set(load_labels(qdir)) == {line["id"] for line in lines[2:]}
+    script = Script()
+    assert run_triage(built, script)["unsorted"] == 0 and script.calls["triage"] == 1  # the two sorted again
+    runs = json.loads(qdir.triage_runs.read_text(encoding="utf-8"))["runs"]
+    assert len(runs) == 2 and runs[1]["to_sort"] == 2
+    assert {"batch", "context_chars", "temperature", "seed", "max_tokens", "model_key", "passages",
+            "corpus_manifest_sha256", "prompt", "concept_sha256"} <= set(runs[0])
+    assert runs[0]["passages"] is True and runs[0]["corpus_manifest_sha256"] == built["corpus"].manifest_sha256
+
+
+def test_triage_refuses_a_corpus_that_is_not_the_one_d_was_built_from(built):
+    from agent.broker import Rejected
+
+    (built["corpus"].root / "p5.md").write_text("changed", encoding="utf-8")
+    with pytest.raises(Rejected):
+        run_triage(built)
+
+
 def test_triage_shows_the_passage_around_the_quote(built):
     seen = []
     script = Script()
@@ -113,6 +150,50 @@ def test_sample_is_deterministic_and_seeded():
 def test_untriaged_candidates_are_reviewed_in_full(built):
     strata = build_pool("q01", built["out"], built["corpus"], sample=0)
     assert strata["unsorted"] == strata["records"] == 6 and strata["sampled"] == 0
+    assert strata["partial"] is False and strata["doc"]["papers"] == strata["doc"]["papers_in_corpus"] == 11
+    assert strata["passages"] is True and strata["corpus_manifest_sha256"] == built["corpus"].manifest_sha256
+    assert strata["concept_sha256"] == concept_sha256(table_concept()) and len(strata["doc"]["sha256"]) == 64
+
+
+def trial(tmp_path, qid="q01", concept=None, script=None, papers=("p5", "p6")):
+    c = corpus(tmp_path)
+    out = tmp_path / "gold"
+    script = script or Script()
+    build(qid, concept or table_concept(), c, out, rotation=script.rotation(),
+          settings=replace(SETTINGS, only_papers=papers), log=lambda _: None)
+    triage(qid, out, c, script.rotation(), settings=SETTINGS, log=lambda _: None)
+    return c, out
+
+
+def test_pool_and_draft_refuse_a_partial_d_unless_allowed(tmp_path):
+    c, out = trial(tmp_path)
+    with pytest.raises(ValueError, match="trial over 2 of 11 papers"):
+        build_pool("q01", out, c)
+    with pytest.raises(ValueError, match="--allow-partial"):
+        draft_key("q01", out)
+    strata = build_pool("q01", out, c, allow_partial=True)
+    assert strata["partial"] is True and strata["doc"]["only_papers"] == ["p5", "p6"]
+    key = draft_key("q01", out, allow_partial=True)
+    assert key["built"]["partial"] is True and key["built"]["doc"]["papers"] == 2 and "PARTIAL" in key["notes"]
+
+
+def test_pool_and_draft_refuse_a_d_with_failed_calls(tmp_path):
+    down = Script(fail=lambda stage, paper, part: stage == "extract" and paper == "p6")
+    c, out = trial(tmp_path, script=down)
+    with pytest.raises(ValueError, match="1 extractions"):
+        draft_key("q01", out)
+    assert "failed calls" in draft_key("q01", out, allow_partial=True)["built"]["partial_reason"]
+
+
+def test_draft_refuses_untriaged_candidates_unless_allowed(built):
+    failing = Script()
+    failing.fail = lambda stage, *_: failing.calls["triage"] == 1
+    assert run_triage(built, failing, batch=3)["unsorted"] == 3
+    with pytest.raises(ValueError, match="3 candidates have no triage label"):
+        draft_key("q01", built["out"])
+    key = draft_key("q01", built["out"], allow_untriaged=True)
+    assert key["built"]["untriaged"] == 3 and key["counts"]["skipped"]["untriaged"] == 3
+    assert "3 candidates had no triage label" in key["notes"] and key["built"]["partial"] is False
 
 
 # --- draft -------------------------------------------------------------------------------------------
@@ -167,7 +248,7 @@ def test_graph_draft_merges_identical_edges_and_validates(tmp_path):
     build("q02", concept, c, out, rotation=script.rotation(), settings=replace(SETTINGS, only_papers=("p5", "p6")),
           log=lambda _: None)
     triage("q02", out, c, script.rotation(), settings=SETTINGS, log=lambda _: None)
-    key = draft_key("q02", out)
+    key = draft_key("q02", out, allow_partial=True)
     assert validate_key(key, concept) == []
     edges = {(r["source"], r["target"]): r for r in key["rows"]}
     assert set(edges) == {("p5", "GSM8K"), ("p6", "HotpotQA")}

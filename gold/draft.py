@@ -16,6 +16,12 @@ is a valid answer row: the answer schema requires both, and gold facts are sourc
 and candidate, not by broker claims. `validate_key` checks exactly that, with
 agent.concept.validate_answer (schema from answer_schema_for(concept), concept hash, unique ids).
 A graph candidate without a source or target cannot be a valid edge and is left out (counted).
+
+A draft key from a partial D would understate recall without saying so, so `draft_key` refuses a
+trial or a D with failed calls unless `allow_partial`, and refuses while candidates have no triage
+label unless `allow_untriaged` (they would silently be missing from the key). Either way the key
+records the D it was made from (`built.doc`: coverage, failures, trial settings, doc.json's sha256),
+`built.partial`, the untriaged count and the git state, and `notes` says when it is partial.
 """
 from __future__ import annotations
 
@@ -25,7 +31,18 @@ from typing import Any
 from agent.concept import concept_sha256, validate_answer
 from agent.rundir import utc_now
 
-from .build import QuestionDir, file_hash, git_commit, load_doc, merge_rows, norm, read_jsonl, write_json
+from .build import (
+    QuestionDir,
+    doc_state,
+    file_hash,
+    git_state,
+    incomplete,
+    load_doc,
+    merge_rows,
+    norm,
+    read_jsonl,
+    write_json,
+)
 from .triage import load_labels
 
 VERSION = "v1-draft"
@@ -63,15 +80,25 @@ def _row(concept: dict[str, Any], n: int, merged: dict[str, Any], facts: list[di
     return {"id": f"r{n}", **{k: cells[k] for k in EDGE_FIELDS}, "attributes": cells["attributes"], "facts": facts}
 
 
-def draft_key(qid: str, out_root: Path, *, tiers: tuple[str, ...] = TIERS) -> dict[str, Any]:
+def draft_key(qid: str, out_root: Path, *, tiers: tuple[str, ...] = TIERS, allow_partial: bool = False,
+              allow_untriaged: bool = False) -> dict[str, Any]:
     """Write key.draft.json for one question from doc.json, candidates.jsonl and triage.jsonl; return it."""
     qdir = QuestionDir(Path(out_root) / qid)
     doc = load_doc(qdir)
     concept = doc["concept"]
+    state = doc_state(doc)
+    why = incomplete(state)
+    if why and not allow_partial:
+        raise ValueError(f"{qid}: D is not complete ({why}); finish `gold build {qid}` first, or pass "
+                         "--allow-partial for a draft key that says it is partial")
     candidates = read_jsonl(qdir.candidates)
-    labels = load_labels(qdir)
+    labels = load_labels(qdir, doc["concept_sha256"])
     if candidates and not labels:
         raise ValueError(f"{qid}: no triage labels; run `gold triage {qid}` first")
+    untriaged = sum(c["id"] not in labels for c in candidates)
+    if untriaged and not allow_untriaged:
+        raise ValueError(f"{qid}: {untriaged} candidates have no triage label; run `gold triage {qid}` again, or "
+                         "pass --allow-untriaged to leave them out of the draft key (recorded in it)")
     graph = concept["answer_shape"]["kind"] == "graph"
     kept, skipped = [], {"untriaged": 0, "other_tiers": 0, "unanchored": 0, "incomplete_edge": 0}
     for c in candidates:
@@ -101,16 +128,24 @@ def draft_key(qid: str, out_root: Path, *, tiers: tuple[str, ...] = TIERS) -> di
                           "origin": "research", "paper_id": c["paper_id"], "quote": c["anchor"]["exact"],
                           "vital": False, "candidate_id": cid}
         rows.append(_row(concept, len(rows) + 1, merged, list(facts.values())))
+    notes = ("DRAFT: rows from model triage alone (labels " + ", ".join(tiers) + ", quotes that passed the "
+             "check), not reviewed by people; scores against it are provisional. The reviewed key.json "
+             "replaces it.")
+    if why:
+        notes += f" PARTIAL: made from an incomplete D ({why}); recall against it is understated."
+    if untriaged:
+        notes += f" {untriaged} candidates had no triage label and are left out."
+    git = git_state(log=None)
     key = {
         "qid": qid, "concept_sha256": concept_sha256(concept), "kind": concept["answer_shape"]["kind"],
         "version": VERSION, "reviewed": False, "rows": rows,
-        "notes": ("DRAFT: rows from model triage alone (labels " + ", ".join(tiers) + ", quotes that passed the "
-                  "check), not reviewed by people; scores against it are provisional. The reviewed key.json "
-                  "replaces it."),
+        "notes": notes,
         "merged_facts": merged_facts,
         "counts": {"candidates": len(candidates), "kept": len(kept), "rows": len(rows), "facts": fact_no,
                    "skipped": skipped},
-        "built": {"tiers": list(tiers), "created_at": utc_now(), "git_commit": git_commit(),
+        "built": {"tiers": list(tiers), "created_at": utc_now(), "git_commit": git["commit"], "git": git,
+                  "partial": bool(why), "partial_reason": why, "untriaged": untriaged,
+                  "doc": {**state, "sha256": file_hash(qdir.doc)},
                   "doc_concept_sha256": doc["concept_sha256"], "candidates_sha256": file_hash(qdir.candidates),
                   "triage_sha256": file_hash(qdir.triage)},
     }
