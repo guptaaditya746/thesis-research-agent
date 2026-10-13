@@ -9,11 +9,15 @@ template step.
 
 Versions:
 - v1 (1.10): the M1-real runs (tests/M1-real); kept byte for byte so they can be reproduced, and
-  run with the loop settings of that time (loop.LEGACY_V1).
+  run with the loop settings of that time (loop.LEGACY_V1: no masking, notices, draft or guided
+  conclusion, the old wording) and, unless a budget is given, their budget (loop.budget_for:
+  150 steps / 400,000 tokens): `agent run --prompt-version v1` is the M1-real run.
 - v2 (1.13, 1.15): the corpus's real file names (`p12.md` and ACL Anthology ids such as
   `2025-acl-long-892.md`; the manifest has no titles), claim a fact in the command that finds it,
   keep ./answer-draft.json up to date, finish research by about 75% of the budget, what the
   budget notices and output masking mean, and a conclude reply that is the bare answer object.
+The attach step (agent/attach.py) has its own attach-<version>.txt, and uses the run's version:
+attach-v2 has v2's corpus paragraph and claim rules verbatim (test_attach checks both versions).
 """
 from __future__ import annotations
 

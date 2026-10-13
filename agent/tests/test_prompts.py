@@ -165,14 +165,14 @@ def test_prompt_v1_content() -> None:
         assert f"{reason}" in v1, reason
 
 
-@pytest.mark.parametrize("version", VERSIONS)
-def test_broker_reasons_are_all_in_the_prompt(version: str) -> None:
-    """If broker.py or anchor.py gains a rejection reason, the prompt must explain it."""
+@pytest.mark.parametrize("name", [f"{p}-{v}.txt" for v in VERSIONS for p in ("system", "attach")])
+def test_broker_reasons_are_all_in_the_prompt(name: str) -> None:
+    """If broker.py or anchor.py gains a rejection reason, the prompt (and the attach step's) must explain it."""
     source = "".join((prompts.PROMPT_DIR.parent / f).read_text(encoding="utf-8") for f in ("broker.py", "anchor.py"))
     import re
     reasons = set(re.findall(r'Rejected\(f?"([a-z_]+)', source)) | set(re.findall(r'AnchorError\("([a-z_]+)"', source))
     assert {"not_found", "ambiguous", "partial_number", "unknown_file"} <= reasons
-    system = (prompts.PROMPT_DIR / f"system-{version}.txt").read_text(encoding="utf-8")
+    system = (prompts.PROMPT_DIR / name).read_text(encoding="utf-8")
     assert sorted(r for r in reasons if r not in system) == []
 
 

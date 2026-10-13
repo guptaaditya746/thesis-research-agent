@@ -91,13 +91,15 @@ def cmd_attach(args: argparse.Namespace) -> int:
     try:
         summary = attach_run(args.run_dir, corpus, manifest, base_url=args.base_url, sandbox_mode=args.sandbox,
                              agent_root=args.agent_root, budget=budget, broker=args.broker,
-                             extra_path=tuple(args.path_extra))
+                             extra_path=tuple(args.path_extra), prompt_version=args.prompt_version,
+                             conclude_decoding=args.conclude_decoding)
     except AttachError as exc:
         print(f"FAIL {exc}")
         return 1
     c = summary["cost"]
     print(f"attach {summary['run_id']}: facts={len(summary['facts'])} attached={summary['attached']} "
-          f"no_source={summary['no_source']} tokens={c['tokens']} time={c['seconds']}s head={summary['chain_head']}")
+          f"(from claims {summary['attached_from_claim']}) no_source={summary['no_source']} tokens={c['tokens']} "
+          f"time={c['seconds']}s head={summary['chain_head']}")
     return 0
 
 
@@ -320,6 +322,9 @@ def main(argv: list[str] | None = None) -> int:
     attach.add_argument("--agent-root", type=Path, help="default: the run's agent root")
     attach.add_argument("--steps-per-fact", type=int)
     attach.add_argument("--tokens-per-fact", type=int)
+    attach.add_argument("--prompt-version", help="agent/prompts/attach-<version>.txt (default: the run's prompt version)")
+    attach.add_argument("--conclude-decoding", choices=DECODING_CHOICES,
+                        help="how conclude replies are decoded (default: the run's)")
     attach.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
     attach.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
     attach.set_defaults(func=cmd_attach)

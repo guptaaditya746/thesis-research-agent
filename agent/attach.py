@@ -2,13 +2,23 @@
 
 Runs after a claim_off run has written answer.json. For each answer fact, in answer order,
 `orch-model` (same settings and seed as the run) gets a fresh conversation: the attach prompt
-(agent/prompts/attach-<version>.txt, the same claim rules as prompt v1) and the fact with its row
-and concept (attach-task-<version>.txt). It has the same sandbox and tools as the run, plus the
+(agent/prompts/attach-<version>.txt, the same corpus description and claim rules as the run's
+prompt version, which it defaults to) and the fact with its row and concept
+(attach-task-<version>.txt). It has the same sandbox and tools as the run, plus the
 `claim` command: each command gets a claim channel opened with origin "attach", so every quote
 passes the broker's normal anchor check and becomes a `claim` record. The fact ends with one json
 block: {"claim_id": ...} naming an accepted claim made for this fact with the fact's own s, p and
 o, or {"no_source": "..."}. Out of budget (its own, per fact, announced) or context, the fact gets
 `conclude_replies` replies with no command, then "no source found".
+
+The run's M1-real failure applies here too (rows 1.13): asked to conclude, Qwen3.8 sent commands.
+So, as in the research loop, a conclude reply is decoded under RESULT_SCHEMA (the run's
+`conclude_decoding`, from config.json; "free" for prompt v1 runs) and parsed as a bare result;
+a server that refuses the schema gets the reply asked for again, decoded freely, for the rest
+of the step (coverage `guided_decoding_rejected`). A fact that ends without a valid result block
+but with accepted attach claims of its own that carry exactly its s, p and o gets the last of
+them attached by the harness: a `coverage` record `attach_from_claim` names it and the others.
+A fact the agent said has no source keeps that answer.
 
 Records: every model call, command and coverage record of the step has custom_metadata.origin
 "attach" (the key the broker puts on attach claims; agent/prov.py groups all of them into one
@@ -17,10 +27,11 @@ stays unique and each attach claim is wasGeneratedBy the command it was sent fro
 appends to the run's own hash chain: the broker is reopened on events.jsonl, which it verifies
 first. A fact with no source also gets a `coverage` record (reason no_source_found).
 
-Files: config.json gains an `attach` section (prompt hash, per-fact budget, first step) when the
-step starts; answer.research.json keeps the answer as the run wrote it; answer.json then gets, for
-every fact, origin "attach" and claims [the attached claim id] or [] ("no source found");
-pairs.jsonl is rewritten; attach.json holds each fact's result and the step's own cost.
+Files: config.json gains an `attach` section (prompt hash, per-fact budget, conclude decoding,
+first step) when the step starts; answer.research.json keeps the answer as the run wrote it;
+answer.json then gets, for every fact, origin "attach" and claims [the attached claim id] or []
+("no source found"); pairs.jsonl is rewritten; attach.json holds each fact's result (and `how`:
+by the agent's result block or from its claim) and the step's own cost.
 
 An attach step is run once. One that was cut (config has `attach`, no attach.json) is not resumed:
 the batch runner (agent/batch.py) reruns the whole run in a fresh run directory.
@@ -36,14 +47,22 @@ from typing import Any
 from . import sandbox
 from .canonical import canonical, canonical_bytes, file_sha256, sha256_hex, write_json
 from .concept import validate_answer
-from .loop import DEFAULT_BASE_URL, POSIX_BROKER, Broker, ContextFull, OrchestratorModel, SandboxEnvironment
+from .loop import (DECODINGS, DEFAULT_BASE_URL, POSIX_BROKER, Broker, FailedCall, GuidedRejected, OrchestratorModel,
+                   SandboxEnvironment)
 from .parse import files_read, normalise_command, parse_reply
 from .prompts import PROMPT_DIR
-from .rundir import ATTACH_FILE, RunDir, attach_state, utc_now  # noqa: F401  (attach_state re-exported)
+from .rundir import ANSWER_BEFORE, ATTACH_FILE, RunDir, attach_state, utc_now  # noqa: F401  (re-exported)
 
 ATTACH_BUDGET = {"steps": 6, "tokens": 60_000, "announced": True}  # per fact; frozen with the run budget after 1.13
 CONCLUDE_REPLIES = 1
-ANSWER_BEFORE = "answer.research.json"
+# The result block as a JSON Schema, for decoding conclude replies under it (the claim id pattern
+# is answer.schema.json's).
+RESULT_SCHEMA: dict[str, Any] = {"anyOf": [
+    {"type": "object", "additionalProperties": False, "required": ["claim_id"],
+     "properties": {"claim_id": {"type": "string", "pattern": "^claim-[0-9]{6,}$"}}},
+    {"type": "object", "additionalProperties": False, "required": ["no_source"],
+     "properties": {"no_source": {"type": "string"}}},
+]}
 logger = logging.getLogger("agent.attach")
 
 
@@ -96,6 +115,7 @@ class FactResult:
     reason: str  # the model's no_source text, or why the harness gave up (budget, context_full)
     first_step: int
     last_step: int
+    how: str = ""  # attached by the agent's "result" block, or by the harness from its matching "claim"
     model_calls: int = 0
     commands: int = 0
     tokens: int = 0
@@ -109,7 +129,7 @@ class AttachStep:
 
     def __init__(self, run: RunDir, model: OrchestratorModel, env: SandboxEnvironment, broker: Broker, *,
                  prompt: AttachPrompt, budget: dict[str, Any], conclude_replies: int, first_step: int,
-                 config_sha256: str) -> None:
+                 config_sha256: str, conclude_decoding: str = "free") -> None:
         self.run = run
         self.model = model
         self.env = env
@@ -117,6 +137,7 @@ class AttachStep:
         self.prompt = prompt
         self.budget = {"steps": int(budget["steps"]), "tokens": int(budget["tokens"])}
         self.conclude_replies = conclude_replies
+        self.decoding = conclude_decoding  # "free" from the first refused guided call on
         self.step = first_step - 1
         self.config_sha256 = config_sha256
         self.cap = int(env.limits["output_cap_bytes"])
@@ -160,7 +181,7 @@ class AttachStep:
         messages: list[dict[str, Any]] = [{"role": "system", "content": system}, {"role": "user", "content": task}]
         result = FactResult(row["id"], fact["id"], "no_source", None, "", self.step + 1, self.step + 1)
         used_steps, tokens, phase, conclude_used = 0, 0, "attach", 0
-        last_command, repeats = "", 0
+        last_command, repeats, given = "", 0, False
 
         def budget_line() -> str:
             return (f"[Budget for this fact: {used_steps} of {self.budget['steps']} steps and {tokens:,} of "
@@ -174,8 +195,11 @@ class AttachStep:
                 phase = "conclude"
                 result.reason = "budget"
                 if self.conclude_replies:
-                    say("Budget for this fact used up. Reply now with your reasoning and the result in EXACTLY ONE "
-                        "fenced json block; no further commands run.")
+                    say("Budget for this fact used up. " + (
+                        "Reply now with your reasoning and the result in EXACTLY ONE fenced json block; no further "
+                        "commands run." if self.decoding == "free" else
+                        'Reply now with the result alone, as one JSON object {"claim_id": "..."} or '
+                        '{"no_source": "..."}; no further commands run.'))
             if phase == "conclude" and conclude_used >= self.conclude_replies:
                 break
             self.step += 1
@@ -185,27 +209,33 @@ class AttachStep:
                 used_steps += 1
             else:
                 conclude_used += 1
+            decoding = self.decoding if phase == "conclude" else "free"
             try:
-                message = self.model.query(messages)
-            except ContextFull as exc:
-                self._record({"subtype": "ai_model_invocation", "step_id": step,
-                              "used": {"prompt_sha256": exc.prompt_sha256, "messages": len(messages),
-                                       **self.model.settings},
-                              "generated": {"error": "context_window_exceeded"}, "started_at": exc.started_at,
-                              "status": "failed", "custom_metadata": {"seconds": round(exc.seconds, 3),
-                                                                      "detail": exc.detail}}, fact["id"], phase)
+                message = self.model.query(messages, decoding=decoding,
+                                           schema=None if decoding == "free" else RESULT_SCHEMA)
+            except FailedCall as exc:
+                rejected = isinstance(exc, GuidedRejected)
+                failed = self._record_failed(step, exc, len(messages), decoding, fact["id"], phase,
+                                             "guided_decoding_rejected" if rejected else "context_window_exceeded")
                 result.model_calls += 1
-                result.reason = "context_full"
-                break
+                if not rejected:
+                    result.reason = "context_full"
+                    break
+                # The server refused the schema: this reply again, and every later one, decoded freely.
+                self._coverage(step, failed, fact["id"], phase, "guided_decoding_rejected", "",
+                               {"decoding": decoding, "now": "free", "error": exc.detail})
+                self.decoding, conclude_used = "free", conclude_used - 1
+                continue
             call = message["extra"]["call"]
             content = message.get("content") or ""
             tokens += call["usage"]["total_tokens"]
             result.tokens += call["usage"]["total_tokens"]
             result.model_calls += 1
-            parsed = parse_reply(content)
+            parsed = parse_reply(content, guided=decoding != "free")
             call_task = self._record({
                 "subtype": "ai_model_invocation", "step_id": step,
-                "used": {"prompt_sha256": call["prompt_sha256"], "messages": call["messages"], **self.model.settings},
+                "used": {"prompt_sha256": call["prompt_sha256"], "messages": call["messages"], **self.model.settings,
+                         **{k: call[k] for k in ("decoding", "schema_sha256") if k in call}},
                 "generated": {k: call[k] for k in ("response_sha256", "reasoning_sha256", "finish_reason", "usage",
                                                    "served_model")} | {"parse": parsed.mode, "reply": parsed.kind},
                 "started_at": call["started_at"], "ended_at": call["ended_at"],
@@ -215,6 +245,7 @@ class AttachStep:
             if parsed.kind == "answer":
                 problem = self._take_result(parsed.answer, spo, set(result.steps), result)
                 if problem is None:
+                    given = True
                     break
                 self._coverage(step, call_task, fact["id"], phase, "invalid_attach_result", content, problem)
                 say(f"Not accepted: {problem}")
@@ -227,7 +258,8 @@ class AttachStep:
                 continue
             if phase == "conclude":
                 self._coverage(step, call_task, fact["id"], phase, "command_not_run", content, {"phase": "conclude"})
-                say("No more commands run now. Reply with the result in one fenced json block.")
+                how = "in one fenced json block" if self.decoding == "free" else "as one JSON object"
+                say(f"No more commands run now. Reply with the result {how}.")
                 continue
             normal = normalise_command(parsed.command)
             repeats = repeats + 1 if normal == last_command else 1
@@ -238,10 +270,41 @@ class AttachStep:
             result.claims_rejected += rejected
             messages.append({"role": "user", "content": f"{text}\n{budget_line()}"})
         result.last_step = self.step
+        if not given:  # no valid result block: the agent's own matching claim, if it made one
+            self._attach_from_claim(spo, row["id"], fact["id"], phase, result)
         if result.status == "no_source":
             self._coverage(self.step, None, fact["id"], phase, "no_source_found", "",
                            {"row_id": row["id"], "reason": result.reason or "no reason given"})
         return result
+
+    def _record_failed(self, step: int, exc: FailedCall, messages: int, decoding: str, fact_id: str, phase: str,
+                       error: str) -> str:
+        used = {"prompt_sha256": exc.prompt_sha256, "messages": messages, **self.model.settings, "decoding": decoding}
+        if decoding != "free":
+            used["schema_sha256"] = sha256_hex(canonical_bytes(RESULT_SCHEMA))
+        return self._record({"subtype": "ai_model_invocation", "step_id": step, "used": used,
+                             "generated": {"error": error}, "started_at": exc.started_at, "status": "failed",
+                             "custom_metadata": {"seconds": round(exc.seconds, 3), "detail": exc.detail}},
+                            fact_id, phase)["task_id"]
+
+    def _attach_from_claim(self, spo: dict[str, Any], row_id: str, fact_id: str, phase: str,
+                           result: FactResult) -> None:
+        """The fact ended without a result block (budget, context, replies that were commands).
+
+        Every accepted attach claim sent during this fact's steps with exactly the fact's s, p and
+        o passed the same checks a named one would (_take_result); the last of them is attached,
+        and a coverage record (attach_from_claim) names it, all candidates and why there was no
+        result. Mirrors the research loop taking the agent's draft (rows 1.13).
+        """
+        claims = self._attach_claims(set(result.steps))
+        matching = [cid for cid, rec in claims.items()
+                    if all(_same(rec["custom_metadata"].get(k), spo[k]) for k in spo)]
+        if not matching:
+            return
+        why = result.reason or "no result"
+        result.status, result.claim_id, result.reason, result.how = "attached", matching[-1], "", "claim"
+        self._coverage(self.step, None, fact_id, phase, "attach_from_claim", "",
+                       {"row_id": row_id, "claim_id": matching[-1], "candidates": matching, "why": why})
 
     def _take_result(self, text: str, spo: dict[str, Any], steps: set[int], result: FactResult) -> str | None:
         """Accept the fact's result block, or return what is wrong with it."""
@@ -264,7 +327,7 @@ class AttachStep:
         if not all(_same(meta[k], spo[k]) for k in spo):
             return (f"{claim_id} records s/p/o {canonical({k: meta[k] for k in spo})}, not the fact's "
                     f"{canonical(spo)}; claim it again with exactly the fact's s, p and o")
-        result.status, result.claim_id, result.reason = "attached", claim_id, ""
+        result.status, result.claim_id, result.reason, result.how = "attached", claim_id, "", "result"
         return None
 
     def _command(self, step: int, parent: str, fact_id: str, phase: str, parsed: Any,
@@ -320,8 +383,13 @@ def _last_step(run: RunDir) -> int:
 def attach_run(run_dir: Path, corpus: Path, manifest: Path, *, model: OrchestratorModel | None = None,
                base_url: str | None = None, sandbox_mode: str | None = None, agent_root: Path | None = None,
                budget: dict[str, Any] | None = None, broker: str = "auto", extra_path: tuple[str, ...] = (),
-               prompt_version: str = "v1", conclude_replies: int = CONCLUDE_REPLIES) -> dict[str, Any]:
-    """Run the attach step on a finished claim_off run. Returns attach.json's content."""
+               prompt_version: str | None = None, conclude_replies: int = CONCLUDE_REPLIES,
+               conclude_decoding: str | None = None) -> dict[str, Any]:
+    """Run the attach step on a finished claim_off run. Returns attach.json's content.
+
+    `prompt_version` and `conclude_decoding` default to the run's (config.json `prompt.version` and
+    `loop.conclude_decoding`; "free" for a run that has none, such as the M1-real runs).
+    """
     from .broker_client import BrokerProcess, InProcessBroker
     from .pairs import write_pairs
 
@@ -343,14 +411,21 @@ def attach_run(run_dir: Path, corpus: Path, manifest: Path, *, model: Orchestrat
     if agent_root is None and config.get("sandbox", {}).get("agent_root"):
         agent_root = Path(config["sandbox"]["agent_root"])
     base_url = base_url or config.get("loop", {}).get("base_url", DEFAULT_BASE_URL)
-    prompt = load_prompt(prompt_version)
+    prompt_version = prompt_version or config["prompt"]["version"]
+    decoding = conclude_decoding or config.get("loop", {}).get("conclude_decoding", "free")
+    if decoding not in DECODINGS:
+        raise AttachError(f"conclude decoding must be one of {DECODINGS}")
+    try:
+        prompt = load_prompt(prompt_version)
+    except OSError as exc:
+        raise AttachError(f"no attach prompt for version {prompt_version} ({exc})") from exc
     budget = dict(budget or ATTACH_BUDGET)
     first_step = _last_step(run) + 1
     section = {"prompt": {"version": prompt_version, "sha256": prompt.sha256, "files": prompt.files},
                "budget_per_fact": {"steps": int(budget["steps"]), "tokens": int(budget["tokens"]),
                                    "announced": bool(budget.get("announced", True))},
-               "conclude_replies": conclude_replies, "first_step": first_step, "started_at": utc_now(),
-               "base_url": base_url, "sandbox": sandbox_mode}
+               "conclude_replies": conclude_replies, "conclude_decoding": decoding, "first_step": first_step,
+               "started_at": utc_now(), "base_url": base_url, "sandbox": sandbox_mode}
     from . import schema
     problems = schema.check("config", config | {"attach": section})
     if problems:
@@ -371,7 +446,7 @@ def attach_run(run_dir: Path, corpus: Path, manifest: Path, *, model: Orchestrat
         env = SandboxEnvironment(run, corpus=corpus, mode=sandbox_mode, claim=True, agent_root=agent_root,
                                  extra_path=extra_path, origin="attach")
         step = AttachStep(run, model, env, channel, prompt=prompt, budget=budget, conclude_replies=conclude_replies,
-                          first_step=first_step, config_sha256=config_sha)
+                          first_step=first_step, config_sha256=config_sha, conclude_decoding=decoding)
         facts = [(row, fact) for row in answer["rows"] for fact in row["facts"]]
         for n, (row, fact) in enumerate(facts, 1):
             results.append(step.fact(concept, row, fact, n, len(facts)))
@@ -400,6 +475,7 @@ def attach_run(run_dir: Path, corpus: Path, manifest: Path, *, model: Orchestrat
         "last_step": max([r.last_step for r in results], default=first_step - 1),
         "started_at": section["started_at"], "ended_at": utc_now(),
         "facts": [asdict(r) for r in results], "attached": sum(r.status == "attached" for r in results),
+        "attached_from_claim": sum(r.how == "claim" for r in results),
         "no_source": sum(r.status == "no_source" for r in results),
         "cost": {k: cost[k] for k in ("model_calls", "commands", "claims_accepted", "claims_rejected", "tokens",
                                       "prompt_tokens", "completion_tokens", "seconds")},
