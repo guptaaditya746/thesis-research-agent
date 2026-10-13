@@ -12,7 +12,8 @@ import itertools
 import json
 import os
 import threading
-from typing import Any, TypeVar
+from dataclasses import dataclass
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
 from pydantic_ai import Agent, NativeOutput
@@ -112,3 +113,26 @@ class JsonlCache:
             os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
             with open(self.path, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps({"key": key, "value": value}, ensure_ascii=False, sort_keys=True) + "\n")
+
+
+@dataclass(frozen=True)
+class Reply(Generic[T]):
+    """A `structured` reply with what produced it: the alias asked, the model name the server reported
+    (LiteLLM passes vLLM's served name through), and token usage for cost accounting."""
+    output: T
+    model: str
+    served_model: str | None
+    input_tokens: int
+    output_tokens: int
+
+
+async def structured_reply(instructions: str, user_prompt: str, output_type: type[T], *, model: Model,
+                           model_settings: ModelSettings | None = None, retries: int = 1) -> Reply[T]:
+    """`structured`, keeping the served model name and usage (the gold builder records both per line)."""
+    native = bool(model.profile.get("supports_json_schema_output"))
+    agent: Agent[None, T] = Agent(model, output_type=NativeOutput(output_type) if native else output_type,
+                                  instructions=instructions, retries=retries)
+    result = await agent.run(user_prompt, model_settings=model_settings or settings())
+    usage = result.usage() if callable(result.usage) else result.usage
+    return Reply(result.output, model_name(model), result.response.model_name,
+                 usage.input_tokens or 0, usage.output_tokens or 0)
