@@ -134,6 +134,11 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def _claim_text(verdict: dict | None) -> str:
+    """A claim verdict of reexec.json as one phrase: 'accepted claim-000002', 'rejected not_found', 'not sent'."""
+    return "not sent" if verdict is None else f"{verdict['status']} {verdict['claim_id'] or verdict['reason']}"
+
+
 def cmd_reexec(args: argparse.Namespace) -> int:
     from .reexec import ReexecError, parse_steps, reexec_run
 
@@ -149,13 +154,20 @@ def cmd_reexec(args: argparse.Namespace) -> int:
     for d in report["differing"]:
         print(f"DIFF step {d['step']} ({d['agent_id']}) line {d['first_diff_line']}: recorded {d['recorded_line']!r}, "
               f"now {d['now_line']!r} -> {d['output_file']}")
+    for d in report["differing_claims"]:
+        print(f"DIFF claim {d['n']} of step {d['step']} ({d['agent_id']}): recorded {_claim_text(d['recorded'])}, "
+              f"now {_claim_text(d['now'])}")
+    if report["toolchain_differs"]:
+        t = report["toolchain"]["agent_root_manifest_sha256"]
+        print(f"WARN toolchain differs: agent root manifest sha256 {t['now']} now, {t['run']} in the run; a differing "
+              "output may come from it")
     for error in report["errors"]:
         print(f"FAIL {error}")
     c = report["claims"]
     print(f"reexec {report['run_id']}: {report['identical']}/{report['steps']} outputs identical, "
-          f"{len(report['differing'])} differing; claims {c.get('same_as_recorded', 0)}/{c.get('sent', 0)} as recorded "
-          f"-> {args.run_dir / 'reexec.json'}")
-    return 2 if report["errors"] else (1 if report["differing"] else 0)
+          f"{len(report['differing'])} differing; claims {c.get('same_as_recorded', 0)}/{c.get('sent', 0)} as recorded, "
+          f"{len(report['differing_claims'])} differing -> {args.run_dir / 'reexec.json'}")
+    return 2 if report["errors"] else (1 if report["differing"] or report["differing_claims"] else 0)
 
 
 def cmd_replay(args: argparse.Namespace) -> int:

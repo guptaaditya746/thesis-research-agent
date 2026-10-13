@@ -6,19 +6,27 @@ and origin, or only the given step ids) and runs each recorded command again
   is there for a later one, as it was in the run;
 - with the run's sandbox mode, agent root and command limits (config.json), and the run's `claim`
   setting: on for claim_on runs and for the attach step's commands (origin attach), off otherwise;
-- against the frozen corpus: its manifest must be the one in config.json, and the corpus files the
-  commands name must still match it.
+- against the frozen corpus: its manifest must be the one in config.json, and every paper it lists
+  must still hash as listed, with no Markdown file it does not list (commands such as
+  `rg -l ... "$CORPUS"` read the whole directory, not only the files they name).
+The toolchain is recorded next to the run's: the agent root's manifest hash (agent-root.sha256,
+as `agent run` hashes it) and the git commit of the code that re-executes. An agent root other than
+the run's is reported (`toolchain_differs`, a WARN line), since then a differing output may be the
+toolchain's doing rather than the run's.
 
 `claim` calls go to a dry broker: the same request checks and anchor search as the run's broker
 (agent/broker.py) and the same reply, with claim ids numbered on from the claims the run had
 accepted before that command, so a command that claims prints byte for byte what it printed in the
 run when the verdicts are the same. Its records go only to <run>/reexec.jsonl, each with the
 claim the run recorded at that place; nothing is appended to the run's chain, and the run's own
-files are only read.
+files are only read. A verdict, claim id or reason other than the run's, a claim the run did not
+send, or one it sent that is not sent again is a difference (`differing_claims`), even when the
+command's output does not show the reply (`claim ... >/dev/null`).
 
 Each new output's sha256 is compared with the recorded `output_sha256`. <run>/reexec.json holds
-{steps, identical, differing: [{step, recorded, now, first_diff_line, ...}], errors, claims}; the
-new output of each differing command is kept in <run>/reexec/ to look at.
+{steps, identical, differing: [{step, recorded, now, first_diff_line, ...}], differing_claims,
+toolchain, errors, claims}; the new output of each differing command is kept in <run>/reexec/.
+Exit codes of `agent reexec`: 0 identical, 1 an output or a claim differs, 2 errors.
 
 Differences to expect: output that depends on time, randomness, process ids or the scratch path
 (`date`, `$RANDOM`, `pwd`), and with `--steps` a command that reads a file a skipped command wrote.
@@ -31,6 +39,7 @@ import json
 import re
 import shutil
 import socket
+import subprocess
 import sys
 import tempfile
 import threading
@@ -43,7 +52,7 @@ from .anchor import AnchorError, find
 from .broker import Broker, Channel, Corpus, Rejected, serve_claims
 from .canonical import canonical_bytes, file_sha256, sha256_hex, write_json
 from .chain import verify
-from .rundir import COMMAND_LIMITS, RunDir, utc_now
+from .rundir import COMMAND_LIMITS, RunDir, git_head, utc_now
 
 REEXEC_FILE = "reexec.json"
 CLAIMS_FILE = "reexec.jsonl"
@@ -63,6 +72,8 @@ def parse_steps(text: str) -> list[int]:
         if not match:
             raise ValueError(f"--steps: {part!r} is not a step id or a range like 3-5")
         first, last = int(match.group(1)), int(match.group(2) or match.group(1))
+        if last < first:
+            raise ValueError(f"--steps: {part!r} runs backwards; write {last}-{first}")
         steps.update(range(first, last + 1))
     return sorted(steps)
 
@@ -77,6 +88,7 @@ class DryBroker:
         self.next_claim = 1
         self.sent: dict[tuple[int, str], int] = {}
         self.counts = {"sent": 0, "accepted": 0, "rejected": 0, "same_as_recorded": 0}
+        self.differing: list[dict[str, Any]] = []  # claims whose verdict, id or reason is not the run's
         self._lock = threading.Lock()
 
     def claim(self, channel: Channel, raw: bytes) -> dict[str, Any]:
@@ -98,20 +110,57 @@ class DryBroker:
             n = self.sent.get(key, 0)
             self.sent[key] = n + 1
             old = self.recorded.get(key, [])[n] if n < len(self.recorded.get(key, [])) else None
-            recorded = None if old is None else {
-                "status": old["status"], "claim_id": old["generated"].get("claim_id"),
-                "reason": old["custom_metadata"].get("reason"), "request_sha256": old["custom_metadata"].get("request_sha256")}
-            same = recorded == {"status": status, "claim_id": claim_id, "reason": reason,
-                                "request_sha256": meta.get("request_sha256")}
+            recorded = None if old is None else verdict(old)
+            now = {"status": status, "claim_id": claim_id, "reason": reason, "request_sha256": meta.get("request_sha256")}
+            same = recorded == now
             self.counts["sent"] += 1
             self.counts[status] += 1
             self.counts["same_as_recorded"] += same
+            if not same:
+                self.differing.append({"step": channel.step_id, "agent_id": channel.agent_id, "n": n + 1,
+                                       "recorded": recorded, "now": now})
             self.log.write(canonical_bytes({
                 "step_id": channel.step_id, "agent_id": channel.agent_id, "origin": channel.origin,
                 "request_sha256": meta.get("request_sha256"), "status": status, "reason": reason,
                 "claim_id": claim_id, "anchor": anchor, "recorded": recorded, "same_as_recorded": same}) + b"\n")
             self.log.flush()
         return {"ok": True, "claim_id": claim_id} if claim_id else {"ok": False, "reason": reason}
+
+    def not_sent_again(self, keys: set[tuple[int, str]]) -> list[dict[str, Any]]:
+        """Claims the run recorded for these (step, agent) that the re-executed commands did not send."""
+        return [{"step": step, "agent_id": agent, "n": n, "recorded": verdict(old), "now": None}
+                for step, agent in sorted(keys)
+                for n, old in enumerate(self.recorded.get((step, agent), []), 1) if n > self.sent.get((step, agent), 0)]
+
+
+def verdict(record: dict[str, Any]) -> dict[str, Any]:
+    """What the dry broker compares of a recorded claim."""
+    return {"status": record["status"], "claim_id": record["generated"].get("claim_id"),
+            "reason": record["custom_metadata"].get("reason"),
+            "request_sha256": record["custom_metadata"].get("request_sha256")}
+
+
+def corpus_problems(corpus: Corpus) -> list[str]:
+    """The frozen-corpus check: every paper of the manifest as hashed there, and no Markdown file it does not list."""
+    problems = []
+    for name, sha in sorted(corpus.hashes.items()):
+        path = corpus.root / name
+        if not path.is_file() or file_sha256(path) != sha:
+            problems.append(f"corpus: {name} differs from the manifest (the corpus is not the frozen one)")
+    problems += [f"corpus: {p.name} is not in the manifest (the corpus is not the frozen one)"
+                 for p in sorted(corpus.root.glob("*.md")) if p.name not in corpus.hashes]
+    return problems
+
+
+def toolchain(config: dict[str, Any], agent_root: Path | None) -> dict[str, Any]:
+    """The run's toolchain and this re-execution's: agent root manifest hash (as `agent run` takes it) and git commit."""
+    now = file_sha256(agent_root / "agent-root.sha256") if agent_root else sha256_hex(b"")
+    try:
+        commit = git_head(Path(__file__).resolve().parents[1])
+    except (OSError, subprocess.SubprocessError):
+        commit = None
+    return {"agent_root_manifest_sha256": {"run": config["hashes"].get("agent_root_manifest_sha256"), "now": now},
+            "git_commit": {"run": config.get("git_commit"), "now": commit}}
 
 
 @dataclass(frozen=True)
@@ -191,6 +240,10 @@ def reexec_run(run_dir: Path, corpus: Path, manifest: Path, *, steps: list[int] 
     if agent_root is None and config.get("sandbox", {}).get("agent_root"):
         agent_root = Path(config["sandbox"]["agent_root"])
     limits = {**COMMAND_LIMITS, **config.get("command_limits", {})}
+    if steps is not None and not steps:
+        raise ReexecError("--steps selects no step")
+    toolchain_now = toolchain(config, agent_root)
+    root_hash = toolchain_now["agent_root_manifest_sha256"]
 
     errors = [f"chain: {e}" for e in verify(run.events, run.claims).errors]
     records = _records(run)
@@ -200,12 +253,7 @@ def reexec_run(run_dir: Path, corpus: Path, manifest: Path, *, steps: list[int] 
                    if s not in {t["step_id"] for t in tools}]
         tools = [t for t in tools if t["step_id"] in steps]
     corpus_index = Corpus(corpus, manifest)
-    for name in sorted({f for t in tools for f in t["used"].get("files_read", [])}):
-        if name not in corpus_index.hashes:
-            continue  # a name the command mentions that is not a corpus file
-        path = Path(corpus) / name
-        if not path.is_file() or file_sha256(path) != corpus_index.hashes[name]:
-            errors.append(f"corpus: {name} differs from the manifest (the corpus is not the frozen one)")
+    errors += corpus_problems(corpus_index)
     recorded: dict[tuple[int, str], list[dict[str, Any]]] = {}
     for r in records:
         if r["subtype"] == "claim":
@@ -220,9 +268,10 @@ def reexec_run(run_dir: Path, corpus: Path, manifest: Path, *, steps: list[int] 
     report: dict[str, Any] = {
         "schema_version": 1, "run_id": run.run_id, "started_at": utc_now(), "ended_at": None,
         "sandbox": sandbox_mode, "agent_root": str(agent_root) if agent_root else None,
-        "corpus_manifest_sha256": config["hashes"]["corpus_manifest_sha256"], "selected_steps": steps,
-        "scratch": str(scratch) if keep_scratch else None, "steps": 0, "identical": 0, "identical_steps": [],
-        "differing": [], "claims": {}, "errors": errors}
+        "corpus_manifest_sha256": config["hashes"]["corpus_manifest_sha256"], "toolchain": toolchain_now,
+        "toolchain_differs": root_hash["now"] != root_hash["run"],
+        "selected_steps": steps, "scratch": str(scratch) if keep_scratch else None, "steps": 0, "identical": 0,
+        "identical_steps": [], "differing": [], "differing_claims": [], "claims": {}, "errors": errors}
     with open(run.root / CLAIMS_FILE, "wb") as log:
         dry = DryBroker(corpus_index, log, recorded)
         try:
@@ -242,6 +291,7 @@ def reexec_run(run_dir: Path, corpus: Path, manifest: Path, *, steps: list[int] 
             if not keep_scratch:
                 shutil.rmtree(scratch, ignore_errors=True)
         report["claims"] = dict(dry.counts)
+        report["differing_claims"] = dry.differing + dry.not_sent_again({(t["step_id"], t["agent_id"]) for t in tools})
     report["ended_at"] = utc_now()
     write_json(run.root / REEXEC_FILE, report)
     return report

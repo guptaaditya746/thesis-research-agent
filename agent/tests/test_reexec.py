@@ -11,7 +11,9 @@ pytest.importorskip("minisweagent")
 pytest.importorskip("litellm")
 
 from agent import replay  # noqa: E402
+from agent.anchor import AnchorError  # noqa: E402
 from agent.attach import attach_run  # noqa: E402
+from agent.canonical import sha256_hex  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.reexec import first_diff, parse_steps, reexec_run  # noqa: E402
 
@@ -51,9 +53,15 @@ def test_reexec_reproduces_the_run(tmp_path: Path, corpus: tuple[Path, Path], ca
     assert diff["recorded_line"] == str(run.scratch.resolve()) and diff["now_line"] != diff["recorded_line"]
     assert (run.root / diff["output_file"]).read_text(encoding="utf-8") == diff["now_line"] + "\n"
     assert diff["exit_code"] == {"recorded": 0, "now": 0}
-    assert "DIFF step 7 (main) line 1" in out and "6/7 outputs identical, 1 differing; claims 3/3 as recorded" in out
+    assert "DIFF step 7 (main) line 1" in out
+    assert "6/7 outputs identical, 1 differing; claims 3/3 as recorded, 0 differing" in out
+    # The toolchain is recorded: the test runs name a made-up agent root hash, this one has none.
+    assert report["toolchain"]["agent_root_manifest_sha256"] == {"run": "b" * 64, "now": sha256_hex(b"")}
+    assert report["toolchain"]["git_commit"]["run"] == "c" * 40 and report["toolchain_differs"]
+    assert "WARN toolchain differs: agent root manifest sha256" in out
     # The claims went to the dry broker: same verdicts and ids as the run's, logged in reexec.jsonl only.
     assert report["claims"] == {"sent": 3, "accepted": 2, "rejected": 1, "same_as_recorded": 3}
+    assert report["differing_claims"] == []
     dry = jsonl(run.root / "reexec.jsonl")
     assert [(d["step_id"], d["status"], d["claim_id"], d["reason"], d["origin"]) for d in dry] == [
         (4, "rejected", None, "not_found", "research"), (5, "accepted", "claim-000001", None, "research"),
@@ -79,10 +87,20 @@ def test_reexec_against_a_changed_corpus(tmp_path: Path, corpus: tuple[Path, Pat
     paper = corpus[0] / "p2.md"
     paper.write_bytes(paper.read_bytes() + b"\nOne more line.\n")
     assert cli(["reexec", str(run.root), "--corpus", str(corpus[0]), "--steps", "6"]) == 2
-    assert "FAIL corpus: p2.md differs from the manifest" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "FAIL corpus: p2.md differs from the manifest" in out
+    assert "DIFF claim 1 of step 6 (main): recorded accepted claim-000002, now rejected corpus_file_hash_mismatch" in out
     report = json.loads((run.root / "reexec.json").read_text(encoding="utf-8"))
     assert report["differing"][0]["step"] == 6 and "corpus_file_hash_mismatch" in report["differing"][0]["now_line"]
     assert jsonl(run.root / "reexec.jsonl")[0]["same_as_recorded"] is False
+    # Any paper counts, named in a command or not (`rg ... "$CORPUS"` reads them all), and so does an extra file.
+    paper.write_bytes(paper.read_bytes()[:-len(b"\nOne more line.\n")])
+    (corpus[0] / "p11.md").write_text("# A paper the manifest does not list\n", encoding="utf-8")
+    (corpus[0] / "p3.md").unlink()
+    report = reexec_run(run.root, *corpus, steps=[1])
+    assert report["errors"] == ["corpus: p3.md differs from the manifest (the corpus is not the frozen one)",
+                                "corpus: p11.md is not in the manifest (the corpus is not the frozen one)"]
+    assert report["identical_steps"] == [1]
     # Another manifest is another corpus: nothing runs.
     other = tmp_path / "other-manifest.json"
     other.write_bytes(corpus[1].read_bytes() + b"\n")
@@ -114,9 +132,45 @@ def test_reexec_baseline_and_its_attach_step(tmp_path: Path, corpus: tuple[Path,
     assert "PARTIAL replay r1: 2/2 model calls" in capsys.readouterr().out
 
 
+@posix_only
+def test_a_claim_that_differs_is_a_difference(tmp_path: Path, corpus: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch,
+                                              capsys: pytest.CaptureFixture[str]) -> None:
+    """The output does not show the claim's reply here, so only the dry broker's verdict tells (C5)."""
+    hidden = f"[ -f flag ] && {claim_cmd(unique_quote('p1'))} >/dev/null; echo done"
+    run, _, _, _ = go(tmp_path, corpus, [bash("echo x > flag"), bash(hidden), final([row(["claim-000001"])])])
+    assert (run.out / "step-0002.txt").read_text(encoding="utf-8") == "done\n"
+    # Step 2 alone: no flag in the fresh scratch, so the claim the run made is not sent again.
+    assert cli(["reexec", str(run.root), "--corpus", str(corpus[0]), "--steps", "2"]) == 1
+    out = capsys.readouterr().out
+    assert "1/1 outputs identical, 0 differing; claims 0/0 as recorded, 1 differing" in out
+    assert "DIFF claim 1 of step 2 (main): recorded accepted claim-000001, now not sent" in out
+    # Both steps, but the anchor check now rejects the quote (say the anchor rules changed).
+    def no_anchor(*args: object, **kwargs: object) -> None:
+        raise AnchorError("not_found")
+    monkeypatch.setattr("agent.reexec.find", no_anchor)
+    assert cli(["reexec", str(run.root), "--corpus", str(corpus[0])]) == 1
+    out = capsys.readouterr().out
+    assert "2/2 outputs identical" in out
+    assert "DIFF claim 1 of step 2 (main): recorded accepted claim-000001, now rejected not_found" in out
+    [d] = json.loads((run.root / "reexec.json").read_text(encoding="utf-8"))["differing_claims"]
+    assert (d["step"], d["recorded"]["status"], d["now"]["status"], d["now"]["claim_id"]) == (2, "accepted", "rejected", None)
+
+
+@posix_only
+def test_steps_that_select_nothing(tmp_path: Path, corpus: tuple[Path, Path], capsys: pytest.CaptureFixture[str]) -> None:
+    run, _, _, _ = go(tmp_path, corpus, [bash("echo one"), final([row([])])])
+    assert cli(["reexec", str(run.root), "--corpus", str(corpus[0]), "--steps", "7-5"]) == 2
+    assert "FAIL --steps: '7-5' runs backwards; write 5-7" in capsys.readouterr().out
+    assert cli(["reexec", str(run.root), "--corpus", str(corpus[0]), "--steps", ","]) == 2
+    assert "FAIL --steps selects no step" in capsys.readouterr().out
+    assert not (run.root / "reexec.json").exists()
+
+
 def test_parse_steps_and_first_diff() -> None:
     assert parse_steps("3, 1,5-7,5") == [1, 3, 5, 6, 7]
     with pytest.raises(ValueError, match="not a step id"):
         parse_steps("1,x")
+    with pytest.raises(ValueError, match="runs backwards"):
+        parse_steps("7-5")
     assert first_diff(b"a\nb\nc\n", b"a\nB\nc\n") == (2, "b\n", "B\n")
     assert first_diff(b"a\n", b"a\nmore\n") == (2, "", "more\n")
