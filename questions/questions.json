@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "questions": [
+    {
+      "id": "q01",
+      "category": "corpus_wide",
+      "question": "Which benchmarks and datasets do the retrieval-augmented generation papers in the corpus evaluate on?",
+      "source": "nlp33",
+      "notes": "Was: 'Which benchmarks and datasets do the indexed retrieval-augmented generation papers evaluate on?' 'indexed papers' became 'papers in the corpus': the agent reads the Markdown corpus with shell tools, there is no search index."
+    },
+    {
+      "id": "q02",
+      "category": "corpus_wide",
+      "question": "What kinds of attacks or safety risks do the LLM safety and red-teaming papers in the corpus evaluate?",
+      "source": "nlp34",
+      "notes": "Was: 'What kinds of attacks or safety risks do the indexed LLM safety and red-teaming papers evaluate?' 'indexed' became 'in the corpus'."
+    },
+    {
+      "id": "q03",
+      "category": "corpus_wide",
+      "question": "Which low-resource languages do the papers in the corpus study, and for which tasks?",
+      "source": "nlp35",
+      "notes": "Was: 'Which low-resource languages do the indexed papers study, and for which tasks?' 'indexed papers' became 'papers in the corpus'."
+    },
+    {
+      "id": "q04",
+      "category": "corpus_wide",
+      "question": "What approaches do the papers in the corpus propose to detect or reduce hallucinations in large language models?",
+      "source": "nlp36",
+      "notes": "Was: 'What approaches do the indexed papers propose to detect or reduce hallucinations in large language models?' 'indexed papers' became 'papers in the corpus'."
+    },
+    {
+      "id": "q05",
+      "category": "corpus_wide",
+      "question": "Which metrics do the papers in the corpus use to measure hallucination or factual errors?",
+      "source": "nlp42",
+      "notes": "Was: 'Which metrics do the indexed papers use to measure hallucination or factual errors?' 'indexed papers' became 'papers in the corpus'."
+    },
+    {
+      "id": "q06",
+      "category": "corpus_wide",
+      "question": "Which EMNLP 2025 papers in the corpus introduce a new benchmark for evaluating large language models, and what does each benchmark measure?",
+      "source": "nlp44",
+      "notes": "Was: 'Which indexed EMNLP 2025 papers introduce a new benchmark for evaluating large language models, and what does each benchmark measure?' 'indexed' became 'in the corpus'. The venue filter stays: the corpus holds ACL 2025 and EMNLP 2025 papers."
+    },
+    {
+      "id": "q07",
+      "category": "ambiguous",
+      "question": "Which retrieval-augmented generation approach is best among the papers in the corpus?",
+      "source": "nlp30",
+      "notes": "Was: 'Which retrieval-augmented generation approach is best among the indexed 2025 papers, and by which evaluation measure?' '2025' dropped (every paper in the corpus is from 2025); 'and by which evaluation measure' dropped, because choosing the measure is one of the readings the concept step should propose, not something the question fixes."
+    },
+    {
+      "id": "q08",
+      "category": "ambiguous",
+      "question": "Which paper in this corpus is the most influential?",
+      "source": "nlp48",
+      "notes": "Unchanged."
+    },
+    {
+      "id": "q09",
+      "category": "ambiguous",
+      "question": "Who are the leading researchers on retrieval-augmented generation in this corpus?",
+      "source": "nlp49",
+      "notes": "Unchanged."
+    },
+    {
+      "id": "q10",
+      "category": "ambiguous",
+      "question": "Which evaluation benchmark is the most popular among the papers in the corpus?",
+      "source": "nlp53",
+      "notes": "Was: 'Which evaluation benchmark is the most popular among the indexed papers?' 'indexed papers' became 'papers in the corpus'."
+    },
+    {
+      "id": "q11",
+      "category": "ambiguous",
+      "question": "Which large language model is used most successfully across the papers in the corpus?",
+      "source": "nlp62",
+      "notes": "Was: 'Which large language model is used most successfully across the indexed papers?' 'indexed papers' became 'papers in the corpus'."
+    },
+    {
+      "id": "q12",
+      "category": "ambiguous",
+      "question": "Is retrieval augmentation or fine-tuning the better approach according to this corpus?",
+      "source": "nlp66",
+      "notes": "Unchanged."
+    }
+  ]
+}

@@ -24,6 +24,8 @@ agent/prompts/** text eol=lf
 agent/concepts/** text eol=lf
 # Concept sessions (rows 2.1-2.3): concepts/<question-id>/ with the frozen concept.json and its chain.
 concepts/** text eol=lf
+# The 12 questions (row 2.3): the same bytes on every checkout, so the file hash the Slurm scripts print matches.
+questions/** text eol=lf
 # Batch run manifests (row 2.9).
 agent/manifests/** text eol=lf
 agent/bin/** text eol=lf
