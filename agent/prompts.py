@@ -1,9 +1,19 @@
 """Versioned prompts (row 1.10): agent/prompts/system-<version>[-baseline].txt and task-<version>.txt.
 
-The system prompt for `claim_on` is system-v1.txt; the baseline (`claim_off`, row 2.4) is
-system-v1-baseline.txt, which is v1 minus its claim block and nothing else: system-v1.diff is
-the checked-in diff and test_prompts checks that it still holds. Files are hashed as stored (LF,
-.gitattributes); `{{steps}}` and `{{tokens}}` are filled in by mini-swe-agent's template step.
+The system prompt for `claim_on` is system-<version>.txt; the baseline (`claim_off`, row 2.4) is
+system-<version>-baseline.txt, which is that prompt minus its claim block and nothing else:
+system-<version>.diff is the checked-in diff and test_prompts checks that it still holds. Files
+are hashed as stored (LF, .gitattributes); `{{steps}}`, `{{tokens}}` and the other template
+values (agent/loop.py, ResearchAgent.extra_template_vars) are filled in by mini-swe-agent's
+template step.
+
+Versions:
+- v1 (1.10): the M1-real runs (tests/M1-real); kept byte for byte so they can be reproduced, and
+  run with the loop settings of that time (loop.LEGACY_V1).
+- v2 (1.13, 1.15): the corpus's real file names (`p12.md` and ACL Anthology ids such as
+  `2025-acl-long-892.md`; the manifest has no titles), claim a fact in the command that finds it,
+  keep ./answer-draft.json up to date, finish research by about 75% of the budget, what the
+  budget notices and output masking mean, and a conclude reply that is the bare answer object.
 """
 from __future__ import annotations
 
