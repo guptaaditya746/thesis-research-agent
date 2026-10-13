@@ -9,7 +9,9 @@ from pathlib import Path
 from . import kg
 from .canonical import canonical, file_sha256, sha256_hex
 from .chain import verify
-from .rundir import BUDGET as RUN_BUDGET, RunDir
+from .rundir import BUDGET as RUN_BUDGET, BUDGET_M1 as RUN_BUDGET_M1, RunDir
+
+DECODING_CHOICES = ("structured_outputs", "guided_json", "free")  # loop.DECODINGS, without importing the loop
 
 
 def cmd_check_run(args: argparse.Namespace) -> int:
@@ -53,8 +55,8 @@ def stop_on_sigterm() -> None:
 def cmd_run(args: argparse.Namespace) -> int:
     import dataclasses
 
-    from .loop import research_run, settings_for  # imports LiteLLM and mini-swe-agent: slow, so only here
-    from .rundir import BUDGET, git_head
+    from .loop import budget_for, research_run, settings_for  # imports LiteLLM and mini-swe-agent: slow, so only here
+    from .rundir import git_head
 
     stop_on_sigterm()
 
@@ -65,12 +67,14 @@ def cmd_run(args: argparse.Namespace) -> int:
     settings = settings_for(args.prompt_version)  # v1: the loop of the M1-real runs
     if args.conclude_decoding:
         settings = dataclasses.replace(settings, conclude_decoding=args.conclude_decoding)
+    budget = budget_for(args.prompt_version)  # v1: the M1-real runs' 150 steps / 400k tokens
+    budget |= {k: v for k, v in (("steps", args.steps), ("tokens", args.tokens)) if v is not None}
     _, outcome, head = research_run(
         runs_root=args.runs_root, run_id=args.run_id, concept=concept, corpus=corpus, manifest=manifest,
         condition=args.condition, temperature=args.temperature, seed=args.seed,
         git_commit=git_head(Path(__file__).resolve().parents[1]), agent_root_manifest_sha256=agent_root_sha,
         sandbox_mode=args.sandbox, agent_root=args.agent_root, base_url=args.base_url,
-        budget={**BUDGET, "steps": args.steps, "tokens": args.tokens}, broker=args.broker, extra_path=tuple(args.path_extra),
+        budget=budget, broker=args.broker, extra_path=tuple(args.path_extra),
         prompt_version=args.prompt_version, settings=settings)
     print(f"run {args.run_id}: exit={outcome.exit_status} steps={outcome.steps} tokens={outcome.tokens} "
           f"rows={outcome.answer_rows} answer={outcome.answer_from} head={head.get('head')}")
@@ -294,11 +298,14 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--sandbox", choices=("landlock", "unsandboxed"), default="landlock",
                      help="unsandboxed runs commands without Landlock/seccomp: tests and machines without Landlock only")
     run.add_argument("--agent-root", type=Path, help="pinned toolchain ($AGENT_ROOT); its agent-root.sha256 is hashed")
-    run.add_argument("--steps", type=int, default=RUN_BUDGET["steps"])
-    run.add_argument("--tokens", type=int, default=RUN_BUDGET["tokens"])
+    run.add_argument("--steps", type=int, help=f"step budget (default {RUN_BUDGET['steps']}; "
+                                                f"{RUN_BUDGET_M1['steps']} with --prompt-version v1)")
+    run.add_argument("--tokens", type=int, help=f"token budget (default {RUN_BUDGET['tokens']:,}; "
+                                                 f"{RUN_BUDGET_M1['tokens']:,} with --prompt-version v1)")
     run.add_argument("--prompt-version", default="v2",
-                     help="agent/prompts/system-<version>.txt; v1 reproduces the M1-real runs (with their loop settings)")
-    run.add_argument("--conclude-decoding", choices=("structured_outputs", "guided_json", "free"),
+                     help="agent/prompts/system-<version>.txt; v1 reproduces the M1-real runs: their loop settings "
+                          "and, unless --steps/--tokens say otherwise, their budget (150 steps / 400,000 tokens)")
+    run.add_argument("--conclude-decoding", choices=DECODING_CHOICES,
                      help="how conclude replies are decoded (default: the prompt version's; structured_outputs is "
                           "vLLM >= 0.10's extra_body key, guided_json older vLLM's, free no schema)")
     run.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")

@@ -7,7 +7,9 @@ Checks, all reported (not only the first):
   its recorded offsets in the frozen corpus file (status "ok", agent/anchor.py);
 - every claim id an answer fact cites is an accepted claim of this run;
 - for a baseline run with an attach step (2.5): the step finished (attach.json), answer.json is the
-  one it wrote, every fact has origin attach and cites only attach claims.
+  one it wrote, every fact has origin attach and cites only attach claims;
+- when the harness read the agent's draft answer (1.13), its copy (answer.draft.json) has the
+  sha256 the coverage record holds.
 
 Figures: steps (model replies), commands, claims (accepted / rejected), claim steps (commands that
 sent at least one claim), tokens (sum of total_tokens over model calls), and wall time from the
@@ -153,7 +155,25 @@ def verify_run(run: RunDir, corpus: Path, manifest: Path) -> RunReport:
         report.errors.append(f"answer: cannot check claim ids ({exc})")
         answer = None
     report.errors += _attach_problems(run, records, answer)
+    report.errors += _draft_problems(run, records)
     return report
+
+
+def _draft_problems(run: RunDir, records: list[dict[str, Any]]) -> list[str]:
+    """The agent's draft answer (row 1.13): the copy the harness kept is the draft it recorded reading."""
+    problems = []
+    for record in records:
+        detail = record["generated"].get("detail") if record["subtype"] == "coverage" else None
+        draft = detail.get("draft") if isinstance(detail, dict) else None
+        if not isinstance(draft, dict) or "copy" not in draft:
+            continue
+        path = run.root / draft["copy"]
+        reason = record["generated"].get("reason")
+        if not path.is_file():
+            problems.append(f"draft: {draft['copy']} ({reason}) is missing")
+        elif file_sha256(path) != draft.get("sha256"):
+            problems.append(f"draft: {draft['copy']} is not the draft {reason} recorded (sha256 differs)")
+    return problems
 
 
 def _attach_problems(run: RunDir, records: list[dict[str, Any]], answer: dict[str, Any] | None) -> list[str]:

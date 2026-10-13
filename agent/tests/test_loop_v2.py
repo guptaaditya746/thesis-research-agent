@@ -8,8 +8,11 @@ What the four real runs showed (tests/RESULTS.md, M1-real) and what these tests 
   whole chain after it: verify, pairs, graph, PROV export, the five queries;
 - proactive output masking (last 8 commands; last 4 after a prompt over 45,000 tokens);
 - six identical commands in a row end research (`repeats`);
-- prompt v1 runs with the loop the M1-real runs had;
+- prompt v1 runs with the loop and the budget the M1-real runs had;
 - `agent run` defaults: 60 steps / 2,000,000 tokens, prompt v2.
+And what the review of the branch found: a draft that is valid JSON but no answer never crashes
+the harness; a refused schema falls back to free decoding; conclude replies get room for a whole
+answer; trajectory.json keeps masked outputs, so every prompt hash can be rebuilt.
 Same harness as test_loop: everything but the model's HTTP call is real.
 """
 from __future__ import annotations
@@ -17,6 +20,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import shlex
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +29,7 @@ import pytest
 pytest.importorskip("minisweagent")
 pytest.importorskip("litellm")
 
+import litellm  # noqa: E402
 from rdflib import Literal  # noqa: E402
 from rdflib.namespace import PROV  # noqa: E402
 
@@ -38,7 +43,7 @@ from agent.rundir import RunDir  # noqa: E402
 from agent.verify import verify_run  # noqa: E402
 
 from .conftest import REPO  # noqa: E402
-from .test_loop import (CONCEPT, Reply, ScriptedModel, bash, claim_cmd, corpus, final, go,  # noqa: E402, F401
+from .test_loop import (CONCEPT, FENCE, Reply, ScriptedModel, bash, claim_cmd, corpus, final, go,  # noqa: E402, F401
                         posix_only, records, row, unique_quote)
 
 THINKING_OFF = {"chat_template_kwargs": {"enable_thinking": False}}
@@ -79,18 +84,38 @@ def test_settings_and_config_schema() -> None:
         config = base | {"loop": {"harness": "mini-swe-agent 2.4.6", "base_url": "x", **settings.config()}}
         assert schema.check("config", config) == []
     assert LoopSettings().config() == {
-        "conclude_replies": 2, "conclude_decoding": "structured_outputs",
+        "conclude_replies": 2, "conclude_decoding": "structured_outputs", "conclude_max_tokens": 16384,
         "masking": {"keep": 8, "keep_tight": 4, "tight_above_prompt_tokens": 45000},
-        "budget_warnings": [50, 75, 90], "repeat_stop": 6, "draft_file": "answer-draft.json"}
-    assert LEGACY_V1.config()["masking"] is None and LEGACY_V1.config()["conclude_decoding"] == "free"
+        "budget_warnings": [50, 75, 90], "repeat_stop": 6, "draft_file": "answer-draft.json", "m1_notices": False}
+    assert LEGACY_V1.config() | {"masking": None, "conclude_decoding": "free", "conclude_max_tokens": None,
+                                 "m1_notices": True} == LEGACY_V1.config()
     for bad in ({"conclude_decoding": "regex"}, {"mask_keep_tight": 0}, {"mask_keep_tight": 9},
-                {"draft_file": "../answer.json"}):
+                {"draft_file": "../answer.json"}, {"conclude_max_tokens": 0}):
         with pytest.raises(ValueError):
             LoopSettings(**bad)
 
 
+def test_agent_defaults_to_its_prompt_versions_settings(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """ResearchAgent built without settings resolves them as research_run does (v1: the M1-real loop)."""
+    from agent import prompts
+    from agent.broker_client import InProcessBroker
+    from agent.loop import ResearchAgent, SandboxEnvironment
+    run = RunDir.create(tmp_path / "runs", "x", CONCEPT, corpus_manifest=corpus[1], condition="claim_on",
+                        prompt_version="v1", prompt_sha256="a" * 64, temperature=0.7, seed=1, git_commit="c" * 40,
+                        agent_root_manifest_sha256="b" * 64)
+    env = SandboxEnvironment(run, corpus=corpus[0], mode="unsandboxed", claim=True)
+    broker = InProcessBroker(run.root, *corpus)
+    try:
+        for version, settings in (("v1", LEGACY_V1), ("v2", LoopSettings())):
+            agent = ResearchAgent(ScriptedModel([]), env, broker=broker, run=run, concept=CONCEPT,
+                                  prompt=prompts.load(version, "claim_on"), budget={"steps": 1, "tokens": 1})
+            assert agent.settings == settings
+    finally:
+        broker.close()
+
+
 def test_cli_run_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    """1.13: `agent run` defaults to the provisional budget and prompt v2; v1 brings the M1-real loop back."""
+    """1.13: `agent run` defaults to the provisional budget and prompt v2; v1 brings the M1-real loop and budget back."""
     import agent.rundir
     seen: list[dict[str, Any]] = []
 
@@ -109,11 +134,14 @@ def test_cli_run_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsy
     assert "exit=budget" in out and "answer=draft" in out
     assert seen[0]["budget"] == {"steps": 60, "tokens": 2_000_000, "announced": True}
     assert seen[0]["prompt_version"] == "v2" and seen[0]["settings"] == LoopSettings()
-    cli([*base, "--prompt-version", "v1", "--steps", "150", "--tokens", "400000"])
+    cli([*base, "--prompt-version", "v1"])  # the M1-real runs: their loop and their budget
     assert seen[1]["prompt_version"] == "v1" and seen[1]["settings"] == LEGACY_V1
     assert seen[1]["budget"] == {"steps": 150, "tokens": 400_000, "announced": True}
-    cli([*base, "--conclude-decoding", "guided_json"])
+    cli([*base, "--conclude-decoding", "guided_json", "--steps", "7"])
     assert seen[2]["settings"] == dataclasses.replace(LoopSettings(), conclude_decoding="guided_json")
+    assert seen[2]["budget"] == {"steps": 7, "tokens": 2_000_000, "announced": True}
+    cli([*base, "--prompt-version", "v1", "--tokens", "9"])
+    assert seen[3]["budget"] == {"steps": 150, "tokens": 9, "announced": True}
 
 
 # --- budget notices ------------------------------------------------------------------------------------
@@ -159,11 +187,13 @@ def test_conclude_is_decoded_under_the_reply_schema(tmp_path: Path, corpus: tupl
     assert outcome.exit_status == "submitted" and outcome.answer_from == "final" and outcome.answer_rows == 1
     schema_sent = reply_schema(CONCEPT)
     guided = {"structured_outputs": {"json": schema_sent}} if decoding == "structured_outputs" else {"guided_json": schema_sent}
-    assert model.kwargs == [{}, {"extra_body": THINKING_OFF | guided}]  # research free, conclude guided
+    # research free; conclude guided, with room for a whole answer
+    assert model.kwargs == [{}, {"extra_body": THINKING_OFF | guided, "max_tokens": 16_384}]
     conclude = model.prompts[1][-1]["content"]
     assert conclude.startswith("Budget used up.") and "the final answer alone, as one JSON object" in conclude
     calls = calls_of(run)
     assert [c["used"]["decoding"] for c in calls] == ["free", decoding]
+    assert [c["used"]["max_tokens"] for c in calls] == [4096, 16_384]
     assert "schema_sha256" not in calls[0]["used"]
     assert calls[1]["used"]["schema_sha256"] == sha256_hex(canonical_bytes(schema_sent))
     assert calls[1]["generated"]["parse"] == "guided_answer" and calls[1]["custom_metadata"]["final_answer"]
@@ -184,8 +214,50 @@ def test_conclude_when_the_server_ignores_the_schema(tmp_path: Path, corpus: tup
     reasons = [c["generated"]["reason"] for c in coverage_of(run)]
     assert reasons == ["command_not_run", "invalid_final_answer", "no_final_answer"]
     problems = coverage_of(run)[1]["generated"]["detail"]
-    assert "cut at the 4,096-token reply limit" in problems[0] and "not valid JSON" in problems[1]
+    assert "cut at the 16,384-token reply limit" in problems[0] and "not valid JSON" in problems[1]
     assert coverage_of(run)[2]["generated"]["detail"] == {"exit_status": "budget"}  # no draft
+
+
+@posix_only
+def test_a_refused_schema_falls_back_to_free_decoding(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A 400 on the guided call that is not context-full (the grammar backend refuses the schema) does not
+    fail the run: the reply is asked for again, decoded freely, and so are all later conclude replies."""
+    refused = litellm.exceptions.BadRequestError("xgrammar: unsupported JSON schema", "orch-model", "openai")
+    replies: list[Reply] = [bash("echo one"), refused, tool_call("ls"), bare([row([])], "after the refusal")]
+    run, outcome, _, model = go(tmp_path, corpus, replies, budget={"steps": 1, "tokens": 10**6, "announced": True})
+    assert outcome.exit_status == "submitted" and outcome.answer_from == "final" and outcome.model_calls == 4
+    assert [("structured_outputs" in k.get("extra_body", {}), k.get("max_tokens")) for k in model.kwargs] == [
+        (False, None), (True, 16_384), (False, 16_384), (False, 16_384)]
+    assert model.prompts[1] == model.prompts[2]  # the same reply asked for again, without the schema
+    calls = calls_of(run)
+    assert [(c["status"], c["used"]["decoding"]) for c in calls] == [
+        ("finished", "free"), ("failed", "structured_outputs"), ("finished", "free"), ("finished", "free")]
+    failed = calls[1]
+    assert failed["generated"] == {"error": "guided_decoding_rejected"} and "xgrammar" in failed["custom_metadata"]["detail"]
+    assert failed["used"]["schema_sha256"] == sha256_hex(canonical_bytes(reply_schema(CONCEPT)))
+    assert [c["generated"]["parse"] for c in calls[2:]] == ["lenient_tool_call", "lenient_bare_answer"]
+    cov = coverage_of(run)
+    assert [c["generated"]["reason"] for c in cov] == ["guided_decoding_rejected", "command_not_run"]
+    assert cov[0]["parent_task_id"] == failed["task_id"] and cov[0]["generated"]["detail"]["now"] == "free"
+    assert model.prompts[3][-1]["content"].startswith("No more commands run now. Reply with the final answer in one "
+                                                      "fenced json block.")
+    assert verify_run(run, *corpus).ok
+
+
+@posix_only
+def test_conclude_reply_limit_fits_the_context(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A conclude reply may use up to 16,384 tokens, but no more than the context leaves, and never less than 4,096."""
+    from agent.loop import CONTEXT_MARGIN
+    limits = {}
+    for last_prompt in (30_000, 55_000, 63_000):
+        model = ScriptedModel([bash("echo one"), final([row([])])], prompt_tokens=[last_prompt, 10])
+        _, _, _, _ = go(tmp_path / str(last_prompt), corpus, [], model=model,
+                        budget={"steps": 1, "tokens": 10**6, "announced": True})
+        added = sum(len(m["content"]) for m in model.prompts[1][-2:]) // 3  # the observation and the conclude notice
+        limits[last_prompt] = (model.kwargs[1]["max_tokens"], 65_536 - last_prompt - 25 - added - CONTEXT_MARGIN)
+    assert limits[30_000][0] == 16_384
+    assert limits[55_000][0] == limits[55_000][1] and 4096 < limits[55_000][0] < 16_384
+    assert limits[63_000][0] == 4096
 
 
 # --- the draft answer ----------------------------------------------------------------------------------
@@ -212,7 +284,9 @@ def test_answer_from_draft_and_everything_after_it(tmp_path: Path, corpus: tuple
     cov = coverage_of(run)
     assert [c["generated"]["reason"] for c in cov] == ["command_not_run", "command_not_run", "answer_from_draft"]
     assert cov[-1]["generated"]["detail"] == {"exit_status": "budget", "rows": 2, "draft": {
-        "file": "scratch/answer-draft.json", "bytes": len(draft_bytes), "sha256": hashlib.sha256(draft_bytes).hexdigest()}}
+        "file": "scratch/answer-draft.json", "copy": "answer.draft.json", "bytes": len(draft_bytes),
+        "sha256": hashlib.sha256(draft_bytes).hexdigest()}}
+    assert (run.root / "answer.draft.json").read_bytes() == draft_bytes  # kept where the sandbox cannot change it
     assert not any(c["custom_metadata"]["final_answer"] for c in calls_of(run))
     # verify, pairs, graph, PROV export and the five queries all work on it.
     report = verify_run(run, *corpus)
@@ -239,7 +313,18 @@ def test_answer_from_draft_and_everything_after_it(tmp_path: Path, corpus: tuple
     assert (iri("answer"), PROV.wasGeneratedBy, iri("task", cov[-1]["task_id"])) in g
     assert (iri("answer"), PROV.wasDerivedFrom, iri("draft")) in g
     assert (iri("draft"), prov.OURS.sha256, Literal(hashlib.sha256(draft_bytes).hexdigest())) in g
+    assert (iri("draft"), prov.OURS.fileName, Literal("answer.draft.json")) in g
     assert (iri("task", cov[-1]["task_id"]), PROV.used, iri("draft")) in g
+    # verify holds the copy to the recorded hash.
+    (run.root / "answer.draft.json").write_bytes(draft_bytes + b" ")
+    assert any("answer.draft.json is not the draft answer_from_draft recorded" in e for e in verify_run(run, *corpus).errors)
+    (run.root / "answer.draft.json").unlink()
+    assert any("answer.draft.json (answer_from_draft) is missing" in e for e in verify_run(run, *corpus).errors)
+
+
+def draft_text(text: str) -> str:
+    """A command that writes a draft whose bytes are exactly `text`."""
+    return bash(f"printf '%s' {shlex.quote(text)} > answer-draft.json")
 
 
 @posix_only
@@ -248,6 +333,13 @@ def test_answer_from_draft_and_everything_after_it(tmp_path: Path, corpus: tuple
     (lambda: write_draft([{"id": "r1", "facts": []}]), "rows/0"),
     (lambda: bash("ln -s ../config.json answer-draft.json"), "not a regular file"),
     (lambda: bash("mkfifo answer-draft.json"), "not a regular file"),
+    # JSON that parses but must not crash the harness (review of 1.13): a non-list facts, non-finite numbers, depth
+    (lambda: write_draft([{"id": "r1", "facts": 3}]), "rows/0"),
+    (lambda: draft_text('{"rows": [{"id": "r1", "facts": [{"id": "f1", "s": "a", "p": "b", "o": NaN}]}], "notes": ""}'),
+     "NaN is not a JSON number"),
+    (lambda: draft_text('{"rows": [], "notes": "", "x": 1e400}'), "1e400 is not a finite number"),
+    (lambda: bash("python3 -c 'print(\"{\\\"rows\\\": \" + \"[\" * 200000 + \"]\" * 200000 + \"}\")' > answer-draft.json"),
+     "nested too deeply"),
 ])
 def test_a_bad_draft_is_not_taken(tmp_path: Path, corpus: tuple[Path, Path], make: Any, problem: str) -> None:
     replies: list[Reply] = [make(), tool_call("ls"), tool_call("ls")]
@@ -295,6 +387,37 @@ def test_old_outputs_become_stubs(tmp_path: Path, corpus: tuple[Path, Path]) -> 
     assert model.prompts[12][:4] == model.prompts[11][:4]
     assert cli(["timeline", str(run.root)]) == 0
     assert "4 outputs masked" in (run.root / "timeline.html").read_text(encoding="utf-8")
+    # trajectory.json keeps what the model saw before the stub, so every prompt hash can still be checked.
+    kept = [m for m in trajectory(run) if m.get("extra", {}).get("masked")]
+    assert len(kept) == 4 and "FIRST-OUTPUT" in kept[0]["extra"]["original_content"]
+    assert kept[0]["extra"]["original_content"] == [m for m in model.prompts[8] if m["role"] == "user"][1]["content"]
+    assert rebuilt_prompt_hashes(run, model) == [c["used"]["prompt_sha256"] for c in calls]
+
+
+def trajectory(run: RunDir) -> list[dict[str, Any]]:
+    return json.loads((run.root / "trajectory.json").read_text(encoding="utf-8"))["messages"]
+
+
+def rebuilt_prompt_hashes(run: RunDir, model: ScriptedModel) -> list[str]:
+    """Each model call's prompt_sha256, from trajectory.json and the call records alone.
+
+    A call's prompt is the first `used.messages` messages; of the command outputs among them the
+    oldest `masked_observations` were stubs (as they are now), the rest as first shown.
+    """
+    messages = trajectory(run)
+    out = []
+    for call in calls_of(run):
+        shown, outputs = [], 0
+        for message in messages[:call["used"]["messages"]]:
+            extra = message.get("extra") or {}
+            content = message["content"]
+            if extra.get("kind") == "observation":
+                outputs += 1
+                if outputs > call["custom_metadata"]["masked_observations"]:
+                    content = extra.get("original_content", content)
+            shown.append({**message, "content": content})
+        out.append(sha256_hex(canonical_bytes(model._prepare_messages_for_api(shown))))
+    return out
 
 
 @posix_only
@@ -304,6 +427,39 @@ def test_masking_tightens_after_a_large_prompt(tmp_path: Path, corpus: tuple[Pat
     run, _, _, _ = go(tmp_path, corpus, [], model=model, budget={"steps": 60, "tokens": 10**9, "announced": True})
     # After call 6 (45,001 prompt tokens) only the last 4 outputs stay; stubs stay stubs after that.
     assert [c["custom_metadata"]["masked_observations"] for c in calls_of(run)] == [0] * 6 + [2, 2]
+    assert rebuilt_prompt_hashes(run, model) == [c["used"]["prompt_sha256"] for c in calls_of(run)]
+
+
+@posix_only
+def test_a_context_full_overflow_keeps_masked_stubs(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """On a context-full 400 the outputs not yet masked become stubs; a stub already made stays as it was."""
+    overflow = litellm.exceptions.ContextWindowExceededError("too long", "orch-model", "openai")
+    replies: list[Reply] = [bash(f"echo {n}") for n in range(1, 11)] + [overflow, final([row([])])]
+    run, outcome, _, model = go(tmp_path, corpus, replies)
+    assert outcome.exit_status == "submitted"
+    outputs = [m["content"] for m in model.prompts[11] if m["role"] == "user"][1:-1]
+    assert [o.split(" ", 1)[0] for o in outputs] == ["[Output"] * 2 + ["[output"] * 8
+    assert all(o.startswith("[output removed: context full] Full output: ") for o in outputs[2:])
+    assert outputs[:2] == [m["content"] for m in model.prompts[10] if m["role"] == "user"][1:3]
+    answered = [c for c in calls_of(run) if c["status"] == "finished"]
+    assert [c["custom_metadata"]["masked_observations"] for c in answered][-1] == 10
+    assert all(m["extra"].get("original_content", "").startswith("<returncode>0</returncode>")
+               for m in trajectory(run) if m.get("extra", {}).get("kind") == "observation")
+
+
+@posix_only
+def test_v1_keeps_the_m1_wording(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """Prompt v1: the context-full stub and a cut answer read as in the M1-real loop."""
+    overflow = litellm.exceptions.ContextWindowExceededError("too long", "orch-model", "openai")
+    cut = f"Done.\n{FENCE}json\n{{\"rows\": [\n{FENCE}"
+    model = ScriptedModel([bash("echo a"), cut, overflow, final([row([])])], finish_reasons=["stop", "length", "stop"])
+    run, outcome, _, _ = go(tmp_path, corpus, [], model=model, prompt_version="v1")
+    assert outcome.exit_status == "submitted" and run.load_config()["budget"]["steps"] == 150  # the M1 budget
+    problems = coverage_of(run)[0]["generated"]["detail"]
+    assert coverage_of(run)[0]["generated"]["reason"] == "invalid_final_answer"
+    assert not any("reply limit" in p for p in problems)
+    assert [m["content"] for m in model.prompts[3] if m["role"] == "user"][1] == "[output removed: context full]"
+    assert all("max_tokens" not in k for k in model.kwargs)
 
 
 @posix_only

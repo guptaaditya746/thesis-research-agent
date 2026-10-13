@@ -45,8 +45,9 @@ class ScriptedModel(OrchestratorModel):
     """OrchestratorModel whose LiteLLM call returns scripted replies (or raises scripted errors).
 
     `kwargs` keeps what each call added to the model's settings (extra_body under guided
-    decoding); `prompt_tokens` and `finish_reasons`, if given, are each call's reported prompt
-    size and finish reason in turn (default: a quarter of the prompt's characters, "stop").
+    decoding, max_tokens for a conclude reply); `prompt_tokens` and `finish_reasons`, if given,
+    are each call's reported prompt size and finish reason in turn (default: a quarter of the
+    prompt's characters, "stop").
     """
 
     abort_exceptions = [*OrchestratorModel.abort_exceptions, IndexError]  # script ran out: fail, never retry
@@ -64,7 +65,7 @@ class ScriptedModel(OrchestratorModel):
     def _query(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         self.prompts.append(json.loads(json.dumps(messages)))
         self.kwargs.append(json.loads(json.dumps(kwargs)))
-        assert set(kwargs) <= {"extra_body"} and self.config.model_kwargs["seed"] == 1234
+        assert set(kwargs) <= {"extra_body", "max_tokens"} and self.config.model_kwargs["seed"] == 1234
         reply = self.replies.pop(0)
         if callable(reply):
             reply = reply(messages)

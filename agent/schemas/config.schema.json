@@ -121,6 +121,8 @@
                              "description": "replies allowed after the budget or the context runs out"},
         "conclude_decoding": {"enum": ["free", "structured_outputs", "guided_json"],
                               "description": "conclude replies decoded freely or under the reply schema (extra_body key; rows 1.13)"},
+        "conclude_max_tokens": {"type": ["integer", "null"], "minimum": 1,
+                                "description": "max_tokens of a conclude reply, within what the context leaves; null = the orchestrator's max_tokens"},
         "masking": {
           "type": ["object", "null"],
           "additionalProperties": false,
@@ -137,7 +139,9 @@
         "repeat_stop": {"type": "integer", "minimum": 0,
                         "description": "identical commands in a row that end research; 0 = never"},
         "draft_file": {"type": ["string", "null"],
-                       "description": "the agent's draft answer in scratch/, taken when the run ends without an answer"}
+                       "description": "the agent's draft answer in scratch/, taken when the run ends without an answer"},
+        "m1_notices": {"type": "boolean",
+                       "description": "the M1-real loop's wording (context-full stub without the output file, no reply-limit line); prompt v1"}
       }
     },
     "attach": {
@@ -167,6 +171,8 @@
           }
         },
         "conclude_replies": {"type": "integer", "minimum": 0},
+        "conclude_decoding": {"enum": ["free", "structured_outputs", "guided_json"],
+                              "description": "conclude replies decoded freely or under the result schema (default: the run's loop.conclude_decoding)"},
         "first_step": {"type": "integer", "minimum": 1, "description": "step id of the attach step's first model call"},
         "started_at": {"type": "string", "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$"},
         "base_url": {"type": "string", "minLength": 1},

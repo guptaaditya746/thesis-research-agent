@@ -3,7 +3,7 @@
 One step is one model reply. Per step the harness
 1. masks old command outputs (row 1.15, below), calls `orch-model` through LiteLLM (thinking
    off, max_tokens 4096, the run's temperature and seed) and writes an `ai_model_invocation`
-   record (decoding mode, how many outputs were masked);
+   record (decoding mode, reply limit, how many outputs were masked);
 2. parses the reply's content (agent/parse.py; the reasoning field is never run). Unparseable
    output becomes a `coverage` record and a nudge, and nothing runs;
 3. runs a command in the sandbox wrapper (agent/sandbox.py) with a fresh claim channel tagged
@@ -23,18 +23,25 @@ every step, so 400k lasted ~26 steps, and in both conclude replies of every run 
 another command (as a `<function=bash>` tool call) instead of the answer. So, with prompt v2:
 - conclude replies are decoded under the reply's JSON schema (vLLM structured outputs passed
   through LiteLLM's extra_body, as B9 did for a regex): the reply *is* the answer object, parsed
-  as `guided_answer`. The conclude notice also shows the agent's draft;
+  as `guided_answer`. A whole answer may need more than 4,096 tokens, so a conclude reply gets
+  up to `conclude_max_tokens` (16,384) of what the context leaves. If the server refuses the
+  schema (a 4xx that is not context-full), the refused call is recorded with a `coverage` record
+  `guided_decoding_rejected` and the reply is asked for again, decoded freely, as are later
+  ones: the run does not fail on it. The conclude notice also shows the agent's draft;
 - the agent keeps a draft answer in scratch/answer-draft.json. A run that ends without a valid
   answer takes the draft if it passes the same answer check (claim ids must be accepted claims),
   with notes saying so and a `coverage` record `answer_from_draft` holding the draft's sha256;
+  the bytes read are kept as answer.draft.json in the run root, out of the sandbox's reach;
 - outputs older than the last `mask_keep` (8) commands become one-line stubs naming their
   out/step-NNNN.txt file, claim replies kept, so prompts stay well under the 61,440 limit; after
   a call whose prompt was over 45,000 tokens only the last 4 stay. Masking is in place and for
-  good, so the prompt prefix (vLLM's prefix cache, C2b) changes only where a new stub starts. The
-  reactive path stays: on a context-full 400 every output becomes a stub, then old replies are
-  shortened, the third 400 ends the run.
+  good, so the prompt prefix (vLLM's prefix cache, C2b) changes only where a new stub starts; the
+  text first shown stays in the message's `extra.original_content`, so trajectory.json still
+  holds every prompt. The reactive path stays: on a context-full 400 every output not yet a stub
+  becomes one, then old replies are shortened, the third 400 ends the run.
 LoopSettings holds these choices and goes into config.json (`loop`); prompt v1 runs with
-LEGACY_V1, the loop as the M1-real runs had it (all of the above off).
+LEGACY_V1, the loop as the M1-real runs had it (all of the above off, the old wording), and by
+default with their budget (budget_for).
 
 A run that ends without a valid answer or a usable draft still gets an answer.json with no rows
 and the reason in `notes`, plus a `coverage` record (`no_final_answer`, with why the draft was not
@@ -70,7 +77,7 @@ from .canonical import canonical_bytes, sha256_hex, write_json  # noqa: E402
 from .answer import accepted_claim_ids, build_answer, empty_answer, reply_schema  # noqa: E402
 from .parse import Parsed, files_read, normalise_command, parse_reply  # noqa: E402
 from .prompts import Prompt, task_vars  # noqa: E402
-from .rundir import COMMAND_LIMITS, ORCHESTRATOR, RunDir, utc_now  # noqa: E402
+from .rundir import BUDGET, BUDGET_M1, COMMAND_LIMITS, DRAFT_COPY, ORCHESTRATOR, RunDir, utc_now  # noqa: E402
 
 HARNESS = f"mini-swe-agent {MSWEA_VERSION}"
 AGENT_DIR = Path(__file__).resolve().parent
@@ -81,6 +88,7 @@ CONTEXT_FULL_MARKERS = ("contextwindowexceeded", "context_length_exceeded", "max
                         "context length")
 POSIX_BROKER = sys.platform != "win32" and hasattr(socket, "send_fds") and hasattr(socket, "SOCK_SEQPACKET")
 DRAFT_MAX_BYTES = 1 << 20  # a larger draft is not read as an answer
+CONTEXT_MARGIN = 1_024  # tokens kept free when a conclude reply's limit is fitted to the context
 logger = logging.getLogger("agent.loop")
 
 # Schema-constrained decoding: the extra_body entry that makes vLLM decode under a JSON Schema.
@@ -97,16 +105,25 @@ class LoopSettings:
 
     conclude_replies: int = CONCLUDE_REPLIES
     conclude_decoding: str = "structured_outputs"  # "free", or a GUIDED_DECODING key
+    # max_tokens of a conclude reply, within what the context leaves (None: the orchestrator's 4,096).
+    # A whole answer to a corpus-wide question (30+ rows) does not fit 4,096 tokens, and claim_on
+    # facts carry claim ids, so a fixed cap would cut claim_on answers sooner than claim_off ones.
+    conclude_max_tokens: int | None = 16_384
     mask_keep: int = 8  # command outputs kept whole; older ones become stubs (0: never)
     mask_keep_tight: int = 4  # ... after a call whose prompt had more than mask_tight_above tokens
     mask_tight_above: int = 45_000
     budget_warnings: tuple[int, ...] = (50, 75, 90)  # % of either budget; one notice each
     repeat_stop: int = 6  # identical commands in a row that end research (0: never)
     draft_file: str | None = "answer-draft.json"  # in scratch/; taken when the run ends without an answer
+    # The M1-real loop's wording: a context-full stub without the output file, and no reply-limit
+    # line in the problems of a cut answer.
+    m1_notices: bool = False
 
     def __post_init__(self) -> None:
         if self.conclude_decoding not in DECODINGS:
             raise ValueError(f"conclude_decoding must be one of {DECODINGS}")
+        if self.conclude_max_tokens is not None and self.conclude_max_tokens < 1:
+            raise ValueError("conclude_max_tokens must be positive (or None)")
         if self.mask_keep and not 1 <= self.mask_keep_tight <= self.mask_keep:
             raise ValueError("mask_keep_tight must be between 1 and mask_keep")
         if self.draft_file is not None and Path(self.draft_file).name != self.draft_file:
@@ -116,16 +133,24 @@ class LoopSettings:
         masking = ({"keep": self.mask_keep, "keep_tight": self.mask_keep_tight,
                     "tight_above_prompt_tokens": self.mask_tight_above} if self.mask_keep else None)
         return {"conclude_replies": self.conclude_replies, "conclude_decoding": self.conclude_decoding,
-                "masking": masking, "budget_warnings": list(self.budget_warnings), "repeat_stop": self.repeat_stop,
-                "draft_file": self.draft_file}
+                "conclude_max_tokens": self.conclude_max_tokens, "masking": masking,
+                "budget_warnings": list(self.budget_warnings), "repeat_stop": self.repeat_stop,
+                "draft_file": self.draft_file, "m1_notices": self.m1_notices}
 
 
-# The loop as the M1-real runs had it: prompt v1 runs with it, so those runs can be reproduced.
-LEGACY_V1 = LoopSettings(conclude_decoding="free", mask_keep=0, budget_warnings=(), repeat_stop=0, draft_file=None)
+# The loop as the M1-real runs had it: prompt v1 runs with it (and with BUDGET_M1, budget_for), so
+# those runs can be reproduced: every prompt the model sees is built as it was then.
+LEGACY_V1 = LoopSettings(conclude_decoding="free", conclude_max_tokens=None, mask_keep=0, budget_warnings=(),
+                         repeat_stop=0, draft_file=None, m1_notices=True)
 
 
 def settings_for(prompt_version: str) -> LoopSettings:
     return LEGACY_V1 if prompt_version == "v1" else LoopSettings()
+
+
+def budget_for(prompt_version: str) -> dict[str, Any]:
+    """The default run budget: the M1-real runs' for prompt v1, the provisional one (rundir.BUDGET) otherwise."""
+    return dict(BUDGET_M1 if prompt_version == "v1" else BUDGET)
 
 
 def read_draft(path: Path, limit: int = DRAFT_MAX_BYTES) -> tuple[bytes | None, str]:
@@ -159,8 +184,8 @@ class Broker(Protocol):
     def close(self, timeout: float = 60) -> dict[str, Any]: ...
 
 
-class ContextFull(Exception):
-    """The proxy refused the prompt as too long (HTTP 400). Never retried: the agent concludes."""
+class FailedCall(Exception):
+    """A model call the proxy refused (HTTP 4xx, never retried), with what its failed-call record needs."""
 
     def __init__(self, detail: str, prompt_sha256: str, started_at: str, seconds: float) -> None:
         super().__init__(detail)
@@ -168,6 +193,23 @@ class ContextFull(Exception):
         self.prompt_sha256 = prompt_sha256
         self.started_at = started_at
         self.seconds = seconds
+
+
+class ContextFull(FailedCall):
+    """The proxy refused the prompt as too long (HTTP 400). The agent concludes."""
+
+
+class GuidedRejected(FailedCall):
+    """A call decoded under a schema was refused, and not for its length.
+
+    vLLM's grammar backend may not take something in the schema, or the proxy may refuse the
+    parameter (B9 proved only that LiteLLM passes structured_outputs through, with a regex). The
+    caller asks for the reply again, decoded freely, instead of failing the run.
+    """
+
+
+GUIDED_REFUSALS = (litellm.exceptions.BadRequestError, litellm.exceptions.UnprocessableEntityError,
+                   litellm.exceptions.UnsupportedParamsError)
 
 
 def is_context_full(exc: Exception) -> bool:
@@ -186,12 +228,16 @@ class OrchestratorModel(LitellmTextbasedModel):
     record needs and `extra.parsed` the parse result. The API key is read from the environment at
     call time and kept out of the model config, so it never reaches trajectory.json or a record.
     With `decoding` other than "free", the reply is decoded under `schema` (GUIDED_DECODING adds
-    the entry to extra_body, next to the thinking switch) and parsed as a bare answer.
+    the entry to extra_body, next to the thinking switch) and parsed as a bare answer; a refusal
+    of that call that is not context-full raises GuidedRejected. `max_tokens` may be given per
+    call (a conclude reply); the call record says which limit applied.
     """
 
-    # 400s are never retried (L8); everything mini aborts on stays aborted. SystemExit is how SIGTERM
-    # at the job limit stops a run (cli.stop_on_sigterm, row 2.9); tenacity would retry it otherwise.
-    abort_exceptions = [*LitellmModel.abort_exceptions, litellm.exceptions.BadRequestError, SystemExit]
+    # 400s and 422s are never retried (L8); everything mini aborts on stays aborted. SystemExit is
+    # how SIGTERM at the job limit stops a run (cli.stop_on_sigterm, row 2.9); tenacity would retry
+    # it otherwise.
+    abort_exceptions = [*LitellmModel.abort_exceptions, litellm.exceptions.BadRequestError,
+                        litellm.exceptions.UnprocessableEntityError, SystemExit]
 
     def __init__(self, *, base_url: str = DEFAULT_BASE_URL, temperature: float, seed: int,
                  alias: str = ORCHESTRATOR["alias"], max_tokens: int = ORCHESTRATOR["max_tokens"],
@@ -224,9 +270,12 @@ class OrchestratorModel(LitellmTextbasedModel):
             for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
                 with attempt:
                     response = self._query(prepared, **kwargs)
-        except litellm.exceptions.BadRequestError as exc:
+        except GUIDED_REFUSALS as exc:
             if is_context_full(exc):
                 raise ContextFull(str(exc)[:500], prompt_sha, started, time.monotonic() - t0) from exc
+            if decoding != "free":
+                raise GuidedRejected(f"{type(exc).__name__}: {exc}"[:500], prompt_sha, started,
+                                     time.monotonic() - t0) from exc
             raise
         raw = response if isinstance(response, dict) else response.model_dump()
         choice = raw["choices"][0]
@@ -243,7 +292,7 @@ class OrchestratorModel(LitellmTextbasedModel):
             "seconds": round(time.monotonic() - t0, 3), "response_sha256": sha256_hex(content.encode("utf-8")),
             "reasoning_sha256": sha256_hex(reasoning.encode("utf-8")) if reasoning else None,
             "finish_reason": choice.get("finish_reason"), "usage": usage, "served_model": raw.get("model"),
-            "decoding": decoding,
+            "decoding": decoding, "max_tokens": int(kwargs.get("max_tokens", self.settings["max_tokens"])),
         }
         if schema is not None and decoding != "free":
             call["schema_sha256"] = sha256_hex(canonical_bytes(schema))
@@ -362,16 +411,20 @@ class ResearchAgent(DefaultAgent):
         self.run_dir = run
         self.concept = concept
         self.budget = {"steps": int(budget["steps"]), "tokens": int(budget["tokens"])}
-        self.settings = settings or LoopSettings()
+        self.settings = settings or settings_for(prompt.version)  # as research_run resolves it
         self.cap = int(env.limits["output_cap_bytes"])
         s = self.settings
         self.extra_template_vars = {
             **self.budget, **task_vars(concept), "mask_keep": s.mask_keep, "repeat_stop": s.repeat_stop,
             "plan_steps": int(self.budget["steps"] * PLAN_SHARE), "plan_tokens": int(self.budget["tokens"] * PLAN_SHARE)}
         self.reply_schema = reply_schema(concept)
+        self.reply_schema_sha256 = sha256_hex(canonical_bytes(self.reply_schema))
+        self.conclude_decoding = s.conclude_decoding  # "free" from the first refused guided call on
         self.research_steps = 0
         self.tokens = 0
         self.last_prompt_tokens = 0
+        self.last_completion_tokens = 0
+        self.last_call_messages = 0  # messages in the last answered call's prompt
         self.phase = "research"
         self.conclude_reason = ""
         self.conclude_used = 0
@@ -393,8 +446,9 @@ class ResearchAgent(DefaultAgent):
 
     def _record_call(self, step: int, call: dict[str, Any], parsed: dict[str, Any], final_answer: bool,
                      masked: int) -> str:
-        # decoding: free, or the guided mode the reply was decoded under (with the schema's hash).
-        decoding = {k: call[k] for k in ("decoding", "schema_sha256") if k in call}
+        # decoding: free, or the guided mode the reply was decoded under (with the schema's hash);
+        # max_tokens: the reply limit of this call (larger for a conclude reply, LoopSettings).
+        decoding = {k: call[k] for k in ("decoding", "schema_sha256", "max_tokens") if k in call}
         reply = self._record({
             "subtype": "ai_model_invocation", "step_id": step,
             "used": {"prompt_sha256": call["prompt_sha256"], "messages": call["messages"], **self.model.settings,
@@ -456,7 +510,7 @@ class ResearchAgent(DefaultAgent):
 
     def _conclude(self, reason: str, text: str) -> dict[str, Any]:
         self.phase, self.conclude_reason, self.conclude_used = "conclude", reason, 0
-        if self.settings.conclude_decoding == "free":
+        if self.conclude_decoding == "free":
             ask = " Reply now with your reasoning and the final answer in EXACTLY ONE fenced json block; no further commands run."
         else:  # decoded under the reply schema: the reply can only be the answer object
             ask = (' Reply now with the final answer alone, as one JSON object {"rows": [...], "notes": "..."}; '
@@ -475,11 +529,20 @@ class ResearchAgent(DefaultAgent):
         return f"\nYour draft ./{self.settings.draft_file}{cut}:\n" + data[:self.cap].decode("utf-8", errors="replace")
 
     def _stub(self, message: dict[str, Any], why: str) -> None:
-        """Replace an observation's output by one line naming the file that holds it; claim replies stay."""
+        """Replace an observation's output by one line naming the file that holds it; claim replies stay.
+
+        The text the model saw before is kept in `extra.original_content` (the API never gets
+        `extra`): trajectory.json is the only copy of the prompts, and with it every call's
+        `prompt_sha256` can still be checked (stubs are always the oldest outputs, and the call
+        record says how many there were).
+        """
         extra = message["extra"]
+        extra.setdefault("original_content", message["content"])
         kept = [ln for ln in message["content"].splitlines() if '"claim_id"' in ln or '"reason"' in ln]
         file = (self.run_dir.root / extra["output_file"]).resolve()
-        if why == "context_full":
+        if why == "context_full" and self.settings.m1_notices:
+            head = "[output removed: context full]"
+        elif why == "context_full":
             head = f"[output removed: context full] Full output: {file}"
         else:
             head = (f"[Output of step {extra['step_id']} removed to save context (exit {extra.get('exit_code')}, "
@@ -506,22 +569,35 @@ class ResearchAgent(DefaultAgent):
         return sum(bool(m["extra"].get("masked")) for m in observations)
 
     def _stub_observations(self, drop_reasoning: bool) -> None:
-        """After a context overflow: keep the commands and the claim replies, drop the outputs."""
+        """After a context overflow: keep the commands and the claim replies, drop the outputs.
+
+        An output that is a stub already stays as it is (it holds no more than the claim replies).
+        """
         for message in self.messages[2:]:
             extra = message.get("extra", {})
-            if extra.get("kind") == "observation":
+            if extra.get("kind") == "observation" and not extra.get("masked"):
                 self._stub(message, "context_full")
             elif drop_reasoning and message.get("role") == "assistant":
                 parsed = extra.get("parsed", {})
+                extra.setdefault("original_content", message["content"])
                 message["content"] = f"[reply shortened: context full] {parsed.get('command') or ''}".strip()
 
-    def _overflow(self, step: int, exc: ContextFull, masked: int, decoding: str) -> None:
-        self._record({"subtype": "ai_model_invocation", "step_id": step,
-                      "used": {"prompt_sha256": exc.prompt_sha256, "messages": len(self.messages), **self.model.settings,
-                               "decoding": decoding},
-                      "generated": {"error": "context_window_exceeded"}, "started_at": exc.started_at,
-                      "status": "failed", "custom_metadata": {"phase": self.phase, "seconds": round(exc.seconds, 3),
-                                                              "detail": exc.detail, "masked_observations": masked}})
+    def _record_failed(self, step: int, exc: FailedCall, error: str, masked: int, decoding: str,
+                       max_tokens: int | None) -> str:
+        """The record of a call the proxy refused; returns its task id."""
+        used = {"prompt_sha256": exc.prompt_sha256, "messages": len(self.messages), **self.model.settings,
+                "decoding": decoding}
+        if decoding != "free":
+            used["schema_sha256"] = self.reply_schema_sha256
+        if max_tokens:
+            used["max_tokens"] = max_tokens
+        return self._record({"subtype": "ai_model_invocation", "step_id": step, "used": used,
+                             "generated": {"error": error}, "started_at": exc.started_at, "status": "failed",
+                             "custom_metadata": {"phase": self.phase, "seconds": round(exc.seconds, 3),
+                                                 "detail": exc.detail, "masked_observations": masked}})["task_id"]
+
+    def _overflow(self, step: int, exc: ContextFull, masked: int, decoding: str, max_tokens: int | None) -> None:
+        self._record_failed(step, exc, "context_window_exceeded", masked, decoding, max_tokens)
         self.overflows += 1
         if self.overflows > 2:
             raise LimitsExceeded(self._exit("context_full"))
@@ -529,6 +605,35 @@ class ResearchAgent(DefaultAgent):
         raise InterruptAgentFlow(self._conclude(
             "context_full", "Context full: the conversation no longer fits the model's context, so earlier "
             "command outputs were removed (claim replies kept). Conclude now."))
+
+    def _guided_rejected(self, step: int, exc: GuidedRejected, masked: int, decoding: str,
+                         max_tokens: int | None) -> None:
+        """The server refused the reply schema: record it, and decode conclude replies freely from now on.
+
+        The refused call does not count as one of the `conclude_replies` (it got no reply). A
+        free reply is parsed as before 1.13: a fenced or bare JSON object is still the answer.
+        A `coverage` record (guided_decoding_rejected) says so, for the Slurm check.
+        """
+        self.model_task_id = self._record_failed(step, exc, "guided_decoding_rejected", masked, decoding, max_tokens)
+        self._coverage(step, "guided_decoding_rejected", "", {"decoding": decoding, "now": "free", "error": exc.detail})
+        self.conclude_decoding, self.conclude_used = "free", self.conclude_used - 1
+
+    def _reply_limit(self) -> int | None:
+        """max_tokens for a conclude reply (LoopSettings.conclude_max_tokens), or None: the usual limit.
+
+        At most `conclude_max_tokens` and no more than the context leaves, so the request is never
+        refused as too long: the last prompt, the reply to it and what was added since (counted as
+        3 characters a token, which is more than they are), less a margin. Never below the usual
+        limit, which every prompt under 61,440 tokens (L8) has room for.
+        """
+        want = self.settings.conclude_max_tokens
+        if self.phase != "conclude" or not want:
+            return None
+        usual = int(self.model.settings["max_tokens"])
+        added = sum(len(m.get("content") or "") for m in self.messages[self.last_call_messages + 1:]) // 3
+        room = (int(ORCHESTRATOR["context_tokens"]) - self.last_prompt_tokens - self.last_completion_tokens
+                - added - CONTEXT_MARGIN)
+        return max(usual, min(want, room))
 
     @staticmethod
     def _exit(status: str) -> dict[str, Any]:
@@ -552,15 +657,22 @@ class ResearchAgent(DefaultAgent):
         else:
             self.conclude_used += 1
         masked = self._mask_observations()
-        decoding = self.settings.conclude_decoding if self.phase == "conclude" else "free"
+        decoding = self.conclude_decoding if self.phase == "conclude" else "free"
+        limit = self._reply_limit()
         try:
             message = self.model.query(self.messages, decoding=decoding,
-                                       schema=None if decoding == "free" else self.reply_schema)
+                                       schema=None if decoding == "free" else self.reply_schema,
+                                       **({"max_tokens": limit} if limit else {}))
         except ContextFull as exc:
-            self._overflow(step, exc, masked, decoding)
+            self._overflow(step, exc, masked, decoding, limit)
+        except GuidedRejected as exc:
+            self._guided_rejected(step, exc, masked, decoding, limit)
+            return self.query()  # the same reply asked for again, decoded freely (never a guided call again)
         call, parsed = message["extra"]["call"], message["extra"]["parsed"]
         self.tokens += call["usage"]["total_tokens"]
         self.last_prompt_tokens = call["usage"]["prompt_tokens"]
+        self.last_completion_tokens = call["usage"]["completion_tokens"]
+        self.last_call_messages = call["messages"]
         # A final answer is checked before its model call is recorded, so the record can say
         # whether this reply is the one that became answer.json.
         self._checked = (build_answer(parsed["answer"], self.concept, accepted_claim_ids(self.run_dir))
@@ -585,15 +697,16 @@ class ResearchAgent(DefaultAgent):
                 self.answer, self.answer_from = answer, "final"
                 raise Submitted({"role": "exit", "content": "answer.json written",
                                  "extra": {"exit_status": "submitted", "submission": parsed.answer}})
-            if message["extra"]["call"]["finish_reason"] == "length":  # a long answer cut mid-JSON
-                problems = [f"the reply was cut at the {self.model.settings['max_tokens']:,}-token reply limit; "
+            call = message["extra"]["call"]
+            if call["finish_reason"] == "length" and not self.settings.m1_notices:  # a long answer cut mid-JSON
+                problems = [f"the reply was cut at the {call['max_tokens']:,}-token reply limit; "
                             "give a shorter answer (shorter strings, short notes)", *problems]
             self._coverage(step, "invalid_final_answer", content, problems[:20])
             return self._say("The final answer is not valid and was not saved:\n- " + "\n- ".join(problems[:20])
                              + "\nFix it and reply with the corrected json block.")
         if self.phase == "conclude":
             self._coverage(step, "command_not_run", content, {"phase": "conclude"})
-            how = "in one fenced json block" if self.settings.conclude_decoding == "free" else "as one JSON object"
+            how = "in one fenced json block" if self.conclude_decoding == "free" else "as one JSON object"
             return self._say(f"No more commands run now. Reply with the final answer {how}.")
         return self.add_messages(self._run_command(step, parsed))
 
@@ -651,26 +764,32 @@ class ResearchAgent(DefaultAgent):
 
     # the draft answer (rows 1.13)
 
-    def check_draft(self) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
-        """(answer, about the draft) if scratch/<draft_file> passes the answer check, else (None, about it).
+    def check_draft(self) -> tuple[dict[str, Any] | None, dict[str, Any] | None, bytes | None]:
+        """(answer or None, about the draft, the bytes read) for scratch/<draft_file>.
 
-        "About" is None when there is no draft, else its file, size, sha256 and the problems found.
+        The answer is the draft completed by build_answer, if it passes the answer check (claim ids
+        must be accepted claims) and can be written as canonical JSON. "About" is None when there
+        is no draft, else its file, size, sha256 and the problems found. The draft is the agent's
+        file, so nothing in it makes this raise.
         """
         if not self.settings.draft_file:
-            return None, None
+            return None, None, None
         file = f"scratch/{self.settings.draft_file}"
         data, why = read_draft(self.run_dir.scratch / self.settings.draft_file)
         if data is None:
-            return None, (None if why == "missing" else {"file": file, "problems": [why]})
+            return None, (None if why == "missing" else {"file": file, "problems": [why]}), None
         if len(data) > DRAFT_MAX_BYTES:
-            return None, {"file": file, "problems": [f"over {DRAFT_MAX_BYTES:,} bytes"]}
+            return None, {"file": file, "problems": [f"over {DRAFT_MAX_BYTES:,} bytes"]}, None
         about: dict[str, Any] = {"file": file, "bytes": len(data), "sha256": sha256_hex(data)}
         try:
-            text = data.decode("utf-8")
+            answer, problems = build_answer(data.decode("utf-8"), self.concept, accepted_claim_ids(self.run_dir))
+            if answer is not None:
+                canonical_bytes(answer)  # answer.json can be written
         except UnicodeDecodeError as exc:
-            return None, about | {"problems": [f"not UTF-8: {exc}"]}
-        answer, problems = build_answer(text, self.concept, accepted_claim_ids(self.run_dir))
-        return answer, (about if answer is not None else about | {"problems": problems[:20]})
+            answer, problems = None, [f"not UTF-8: {exc}"]
+        except (TypeError, ValueError, RecursionError) as exc:  # build_answer reports these itself; a last guard
+            answer, problems = None, [f"the draft could not be checked: {type(exc).__name__}: {exc}"[:500]]
+        return answer, (about if answer is not None else about | {"problems": problems[:20]}), data
 
     def outcome(self, status: str) -> Outcome:
         return Outcome(status, self.research_steps, self.n_calls, self.tokens,
@@ -688,15 +807,21 @@ def finish_without_answer(agent: ResearchAgent, status: str) -> None:
     """No valid final answer: the agent's draft if it passes the answer check, else an answer with no rows.
 
     Either way a `coverage` record says which (answer_from_draft with the draft's sha256, or
-    no_final_answer with why the draft was not taken), so the run directory is complete.
+    no_final_answer with why the draft was not taken), so the run directory is complete. The
+    draft's bytes as read go to DRAFT_COPY in the run root (named in the record as `copy`),
+    where the sandbox cannot change them; verify checks the copy against the recorded sha256.
+    answer.json is written before the record that says where it came from.
     """
-    answer, draft = agent.check_draft()
+    answer, draft, data = agent.check_draft()
+    if data is not None and draft is not None:
+        (agent.run_dir.root / DRAFT_COPY).write_bytes(data)
+        draft["copy"] = DRAFT_COPY
     if answer is not None and draft is not None:
         answer["notes"] = draft_notes(status, answer.get("notes"))
-        agent._coverage(agent.n_calls, "answer_from_draft", "", {"exit_status": status, "draft": draft,
-                                                                  "rows": len(answer["rows"])})
         write_json(agent.run_dir.answer, answer)
         agent.answer, agent.answer_from = answer, "draft"
+        agent._coverage(agent.n_calls, "answer_from_draft", "", {"exit_status": status, "draft": draft,
+                                                                  "rows": len(answer["rows"])})
         return
     agent._coverage(agent.n_calls, "no_final_answer", "", {"exit_status": status} | ({"draft": draft} if draft else {}))
     write_json(agent.run_dir.answer, empty_answer(agent.concept, f"exit status {status}"))
@@ -729,18 +854,17 @@ def research_run(*, runs_root: Path, run_id: str, concept: dict[str, Any], corpu
     """Create runs/<run_id>/, start the broker, run the agent, write pairs.jsonl, close the broker.
 
     `broker` is "process" (BrokerProcess, POSIX), "inprocess" (InProcessBroker) or "auto" (the
-    process where SEQPACKET and descriptor passing exist). `settings` defaults to the prompt
-    version's (settings_for). Returns the run directory, the outcome and the broker's final head;
-    the head is also printed, for the Slurm log.
+    process where SEQPACKET and descriptor passing exist). `settings` and `budget` default to the
+    prompt version's (settings_for, budget_for). Returns the run directory, the outcome and the
+    broker's final head; the head is also printed, for the Slurm log.
     """
     from . import prompts
     from .broker_client import BrokerProcess, InProcessBroker
     from .pairs import write_pairs
-    from .rundir import BUDGET
 
     prompt = prompts.load(prompt_version, condition)
     settings = settings or settings_for(prompt_version)
-    budget = dict(budget or BUDGET)
+    budget = dict(budget or budget_for(prompt_version))
     abi = sandbox.landlock_abi()
     if sandbox_mode == "landlock" and abi is None:
         raise RuntimeError("Landlock is not available here; pass sandbox mode 'unsandboxed' explicitly")

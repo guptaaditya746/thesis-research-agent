@@ -15,6 +15,10 @@ from .concept import validate_answer, validate_concept
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")
 DIRS = ("out", "scratch")
 ATTACH_FILE = "attach.json"  # the baseline's attach step (row 2.5) writes it when it finishes
+ANSWER_BEFORE = "answer.research.json"  # ... after keeping the run's own answer here
+# The bytes of the agent's draft answer as the harness read them when the run ended without an
+# answer (row 1.13): scratch/ stays writable (the attach step works there), this copy does not change.
+DRAFT_COPY = "answer.draft.json"
 
 # Fixed run settings (milestones-1-2.md). Budget is adjusted once after 1.13, then frozen.
 ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
@@ -25,6 +29,7 @@ SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-25
 # counts the whole prompt again at every step, so the M1-real runs' 150 steps / 400k lasted only
 # ~26 steps: 2M tokens over 60 steps is ~33k per step, about what a masked context costs.
 BUDGET = {"steps": 60, "tokens": 2_000_000, "announced": True}
+BUDGET_M1 = {"steps": 150, "tokens": 400_000, "announced": True}  # the M1-real runs (prompt v1), for reruns
 COMMAND_LIMITS = {"timeout_s": 120, "ulimit_v_kib": 2 * 1024 * 1024, "output_cap_bytes": 8192}
 
 
