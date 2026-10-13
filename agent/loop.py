@@ -593,7 +593,8 @@ class ResearchAgent(DefaultAgent):
                              + "\nFix it and reply with the corrected json block.")
         if self.phase == "conclude":
             self._coverage(step, "command_not_run", content, {"phase": "conclude"})
-            return self._say("No more commands run now. Reply with the final answer in one fenced json block.")
+            how = "in one fenced json block" if self.settings.conclude_decoding == "free" else "as one JSON object"
+            return self._say(f"No more commands run now. Reply with the final answer {how}.")
         return self.add_messages(self._run_command(step, parsed))
 
     def _say(self, text: str) -> list[dict[str, Any]]:
