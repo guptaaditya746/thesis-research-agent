@@ -292,12 +292,18 @@ class Highlight(BaseModel):
 
 
 class Passage(BaseModel):
+    """Offsets count Unicode code points (Python's), as the agent's anchors do; JavaScript strings count
+    UTF-16 code units, which differ after any character outside the BMP (e.g. math italic letters in
+    a converted PDF), so the frontend slices `text` with `highlight_utf16`."""
+
     paper_id: str
     title: str
     text: str = Field(description="the window of the paper's text around the span")
-    highlight: Highlight | None = Field(description="the span, relative to `text`")
-    offset: int = Field(description="raw offset of `text` in the paper file")
-    length: int = Field(description="length of the whole paper file in characters")
+    highlight: Highlight | None = Field(description="the span in `text`, in code points (Python, the anchors)")
+    highlight_utf16: Highlight | None = Field(None, description="the same span in UTF-16 code units: "
+                                                                "text.slice(start, end) in JavaScript")
+    offset: int = Field(description="raw offset of `text` in the paper file, in code points")
+    length: int = Field(description="length of the whole paper file in code points")
 
 
 class Verdict(Open):

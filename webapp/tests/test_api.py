@@ -183,6 +183,24 @@ def test_score(client: TestClient) -> None:
     assert client.get("/api/runs/baseline-r1/score").status_code == 404
 
 
+def test_highlight_in_utf16_units(tmp_path: Path) -> None:
+    """Characters outside the BMP before a quote: JavaScript slices with highlight_utf16."""
+    from agent.canonical import sha256_hex
+    from webapp.corpus import Corpus
+
+    text = "# Paper\n\nWe set \U0001d465 = 3 and \U0001d703 = 0.5. The model reaches 91.2 F1 on Spider.\n"
+    (tmp_path / "x1.md").write_text(text, encoding="utf-8")
+    (tmp_path / "manifest.json").write_text(json.dumps({"papers": [
+        {"id": "x1", "markdown_sha256": sha256_hex(text.encode("utf-8")), "failure": None}]}), encoding="utf-8")
+    quote = "91.2 F1 on Spider"
+    start = text.index(quote)
+    p = Corpus(tmp_path).passage("x1", start, start + len(quote), 60)  # the window holds both letters
+    assert p.text[p.highlight.start:p.highlight.end] == quote
+    units = p.text.encode("utf-16-le")
+    lo, hi = p.highlight_utf16.start, p.highlight_utf16.end
+    assert units[2 * lo:2 * hi].decode("utf-16-le") == quote and (lo, hi) == (p.highlight.start + 2, p.highlight.end + 2)
+
+
 def test_corpus_passage(client: TestClient, world: World) -> None:
     text = read_text(world.corpus / "p1.md")
     start = text.index(SPIDER_BIRD.text)

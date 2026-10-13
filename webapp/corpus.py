@@ -2,8 +2,11 @@
 
 Offsets are raw code-point offsets into the file's text exactly as stored (agent/anchor.py: the
 selectors' start/end, `read_text`), so the highlight is `start - offset, end - offset` in the
-returned window. A paper is known by its manifest id (`p12`, `2025-acl-long-892`; `.md` optional);
-papers whose conversion failed have no text. The title is the file's first Markdown heading.
+returned window. The frontend slices in JavaScript, whose strings count UTF-16 code units: any
+character outside the BMP before the quote (math italic letters are common in converted PDFs)
+shifts a code-point highlight, so the same span is also given in UTF-16 units (`highlight_utf16`).
+A paper is known by its manifest id (`p12`, `2025-acl-long-892`; `.md` optional); papers whose
+conversion failed have no text. The title is the file's first Markdown heading.
 """
 from __future__ import annotations
 
@@ -97,8 +100,16 @@ class Corpus:
                 raise ValueError(f"span [{start}, {end}) must lie inside the paper (0..{len(text)})")
             lo, hi = max(0, start - context), min(len(text), end + context)
             highlight = Highlight(start=start - lo, end=end - lo)
-        return Passage(paper_id=paper_id, title=title(text, paper_id), text=text[lo:hi], highlight=highlight,
-                       offset=lo, length=len(text))
+        window = text[lo:hi]
+        utf16 = Highlight(start=utf16_len(window[:highlight.start]),
+                          end=utf16_len(window[:highlight.end])) if highlight else None
+        return Passage(paper_id=paper_id, title=title(text, paper_id), text=window, highlight=highlight,
+                       highlight_utf16=utf16, offset=lo, length=len(text))
+
+
+def utf16_len(text: str) -> int:
+    """Length of `text` in UTF-16 code units (JavaScript's string length)."""
+    return len(text.encode("utf-16-le")) // 2
 
 
 def title(text: str, fallback: str) -> str:

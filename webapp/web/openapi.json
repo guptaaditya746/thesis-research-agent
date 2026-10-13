@@ -2945,17 +2945,28 @@
                 "type": "null"
               }
             ],
-            "description": "the span, relative to `text`"
+            "description": "the span in `text`, in code points (Python, the anchors)"
+          },
+          "highlight_utf16": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Highlight"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "the same span in UTF-16 code units: text.slice(start, end) in JavaScript"
           },
           "offset": {
             "type": "integer",
             "title": "Offset",
-            "description": "raw offset of `text` in the paper file"
+            "description": "raw offset of `text` in the paper file, in code points"
           },
           "length": {
             "type": "integer",
             "title": "Length",
-            "description": "length of the whole paper file in characters"
+            "description": "length of the whole paper file in code points"
           }
         },
         "type": "object",
@@ -2967,7 +2978,8 @@
           "offset",
           "length"
         ],
-        "title": "Passage"
+        "title": "Passage",
+        "description": "Offsets count Unicode code points (Python's), as the agent's anchors do; JavaScript strings count\nUTF-16 code units, which differ after any character outside the BMP (e.g. math italic letters in\na converted PDF), so the frontend slices `text` with `highlight_utf16`."
       },
       "Pick": {
         "properties": {
