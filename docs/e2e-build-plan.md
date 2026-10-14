@@ -136,10 +136,17 @@ like: `{qid, concept_sha256, kind, version, reviewed, rows: [{id, cells | source
 - `same_row(run_row, key_row, concept) -> {match: bool, ...}` for row matching when cells differ in wording.
 Both cache in `$GOLD/judge-cache.jsonl`, keyed by sha256 of canonical input + model + prompt hash, so a
 rescore costs no model calls. Calls go through `gold/llm.py` (pydantic-ai, structured output).
+Scoring (D) uses `default_judge()` and awaits its async twins (`asupport_pair(pair, Corpus(corpus))`,
+`asame_fact`, `asame_row`) on one event loop (a pydantic-ai HTTP client must not be shared between loops),
+so support is judged with `context_for` (paper id + 600 characters each side), the input the calibration
+measured; `partial` counts as supporting as `$GOLD/judge-report.json` `calibration.partial_counts_as` says.
 
 ### Scores (D → E)
 - `<run>/score.json`: `{run_id, qid, condition, seed, exit_status, verify_ok, key_version, rows: {tp, fp, fn, precision, recall, f1}, facts: {strict: {...}, normalised: {...}, soft: {...}}, vital_recall, support: {facts, with_claims, supports, partial, no, unsourced, support_share}, cost: {steps, model_calls, tokens, tokens_without_attach, seconds, seconds_without_attach, claim_steps, claim_step_tokens}}`.
-- `$RUNS/report/`: `scores.jsonl`, `report.json` (per question × condition means, paired differences, BCa intervals, Wilcoxon results, the pre-registered primary test), `report.md`, CSV tables.
+  `score run <run>` without `--key` takes the run's question's `$GOLD/<qid>/key.json`, else `key.draft.json`;
+  judged precision reads the facts reviewers rejected as wrong from `$GOLD/<qid>/export.json` (C2). score.json
+  adds fields (pending judge decisions, run settings, judge identity, scorer version; `scoring/README.md`).
+- `$RUNS/report/`: `scores.jsonl`, `report.json` (per question × condition means, paired differences, BCa intervals, Wilcoxon results, the pre-registered primary test), `report.md`, CSV tables. `score batch $RUNS --manifest $RUNS/<name>/manifest.json` reads the attempts from the manifest's runs_root and writes here.
 - `$RUNS/.oxigraph/`: pyoxigraph store, one named graph per run (`urn:thesis-agent:run:<run_id>`), built from each run's `graph.ttl` (`score store`).
 
 ## Backend API (E; F builds against this)

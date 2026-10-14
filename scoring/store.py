@@ -4,10 +4,13 @@ One named graph per run, `urn:thesis-agent:run:<run_id>` (the run-scoped IRI pre
 uses), so a query can address one run with GRAPH or all runs through the union default graph.
 The store is a cache: it can always be rebuilt from the run directories, and a run whose graph.ttl
 changed (by hash) is reloaded. Queries are read-only: SELECT, ASK, CONSTRUCT and DESCRIBE.
+`score store <runs_root>` loads every run below the root into $RUNS/.oxigraph (`load_tree`);
+`score sparql <query-file> [--run ID]` queries it (scoring/cli.py).
 """
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -79,6 +82,28 @@ class RunStore:
         """Load every run directory under runs_root that has a graph.ttl; returns the runs (re)loaded."""
         root = Path(runs_root)
         return [d.name for d in sorted(root.iterdir()) if d.is_dir() and self.load_run(d)] if root.is_dir() else []
+
+    def load_tree(self, runs_root: Path | str) -> dict[str, Any]:
+        """Load every graph.ttl below runs_root, nested run roots (runs/m4-72/...) included.
+
+        A run directory (one with graph.ttl or config.json) is not searched further, nor is a hidden
+        directory (.oxigraph, .jobs). Run ids are directory names, so a second run directory with an
+        id already seen is skipped and reported, not loaded over the first.
+        """
+        found: dict[str, Path] = {}
+        duplicates: list[str] = []
+        for top, dirs, files in os.walk(runs_root):
+            dirs[:] = sorted(d for d in dirs if not d.startswith("."))
+            if TTL_FILE in files or "config.json" in files:
+                dirs[:] = []
+                if TTL_FILE in files:
+                    run = Path(top)
+                    if run.name in found:
+                        duplicates.append(str(run))
+                    else:
+                        found[run.name] = run
+        loaded = [name for name, run in sorted(found.items()) if self.load_run(run)]
+        return {"runs": sorted(found), "loaded": loaded, "duplicates": duplicates}
 
     def runs(self) -> list[str]:
         return sorted(self._loaded)
