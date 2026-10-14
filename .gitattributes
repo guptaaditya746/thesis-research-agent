@@ -37,3 +37,7 @@ agent/spawn-bin/** text eol=lf
 *.sbatch text eol=lf
 scripts/omen-tunnels text eol=lf
 scripts/omen-tunnels-external text eol=lf
+
+# The built web app (webapp/web/dist, made by `npm run build`) is committed byte for byte, so the
+# Slurm node serves it without npm.
+webapp/web/dist/** -text
