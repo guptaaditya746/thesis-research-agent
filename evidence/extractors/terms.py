@@ -10,12 +10,16 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 
-_NOUNS = r"(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?"
+_NOUNS = r"(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+"
 
+# "RAG with reranking", "RAG without reranking", "retrieval-augmented model without reranking" name other
+# systems (ablations), not the rag condition: the optional parts are possessive so the lookahead cannot be
+# dodged by matching less.
 CONDITIONS: dict[str, list[str]] = {
     "rag": [
-        r"(?i)\bretrieval[- ]augmented(?:\s+generation)?" + _NOUNS,
-        r"\bRAG\b(?:\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?",
+        r"(?i)\bretrieval[- ]augmented(?:\s+generation)?+" + _NOUNS + r"(?!\s+without\b)",
+        r"\bRAG\b(?:\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+"
+        r"(?!\s+(?i:with|without)\b)",
         r"(?i)\b(?:model|LLM|system|variant|generator)\s+with\s+retrieval\b",
     ],
     "baseline": [
