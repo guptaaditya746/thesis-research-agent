@@ -138,8 +138,6 @@ export const api = {
   startRun: (body: RunRequest) => post<Job>("/api/runs", body),
   run: (runId: string, signal?: AbortSignal) => get<RunDetail>(`/api/runs/${seg(runId)}`, undefined, signal),
   steps: (runId: string, signal?: AbortSignal) => get<Step[]>(`/api/runs/${seg(runId)}/steps`, undefined, signal),
-  stepOutput: async (runId: string, step: number, agentId?: string | null, signal?: AbortSignal) =>
-    (await request("GET", outputPath(runId, step), { params: outputParams(agentId), signal })).text(),
   claims: (runId: string, signal?: AbortSignal) => get<Claim[]>(`/api/runs/${seg(runId)}/claims`, undefined, signal),
   graph: (runId: string, signal?: AbortSignal) => get<KnowledgeGraph>(`/api/runs/${seg(runId)}/graph`, undefined, signal),
   /** `judge`: also ask the judge (a model call per quote it has not cached) about quotes score.json has no verdict for. */

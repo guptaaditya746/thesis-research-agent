@@ -52,7 +52,6 @@ export type TimelineAction =
   | { type: "seed"; steps: Step[] }
   | { type: "record"; record: EventRecord }
   | { type: "done" }
-  | { type: "reset" }
 
 export const initialTimeline: TimelineState = { steps: {}, seen: {}, records: 0, done: false }
 
@@ -165,8 +164,6 @@ function seedPatch(s: Step): Patch {
 
 export function timelineReducer(state: TimelineState, action: TimelineAction): TimelineState {
   switch (action.type) {
-    case "reset":
-      return initialTimeline
     case "done":
       return state.done ? state : { ...state, done: true }
     case "seed":
@@ -211,7 +208,6 @@ export interface TimelineSummary {
   claimsAccepted: number
   claimsRejected: number
   phaseChanges: PhaseChange[]
-  coverage: { at: string; reason: string }[]
   budgetNotices: BudgetNotice[]
 }
 
@@ -276,7 +272,6 @@ export function summarize(
     claimsAccepted: steps.reduce((n, s) => n + s.claims.filter((c) => c.status === "accepted").length, 0),
     claimsRejected: steps.reduce((n, s) => n + s.claims.filter((c) => c.status === "rejected").length, 0),
     phaseChanges,
-    coverage: steps.flatMap((s) => s.coverage.map((reason) => ({ at: s.key, reason }))),
     budgetNotices,
   }
 }

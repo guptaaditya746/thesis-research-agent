@@ -95,9 +95,9 @@ describe("API client", () => {
     expect(judged).toBe(true)
   })
 
-  it("returns step output as text and the five queries with their rows", async () => {
-    expect(await api.stepOutput(RUN.on, 3)).toContain('"claim_id": "claim-000001"')
-    expect(await api.stepOutput(RUN.on, 6, "sub-01")).toContain("claim-000007")
+  it("links step output as text (the walk's 'full output') and returns the five queries with their rows", async () => {
+    expect(await (await fetch(urls.stepOutput(RUN.on, 3))).text()).toContain('"claim_id": "claim-000001"')
+    expect(await (await fetch(urls.stepOutput(RUN.on, 6, "sub-01"))).text()).toContain("claim-000007")
     const unsourced = await api.provQuery(5, RUN.on)
     expect(unsourced).toEqual({ n: 5, name: "unsourced_facts", run_id: RUN.on, rows: [{ fact_id: "f5", row_id: "r5", s: "p3", p: "evaluatesOn", o: "HellaSwag", origin: "research", cited: [] }] })
     await expect(api.provQuery(3, RUN.on)).rejects.toMatchObject({ status: 400 })

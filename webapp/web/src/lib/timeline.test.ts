@@ -60,7 +60,7 @@ describe("timeline reducer", () => {
     expect(summary.claimsAccepted).toBe(1)
     expect(summary.claimsRejected).toBe(1)
     expect(summary.phaseChanges).toEqual([{ at: "main:6", from: "research", to: "conclude" }])
-    expect(summary.coverage).toEqual([{ at: "main:3", reason: "unparsed" }])
+    expect(summary.steps.find((s) => s.key === "main:3")?.coverage).toEqual(["unparsed"])
     expect(summary.steps.at(-1)?.final_answer).toBe(true)
   })
 
@@ -99,10 +99,10 @@ describe("timeline reducer", () => {
     expect(summarize(fold([noTotal])).tokens).toBe(100)
   })
 
-  it("marks done and resets", () => {
+  it("marks done once", () => {
     const done = timelineReducer(fold([call(1, 10)]), { type: "done" })
     expect(done.done).toBe(true)
-    expect(timelineReducer(done, { type: "reset" })).toEqual(initialTimeline)
+    expect(timelineReducer(done, { type: "done" })).toBe(done)
   })
 
   it("seeds from the steps endpoint as they are", () => {

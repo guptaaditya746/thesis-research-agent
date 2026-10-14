@@ -181,14 +181,6 @@ export const usePassage = (paperId: string | null | undefined, start: number, en
     staleTime: Infinity,
   })
 
-export const useStepOutput = (runId: string, step: number | null, agentId?: string | null) =>
-  useQuery({
-    queryKey: keys.runPart(runId, "output", step ?? -1, agentId ?? "main"),
-    queryFn: ({ signal }) => api.stepOutput(runId, step!, agentId, signal),
-    enabled: !!runId && step !== null,
-    staleTime: Infinity,
-  })
-
 // --- gold, results, provenance ---------------------------------------------------------------------
 
 export const useGold = () => useQuery({ queryKey: keys.gold, queryFn: ({ signal }) => api.gold(signal) })

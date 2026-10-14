@@ -28,7 +28,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { announceError, announceJob } from "@/lib/toasts"
 
-export function ProposeDialog({ qid, disabled }: { qid: string; disabled?: boolean }) {
+export function ProposeDialog({ qid }: { qid: string }) {
   const [open, setOpen] = useState(false)
   const [temperature, setTemperature] = useState("0.7")
   const [seed, setSeed] = useState("1")
@@ -53,7 +53,7 @@ export function ProposeDialog({ qid, disabled }: { qid: string; disabled?: boole
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={disabled}>
+        <Button>
           <SparklesIcon data-icon="inline-start" />
           Propose concepts
         </Button>
