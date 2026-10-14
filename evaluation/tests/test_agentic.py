@@ -56,6 +56,19 @@ def test_accepted_claims_become_items_with_checked_spans() -> None:
     assert ids["S001.c2"] in job.concept["scope"]["earlier_items"]
 
 
+def test_code_hash_covers_the_agent_and_its_harness(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Review 6: run settings, concept and prompt handling, stopping, spawn and mini-swe-agent change the id."""
+    from importlib import metadata
+
+    from evidence.agentic import extractor as ex
+
+    assert {"rundir.py", "concept.py", "stopping.py", "prompts.py", "spawn.py"} <= set(ex.AGENT_FILES)
+    before = ex.code_sha256()
+    real = metadata.version
+    monkeypatch.setattr(metadata, "version", lambda name: "9.9.9" if name == "mini-swe-agent" else real(name))
+    assert ex.code_sha256() != before
+
+
 def test_register_agentic_uses_the_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     import sys
     import types

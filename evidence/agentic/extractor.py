@@ -31,14 +31,27 @@ DEFAULT_BUDGET = {"steps": 30, "tokens": 600_000}
 PACKAGE = Path(__file__).resolve().parent
 AGENT = PACKAGE.parents[1] / "agent"
 # Source whose change changes what the extractor does: this package, and the agent's loop, answer check,
-# broker, anchoring and reply parser. The prompt files are hashed separately (prompt_files in config).
-AGENT_FILES = ("loop.py", "answer.py", "broker.py", "anchor.py", "parse.py", "sandbox.py", "claim_client.py")
+# broker, anchoring, reply parser, sandbox, claim client, run settings (budget, command limits: rundir.py),
+# concept and prompt handling, stopping and spawn hooks; plus the mini-swe-agent version the loop runs on.
+# The prompt files are hashed separately (prompt_files in config).
+AGENT_FILES = ("loop.py", "answer.py", "broker.py", "anchor.py", "parse.py", "sandbox.py", "claim_client.py",
+               "rundir.py", "concept.py", "stopping.py", "prompts.py", "spawn.py")
+
+
+def harness_version() -> str:
+    from importlib.metadata import PackageNotFoundError, version
+
+    try:
+        return version("mini-swe-agent")
+    except PackageNotFoundError:
+        return "missing"
 
 
 def code_sha256() -> str:
     files = sorted(PACKAGE.glob("*.py")) + [AGENT / f for f in AGENT_FILES]
-    return digest({f.name if f.parent == PACKAGE else f"agent/{f.name}": sha256_hex(f.read_bytes().replace(b"\r\n", b"\n"))
-                   for f in files})
+    hashes = {f.name if f.parent == PACKAGE else f"agent/{f.name}": sha256_hex(f.read_bytes().replace(b"\r\n", b"\n"))
+              for f in files}
+    return digest({**hashes, "mini-swe-agent": harness_version()})
 
 
 def prompt_files(version: str) -> dict[str, str]:
