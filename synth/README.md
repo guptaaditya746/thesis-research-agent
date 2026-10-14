@@ -47,7 +47,8 @@ Every rendering of a fact is a placement `{fact, role, paper, start, end, exact}
 `condition_label`, `metric_label` or `claim`: raw code-point offsets into the stored text
 (`agent/anchor.read_text`). The template renderer writes text through `text.Doc`, which records the
 offsets as it writes, so placements are exact by construction; the LLM renderer locates them afterwards.
-Codes and abbreviations are placements of their condition/metric; a metric's description (in the Method
+Codes and abbreviations are placements of their condition/metric where the plan puts them, on table lines
+and in their definition sentence (one that also holds the full name), so "Appendix B" is not condition B; a metric's description (in the Method
 section) is a `metric_label` placement too. Ground truth `label`/`name` are the names the paper uses (the
 synonym in paraphrased papers); `aliases` hold the codes.
 

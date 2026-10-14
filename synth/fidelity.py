@@ -106,17 +106,11 @@ def values_unique(text: str, ps: list[Placement]) -> list[str]:
 
 
 def labels_covered(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
-    """Every occurrence of a condition or metric name is a recorded rendering of that fact."""
-    names = [(c, plan.cond_name[c]) for c in plan.cond_name] + [(c, a) for c, al in plan.cond_aliases.items() for a in al]
-    names += [(k, plan.metric_name[k]) for k in plan.metric_name] + [
-        (k, a) for k, al in plan.metric_aliases.items() for a in al]
+    """Every rendering of a condition or metric name (levelcheck.renderings: codes and abbreviations only
+    in tables and definitions) is a recorded placement of that fact."""
     spans = {(p.fact, p.start, p.end) for p in ps}
-    bad = []
-    for fact, name in names:
-        for a, b in levelcheck.occurs(text, name):
-            if not any(f == fact and s <= a and b <= e for f, s, e in spans):
-                bad.append(f"{fact}: unrecorded {text[a:b]!r} at {a}")
-    return bad
+    return [f"{fact}: unrecorded {text[a:b]!r} at {a}" for fact, _, a, b, _ in levelcheck.renderings(text, plan)
+            if not any(f == fact and s <= a and b <= e for f, s, e in spans)]
 
 
 def stray_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:

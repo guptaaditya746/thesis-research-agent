@@ -29,7 +29,8 @@ DEFINITIONS = {
                    "and the abbreviation are defined in the Method section, separated from the table by "
                    "several paragraphs. No sentence states a value. Same facts as explicit.",
     "complex": "Every condition (with the distractor systems), the question metric and one or two distractor "
-               "metrics (BLEU, ROUGE-L, latency) on two datasets, one table per dataset with full labels; the "
+               "metrics (BLEU, ROUGE-L, latency) on two datasets, in one table with full labels and a Dataset column "
+               "(one row per dataset and condition); the "
                "rag value on the question metric of the main (first) dataset is not in the table but given in "
                "the text relative to the baseline ('7.0 percentage points higher than the ...'). The reader "
                "must pick the rag/baseline pair of the question metric on the main dataset.",

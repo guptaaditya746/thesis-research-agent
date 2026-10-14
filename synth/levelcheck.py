@@ -43,6 +43,29 @@ def occurs(text: str, name: str) -> list[tuple[int, int]]:
     return [(m.start(), m.end()) for m in re.finditer(r"(?<!\w)" + re.escape(name) + r"(?!\w)", text, flags)]
 
 
+def renderings(text: str, plan: Plan) -> list[tuple[str, str, int, int, bool]]:
+    """(fact, role, start, end, is_main_name) of every rendering of a condition or metric name.
+
+    A code or abbreviation counts only on a table line or in a sentence that also holds the fact's main
+    name (its definition), so a stray 'Appendix B' is not condition B; descriptions count anywhere."""
+    tables = table_lines(text)
+    items = [(c, "condition_label", plan.cond_name[c], set(plan.cond_aliases[c]), plan.cond_aliases[c])
+             for c in plan.cond_name]
+    items += [(k, "metric_label", plan.metric_name[k], {plan.metric_of(k).abbr}, plan.metric_aliases[k])
+              for k in plan.metric_name]
+    out = []
+    for fact, role, main, codes, aliases in items:
+        mains = occurs(text, main)
+        out += [(fact, role, a, b, True) for a, b in mains]
+        for alias in aliases:
+            for a, b in occurs(text, alias):
+                s, e = sentence_of(text, a, b)
+                if (alias not in codes or any(x <= a < y for x, y in tables)
+                        or any(s <= ma and mb <= e for ma, mb in mains)):
+                    out.append((fact, role, a, b, False))
+    return out
+
+
 def _explicit(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     bad = [f"table line at {a}" for a, _ in table_lines(text)]
     for p in ps:
@@ -63,6 +86,7 @@ def _explicit(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
 def _paraphrased(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     bad = [f"label {c.label!r} used verbatim" for c in plan.conditions if occurs(text, c.label)]
     bad += [f"metric name {m.name!r} used verbatim" for m in plan.metrics if occurs(text, m.name)]
+    bad += [f"metric abbreviation {m.abbr!r} used" for m in plan.metrics if occurs(text, m.abbr)]
     fmts = {p.fmt for p in ps if p.role == "value"}
     if len(fmts) < 2:
         bad.append(f"values in only one format: {sorted(f or '' for f in fmts)}")
@@ -84,6 +108,12 @@ def _distributed(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
             bad.append(f"{cid}: code {code!r} defined within {DISTANCE} characters of the table")
         if any(in_table(text, a) for a, _ in occurs(text, plan.cond_name[cid])):
             bad.append(f"{cid}: full label inside the table")
+    for k in plan.metrics:
+        defs = [p for p in ps if p.fact == k.id and p.exact == k.abbr and not in_table(text, p.start)]
+        if not defs:
+            bad.append(f"{k.id}: abbreviation {k.abbr!r} never defined outside the table")
+        elif max(p.end for p in defs) > first - DISTANCE:
+            bad.append(f"{k.id}: abbreviation {k.abbr!r} defined within {DISTANCE} characters of the table")
     for p in ps:
         if p.role == "condition_label" and not in_table(text, p.start):
             a, b = sentence_of(text, p.start, p.end)
