@@ -5,9 +5,11 @@
 
 Sends one request {task, files, steps} to the harness over the inherited descriptor in
 $SPAWN_FD and prints the subagent's result when it is done: {"ok": true, "agent_id": "sub-01",
-"status": ..., "summary": ..., "claims": [...], ...}, or {"ok": false, "reason": ...} when no
-subagent ran. Exit status 0 when a subagent ran, 1 when the harness refused, 2 on a usage error
-or without $SPAWN_FD (spawn is off in this run, or this is a subagent, which cannot spawn).
+"status": ..., "summary": ..., "claims": [...], ...} for a subagent that ran, whatever its
+status (submitted, budget, error, ...), or {"ok": false, "reason": ...} when none ran. Exit
+status 0 when a subagent ran, 1 when the harness refused the request or could not run it, 2 on
+a usage error or without $SPAWN_FD (spawn is off in this run, or this is a subagent, which
+cannot spawn).
 
 Several spawns may share one command's descriptor (`spawn ... & spawn ... & wait`), so the reply
 does not come back on it: SPAWN_FD is a SOCK_SEQPACKET socket, each request is one message, and

@@ -24,7 +24,7 @@ from rdflib import Literal  # noqa: E402
 from rdflib.namespace import PROV  # noqa: E402
 
 from agent import prompts, prov, queries, sandbox, schema  # noqa: E402
-from agent.batch import Batch, Manifest  # noqa: E402
+from agent.batch import Batch, Manifest, run_state  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.loop import POSIX_BROKER, LoopSettings, Outcome, SandboxEnvironment, kept_lines  # noqa: E402
 from agent.rundir import SUBAGENTS, RunDir  # noqa: E402
@@ -275,8 +275,27 @@ def test_a_subagent_left_running_is_cancelled_when_the_command_ends(tmp_path: Pa
     parent_tool = next(t for t in of(run, "agent_tool") if t["agent_id"] == "main")
     assert parent_tool["custom_metadata"]["spawned"] == ["sub-01"] and parent_tool["task_id"] > back["task_id"]
     result = json.loads((run.root / back["generated"]["result_file"]).read_text(encoding="utf-8"))
-    assert result["ok"] is False and result["reason"] == "cancelled"
+    assert result["ok"] is True and result["status"] == "cancelled"  # it ran: ok, and the status says how it ended
     assert verify_run(run, *corpus).ok
+
+
+@posix_only
+def test_a_subagent_that_fails_after_a_claim(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """Its model fails after one claim: the parent gets ok, status error and the claim (exit 0) and cites
+    it; the run is finished for the batch runner (subagent_error is not the run's run_error)."""
+    subs = SubModels({"t": [bash(claim_cmd(unique_quote()))]})  # the script ends: its next model call fails
+    run, outcome, _, _ = go(tmp_path, corpus, [bash('spawn --task t --files p1.md; echo "exit=$?"'), cite_sub_claims],
+                            spawn=SPAWN, sub_model=subs)
+    assert outcome.exit_status == "submitted"
+    out = (run.out / "step-0001.txt").read_text(encoding="utf-8")
+    result = results_in(out)[0]
+    assert (result["ok"], result["status"], [c["claim_id"] for c in result["claims"]]) == (True, "error", ["claim-000001"])
+    assert "reason" not in result and "exit=0" in out
+    assert [r["generated"]["reason"] for r in of(run, "coverage") if r["agent_id"] == "sub-01"] == ["subagent_error"]
+    back = next(s for s in of(run, "spawn") if s["custom_metadata"]["event"] == "return")
+    assert back["status"] == "error" and back["generated"]["claims"] == ["claim-000001"]
+    assert json.loads(run.answer.read_bytes())["rows"][0]["facts"][0]["claims"] == ["claim-000001"]
+    assert verify_run(run, *corpus).ok and run_state(run, *corpus) == ("finished", "")
 
 
 @posix_only

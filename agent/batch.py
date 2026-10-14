@@ -151,7 +151,10 @@ def run_state(run: RunDir, corpus: Path, manifest: Path) -> tuple[str, str]:
 
     if not run.config.is_file():
         return "incomplete", "no config.json"
-    reasons = [r["generated"].get("reason") for r in _records(run) if r["subtype"] == "coverage"]
+    # The run's own coverage (main agent, attach step, this runner): a subagent's (row 2.12) never
+    # fails the run; it records its failure as subagent_error, and the parent goes on.
+    reasons = [r["generated"].get("reason") for r in _records(run)
+               if r["subtype"] == "coverage" and r["agent_id"] in ("main", "batch")]
     cut = [r for r in reasons if r in CUT_REASONS]
     if cut:
         return "cut", cut[-1]

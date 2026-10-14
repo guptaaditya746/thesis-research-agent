@@ -17,6 +17,9 @@ sub-v1-baseline.txt in a claim_off run), its own scratch directory (sub/<id>/scr
 the parent's, so neither can change the other's files) and trajectory (sub/<id>/trajectory.json),
 `claim` iff the run is claim_on, and no spawn (depth 1). Its result is {"summary"} as its final
 json block; the harness adds the claims it recorded, read from the broker's log, not from it.
+The parent's spawn prints {"ok": true, "agent_id", "status", ...} for every subagent that
+started, however it ended (its claims are accepted either way), and {"ok": false, "reason"}
+only when none started.
 
 Records, all in the run's one hash chain:
 - the parent's `spawn` record when a subagent starts (status started, used.task/files/steps,
@@ -71,7 +74,7 @@ SUMMARY_MAX = 4_000  # characters of a summary passed to the parent
 FINISH_WAIT_S = 10.0  # how long a stopping harness waits for cancelled subagents
 SUMMARY_SCHEMA: dict[str, Any] = {"type": "object", "additionalProperties": False, "required": ["summary"],
                                   "properties": {"summary": {"type": "string"}}}
-RAN = ("submitted", "budget", "context_full", "repeats")  # exit statuses of a subagent that ran its course
+RAN = ("submitted", "budget", "context_full", "repeats")  # ran its course: return record status "finished"
 logger = logging.getLogger("agent.spawn")
 
 
@@ -265,7 +268,12 @@ class SubAgent(ResearchAgent):
 
 
 def run_subagent(agent: SubAgent) -> str:
-    """Run a subagent to its end; its exit status (an error or the harness stopping included, never raised)."""
+    """Run a subagent to its end; its exit status (an error or the harness stopping included, never raised).
+
+    A failure is recorded as `subagent_error`, not the run's `run_error`: the run goes on (the
+    parent gets the status and the claims made so far), so the batch runner, scoring and the web
+    app, which read `run_error` as a failed run, must not see one.
+    """
     try:
         return agent.run(task="").get("exit_status", "") or "no_result"
     except BaseException as exc:  # noqa: BLE001 - a worker thread must outlive any subagent
@@ -273,8 +281,8 @@ def run_subagent(agent: SubAgent) -> str:
         if status == "error":
             logger.exception("subagent %s failed", agent.agent_id)
         try:
-            agent._coverage(agent.step_id, "run_error", "", {"error": f"{type(exc).__name__}: {exc}"[:500],
-                                                          "exit_status": status})
+            agent._coverage(agent.step_id, "subagent_error", "", {"error": f"{type(exc).__name__}: {exc}"[:500],
+                                                               "exit_status": status})
         except Exception:  # noqa: BLE001 - the broker may be closing
             pass
         return status
@@ -417,7 +425,8 @@ class SpawnService:
             except BaseException:  # noqa: BLE001 - keep the worker for the next job
                 logger.exception("spawn %s failed", job.agent_id)
             finally:
-                job.reply({"ok": False, "reason": "spawn_failed"})  # no-op once the result was sent
+                # A no-op once the result was sent; else the harness failed before it could send one.
+                job.reply({"ok": False, "reason": "spawn_failed: the harness could not return a result"})
                 with self._lock:
                     self._live.discard(job)
                 job.done.set()
@@ -478,14 +487,18 @@ class SpawnService:
             job.reply(result)
 
     def _result(self, job: SpawnJob, agent: SubAgent | None, status: str) -> dict[str, Any]:
-        """What the parent's spawn prints: the summary, how it ended, and (claim_on) the claims it recorded."""
+        """What the parent's spawn prints: the summary, how it ended, and (claim_on) the claims it recorded.
+
+        `ok` is true for every subagent that started, whatever its status (an error or a
+        cancellation included): its claims are accepted claims the parent may cite. Only a
+        request that started no subagent gets {"ok": false, "reason"} (_refuse, a cancellation
+        before it started).
+        """
         summary = ((agent.answer if agent else None) or {}).get("summary", "")
         if len(summary) > SUMMARY_MAX:
             summary = summary[:SUMMARY_MAX] + f" [summary cut at {SUMMARY_MAX:,} characters]"
-        result: dict[str, Any] = {"ok": status in RAN, "agent_id": job.agent_id, "status": status, "summary": summary,
+        result: dict[str, Any] = {"ok": True, "agent_id": job.agent_id, "status": status, "summary": summary,
                                   "steps": agent.research_steps if agent else 0, "tokens": agent.tokens if agent else 0}
-        if status not in RAN:
-            result["reason"] = status
         if self.claim:
             result["claims"] = [
                 {"claim_id": r["generated"]["claim_id"], "s": r["custom_metadata"]["s"], "p": r["custom_metadata"]["p"],
