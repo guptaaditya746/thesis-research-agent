@@ -45,18 +45,25 @@ METRICS: list[tuple[str, str, bool]] = [   # pattern, canonical, higher_is_bette
 ]
 
 # Author claims: a sentence that names retrieval and states an effect. Checked in this order, so a
-# negated improvement ("does not improve") is no_effect, never improves.
-CLAIM_SUBJECT = r"(?i)\bretrieval\b|\bRAG\b"
+# negated statement ("does not measurably reduce", "does not make the answers more accurate") is no_effect,
+# never improves: any words (adverbs, objects) may stand between "not" and the verb or the comparison.
+CLAIM_SUBJECT = r"(?i)\bretriev\w*|\bRAG\b"
+_NOT = r"\b(?:does|did|do|is|was|are|were)\s+not\b|\b(?:doesn't|didn't|don't|isn't|wasn't)\b"
+_VERBS = (r"improve|help|increase|change|reduce|lower|decrease|raise|boost|enhance|affect|alter|make|lead|yield"
+          r"|matter")
 CLAIMS: list[tuple[str, str]] = [
-    (r"(?i)\b(?:does|did|do)\s+not\s+(?:significantly\s+|substantially\s+|reliably\s+)?(?:improve|help|increase|change|reduce)"
+    (r"(?i)(?:" + _NOT + r")(?:\s+\w+){0,3}?\s+(?:" + _VERBS + r")\w*"
+     r"|(?:" + _NOT + r")[^.;]{0,80}?\bmore\s+(?:accurate|factual|reliable|correct)"
      r"|\b(?:fails?|failed)\s+to\s+(?:improve|help)|\bno\s+(?:significant\s+|clear\s+|measurable\s+)?"
-     r"(?:improvement|effect|difference|gain|benefit)|\bon\s+par\s+with\b|\bdoes\s+not\s+make\s+a\s+difference",
+     r"(?:improvement|effect|difference|gain|benefit|change)|\bon\s+par\s+with\b|\b(?:essentially\s+)?unchanged\b",
      "no_effect"),
     (r"(?i)\b(?:increases?|increased|raises?|raised)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat"
+     r"|\bmore\s+hallucinat|\bless\s+(?:accurate|factual|correct)\b"
      r"|\b(?:hurts?|harms?|harmed|degrades?|degraded|worsens?|worsened|impairs?|impaired)\b"
      r"|\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased)\s+(?:the\s+)?(?:factual\s+|answer\s+)?accuracy",
      "worsens"),
     (r"(?i)\b(?:reduces?|reduced|lowers?|lowered|decreases?|decreased|cuts?)\s+(?:the\s+)?(?:rate\s+of\s+)?hallucinat"
+     r"|\b(?:fewer|less)\s+hallucinat"
      r"|\b(?:improves?|improved|improving|increases?|increased|boosts?|boosted|raises?|raised|enhances?|enhanced)\b"
      r"|\b(?:outperforms?|outperformed)\b|\bmore\s+(?:factual|accurate)\b",
      "improves"),
