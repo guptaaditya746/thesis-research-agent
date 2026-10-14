@@ -56,6 +56,20 @@ def test_accepted_claims_become_items_with_checked_spans() -> None:
     assert ids["S001.c2"] in job.concept["scope"]["earlier_items"]
 
 
+def test_register_agentic_uses_the_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    import sys
+    import types
+
+    from evidence.agentic import factory, register_agentic
+
+    registered: dict = {}
+    registry = types.ModuleType("evidence.extractors")
+    registry.register = lambda name, f: registered.update({name: f})  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "evidence.extractors", registry)
+    register_agentic()
+    assert registered == {"agentic": factory}
+
+
 def test_engine_config_and_recorder() -> None:
     """Built as the engine's registry builds it; the run goes to the engine's recorder for its cache."""
     from evidence.agentic import factory
