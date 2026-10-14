@@ -32,6 +32,21 @@ class ExtractorRef(Strict):
     budget: Budget | None = None            # given to the task for agentic extractors only
 
 
+class BoundWhen(Strict):
+    link: str                               # the link whose target decides whether the bound applies
+    field: str                              # a field of the linked item
+    values: tuple[Any, ...]                 # the bound applies when that field has one of these values
+
+
+class Bound(Strict):
+    """A range a numeric field must lie in, checked by the engine (rejected with reason schema otherwise);
+    e.g. a measurement of an accuracy or a rate is a fraction in [0, 1]."""
+    field: str
+    min: float | None = None
+    max: float | None = None
+    when: BoundWhen | None = None
+
+
 class EvidenceTypeSpec(Strict):
     description: str = ""
     fields: dict[str, Any]                  # JSON schema (an object schema) of an item's fields
@@ -41,6 +56,7 @@ class EvidenceTypeSpec(Strict):
     merge_key: tuple[str, ...] | None = None       # fields compared when merging a cascade (default: all)
     query: tuple[str, ...] = ()             # bm25 query terms for the locate step
     cascade: Literal["all", "until_found"] = "all"  # until_found: later extractors run only if none found
+    bounds: tuple[Bound, ...] = ()          # ranges of numeric fields (checks.py)
     extractors: tuple[ExtractorRef, ...] = Field(min_length=1)
 
     @property
@@ -94,6 +110,9 @@ class Protocol(Strict):
             for target in spec.links.values():
                 if target not in spec.context:
                     raise ValueError(f"{name} links to {target!r} but does not list it as context")
+            for bound in spec.bounds:
+                if bound.field not in spec.properties or (bound.when and bound.when.link not in spec.links):
+                    raise ValueError(f"{name}.bounds names an unknown field or link: {bound}")
             missing = [k for k in spec.merge_key or () if k not in spec.properties]
             if missing:
                 raise ValueError(f"{name}.merge_key names unknown fields {missing}")
