@@ -43,7 +43,7 @@ def test_real_agent_run_becomes_items(tmp_path: Any) -> None:
     ids = {k: i.item_id for k, i in fx.perfect_items().items()}
     request = json.dumps({"s": "r1", "p": "value", "o": 0.7, "file": "S001.md", "quote": "0.70"})
     bad = json.dumps({"s": "r1", "p": "value", "o": 0.7, "file": "S001.md", "quote": "R scores 0.71"})
-    row = {"id": "r1", "cells": {"condition": ids["S001.c2"], "metric": ids["S001.k1"], "value": 0.7},
+    row = {"id": "r1", "cells": {"condition": ids["S001.c2"], "metric": ids["S001.k1"], "value": 0.7, "dataset": None},
            "facts": [{"id": "f1", "s": "r1", "p": "value", "o": "0.7", "claims": ["claim-000001"]}]}
     replies = [f"Read the table and claim.\n{FENCE}bash\nsed -n '/| System/,/R-noRerank/p' \"$CORPUS/S001.md\"; "
                f"echo '{bad}' | claim; echo '{request}' | claim\n{FENCE}",
@@ -61,7 +61,8 @@ def test_real_agent_run_becomes_items(tmp_path: Any) -> None:
     assert record["outcome"]["exit_status"] == "submitted" and record["outcome"]["answer_from"] == "final"
     assert result.status == "ok" and len(result.items) == 1
     item = result.items[0]
-    assert item.fields == {"condition": ids["S001.c2"], "metric": ids["S001.k1"], "value": 0.7}
+    assert item.fields == {"value": 0.7, "dataset": None}
+    assert item.links == {"condition": ids["S001.c2"], "metric": ids["S001.k1"]}
     assert [(s.role, s.selector["exact"], s.selector["file"]) for s in item.spans] == [("value", "0.70", "papers/S001.md")]
     assert [(r.reason, r.quotes) for r in result.rejected] == [("not_found", ("R scores 0.71",))]
     assert any(c.status == "found" and c.found == 1 for c in result.coverage)

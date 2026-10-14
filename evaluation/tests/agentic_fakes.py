@@ -8,10 +8,11 @@ from evidence.contract import DocumentRef, ExtractionTask, Item, ProtocolRef, Sc
 
 from . import fixtures as fx
 
-MEASUREMENT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["condition", "metric", "value"],
-                      "properties": {"condition": {"type": "string", "description": "the condition's item id"},
-                                     "metric": {"type": "string", "description": "the metric's item id"},
-                                     "value": {"type": "number", "description": "as a fraction in [0, 1]"}}}
+# As evidence/protocols/rag-factuality.yaml (ev/engine) has them: a measurement's condition and metric are links.
+MEASUREMENT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["value", "dataset"],
+                      "properties": {"value": {"type": "number", "description": "as a fraction for accuracies and rates"},
+                                     "dataset": {"type": ["string", "null"], "description": "the dataset, or null"}}}
+LINKS = {"condition": "condition", "metric": "metric"}
 CONDITION_SCHEMA = {"type": "object", "required": ["label", "role"],
                     "properties": {"label": {"type": "string"}, "role": {"enum": ["rag", "baseline", "other"]}}}
 
@@ -19,8 +20,11 @@ CONDITION_SCHEMA = {"type": "object", "required": ["label", "role"],
 class Ctx:
     """The engine's RunContext for one task, in memory."""
 
-    def __init__(self, text: str, context: list[Item], schema: dict[str, Any]) -> None:
-        self._text, self._context, self._schema = text, context, schema
+    def __init__(self, text: str, context: list[Item], schema: dict[str, Any], recorder: Any = None) -> None:
+        self._text, self._context, self._schema, self._recorder = text, context, schema, recorder
+
+    def llm(self) -> Any:  # the engine's Recorder (evidence/recording.py) has a `records` list
+        return self._recorder
 
     def text(self) -> str:
         return self._text
@@ -72,12 +76,12 @@ def recorded_run() -> dict[str, Any]:
                       "output_sha256": "0" * 64, "exit_code": 0}],
         "model_calls": [{"task_id": "task-000001", "step_id": 1}, {"task_id": "task-000004", "step_id": 2}],
         "answer": {"rows": [
-            row("r1", {"condition": c2, "metric": k1, "value": 0.7}, [1, 2]),
-            row("r2", {"condition": "closed-book model", "metric": k1, "value": 0.62}, [3]),   # label -> c1's id
-            row("r3", {"condition": c1, "metric": k1, "value": 0.62}, [4]),                    # same item as r2
-            row("r4", {"condition": "c-0000000000000000", "metric": k1, "value": 0.66}, [1]),  # dangling link
-            row("r5", {"condition": c1, "metric": None, "value": 0.62}, [3]),                  # schema: no metric
-            row("r6", {"condition": c1, "metric": k1, "value": 0.5}, []),                      # no claim
+            row("r1", {"condition": c2, "metric": k1, "value": 0.7, "dataset": None}, [1, 2]),
+            row("r2", {"condition": "closed-book model", "metric": k1, "value": 0.62, "dataset": None}, [3]),  # label
+            row("r3", {"condition": c1, "metric": k1, "value": 0.62, "dataset": None}, [4]),     # same item as r2
+            row("r4", {"condition": "c-0000000000000000", "metric": k1, "value": 0.66, "dataset": None}, [1]),  # dangling
+            row("r5", {"condition": c1, "metric": k1, "value": None, "dataset": None}, [3]),     # schema: no value
+            row("r6", {"condition": c1, "metric": k1, "value": 0.5, "dataset": None}, []),       # no claim
         ], "notes": ""},
         "trajectory": {"messages": []}, "head": "f" * 64,
     }

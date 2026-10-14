@@ -159,10 +159,11 @@ def perfect_items() -> dict[str, Item]:
         for c in study["conditions"]:
             items[c["id"]] = Item.build("condition", {"label": c["label"], "role": c["role"]}, fact_spans(c["id"]))
         for k in study["metrics"]:
-            items[k["id"]] = Item.build("metric", {"name": k["name"], "canonical": k["canonical"]}, fact_spans(k["id"]))
-        for m in study["measurements"]:
+            items[k["id"]] = Item.build("metric", {"name": k["name"], "canonical": k["canonical"],
+                                                   "higher_is_better": k["higher_is_better"]}, fact_spans(k["id"]))
+        for m in study["measurements"]:  # as the engine's protocol has it: links in `links`, not in fields
             cond, met = items[m["condition"]].item_id, items[m["metric"]].item_id
-            items[m["id"]] = Item.build("measurement", {"condition": cond, "metric": met, "value": m["value"]},
+            items[m["id"]] = Item.build("measurement", {"value": m["value"], "dataset": m["dataset"]},
                                         fact_spans(m["id"]), links={"condition": cond, "metric": met})
         a = study["author_claim"]
         items[a["id"]] = Item.build("author_claim", {"direction": a["direction"]}, fact_spans(a["id"]))

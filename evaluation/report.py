@@ -93,7 +93,8 @@ def render(report: dict[str, Any]) -> str:
         out += ["## Cost", "", table(rows, ["measure", "total", "per_paper"]), ""]
     if report.get("stability"):
         out += ["## Re-execution stability", "", table(report["stability"]["rows"], ["extractor", "calls", "identical",
-                                                                                  "identical_share"]), ""]
+                                                                                  "identical_share", "item_stability"]),
+                ""]
     return "\n".join(line.rstrip() for line in out)
 
 

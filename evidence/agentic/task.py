@@ -34,23 +34,30 @@ def column_type(schema: dict[str, Any]) -> str:
     return SCALARS.get(kind, "string")
 
 
-def columns(field_schema: dict[str, Any]) -> list[dict[str, str]]:
-    """One table column per property of the evidence type's schema (names the concept schema allows)."""
+def link_names(task: ExtractionTask, links: dict[str, str] | None, context: list[Item]) -> dict[str, str]:
+    """Link name -> evidence type it points to: the protocol's `links` when given, else one per context type."""
+    if links:
+        return dict(links)
+    return {t: t for t in sorted({i.evidence_type for i in context}) if t != task.evidence_type}
+
+
+def columns(field_schema: dict[str, Any], links: dict[str, str]) -> list[dict[str, str]]:
+    """A table column per link (an earlier item's id) and per property of the schema (names the concept allows)."""
     props = field_schema.get("properties") or {}
-    return [{"name": name, "type": column_type(spec)} for name, spec in props.items() if COLUMN_NAME.match(name)]
+    out = [{"name": name, "type": "string"} for name in links if COLUMN_NAME.match(name)]
+    return out + [{"name": n, "type": column_type(s)} for n, s in props.items() if COLUMN_NAME.match(n) and n not in links]
 
 
-def describe_fields(field_schema: dict[str, Any], context: list[Item]) -> str:
+def describe_fields(field_schema: dict[str, Any], links: dict[str, str]) -> str:
     required = set(field_schema.get("required") or [])
-    parts = []
+    parts = [f"{name}: the id of the earlier {NOUN.get(kind, kind)} item this one belongs to (listed below)"
+             for name, kind in links.items()]
     for name, spec in (field_schema.get("properties") or {}).items():
         text = f"{name} ({column_type(spec)}{', required' if name in required else ''})"
         if spec.get("description"):
             text += f": {spec['description']}"
         if spec.get("enum"):
             text += f"; one of {', '.join(map(str, spec['enum']))}"
-        if any(name == i.evidence_type for i in context):  # e.g. a measurement's condition
-            text += "; give the id of the earlier item it refers to"
         parts.append(text)
     return "; ".join(parts) or "the fields the paper states"
 
@@ -60,11 +67,16 @@ def describe_context(context: list[Item]) -> str:
                      for i in sorted(context, key=lambda i: i.item_id))
 
 
-def concept_for(task: ExtractionTask, field_schema: dict[str, Any], context: list[Item], file: str,
-                length: int) -> dict[str, Any]:
-    """The concept brief that asks the agent for every item of the task's evidence type in `file`."""
+def concept_for(task: ExtractionTask, field_schema: dict[str, Any], links: dict[str, str], context: list[Item],
+                file: str, length: int, description: str = "") -> dict[str, Any]:
+    """The concept brief that asks the agent for every item of the task's evidence type in `file`.
+
+    `links` (link_names): the columns that name earlier items; `description`: the protocol's text for
+    the evidence type, used instead of the built-in one when given.
+    """
     kind: EvidenceType = task.evidence_type
     noun = NOUN[kind]
+    what = (" ".join(description.split()) or WHAT[kind]).rstrip(".") + "."
     where = ("the whole paper" if task.scope.kind == "document" or not task.scope.ranges else
              "only these character ranges of the file (offsets into the file as stored, of "
              f"{length} characters): " + ", ".join(f"{a}-{b}" for a, b in task.scope.ranges)
@@ -72,9 +84,9 @@ def concept_for(task: ExtractionTask, field_schema: dict[str, Any], context: lis
     scope = {
         "paper": f"only {file}, the one paper in the corpus",
         "passages": where,
-        "item": f"one row per {noun}: {WHAT[kind]}. List every one the paper states, each once; a value stated twice "
+        "item": f"one row per {noun}: {what} List every one the paper states, each once; a value stated twice "
                 "(abstract and table) is one row with both quotes",
-        "fields": describe_fields(field_schema, context),
+        "fields": describe_fields(field_schema, links),
         "claims": "for each field of a row, claim a verbatim quote that states it: s = the row id (r1, r2, ...), "
                   f"p = the field name, o = the value, file = {file}; list those claim ids in the row's facts. "
                   "A row without an accepted claim is not used",
@@ -87,7 +99,8 @@ def concept_for(task: ExtractionTask, field_schema: dict[str, Any], context: lis
         "definition": f"{title}, with its fields and a verbatim quote for each field.",
         "measure": {"operation": "list", "of": noun.title().replace(" ", "")},
         "scope": scope,
-        "answer_shape": {"kind": "table", "columns": columns(field_schema) or [{"name": "text", "type": "string"}]},
+        "answer_shape": {"kind": "table",
+                         "columns": columns(field_schema, links) or [{"name": "text", "type": "string"}]},
         "competency_questions": [f"Which {noun}s does {file} state?",
                                  "Which passage of the paper states each field of each row?"],
         "needs": [f"the passages of {file} that state each {noun}", "a quote for every field"],

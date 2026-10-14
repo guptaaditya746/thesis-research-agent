@@ -354,17 +354,23 @@ def score_cost(run: dict[str, Any] | None, papers: int) -> dict[str, Any] | None
 def score_stability(reexec: Any | None) -> dict[str, Any] | None:
     """Per extractor, how many re-executed calls had each outcome (identical, items added, ...).
 
-    Reads {"calls": [{extractor_id, outcome}]} (`comparison` or `status` also taken for the outcome);
-    anything else in the report is passed through under `summary`.
+    Reads the engine's reexec.json (evidence/replay.compare): {"calls": [{extractor, outcome,
+    items_original, items_reproduced}], "summary": {...}}; `extractor_id` is taken for the extractor
+    too. item_stability = items reproduced / items originally found, over the extractor's calls.
+    The report's own `summary` is passed through.
     """
     if reexec is None:
         return None
     rows: dict[str, Counter[str]] = defaultdict(Counter)
+    items: dict[str, Counter[str]] = defaultdict(Counter)
     for call in reexec.get("calls", []) if isinstance(reexec, dict) else []:
-        outcome = call.get("outcome") or call.get("comparison") or call.get("status") or "unknown"
-        rows[call.get("extractor_id", "unknown")][outcome] += 1
+        name = call.get("extractor") or call.get("extractor_id") or "unknown"
+        rows[name][call.get("outcome") or "unknown"] += 1
+        items[name].update(original=call.get("items_original") or 0, reproduced=call.get("items_reproduced") or 0)
     out: dict[str, Any] = {"rows": [{"extractor": e, "calls": sum(c.values()), "identical": c["identical"],
-                                     "identical_share": share(c["identical"], sum(c.values())), "outcomes": dict(c)}
+                                     "identical_share": share(c["identical"], sum(c.values())),
+                                     "item_stability": share(items[e]["reproduced"], items[e]["original"]),
+                                     "outcomes": dict(c)}
                                     for e, c in sorted(rows.items())]}
     if isinstance(reexec, dict) and "summary" in reexec:
         out["summary"] = reexec["summary"]

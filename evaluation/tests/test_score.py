@@ -76,7 +76,7 @@ def test_value_linked_to_wrong_condition_counts_in_a_but_fails_b(tmp_path: Path,
     items = fx.perfect_items()
     old = items["S001.m2"]
     wrong = items["S001.c3"].item_id  # the distractor system (role other), not the RAG condition
-    items["S001.m2"] = Item.build("measurement", {**old.fields, "condition": wrong}, list(old.spans),
+    items["S001.m2"] = Item.build("measurement", dict(old.fields), list(old.spans),
                                   links={**old.links, "condition": wrong})
     result = score(run_with(tmp_path, items), corpus)
     assert a_row(result, "measurement")["f1"] == 1.0
@@ -180,12 +180,20 @@ def test_baseline_answers_are_scored_like_the_engine(tmp_path: Path, corpus: Pat
 
 
 def test_stability_from_a_reexec_report(tmp_path: Path, corpus: Path) -> None:
-    reexec = {"calls": [{"extractor_id": fx.REGEX, "outcome": "identical"}] * 3
-              + [{"extractor_id": fx.LLM, "outcome": "identical"}, {"extractor_id": fx.LLM, "outcome": "items_added"}]}
+    """The engine's reexec.json shape (evidence/replay.compare): calls name the extractor, not its id."""
+    def call(name: str, outcome: str, original: int, reproduced: int) -> dict:
+        return {"document": "S001", "evidence_type": "measurement", "extractor": name, "outcome": outcome,
+                "items_original": original, "items_reproduced": reproduced}
+
+    reexec = {"calls": [call("regex_measurement", "identical", 3, 3)] * 3
+              + [call("llm_measurement", "identical", 2, 2), call("llm_measurement", "items_missing", 2, 1)],
+              "summary": {"llm_measurement": {"calls": 2}}, "totals": {"identical": 4, "items_missing": 1}}
     result = score(run_with(tmp_path, fx.perfect_items(), reexec=reexec), corpus)
     rows = {r["extractor"]: r for r in result["stability"]["rows"]}
-    assert rows[fx.REGEX]["identical_share"] == 1.0 and rows[fx.LLM]["identical_share"] == 0.5
-    assert rows[fx.LLM]["outcomes"] == {"identical": 1, "items_added": 1}
+    assert rows["regex_measurement"]["identical_share"] == 1.0 and rows["llm_measurement"]["identical_share"] == 0.5
+    assert rows["llm_measurement"]["item_stability"] == 0.75
+    assert rows["llm_measurement"]["outcomes"] == {"identical": 1, "items_missing": 1}
+    assert result["stability"]["summary"] == {"llm_measurement": {"calls": 2}}
 
 
 def test_report_files_are_deterministic(tmp_path: Path, corpus: Path) -> None:

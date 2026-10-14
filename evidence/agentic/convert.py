@@ -1,11 +1,11 @@
 """From one agent run's record (runner.collect) to the contract's items, rejected items and coverage.
 
 - **Items** come from the rows of the agent's answer (answer.json, which the harness has already
-  checked: every cited claim id is an accepted claim). A row's cells are the item's fields (null
-  cells left out); its spans are the accepted claims its facts cite, each quote anchored again in
+  checked: every cited claim id is an accepted claim). A row's cells for the schema's properties are
+  the item's fields; its spans are the accepted claims its facts cite, each quote anchored again in
   the engine's copy of the document (agent.anchor.find, rule R1) with the task's file name. A span's
-  role comes from the claim's predicate, the field it supports (ROLE). A field naming an earlier
-  item (its id, or its label, name or alias) becomes a link (R2). Rows with equal fields and links
+  role comes from the claim's predicate, the field it supports (span_role). A link cell naming an
+  earlier item (its id, or its label, name or alias) becomes a link (R2). Rows with equal fields and links
   are one item with all their spans (decision 1 of the contract).
 - **Rejected**: every claim the broker refused (its anchor reason; broker reasons that are not
   anchor reasons map to not_found or schema), and every row that fails a check: no accepted claim
@@ -62,38 +62,48 @@ def rejected_claims(record: dict[str, Any], kind: EvidenceType) -> list[Rejected
     return out
 
 
-def _resolve_link(name: str, value: Any, context: list[Item]) -> str | None:
-    """The context item a field value names: its id, or (for a field named after its type) its label."""
-    if isinstance(value, str) and any(i.item_id == value for i in context):
+def _resolve_link(kind: str, value: Any, context: list[Item]) -> str | None:
+    """The context item of type `kind` a cell names: by its id, or by its label, name or an alias."""
+    if not isinstance(value, str):
+        return None
+    if any(i.item_id == value and i.evidence_type == kind for i in context):
         return value
-    if isinstance(value, str) and not ITEM_ID.match(value):
+    if not ITEM_ID.match(value):
         folded = value.casefold().strip()
         for item in sorted(context, key=lambda i: i.item_id):
             names = [item.fields.get(k) for k in ("label", "name")] + list(item.fields.get("aliases") or [])
-            if item.evidence_type == name and folded in {str(n).casefold().strip() for n in names if n}:
+            if item.evidence_type == kind and folded in {str(n).casefold().strip() for n in names if n}:
                 return item.item_id
     return None
 
 
-def row_item(row: dict[str, Any], task: ExtractionTask, schema: dict[str, Any], context: list[Item],
-             claims: dict[str, dict[str, Any]], index: Index) -> Item | Rejected:
-    """One answer row as an Item, or as a Rejected with the first check it fails."""
+def row_item(row: dict[str, Any], task: ExtractionTask, schema: dict[str, Any], link_names: dict[str, str],
+             context: list[Item], claims: dict[str, dict[str, Any]], index: Index) -> Item | Rejected:
+    """One answer row as an Item, or as a Rejected with the first check it fails.
+
+    Cells of the schema's properties are the fields (a null cell stays null: the schema decides
+    whether that is allowed); cells named in `link_names` (link -> evidence type) are links.
+    """
     kind = task.evidence_type
-    fields = {k: v for k, v in (row.get("cells") or {}).items() if v is not None}
+    cells = row.get("cells") or {}
+    props = (schema or {}).get("properties")
+    fields = {k: v for k, v in cells.items() if k not in link_names and (k in props if props is not None else v is not None)}
     cited = [claims[c] for f in row.get("facts", []) for c in f.get("claims", []) if c in claims]
     quotes = tuple(dict.fromkeys(c["quote"] for c in cited))
 
     def rejected(reason: RejectReason, detail: str) -> Rejected:
-        return Rejected(evidence_type=kind, fields=fields, quotes=quotes, reason=reason, detail=f"row {row.get('id')}: {detail}")
+        return Rejected(evidence_type=kind, fields={**fields, **{k: cells.get(k) for k in link_names if cells.get(k)}},
+                        quotes=quotes, reason=reason, detail=f"row {row.get('id')}: {detail}")
 
     links = {}
-    context_types = {i.evidence_type for i in context}
-    for name, value in list(fields.items()):
-        target = _resolve_link(name, value, context)
-        if target:
-            fields[name] = links[name] = target
-        elif (isinstance(value, str) and ITEM_ID.match(value)) or (name in context_types and name != kind):
-            return rejected("dangling_link", f"{name}={value!r} names no item of the context")
+    for name, target_type in link_names.items():
+        value = cells.get(name)
+        if value is None:
+            continue
+        target = _resolve_link(target_type, value, context)
+        if target is None:
+            return rejected("dangling_link", f"{name}={value!r} names no {target_type} item of the context")
+        links[name] = target
     errors = sorted(e.message for e in Draft202012Validator(schema).iter_errors(fields)) if schema else []
     if errors:
         return rejected("schema", "; ".join(errors)[:500])

@@ -1,6 +1,8 @@
 """The agentic extractor's conversion, offline with recorded runs (no agent, no model)."""
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from agent.concept import validate_concept
@@ -9,7 +11,8 @@ from evidence.agentic.runner import AgentSettings
 from evidence.contract import Extractor, ExtractionResult, Scope
 
 from . import fixtures as fx
-from .agentic_fakes import CONDITION_SCHEMA, MEASUREMENT_SCHEMA, Ctx, FakeRunner, context, recorded_run, task
+from .agentic_fakes import (CONDITION_SCHEMA, LINKS, MEASUREMENT_SCHEMA, Ctx, FakeRunner, context, recorded_run,
+                            task)
 
 
 def extract(record=None, scope: Scope | None = None) -> tuple[ExtractionResult, FakeRunner]:
@@ -42,15 +45,40 @@ def test_accepted_claims_become_items_with_checked_spans() -> None:
     assert value["file"] == "papers/S001.md" and fx.S001[value["start"]:value["end"]] == "0.70"
     assert value["sha256"] == task().document.sha256
     base = items[0.62]  # rows r2 (label resolved to the id) and r3 (id) are one item with both value spans
-    assert base.fields["condition"] == ids["S001.c1"] and base.links["condition"] == ids["S001.c1"]
+    assert base.fields == {"value": 0.62, "dataset": None} and base.links["condition"] == ids["S001.c1"]
     assert sorted(s.selector["exact"] for s in base.spans) == ["0.62", "62%"]
     assert result.model_calls == ("agentic-" + task().task_sha256[:16] + "/task-000001",
                                   "agentic-" + task().task_sha256[:16] + "/task-000004")
     job = runner.jobs[0]
     assert job.files == {"S001.md": fx.S001} and job.budget == {"steps": 30, "tokens": 600_000}
     assert validate_concept(job.concept) == [] and "S001.md" in job.concept["scope"]["paper"]
-    assert [c["name"] for c in job.concept["answer_shape"]["columns"]] == ["condition", "metric", "value"]
+    assert [c["name"] for c in job.concept["answer_shape"]["columns"]] == ["condition", "metric", "value", "dataset"]
     assert ids["S001.c2"] in job.concept["scope"]["earlier_items"]
+
+
+def test_engine_config_and_recorder() -> None:
+    """Built as the engine's registry builds it; the run goes to the engine's recorder for its cache."""
+    from evidence.agentic import factory
+
+    extractor = factory({"evidence_type": "measurement", "links": LINKS, "description": "One reported result.",
+                         "field_schema": MEASUREMENT_SCHEMA, "roles": ["value"], "sandbox_mode": "unsandboxed",
+                         "budget": {"steps": 9, "tokens": 9000}})
+    assert extractor.spec.evidence_types == ("measurement",) and extractor.settings.sandbox_mode == "unsandboxed"
+    assert extractor.spec.config["links"] == LINKS and extractor.budget == {"steps": 9, "tokens": 9000}
+    record = recorded_run()
+    record["model_calls"] = [{"task_id": "task-000001", "step_id": 1, "usage": {"prompt_tokens": 100,
+                                                                                "completion_tokens": 7}},
+                             {"task_id": "task-000004", "step_id": 2, "usage": {"prompt_tokens": 300,
+                                                                                "completion_tokens": 9}}]
+    extractor.runner = FakeRunner(record)
+
+    recorder = SimpleNamespace(records=[])  # the engine's Recorder, as far as the extractor uses it
+    result = extractor.extract(task(), Ctx(fx.S001, context(), MEASUREMENT_SCHEMA, recorder))
+    assert [r["id"] for r in recorder.records] == list(result.model_calls) and len(result.model_calls) == 2
+    assert [r["usage"] for r in recorder.records] == [{"input_tokens": 100, "output_tokens": 7},
+                                                      {"input_tokens": 300, "output_tokens": 9}]
+    assert "agent_run" not in recorder.records[0] and recorder.records[1]["agent_run"]["claims"]
+    assert "One reported result." in extractor.runner.jobs[0].concept["scope"]["item"]
 
 
 def test_bad_quotes_and_bad_rows_are_rejected_with_reasons() -> None:
