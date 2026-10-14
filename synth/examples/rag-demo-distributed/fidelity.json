@@ -1,10 +1,15 @@
 {
-  "corpus_id": "rag-demo-b2219cb3",
+  "corpus_id": "rag-demo-49dc96b5",
   "papers": [
     {
       "id": "S001",
       "ok": true,
       "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
         {
           "name": "lf_only",
           "ok": true,
@@ -59,6 +64,11 @@
       "ok": true,
       "checks": [
         {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
           "name": "lf_only",
           "ok": true,
           "detail": ""
@@ -111,6 +121,11 @@
       "id": "S003",
       "ok": true,
       "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
         {
           "name": "lf_only",
           "ok": true,
@@ -165,6 +180,11 @@
       "ok": true,
       "checks": [
         {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
           "name": "lf_only",
           "ok": true,
           "detail": ""
@@ -218,6 +238,11 @@
       "ok": true,
       "checks": [
         {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
           "name": "lf_only",
           "ok": true,
           "detail": ""
@@ -270,6 +295,11 @@
       "id": "S006",
       "ok": true,
       "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
         {
           "name": "lf_only",
           "ok": true,

@@ -22,7 +22,10 @@ Seeded with one `random.Random(seed)`, no clock. Each study has a baseline and a
 distractor conditions (ablations, other systems), one question metric (`factual_accuracy` or
 `hallucination_rate`) plus 1-2 distractor metrics (BLEU, ROUGE-L, latency), two datasets (the first is the
 main one) and a measurement for every condition × metric × dataset. Fractions have three decimals with a
-non-zero last digit (so 62.4%, never 62.0%), all values within a study are distinct, and the main
+non-zero last digit (so 62.4%, never 62.0%), all values within a study are pairwise more than 0.0075 apart
+(`truth.DECOY_GAP`, the evaluation tolerance 0.005 plus a margin; checked as `values_apart`), so a value
+read from the wrong cell never matches another fact by value alone (hence a neutral effect is a
+difference of 0.008 or 0.009, still below `rules.MIN_EFFECT`), and the main
 rag-baseline difference differs from every value (the complex level writes it). The effect is
 `evidence.rules.effect` on the main dataset's rag/baseline pair of the question metric (the second dataset
 shows the same direction); the answer is `evidence.rules.label`. `--effects` sets the share of true

@@ -78,3 +78,12 @@ def test_decoy_is_far_from_every_true_value_and_fits_the_false_claim(seed: int) 
         assert all(abs(s.decoy - m.value) > truth.DECOY_GAP for m in s.measurements), (s.study_id, s.decoy)
         base = s.value_of(s.effect.baseline)
         assert rules.claim_agrees(s.false_claim, rules.effect(s.decoy, base, s.primary.higher_is_better)[0])
+
+
+@pytest.mark.parametrize("seed", range(1, 41))
+def test_true_values_of_a_study_are_more_than_the_gap_apart(seed: int) -> None:
+    """A value read from the wrong cell can never match another fact by value alone (tolerance 0.005)."""
+    for s in truth.generate(seed, 20):
+        values = sorted(m.value for m in s.measurements)
+        gaps = [b - a for a, b in zip(values, values[1:])]
+        assert min(gaps) > truth.DECOY_GAP, (s.study_id, values)
