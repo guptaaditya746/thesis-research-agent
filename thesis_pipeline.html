@@ -102,6 +102,9 @@
   .brief pre.code { font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--lane-a);
     border-radius: 8px; padding: 12px 14px; margin: 8px 0 0; overflow-x: auto; white-space: pre; }
   #protocol { grid-template-columns: minmax(0, 1fr); }
+  ol.notes { margin: 0; padding-left: 24px; font-size: 16px; line-height: 1.5; max-width: 1100px; }
+  ol.notes li + li { margin-top: 6px; }
+  .box-link { font: inherit; font-size: 14px; color: var(--paper); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; }
   .brief dl.levels { grid-template-columns: 120px minmax(0, 1fr); gap: 10px 14px; margin-top: 8px; }
   .brief dl.levels dd { font-family: Georgia, "Times New Roman", serif; font-size: 15.5px; line-height: 1.45; }
   @media (max-width: 760px) { .briefs { grid-template-columns: minmax(0, 1fr); } .brief dl { grid-template-columns: minmax(0, 1fr); } }
@@ -119,6 +122,7 @@
   .s-partial { color: #9a5200; background: var(--now-soft); border-color: var(--now); }
   .s-blocked { color: var(--bad); background: var(--bad-soft); border-color: var(--bad); }
   .s-open { color: var(--tool); background: var(--tool-soft); border-color: var(--tool); }
+  .s-spec { color: var(--paper); background: var(--paper-soft); border-color: var(--paper); }
   @media (max-width: 760px) {
     .status-row { grid-template-columns: minmax(0, 1fr) auto; }
     .status-row .evidence, .status-row .next { grid-column: 1 / -1; }
@@ -189,6 +193,10 @@
   <h2>Order of work and what we can reuse</h2>
   <p class="hint" id="status-note"></p>
   <div class="status" id="status"></div>
+  <h2>Decisions so far</h2>
+  <ol class="notes" id="decisions"></ol>
+  <h2>Open questions for the supervisor</h2>
+  <ol class="notes" id="questions"></ol>
   <h2>What a protocol looks like</h2>
   <p class="hint" id="protocol-note"></p>
   <div class="briefs" id="protocol"></div>
@@ -263,8 +271,9 @@ const LANES = [
   { id: "protocol",   name: "Question → protocol", sub: "the compiler front end" },
   { id: "engine",     name: "Execution engine",    sub: "runs one protocol over a corpus" },
   { id: "extractors", name: "Extractor library",   sub: "one interface, swappable parts", flow: false },
+  { id: "prov",       name: "Provenance & replay", sub: "same data on every replay" },
   { id: "bench",      name: "Synthetic benchmark", sub: "ground truth → papers" },
-  { id: "eval",       name: "Evaluation",          sub: "A, B, C separately + two baselines" },
+  { id: "eval",       name: "Evaluation",          sub: "locate, A, B, C + two baselines" },
   { id: "infra",      name: "Where it runs",       sub: "Slurm GPU job, tested", flow: false },
   { id: "optional",   name: "Extensions",          sub: "not required for the thesis", flow: false, open: true },
 ];
@@ -275,19 +284,27 @@ const STAGES = [
   { id: "write",     lane: "protocol", col: 1, name: "Write protocol",    desc: "by hand, step 1",          llm: false, people: true, current: true },
   { id: "protocol",  lane: "protocol", col: 2, name: "Research protocol", desc: "YAML: evidence → answer",  llm: false, ours: "intermediate representation", oursTitle: "The executable research protocol sits between the natural-language question and the evidence graph, like an intermediate representation in a compiler" },
   // Execution engine
-  { id: "engine",    lane: "engine",   col: 2, name: "Engine",            desc: "Python, runs the protocol", llm: false, sources: ["provagent"], ours: "protocol interpreter" },
+  { id: "engine",    lane: "engine",   col: 1, name: "Engine",            desc: "Python, runs the protocol", llm: false, sources: ["provagent"], ours: "protocol interpreter" },
+  { id: "locate",    lane: "engine",   col: 2, name: "Locate",            desc: "exhaustive · BM25 · agent", llm: true, added: true, ours: "flexible search, fixed flow", oursTitle: "The protocol fixes which evidence counts, the order of steps and the synthesis; only how a passage is found is flexible (exhaustive screening, keyword retrieval or an agent), within a budget, with the same output contract" },
   { id: "evgraph",   lane: "engine",   col: 3, name: "Evidence graph",    desc: "study → experiment → result", llm: false, sources: ["provo", "webanno"], ours: "every node has its passage" },
   { id: "synth",     lane: "engine",   col: 4, name: "Synthesis",         desc: "explicit rules, pro and contra", llm: false, ours: "deterministic first" },
   { id: "answer",    lane: "engine",   col: 5, name: "Answer",            desc: "verdict + evidence table", llm: false },
   { id: "trace",     lane: "engine",   col: 6, name: "Trace back",        desc: "answer → result → passage", llm: false, people: true, added: true, sources: ["laquer", "ledger"] },
   // Extractor library (no arrows: the engine picks the extractor per evidence type)
-  { id: "iface",     lane: "extractors", col: 0, name: "Common interface", desc: "text in → typed evidence + span", llm: false, ours: "one contract" },
+  { id: "iface",     lane: "extractors", col: 0, name: "Common interface", desc: "the extractor contract", llm: false, ours: "one contract, written" },
   { id: "x_cond",    lane: "extractors", col: 1, name: "Conditions",       desc: "models, with / without RAG", llm: true, sources: ["edc"] },
   { id: "x_metric",  lane: "extractors", col: 2, name: "Metrics",          desc: "how factuality is measured", llm: true },
   { id: "x_result",  lane: "extractors", col: 3, name: "Results",          desc: "a number per condition", llm: true },
   { id: "x_claim",   lane: "extractors", col: 4, name: "Author claims",    desc: "what the authors conclude", llm: true, added: true },
   { id: "x_agent",   lane: "extractors", col: 5, name: "Agentic extractor", desc: "navigates one paper", llm: true, added: true, ours: "our agent, as an extractor", oursTitle: "The existing research agent (sandbox, shell, claim tool with quote check) as one implementation behind the extractor interface, for distributed and complex evidence" },
-  { id: "x_bench",   lane: "extractors", col: 6, name: "Benchmarked",      desc: "each extractor, over time", llm: false, ours: "reusable, measured" },
+  { id: "x_cascade", lane: "extractors", col: 6, name: "Cascade",          desc: "regex → LLM → agent", llm: false, added: true, ours: "who found what" },
+  { id: "x_bench",   lane: "extractors", col: 7, name: "Benchmarked",      desc: "each version, per difficulty", llm: false, ours: "reusable, measured" },
+  // Provenance and replay (the extractor contract, sections 7 and 8)
+  { id: "evlog",     lane: "prov",     col: 1, name: "Event log",         desc: "one event per extractor call", llm: false, added: true, sources: ["provagent"], ours: "hash-chained" },
+  { id: "cache",     lane: "prov",     col: 2, name: "Record cache",      desc: "key: extractor id + task", llm: false, added: true },
+  { id: "replay",    lane: "prov",     col: 3, name: "Replay",            desc: "records only → same data", llm: false, added: true, ours: "identical every time" },
+  { id: "reexec",    lane: "prov",     col: 4, name: "Re-execution",      desc: "run again → measured drift", llm: true, added: true, ours: "stability as a result" },
+  { id: "export",    lane: "prov",     col: 5, name: "PROV-O + SPARQL",   desc: "graph.ttl, queries", llm: false, sources: ["provo"] },
   // Synthetic benchmark
   { id: "truth",     lane: "bench",    col: 0, name: "Ground truth",      desc: "fictional studies + results", llm: false, ours: "data first, papers second", oursTitle: "The process is reversed: structured ground truth is generated first, and papers are written from it, so the corpus's intended evidence is known exactly" },
   { id: "knobs",     lane: "bench",    col: 1, name: "Difficulty knobs",  desc: "explicit → contradictory", llm: false },
@@ -296,13 +313,14 @@ const STAGES = [
   { id: "corpus",    lane: "bench",    col: 4, name: "Synthetic corpus",  desc: "papers + known evidence", llm: false },
   { id: "variants",  lane: "bench",    col: 5, name: "Controlled variants", desc: "change one result", llm: false, ours: "predictable answer shift" },
   // Evaluation
-  { id: "evA",       lane: "eval",     col: 0, name: "A · Extraction",    desc: "P / R / F1 · provenance", llm: false, sources: ["benchie", "webnlg"] },
-  { id: "evB",       lane: "eval",     col: 1, name: "B · Integration",   desc: "links across sections", llm: false },
-  { id: "evC",       lane: "eval",     col: 2, name: "C · Synthesis",     desc: "vs answer from ground truth", llm: false },
-  { id: "errors",    lane: "eval",     col: 3, name: "Error attribution", desc: "missed · mislinked · rule", llm: false, ours: "why it fails, not only if" },
-  { id: "baseline",  lane: "eval",     col: 4, name: "Answer-level baseline", desc: "retrieve passages → answer", llm: true, sources: ["alce", "rarr"] },
-  { id: "agentbase", lane: "eval",     col: 5, name: "Agent baseline",    desc: "our agent, no protocol", llm: true, added: true, ours: "a stronger baseline" },
-  { id: "compare",   lane: "eval",     col: 6, name: "Comparison",        desc: "correct · complete · traceable", llm: false, sources: ["bootstrap", "goo2026"] },
+  { id: "evLoc",     lane: "eval",     col: 0, name: "Locate recall",     desc: "passages found vs placed", llm: false, added: true },
+  { id: "evA",       lane: "eval",     col: 1, name: "A · Extraction",    desc: "P / R / F1 · provenance", llm: false, sources: ["benchie", "webnlg"] },
+  { id: "evB",       lane: "eval",     col: 2, name: "B · Integration",   desc: "links across sections", llm: false },
+  { id: "evC",       lane: "eval",     col: 3, name: "C · Synthesis",     desc: "vs answer from ground truth", llm: false },
+  { id: "errors",    lane: "eval",     col: 4, name: "Error attribution", desc: "never found · extracted · linked · rule", llm: false, ours: "why it fails, not only if" },
+  { id: "baseline",  lane: "eval",     col: 5, name: "Answer-level baseline", desc: "retrieve passages → answer", llm: true, sources: ["alce", "rarr"] },
+  { id: "agentbase", lane: "eval",     col: 6, name: "Agent baseline",    desc: "our agent, no protocol", llm: true, added: true, ours: "a stronger baseline" },
+  { id: "compare",   lane: "eval",     col: 7, name: "Comparison",        desc: "correct · complete · traceable", llm: false, sources: ["bootstrap", "goo2026"] },
   // Where it runs
   { id: "slurm",     lane: "infra",    col: 0, name: "Slurm job",         desc: "3×A100 40 GB · 48 h", llm: false, sources: ["llmsetup"] },
   { id: "models",    lane: "infra",    col: 1, name: "Qwen models",       desc: "27B + 2× 30B-A3B", llm: true, sources: ["vllm"] },
@@ -315,10 +333,11 @@ const STAGES = [
 
 const LINKS = [
   ["protocol", "engine",   "executes"],
-  ["engine",   "iface",    "evidence type → extractor"],
+  ["locate",   "iface",    "passages → extractors"],
   ["x_result", "evgraph",  "typed evidence + span"],
   ["corpus",   "engine",   "documents"],
-  ["truth",    "evA",      "known evidence"],
+  ["truth",    "evLoc",    "where each fact was placed"],
+  ["x_cascade", "evlog",   "every call recorded"],
   ["answer",   "evC",      "the system's answer"],
   ["corpus",   "baseline", "same papers"],
 ];
@@ -383,6 +402,20 @@ const STAGE_DETAILS = {
     ours: "The protocol interpreter: the part that turns a declarative protocol into an evidence acquisition workflow.",
     code: ["reusable: agent/events and hash-chained log (agent/broker.py), agent/prov.py for the PROV-O export", "new: engine/ (protocol schema, runner)"],
   },
+  locate: {
+    what: "Finds the passages that may hold each evidence type, before the extractors read them. The protocol fixes what to look for and the order of steps; only how the passages are found is flexible.",
+    how: [
+      "Per evidence type the protocol names a strategy: `exhaustive` (screen every section of every paper with one yes/no question, as the gold builder does), `bm25` (keyword retrieval with the protocol's terms), or `agent` (an agent searches the corpus freely within a step and token budget).",
+      "Every strategy returns the same thing: passages with checked spans, plus coverage (what was examined, what was not). Everything after this step is fixed again.",
+      "The agent cannot add evidence types, change inclusion criteria or touch the synthesis; its actions are logged and replayed like any extractor call.",
+      "Why: fixed patterns cannot anticipate every way a paper lays out its evidence; reading everything is exact but costly on large corpora.",
+      "Experiment: the same protocol with each strategy, scored by locate recall per difficulty level.",
+    ],
+    io: ["protocol + corpus", "candidate passages per evidence type, with coverage"],
+    ours: "Flexible search inside a fixed, reproducible control flow.",
+    differs: ["Not discussed with the supervisor yet: his engine runs the protocol; whether one of its steps may be agentic is a question for him."],
+    code: ["reusable: gold/screen.py (exhaustive screening), agent/loop.py (agentic search)"],
+  },
   evgraph: {
     what: "The structured evidence representation: studies, experiments, conditions, measurements and author claims, linked to each other and each linked to the exact source passage it came from.",
     how: [
@@ -426,13 +459,16 @@ const STAGE_DETAILS = {
 
   // ---------------------------------------------------------------- Extractor library
   iface: {
-    what: "The contract every extractor implements, so that implementations are interchangeable.",
+    what: "The contract every extractor implements, so that implementations are interchangeable. Written down in docs/extractor-contract.md (14 Oct): identity, task, result, spans, coverage, provenance event, cache, replay and re-execution, benchmark per version.",
     how: [
       "Input: a document (or a section of it) and the evidence type's field schema from the protocol.",
       "Implementations, simplest first: regex or lookup; a specialised model; a single-call LLM (one schema-constrained call per chunk); an agentic LLM (several steps through one paper: search, read, follow table references). All four return the same thing.",
       "Output: a list of typed evidence items, each with the exact source span (quote, offsets) and a confidence or status.",
       "Every span is checked against the document (the quote must be found), as the current claim broker checks quotes.",
-      "Each extractor has a name and version, recorded with every item it produces.",
+      "Each extractor has a name and version, recorded with every item it produces; its id contains the hash of its code and its configuration, so a changed prompt or pattern is a new extractor.",
+      "An item may have several spans with roles (the value in a table, the meaning of its column in the method section): this is what makes distributed evidence traceable.",
+      "Coverage is part of the result: every part examined is marked found, none, skipped or error, so missed and not there are told apart.",
+      "Decided (14 Oct): a value reported twice in a paper is one item with two spans; items keep normalised values and the raw text; benchmark recall is reported, not enforced.",
     ],
     io: ["document + field schema", "typed evidence items with spans"],
     ours: "One interface for regex, model, single-call LLM and agentic LLM extractors, with the quote check built in.",
@@ -483,6 +519,65 @@ const STAGE_DETAILS = {
     ours: "An agent used where it is measurable: one swappable extractor, scored against ground truth.",
     code: ["reusable: agent/loop.py (agent loop), agent/sandbox.py (Landlock sandbox), agent/broker.py and agent/anchor.py (claim with quote check), agent/answer.py (schema-constrained final reply)"],
     differs: ["Not discussed with the supervisor yet: his extractor list (\"regular expressions, specialized models, LLMs, or other methods\") allows it, but he did not mention agents."],
+  },
+
+  x_cascade: {
+    what: "Several extractors for one evidence type, run in the order the protocol lists them, typically the cheap and exact ones first.",
+    how: [
+      "Example: regex for results stated in one sentence, then a single-call LLM for the rest, then the agentic extractor for what is still missing (distributed, complex).",
+      "Items with equal normalised fields are merged into one item that keeps all spans and a found_by list.",
+      "The report gives each extractor's marginal contribution (items only it found) and what none of them found, against the synthetic ground truth.",
+    ],
+    io: ["one evidence type, ordered extractors", "merged items, each with found_by"],
+    ours: "Answers \"who found what\": a regex that finds 30 % is fine if the report says so and the next extractor covers the rest.",
+    code: ["contract: docs/extractor-contract.md §10"],
+  },
+
+  // ---------------------------------------------------------------- Provenance & replay
+  evlog: {
+    what: "Every extractor call appends one record to the run's hash-chained event log, with the records of every model call inside it.",
+    how: [
+      "Fields: the call id, the extractor id (with code and config hashes), the task hash, the document hash, the output hash, the status, the model calls, the times, prev_hash and hash.",
+      "The format is PROV-AGENT's record (subtype extractor_call); model calls are ai_model_invocation records; the chain is the broker's.",
+      "Written by the engine, never by the extractor: an extractor cannot alter its own record.",
+    ],
+    io: ["each extractor call", "events.jsonl (one line per call, chained)"],
+    code: ["reusable: agent/broker.py (hash chain), agent/canonical.py (canonical hashes)", "contract: docs/extractor-contract.md §7"],
+  },
+  cache: {
+    what: "The stored result of every extractor call, keyed by the extractor id and the task hash.",
+    how: [
+      "Holds the full result and every model call inside it (request and response; for an agent its whole trajectory).",
+      "Append-only; a changed extractor (new code or config hash) has a new id, so it never hits an old entry.",
+    ],
+    io: ["extractor id + task hash", "the recorded result"],
+    code: ["reusable: gold/llm.py (cache_key, JsonlCache)"],
+  },
+  replay: {
+    what: "Rebuilds the evidence, the graph and the answer from the records alone. A missing record is an error, never a new call.",
+    how: [
+      "This is what \"every time we run the provenance we get the same data\" means: identical for every kind of extractor, the agentic one included.",
+      "The rebuilt graph and answer must hash the same as recorded; all reported results come from replay.",
+    ],
+    io: ["a run directory", "the same evidence, graph and answer, verified by hash"],
+    ours: "Exact reproducibility for every extractor, by construction.",
+    code: ["pattern: agent replay"],
+  },
+  reexec: {
+    what: "Runs the extractors again from scratch and compares with the records, per call: identical, same items with other spans, items added, items missing, fields differ.",
+    how: [
+      "Expected: regex and fixed models identical; single-call LLMs (temperature 0, seed, pinned model) nearly identical; agentic extractors variable.",
+      "The differences are a result in themselves: how stable each kind of extractor is.",
+    ],
+    io: ["a run + its records", "a stability report per extractor"],
+    ours: "Instability is measured and reported, not hidden.",
+    code: ["pattern: agent reexec"],
+  },
+  export: {
+    what: "The evidence graph and its provenance exported as RDF and loaded into a SPARQL store.",
+    how: ["Each call is a prov:Activity, each item a prov:Entity derived from its passages, the answer derived from the items it counted. SPARQL answers questions like: which experiments contradict their own abstract?"],
+    io: ["evidence graph + event log", "graph.ttl, SPARQL queries"],
+    code: ["reusable: agent/prov.py, scoring/store.py (pyoxigraph)"],
   },
 
   // ---------------------------------------------------------------- Synthetic benchmark
@@ -545,6 +640,14 @@ const STAGE_DETAILS = {
   },
 
   // ---------------------------------------------------------------- Evaluation
+  evLoc: {
+    what: "Did the search find the passages that hold the evidence? Measured before extraction.",
+    how: [
+      "The generator's rendering plan records where each fact was placed in each paper, so the passages that should be found are known exactly.",
+      "Recall of those passages per locate strategy (exhaustive, BM25, agent) and per difficulty level, with the cost of each.",
+      "Lets error attribution start one step earlier: never found, found but extracted wrong, linked wrong, or synthesised wrong.",
+    ],
+  },
   evA: {
     what: "A · Evidence extraction: how accurately and completely the system reconstructs the experimental evidence.",
     how: [
@@ -639,6 +742,14 @@ const ORIGIN = {
   write:    "Supervisor §8, step 1: \"Define one research question and a corresponding protocol manually.\"",
   protocol: "Supervisor §2: an executable research protocol as intermediate representation, declarative (YAML or JSON).",
   engine:   "Supervisor §2: \"executed by a Python-based engine\".",
+  locate:   "Our addition (14 Oct, not yet discussed with the supervisor): flexible search as one step inside his program-run engine.",
+  x_cascade:"Our addition: the extractor contract §10 (several extractors per evidence type, run in order).",
+  evlog:    "Our addition, from the extractor contract §7; it carries over the hash-chained log of the earlier design.",
+  cache:    "Our addition: the extractor contract §8.",
+  replay:   "Our addition: the extractor contract §8, so provenance gives the same data on every replay. Supports the supervisor's aim of reproducible investigations (§9).",
+  reexec:   "Our addition: the extractor contract §8.",
+  export:   "Supervisor §2: \"SPARQL could still be useful for querying the resulting evidence graph.\" The PROV-O export is ours.",
+  evLoc:    "Our addition: measures the locate step; possible because the generator records where each fact was placed.",
   evgraph:  "Supervisor §2 (evidence graph) and §8 step 4 (connections between studies, experiments, measurements and source passages).",
   synth:    "Supervisor §4 and §8 step 5: deterministic procedures with explicit rules; §2: supporting and contradicting evidence.",
   answer:   "Supervisor §2: \"Evidence graph and synthesized answer\".",
@@ -824,6 +935,12 @@ const STATUS = [
   { area: "3 · Extractor library", stage: "iface", state: "partial", tests: "gold/chunks.py, gold/extract.py, agent/anchor.py, agent/broker.py, agent/loop.py",
     evidence: "Section-aware chunking, schema-constrained LLM extraction with retries, and the quote check against the file are built and tested (scripted models only). The research agent, for the agentic extractor, is built and has run on the cluster.",
     next: "Wrap them behind one extractor interface; add conditions, metrics, results and author-claim extractors; the agent as one more implementation." },
+  { area: "Extractor contract", stage: "iface", state: "spec", tests: "docs/extractor-contract.md",
+    evidence: "Written and decided (14 Oct): identity with code and config hashes, task, result with multi-span items, coverage, one hash-chained event per call, cache, exact replay, measured re-execution, cascade, benchmark per version.",
+    next: "Implement it as pydantic models plus the engine's recorder; first extractor behind it: the single-call LLM extractor from gold/extract.py." },
+  { area: "Provenance & replay", stage: "replay", state: "spec", tests: "agent/broker.py, gold/llm.py, agent replay/reexec",
+    evidence: "Specified in the contract; the hash chain, the call cache and the replay and re-execution pattern exist for the agent.",
+    next: "Engine records every extractor call; engine replay and engine reexec." },
   { area: "4 · Evidence representation", stage: "evgraph", state: "partial", tests: "agent/prov.py, scoring/store.py",
     evidence: "PROV-O export and a pyoxigraph SPARQL store over run graphs are built and tested.",
     next: "The study → experiment → condition → measurement model with passages." },
@@ -843,7 +960,25 @@ const STATUS = [
     evidence: "FastAPI + React app with a fact-to-passage walk, graph view, SPARQL and chat, built for the previous design.",
     next: "Show the evidence graph and the answer's trace (optional)." },
 ];
-const STATE_LABEL = { works: "Works", partial: "Partly reusable", blocked: "Blocked", open: "Not built" };
+const STATE_LABEL = { works: "Works", partial: "Partly reusable", spec: "Specified", blocked: "Blocked", open: "Not built" };
+
+/* ---- DECISIONS and QUESTIONS: the two lists under the status table ------------------------------ */
+const DECISIONS = [
+  { text: "Follow the supervisor's design: question → hand-written protocol → engine with an extractor library → evidence graph → rule-based synthesis; synthetic benchmark as the main evaluation.", stage: "protocol" },
+  { text: "First question: does RAG improve the factual accuracy of LLM answers?", stage: "question" },
+  { text: "The research agent fits in two places: as one extractor implementation (agentic extractor) and, without a protocol, as a second baseline.", stage: "x_agent" },
+  { text: "Agents at the edges, a program in the middle: the protocol fixes which evidence counts, the order of steps and the synthesis; flexibility only in how evidence is found (locate step, agentic extractor).", stage: "locate" },
+  { text: "Extractor contract written: one interface for regex, model, single-call LLM and agentic extractors, with checked spans, recorded coverage, exact replay and measured re-execution.", stage: "iface" },
+  { text: "A value reported twice in a paper is one item with two spans; items keep normalised values and raw text; benchmark recall is reported, not enforced.", stage: "iface" },
+  { text: "All reported results come from replay of recorded calls, so provenance gives the same data every time; re-execution stability is a measurement.", stage: "replay" },
+];
+const QUESTIONS = [
+  { text: "Is the engine strictly program-run, or may one step (locating the evidence for an evidence type) be done by an agent that searches flexibly within a budget, with the same output contract and every action logged?", stage: "locate" },
+  { text: "Is an agentic extractor acceptable as one implementation behind the extractor interface, replayed from records, with its re-execution stability reported?", stage: "x_agent" },
+  { text: "Is a second baseline welcome: our research agent with the question only and no protocol, next to the retrieve-then-answer baseline?", stage: "agentbase" },
+  { text: "Is RAG and factual accuracy fixed as the first question, or one candidate?", stage: "question" },
+  { text: "How large should the synthetic benchmark be (studies, papers, corpora or seeds), and how many generated papers should a person check for fidelity?", stage: "fidelity" },
+];
 
 /* ============================== drawing (no edits needed below) ============================== */
 const LABEL_W = 250, COL_W = 200, NODE_W = 178, NODE_H = 86, CHIP_H = 22, CHIP_GAP = 5, TOP = 14, FLAG_H = 46;
@@ -1078,6 +1213,13 @@ function examples() {
       h("dl", { class: "levels" }, DIFFICULTY.map(d => [h("dt", {}, d.level), h("dd", {}, d.text)]).flat())));
 }
 
+function notes() {
+  const fill = (id, rows) => document.getElementById(id).append(...rows.map(r =>
+    h("li", {}, rich(r.text), " ", h("button", { type: "button", class: "box-link", onclick: () => openDetails("stage", r.stage) }, "(box)"))));
+  fill("decisions", DECISIONS);
+  fill("questions", QUESTIONS);
+}
+
 function statusTable() {
   document.getElementById("status-note").textContent = STATUS_NOTE;
   const box = document.getElementById("status");
@@ -1279,6 +1421,7 @@ draw();
 references();
 wireDetails();
 statusTable();
+notes();
 examples();
 </script>
 </body>
