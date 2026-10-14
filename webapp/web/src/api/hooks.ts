@@ -113,12 +113,18 @@ export function useStartRun() {
   })
 }
 
-export const useRun = (runId: string) =>
+/**
+ * One run. `waiting`: a job that will write this run is queued or running, so a 404 means "not
+ * written yet" (agent run takes seconds to write config.json, a queued job longer): ask again every
+ * few seconds until the run is there.
+ */
+export const useRun = (runId: string, { waiting = false }: { waiting?: boolean } = {}) =>
   useQuery({
     queryKey: keys.run(runId),
     queryFn: ({ signal }) => api.run(runId, signal),
     enabled: !!runId,
-    refetchInterval: (query) => (query.state.data && isBusy(query.state.data.summary) ? LIVE_POLL_MS : false),
+    refetchInterval: (query) =>
+      query.state.data ? (isBusy(query.state.data.summary) ? LIVE_POLL_MS : false) : waiting ? JOB_POLL_MS : false,
   })
 
 export const useSteps = (runId: string, enabled = true) =>

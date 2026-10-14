@@ -3,6 +3,10 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
+/* The built app is committed in dist/: Tailwind must not scan it (it would scrape class-like words out
+   of the old minified bundle), or every build would differ from a clean one. */
+@source not "../dist";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

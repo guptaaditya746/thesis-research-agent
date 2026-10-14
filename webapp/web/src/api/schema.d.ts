@@ -771,7 +771,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "none" | "building" | "draft" | "reviewed";
+            status: "none" | "building" | "draft" | "reviewing" | "reviewed";
             /**
              * Stage
              * @description the gold builder's stage (progress.json), when it wrote one
@@ -802,7 +802,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "none" | "building" | "draft" | "reviewed";
+            status: "none" | "building" | "draft" | "reviewing" | "reviewed";
             /** Rows */
             rows?: number | null;
             /** Facts */
@@ -1324,6 +1324,11 @@ export interface components {
              * @enum {string}
              */
             verify: "ok" | "failed" | "unknown";
+            /**
+             * Verify From
+             * @description where `verify` comes from: the app's own `agent verify` (cached while the server runs), or score.json's verify_ok when the scorer checked the run after its last record
+             */
+            verify_from?: ("verify" | "score") | null;
             score: components["schemas"]["ScoreSummary"] | null;
             /**
              * Live

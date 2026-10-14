@@ -85,6 +85,8 @@ export function ConceptBadge({ status, pickedBy }: { status: ConceptState; picke
 
 export function GoldBadge({ status }: { status: GoldState }) {
   if (status === "reviewed") return <StatusBadge tone="good" icon={<CheckCircle2Icon />}>reviewed</StatusBadge>
+  // key.json of an export half way through the review: scores against it are still provisional
+  if (status === "reviewing") return <StatusBadge tone="warning" icon={<PencilLineIcon />}>review in progress</StatusBadge>
   if (status === "draft") return <StatusBadge tone="warning" icon={<PencilLineIcon />}>draft</StatusBadge>
   if (status === "building") return <StatusBadge tone="neutral" icon={<HammerIcon />}>building</StatusBadge>
   return <StatusBadge tone="neutral" icon={<CircleSlashIcon />}>none</StatusBadge>

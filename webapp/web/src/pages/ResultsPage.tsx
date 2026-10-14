@@ -6,7 +6,16 @@
  * outcomes' paired differences (intervals, no tests, as pre-registered) and the per-question
  * table, which is the charts' table view. Warnings (draft keys, pending verdicts) come first.
  */
-import { BarChart3Icon, CheckCircle2Icon, CircleMinusIcon, CircleSlashIcon, FlaskConicalIcon, HourglassIcon } from "lucide-react"
+import {
+  BarChart3Icon,
+  CheckCircle2Icon,
+  CircleMinusIcon,
+  CircleSlashIcon,
+  FlaskConicalIcon,
+  HourglassIcon,
+  OctagonAlertIcon,
+  ShieldAlertIcon,
+} from "lucide-react"
 import type { ReactNode } from "react"
 
 import { useQuestions, useResults } from "@/api/hooks"
@@ -103,9 +112,19 @@ function Report({ report }: { report: ResultsReport }) {
   )
 }
 
+/** report.md's warnings (scoring/report.py warnings_md): what keeps the numbers from being results. */
 function Warnings({ report }: { report: ResultsReport }) {
-  const pending = report.completeness?.pending_support_runs ?? []
-  const unverified = report.completeness?.unverified_runs ?? []
+  const c = report.completeness ?? {}
+  const pending = c.pending_support_runs ?? []
+  const unverified = c.unverified_runs ?? []
+  const failedVerify = c.verify_failed_runs ?? []
+  const keyProblems = c.key_problem_runs ?? []
+  const differ = Object.keys(c.settings_differ ?? {})
+  const mixed = Object.keys(c.partial_counts_as ?? {}).length > 1 || Object.keys(c.support_context ?? {}).length > 1
+  const judge = report.judge
+  const duplicates = report.duplicates ?? []
+  const notScored = Object.values(report.coverage ?? {}).reduce((n, v) => n + (v?.not_scored ?? 0), 0)
+  const incomplete = c.key_states?.incomplete ?? 0
   return (
     <div className="space-y-2">
       {report.provisional && (
@@ -113,7 +132,42 @@ function Warnings({ report }: { report: ResultsReport }) {
           <FlaskConicalIcon className="text-status-warning" />
           <AlertTitle>Provisional</AlertTitle>
           <AlertDescription>
-            {report.provisional_runs ?? "Some"} runs were scored against draft keys (before review): these numbers test the pipeline and are not results.
+            {report.provisional_runs ?? "Some"} runs were scored against keys that are not final
+            {incomplete ? ` (${incomplete} against a key whose review is not finished)` : " (draft keys, before review)"}: these numbers test the pipeline and are not results.
+          </AlertDescription>
+        </Alert>
+      )}
+      {judge && judge.state !== "passed" && (
+        <Alert className={judge.state === "failed" ? "border-status-critical/60" : "border-status-warning/60"}>
+          <ShieldAlertIcon className={judge.state === "failed" ? "text-status-critical" : "text-status-warning"} />
+          <AlertTitle>{judge.state === "failed" ? "The judge failed its calibration" : "The judge is not calibrated"}</AlertTitle>
+          <AlertDescription>
+            {judge.state === "failed"
+              ? `Kappa ${judge.kappa.map((k) => k.toFixed(2)).join(", ") || "?"} is below the bar of ${String(judge.bar)}: the support share is an unvalidated secondary number, not the pre-registered result, and the soft-level outcomes are left out.`
+              : "Its verdicts are not validated against people yet (`partial` counts as no): the primary test is not a result until `gold judge-agreement` has run and the runs are rescored."}
+          </AlertDescription>
+        </Alert>
+      )}
+      {duplicates.length > 0 && (
+        <Alert className="border-status-critical/60">
+          <OctagonAlertIcon className="text-status-critical" />
+          <AlertTitle>Duplicate runs left out</AlertTitle>
+          <AlertDescription>
+            {duplicates.length} scores share a run id (or question, condition, repeat and attempt) with another ({duplicates.slice(0, 4).map((d) => d.run_id).join(", ")}): score one batch root at a time.
+          </AlertDescription>
+        </Alert>
+      )}
+      {(failedVerify.length > 0 || keyProblems.length > 0 || differ.length > 0 || mixed) && (
+        <Alert className="border-status-critical/60">
+          <OctagonAlertIcon className="text-status-critical" />
+          <AlertTitle>The comparison may not be clean</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc pl-4">
+              {failedVerify.length > 0 && <li>{failedVerify.length} scored runs failed `agent verify` ({failedVerify.slice(0, 4).join(", ")}).</li>}
+              {keyProblems.length > 0 && <li>{keyProblems.length} runs were scored against keys that do not validate against the concept's answer schema.</li>}
+              {differ.length > 0 && <li>Settings differ between runs: {differ.join(", ")} (report.json completeness.settings_differ).</li>}
+              {mixed && <li>Runs were judged with different settings (partial mapping or judge context).</li>}
+            </ul>
           </AlertDescription>
         </Alert>
       )}
@@ -129,6 +183,9 @@ function Warnings({ report }: { report: ResultsReport }) {
       )}
       {unverified.length > 0 && (
         <p className="text-xs text-muted-foreground">{unverified.length} scored runs were not verified (no corpus when scored).</p>
+      )}
+      {notScored > 0 && (
+        <p className="text-xs text-muted-foreground">{notScored} planned runs were not scored (cut, failed or not started; see Coverage).</p>
       )}
     </div>
   )
@@ -178,6 +235,9 @@ function PrimaryTest({ report }: { report: ResultsReport }) {
             <div><dt className="text-muted-foreground">p (α = {p.alpha})</dt><dd className="tabular-nums">{pValue(p.p_value)}</dd></div>
           </dl>
           <Verdict computed={p.computed} significant={p.significant} alpha={p.alpha} />
+          {p.computed && p.judge_validated === false && (
+            <StatusBadge tone="warning" icon={<ShieldAlertIcon />}>unvalidated: judge {p.judge_calibration === "failed" ? "failed calibration" : "not calibrated"}</StatusBadge>
+          )}
         </div>
         {!p.computed && p.reason && <p className="text-sm text-muted-foreground">Not computed: {p.reason}.</p>}
         {p.excluded_questions.length > 0 && (

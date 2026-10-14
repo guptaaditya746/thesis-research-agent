@@ -203,7 +203,11 @@ function KeySheet({ qid, onClose }: { qid: string | null; onClose: () => void })
               {key.data ? (
                 <>
                   <Badge variant="outline" className="font-mono">{key.data.version ?? "?"}</Badge>
-                  {key.data.reviewed ? "reviewed" : "draft from triage alone"} · {rows.length} rows
+                  {key.data.reviewed
+                    ? (key.data.review as { complete?: boolean } | undefined)?.complete === false
+                      ? "reviewed in part (the review is not finished)"
+                      : "reviewed"
+                    : "draft from triage alone"} · {rows.length} rows
                 </>
               ) : (
                 "key.json, or key.draft.json before review"

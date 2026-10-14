@@ -5,7 +5,7 @@ import { http, HttpResponse } from "msw"
 import { beforeAll, describe, expect, it } from "vitest"
 
 import { routes } from "@/app/routes"
-import { RUN } from "@/mocks/fixtures"
+import { initialRunDetails, RUN } from "@/mocks/fixtures"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
 
@@ -130,6 +130,27 @@ describe("pages", () => {
     expect(await screen.findByText("No run nope", {}, T)).toBeInTheDocument()
   })
 
+  it("run page of a run its job has not written yet waits for it, then opens it", async () => {
+    let written = false
+    const job = {
+      id: "job-0042", kind: "run", args: {}, state: "running", created_at: "2026-10-14T09:00:00Z", run_id: "web~fresh",
+      steps: [{ name: "run", argv: [], command: "agent run", state: "running" }, { name: "verify", argv: [], command: "agent verify", state: "pending" }],
+    }
+    server.use(
+      http.get("/api/jobs", () => HttpResponse.json([job])),
+      http.get("/api/runs/web~fresh", () =>
+        written ? HttpResponse.json(initialRunDetails()[RUN.on]) : HttpResponse.json({ detail: "no run" }, { status: 404 })),
+    )
+    renderRoutes(routes, "/runs/web~fresh")
+    expect(await screen.findByText("Starting run web~fresh", {}, T)).toBeInTheDocument()
+    expect(screen.getByRole("list", { name: "Job steps" })).toHaveTextContent("verify")
+    expect(screen.getByRole("link", { name: "Job log" })).toHaveAttribute("href", "/jobs/job-0042")
+    expect(screen.queryByText(/No run web~fresh/)).not.toBeInTheDocument()
+    written = true // agent run has written config.json: the next poll opens the run
+    await waitFor(() => expect(screen.queryByText("Starting run web~fresh")).not.toBeInTheDocument(), T)
+    expect(await screen.findByRole("tab", { name: "Answer" }, T)).toBeInTheDocument()
+  })
+
   it("results page shows the primary test, its sensitivity analyses and the per-question table", async () => {
     renderRoutes(routes, "/results")
     const primary = (await screen.findByText("Pre-registered primary outcome", {}, T)).closest<HTMLElement>("[data-slot=card]")!
@@ -159,6 +180,31 @@ describe("pages", () => {
     expect(screen.getByText("Judge verdicts pending")).toBeInTheDocument()
     expect(screen.getByText("not computed")).toBeInTheDocument()
     expect(screen.getByText(/fewer than 6 paired questions/)).toBeInTheDocument()
+  })
+
+  it("results page shows every warning report.md has: judge calibration, verify failures, settings, duplicates", async () => {
+    server.use(http.get("/api/results", () => HttpResponse.json({
+      provisional: true, provisional_runs: 2, complete: true,
+      completeness: { verify_failed_runs: ["m4-72~q02-claim_off-r1-a1"], key_problem_runs: [], key_states: { incomplete: 2, reviewed: 70 },
+                      settings_differ: { loop: { a: 1, b: 71 } }, partial_counts_as: { no: 72 }, support_context: { calibrated: 72 } },
+      judge: { state: "failed", validated: false, kappa: [0.48], bar: 0.61 },
+      duplicates: [{ run_id: "q01-claim_on-r1-a1", qid: "q01", condition: "claim_on", repeat: 1, attempt: 1 }],
+      coverage: { claim_on: { scored: 36, answered: 30, answered_share: 0.83, not_scored: 0 }, claim_off: { scored: 35, answered: 30, answered_share: 0.86, not_scored: 1 } },
+      primary: {
+        outcome: "support_share", test: "wilcoxon signed-rank", alternative: "two-sided", alpha: 0.05, n_pairs: 12, n_nonzero: 12, computed: true,
+        reason: null, statistic: 3, p_value: 0.002, significant: true, rank_biserial: 0.9, mean_difference: 0.2, ci_low: 0.1, ci_high: 0.3,
+        ci_method: "BCa", questions: [], excluded_questions: [], judge_validated: false, judge_calibration: "failed",
+      },
+    })))
+    renderRoutes(routes, "/results")
+    expect(await screen.findByText("The judge failed its calibration", {}, T)).toBeInTheDocument()
+    expect(screen.getByText(/Kappa 0.48 is below the bar of 0.61/)).toBeInTheDocument()
+    expect(screen.getByText("unvalidated: judge failed calibration")).toBeInTheDocument()
+    expect(screen.getByText(/2 against a key whose review is not finished/)).toBeInTheDocument()
+    expect(screen.getByText("Duplicate runs left out")).toBeInTheDocument()
+    expect(screen.getByText(/1 scored runs failed `agent verify`/)).toBeInTheDocument()
+    expect(screen.getByText(/Settings differ between runs: loop/)).toBeInTheDocument()
+    expect(screen.getByText(/1 planned runs were not scored/)).toBeInTheDocument()
   })
 
   it("results page explains a missing report", async () => {

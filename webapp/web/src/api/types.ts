@@ -23,7 +23,7 @@ export type Category = "corpus_wide" | "ambiguous"
 /** agent/concept_step.py PICKED_BY */
 export type PickedBy = "user" | "claude" | "provisional-first"
 export type ConceptState = "none" | "proposed" | "picked"
-export type GoldState = "none" | "building" | "draft" | "reviewed"
+export type GoldState = "none" | "building" | "draft" | "reviewing" | "reviewed"
 export type VerifyState = "ok" | "failed" | "unknown"
 export type AttachState = "not_applicable" | "pending" | "cut" | "done"
 export type AnswerFrom = "final" | "draft" | "none"
@@ -432,7 +432,13 @@ export interface PairedTest {
   label?: string
 }
 
+/** passed: kappa at or above the bar; failed: below it; none: not calibrated yet; mixed: runs differ */
+export type JudgeCalibration = "passed" | "failed" | "none" | "mixed"
+
 export interface PrimaryTest extends PairedTest {
+  /** the pre-registered result only when true: the judge passed its calibration against people */
+  judge_validated?: boolean
+  judge_calibration?: JudgeCalibration
   sensitivity_empty_as_zero?: PairedTest
   sensitivity_other_mapping?: PairedTest
   sensitivity_first_claim?: PairedTest
@@ -457,7 +463,28 @@ export interface ResultsReport {
   provisional?: boolean
   provisional_runs?: number
   complete?: boolean
-  completeness?: { pending_support_runs?: string[]; pending_soft_runs?: string[]; unverified_runs?: string[]; verify_failed_runs?: string[] }
+  completeness?: {
+    pending_support_runs?: string[]
+    pending_soft_runs?: string[]
+    unverified_runs?: string[]
+    verify_failed_runs?: string[]
+    /** runs scored against keys whose rows do not validate against the concept's answer schema */
+    key_problem_runs?: string[]
+    /** runs by the key they were scored against: reviewed, incomplete (a review still going on), draft */
+    key_states?: Record<string, number>
+    /** setting -> value -> runs; prompt and attach settings are compared within each condition ("claim_on: ...") */
+    settings_differ?: Record<string, Record<string, number>>
+    /** runs by the judge's input: calibrated (with context) or none */
+    support_context?: Record<string, number>
+    /** runs by how `partial` counted */
+    partial_counts_as?: Record<string, number>
+    /** runs by the judge's calibration state */
+    judge_calibration?: Record<string, number>
+  }
+  /** whether the judge passed its calibration against people (scoring/support.py, report.py judge_validation) */
+  judge?: { state: JudgeCalibration; validated: boolean; kappa: number[]; bar: number | number[] | null }
+  /** scores left out because another score has the same run id, or question, condition, repeat and attempt */
+  duplicates?: { run_id: string; qid: string | null; condition: string; repeat: number | null; attempt: number | null }[]
   settings?: { interval?: string; confidence?: number; resamples?: number; alpha?: number; min_pairs?: number }
   runs?: { scored?: number; by_condition?: Partial<Record<Condition, number>>; by_exit_status?: Record<string, Record<string, number>> }
   coverage?: Partial<Record<Condition, { scored: number; answered: number; answered_share: number | null; not_scored: number }>>
