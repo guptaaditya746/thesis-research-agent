@@ -9,13 +9,20 @@ needed), and `normalised` replaces `entailed`.
 ## Commands
 
 ```sh
+R=$RUNS/m4-72                                            # the batch root e2e-batch.sh prints (RUNS_ROOT=...)
 score run    <run> [--key $GOLD/<qid>/key.json]         # -> <run>/score.json
-score batch  $RUNS --gold $GOLD --manifest $RUNS/m4-72/manifest.json
-                                                         # -> $RUNS/report/scores.jsonl, batch.json
-score report $RUNS                                       # -> $RUNS/report/report.json, report.md, *.csv
-score store  <runs_root> [--path $RUNS/.oxigraph]        # every run's graph.ttl into the SPARQL store
-score sparql <query.rq> [--run <run_id>] [--path ...]    # read-only query, {vars, rows} as JSON
+score batch  $R --gold $GOLD --manifest $R/manifest.json # -> $R/report/scores.jsonl, batch.json
+score report $R                                          # -> $R/report/report.json, report.md, *.csv
+score store  $R --path $R/.oxigraph                      # every run's graph.ttl into the SPARQL store
+score sparql <query.rq> [--run <run_id>] [--path ...]    # read-only query (no SERVICE), {vars, rows} as JSON
 ```
+
+The runs root of scoring (and of the web app, `RUNS=$R webapp serve`) is one batch root, the
+`RUNS_ROOT` `scripts/e2e-batch.sh` prints (docs/e2e-build-plan.md, Environment), never the `$RUNS`
+above several: run ids are directory names, and the smoke batch and m4-72 both have
+`q01-claim_on-r1-a1`. Under a root holding both, `score batch` without a manifest scores the first
+and lists the second as `duplicate`, `score store` skips it, and `score report` lists any two scores of
+one run id (`duplicates`), so nothing mixes silently, but the numbers are only clean per batch root.
 
 `run` and `batch` take `--gold` (default `$GOLD`: keys, the judge's cache and calibration), `--corpus`
 (default `$CORPUS`: runs `agent verify` and gives the judge each quote's context), `--no-judge` and
@@ -27,10 +34,11 @@ input. `run` without `--key` takes the run's question's `key.json`, else `key.dr
 `batch --manifest` reads the attempts from the manifest's own `runs_root`, where `agent batch` wrote
 them: give it the effective manifest `scripts/e2e-batch.sh` writes, `$RUNS/<name>/manifest.json`
 (runs_root `$RUNS/<name>`); a manifest whose runs_root does not exist is an error. The report goes to
-`<runs_root>/report/` (`$RUNS/report/`, which the web app reads). Without `--manifest` every run
+`<runs_root>/report/` (which the web app started on that root reads). Without `--manifest` every run
 directory below the root (nested roots included) whose id is a batch run key is scored, its key found
-by concept hash; `--all` adds runs with other ids (ad hoc runs). `--force` rescores runs whose
-score.json is current. A run that cannot be scored is recorded as `score_failed` and the batch goes on.
+by concept hash, a second directory with an id already seen listed as `duplicate`; `--all` adds runs
+with other ids (ad hoc runs). `--force` rescores runs whose score.json is current. A run that cannot be
+scored is recorded as `score_failed` and the batch goes on.
 
 Order on the cluster, after the runs: `scripts/e2e-batch.sh` (agent batch, verify, pairs, graph) →
 `score batch` → `score report` (→ `score store` for the web app's provenance queries).
@@ -67,6 +75,13 @@ judge, by another judge model or prompt, with another context mode or calibratio
 pending; the judge's cache makes that free for decisions it has seen. Errors are recorded without HTTP
 bodies or anything key-like.
 
+The judge's calibration (`$GOLD/judge-report.json`, `gold judge-agreement`) is recorded per run
+(`support.calibration`: partial mapping, `state` passed / failed / none, `use_judge`, the tested kappa
+and the bar). The report's primary test is the pre-registered result only when every run's judge
+passed (`primary.judge_validated`); otherwise report.md and the web app say first that it is not
+calibrated yet or failed, and a judge that failed (kappa below 0.61) decides no soft match either:
+those runs' soft outcomes are left out, as pending ones are (strict and normalised stand).
+
 ## Pre-registered analysis (fixed 13 Oct 2026, before any scored run)
 
 - **Primary outcome:** support share, claim_on vs claim_off (after the attach step), with the judge's
@@ -91,19 +106,22 @@ bodies or anything key-like.
   normalised), row F1 (soft and normalised), vital recall, judged precision, unsourced share, claims
   per sourced fact, tokens and time with and without the attach step.
 - **Draft keys:** scores against `key.draft.json` are provisional; the report says so in its first
-  line and they are never reported as results.
+  line and they are never reported as results. So are scores against a `key.json` whose review is not
+  finished (`review.complete` false: `gold export` writes one after every pull).
+- **Judge not validated:** with the judge not calibrated yet, or below κ 0.61, the test is shown but
+  marked unvalidated (STATE.md, Judge: the support share is then an unvalidated secondary number).
 
 ## Files
 
 | File | Content |
 |---|---|
-| `<run>/score.json` | `schema_version` (2), `run_id, qid, condition, seed, temperature, repeat, attempt, kind, exit_status` (submitted, budget, context_full, error, cut, …), `answer_from` (final, draft, none; null for older runs), `verify_ok` (null without a corpus), `verify_errors, key_version, key_reviewed, key_sha256, key_path, provisional, key_problems`, `rows` {tp, fp, fn, precision, recall, f1, asked, pending} (soft), `rows_by_level` {normalised, soft}, `facts` {strict, normalised, soft: {tp, fp, fn, precision, recall, f1, vital, vital_tp, vital_recall; soft also asked, pending}}, `vital_recall` (soft), `judged_precision` {correct, wrong, precision, coverage, source}, `support` {facts, with_claims, supports, partial, no, unsourced, pending, partial_counts_as, support_share, support_share_partial_no, support_share_partial_yes, support_share_first_claim, claims_per_fact, unsourced_share, context (calibrated / none), calibration {partial_counts_as, source, sha256}}, `pending` {support, same_fact, same_row}, `cost` {steps, model_calls, tokens, tokens_without_attach, seconds, seconds_without_attach, wall_seconds, claim_steps, claim_step_tokens, attach_tokens, attach_seconds}, `run_settings` {budget, temperature, prompt_version, prompt_sha256, model, corpus_manifest_sha256, git_commit}, `judge` (this run's calls) {used, name, identity {name, model, prompts}, models, prompt_sha256, calls, cached, pending, errors}, `scorer` {version, git_commit}, `detail` {rows, facts: {pairs, missed, extra, duplicates}, support: per fact {row_id, fact_id, origin, label, first_claim_label, claims: [{claim_id, file, label, rationale, model, prompt_sha256, cached}]}}, `scored_at` |
+| `<run>/score.json` | `schema_version` (3), `run_id, qid, condition, seed, temperature, repeat, attempt, kind, exit_status` (submitted, budget, context_full, error, cut, …), `answer_from` (final, draft, none; null for older runs), `verify_ok` (null without a corpus), `verify_errors, key_version, key_reviewed, key_complete, key_sha256, key_path, provisional, key_problems`, `rows` {tp, fp, fn, precision, recall, f1, asked, pending} (soft), `rows_by_level` {normalised, soft}, `facts` {strict, normalised, soft: {tp, fp, fn, precision, recall, f1, vital, vital_tp, vital_recall; soft also asked, pending}}, `vital_recall` (soft), `judged_precision` {correct, wrong, precision, coverage, source}, `support` {facts, with_claims, supports, partial, no, unsourced, pending, partial_counts_as, support_share, support_share_partial_no, support_share_partial_yes, support_share_first_claim, claims_per_fact, unsourced_share, context (calibrated / none), calibration {partial_counts_as, source, sha256, state, use_judge, kappa, bar}}, `pending` {support, same_fact, same_row}, `cost` {steps, model_calls, tokens, tokens_without_attach, seconds, seconds_without_attach, wall_seconds, claim_steps, claim_step_tokens, attach_tokens, attach_seconds}, `run_settings` {budget, temperature, prompt_version, prompt_sha256, model, corpus_manifest_sha256, git_commit, loop, spawn, sandbox_mode, command_limits, attach}, `judge` (this run's calls) {used, name, identity {name, model, prompts}, models, prompt_sha256, calls, cached, pending, errors}, `scorer` {version, git_commit}, `detail` {rows, facts: {pairs, missed, extra, duplicates}, support: per fact {row_id, fact_id, origin, label, first_claim_label, claims: [{claim_id, file, label, rationale, model, prompt_sha256, cached}]}}, `scored_at` |
 | `report/scores.jsonl` | one score.json per scored run, by run id |
-| `report/batch.json` | `runs_root`, `attempts_root`, every run key (or run) with its state (finished, cut, failed, attach_pending, not_started, not_a_batch_run, no_key, score_failed) and whether it was scored, `key_problems` (key files that did not parse) |
-| `report/report.json` | `provisional`, `complete`, `completeness` (pending support / soft runs, unjudged, unverified and verify-failed runs, runs with key problems, judge context and partial mapping counts, `settings_differ`), `settings`, `inputs` (sha256 of scores.jsonl and batch.json, scorer and report commits, key hashes per question, judge models, prompt hashes and identities), `runs` (by condition, exit status, answer source, unscored keys), `coverage`, `questions`, `per_question` (means per question × condition, with runs, answered, primary_runs, pending_runs), `paired`, `summary` (per outcome: each condition's mean `{n, mean, low, high, method, runs, runs_without_value}` and the paired difference), `primary` (the test above; `sensitivity_empty_as_zero`, `sensitivity_other_mapping`, `sensitivity_first_claim` inside), `secondary` |
-| `report/report.md` | warnings first (provisional, incomplete, unverified, key problems, differing settings), the primary test with coverage and sensitivity analyses, outcomes by condition with intervals, per-question table, runs by exit status and answer source |
+| `report/batch.json` | `runs_root`, `attempts_root`, every run key (or run) with its state (finished, cut, failed, attach_pending, not_started, not_a_batch_run, duplicate, no_key, score_failed), `run_dir` and whether it was scored, `key_problems` (key files that did not parse) |
+| `report/report.json` | `provisional`, `complete`, `completeness` (pending support / soft runs, unjudged, unverified and verify-failed runs, runs with key problems, judge context, partial mapping, judge calibration and key state counts, `settings_differ`: prompt and attach within each condition), `judge` (calibration state, validated, kappa, bar), `duplicates`, `settings`, `inputs` (sha256 of scores.jsonl and batch.json, scorer and report commits, key hashes per question, judge models, prompt hashes and identities), `runs` (by condition, exit status, answer source, unscored keys), `coverage`, `questions`, `per_question` (means per question × condition, with runs, answered, primary_runs, pending_runs), `paired`, `summary` (per outcome: each condition's mean `{n, mean, low, high, method, runs, runs_without_value}` and the paired difference), `primary` (the test above; `sensitivity_empty_as_zero`, `sensitivity_other_mapping`, `sensitivity_first_claim` inside), `secondary` |
+| `report/report.md` | warnings first (provisional, judge not calibrated or failed, duplicates, incomplete, unverified, key problems, differing settings), the primary test with coverage and sensitivity analyses, outcomes by condition with intervals, per-question table, runs by exit status and answer source |
 | `report/*.csv` | per_run, per_question, paired, summary, exit_status |
-| `$RUNS/.oxigraph/` | pyoxigraph store, one named graph `urn:thesis-agent:run:<run_id>` per run |
+| `<runs_root>/.oxigraph/` | pyoxigraph store (`score store`), one named graph `urn:thesis-agent:run:<run_id>` per run |
 
 The answer key format is the plan's (`key.json` / `key.draft.json`); judged precision reads the review
 export beside it (`export.json`, C2) and the candidates' s/p/o (`candidates.jsonl` or `pool.jsonl`).

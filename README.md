@@ -28,9 +28,12 @@ uv run agent run --help                       # likewise gold, score, webapp
 ## The web app
 
 ```bash
-export CORPUS=/path/to/corpus RUNS=runs GOLD=gold-data CONCEPTS=concepts
+export CORPUS=/path/to/corpus RUNS=runs/m4-72 GOLD=gold-data CONCEPTS=concepts   # RUNS: one batch root
 uv run webapp serve                           # http://127.0.0.1:8080; on Slurm: ssh -L 8080:127.0.0.1:8080 <node>
 ```
+
+`RUNS` is the batch root `scripts/e2e-batch.sh` prints (`RUNS_ROOT=...`), the same one `score batch`,
+`score report` and `score store` take: two batches have runs of the same names (webapp/README.md).
 
 The built frontend is committed (`webapp/web/dist`, made by `npm run build`), so the server needs no
 Node. To work on the frontend: `cd webapp/web && uv run --group frontend npm ci`, then `npm run dev`

@@ -28,7 +28,8 @@ Commands, files and costs: `gold/README.md`.
 
 - Proposing and picking the 12 concepts (2.3; `scripts/e2e-concepts.sh`, provisional pick of brief 1,
   `picked_by: provisional-first`; the user may change a pick in the web app before gold is built).
-- A gold trial (`gold build qNN --max-papers 20`): whether vLLM honours the generated extraction schemas,
+- A gold trial (`gold build qNN --max-papers 20 --out $GOLD-trial`, out of `$GOLD`: gold files there freeze
+  the question's provisional pick before the user has seen it): whether vLLM honours the generated extraction schemas,
   real prompt sizes of 40k-character chunks against the 32k sub-model context, the served model name,
   and the real call rate. The README's cost estimate (about 1,000 screening calls and 7–8 M prompt
   tokens per question) is a count of calls and tokens, not a measured time.
@@ -57,10 +58,15 @@ keys, and the pre-registered test is reported.
 | SPARQL store | Every run's `graph.ttl` in one pyoxigraph store, one named graph per run (`score store`, `score sparql`) | `scoring/store.py` | `scoring/tests/test_store.py` |
 | Web app | FastAPI backend (every endpoint of the plan, run stream and job logs over SSE, jobs for concepts, runs and gold, read-only SPARQL, the five provenance queries, a read-only chat agent) and the React frontend (overview, questions and concept cards with pick, runs, run page with answer, claim walk to the highlighted quote, graph, live timeline, claims, provenance and score tabs, compare, results dashboard, gold, jobs, chat); the built frontend is committed in `webapp/web/dist` | `webapp/`, `webapp/web/` | `webapp/tests/`, Vitest in `webapp/web` |
 
-Cluster order after the runs: `scripts/e2e-batch.sh agent/manifests/m4-72.json`, then
-`score batch $RUNS --gold $GOLD --manifest $RUNS/m4-72/manifest.json --corpus $CORPUS`,
-`score report $RUNS`, `score store $RUNS`; the web app (`webapp serve`, through an SSH tunnel) reads
-the same roots.
+Cluster order after the runs: `scripts/e2e-batch.sh agent/manifests/m4-72.json` (its last line is
+`RUNS_ROOT=$RUNS/m4-72`), then, with that root as the runs root of everything after it,
+`score batch $RUNS/m4-72 --gold $GOLD --manifest $RUNS/m4-72/manifest.json --corpus $CORPUS`,
+`score report $RUNS/m4-72`, `score store $RUNS/m4-72 --path $RUNS/m4-72/.oxigraph`, and the web app
+(`RUNS=$RUNS/m4-72 webapp serve`, through an SSH tunnel). One batch root at a time: run ids are
+directory names, and the smoke batch has runs of the same names (`q01-claim_on-r1-a1`), so a root
+above both would mix them (`score batch` lists the second as `duplicate`, `score store` skips it).
+The gold trial goes to its own directory (`gold build qNN --max-papers 20 --out $GOLD-trial`): a file
+in `$GOLD/<qid>/` freezes that question's concept pick.
 
 ### Still needs the cluster
 
@@ -74,5 +80,6 @@ the same roots.
 ### Still needs people
 
 - The reviewed keys (milestone 3) before scores are final, and the judge calibration before the soft
-  level and support share are reported with the judge (below κ 0.61 the report says to drop it).
+  level and support share are reported with the judge (before it, and below κ 0.61, `score report` says
+  so first and marks the primary test unvalidated; below the bar it leaves the soft outcomes out).
 - Freezing the budget after the smoke batch, and confirming or replacing the provisional concept picks.

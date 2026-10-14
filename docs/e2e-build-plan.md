@@ -146,8 +146,8 @@ measured; `partial` counts as supporting as `$GOLD/judge-report.json` `calibrati
   `score run <run>` without `--key` takes the run's question's `$GOLD/<qid>/key.json`, else `key.draft.json`;
   judged precision reads the facts reviewers rejected as wrong from `$GOLD/<qid>/export.json` (C2). score.json
   adds fields (pending judge decisions, run settings, judge identity, scorer version; `scoring/README.md`).
-- `$RUNS/report/`: `scores.jsonl`, `report.json` (per question × condition means, paired differences, BCa intervals, Wilcoxon results, the pre-registered primary test), `report.md`, CSV tables. `score batch $RUNS --manifest $RUNS/<name>/manifest.json` reads the attempts from the manifest's runs_root and writes here.
-- `$RUNS/.oxigraph/`: pyoxigraph store, one named graph per run (`urn:thesis-agent:run:<run_id>`), built from each run's `graph.ttl` (`score store`).
+- `$RUNS/report/`, with RUNS the manifest's root as in Environment (`RUNS_ROOT=$RUNS/<name>` from `scripts/e2e-batch.sh`): `scores.jsonl`, `report.json` (per question × condition means, paired differences, BCa intervals, Wilcoxon results, the pre-registered primary test), `report.md`, CSV tables. `score batch $RUNS_ROOT --manifest $RUNS_ROOT/manifest.json` reads the attempts from the manifest's runs_root and writes here.
+- `$RUNS_ROOT/.oxigraph/`: pyoxigraph store, one named graph per run (`urn:thesis-agent:run:<run_id>`), built from each run's `graph.ttl` (`score store $RUNS_ROOT`). Run ids are directory names, so one store (and one web app) takes one batch root: the smoke and the M4 batch both have `q01-claim_on-r1-a1`.
 
 ## Backend API (E; F builds against this)
 
