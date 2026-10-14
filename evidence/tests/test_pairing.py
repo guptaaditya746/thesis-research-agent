@@ -4,22 +4,24 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
+
 
 from .conftest import regex_run
 
 HEAD = "# T\n\n## Setup\n\nWe compare a closed-book baseline (B) with its retrieval-augmented variant (R).\n\n## Results\n\n"
 
 
-@pytest.mark.parametrize("rag_nq, rag_tqa", [(70, 50), (71, 49), (72, 48), (73, 47), (74, 46), (75, 45)])
-def test_pairs_on_the_first_dataset_with_both(tmp_path: Path, rag_nq: int, rag_tqa: int) -> None:
-    table = ("| System | Dataset | Accuracy (%) |\n|---|---|---|\n| B | NQ | 60.0 |\n"
-             f"| R | NQ | {rag_nq}.0 |\n| B | TQA | 60.0 |\n| R | TQA | {rag_tqa}.0 |\n")
-    answer, items = regex_run({"T": HEAD + table}, tmp_path)
-    study = answer["studies"][0]
-    assert study["direction"] == "supports"
-    assert study["rag"]["value"] == rag_nq / 100 and study["baseline"]["value"] == 0.6
-    assert items[study["rag"]["measurement"]]["fields"]["dataset"] == "NQ"
+def test_pairs_on_the_first_dataset_with_both(tmp_path: Path) -> None:
+    """Six papers whose item ids (hashes) differ: the pair must not depend on them (it did before the fix)."""
+    values = [(70, 50), (71, 49), (72, 48), (73, 47), (74, 46), (75, 45)]
+    docs = {f"T{n}": HEAD + ("| System | Dataset | Accuracy (%) |\n|---|---|---|\n| B | NQ | 60.0 |\n"
+                             f"| R | NQ | {a}.0 |\n| B | TQA | 60.0 |\n| R | TQA | {b}.0 |\n")
+            for n, (a, b) in enumerate(values)}
+    answer, items = regex_run(docs, tmp_path)
+    for study, (a, _) in zip(answer["studies"], values, strict=True):
+        assert study["direction"] == "supports", study
+        assert study["rag"]["value"] == a / 100 and study["baseline"]["value"] == 0.6
+        assert items[study["rag"]["measurement"]]["fields"]["dataset"] == "NQ"
 
 
 def test_dataset_order_follows_the_values_not_the_labels(tmp_path: Path) -> None:
