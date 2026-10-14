@@ -88,7 +88,8 @@ def plan_json(plan: Plan) -> dict[str, Any]:
 
 
 def locate(text: str, plan: Plan) -> tuple[list[Placement], list[Decoy], list[str]]:
-    """Placements in the model's text; problems for every required string missing or ambiguous."""
+    """Placements in the model's text; problems for every required string missing or ambiguous. Codes and
+    abbreviations count only where the plan puts them: table lines and their definitions."""
     index, ps, decoys, problems = anchor.Index(text), [], [], []
 
     def find_once(fact: str, role: str, quote: str, fmt: str | None = None) -> None:
@@ -110,15 +111,11 @@ def locate(text: str, plan: Plan) -> tuple[list[Placement], list[Decoy], list[st
             decoys.append(Decoy(plan.decoy.measurement, plan.decoy.stated_value, sel.exact, sel.start, sel.end))
         except anchor.AnchorError as exc:
             problems.append(f"decoy {plan.decoy.exact!r} is {exc.reason}")
-    names = [(c, "condition_label", n, n == plan.cond_name[c]) for c in plan.cond_name
-             for n in (plan.cond_name[c], *plan.cond_aliases[c])]
-    names += [(k, "metric_label", n, n == plan.metric_name[k]) for k in plan.metric_name
-              for n in (plan.metric_name[k], *plan.metric_aliases[k])]
-    for fact, role, name, required in names:
-        spans = levelcheck.occurs(text, name)
-        if required and not spans:
-            problems.append(f"{fact}/{role}: name {name!r} not found")
-        ps += [Placement(fact, role, plan.paper, a, b, text[a:b]) for a, b in spans]
+    found = levelcheck.renderings(text, plan)
+    have = {fact for fact, _, _, _, main in found if main}
+    problems += [f"{c}/condition_label: name {plan.cond_name[c]!r} not found" for c in plan.cond_name if c not in have]
+    problems += [f"{k}/metric_label: name {plan.metric_name[k]!r} not found" for k in plan.metric_name if k not in have]
+    ps += [Placement(fact, role, plan.paper, a, b, text[a:b]) for fact, role, a, b, _ in found]
     return sorted(ps, key=lambda p: (p.start, p.end, p.fact)), decoys, problems
 
 

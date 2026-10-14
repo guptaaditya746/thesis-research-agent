@@ -13,7 +13,7 @@ from dataclasses import asdict, dataclass, field
 from pydantic import BaseModel
 
 from agent import anchor
-from synth import levelcheck
+from synth import assoc, levelcheck
 from synth.levels import Plan, parse_value
 from synth.text import Decoy, Placement
 
@@ -106,17 +106,11 @@ def values_unique(text: str, ps: list[Placement]) -> list[str]:
 
 
 def labels_covered(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
-    """Every occurrence of a condition or metric name is a recorded rendering of that fact."""
-    names = [(c, plan.cond_name[c]) for c in plan.cond_name] + [(c, a) for c, al in plan.cond_aliases.items() for a in al]
-    names += [(k, plan.metric_name[k]) for k in plan.metric_name] + [
-        (k, a) for k, al in plan.metric_aliases.items() for a in al]
+    """Every rendering of a condition or metric name (levelcheck.renderings: codes and abbreviations only
+    in tables and definitions) is a recorded placement of that fact."""
     spans = {(p.fact, p.start, p.end) for p in ps}
-    bad = []
-    for fact, name in names:
-        for a, b in levelcheck.occurs(text, name):
-            if not any(f == fact and s <= a and b <= e for f, s, e in spans):
-                bad.append(f"{fact}: unrecorded {text[a:b]!r} at {a}")
-    return bad
+    return [f"{fact}: unrecorded {text[a:b]!r} at {a}" for fact, _, a, b, _ in levelcheck.renderings(text, plan)
+            if not any(f == fact and s <= a and b <= e for f, s, e in spans)]
 
 
 def stray_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:
@@ -142,6 +136,7 @@ def check_paper(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy])
         _check("anchored", anchored(text, ps)),
         _check("values_match", values_match(plan, ps)),
         _check("values_unique", values_unique(text, ps)),
+        _check("values_associated", assoc.associations(text, plan, ps)),
         _check("labels_covered", labels_covered(text, plan, ps)),
         _check("stray_numbers", stray_numbers(text, plan, ps, decoys)),
         _check(f"level_{plan.level}", levelcheck.check_level(text, plan, ps, decoys)),
@@ -162,15 +157,35 @@ class BlindExtraction(BaseModel):
 BlindExtractor = Callable[[str], Awaitable[BlindExtraction]]
 
 
+def _norm(name: str) -> str:
+    name = " ".join(name.lower().split())
+    return name[4:] if name.startswith("the ") else name
+
+
+def names_condition(reported: str, plan: Plan, cid: str) -> bool:
+    """The reported condition is this condition: one of its names in the paper (or its code) exactly, or,
+    for a name longer than a code, containing it or contained in it."""
+    got = _norm(reported)
+    for name in (plan.cond_name[cid], *plan.cond_aliases[cid]):
+        n = _norm(name)
+        if got == n or (len(n) > 3 and len(got) > 3 and (n in got or got in n)):
+            return True
+    return False
+
+
 async def blind_check(text: str, plan: Plan, extract: BlindExtractor) -> Check:
-    """A model that never saw the plan reads the paper; every planned value must come back (within the
-    evaluation tolerance). Extra values (a decoy, a computed relative value) are reported, not failed."""
-    values = [g.value for g in (await extract(text)).measurements]
+    """A model that never saw the plan reads the paper; every planned (condition, value) must come back,
+    the value within the evaluation tolerance and attached to the same condition, so a value written next
+    to the wrong condition fails. Extra results (a decoy, a computed relative value) are reported only."""
+    got = (await extract(text)).measurements
 
     def near(v: float, truth: float) -> bool:      # a percent the model did not convert still counts
         return abs(v - truth) <= TOLERANCE or abs(v / 100 - truth) <= TOLERANCE
 
-    missing = [m.id for m in plan.measurements if not any(near(v, m.value) for v in values)]
-    extra = [v for v in values if not any(near(v, m.value) for m in plan.measurements)]
+    missing = [m.id for m in plan.measurements
+               if not any(near(g.value, m.value) and names_condition(g.condition, plan, m.condition) for g in got)]
+    extra = [(g.condition, g.value) for g in got
+             if not any(near(g.value, m.value) and names_condition(g.condition, plan, m.condition)
+                        for m in plan.measurements)]
     detail = (f"missing {missing}" if missing else "all values recovered") + (f"; extra {extra}" if extra else "")
     return Check("blind_reextraction", not missing, detail)

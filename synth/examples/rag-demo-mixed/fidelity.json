@@ -1,5 +1,5 @@
 {
-  "corpus_id": "rag-demo-f46faad7",
+  "corpus_id": "rag-demo-319f4361",
   "papers": [
     {
       "id": "S001",
@@ -27,6 +27,11 @@
         },
         {
           "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
           "ok": true,
           "detail": ""
         },
@@ -79,6 +84,11 @@
           "detail": ""
         },
         {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
           "name": "labels_covered",
           "ok": true,
           "detail": ""
@@ -123,6 +133,11 @@
         },
         {
           "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
           "ok": true,
           "detail": ""
         },
@@ -175,6 +190,11 @@
           "detail": ""
         },
         {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
           "name": "labels_covered",
           "ok": true,
           "detail": ""
@@ -223,6 +243,11 @@
           "detail": ""
         },
         {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
           "name": "labels_covered",
           "ok": true,
           "detail": ""
@@ -267,6 +292,11 @@
         },
         {
           "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
           "ok": true,
           "detail": ""
         },

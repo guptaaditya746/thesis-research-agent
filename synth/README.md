@@ -39,7 +39,7 @@ Facts per paper: all conditions on the question metric on the main dataset; comp
 | paraphrased | Conditions and the metric are never called by their labels, only by descriptive synonyms (`the model that answers from its own parameters`, `share of answers whose facts are all correct`); values in prose, in at least two of three formats: `62.4%`, `0.624`, `624 out of 1,000`. No tables. |
 | distributed | Values appear only in one Markdown table whose rows are short codes (`B`, `R`, `A1`, `A2`) and whose value column header is the metric's abbreviation (`FA (%)`, cells `62.4`); the codes and the abbreviation are defined in the Method section, at least 300 characters (in practice an implementation-details subsection) before the table. No sentence states a value; no full condition label is in the table. |
 | complex | All conditions with the distractors, the question metric and 1-2 distractor metrics, two datasets, in one table (columns System, Dataset, one per metric; full labels); the rag value on the question metric of the main dataset is `see text` in the table and given only relatively in a sentence (`7.0 percentage points higher than the …`). The reader must pick the question-metric pair on the main dataset. |
-| contradictory | Values in a table with full labels, but the stated claim (abstract and conclusion) disagrees with the data: an improvement where the data show none or a worsening, "no effect" where they show an improvement. In every second study (odd index) the abstract also states a wrong rag value (a decoy, `decoys.json`). The table is the truth: `effect` comes from it, `author_claim` is the claim as stated. |
+| contradictory | Values in a table with full labels, but the stated claim (abstract and conclusion) disagrees with the data: an improvement where the data show none or a worsening, "no effect" where they show an improvement. In odd-index studies the abstract also states a wrong rag value (a decoy, `decoys.json`) that fits the false claim and lies more than 0.0075 (evaluation tolerance 0.005 plus a margin) from every true value of the study, so taking it never scores; in the rare study where no such value exists (about 2 %) there is no decoy. The table is the truth: `effect` comes from it, `author_claim` is the claim as stated. |
 
 ## Placements
 
@@ -47,7 +47,8 @@ Every rendering of a fact is a placement `{fact, role, paper, start, end, exact}
 `condition_label`, `metric_label` or `claim`: raw code-point offsets into the stored text
 (`agent/anchor.read_text`). The template renderer writes text through `text.Doc`, which records the
 offsets as it writes, so placements are exact by construction; the LLM renderer locates them afterwards.
-Codes and abbreviations are placements of their condition/metric; a metric's description (in the Method
+Codes and abbreviations are placements of their condition/metric where the plan puts them, on table lines
+and in their definition sentence (one that also holds the full name), so "Appendix B" is not condition B; a metric's description (in the Method
 section) is a `metric_label` placement too. Ground truth `label`/`name` are the names the paper uses (the
 synonym in paraphrased papers); `aliases` hold the codes.
 
@@ -69,11 +70,11 @@ synonym in paraphrased papers); `aliases` hold the codes.
 Per paper: `lf_only`; `facts_rendered` (every planned fact has a rendering of its role); `anchored` (each
 placement holds its exact text and `anchor.find` with its context lands on it); `values_match` (the rendered
 string reads as the true value; relative ones against the baseline); `values_unique` (a value string occurs
-only where placed); `labels_covered` (every occurrence of a name is a recorded placement of that fact);
+only where placed); `values_associated` (a value's table row names its condition and no other, its column header its metric, its Dataset cell its dataset; in prose its sentence names its condition and metric and no other, a relative value its own condition before and the baseline after; `assoc.py`); `labels_covered` (every occurrence of a name is a recorded placement of that fact);
 `stray_numbers` (no other number reads as one of the study's values as is, as percent or per 1,000);
 `level_<level>` (the level's property); LLM only: `required_strings`, `model_call`, and with
-`--verify-model` `blind_reextraction` (a model that never saw the plan must recover every value within
-0.005). A study failing at any level is left out of every corpus of the set and reported with
+`--verify-model` `blind_reextraction` (a model that never saw the plan must recover every (condition, value) pair:
+the value within 0.005, reported under one of the condition's names or its code). A study failing at any level is left out of every corpus of the set and reported with
 `excluded_reason` and its attempt `history`.
 
 `synth sample` writes `review/review-s<seed>.md` and `.csv`: per sampled paper, every placement with its
@@ -89,8 +90,9 @@ is in `corpus.json`). `.gitattributes` keeps it LF on every checkout.
 
 ## Deviations from docs/evidence-interfaces.md
 
-- `corpus_id` is `<name>-<8 hex>` (a hash of name, level, seed, renderer), not `<name>-<level>`: the
-  manifest must not hint at the level. The directory name is `<name>-<level>` as documented.
+- `corpus_id` is `<name>-<8 hex>`, the hex from the hash of the papers' ids and sha256s, not
+  `<name>-<level>`: the manifest must not hint at the level (a hash of name and level could be guessed).
+  Two corpora with the very same papers (a one-level build and its mixed corpus) share the id. The directory name is `<name>-<level>` as documented.
 - Extra file `decoys.json` (the contradictory level's wrong stated values with offsets); systems under test
   never read it.
 - `fidelity.json` is `{corpus_id, papers: [{id, ok, checks, attempts, history, excluded_reason?}],

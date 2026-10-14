@@ -29,13 +29,15 @@ DEFINITIONS = {
                    "and the abbreviation are defined in the Method section, separated from the table by "
                    "several paragraphs. No sentence states a value. Same facts as explicit.",
     "complex": "Every condition (with the distractor systems), the question metric and one or two distractor "
-               "metrics (BLEU, ROUGE-L, latency) on two datasets, one table per dataset with full labels; the "
+               "metrics (BLEU, ROUGE-L, latency) on two datasets, in one table with full labels and a Dataset column "
+               "(one row per dataset and condition); the "
                "rag value on the question metric of the main (first) dataset is not in the table but given in "
                "the text relative to the baseline ('7.0 percentage points higher than the ...'). The reader "
                "must pick the rag/baseline pair of the question metric on the main dataset.",
     "contradictory": "The values are in a table with full labels, but the author claim (abstract and conclusion) "
                      "disagrees with them (it claims an improvement the table does not show, or no effect where "
-                     "it does); in every second study the abstract also states a wrong rag value (a decoy). The "
+                     "it does); in odd-index studies the abstract also states a wrong rag value (a decoy, more than "
+                     "0.0075 from every true value; left out in the rare study where none fits). The "
                      "table is the truth: the effect is computed from it and the claim is recorded as stated. "
                      "Same facts as explicit.",
 }

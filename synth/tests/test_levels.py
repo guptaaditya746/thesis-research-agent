@@ -87,7 +87,7 @@ def test_contradictory_claim_disagrees_with_the_data() -> None:
         for d in r.decoys:
             decoys += 1
             assert r.text[d.start:d.end] == d.exact and not levelcheck.in_table(r.text, d.start)
-            assert abs(d.stated_value - s.value_of(d.measurement)) >= 0.005
+            assert all(abs(d.stated_value - m.value) > truth.DECOY_GAP for m in s.measurements)
     assert decoys > 0
 
 
@@ -143,3 +143,41 @@ def test_checks_catch_stray_number_duplicate_value_and_unrecorded_label() -> Non
     assert "labels_covered" in failing(plan, extra, ps, decoys)
     assert "facts_rendered" in failing(plan, text, [p for p in ps if p.role != "claim"], decoys)
     assert failing(plan, text, ps, decoys) == set()
+
+
+def _llm_read(level: str, edit):
+    """A template paper changed by `edit(text, plan)` and read back as the LLM renderer reads a paper."""
+    from synth.render_llm import locate
+    s = truth.generate(4, 3)[1]
+    plan = make_plan(s, level, plan_rng(4, s.study_id, level))
+    text = edit(render(plan, plan_rng(4, s.study_id, level + ":text"))[0], plan)
+    ps, decoys, problems = locate(text, plan)
+    assert problems == []
+    return text, plan, ps, decoys
+
+
+def test_a_stray_code_is_not_a_placement() -> None:
+    """Review item 9: 'Appendix B' is not condition B."""
+    text, plan, ps, decoys = _llm_read("distributed", lambda t, p: t + "\nSee Appendix B and R for details.\n")
+    tail = text.rindex("Appendix B")
+    assert not [p for p in ps if p.start >= tail]
+    assert failing(plan, text, ps, decoys) == set()
+
+
+def test_paraphrased_forbids_the_abbreviation() -> None:
+    text, plan, ps, decoys = _llm_read("paraphrased", lambda t, p: t + f"\nWe write {p.metrics[0].abbr} for short.\n")
+    assert "level_paraphrased" in failing(plan, text, ps, decoys)
+
+
+def test_distributed_abbreviation_defined_far_from_the_table() -> None:
+    def near_table(t: str, p) -> str:
+        at = t.index("\n|") + 1
+        q = p.metrics[0]
+        return t[:at] + f"Recall that the {q.name} is abbreviated as {q.abbr}.\n\n" + t[at:]
+    text, plan, ps, decoys = _llm_read("distributed", near_table)
+    assert "level_distributed" in failing(plan, text, ps, decoys)
+
+
+def test_complex_definition_says_one_table() -> None:
+    from synth.levels import DEFINITIONS
+    assert "one table per dataset" not in DEFINITIONS["complex"] and "Dataset column" in DEFINITIONS["complex"]

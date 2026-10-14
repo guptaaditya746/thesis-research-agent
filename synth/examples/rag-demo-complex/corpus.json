@@ -1,10 +1,10 @@
 {
-  "corpus_id": "rag-demo-9578a766",
+  "corpus_id": "rag-demo-5cf2d4f8",
   "seed": 1,
   "generator": {
     "name": "synth",
     "version": "1",
-    "code_sha256": "f12f4aa0e1677c0d1d6ac40c7e3c0dc0b6c4ad50e5250abeb2f4a4ba1b0759fb"
+    "code_sha256": "9446a3e346800e2c67ea3d5c66fddfcb1a586cee5eb557f019ceca4b9206c453"
   },
   "renderer": "template",
   "level": "complex",
