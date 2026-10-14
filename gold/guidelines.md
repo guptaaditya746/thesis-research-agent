@@ -1,7 +1,7 @@
 # Annotation guideline (gold v1)
 
 Adapted from the labelling repo's `guidelines/annotation.md` to facts with quotes from the Markdown
-corpus. How the answers are used is in `gold/REVIEW.md`.
+corpus. How the answers are used is in `gold/README.md` (Review).
 
 You review the **candidate facts of one question's evidence document D**. D was built by a model
 (`sub-model`, not the agent being scored): every paper of the corpus was screened for the question,

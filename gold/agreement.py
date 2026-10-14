@@ -205,7 +205,7 @@ def sources_note(sources: dict[str, Any]) -> dict[str, Any]:
     if live:
         out["warning"] = (f"{live} overlap record(s) have no snapshot with both answers and come from the last pull, "
                           "which may already reflect discussion or adjudication: run `gold snapshot` when both have "
-                          "finished, before they talk (gold/REVIEW.md step 5)")
+                          "finished, before they talk (gold/README.md, Review workflow step 5)")
     return out
 
 

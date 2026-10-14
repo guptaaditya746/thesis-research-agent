@@ -28,8 +28,8 @@ agent/anchor.py, as the broker anchors the agent's claims (an ambiguous quote is
 the reviewer quotes more). An anchored line becomes a key fact (vital false, candidate_id null); a line
 that does not parse or anchor is listed in export.json `rejected` and not added.
 
-Rows (`merge_rows`) follow the rule of C1's draft key and doc.json (gold/build.py on e2e/gold-build: norm,
-key_column, count_columns, merge_cells, row_key, copied below until the branches meet), so key.draft.json
+Rows (`merge_rows`) follow the rule of C1's draft key and doc.json, imported from gold/build.py (norm,
+key_column, merge_cells with its count_columns, row_key: one implementation), so key.draft.json
 and key.json group the same facts the same way: table rows with the same normalised value (NFKC,
 casefold, letters and digits) in the first string column are one row, list cells unioned, a count column
 of a list recomputed, other cells the first value given, rows without a key value never merged; graph
@@ -53,18 +53,18 @@ from __future__ import annotations
 import json
 import re
 import subprocess
-import unicodedata
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
 from agent import anchor
-from agent.canonical import canonical, canonical_bytes, file_sha256, sha256_hex
+from agent.canonical import canonical_bytes, file_sha256, sha256_hex
 from agent.concept import concept_sha256 as concept_hash
 from agent.concept import validate_answer
 from agent.rundir import git_head
 
 from . import review
+from .build import _edge_spec, key_column, merge_cells, norm, row_key
 
 VERSION = "v1"
 KEY_FILE = "key.json"
@@ -245,98 +245,6 @@ def added_facts(records: list[dict[str, Any]], corpus: review.Corpus) -> tuple[l
     return added, rejected
 
 
-# --- C1's row rule (gold/build.py on e2e/gold-build at 31c9f0b, copied unchanged) --------------------------
-# TODO(integration): delete this block and `from .build import count_columns, key_column, merge_cells, norm,
-# row_key` (and _edge_spec), so that doc.json, key.draft.json and key.json share one implementation.
-
-NUMERIC = ("integer", "number", "boolean")
-
-
-def norm(value: Any) -> str:
-    """Key form of a value: NFKC, casefold, letters and digits only; the casefolded text if none."""
-    text = unicodedata.normalize("NFKC", str(value)).casefold()
-    return "".join(ch for ch in text if ch.isalnum()) or text.strip()
-
-
-def _is_list(type_name: str) -> bool:
-    return type_name.startswith("list<")
-
-
-def key_column(columns: list[dict[str, str]]) -> str | None:
-    """The first string-valued column (string, date or a class label), the table's merge key."""
-    return next((c["name"] for c in columns if not _is_list(c["type"]) and c["type"] not in NUMERIC), None)
-
-
-def count_columns(columns: list[dict[str, str]]) -> dict[str, str]:
-    """integer column -> the list column it counts (see the module docstring)."""
-    lists = [c for c in columns if _is_list(c["type"])]
-    out: dict[str, str] = {}
-    for col in columns:
-        if col["type"] != "integer":
-            continue
-        tokens = set(col["name"].split("_"))
-        hits = [lst["name"] for lst in lists
-                if tokens & {lst["name"], lst["name"].rstrip("s"), lst["type"][5:-1].lower()}]
-        if not hits and len(lists) == 1 and tokens & {"count", "n", "num", "number", "total"}:
-            hits = [lists[0]["name"]]
-        if hits:
-            out[col["name"]] = hits[0]
-    return out
-
-
-def _union(values: list[Any]) -> list[Any]:
-    seen: dict[str, Any] = {}
-    for listed in values:
-        for item in listed or []:
-            seen.setdefault(norm(item), item)
-    return list(seen.values())
-
-
-def merge_cells(columns: list[dict[str, str]], rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, list]]:
-    """Cells of several rows as one: list columns unioned, counts of a list recomputed, else first non-null."""
-    counts = count_columns(columns)
-    cells: dict[str, Any] = {}
-    conflicts: dict[str, list[Any]] = {}
-    for col in columns:
-        name = col["name"]
-        values = [row.get(name) for row in rows]
-        if _is_list(col["type"]):
-            cells[name] = _union(values)
-            continue
-        present = [v for v in values if v is not None]
-        cells[name] = present[0] if present else None
-        distinct = list({norm(v): v for v in reversed(present)}.values())[::-1]
-        if len(distinct) > 1:
-            conflicts[name] = distinct
-    for name, listed in counts.items():
-        if cells[listed]:
-            cells[name] = len(cells[listed])
-            conflicts.pop(name, None)
-    return cells, conflicts
-
-
-def _edge_spec(shape: dict[str, Any], row: dict[str, Any]) -> dict[str, Any]:
-    wanted = (row["source_type"], row["predicate"], row["target_type"])
-    for edge in shape["edges"]:
-        if (edge["source"], edge["predicate"], edge["target"]) == wanted:
-            return edge
-    return {"attributes": [{"name": n, "type": "string"} for n in row.get("attributes") or {}]}
-
-
-def row_key(shape: dict[str, Any], row: dict[str, Any]) -> str | None:
-    """The merge key of an extracted row; None for a row that is never merged (no key value)."""
-    if shape["kind"] == "graph":
-        if row.get("source") is None or row.get("target") is None:
-            return None
-        return (f"{row['source_type']}:{norm(row['source'])} {row['predicate']} "
-                f"{row['target_type']}:{norm(row['target'])}")
-    column = key_column(shape["columns"])
-    if column is None:
-        return canonical({k: [norm(x) for x in v] if isinstance(v, list) else (None if v is None else norm(v))
-                          for k, v in row.items()})
-    return None if row.get(column) is None else norm(row[column])
-
-
 # --- rows of the key ----------------------------------------------------------------------------------------
 
 def fact_key(fact: dict[str, Any]) -> tuple[str, str, str]:
@@ -472,8 +380,9 @@ def merge_rows(concept: dict[str, Any], items: list[tuple[dict[str, Any] | None,
         else:
             cells, conflicts = merge_cells(shape["columns"], [row["cells"] for row in rows])
             fields = {"cells": cells}
+        kept = fields["attributes"] if graph else fields["cells"]
         for name, values in conflicts.items():
-            problems.append(f"row r{r}: {name} is {values!r} in different candidates; kept the first")
+            problems.append(f"row r{r}: {name} is {values!r} in different candidates; kept {kept[name]!r}")
         row_facts = []
         for fact in group["facts"].values():
             n += 1

@@ -227,7 +227,9 @@ def test_table_rows_merge_by_first_column() -> None:
         {"author": "Author A", "first_author_papers": 3, "papers": ["p12", "p87", "p88"]},
         {"author": "Author B", "first_author_papers": 1, "papers": ["p41"]},
         {"author": "Author C", "first_author_papers": 1, "papers": ["p50"]}]
-    assert [len(r["facts"]) for r in rows] == [3, 2, 1] and not problems
+    assert [len(r["facts"]) for r in rows] == [3, 2, 1]
+    # The extracted "2" disagrees with its own row's one paper: C1's rule keeps the recomputed 3 and lists it.
+    assert problems == ["row r1: first_author_papers is [3, 2] in different candidates; kept 3"]
     answer = {"concept_sha256": concept_sha256(concept), "kind": "table",
               "rows": [{**r, "facts": [{k: v for k, v in f.items() if k not in export.GOLD_ONLY} for f in r["facts"]]}
                        for r in rows]}
