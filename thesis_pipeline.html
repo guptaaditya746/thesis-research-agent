@@ -429,12 +429,13 @@ const STAGE_DETAILS = {
     what: "The contract every extractor implements, so that implementations are interchangeable.",
     how: [
       "Input: a document (or a section of it) and the evidence type's field schema from the protocol.",
+      "Implementations, simplest first: regex or lookup; a specialised model; a single-call LLM (one schema-constrained call per chunk); an agentic LLM (several steps through one paper: search, read, follow table references). All four return the same thing.",
       "Output: a list of typed evidence items, each with the exact source span (quote, offsets) and a confidence or status.",
       "Every span is checked against the document (the quote must be found), as the current claim broker checks quotes.",
       "Each extractor has a name and version, recorded with every item it produces.",
     ],
     io: ["document + field schema", "typed evidence items with spans"],
-    ours: "One interface for regex, model and LLM extractors, with the quote check built in.",
+    ours: "One interface for regex, model, single-call LLM and agentic LLM extractors, with the quote check built in.",
     code: ["reusable: agent/broker.py and agent/anchor.py (quote check), gold/chunks.py (section-aware chunking)"],
   },
   x_cond: {
