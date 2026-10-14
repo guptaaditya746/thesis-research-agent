@@ -22,7 +22,7 @@ import pytest
 pytest.importorskip("minisweagent")
 pytest.importorskip("litellm")
 
-from rdflib import Literal  # noqa: E402
+from rdflib import RDF, Literal  # noqa: E402
 from rdflib.namespace import PROV  # noqa: E402
 
 from agent import prompts, prov, queries, sandbox, schema  # noqa: E402
@@ -32,6 +32,7 @@ from agent.cli import main as cli  # noqa: E402
 from agent.loop import POSIX_BROKER, LoopSettings, Outcome, SandboxEnvironment, StepCounter, kept_lines  # noqa: E402
 from agent.rundir import SUBAGENTS, RunDir  # noqa: E402
 from agent.spawn import SpawnJob, SpawnService, SpawnSettings  # noqa: E402
+from agent.verify import stats as verify_stats  # noqa: E402
 from agent.verify import verify_run  # noqa: E402
 
 from .test_batch import SAMPLE  # noqa: E402
@@ -127,8 +128,12 @@ def test_two_subagents_at_once_and_their_claims_everywhere(tmp_path: Path, corpu
     assert outcome.tokens == sum(c["generated"]["usage"]["total_tokens"] for c in main_calls)
     sub_calls = [c for c in of(run, "ai_model_invocation") if c["agent_id"] != "main"]
     assert outcome.subagent_tokens == sum(c["generated"]["usage"]["total_tokens"] for c in sub_calls) > 0
-    # Records: the subagents' carry their own agent id, the parent and the parent's step.
+    # Records: the subagents' carry their own agent id, the parent and the parent's step. A subagent's
+    # result is marked `result`; final_answer stays the parent's (the reply that became answer.json).
     assert {c["agent_id"] for c in sub_calls} == {"sub-01", "sub-02"}
+    assert [c["custom_metadata"]["final_answer"] for c in main_calls] == [False, True]
+    assert not any(c["custom_metadata"]["final_answer"] for c in sub_calls)
+    assert sorted(c["agent_id"] for c in sub_calls if c["custom_metadata"]["result"]) == ["sub-01", "sub-02"]
     for rec in records(run):
         if rec["agent_id"].startswith("sub-"):
             assert rec["source_agent_id"] == "main" and rec["custom_metadata"]["spawned_by_step"] == 1, rec
@@ -194,6 +199,8 @@ def test_two_subagents_at_once_and_their_claims_everywhere(tmp_path: Path, corpu
     g = prov.load(run)
     iri = prov.Iris(run.run_id)
     assert (iri("agent", "sub-01"), PROV.actedOnBehalfOf, iri("agent", "main")) in g
+    for child, start in starts.items():  # spawned by its start record only, not by its return record too
+        assert list(g.subjects(prov.OURS.spawnedAgent, iri("agent", child))) == [iri("task", start["task_id"])]
     sub01_model = SUBAGENTS[[s["alias"] for s in SUBAGENTS].index(subs.made["sub-01"][0])]
     assert (iri("agent", "sub-01"), prov.OURS.model, Literal(f"{sub01_model['name']}@{sub01_model['revision']}")) in g
     sub01 = queries.claims_from(g, agent="sub-01")
@@ -206,6 +213,7 @@ def test_two_subagents_at_once_and_their_claims_everywhere(tmp_path: Path, corpu
     assert cli(["timeline", root]) == 0
     page = (run.root / "timeline.html").read_text(encoding="utf-8")
     assert "spawn start sub-01" in page and "<span class=tag>sub-02</span>" in page
+    assert page.count("<span class=tag>subagent result</span>") == 2 and page.count("<span class=tag>final answer</span>") == 1
 
 
 @posix_only
@@ -260,26 +268,42 @@ def test_refused_requests_and_a_lower_step_budget(tmp_path: Path, corpus: tuple[
 
 @posix_only
 def test_a_subagent_left_running_is_cancelled_when_the_command_ends(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
-    """No `wait`: the command ends, its subagent's running command is killed and the subagent stops.
+    """No `wait`: the command ends, its subagent's running command is killed and the subagent stops;
+    one still queued is cancelled before it starts, and no view counts it as an agent.
 
     (A spawn left in the background that still holds the command's output keeps the command
     open until it returns, as any background process does: the harness reads output to its end.)
     """
-    subs = SubModels({"slow": [bash("sleep 60; echo late"), summary("never")]})
+    subs = SubModels({"slow": [bash("sleep 60; echo late"), summary("never")], "queued": [summary("never")]})
+    command = "spawn --task slow > s.json 2>&1 & sleep 0.5; spawn --task queued > q.json 2>&1 & sleep 1.5; echo done"
     t0 = time.monotonic()
-    run, outcome, _, _ = go(tmp_path, corpus, [bash("spawn --task slow > s.json 2>&1 & sleep 2; echo done"),
-                                               final([row([])])], spawn=SPAWN, sub_model=subs)
+    run, outcome, _, _ = go(tmp_path, corpus, [bash(command), final([row([])])],
+                            spawn=dataclasses.replace(SPAWN, max_concurrent=1), sub_model=subs)
     assert outcome.exit_status == "submitted" and time.monotonic() - t0 < 30
-    back = next(s for s in of(run, "spawn") if s["custom_metadata"]["event"] == "return")
-    assert (back["status"], back["generated"]["exit_status"]) == ("cancelled", "cancelled")
+    assert outcome.subagents == 1 and sorted(subs.made) == ["sub-01"]
+    spawns = of(run, "spawn")
+    assert [(s["custom_metadata"]["event"], s["status"], s["generated"].get("agent_id")) for s in spawns] == [
+        ("start", "started", "sub-01"), ("return", "cancelled", "sub-01"), ("cancelled", "cancelled", "sub-02")]
+    back = spawns[1]
+    assert back["generated"]["exit_status"] == "cancelled"
     sub_tool = next(t for t in of(run, "agent_tool") if t["agent_id"] == "sub-01")
     assert sub_tool["custom_metadata"]["cleanup"] == "cancelled" and sub_tool["generated"]["exit_code"] == 137
     assert not sub_tool["generated"]["timed_out"]
     parent_tool = next(t for t in of(run, "agent_tool") if t["agent_id"] == "main")
-    assert parent_tool["custom_metadata"]["spawned"] == ["sub-01"] and parent_tool["task_id"] > back["task_id"]
+    assert parent_tool["custom_metadata"]["spawned"] == ["sub-01"] and parent_tool["task_id"] > spawns[-1]["task_id"]
     result = json.loads((run.root / back["generated"]["result_file"]).read_text(encoding="utf-8"))
     assert result["ok"] is True and result["status"] == "cancelled"  # it ran: ok, and the status says how it ended
-    assert verify_run(run, *corpus).ok
+    report = verify_run(run, *corpus)
+    assert report.ok, report.errors
+    assert report.stats["subagents"] == 1 and list(report.stats["agents"]) == ["main", "sub-01"]
+    # PROV: sub-01 was spawned by its start record only; sub-02 never acted, so it is no agent.
+    assert cli(["graph", str(run.root), "--manifest", str(corpus[1])]) == 0
+    g = prov.build(run)
+    iri = prov.Iris(run.run_id)
+    assert [str(a) for a in g.subjects(prov.OURS.spawnedAgent, iri("agent", "sub-01"))] == [
+        str(iri("task", spawns[0]["task_id"]))]
+    assert (iri("agent", "sub-02"), RDF.type, PROV.SoftwareAgent) not in g
+    assert not list(g.subjects(prov.OURS.spawnedAgent, iri("agent", "sub-02")))
 
 
 @posix_only
@@ -430,6 +454,29 @@ def test_spawn_commands_get_the_longer_time_limit(tmp_path: Path, corpus: tuple[
     assert "--timeout" in on.argv("spawn --task x", 1800) and "1800" in on.argv("spawn --task x", 1800)
     assert on.environment(None, 9)["SPAWN_FD"] == "9" and "SPAWN_FD" not in off.environment(None)
     assert on.config == {"mode": "unsandboxed", "claim": True, "spawn": True} and "spawn" not in off.config
+
+
+def test_cost_per_agent_leaves_the_attach_step_apart() -> None:
+    """agents.main is what the main agent's budget counted (the attach step, also agent main, is
+    `attach`); a subagent that started without a model call is a subagent too, one cancelled before
+    it started is not."""
+    def rec(subtype: str, agent: str = "main", tokens: int = 0, origin: str = "research",
+            **meta: Any) -> dict[str, Any]:
+        generated = {"usage": {"total_tokens": tokens}} if subtype == "ai_model_invocation" else {}
+        return {"subtype": subtype, "agent_id": agent, "step_id": 1, "status": "finished", "used": {},
+                "generated": generated, "started_at": "2026-10-14T10:00:00Z", "ended_at": "2026-10-14T10:00:01Z",
+                "custom_metadata": {"origin": origin, **meta}}
+
+    def spawn(child: str, event: str) -> dict[str, Any]:
+        return rec("spawn", event=event) | {"generated": {"agent_id": child}}
+
+    records = [rec("ai_model_invocation", tokens=100), spawn("sub-01", "start"), spawn("sub-02", "start"),
+               spawn("sub-03", "cancelled"), rec("ai_model_invocation", "sub-01", 30),
+               rec("ai_model_invocation", tokens=50, origin="attach")]
+    s = verify_stats(records)
+    assert (s["tokens"], s["attach"]["tokens"], s["without_attach"]["tokens"]) == (180, 50, 130)
+    assert list(s["agents"]) == ["main", "sub-01", "sub-02"] and s["subagents"] == 2
+    assert [(a["model_calls"], a["tokens"]) for a in s["agents"].values()] == [(1, 100), (1, 30), (0, 0)]
 
 
 def test_claim_channel_request_with_the_subagent_fields() -> None:

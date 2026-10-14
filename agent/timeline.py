@@ -64,7 +64,8 @@ def render(run: RunDir) -> str:
             kind = r["subtype"]
             if kind == "ai_model_invocation":
                 tokens = (gen.get("usage") or {}).get("total_tokens", "-")
-                tags = "<span class=tag>final answer</span>" if meta.get("final_answer") else ""
+                tags = ("<span class=tag>final answer</span>" if meta.get("final_answer") else
+                        "<span class=tag>subagent result</span>" if meta.get("result") else "")  # row 2.12
                 if used.get("decoding", "free") != "free":  # conclude reply decoded under the answer schema
                     tags += f"<span class=tag>{_e(used['decoding'])}</span>"
                 if meta.get("masked_observations"):  # row 1.15: outputs shown as stubs in this prompt

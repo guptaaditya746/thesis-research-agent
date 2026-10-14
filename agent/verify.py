@@ -16,8 +16,8 @@ sent at least one claim), tokens (sum of total_tokens over model calls), and wal
 first record's start to the last record's end. With an attach step, the same figures for the
 attach step alone (`attach`) and for the run without it (`without_attach`), so cost can be reported
 with and without it. With subagents (row 2.12) the figures are the run's total, and `agents` has
-them per agent (main, sub-01, ...), `subagents` how many ran; and each subagent's result.json is
-the one its spawn record holds the sha256 of.
+the research's per agent (main, sub-01, ...; attach apart), `subagents` how many started; and
+each subagent's result.json is the one its spawn record holds the sha256 of.
 """
 from __future__ import annotations
 
@@ -67,22 +67,36 @@ ATTACH_COST = ("steps", "model_calls", "commands", "claims_accepted", "claims_re
                "prompt_tokens", "completion_tokens", "seconds")
 
 
+def started_subagents(records: list[dict[str, Any]]) -> list[str]:
+    """The subagents that started (row 2.12), in order: the child of each spawn start record.
+
+    Not a refusal, and not one cancelled before it started (event "cancelled"); a start record
+    without an event (built by hand) counts as a start.
+    """
+    return [r["generated"]["agent_id"] for r in records
+            if r["subtype"] == "spawn" and isinstance(r["generated"].get("agent_id"), str)
+            and (r["custom_metadata"] or {}).get("event", "start") == "start"]
+
+
 def stats(records: list[dict[str, Any]]) -> dict[str, Any]:
     """cost() of all records; with an attach step also `attach` (its own cost) and `without_attach`.
 
-    With subagents (row 2.12), `agents` holds cost() per agent that made model calls (the main
-    agent's is what its budget counted) and `subagents` their number; the totals stay the run's.
+    With subagents (row 2.12), `agents` holds cost() of the research per agent: `main` (what its
+    budget counted: the attach step, also agent main, is `attach` alone) and every subagent that
+    started, with or without a model call; `subagents` is their number. The totals stay the run's.
     """
     out = cost(records)
     attach = [r for r in records if is_attach(r)]
+    research = [r for r in records if not is_attach(r)]
     if attach:
-        mine, rest = cost(attach), cost([r for r in records if not is_attach(r)])
+        mine, rest = cost(attach), cost(research)
         out["attach"] = {k: mine[k] for k in ATTACH_COST}
         out["without_attach"] = {k: rest[k] for k in ATTACH_COST}
-    callers = list(dict.fromkeys(r["agent_id"] for r in records if r["subtype"] == "ai_model_invocation"))
-    if any(a != "main" for a in callers):
-        out["agents"] = {a: cost([r for r in records if r["agent_id"] == a]) for a in callers}
-        out["subagents"] = sum(a != "main" for a in callers)
+    callers = [r["agent_id"] for r in research if r["subtype"] == "ai_model_invocation"]
+    subagents = list(dict.fromkeys(a for a in [*started_subagents(records), *callers] if a != "main"))
+    if subagents:
+        out["agents"] = {a: cost([r for r in research if r["agent_id"] == a]) for a in ("main", *subagents)}
+        out["subagents"] = len(subagents)
     return out
 
 

@@ -537,6 +537,7 @@ class ResearchAgent(DefaultAgent):
     """
 
     reply_shape = '{"rows": [...], "notes": "..."}'  # the answer object, as the conclude notice names it
+    answer_flag = "final_answer"  # custom_metadata key of the model call whose answer was taken
 
     def __init__(self, model: OrchestratorModel, env: SandboxEnvironment, *, broker: Broker, run: RunDir,
                  concept: dict[str, Any], prompt: Prompt, budget: dict[str, Any],
@@ -593,22 +594,24 @@ class ResearchAgent(DefaultAgent):
         return self.broker.record({"agent_id": self.agent_id, "source_agent_id": self.source_agent_id, **record,
                                    "custom_metadata": meta})
 
-    def _record_call(self, step: int, call: dict[str, Any], parsed: dict[str, Any], final_answer: bool,
+    def _record_call(self, step: int, call: dict[str, Any], parsed: dict[str, Any], answered: bool,
                      masked: int) -> str:
         # decoding: free, or the guided mode the reply was decoded under (with the schema's hash);
         # max_tokens: the reply limit of this call (larger for a conclude reply, LoopSettings).
         decoding = {k: call[k] for k in ("decoding", "schema_sha256", "max_tokens") if k in call}
+        # final_answer: this reply's json block became answer.json (agent/prov.py links them).
+        # A subagent's accepted result is marked under its own answer_flag ("result", row 2.12),
+        # so final_answer keeps that one meaning for every reader of the records.
+        # masked_observations: command outputs shown as stubs in this call's prompt (row 1.15).
+        meta = {"phase": self.phase, "seconds": call["seconds"], "final_answer": False, "masked_observations": masked}
+        meta[self.answer_flag] = answered
         reply = self._record({
             "subtype": "ai_model_invocation", "step_id": step,
             "used": {"prompt_sha256": call["prompt_sha256"], "messages": call["messages"], **self.model.settings,
                      **decoding},
             "generated": {k: call[k] for k in ("response_sha256", "reasoning_sha256", "finish_reason", "usage",
                                                "served_model")} | {"parse": parsed["mode"], "reply": parsed["kind"]},
-            "started_at": call["started_at"], "ended_at": call["ended_at"],
-            # final_answer: this reply's json block became answer.json (agent/prov.py links them).
-            # masked_observations: command outputs shown as stubs in this call's prompt (row 1.15).
-            "custom_metadata": {"phase": self.phase, "seconds": call["seconds"], "final_answer": final_answer,
-                                "masked_observations": masked},
+            "started_at": call["started_at"], "ended_at": call["ended_at"], "custom_metadata": meta,
         })
         return reply["task_id"]
 
@@ -824,7 +827,7 @@ class ResearchAgent(DefaultAgent):
         # A final answer is checked before its model call is recorded, so the record can say
         # whether this reply is the one that became answer.json.
         self._checked = self._check_answer(parsed["answer"]) if parsed["kind"] == "answer" else (None, [])
-        self.model_task_id = self._record_call(step, call, parsed, final_answer=self._checked[0] is not None,
+        self.model_task_id = self._record_call(step, call, parsed, answered=self._checked[0] is not None,
                                                masked=masked)
         self.add_messages(message)
         return message

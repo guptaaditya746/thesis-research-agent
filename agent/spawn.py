@@ -29,8 +29,9 @@ Records, all in the run's one hash chain:
   saying why a request was refused (spawn_limit, unknown_file, ...; status refused);
 - the subagent's own model calls, commands, claims and coverage, with agent_id sub-NN,
   source_agent_id main and custom_metadata.spawned_by_step = the parent's step; its first model
-  call points at the start record. Step ids come from the run's StepCounter, so they stay unique
-  in the run (out/step-NNNN.txt) while the parent's spawn command runs.
+  call points at the start record, and the call whose result was taken has custom_metadata.result
+  (final_answer stays false: it means answer.json). Step ids come from the run's StepCounter, so
+  they stay unique in the run (out/step-NNNN.txt) while the parent's spawn command runs.
 
 Cost: the parent's budget counts its own calls only (each subagent has its own); `agent verify`
 reports the run's total and each agent's (verify.stats `agents`).
@@ -224,6 +225,7 @@ class SubAgent(ResearchAgent):
     """The research loop as a subagent: its result is {"summary"}, kept for the parent, not answer.json."""
 
     reply_shape = '{"summary": "..."}'
+    answer_flag = "result"  # its result never becomes answer.json: final_answer stays false on its calls
 
     def __init__(self, model: OrchestratorModel, env: SandboxEnvironment, *, broker: Broker, run: RunDir,
                  concept: dict[str, Any], prompt: prompts.Prompt, budget: dict[str, Any], settings: LoopSettings,

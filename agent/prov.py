@@ -12,7 +12,7 @@ Edge table, as exported:
 | claim -> step that made it              | produces   | claim prov:wasGeneratedBy the step's command              |
 | anchor -> claim                         | supports   | claim prov:wasDerivedFrom anchor                          |
 | broker check of the anchor -> claim     | checked_by | claim ours:checkedBy check; check is a prov:Activity      |
-| subagent -> parent agent                | -          | child prov:actedOnBehalfOf parent (from spawn records)    |
+| subagent -> parent agent                | -          | child prov:actedOnBehalfOf parent (spawn start records)   |
 | every activity -> its agent             | -          | activity prov:wasAssociatedWith agent                     |
 | KG edge -> claim                        | -          | edge prov:wasDerivedFrom claim                            |
 
@@ -206,7 +206,11 @@ def build(run: RunDir) -> Graph:
             for name in files_read(used):  # uses
                 g.add((act, PROV.used, corpus_file(name)))
                 g.add((corpus_file(name), RDF.type, OURS.CorpusFile))
-        elif sub == "spawn" and isinstance(generated.get("agent_id"), str):
+        elif (sub == "spawn" and isinstance(generated.get("agent_id"), str)
+              and (rec["custom_metadata"] or {}).get("event", "start") == "start"):
+            # Row 2.12: only a start record spawns its child. The return record names it too, but
+            # is prov:wasInformedBy its start (parent_task_id); one cancelled before it started
+            # names an agent that never acted, so it makes no agent.
             child = agent(generated["agent_id"])
             g.add((child, PROV.actedOnBehalfOf, agent(rec["agent_id"])))
             g.add((act, OURS.spawnedAgent, child))
