@@ -3,6 +3,12 @@
 The one page to plan the implementation from. Everything here is decided or measured; details live in
 the files named at the end, history in git.
 
+> **Superseded framing (14 Oct).** The supervisor redirected the thesis to evidence-level research: an
+> explicit evidence plan per question, one agent, evaluation of how reliably and comprehensively evidence is
+> extracted. The claim_on vs claim_off comparison, the attach step and subagents are dropped. The plan and
+> its decisions are in [`plan-evidence-level.md`](plan-evidence-level.md); this page describes the system
+> as built and is rewritten when that plan is implemented.
+
 ## Framing (decided 10 Oct, grill doc)
 
 - One contribution: provenance recorded while the agent researches, not reconstructed afterwards. Not a claim
