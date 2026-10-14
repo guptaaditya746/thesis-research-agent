@@ -1,7 +1,7 @@
 # Milestones 1 and 2: triaged work list
 
 Built from `docs/STATE.md` (10 Oct 2026) and revised after a review the same day. Milestone 3 (gold D,
-Argilla, answer key) and milestone 4 (72 runs, scoring) are planned separately; what they need from 1 and 2 is
+Argilla, answer key) and milestone 4 (72 runs, scoring) were built in the e2e build (`docs/milestones-3-4.md`); what they need from 1 and 2 is
 listed at the end.
 
 **Priorities**
@@ -114,7 +114,7 @@ difference is what RQ1 measures, and it is expected.
 **Can start before milestone 1 is done:** 2.1 and 2.5 (the attach step needs only the anchor check and the
 model). 2.3 waits only for the 12 questions.
 
-### Progress (milestone 2)
+### Progress (milestone 2; all branches of the e2e build merged on `e2e-build`, 14 Oct)
 
 | # | Status | Commits | Tests |
 |---|---|---|---|
@@ -124,12 +124,14 @@ model). 2.3 waits only for the 12 questions.
 | 2.1, 2.2 | done: `agent concepts propose\|pick\|check`, prompt `concept-v1.txt`, corpus-blind, capped at 5, one repair round; pick is a `concept_pick` record by agent `user` | `18d5202` | `test_concept_step` |
 | 2.4 | done: the loop already had `claim_off`; tests pin no `claim`/`CLAIM_FD`, same config except condition and prompt | `259a4de` | `test_loop` |
 | 2.5 | done: `agent attach <run>`; per fact a fresh conversation using `claim` with `origin="attach"`, or `no_source`; 6 steps / 60k tokens per fact to start; appends to the run's chain; `answer.research.json` kept | `bb6b631` | `test_attach` |
-| 2.9 | done: `agent batch <manifest>`; sample `agent/manifests/m4-72.json` (placeholder q01–q12); cut runs rerun fresh as `<key>-a<N>` (max 3); exit 0 done / 2 out of time / 1 gave up | `8f17bd7`, `051f64b` | `test_batch` |
+| 2.9 | done: `agent batch <manifest>`; `agent/manifests/m4-72.json` on the 12 questions (2.3), provisional budget and prompt v2 (1.13), spawn off; cut runs rerun fresh as `<key>-a<N>` (max 3); exit 0 done / 2 out of time / 1 gave up | `8f17bd7`, `051f64b` | `test_batch` |
 | 2.12 | built against scripted models on `e2e/spawn`, off by default (`agent run --spawn on`, manifest `spawn`; `m4-72.json` keeps it off): `spawn --task ... [--files a.md,b.md] [--steps N]` in the sandbox over a SPAWN_FD channel; at most 2 subagents at once (one per sub-model replica), the rest queued; a subagent is the research loop on the sub model (32,768 context, 15 steps / 300k tokens, `sub-v1.txt`, no nested spawn, claim iff claim_on; budget settable with `--spawn-steps/--spawn-tokens`, manifest `spawn_budget`) whose records and claims carry `agent_id` sub-NN and `spawned_by_step`; a command that starts a subagent gets 1,800 s; `agent verify` reports the run's total and each agent's cost. Review fixes: masking treats spawn results alike in both conditions, `ok` means a subagent ran, a subagent's failure is `subagent_error` (never fails the run), `spawn` in its own PATH directory, time limit from the spawn channel, one stop deadline inside the batch grace. Not yet run on the real model (C4) | `7e698cb`, `d50cd55`, `0c2c63f`, `fab16c7`, review fixes | `test_spawn` (25) |
 | 2.3 | built: the 12 questions in `questions/questions.json` (6 corpus-wide, 6 ambiguous, from the labelling repo; `questions/README.md`); `agent concepts propose-all\|pick-all\|status`, `pick --picked-by --reason --replace`, `$CONCEPTS/picks.json`; manifests `m4-72` and `e2e-smoke` on them. Open: proposing and picking the 12 on Slurm (`scripts/e2e-concepts.sh`) | `da7b45f`, `a1be5cd`, `59e981d`, `045424c` | `test_questions`, `test_concept_step` |
 | 2.10 | open: needs the cluster (`scripts/e2e-batch.sh agent/manifests/e2e-smoke.json`) | — | — |
-| 2.13 | done: `agent reexec <run> [--steps]` (C5) and `agent replay <run>` (C6); first real use on Slurm (`scripts/e2e-replay.sh --reexec`) | `0085b29`, `f389ea6`, `46d911b`, `91dccf3` | `test_reexec`, `test_replay` |
+| 2.13 | done: `agent reexec <run> [--steps]` (C5; a subagent's commands in a scratch of their own, since the merge with 2.12) and `agent replay <run>` (C6); first real use on Slurm (`scripts/e2e-replay.sh --reexec`) | `0085b29`, `f389ea6`, `46d911b`, `91dccf3` | `test_reexec`, `test_replay` |
 | Slurm scripts | `scripts/e2e-env.sh`, `e2e-concepts.sh`, `e2e-batch.sh`, `e2e-replay.sh` | `aebdadc`, `6b7c5f6` | `test_e2e_scripts` |
+| 2.11 | done in the web app (`webapp/web`, run page): an answer fact's badge, a graph edge or a claim opens the claim walk: fact, claim(s), the step (model call numbers, command, output head) and the passage with the quote highlighted (`GET /api/runs/{id}/facts/{fact}/walk`, the verdict scoring counted) | e2e build (WP E, F) | `webapp/tests/test_api.py`, `ClaimWalkSheet.test.tsx` |
+| 2.14 | done in the web app (question page): concept briefs as cards side by side with the answer shape, pick (who and why) and propose | e2e build (WP E, F) | `webapp/tests/test_pick.py`, Vitest |
 
 Small decisions made while building:
 - Attach-step records are ordinary records with `custom_metadata.origin = "attach"` (loop records carry `research`); the export groups them into one attach activity. Attach claims are `wasGeneratedBy` their attach command and `wasInfluencedBy` the attach activity.
