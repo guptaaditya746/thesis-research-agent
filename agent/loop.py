@@ -104,8 +104,12 @@ CONTEXT_MARGIN = 1_024  # tokens kept free when a conclude reply's limit is fitt
 logger = logging.getLogger("agent.loop")
 
 # Schema-constrained decoding: the extra_body entry that makes vLLM decode under a JSON Schema.
+# disable_any_whitespace (a per-request field of vLLM's StructuredOutputsParams): the grammar allows
+# no whitespace between JSON tokens. By default xgrammar allows any, and Qwen models then pretty-print
+# (30-50 % more tokens for the same answer) or run away in whitespace until the reply limit cuts the
+# answer; a 16,384-token conclude reply takes ~400 s at 41.6 tok/s already (STATE.md, A5).
 GUIDED_DECODING: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
-    "structured_outputs": lambda schema: {"structured_outputs": {"json": schema}},  # vLLM >= 0.10 (B9)
+    "structured_outputs": lambda schema: {"structured_outputs": {"json": schema, "disable_any_whitespace": True}},
     "guided_json": lambda schema: {"guided_json": schema},  # older vLLM
 }
 DECODINGS = ("free", *GUIDED_DECODING)
@@ -243,6 +247,15 @@ class ContextFull(FailedCall):
     """The proxy refused the prompt as too long (HTTP 400). The agent concludes."""
 
 
+class TimedOut(FailedCall):
+    """A long call (a conclude reply: guided, or with a larger reply limit) ran past the proxy timeout.
+
+    Sent again it would most likely time out again (a long reply on an orchestrator whose KV cache
+    holds about one such request), each try costing 600 s and a prefill of the whole prompt, so it
+    is not retried: the caller records it and goes on, as after a context-full 400.
+    """
+
+
 class GuidedRejected(FailedCall):
     """A call decoded under a schema was refused, and not for its length.
 
@@ -274,14 +287,18 @@ class OrchestratorModel(LitellmTextbasedModel):
     With `decoding` other than "free", the reply is decoded under `schema` (GUIDED_DECODING adds
     the entry to extra_body, next to the thinking switch) and parsed as a bare answer; a refusal
     of that call that is not context-full raises GuidedRejected. `max_tokens` may be given per
-    call (a conclude reply); the call record says which limit applied.
+    call (a conclude reply); the call record says which limit applied. Such a long call (guided,
+    or with a larger reply limit) is not retried after the proxy's timeout: it raises TimedOut.
     """
 
     # 400s and 422s are never retried (L8); everything mini aborts on stays aborted. SystemExit is
     # how SIGTERM at the job limit stops a run (cli.stop_on_sigterm, row 2.9); tenacity would retry
-    # it otherwise.
+    # it otherwise. A long call (`long_call`) also aborts on a timeout (TimedOut).
     abort_exceptions = [*LitellmModel.abort_exceptions, litellm.exceptions.BadRequestError,
                         litellm.exceptions.UnprocessableEntityError, SystemExit]
+    # Retries are mini's (tenacity, MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT) alone: the OpenAI client
+    # under LiteLLM would otherwise retry timeouts and 408s twice more inside every attempt.
+    client_retries = 0
 
     def __init__(self, *, base_url: str = DEFAULT_BASE_URL, temperature: float, seed: int,
                  alias: str = ORCHESTRATOR["alias"], max_tokens: int = ORCHESTRATOR["max_tokens"],
@@ -292,7 +309,8 @@ class OrchestratorModel(LitellmTextbasedModel):
         # agent/spawn.py) passes a sub-model's from rundir.SUBAGENTS.
         super().__init__(model_name=f"openai/{alias}", cost_tracking="ignore_errors", model_kwargs={
             "api_base": base_url, "temperature": temperature, "seed": seed, "max_tokens": max_tokens,
-            "timeout": timeout_s, "extra_body": {"chat_template_kwargs": {"enable_thinking": thinking}}})
+            "timeout": timeout_s, "max_retries": self.client_retries,
+            "extra_body": {"chat_template_kwargs": {"enable_thinking": thinking}}})
         self.base_url = base_url
         self.api_key_env = api_key_env
         self.context_tokens = int(context_tokens)
@@ -314,10 +332,16 @@ class OrchestratorModel(LitellmTextbasedModel):
         prepared = self._prepare_messages_for_api(messages)
         prompt_sha = sha256_hex(canonical_bytes(prepared))
         started, t0 = utc_now(), time.monotonic()
+        long_call = decoding != "free" or int(kwargs.get("max_tokens", 0)) > int(self.settings["max_tokens"])
+        abort = [*self.abort_exceptions, litellm.exceptions.Timeout] if long_call else self.abort_exceptions
         try:
-            for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
+            for attempt in retry(logger=logger, abort_exceptions=abort):
                 with attempt:
                     response = self._query(prepared, **kwargs)
+        except litellm.exceptions.Timeout as exc:
+            if not long_call:  # a research reply that timed out on every retry: as before, the run fails
+                raise
+            raise TimedOut(f"{type(exc).__name__}: {exc}"[:500], prompt_sha, started, time.monotonic() - t0) from exc
         except GUIDED_REFUSALS as exc:
             if is_context_full(exc):
                 raise ContextFull(str(exc)[:500], prompt_sha, started, time.monotonic() - t0) from exc
@@ -567,8 +591,7 @@ class ResearchAgent(DefaultAgent):
         self.extra_template_vars = {
             **self.budget, **task_vars(concept), "mask_keep": s.mask_keep, "repeat_stop": s.repeat_stop,
             "plan_steps": int(self.budget["steps"] * PLAN_SHARE), "plan_tokens": int(self.budget["tokens"] * PLAN_SHARE)}
-        self.reply_schema = reply_schema(concept)
-        self.reply_schema_sha256 = sha256_hex(canonical_bytes(self.reply_schema))
+        self.call_schema_sha256: str | None = None  # of the schema the current call is decoded under
         self.conclude_decoding = s.conclude_decoding  # "free" from the first refused guided call on
         self.research_steps = 0
         self.tokens = 0
@@ -743,7 +766,7 @@ class ResearchAgent(DefaultAgent):
         used = {"prompt_sha256": exc.prompt_sha256, "messages": len(self.messages), **self.model.settings,
                 "decoding": decoding}
         if decoding != "free":
-            used["schema_sha256"] = self.reply_schema_sha256
+            used["schema_sha256"] = self.call_schema_sha256
         if max_tokens:
             used["max_tokens"] = max_tokens
         return self._record({"subtype": "ai_model_invocation", "step_id": step, "used": used,
@@ -772,6 +795,19 @@ class ResearchAgent(DefaultAgent):
         self.model_task_id = self._record_failed(step, exc, "guided_decoding_rejected", masked, decoding, max_tokens)
         self._coverage(step, "guided_decoding_rejected", "", {"decoding": decoding, "now": "free", "error": exc.detail})
         self.conclude_decoding, self.conclude_used = "free", self.conclude_used - 1
+
+    def _timed_out(self, step: int, exc: TimedOut, masked: int, decoding: str, max_tokens: int | None) -> None:
+        """A conclude reply ran past the proxy timeout: recorded as a failed call (`timeout`) with a
+        `coverage` record (model_timeout), and it counts as one of the conclude replies, so the run
+        goes on to the next one or ends (taking the draft) instead of sending it again for hours."""
+        self.model_task_id = self._record_failed(step, exc, "timeout", masked, decoding, max_tokens)
+        self._coverage(step, "model_timeout", "", {"decoding": decoding, "max_tokens": max_tokens,
+                                                   "seconds": round(exc.seconds, 3), "error": exc.detail})
+
+    def conclude_schema(self) -> dict[str, Any]:
+        """The schema a guided conclude reply is decoded under, built for this call: the reply object
+        with cited claim ids limited to the claims accepted so far (answer.reply_schema)."""
+        return reply_schema(self.concept, accepted_claim_ids(self.run_dir))
 
     def _reply_limit(self) -> int | None:
         """max_tokens for a conclude reply (LoopSettings.conclude_max_tokens), or None: the usual limit.
@@ -814,15 +850,19 @@ class ResearchAgent(DefaultAgent):
         masked = self._mask_observations()
         decoding = self.conclude_decoding if self.phase == "conclude" else "free"
         limit = self._reply_limit()
+        schema = None if decoding == "free" else self.conclude_schema()
+        self.call_schema_sha256 = sha256_hex(canonical_bytes(schema)) if schema is not None else None
         try:
-            message = self.model.query(self.messages, decoding=decoding,
-                                       schema=None if decoding == "free" else self.reply_schema,
+            message = self.model.query(self.messages, decoding=decoding, schema=schema,
                                        **({"max_tokens": limit} if limit else {}))
         except ContextFull as exc:
             self._overflow(step, exc, masked, decoding, limit)
         except GuidedRejected as exc:
             self._guided_rejected(step, exc, masked, decoding, limit)
             return self.query()  # the same reply asked for again, decoded freely (never a guided call again)
+        except TimedOut as exc:
+            self._timed_out(step, exc, masked, decoding, limit)
+            return self.query()  # the next conclude reply, or the end of the run (the draft)
         call, parsed = message["extra"]["call"], message["extra"]["parsed"]
         self.tokens += call["usage"]["total_tokens"]
         self.last_prompt_tokens = call["usage"]["prompt_tokens"]

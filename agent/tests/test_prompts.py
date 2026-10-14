@@ -276,6 +276,47 @@ def test_reply_schema(name: str) -> None:
         assert schema.errors(reply, bad), bad
 
 
+@pytest.mark.parametrize("name", ["concept_table.json", "concept_graph.json"])
+def test_reply_schema_lists_keys_in_the_prompts_order(name: str) -> None:
+    """Grammar backends emit object keys in schema order (xgrammar does): a row's keys come as the prompt's
+    row_example teaches them, `facts` last, so a guided reply can copy the draft without reordering it."""
+    concept = fixture(name)
+    rows = reply_schema(concept)["properties"]["rows"]["items"]
+    example = list(prompts.row_example(concept))
+    for variant in rows.get("anyOf", [rows]):
+        keys = list(variant["properties"])
+        assert [k for k in keys if k in example] == [k for k in example if k in keys] and keys[-1] == "facts"
+        assert keys[:2] == ["id", "cells" if concept["answer_shape"]["kind"] == "table" else "source"]
+
+
+@pytest.mark.parametrize("name", ["concept_table.json", "concept_graph.json"])
+def test_reply_schema_takes_only_the_runs_accepted_claims(name: str) -> None:
+    """Built at the conclude call with the run's accepted claim ids, the schema cannot express a mistyped id
+    (one would make build_answer refuse the whole answer, a failure only claim_on could have); with none
+    accepted (claim_off) a fact has no claims at all."""
+    from agent import schema
+    concept = fixture(name)
+    row = prompts.row_example(concept)
+    if concept["answer_shape"]["kind"] == "table":
+        row["cells"] = {"author": "Ann Lee", "first_author_papers": 2, "papers": ["p1", "p2"]}
+    else:
+        row["attributes"] = {"metric": None}
+
+    def reply(claims: list[str] | None) -> dict:
+        fact = {"id": "f1", "s": "a", "p": "b", "o": 1} | ({"claims": claims} if claims is not None else {})
+        return {"rows": [{**row, "facts": [fact]}], "notes": "n"}
+
+    known = reply_schema(concept, ["claim-000002", "claim-000001"])
+    fact = known["properties"]["rows"]["items"]
+    fact = (fact.get("anyOf") or [fact])[0]["properties"]["facts"]["items"]
+    assert fact["properties"]["claims"]["items"] == {"enum": ["claim-000001", "claim-000002"]}
+    assert schema.errors(known, reply(["claim-000002"])) == []
+    assert schema.errors(known, reply(["claim-000003"]))  # a mistyped id cannot be decoded
+    none = reply_schema(concept, [])
+    assert schema.errors(none, reply(None)) == [] and schema.errors(none, reply([]))  # no claims key at all
+    assert schema.errors(reply_schema(concept), reply(["claim-000003"])) == []  # without ids: the pattern only
+
+
 def test_reply_schema_keeps_column_names_that_look_like_keywords() -> None:
     concept = fixture("concept_table.json")
     concept["answer_shape"]["columns"] = [{"name": "title", "type": "string"}, {"name": "description", "type": "string"}]

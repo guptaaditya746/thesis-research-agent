@@ -244,13 +244,14 @@ class SubAgent(ResearchAgent):
                          record_meta={"spawned_by_step": job.step_id}, parent_task_id=spawn_task_id,
                          next_step=next_step, trajectory=run.root / SUB_DIR / job.agent_id / "trajectory.json")
         self.cancel = job.cancel
-        self.reply_schema = SUMMARY_SCHEMA
-        self.reply_schema_sha256 = sha256_hex(canonical_bytes(SUMMARY_SCHEMA))
         files = ", ".join(job.files)
         self.extra_template_vars |= {
             "sub_task": job.task,
             "sub_files": (f"Start with these corpus files: {files}." if files else
                           "The agent named no files; find the papers you need in $CORPUS.")}
+
+    def conclude_schema(self) -> dict[str, Any]:
+        return SUMMARY_SCHEMA
 
     def _check_answer(self, text: str) -> tuple[dict[str, Any] | None, list[str]]:
         """The result block: an object with a string "summary" (other keys are ignored: claims come from the log)."""

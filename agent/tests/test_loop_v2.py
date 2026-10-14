@@ -185,8 +185,10 @@ def test_conclude_is_decoded_under_the_reply_schema(tmp_path: Path, corpus: tupl
     run, outcome, _, model = go(tmp_path, corpus, replies, budget={"steps": 1, "tokens": 10**6, "announced": True},
                                 settings=settings)
     assert outcome.exit_status == "submitted" and outcome.answer_from == "final" and outcome.answer_rows == 1
-    schema_sent = reply_schema(CONCEPT)
-    guided = {"structured_outputs": {"json": schema_sent}} if decoding == "structured_outputs" else {"guided_json": schema_sent}
+    schema_sent = reply_schema(CONCEPT, ["claim-000001"])  # built at the call: the claims accepted by then
+    assert schema_sent != reply_schema(CONCEPT)
+    guided = ({"structured_outputs": {"json": schema_sent, "disable_any_whitespace": True}}
+              if decoding == "structured_outputs" else {"guided_json": schema_sent})
     # research free; conclude guided, with room for a whole answer
     assert model.kwargs == [{}, {"extra_body": THINKING_OFF | guided, "max_tokens": 16_384}]
     conclude = model.prompts[1][-1]["content"]
@@ -234,7 +236,7 @@ def test_a_refused_schema_falls_back_to_free_decoding(tmp_path: Path, corpus: tu
         ("finished", "free"), ("failed", "structured_outputs"), ("finished", "free"), ("finished", "free")]
     failed = calls[1]
     assert failed["generated"] == {"error": "guided_decoding_rejected"} and "xgrammar" in failed["custom_metadata"]["detail"]
-    assert failed["used"]["schema_sha256"] == sha256_hex(canonical_bytes(reply_schema(CONCEPT)))
+    assert failed["used"]["schema_sha256"] == sha256_hex(canonical_bytes(reply_schema(CONCEPT, [])))  # no claim yet
     assert [c["generated"]["parse"] for c in calls[2:]] == ["lenient_tool_call", "lenient_bare_answer"]
     cov = coverage_of(run)
     assert [c["generated"]["reason"] for c in cov] == ["guided_decoding_rejected", "command_not_run"]
@@ -242,6 +244,33 @@ def test_a_refused_schema_falls_back_to_free_decoding(tmp_path: Path, corpus: tu
     assert model.prompts[3][-1]["content"].startswith("No more commands run now. Reply with the final answer in one "
                                                       "fenced json block.")
     assert verify_run(run, *corpus).ok
+
+
+@posix_only
+def test_a_conclude_reply_past_the_timeout_is_not_sent_again(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A guided conclude reply that runs past the proxy's 600 s is recorded as a failed call (`timeout`, coverage
+    model_timeout) and counts as a conclude reply: no tenacity retry and no client retry (max_retries 0), so it
+    cannot cost hours of 600 s attempts; the next conclude reply comes, and the run ends normally."""
+    timeout = litellm.exceptions.Timeout("Request timed out after 600 s", "orch-model", "openai")
+    replies: list[Reply] = [bash("echo one"), timeout, bare([row([])], "after the timeout")]
+    run, outcome, _, model = go(tmp_path, corpus, replies, budget={"steps": 1, "tokens": 10**6, "announced": True})
+    assert outcome.exit_status == "submitted" and outcome.answer_from == "final" and len(model.kwargs) == 3
+    assert model.config.model_kwargs["max_retries"] == 0
+    assert model.prompts[1] == model.prompts[2]  # the timed-out reply got no message: the same prompt again
+    calls = calls_of(run)
+    assert [(c["status"], c["used"]["decoding"]) for c in calls] == [
+        ("finished", "free"), ("failed", "structured_outputs"), ("finished", "structured_outputs")]
+    assert calls[1]["generated"] == {"error": "timeout"} and "timed out" in calls[1]["custom_metadata"]["detail"]
+    [cov] = coverage_of(run)
+    assert cov["generated"]["reason"] == "model_timeout" and cov["parent_task_id"] == calls[1]["task_id"]
+    assert cov["generated"]["detail"]["max_tokens"] == 16_384
+    # Both conclude replies timing out: the run ends as the budget left it (the draft, or no answer).
+    run, outcome, _, _ = go(tmp_path / "twice", corpus, [bash("echo one"), timeout, timeout],
+                            budget={"steps": 1, "tokens": 10**6, "announced": True})
+    assert outcome.answer_from == "none" and [c["generated"]["reason"] for c in coverage_of(run)] == [
+        "model_timeout", "model_timeout", "no_final_answer"]
+    from agent import replay
+    assert replay.replay_run(run.root)["ok"]  # failed calls send the same prompt again: still replayable
 
 
 @posix_only

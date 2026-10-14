@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import json
 import math
+from collections.abc import Iterable
 from typing import Any
 
 from .concept import answer_schema_for, concept_sha256, validate_answer
@@ -19,21 +20,37 @@ from .rundir import RunDir
 NOT_FOR_GRAMMAR = ("$schema", "$id", "title", "description", "uniqueItems")
 
 
-def reply_schema(concept: dict[str, Any]) -> dict[str, Any]:
+def reply_schema(concept: dict[str, Any], claim_ids: Iterable[str] | None = None) -> dict[str, Any]:
     """JSON Schema of the agent's reply {rows, notes} for this concept (conclude under structured outputs).
 
     answer_schema_for(concept) without what the harness sets (concept_sha256, kind, each fact's
-    origin). A fact's `claims` stays optional, as in the reply format (build_answer fills []), so
-    the schema is the same for claim_on and claim_off; `notes` is required, so a forced answer
-    can still say what was not checked. The fact `$ref` is inlined, `oneOf` (graph edge types,
-    disjoint by their consts) becomes `anyOf`, and NOT_FOR_GRAMMAR keys are dropped, which keeps
-    the schema within what xgrammar and llguidance accept. Nothing is lost: build_answer checks
-    the reply against the full schema afterwards.
+    origin). A fact's `claims` stays optional, as in the reply format (build_answer fills []);
+    `notes` is required, so a forced answer can still say what was not checked. The fact `$ref`
+    is inlined, `oneOf` (graph edge types, disjoint by their consts) becomes `anyOf`, and
+    NOT_FOR_GRAMMAR keys are dropped, which keeps the schema within what xgrammar and llguidance
+    accept. Nothing is lost: build_answer checks the reply against the full schema afterwards.
+
+    `claim_ids`: the run's accepted claims when the reply is asked for (the loop builds the schema
+    at each conclude call). A cited id must then be one of them (`enum`), so the grammar cannot
+    produce the one mistyped id that would make build_answer refuse the whole answer, a failure
+    only claim_on answers could have; with none accepted (claim_off, or no claim yet) a fact has no
+    `claims` at all. None keeps the plain id pattern (tests, readers of the shape).
+
+    Properties keep the order the prompt teaches (agent/prompts.py row_example): a row's `facts`
+    come last, after its cells or edge fields. Grammar backends emit object keys in schema order
+    (xgrammar does), and answer_schema_for lists `facts` second, so the model would otherwise have
+    to write every fact of a row before the cells they support, against the draft it copies from.
     """
     full = answer_schema_for(concept)
     fact = copy.deepcopy(full["$defs"]["fact"])
     del fact["properties"]["origin"]
     fact["required"] = [k for k in fact["required"] if k not in ("origin", "claims")]
+    if claim_ids is not None:
+        known = sorted(set(claim_ids))
+        if known:
+            fact["properties"]["claims"] = {"type": "array", "items": {"enum": known}}
+        else:
+            del fact["properties"]["claims"]
 
     def grammar(node: Any) -> Any:
         if isinstance(node, list):
@@ -45,7 +62,8 @@ def reply_schema(concept: dict[str, Any]) -> dict[str, Any]:
         out: dict[str, Any] = {}
         for key, value in node.items():
             if key == "properties":  # names, not keywords: a column may be called "title"
-                out[key] = {name: grammar(sub) for name, sub in value.items()}
+                ordered = [n for n in value if n != "facts"] + [n for n in value if n == "facts"]
+                out[key] = {name: grammar(value[name]) for name in ordered}
             elif key not in NOT_FOR_GRAMMAR:
                 out["anyOf" if key == "oneOf" else key] = grammar(value)
         return out
