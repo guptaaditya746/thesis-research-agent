@@ -25,10 +25,17 @@ Nothing is dropped silently. A run whose support verdicts are pending (judge unr
 support share; while any scored run is in that state the primary test and its sensitivity tests are
 not computed, and the runs are listed. A soft-level number with judge decisions pending is a lower
 bound: such a run's soft outcomes are left out of the means, and each condition's summary says how
-many runs fed it. The report also says which runs are unverified (no corpus at scoring) or failed
-`agent verify`, whose key did not validate, whether the runs' settings (budget, temperature, prompt,
-model, corpus, git commit) differ, and what produced the numbers (scorer commits, judge models and
-prompt hashes, key hashes, the sha256 of scores.jsonl and batch.json).
+many runs fed it. The judge's calibration (scoring/support.py) decides what its verdicts are worth:
+the primary test is the pre-registered result only when it passed (`primary.judge_validated`);
+not calibrated yet, or failed (kappa below the bar), the report says so first, and a failed judge's
+soft decisions are left out as pending ones are (strict and normalised levels stand). Two scores of
+one run id, or of one question, condition, repeat and attempt (two batch roots scored together),
+keep the later and list the other (`duplicates`). The report also says which runs are unverified
+(no corpus at scoring) or failed `agent verify`, whose key did not validate or is not final (draft,
+or a review not finished), whether the runs' settings differ (budget, temperature, prompt version,
+model, corpus, git commit, loop, subagents, sandbox and command limits across all runs; the system
+prompt and the attach step within each condition), and what produced the numbers (scorer commits,
+judge models and prompt hashes, key hashes, the sha256 of scores.jsonl and batch.json).
 
 Secondary outcomes, with intervals and no test: fact precision, recall and F1 (soft; F1 also strict
 and normalised), row F1 (soft and normalised), vital recall, judged precision, unsourced share, claims
@@ -96,8 +103,13 @@ SENSITIVITY = {
 }
 COUNTS = ("tokens", "tokens_without_attach")
 TIMES = ("seconds", "seconds_without_attach")
-SETTINGS = ("budget", "temperature", "prompt_version", "prompt_sha256", "model", "corpus_manifest_sha256",
-            "git_commit")
+# Settings every run must share, and settings each condition's runs must share (run_score.run_settings):
+# the system prompts of claim_on and claim_off differ by the claim block, and only claim_off attaches.
+SETTINGS = ("budget", "temperature", "prompt_version", "model", "corpus_manifest_sha256", "git_commit", "loop",
+            "spawn", "sandbox_mode", "command_limits")
+WITHIN_CONDITION = ("prompt_sha256", "attach")
+# Calibration states of the judge (scoring/support.py calibration): only "passed" validates its verdicts.
+CALIBRATED = "passed"
 
 
 class ReportError(ValueError):
@@ -195,43 +207,67 @@ def _int(value: Any) -> int:
     return int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else 0
 
 
-def per_run(scores: list[dict[str, Any]]) -> pd.DataFrame:
-    """One row per scored run; of several finished attempts at one repeat, the latest counts."""
+def key_state(score: dict[str, Any]) -> str:
+    """reviewed (a final key), incomplete (key.json of a review still going on) or draft."""
+    if not score.get("provisional"):
+        return "reviewed"
+    return "incomplete" if score.get("key_reviewed") and score.get("key_complete") is False else "draft"
+
+
+def per_run(scores: list[dict[str, Any]]) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
+    """One row per scored run, and the scores left out as duplicates.
+
+    Of several finished attempts at one repeat the latest counts. Two scores with the same run id
+    (two batches' runs of one name scored together) or of the same question, condition, repeat and
+    attempt cannot both be the run: the later one by run id is kept and the other listed, never
+    dropped silently (report.json `duplicates`, a warning in report.md)."""
     rows = []
     for s in scores:
         support = s.get("support") or {}
         pending = s.get("pending") or {}
+        calibrated = support.get("calibration") or {}
         facts = support.get("facts")
         row = {"run_id": s["run_id"], "qid": s.get("qid"), "condition": s["condition"], "repeat": s.get("repeat"),
                "attempt": s.get("attempt"), "exit_status": s.get("exit_status"), "answer_from": s.get("answer_from"),
-               "provisional": bool(s.get("provisional")), "facts": facts,
+               "provisional": bool(s.get("provisional")), "key_state": key_state(s), "facts": facts,
                "answered": bool(facts), "judged": bool((s.get("judge") or {}).get("used")),
                "pending_support": _int(pending.get("support", support.get("pending"))),
                "pending_same_fact": _int(pending.get("same_fact")), "pending_same_row": _int(pending.get("same_row")),
                "verify_ok": s.get("verify_ok"), "key_problems": len(s.get("key_problems") or []),
-               "support_context": support.get("context"), "partial_counts_as": support.get("partial_counts_as")
+               "support_context": support.get("context"), "partial_counts_as": support.get("partial_counts_as"),
+               "judge_calibration": calibrated.get("state") or "none", "judge_kappa": calibrated.get("kappa"),
+               "judge_bar": calibrated.get("bar"),
                } | {k: get(s, path) for k, (_, path) in OUTCOMES.items()}
         # Soft numbers with judge decisions pending are lower bounds: left out, never averaged with the rest.
-        for outcome in SOFT_FACTS if row["pending_same_fact"] else ():
+        # A judge that failed calibration decides no soft match either (soft scores are reported without it).
+        failed = row["judge_calibration"] == "failed"
+        for outcome in SOFT_FACTS if row["pending_same_fact"] or failed else ():
             row[outcome] = math.nan
-        for outcome in SOFT_ROWS if row["pending_same_row"] else ():
+        for outcome in SOFT_ROWS if row["pending_same_row"] or failed else ():
             row[outcome] = math.nan
         row["support_share_empty_as_zero"] = 0.0 if facts == 0 else row["support_share"]
         other = "support_share_partial_no" if support.get("partial_counts_as") == "yes" else "support_share_partial_yes"
         row["support_share_other_mapping"] = get(s, ("support", other))
         row["support_share_first_claim"] = get(s, ("support", "support_share_first_claim"))
-        row |= {f"setting_{k}": canonical((s.get("run_settings") or {}).get(k)) for k in SETTINGS}
+        row |= {f"setting_{k}": canonical((s.get("run_settings") or {}).get(k)) for k in (*SETTINGS, *WITHIN_CONDITION)}
         rows.append(row)
-    columns = ["run_id", "qid", "condition", "repeat", "attempt", "exit_status", "answer_from", "provisional", "facts",
-               "answered", "judged", "pending_support", "pending_same_fact", "pending_same_row", "verify_ok",
-               "key_problems", "support_context", "partial_counts_as", *OUTCOMES, *SENSITIVITY,
-               *(f"setting_{k}" for k in SETTINGS)]
+    columns = ["run_id", "qid", "condition", "repeat", "attempt", "exit_status", "answer_from", "provisional",
+               "key_state", "facts", "answered", "judged", "pending_support", "pending_same_fact", "pending_same_row",
+               "verify_ok", "key_problems", "support_context", "partial_counts_as", "judge_calibration", "judge_kappa",
+               "judge_bar", *OUTCOMES, *SENSITIVITY, *(f"setting_{k}" for k in (*SETTINGS, *WITHIN_CONDITION))]
     df = pd.DataFrame(rows, columns=columns)
     if df.empty:
-        return df
+        return df, []
+    df = df.sort_values("run_id", kind="stable")
+    twins = (df.duplicated(["run_id"], keep="last")
+             | (df.duplicated(["qid", "condition", "repeat", "attempt"], keep="last") & df["repeat"].notna()))
+    duplicates = [{"run_id": r["run_id"], "qid": r["qid"], "condition": r["condition"], "repeat": r["repeat"],
+                   "attempt": r["attempt"]} for r in df.loc[twins].to_dict("records")]
+    df = df.loc[~twins].copy()
     df["slot"] = [f"r{r:g}" if pd.notna(r) else run for r, run in zip(df["repeat"], df["run_id"])]
     df = df.sort_values(["qid", "condition", "slot", "attempt"], na_position="first")
-    return df.drop_duplicates(["qid", "condition", "slot"], keep="last").drop(columns="slot").reset_index(drop=True)
+    return (df.drop_duplicates(["qid", "condition", "slot"], keep="last").drop(columns="slot").reset_index(drop=True),
+            plain(duplicates))
 
 
 def per_question(runs: pd.DataFrame) -> pd.DataFrame:
@@ -326,16 +362,23 @@ def completeness(runs: pd.DataFrame) -> dict[str, Any]:
     if runs.empty:
         return {"complete": True, "pending_support_runs": [], "pending_soft_runs": [], "unjudged_runs": [],
                 "unverified_runs": [], "verify_failed_runs": [], "key_problem_runs": [], "support_context": {},
-                "partial_counts_as": {}, "settings_differ": {}}
+                "partial_counts_as": {}, "judge_calibration": {}, "key_states": {}, "settings_differ": {}}
 
     def ids(mask: pd.Series) -> list[str]:
         return sorted(runs.loc[mask, "run_id"])
 
-    differ = {}
+    def counts(column: str, missing: str) -> dict[str, int]:
+        return {str(k): int(v) for k, v in sorted(Counter(runs[column].fillna(missing)).items())}
+
+    differ: dict[str, dict[str, int]] = {}
     for k in SETTINGS:
         values = Counter(runs[f"setting_{k}"])
         if len(values) > 1:
             differ[k] = {v: int(n) for v, n in sorted(values.items())}
+    for k in WITHIN_CONDITION:  # compared within each condition: claim_on and claim_off differ by design
+        found = {c: Counter(runs.loc[runs["condition"] == c, f"setting_{k}"]) for c in CONDITIONS}
+        if any(len(values) > 1 for values in found.values()):
+            differ[k] = {f"{c}: {v}": int(n) for c, values in found.items() for v, n in sorted(values.items())}
     pending = ids(runs["pending_support"] > 0)
     return {"complete": not pending and not (runs["pending_same_fact"] + runs["pending_same_row"]).any(),
             "pending_support_runs": pending,
@@ -344,9 +387,26 @@ def completeness(runs: pd.DataFrame) -> dict[str, Any]:
             "unverified_runs": ids(runs["verify_ok"].isna()),
             "verify_failed_runs": ids(runs["verify_ok"].eq(False)),
             "key_problem_runs": ids(runs["key_problems"] > 0),
-            "support_context": {str(k): int(v) for k, v in Counter(runs["support_context"].fillna("none")).items()},
-            "partial_counts_as": {str(k): int(v) for k, v in Counter(runs["partial_counts_as"].fillna("?")).items()},
+            "support_context": counts("support_context", "none"),
+            "partial_counts_as": counts("partial_counts_as", "?"),
+            "judge_calibration": counts("judge_calibration", "none"),
+            "key_states": counts("key_state", "draft"),
             "settings_differ": differ}
+
+
+def judge_validation(runs: pd.DataFrame) -> dict[str, Any]:
+    """Whether the judge behind the support verdicts passed its calibration against people.
+
+    `state`: passed (every run judged with a calibration that passed the bar), failed (any run's
+    calibration fell below it: the support share is then an unvalidated secondary number and the
+    soft scores are reported without the judge, docs/STATE.md), none (not calibrated yet: partial
+    counted as no by default) or mixed."""
+    states = set(runs["judge_calibration"]) if not runs.empty else set()
+    state = ("passed" if states == {CALIBRATED} else "failed" if "failed" in states
+             else "none" if states <= {"none"} else "mixed")
+    kappas = sorted({float(k) for k in runs["judge_kappa"].dropna()}) if not runs.empty else []
+    bars = sorted({float(b) for b in runs["judge_bar"].dropna()}) if not runs.empty else []
+    return {"state": state, "validated": state == "passed", "kappa": kappas, "bar": bars[0] if len(bars) == 1 else bars}
 
 
 def inputs(runs_root: Path, scores: list[dict[str, Any]]) -> dict[str, Any]:
@@ -373,16 +433,20 @@ def inputs(runs_root: Path, scores: list[dict[str, Any]]) -> dict[str, Any]:
 def build(runs_root: Path, *, seed: int = SEED, resamples: int = RESAMPLES) -> dict[str, Any]:
     """Compute everything; returns {"report": report.json content, "tables": {name: DataFrame}}."""
     scores = load_scores(runs_root)
-    runs = per_run(scores)
+    runs, duplicates = per_run(scores)
     questions = per_question(runs)
     kw = {"seed": seed, "resamples": resamples}
     state = completeness(runs)
+    judge = judge_validation(runs)
     pending = state["pending_support_runs"]
     blocked = (f"{len(pending)} scored run{'s have' if len(pending) != 1 else ' has'} pending judge verdicts "
                f"({', '.join(pending[:10])}{', ...' if len(pending) > 10 else ''}); run `score batch` with the judge "
                "until none is pending") if pending else None
     summary = {k: summarise(questions, k, runs, **kw) for k in OUTCOMES}
-    test = primary(questions, blocked=blocked, **kw)
+    # The test is computed either way, but it is the pre-registered result only with a judge that passed
+    # its calibration: `judge_validated` says so, and report.md and the web app put it in the headline.
+    test = primary(questions, blocked=blocked, **kw) | {"judge_validated": judge["validated"],
+                                                        "judge_calibration": judge["state"]}
     for column, label in SENSITIVITY.items():
         test[column.replace("support_share_", "sensitivity_")] = primary(questions, column, blocked=blocked, **kw) | {
             "label": label}
@@ -390,15 +454,16 @@ def build(runs_root: Path, *, seed: int = SEED, resamples: int = RESAMPLES) -> d
     batch = batch_states(runs_root)
     exits, sources = exit_counts(runs), exit_counts(runs, "answer_from")
     report = {
-        "schema_version": 2, "generated_at": utc_now(), "runs_root": str(runs_root),
+        "schema_version": 3, "generated_at": utc_now(), "runs_root": str(runs_root),
         "provisional": bool(len(provisional_runs)), "provisional_runs": int(len(provisional_runs)),
         "provisional_questions": sorted(set(provisional_runs["qid"].dropna())) if len(provisional_runs) else [],
-        "complete": state["complete"], "completeness": state,
+        "complete": state["complete"], "completeness": state, "judge": judge, "duplicates": duplicates,
         "settings": {"interval": "BCa bootstrap over questions", "confidence": CONFIDENCE, "resamples": resamples,
                      "seed": seed, "alpha": ALPHA, "min_pairs": MIN_PAIRS,
                      "test": "scipy.stats.wilcoxon(zero_method='wilcox', alternative='two-sided', method='auto')",
                      "aggregation": "mean over repeats per question and condition, then over questions",
-                     "soft_pending": "runs with soft-level judge decisions pending are left out of soft outcomes"},
+                     "soft_pending": "runs with soft-level judge decisions pending are left out of soft outcomes",
+                     "soft_judge_failed": "runs whose judge failed calibration are left out of soft outcomes"},
         "inputs": inputs(runs_root, scores),
         "runs": {"scored": int(len(runs)),
                  "by_condition": {c: int((runs["condition"] == c).sum()) for c in CONDITIONS} if not runs.empty else {},
@@ -466,9 +531,27 @@ def warnings_md(report: dict[str, Any]) -> list[str]:
     c, out = report["completeness"], []
     if report["provisional"]:
         n = report["provisional_runs"]
-        out.append(f"**PROVISIONAL: {n} run{'s were' if n != 1 else ' was'} scored against draft answer keys "
-                   f"({', '.join(report['provisional_questions'])}). These numbers test the pipeline; do not "
-                   "report them.**")
+        states = c.get("key_states") or {}
+        which = " and ".join(f"{states[k]} against {label}" for k, label in (
+            ("draft", "draft keys"), ("incomplete", "keys whose review is not finished")) if states.get(k))
+        out.append(f"**PROVISIONAL: {n} run{'s were' if n != 1 else ' was'} scored against keys that are not final "
+                   f"({which or 'draft keys'}; {', '.join(report['provisional_questions'])}). These numbers test "
+                   "the pipeline; do not report them.**")
+    judge = report.get("judge") or {}
+    if judge.get("state") == "failed":
+        out.append(f"**JUDGE FAILED CALIBRATION (kappa {', '.join(f'{k:.2f}' for k in judge['kappa']) or '?'} below "
+                   f"{judge.get('bar')}): the support share below is an unvalidated secondary number, not the "
+                   "pre-registered result, and the soft-level outcomes are left out (strict and normalised stand).**")
+    elif judge.get("state") in ("none", "mixed"):
+        out.append("**JUDGE NOT CALIBRATED" + (" for every run" if judge["state"] == "mixed" else "")
+                   + ": `partial` counts as no by default and the judge's verdicts are not validated against people; "
+                   "the primary test is not a result until `gold judge-agreement` has run and the runs are "
+                   "rescored (`score batch`).**")
+    if report.get("duplicates"):
+        d = report["duplicates"]
+        out.append(f"**DUPLICATE RUNS: {len(d)} score{'s' if len(d) != 1 else ''} left out because another run has "
+                   f"the same run id or question, condition, repeat and attempt ({', '.join(x['run_id'] for x in d[:5])}"
+                   f"{', ...' if len(d) > 5 else ''}): score one batch root at a time (report.json duplicates).**")
     if c["pending_support_runs"]:
         out.append(f"**INCOMPLETE: {len(c['pending_support_runs'])} runs have pending judge verdicts "
                    f"({', '.join(c['pending_support_runs'][:10])}); the primary test is not computed until "
@@ -501,6 +584,10 @@ def markdown(report: dict[str, Any], tables: dict[str, pd.DataFrame]) -> str:
               f"seed {report['settings']['seed']}).", "", "## Primary outcome (pre-registered)", "",
               "Share of answer facts whose quote supports them (LLM judge), claim_on − claim_off, paired over "
               "questions; Wilcoxon signed-rank test, two-sided, α = 0.05.", ""]
+    if p["computed"] and not p.get("judge_validated"):
+        lines.append(f"**Unvalidated: the judge {'failed' if p.get('judge_calibration') == 'failed' else 'has not had'} "
+                     "its calibration against people; the test below is not the pre-registered result.**")
+        lines.append("")
     if p["computed"]:
         verdict = "significant" if p["significant"] else "not significant"
         lines.append(f"n = {p['n_pairs']} questions ({p['n_nonzero']} non-zero differences): W = min(T+, T−) = "

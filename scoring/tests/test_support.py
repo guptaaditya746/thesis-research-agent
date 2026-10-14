@@ -142,12 +142,24 @@ def test_errors_never_keep_a_key_or_an_http_body(monkeypatch: pytest.MonkeyPatch
 
 
 def test_partial_mapping_from_the_calibration(tmp_path: Path) -> None:
-    assert calibration(tmp_path) == {"partial_counts_as": "no", "source": None, "sha256": None}
+    assert calibration(tmp_path) == {"partial_counts_as": "no", "source": None, "sha256": None, "state": "none",
+                                     "use_judge": None, "kappa": None, "bar": None}
     assert calibration(None)["partial_counts_as"] == "no"
     (tmp_path / "judge-report.json").write_text(json.dumps({"calibration": {"partial_counts_as": "yes"}}),
                                                 encoding="utf-8")
     found = calibration(tmp_path)
     assert found["partial_counts_as"] == "yes" and len(found["sha256"]) == 64
+    assert found["state"] == "failed"  # a report that does not say use_judge never counts as passed
+    # gold.judge.calibrate's report: the tested (population-weighted) kappa against the bar.
+    report = {"calibration": {"partial_counts_as": "no"}, "test": {"kappa": 0.7, "weighted_kappa": 0.55},
+              "bar": 0.61, "use_judge": False}
+    (tmp_path / "judge-report.json").write_text(json.dumps(report), encoding="utf-8")
+    assert {k: calibration(tmp_path)[k] for k in ("state", "use_judge", "kappa", "bar")} == {
+        "state": "failed", "use_judge": False, "kappa": 0.55, "bar": 0.61}
+    (tmp_path / "judge-report.json").write_text(json.dumps(report | {"use_judge": True,
+                                                                      "test": {"kappa": 0.72, "weighted_kappa": None}}),
+                                                encoding="utf-8")
+    assert (calibration(tmp_path)["state"], calibration(tmp_path)["kappa"]) == ("passed", 0.72)
     detail = [{"label": "supports", "first_claim_label": "supports", "claims": [{}]},
               {"label": "partial", "first_claim_label": "no", "claims": [{}, {}]},
               {"label": "unsourced", "first_claim_label": "unsourced", "claims": []}]

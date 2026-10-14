@@ -31,17 +31,20 @@ SETTINGS = {"budget": {"steps": 60, "tokens": 2000000}, "temperature": 0.7, "pro
 
 def score(qid: str, condition: str, repeat: int, share: float | None, *, attempt: int = 1, exit_status: str = "submitted",
           provisional: bool = False, f1: float = 0.5, pending: int = 0, soft_pending: int = 0,
-          verify_ok: bool | None = True, **settings: Any) -> dict[str, Any]:
+          verify_ok: bool | None = True, calibration: str = "passed", **settings: Any) -> dict[str, Any]:
     """A score.json as run_score writes it (the fields the report reads). claim_off's other partial mapping
-    adds 0.1 to its share; claim_on's first-claim share is 0.2 lower."""
+    adds 0.1 to its share; claim_on's first-claim share is 0.2 lower. The two conditions' system prompts
+    differ (the claim block), as in real runs."""
     on = condition == "claim_on"
     facts = 0 if share is None else 4
     known = share is not None and not pending
+    kappa = {"passed": 0.72, "failed": 0.48, "none": None}[calibration]
     return {
-        "schema_version": 2, "run_id": f"{qid}-{condition}-r{repeat}-a{attempt}", "qid": qid, "condition": condition,
+        "schema_version": 3, "run_id": f"{qid}-{condition}-r{repeat}-a{attempt}", "qid": qid, "condition": condition,
         "repeat": repeat, "attempt": attempt, "seed": 1000 + repeat, "exit_status": exit_status,
         "answer_from": "final" if facts else "none", "provisional": provisional, "verify_ok": verify_ok,
-        "key_problems": [], "key_sha256": f"key-{qid}", "scorer": {"version": 2, "git_commit": "s" * 40},
+        "key_reviewed": True, "key_complete": not provisional,
+        "key_problems": [], "key_sha256": f"key-{qid}", "scorer": {"version": 3, "git_commit": "s" * 40},
         "rows": {"tp": 1, "fp": 1, "fn": 1, "precision": 0.5, "recall": 0.5, "f1": f1},
         "rows_by_level": {"normalised": {"f1": f1}},
         "facts": {level: {"precision": f1, "recall": f1, "f1": f1} for level in ("strict", "normalised", "soft")},
@@ -52,11 +55,14 @@ def score(qid: str, condition: str, repeat: int, share: float | None, *, attempt
                     "support_share_partial_yes": (share if on else share + 0.1) if known else None,
                     "support_share_first_claim": (share - 0.2 if on else share) if known else None,
                     "claims_per_fact": (2.0 if on else 1.0) if facts else None,
-                    "unsourced_share": 0.0 if on else 0.25},
+                    "unsourced_share": 0.0 if on else 0.25,
+                    "calibration": {"partial_counts_as": "no", "state": calibration, "kappa": kappa,
+                                    "bar": 0.61 if kappa is not None else None}},
         "pending": {"support": pending, "same_fact": soft_pending, "same_row": 0},
         "judge": {"used": True, "identity": {"name": "gold.judge", "model": "judge-model", "prompts": {"support": "h"}},
                   "models": ["judge-model"], "prompt_sha256": ["h" * 64]},
-        "run_settings": SETTINGS | settings,
+        "run_settings": SETTINGS | {"prompt_sha256": ("p" if on else "q") * 64,
+                                    "attach": None if on else {"budget_per_fact": {"steps": 6}}} | settings,
         "cost": {"tokens": 1000 if on else 1500, "tokens_without_attach": 1000 if on else 1200,
                  "seconds": 60.0 if on else 90.0, "seconds_without_attach": 60.0 if on else 70.0},
     }
@@ -131,7 +137,10 @@ def test_report_numbers_against_hand_computed(tmp_path: Path) -> None:
     assert report["runs"]["by_answer_from"] == {"claim_off": {"final": 12, "none": 2}, "claim_on": {"final": 14}}
     assert report["coverage"]["claim_off"] == {"scored": 14, "answered": 12, "answered_share": 12 / 14, "not_scored": 0}
     assert report["provisional"] is False and report["secondary"][0] == "fact_precision"
+    # The conditions' prompts differ by design: no false alarm.
     assert report["complete"] is True and report["completeness"]["settings_differ"] == {}
+    assert report["judge"] == {"state": "passed", "validated": True, "kappa": [0.72], "bar": 0.61}
+    assert p["judge_validated"] is True and report["duplicates"] == []
     inputs = report["inputs"]
     assert len(inputs["scores_sha256"]) == 64 and inputs["batch_sha256"] is None
     assert inputs["keys"]["q01"] == ["key-q01"] and inputs["scorer_commits"] == ["s" * 40]
@@ -187,6 +196,57 @@ def test_unverified_runs_key_problems_and_differing_settings_are_flagged(tmp_pat
     md = (root / "report" / "report.md").read_text(encoding="utf-8")
     assert "**UNVERIFIED: 1 runs were scored without `agent verify` (no corpus) and 1 failed it.**" in md
     assert "**KEY PROBLEMS: 1 runs" in md and "**SETTINGS DIFFER between runs: budget**" in md
+
+
+def test_settings_are_compared_within_each_condition(tmp_path: Path) -> None:
+    """Another system prompt or attach budget inside one condition is flagged; the two conditions'
+    prompts differing is the design. So are the loop's settings across all runs (another Slurm job)."""
+    scores = sample()
+    scores[1] = score("q01", "claim_off", 1, 0.5, prompt_sha256="x" * 64, attach={"budget_per_fact": {"steps": 9}})
+    scores[0] = score("q01", "claim_on", 1, 0.8, loop={"conclude_decoding": "free"})
+    c = write(write_scores(tmp_path, scores))["completeness"]
+    assert set(c["settings_differ"]) == {"prompt_sha256", "attach", "loop"}
+    prompts = c["settings_differ"]["prompt_sha256"]
+    assert sum(n for k, n in prompts.items() if k.startswith("claim_off")) == 14
+    assert [k for k in prompts if k.startswith("claim_on")] == [f'claim_on: "{"p" * 64}"']  # one prompt: fine
+
+
+def test_a_judge_that_failed_calibration_is_not_the_result(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Below the kappa bar the support share is an unvalidated secondary number and the soft scores are
+    reported without the judge (docs/STATE.md, Judge): the report says so first, the primary test is
+    marked unvalidated, and the soft outcomes are left out while strict and normalised stand."""
+    root = write_scores(tmp_path, [score(q, c, r, share, calibration="failed") for q, (on, off) in SHARES.items()
+                                   for r in (1, 2) for c, share in (("claim_on", on[r - 1]), ("claim_off", off[r - 1]))])
+    report = write(root)
+    assert report["judge"]["state"] == "failed" and report["judge"]["kappa"] == [0.48]
+    assert report["primary"]["computed"] and report["primary"]["judge_validated"] is False
+    assert report["summary"]["fact_f1"]["claim_on"]["n"] == 0  # soft: left out
+    assert report["summary"]["fact_f1_normalised"]["claim_on"]["n"] == 7  # needs no judge
+    md = (root / "report" / "report.md").read_text(encoding="utf-8")
+    assert "**JUDGE FAILED CALIBRATION (kappa 0.48 below 0.61)" in md and "**Unvalidated: the judge failed" in md
+    assert cli(["report", str(root)]) == 0 and "JUDGE FAILED CALIBRATION" in capsys.readouterr().out
+    none = write(write_scores(tmp_path / "none", [score("q01", "claim_on", 1, 0.5, calibration="none")]))
+    assert none["judge"]["state"] == "none" and not none["judge"]["validated"]
+    assert "**JUDGE NOT CALIBRATED" in (tmp_path / "none" / "report" / "report.md").read_text(encoding="utf-8")
+
+
+def test_scores_of_one_run_twice_are_listed_not_mixed(tmp_path: Path) -> None:
+    """Two batch roots scored together (e2e-smoke and m4-72 both have q01-claim_on-r1-a1): one is kept,
+    the other listed and warned about, never averaged in silently."""
+    scores = sample() + [score("q01", "claim_on", 1, 0.0)]  # the smoke run of the same name
+    report = write(write_scores(tmp_path, scores))
+    assert [d["run_id"] for d in report["duplicates"]] == ["q01-claim_on-r1-a1"] and report["runs"]["scored"] == 28
+    assert "**DUPLICATE RUNS: 1 score left out" in (tmp_path / "report" / "report.md").read_text(encoding="utf-8")
+
+
+def test_incomplete_keys_are_named_in_the_provisional_warning(tmp_path: Path) -> None:
+    scores = sample()
+    scores[0] |= {"provisional": True, "key_complete": False}  # key.json of a review still going on
+    scores[1] |= {"provisional": True, "key_reviewed": False, "key_complete": None}  # key.draft.json
+    report = write(write_scores(tmp_path, scores))
+    assert report["completeness"]["key_states"] == {"draft": 1, "incomplete": 1, "reviewed": 26}
+    md = (tmp_path / "report" / "report.md").read_text(encoding="utf-8")
+    assert "(1 against draft keys and 1 against keys whose review is not finished; q01)" in md
 
 
 def test_wilcoxon_on_a_known_example() -> None:

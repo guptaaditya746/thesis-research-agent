@@ -48,16 +48,30 @@ def load_pairs(run: RunDir) -> list[dict[str, Any]]:
 
 
 def calibration(gold: Path | None) -> dict[str, Any]:
-    """How `partial` counts, from $GOLD/judge-report.json; "no" (and source null) before calibration."""
+    """The judge's calibration from $GOLD/judge-report.json (gold.judge.calibrate): how `partial`
+    counts, and whether the judge passed (`state`).
+
+    `state` is "passed" (kappa on the test half at or above the bar), "failed" (below it: report the
+    support share only as an unvalidated secondary number and the soft scores without the judge,
+    docs/STATE.md, Judge) or "none" (not calibrated yet: partial counts as "no", source null). The
+    tested kappa (population-weighted where the sample says so) and the bar come with it, so the
+    report can say which it is.
+    """
     path = Path(gold) / JUDGE_REPORT if gold else None
     try:
         report = json.loads(path.read_text(encoding="utf-8")) if path and path.is_file() else None
     except (OSError, ValueError):
         report = None
-    found = ((report or {}).get("calibration") or {}).get("partial_counts_as")
+    report = report if isinstance(report, dict) else {}
+    found = (report.get("calibration") or {}).get("partial_counts_as")
     if found not in MAPPINGS:
-        return {"partial_counts_as": "no", "source": None, "sha256": None}
-    return {"partial_counts_as": found, "source": str(path), "sha256": file_sha256(path)}
+        return {"partial_counts_as": "no", "source": None, "sha256": None, "state": "none", "use_judge": None,
+                "kappa": None, "bar": None}
+    test = report.get("test") or {}
+    kappa = test.get("weighted_kappa") if test.get("weighted_kappa") is not None else test.get("kappa")
+    use = report.get("use_judge") is True
+    return {"partial_counts_as": found, "source": str(path), "sha256": file_sha256(path),
+            "state": "passed" if use else "failed", "use_judge": use, "kappa": kappa, "bar": report.get("bar")}
 
 
 def fact_label(verdicts: list[dict[str, Any] | None]) -> str:

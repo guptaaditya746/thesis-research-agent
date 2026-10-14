@@ -55,11 +55,12 @@ def test_score_json_contract(research: Built, tmp_path: Path) -> None:
     assert score["judge"]["calls"] > 0 and score["judge"]["models"] == ["fake-judge"]
     assert score["judge"]["identity"] == {"name": "fake", "model": None, "prompts": None}
     assert score["pending"] == {"support": 0, "same_fact": 0, "same_row": 0}
-    assert score["scorer"]["version"] == 2 and score["answer_from"] == "final"
+    assert score["scorer"]["version"] == 3 and score["answer_from"] == "final"
     assert score["run_settings"]["temperature"] == score["temperature"]
     assert {d["fact_id"]: d["label"] for d in score["detail"]["support"]}["f2"] == "partial"
     assert [m["key"]["fact"] for m in score["detail"]["facts"]["missed"]] == ["f5"]
-    assert score["support"]["calibration"] == {"partial_counts_as": "no", "source": None, "sha256": None}
+    assert score["support"]["calibration"] == {"partial_counts_as": "no", "source": None, "sha256": None,
+                                               "state": "none", "use_judge": None, "kappa": None, "bar": None}
     assert score["judged_precision"]["precision"] is None and score["judged_precision"]["source"] is None
 
 
@@ -142,6 +143,30 @@ def test_draft_key_is_provisional_and_problems_are_recorded(research: Built, tmp
     assert not (research.run.root / "score.json").exists()
     assert provisional({"reviewed": True, "version": "v2-draft"}) and not provisional({"reviewed": True, "version": "v1"})
     assert key_problems(graph_key(research.run), research.run.load_concept()) == []
+
+
+def test_key_of_an_unfinished_review_is_provisional(research: Built, tmp_path: Path) -> None:
+    """`gold export` writes key.json (v1, reviewed) after every pull, also half way through the review
+    (review.complete false): the records nobody decided yet are missing from it, so scores against it
+    are provisional like a draft's, and the report says which kind of key it was."""
+    key = graph_key(research.run)
+    key["review"] = {"complete": False, "unreviewed": 40, "records": 50}
+    score = score_run(research.run.root, write_key(tmp_path / "gold" / "q01" / "key.json", key), write=False)
+    assert (score["key_reviewed"], score["key_complete"], score["provisional"]) == (True, False, True)
+    key["review"]["complete"] = True
+    score = score_run(research.run.root, write_key(tmp_path / "gold" / "q01" / "key.json", key), write=False)
+    assert (score["key_complete"], score["provisional"]) == (True, False)
+    assert not provisional({"reviewed": True, "version": "v1"})  # a key without a review record: by its flag
+
+
+def test_run_settings_compare_what_differs_between_jobs(research: Built, baseline: Built, tmp_path: Path) -> None:
+    """The loop, subagents, sandbox and attach settings are recorded, so the report can flag jobs that differ."""
+    finish_attach(baseline.run)
+    on = score_run(research.run.root, write_key(tmp_path / "a.json", graph_key(research.run)), write=False)
+    off = score_run(baseline.run.root, write_key(tmp_path / "b.json", graph_key(baseline.run)), write=False)
+    assert {"loop", "spawn", "sandbox_mode", "command_limits", "attach"} <= set(on["run_settings"])
+    assert on["run_settings"]["attach"] is None and off["run_settings"]["attach"] is not None
+    assert "base_url" not in (on["run_settings"]["loop"] or {})
 
 
 def test_key_for_another_concept_is_refused(research: Built, tmp_path: Path) -> None:

@@ -117,7 +117,13 @@ def cmd_report(args: argparse.Namespace) -> int:
     else:
         print(f"primary: not computed ({p['reason']})")
     if report["provisional"]:
-        print("PROVISIONAL: draft keys used; do not report these numbers")
+        print("PROVISIONAL: draft keys (or keys whose review is not finished) used; do not report these numbers")
+    if report["judge"]["state"] != "passed":
+        print(f"JUDGE {'FAILED CALIBRATION' if report['judge']['state'] == 'failed' else 'NOT CALIBRATED'}: "
+              "the primary test is not the pre-registered result (report.md)")
+    if report["duplicates"]:
+        print(f"DUPLICATES: {len(report['duplicates'])} scores left out (same run id, or question, condition, "
+              "repeat and attempt); score one batch root at a time")
     if c["pending_support_runs"] or c["pending_soft_runs"]:
         print(f"INCOMPLETE: judge decisions pending in {len(set(c['pending_support_runs'] + c['pending_soft_runs']))} "
               "runs; run `score batch` with the judge")

@@ -13,7 +13,9 @@ score.json (docs/e2e-build-plan.md, Scores; scoring/README.md lists every field)
 - The key must be for the run's concept (same concept_sha256); its rows are checked against the
   concept's answer schema once the gold-only fact fields are stripped, and problems are recorded.
 - A key that is not reviewed (key.draft.json, `reviewed: false`) makes the score provisional: it tests
-  the pipeline and is never reported as a result (as the labelling repo's draft keys).
+  the pipeline and is never reported as a result (as the labelling repo's draft keys). So does a
+  key.json whose review is not finished (`review.complete` false, `key_complete` in score.json):
+  `gold export` writes one after every pull, and what nobody has decided yet is missing from it.
 - exit_status comes from the run's records: a cut by the batch runner, a run error, the loop's reason
   for ending without a final answer, or "submitted"; trajectory.json's info.exit_status is the fallback.
   answer_from says where answer.json came from: the final reply (`final`), the agent's draft file after
@@ -53,7 +55,7 @@ from .match import GOLD_FIELDS, match
 from .support import calibration, judge_support
 
 SCORE_FILE = "score.json"
-SCHEMA_VERSION = 2  # the scoring rules' version: a score.json of another version is always rescored
+SCHEMA_VERSION = 3  # the scoring rules' version: a score.json of another version is always rescored
 RUN_KEY = re.compile(r"^(?P<qid>.+)-(?P<condition>claim_on|claim_off)-r(?P<repeat>\d+)(?:-a(?P<attempt>\d+))?$")
 COST = ("steps", "model_calls", "tokens", "claim_steps", "claim_step_tokens")
 EXPORT_FILE = "export.json"
@@ -71,9 +73,20 @@ def load_key(path: Path) -> dict[str, Any]:
     return key
 
 
+def key_complete(key: dict[str, Any]) -> bool | None:
+    """Whether the review behind the key is finished: gold/export.py's `review.complete` (every pool
+    record decided, overlap disagreements resolved, the missing-facts record done, the screening
+    sample checked); None for a key without that record (a draft, or one written by hand)."""
+    review = key.get("review")
+    return review.get("complete") is True if isinstance(review, dict) else None
+
+
 def provisional(key: dict[str, Any]) -> bool:
-    """True for a draft key: not reviewed, or a version ending in -draft."""
-    return key.get("reviewed") is not True or str(key.get("version", "")).endswith("-draft")
+    """True for a draft key (not reviewed, or a version ending in -draft) and for a reviewed key whose
+    review is not finished: `gold export` writes key.json (v1, reviewed) after every pull, also half
+    way through the review, and the records nobody has decided yet are simply missing from it."""
+    return (key.get("reviewed") is not True or str(key.get("version", "")).endswith("-draft")
+            or key_complete(key) is False)
 
 
 def key_problems(key: dict[str, Any], concept: dict[str, Any]) -> list[str]:
@@ -208,15 +221,30 @@ def run_identity(run: RunDir, config: dict[str, Any]) -> dict[str, Any]:
             "attempt": int(m.group("attempt")) if m and m.group("attempt") else None}
 
 
+ATTACH_SETTINGS = ("prompt", "budget_per_fact", "conclude_replies", "conclude_decoding", "sandbox")
+
+
 def run_settings(config: dict[str, Any]) -> dict[str, Any]:
-    """The settings every run of one comparison must share (the report flags any that differ)."""
+    """The settings the runs of one comparison must share (the report flags any that differ).
+
+    `prompt_sha256` is the condition's own system prompt (claim_on and claim_off differ by the claim
+    block) and `attach` exists for claim_off only, so the report compares those two within each
+    condition; the rest across all runs: the loop (conclude decoding and reply limit, masking, ...;
+    not the proxy URL), subagents, sandbox mode and command limits can differ between Slurm jobs.
+    """
     orchestrator = (config.get("models") or {}).get("orchestrator") or {}
     prompt = config.get("prompt") or {}
+    loop = config.get("loop")
+    attach = config.get("attach")
     return {"budget": config.get("budget"), "temperature": (config.get("sampling") or {}).get("temperature"),
             "prompt_version": prompt.get("version"), "prompt_sha256": prompt.get("sha256"),
             "model": f"{orchestrator.get('name')}@{orchestrator.get('revision')}" if orchestrator else None,
             "corpus_manifest_sha256": (config.get("hashes") or {}).get("corpus_manifest_sha256"),
-            "git_commit": config.get("git_commit")}
+            "git_commit": config.get("git_commit"),
+            "loop": {k: v for k, v in loop.items() if k != "base_url"} if isinstance(loop, dict) else None,
+            "spawn": config.get("spawn"), "sandbox_mode": (config.get("sandbox") or {}).get("mode"),
+            "command_limits": config.get("command_limits"),
+            "attach": {k: attach.get(k) for k in ATTACH_SETTINGS} if isinstance(attach, dict) else None}
 
 
 @functools.cache
@@ -257,6 +285,7 @@ def score_run(run_dir: Path | str, key_path: Path | str, *, judge: Judge | None 
         "kind": concept["answer_shape"]["kind"], "exit_status": exit_status(run, recs),
         "answer_from": answer_from(recs), "verify_ok": verify_ok, "verify_errors": verify_errors,
         "key_version": key.get("version"), "key_reviewed": key.get("reviewed") is True,
+        "key_complete": key_complete(key),
         "key_sha256": file_sha256(key_path), "key_path": str(key_path), "provisional": provisional(key),
         "key_problems": key_problems(key, concept)[:20],
         "rows": rows["levels"]["soft"], "rows_by_level": rows["levels"],
