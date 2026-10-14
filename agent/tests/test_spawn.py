@@ -640,10 +640,15 @@ def test_batch_manifest_spawn_switch(tmp_path: Path) -> None:
     data = json.loads(SAMPLE.read_text(encoding="utf-8"))
     assert data["spawn"] == "off"  # the 72 runs keep it off
     for value in ("on", "off"):
-        (tmp_path / "m.json").write_text(json.dumps(data | {"spawn": value}), encoding="utf-8")
+        manifest = data | {"spawn": value, "spawn_budget": {"steps": 10, "tokens": 400_000}}
+        (tmp_path / "m.json").write_text(json.dumps(manifest), encoding="utf-8")
         batch = Batch(Manifest.load(tmp_path / "m.json"), deadline=None, corpus=tmp_path)
         argv = batch.run_argv(batch.manifest.plan()[0], "x")
         assert argv[argv.index("--spawn") + 1] == value
+        assert ("--spawn-steps" in argv) == (value == "on")  # the subagent budget only goes with spawn on
+        if value == "on":
+            at = argv.index("--spawn-steps")
+            assert argv[at:at + 4] == ["--spawn-steps", "10", "--spawn-tokens", "400000"]
         assert "--spawn" not in batch.attach_argv(RunDir(tmp_path / "runs" / "x"))
     (tmp_path / "m.json").write_text(json.dumps(data | {"spawn": "maybe"}), encoding="utf-8")
     with pytest.raises(ValueError, match="spawn"):
@@ -671,3 +676,10 @@ def test_cli_run_spawn_switch(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, c
     assert "subagents=2 run_tokens=1500" in capsys.readouterr().out
     assert cli([*base, "--spawn", "on", "--prompt-version", "v1"]) == 1  # the M1-real prompt has no spawn block
     assert "spawn needs prompt v2" in capsys.readouterr().out and len(seen) == 2
+    # Each subagent's budget is provisional like the run's: settable, recorded through SpawnSettings.config.
+    assert cli([*base, "--spawn", "on", "--spawn-steps", "10", "--spawn-tokens", "400000"]) == 0
+    assert seen[2]["spawn"] == SpawnSettings(enabled=True, steps=10, tokens=400_000)
+    capsys.readouterr()
+    assert cli([*base, "--spawn-steps", "10"]) == 1 and "need --spawn on" in capsys.readouterr().out
+    assert cli([*base, "--spawn", "on", "--spawn-tokens", "0"]) == 1 and "positive" in capsys.readouterr().out
+    assert len(seen) == 3

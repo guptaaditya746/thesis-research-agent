@@ -70,7 +70,15 @@ def cmd_run(args: argparse.Namespace) -> int:
         settings = dataclasses.replace(settings, conclude_decoding=args.conclude_decoding)
     budget = budget_for(args.prompt_version)  # v1: the M1-real runs' 150 steps / 400k tokens
     budget |= {k: v for k, v in (("steps", args.steps), ("tokens", args.tokens)) if v is not None}
-    spawn = SpawnSettings(enabled=args.spawn == "on")
+    spawn_budget = {k: v for k, v in (("steps", args.spawn_steps), ("tokens", args.spawn_tokens)) if v is not None}
+    if spawn_budget and args.spawn != "on":
+        print("FAIL --spawn-steps and --spawn-tokens need --spawn on")
+        return 1
+    try:  # each subagent's budget: provisional, like the run's (frozen after the Slurm test)
+        spawn = SpawnSettings(enabled=args.spawn == "on", **spawn_budget)
+    except ValueError as exc:
+        print(f"FAIL {exc}")
+        return 1
     if spawn.enabled:
         from . import prompts
         try:  # v1 (the M1-real runs) has no spawn block
@@ -330,6 +338,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--spawn", choices=("on", "off"), default="off",
                      help="the spawn command: subagents on sub-model-1/-2 with their own budget (row 2.12; "
                           "recorded in config.json; off for the 72 runs unless decided otherwise)")
+    run.add_argument("--spawn-steps", type=int, help="each subagent's step budget, with --spawn on (default 15)")
+    run.add_argument("--spawn-tokens", type=int, help="each subagent's token budget, with --spawn on (default 300,000)")
     run.set_defaults(func=cmd_run)
 
     attach = sub.add_parser("attach", help="baseline attach step: one quote or 'no source found' per answer fact (row 2.5)")
