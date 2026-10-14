@@ -1,0 +1,1197 @@
+{
+  "corpus_id": "rag-demo-725e0c19",
+  "seed": 1,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "study_id": "S001",
+      "paper": "S001",
+      "level": "paraphrased",
+      "conditions": [
+        {
+          "id": "S001.c1",
+          "role": "baseline",
+          "label": "model that answers from its own parameters",
+          "aliases": []
+        },
+        {
+          "id": "S001.c2",
+          "role": "rag",
+          "label": "configuration that looks up supporting documents",
+          "aliases": []
+        },
+        {
+          "id": "S001.c3",
+          "role": "other",
+          "label": "model that samples several answers and votes",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S001.k1",
+          "canonical": "hallucination_rate",
+          "name": "fraction of answers judged to contain invented facts",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S001.m1",
+          "condition": "S001.c1",
+          "metric": "S001.k1",
+          "value": 0.115,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S001.m2",
+          "condition": "S001.c2",
+          "metric": "S001.k1",
+          "value": 0.083,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S001.m3",
+          "condition": "S001.c3",
+          "metric": "S001.k1",
+          "value": 0.275,
+          "dataset": "TriviaCheck"
+        }
+      ],
+      "author_claim": {
+        "id": "S001.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.032,
+        "metric": "S001.k1",
+        "rag": "S001.m2",
+        "baseline": "S001.m1"
+      }
+    },
+    {
+      "study_id": "S002",
+      "paper": "S002",
+      "level": "paraphrased",
+      "conditions": [
+        {
+          "id": "S002.c1",
+          "role": "baseline",
+          "label": "language model used on its own",
+          "aliases": []
+        },
+        {
+          "id": "S002.c2",
+          "role": "rag",
+          "label": "system grounded in retrieved passages",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S002.k1",
+          "canonical": "factual_accuracy",
+          "name": "proportion of questions answered with correct facts",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S002.m1",
+          "condition": "S002.c1",
+          "metric": "S002.k1",
+          "value": 0.445,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m2",
+          "condition": "S002.c2",
+          "metric": "S002.k1",
+          "value": 0.567,
+          "dataset": "LawFactQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S002.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.122,
+        "metric": "S002.k1",
+        "rag": "S002.m2",
+        "baseline": "S002.m1"
+      }
+    },
+    {
+      "study_id": "S003",
+      "paper": "S003",
+      "level": "paraphrased",
+      "conditions": [
+        {
+          "id": "S003.c1",
+          "role": "baseline",
+          "label": "plain generator with no lookup step",
+          "aliases": []
+        },
+        {
+          "id": "S003.c2",
+          "role": "rag",
+          "label": "model that consults the document index before answering",
+          "aliases": []
+        },
+        {
+          "id": "S003.c3",
+          "role": "other",
+          "label": "model prompted to reason step by step",
+          "aliases": []
+        },
+        {
+          "id": "S003.c4",
+          "role": "other",
+          "label": "model that samples several answers and votes",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S003.k1",
+          "canonical": "hallucination_rate",
+          "name": "share of answers that contain at least one unsupported statement",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S003.m1",
+          "condition": "S003.c1",
+          "metric": "S003.k1",
+          "value": 0.445,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m2",
+          "condition": "S003.c2",
+          "metric": "S003.k1",
+          "value": 0.447,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m3",
+          "condition": "S003.c3",
+          "metric": "S003.k1",
+          "value": 0.346,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m4",
+          "condition": "S003.c4",
+          "metric": "S003.k1",
+          "value": 0.281,
+          "dataset": "NewsTruthQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S003.a1",
+        "direction": "no_effect"
+      },
+      "effect": {
+        "direction": "neutral",
+        "delta": -0.002,
+        "metric": "S003.k1",
+        "rag": "S003.m2",
+        "baseline": "S003.m1"
+      }
+    },
+    {
+      "study_id": "S004",
+      "paper": "S004",
+      "level": "paraphrased",
+      "conditions": [
+        {
+          "id": "S004.c1",
+          "role": "baseline",
+          "label": "language model used on its own",
+          "aliases": []
+        },
+        {
+          "id": "S004.c2",
+          "role": "rag",
+          "label": "variant that reads retrieved evidence first",
+          "aliases": []
+        },
+        {
+          "id": "S004.c3",
+          "role": "other",
+          "label": "model that samples several answers and votes",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S004.k1",
+          "canonical": "hallucination_rate",
+          "name": "proportion of answers with a statement not backed by any source",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S004.m1",
+          "condition": "S004.c1",
+          "metric": "S004.k1",
+          "value": 0.365,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S004.m2",
+          "condition": "S004.c2",
+          "metric": "S004.k1",
+          "value": 0.236,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S004.m3",
+          "condition": "S004.c3",
+          "metric": "S004.k1",
+          "value": 0.298,
+          "dataset": "LawFactQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S004.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.129,
+        "metric": "S004.k1",
+        "rag": "S004.m2",
+        "baseline": "S004.m1"
+      }
+    },
+    {
+      "study_id": "S005",
+      "paper": "S005",
+      "level": "paraphrased",
+      "conditions": [
+        {
+          "id": "S005.c1",
+          "role": "baseline",
+          "label": "language model used on its own",
+          "aliases": []
+        },
+        {
+          "id": "S005.c2",
+          "role": "rag",
+          "label": "system grounded in retrieved passages",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S005.k1",
+          "canonical": "hallucination_rate",
+          "name": "share of answers that contain at least one unsupported statement",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S005.m1",
+          "condition": "S005.c1",
+          "metric": "S005.k1",
+          "value": 0.185,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m2",
+          "condition": "S005.c2",
+          "metric": "S005.k1",
+          "value": 0.247,
+          "dataset": "SciFactBench"
+        }
+      ],
+      "author_claim": {
+        "id": "S005.a1",
+        "direction": "worsens"
+      },
+      "effect": {
+        "direction": "contradicts",
+        "delta": -0.062,
+        "metric": "S005.k1",
+        "rag": "S005.m2",
+        "baseline": "S005.m1"
+      }
+    },
+    {
+      "study_id": "S006",
+      "paper": "S006",
+      "level": "paraphrased",
+      "conditions": [
+        {
+          "id": "S006.c1",
+          "role": "baseline",
+          "label": "model that answers from its own parameters",
+          "aliases": []
+        },
+        {
+          "id": "S006.c2",
+          "role": "rag",
+          "label": "variant that reads retrieved evidence first",
+          "aliases": []
+        },
+        {
+          "id": "S006.c3",
+          "role": "other",
+          "label": "retrieval variant that skips the reranker",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S006.k1",
+          "canonical": "hallucination_rate",
+          "name": "proportion of answers with a statement not backed by any source",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S006.m1",
+          "condition": "S006.c1",
+          "metric": "S006.k1",
+          "value": 0.361,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S006.m2",
+          "condition": "S006.c2",
+          "metric": "S006.k1",
+          "value": 0.305,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S006.m3",
+          "condition": "S006.c3",
+          "metric": "S006.k1",
+          "value": 0.195,
+          "dataset": "TriviaCheck"
+        }
+      ],
+      "author_claim": {
+        "id": "S006.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.056,
+        "metric": "S006.k1",
+        "rag": "S006.m2",
+        "baseline": "S006.m1"
+      }
+    }
+  ],
+  "placements": [
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 191,
+      "end": 233,
+      "exact": "model that answers from its own parameters"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 243,
+      "end": 291,
+      "exact": "configuration that looks up supporting documents"
+    },
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 308,
+      "end": 383,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 933,
+      "end": 975,
+      "exact": "model that answers from its own parameters"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1091,
+      "end": 1139,
+      "exact": "configuration that looks up supporting documents"
+    },
+    {
+      "fact": "S001.c3",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1244,
+      "end": 1288,
+      "exact": "model that samples several answers and votes"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1380,
+      "end": 1432,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1715,
+      "end": 1767,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1773,
+      "end": 1815,
+      "exact": "model that answers from its own parameters"
+    },
+    {
+      "fact": "S001.m1",
+      "role": "value",
+      "paper": "S001",
+      "start": 1831,
+      "end": 1847,
+      "exact": "115 out of 1,000"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1879,
+      "end": 1927,
+      "exact": "configuration that looks up supporting documents"
+    },
+    {
+      "fact": "S001.m2",
+      "role": "value",
+      "paper": "S001",
+      "start": 1940,
+      "end": 1944,
+      "exact": "8.3%"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1952,
+      "end": 2004,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.c3",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2029,
+      "end": 2073,
+      "exact": "model that samples several answers and votes"
+    },
+    {
+      "fact": "S001.m3",
+      "role": "value",
+      "paper": "S001",
+      "start": 2086,
+      "end": 2091,
+      "exact": "0.275"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2099,
+      "end": 2151,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 2477,
+      "end": 2560,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 215,
+      "end": 245,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 255,
+      "end": 292,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S002.a1",
+      "role": "claim",
+      "paper": "S002",
+      "start": 307,
+      "end": 380,
+      "exact": "Retrieval augmentation makes the generated answers clearly more accurate."
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 925,
+      "end": 955,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1038,
+      "end": 1075,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1202,
+      "end": 1253,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1529,
+      "end": 1559,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1565,
+      "end": 1616,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S002.m1",
+      "role": "value",
+      "paper": "S002",
+      "start": 1638,
+      "end": 1643,
+      "exact": "0.445"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1663,
+      "end": 1700,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S002.m2",
+      "role": "value",
+      "paper": "S002",
+      "start": 1709,
+      "end": 1725,
+      "exact": "567 out of 1,000"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1752,
+      "end": 1803,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S002.a1",
+      "role": "claim",
+      "paper": "S002",
+      "start": 2111,
+      "end": 2187,
+      "exact": "Grounding the generator in retrieved documents yields more accurate answers."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 181,
+      "end": 216,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 226,
+      "end": 281,
+      "exact": "model that consults the document index before answering"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 298,
+      "end": 369,
+      "exact": "Retrieval augmentation does not measurably reduce hallucinated content."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 907,
+      "end": 942,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1013,
+      "end": 1068,
+      "exact": "model that consults the document index before answering"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1175,
+      "end": 1212,
+      "exact": "model prompted to reason step by step"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1303,
+      "end": 1347,
+      "exact": "model that samples several answers and votes"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1439,
+      "end": 1503,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1776,
+      "end": 1811,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S003.m1",
+      "role": "value",
+      "paper": "S003",
+      "start": 1820,
+      "end": 1836,
+      "exact": "445 out of 1,000"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1863,
+      "end": 1927,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1949,
+      "end": 2013,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2021,
+      "end": 2076,
+      "exact": "model that consults the document index before answering"
+    },
+    {
+      "fact": "S003.m2",
+      "role": "value",
+      "paper": "S003",
+      "start": 2081,
+      "end": 2086,
+      "exact": "44.7%"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2097,
+      "end": 2134,
+      "exact": "model prompted to reason step by step"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2140,
+      "end": 2204,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.m3",
+      "role": "value",
+      "paper": "S003",
+      "start": 2228,
+      "end": 2233,
+      "exact": "0.346"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2255,
+      "end": 2299,
+      "exact": "model that samples several answers and votes"
+    },
+    {
+      "fact": "S003.m4",
+      "role": "value",
+      "paper": "S003",
+      "start": 2308,
+      "end": 2324,
+      "exact": "281 out of 1,000"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2351,
+      "end": 2415,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 2712,
+      "end": 2803,
+      "exact": "Adding retrieved documents leaves the amount of hallucinated content essentially unchanged."
+    },
+    {
+      "fact": "S004.c1",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 180,
+      "end": 210,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S004.c2",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 220,
+      "end": 263,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S004.a1",
+      "role": "claim",
+      "paper": "S004",
+      "start": 278,
+      "end": 353,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S004.c1",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 923,
+      "end": 953,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S004.c2",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1036,
+      "end": 1079,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S004.c3",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1177,
+      "end": 1221,
+      "exact": "model that samples several answers and votes"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 1313,
+      "end": 1376,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 1664,
+      "end": 1727,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S004.c1",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1735,
+      "end": 1765,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S004.m1",
+      "role": "value",
+      "paper": "S004",
+      "start": 1770,
+      "end": 1775,
+      "exact": "0.365"
+    },
+    {
+      "fact": "S004.c2",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1795,
+      "end": 1838,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S004.m2",
+      "role": "value",
+      "paper": "S004",
+      "start": 1847,
+      "end": 1863,
+      "exact": "236 out of 1,000"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 1890,
+      "end": 1953,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 1973,
+      "end": 2036,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S004.c3",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 2044,
+      "end": 2088,
+      "exact": "model that samples several answers and votes"
+    },
+    {
+      "fact": "S004.m3",
+      "role": "value",
+      "paper": "S004",
+      "start": 2093,
+      "end": 2098,
+      "exact": "29.8%"
+    },
+    {
+      "fact": "S004.a1",
+      "role": "claim",
+      "paper": "S004",
+      "start": 2413,
+      "end": 2496,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 189,
+      "end": 219,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 229,
+      "end": 266,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S005.a1",
+      "role": "claim",
+      "paper": "S005",
+      "start": 284,
+      "end": 353,
+      "exact": "Retrieval augmentation increases hallucinated content in the answers."
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 904,
+      "end": 934,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1017,
+      "end": 1054,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 1181,
+      "end": 1245,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1517,
+      "end": 1547,
+      "exact": "language model used on its own"
+    },
+    {
+      "fact": "S005.m1",
+      "role": "value",
+      "paper": "S005",
+      "start": 1556,
+      "end": 1572,
+      "exact": "185 out of 1,000"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 1599,
+      "end": 1663,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1673,
+      "end": 1710,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S005.m2",
+      "role": "value",
+      "paper": "S005",
+      "start": 1723,
+      "end": 1728,
+      "exact": "24.7%"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 1736,
+      "end": 1800,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S005.a1",
+      "role": "claim",
+      "paper": "S005",
+      "start": 2128,
+      "end": 2210,
+      "exact": "Grounding the generator in retrieved documents leads to more hallucinated answers."
+    },
+    {
+      "fact": "S006.c1",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 190,
+      "end": 232,
+      "exact": "model that answers from its own parameters"
+    },
+    {
+      "fact": "S006.c2",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 242,
+      "end": 285,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S006.a1",
+      "role": "claim",
+      "paper": "S006",
+      "start": 302,
+      "end": 377,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S006.c1",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 894,
+      "end": 936,
+      "exact": "model that answers from its own parameters"
+    },
+    {
+      "fact": "S006.c2",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1052,
+      "end": 1095,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S006.c3",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1193,
+      "end": 1234,
+      "exact": "retrieval variant that skips the reranker"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 1339,
+      "end": 1402,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 1704,
+      "end": 1767,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S006.c1",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1773,
+      "end": 1815,
+      "exact": "model that answers from its own parameters"
+    },
+    {
+      "fact": "S006.m1",
+      "role": "value",
+      "paper": "S006",
+      "start": 1831,
+      "end": 1847,
+      "exact": "361 out of 1,000"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 1891,
+      "end": 1954,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S006.c2",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1962,
+      "end": 2005,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S006.m2",
+      "role": "value",
+      "paper": "S006",
+      "start": 2010,
+      "end": 2015,
+      "exact": "0.305"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 2037,
+      "end": 2100,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S006.c3",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 2108,
+      "end": 2149,
+      "exact": "retrieval variant that skips the reranker"
+    },
+    {
+      "fact": "S006.m3",
+      "role": "value",
+      "paper": "S006",
+      "start": 2154,
+      "end": 2159,
+      "exact": "19.5%"
+    },
+    {
+      "fact": "S006.a1",
+      "role": "claim",
+      "paper": "S006",
+      "start": 2474,
+      "end": 2557,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    }
+  ],
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S001",
+      "S002",
+      "S004",
+      "S006"
+    ],
+    "contradicting": [
+      "S005"
+    ],
+    "neutral": [
+      "S003"
+    ]
+  }
+}
