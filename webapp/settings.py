@@ -15,16 +15,19 @@
 | `WEBAPP_CHAT_MODEL`    | `chat_model`       | `sub-model-1`                            |
 | `WEBAPP_LIVE_WINDOW_S` | `live_window_s`    | 900                                      |
 | `WEBAPP_POLL_S`        | `poll_s`           | 0.5                                      |
+| `WEBAPP_ALLOWED_HOSTS` | `allowed_hosts`    | `127.0.0.1,localhost,::1`                |
 
 Relative paths are resolved against the working directory when the settings are made, so the job
 subprocesses (which run in the repo) get absolute paths; an empty variable counts as unset. The
 API keys ($LITELLM_MASTER_KEY, $ARGILLA_API_KEY) are never settings: they are read from the
 environment at call time only.
 
-$RUNS is the root of everything run-shaped: single runs ($RUNS/<run>), batch roots one level down
-($RUNS/<manifest name>/<key>-aN, as scripts/e2e-batch.sh and agent/manifests/m4-72.json write
-them, each with its own report/), and the web app's own runs in $RUNS/web/, so they never mix
-into a manifest's runs root.
+$RUNS is one batch root, the RUNS_ROOT scripts/e2e-batch.sh prints for a manifest ($RUNS/m4-72 on
+the cluster; docs/e2e-build-plan.md, Environment), which scoring takes too: its runs, its report/,
+and the web app's own runs in $RUNS/web/ (ids web~<name>), so they never count as a manifest's runs.
+A batch root one level down is listed as well (ids <batch>~<name>), but a root above several
+batches is not what the app is for: run ids are directory names, and two batches have runs of the
+same name (webapp/README.md).
 """
 from __future__ import annotations
 
@@ -65,6 +68,13 @@ class Settings(BaseSettings):
                                              "(120 s, COMMAND_LIMITS), with a margin for the proxy's queue")
     poll_s: float = Field(0.5, validation_alias="WEBAPP_POLL_S", description="how often the SSE streams look "
                                                                             "for new lines")
+    allowed_hosts: str = Field("127.0.0.1,localhost,::1", validation_alias="WEBAPP_ALLOWED_HOSTS",
+                               description="comma-separated Host names the app answers (webapp/guard.py: "
+                                           "a DNS-rebinding page sends its own name)")
+
+    @property
+    def hosts(self) -> list[str]:
+        return [h.strip() for h in self.allowed_hosts.split(",") if h.strip()]
 
     @field_validator("corpus", "runs", "gold", "concepts", "questions", "agent_root", "web_dist")
     @classmethod

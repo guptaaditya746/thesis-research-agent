@@ -1,7 +1,11 @@
-"""Read-only safety: no path leaves its root, SPARQL cannot write, the built frontend is served safely."""
+"""Read-only safety: no path leaves its root, SPARQL cannot write or fetch, other sites cannot write
+or rebind, the built frontend is served safely."""
 from __future__ import annotations
 
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -94,6 +98,63 @@ def test_sparql_is_read_only(client: TestClient) -> None:
         response = client.post("/api/sparql", json={"query": update})
         assert response.status_code == 400, update
     assert client.post("/api/sparql", json={"query": count}).json()["rows"][0]["n"] == before
+
+
+class Recorder(BaseHTTPRequestHandler):
+    """A local HTTP server that counts the requests it gets (a SPARQL SERVICE endpoint)."""
+    hits: list[str] = []
+
+    def _answer(self) -> None:
+        Recorder.hits.append(self.path)
+        self.send_response(405)
+        self.end_headers()
+
+    do_GET = do_POST = _answer
+
+    def log_message(self, *args: Any) -> None:
+        pass
+
+
+def test_sparql_is_never_federated(client: TestClient) -> None:
+    """SERVICE makes pyoxigraph send an HTTP request to the IRI it names: the server would fetch any URL
+    a query (or a prompt-injected chat agent) names. Refused before the store sees it; the server is
+    never called. A literal or an IRI that merely says "service" is no SERVICE clause."""
+    server = HTTPServer(("127.0.0.1", 0), Recorder)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{server.server_port}/sparql"
+    try:
+        Recorder.hits.clear()
+        for query in (f"SELECT * WHERE {{ SERVICE <{url}> {{ ?s ?p ?o }} }}",
+                      f"select * where {{ service silent <{url}> {{ ?s ?p ?o }} }}",
+                      f"SELECT * WHERE {{ ?a ?b ?c . # a comment\n SERVICE <{url}> {{ ?s ?p ?o }} }}",
+                      f"PREFIX ours: <urn:thesis-agent:vocab#>\nASK {{ SERVICE <{url}> {{ ?s ?p ?o }} }}"):
+            response = client.post("/api/sparql", json={"query": query})
+            assert response.status_code == 400 and "SERVICE" in response.json()["detail"], query
+        assert Recorder.hits == []
+    finally:
+        server.shutdown()
+    for harmless in ('SELECT ?s WHERE { ?s ?p "SERVICE" }', "SELECT ?s WHERE { ?s <urn:x:service> ?o }",
+                     "SELECT ?s WHERE { ?s ?p ?o } # SERVICE in a comment"):
+        assert client.post("/api/sparql", json={"query": harmless}).status_code == 200, harmless
+
+
+def test_other_sites_cannot_write_or_rebind(fresh: World) -> None:
+    """A form POST from another site (no JSON, no preflight) and a cross-origin JSON request are refused
+    before any job starts; a Host that is not a loopback name (DNS rebinding) gets nothing at all."""
+    with TestClient(create_app(fresh.settings)) as c:
+        form = {"content-type": "application/x-www-form-urlencoded", "origin": "https://evil.example"}
+        assert c.post("/api/gold/q02/build", content=b"", headers=form).status_code == 403
+        assert c.post("/api/gold/q02/build", content=b"", headers={"content-type": "text/plain"}).status_code == 403
+        assert c.post("/api/jobs/x/cancel").status_code == 403
+        cross = c.post("/api/gold/q02/build", json={}, headers={"origin": "https://evil.example"})
+        assert cross.status_code == 403 and "cross-origin" in cross.json()["detail"]
+        assert c.get("/api/jobs").json() == []  # nothing was queued
+        assert c.get("/api/health", headers={"host": "attacker.example:8080"}).status_code == 400
+        assert c.get("/api/health", headers={"host": "127.0.0.1:8080"}).status_code == 200
+        assert c.get("/api/health", headers={"host": "[::1]:8080"}).status_code == 200
+        same = c.post("/api/sparql", json={"query": "ASK { ?s ?p ?o }"},
+                      headers={"host": "127.0.0.1:8080", "origin": "http://127.0.0.1:8080"})
+        assert same.status_code == 200  # the app's own page
 
 
 def test_sparql_queries(client: TestClient) -> None:

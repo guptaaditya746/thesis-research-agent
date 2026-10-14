@@ -9,8 +9,10 @@ only job state and logs ($RUNS/.jobs/) and concept picks ($CONCEPTS, through age
 and the jobs it starts write what their commands write. One GET can cause a write elsewhere: a
 claim walk with `?judge=true` asks the judge, which appends its verdicts to $GOLD/judge-cache.jsonl.
 It has no authentication: it binds to 127.0.0.1 and is reached through an SSH tunnel
-(webapp/README.md). Request paths are checked against their roots (webapp/files.py); SPARQL is
-read-only (scoring/store.py).
+(webapp/README.md); webapp/guard.py answers only loopback Host names and takes a write only as a
+same-origin JSON request, so other web pages the user has open can neither start jobs nor read
+through DNS rebinding. Request paths are checked against their roots (webapp/files.py); SPARQL is
+read-only and never federated (scoring/store.py).
 """
 from __future__ import annotations
 
@@ -32,6 +34,7 @@ from agent.canonical import file_sha256
 from . import chat, commands, goldstate, judge
 from .corpus import Corpus
 from .files import ID, BadRequest, Conflict, NotFound, check_id, inside, read_json
+from .guard import Guard
 from .jobs import JobManager
 from .models import (AnswerKey, AppConfig, Claim, FactWalk, GoldEntry, Health, Job, KnowledgeGraph, Passage,
                      PickRequest, ProposeRequest, Question, QuestionDetail, QueryResult, Results, RunDetail,
@@ -112,6 +115,7 @@ def create_app(settings: Settings | None = None, *, chat_model: Any = None,
                   description="Runs, provenance, gold standard and scores of the research agent "
                               "(docs/e2e-build-plan.md, Backend API).")
     app.state.services = services
+    app.add_middleware(Guard, allowed_hosts=services.settings.hosts)  # webapp/guard.py: Host and same-origin writes
     for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400)):
         app.add_exception_handler(exc_type, _handler(status))
     app.include_router(api_router(services), prefix="/api")

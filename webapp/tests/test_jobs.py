@@ -332,7 +332,7 @@ def test_propose_and_gold_jobs(fresh: World, fake_python: Path, tmp_path: Path) 
         job = c.post("/api/questions/q02/concepts/propose", json={"temperature": 0.5, "seed": 3}).json()
         assert (job["kind"], job["qid"], job["args"]) == ("concepts", "q02", {"qid": "q02", "temperature": 0.5, "seed": 3})
         assert wait(c, job["id"])["state"] == "done"
-        gold = wait(c, c.post("/api/gold/q02/build").json()["id"])
+        gold = wait(c, c.post("/api/gold/q02/build", json={}).json()["id"])
         q02 = c.get("/api/questions").json()[1]
     assert gold["state"] == "done" and [s["state"] for s in gold["steps"]] == ["done"] * 4
     assert q02["gold"]["status"] == "draft"  # the job ends at the draft key, not at `building`
@@ -350,15 +350,15 @@ def test_a_running_gold_build_shows_and_can_be_cancelled(fresh: World, fake_pyth
     (fresh.root / "gold-data" / "q02" / "key.draft.json").unlink()
     (fresh.root / "gold-data" / "q02" / "doc.json").unlink()
     with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python)))) as c:
-        job = c.post("/api/gold/q02/build").json()
-        assert c.post("/api/gold/q02/build").status_code == 409  # one build per question at a time
+        job = c.post("/api/gold/q02/build", json={}).json()
+        assert c.post("/api/gold/q02/build", json={}).status_code == 409  # one build per question at a time
         end = time.monotonic() + 10
         while c.get(f"/api/jobs/{job['id']}").json()["state"] != "running" and time.monotonic() < end:
             time.sleep(0.05)
         q02 = c.get("/api/questions").json()[1]
         assert q02["gold"]["status"] == "building"
-        assert c.post(f"/api/jobs/{job['id']}/cancel").json()["id"] == job["id"]
+        assert c.post(f"/api/jobs/{job['id']}/cancel", json={}).json()["id"] == job["id"]
         job = wait(c, job["id"])
-        assert c.post("/api/jobs/nope/cancel").status_code == 404
+        assert c.post("/api/jobs/nope/cancel", json={}).status_code == 404
         assert c.get("/api/jobs/nope/log").status_code == 404
     assert (job["state"], job["error"]) == ("failed", "cancelled")

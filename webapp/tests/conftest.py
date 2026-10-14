@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -9,6 +10,9 @@ from fastapi.testclient import TestClient
 from webapp.app import create_app
 
 from .world import World, build_world
+
+# Starlette's TestClient sends Host: testserver; the app answers loopback names only (webapp/guard.py).
+os.environ.setdefault("WEBAPP_ALLOWED_HOSTS", "127.0.0.1,localhost,::1,testserver")
 
 
 @pytest.fixture(scope="session")
