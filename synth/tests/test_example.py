@@ -42,7 +42,8 @@ def test_cli_build_and_sample(tmp_path: Path, capsys: pytest.CaptureFixture[str]
     assert sorted(p.name for p in tmp_path.iterdir()) == ["c-complex", "c-explicit", "c-mixed"]
     assert cli.main(["sample", "--corpus", str(tmp_path / "c-mixed"), "--n", "2", "--seed", "1"]) == 0
     md = (tmp_path / "c-mixed" / "review" / "review-s1.md").read_text(encoding="utf-8")
-    rows = list(csv.DictReader((tmp_path / "c-mixed" / "review" / "review-s1.csv").open(encoding="utf-8")))
+    with (tmp_path / "c-mixed" / "review" / "review-s1.csv").open(encoding="utf-8", newline="") as fh:
+        rows = list(csv.DictReader(fh))
     papers = sorted({r["paper"] for r in rows})
     assert len(papers) == 2 and all(f"## {p}" in md for p in papers) and "[ ]" in md
     gt = json.loads((tmp_path / "c-mixed" / "ground_truth.json").read_text(encoding="utf-8"))
