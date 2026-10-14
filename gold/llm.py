@@ -125,7 +125,7 @@ class JsonlCache:
         with self._lock:
             self._data[key] = value
             os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-            line = json.dumps({"key": key, "value": value}, ensure_ascii=False, sort_keys=True) + "\n"
+            line =json.dumps({"key": key, "value": value}, ensure_ascii=False, sort_keys=True) + "\n"
             with open(self.path, "a", encoding="utf-8", newline="\n") as fh:
                 fh.write(("\n" if self._newline else "") + line)
             self._newline = False

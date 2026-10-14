@@ -39,6 +39,7 @@ SERVICES = {
     "thesis-redis": (16379, 36380, 56380, 46380),
     "tracing-clickhouse-http": (18123, 38123, 58123, 48123),
     "tracing-clickhouse-native": (19000, 39000, 59000, 49000),
+    "argilla": (6900, 26900, 46900, 36900),
 }
 
 DEFAULT_SERVICES = ("tracing", "postgres")
