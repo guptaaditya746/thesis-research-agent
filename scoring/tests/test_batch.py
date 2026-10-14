@@ -158,6 +158,22 @@ def test_manifest_runs_root_below_the_report_root(tmp_path: Path, corpus_env: tu
     assert "runs_root" in capsys.readouterr().out
 
 
+def test_two_batch_roots_with_one_run_id_are_not_mixed(tmp_path: Path, corpus_env: tuple[Path, Path]) -> None:
+    """$RUNS holding e2e-smoke/ and m4-72/ (both with q01-claim_on-r1-a1): without a manifest the first is
+    scored and the second listed as a duplicate, with the path, never scored in its place or beside it."""
+    runs = tmp_path / "RUNS"
+    smoke = research_run(runs / "e2e-smoke", *corpus_env, run_id="q01-claim_on-r1-a1").run
+    m4 = research_run(runs / "m4-72", *corpus_env, run_id="q01-claim_on-r1-a1").run
+    gold = tmp_path / "gold"
+    write_key(gold / "q01" / "key.json", graph_key(smoke))
+    said: list[str] = []
+    summary = score_batch(runs, gold, judge=judge()[0], log=said.append)
+    states = [(i["run_dir"], i["state"], i["scored"]) for i in summary["items"]]
+    assert states == [(str(smoke.root.resolve()), "finished", True), (str(m4.root.resolve()), "duplicate", False)]
+    assert summary["counts"]["scored"] == 1 and len(lines(runs)) == 1
+    assert any(str(m4.root) in s and "same run id" in s for s in said)
+
+
 def test_a_malformed_run_does_not_stop_the_batch(batch: dict[str, Any]) -> None:
     config = json.loads(batch["on1"].config.read_text(encoding="utf-8"))
     del config["hashes"]
