@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
+import socket
 import threading
 import time
 from pathlib import Path
@@ -25,10 +27,11 @@ from rdflib.namespace import PROV  # noqa: E402
 
 from agent import prompts, prov, queries, sandbox, schema  # noqa: E402
 from agent.batch import Batch, Manifest, run_state  # noqa: E402
+from agent.broker_client import InProcessBroker  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
-from agent.loop import POSIX_BROKER, LoopSettings, Outcome, SandboxEnvironment, kept_lines  # noqa: E402
+from agent.loop import POSIX_BROKER, LoopSettings, Outcome, SandboxEnvironment, StepCounter, kept_lines  # noqa: E402
 from agent.rundir import SUBAGENTS, RunDir  # noqa: E402
-from agent.spawn import SpawnJob, SpawnSettings  # noqa: E402
+from agent.spawn import SpawnJob, SpawnService, SpawnSettings  # noqa: E402
 from agent.verify import verify_run  # noqa: E402
 
 from .test_batch import SAMPLE  # noqa: E402
@@ -296,6 +299,34 @@ def test_a_subagent_that_fails_after_a_claim(tmp_path: Path, corpus: tuple[Path,
     assert back["status"] == "error" and back["generated"]["claims"] == ["claim-000001"]
     assert json.loads(run.answer.read_bytes())["rows"][0]["facts"][0]["claims"] == ["claim-000001"]
     assert verify_run(run, *corpus).ok and run_state(run, *corpus) == ("finished", "")
+
+
+@posix_only
+def test_a_request_that_fails_unexpectedly_still_gets_a_reply(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A file name with a NUL byte makes the corpus lookup raise ValueError: the request is refused
+    (record and reply), not dropped with the requester blocked until its time limit."""
+    run = RunDir.create(tmp_path / "runs", "x", CONCEPT, corpus_manifest=corpus[1], condition="claim_on",
+                        prompt_version="v2", prompt_sha256="a" * 64, temperature=0.7, seed=1, git_commit="c" * 40,
+                        agent_root_manifest_sha256="b" * 64)
+    broker = InProcessBroker(run.root, *corpus)
+    service = SpawnService(run, broker, SPAWN, concept=CONCEPT, corpus=corpus[0], manifest=corpus[1],
+                           condition="claim_on", sandbox_mode="unsandboxed", base_url="http://mock.invalid/v1",
+                           temperature=0.7, seed=1, loop=LoopSettings(), next_step=StepCounter())
+    channel = service.channel(1, None)
+    try:
+        read_end, write_end = os.pipe()
+        body = {"task": "x", "files": [f"{corpus[0]}\x00/p1.md"], "steps": None}
+        socket.send_fds(channel.sandbox_end, [json.dumps(body).encode("utf-8")], [write_end])
+        os.close(write_end)
+        with os.fdopen(read_end, "rb") as pipe:  # EOF once the harness wrote and closed its copy
+            reply = json.loads(pipe.read())
+    finally:
+        channel.sandbox_end.close()
+        channel.finish()
+        service.close()
+        broker.close()
+    assert reply["ok"] is False and reply["reason"].startswith("bad_request: ValueError"), reply
+    assert [(s["status"], s["generated"]["reason"]) for s in of(run, "spawn")] == [("refused", reply["reason"])]
 
 
 @posix_only

@@ -130,18 +130,16 @@ class Refused(Exception):
         self.reason = reason
 
 
-def send_reply(fd: int, reply: dict[str, Any]) -> bytes:
-    """Write `reply` (one canonical JSON line) to the requester's pipe and close it; returns the bytes.
+def send_reply(fd: int, reply: dict[str, Any]) -> None:
+    """Write `reply` (one canonical JSON line) to the requester's pipe and close it.
 
     A requester that is gone (its command ended) is not an error.
     """
-    data = canonical_bytes(reply) + b"\n"
     try:
         with os.fdopen(fd, "wb") as pipe:
-            pipe.write(data)
+            pipe.write(canonical_bytes(reply) + b"\n")
     except OSError:
         pass
-    return data
 
 
 @dataclass(eq=False)  # compared and hashed by identity: jobs live in a set
@@ -165,10 +163,11 @@ class SpawnJob:
     def step_id(self) -> int:
         return self.channel.step_id
 
-    def reply(self, reply: dict[str, Any]) -> bytes:
+    def reply(self, reply: dict[str, Any]) -> None:
         """Send the reply once: a second call must not write to a descriptor number reused since."""
         fd, self.reply_fd = self.reply_fd, None
-        return send_reply(fd, reply) if fd is not None else canonical_bytes(reply) + b"\n"
+        if fd is not None:
+            send_reply(fd, reply)
 
 
 class CommandChannel:
@@ -375,6 +374,11 @@ class SpawnService:
             self._queue.put(job)
         except Refused as exc:
             self._refuse(channel, reply_fd, shown, exc.reason)
+        except Exception as exc:  # noqa: BLE001 - every request gets a reply (its pipe closed) and a record
+            # e.g. a file name with a NUL byte (Path.resolve raises ValueError): without a reply the
+            # requester would block until its command's time limit, and nothing would say why.
+            logger.exception("spawn request at step %s failed", channel.step_id)
+            self._refuse(channel, reply_fd, shown, f"bad_request: {type(exc).__name__}: {exc}"[:300])
 
     @staticmethod
     def _body(msg: bytes) -> dict[str, Any]:

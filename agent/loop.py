@@ -67,7 +67,7 @@ import threading
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
 # mini-swe-agent prints a banner and reads a user .env on import; keep runs independent of both.
 os.environ.setdefault("MSWEA_SILENT_STARTUP", "1")
@@ -87,6 +87,9 @@ from .answer import accepted_claim_ids, build_answer, empty_answer, reply_schema
 from .parse import Parsed, files_read, normalise_command, parse_reply  # noqa: E402
 from .prompts import Prompt, task_vars  # noqa: E402
 from .rundir import BUDGET, BUDGET_M1, COMMAND_LIMITS, DRAFT_COPY, ORCHESTRATOR, RunDir, utc_now  # noqa: E402
+
+if TYPE_CHECKING:  # agent/spawn.py imports this module
+    from .spawn import SpawnJob, SpawnService, SpawnSettings
 
 HARNESS = f"mini-swe-agent {MSWEA_VERSION}"
 AGENT_DIR = Path(__file__).resolve().parent
@@ -369,8 +372,8 @@ class SandboxEnvironment:
     def __init__(self, run: RunDir, *, corpus: Path, mode: str, claim: bool, agent_root: Path | None = None,
                  limits: dict[str, int] | None = None, extra_path: tuple[str, ...] = (),
                  python: str = sys.executable, origin: str = "research", agent_id: str = "main",
-                 channel_meta: dict[str, Any] | None = None, scratch: Path | None = None, spawn: Any = None,
-                 cancel: threading.Event | None = None) -> None:
+                 channel_meta: dict[str, Any] | None = None, scratch: Path | None = None,
+                 spawn: SpawnService | None = None, cancel: threading.Event | None = None) -> None:
         if mode not in sandbox.MODES:
             raise ValueError(f"sandbox mode must be one of {sandbox.MODES}")
         self.run = run
@@ -1009,8 +1012,9 @@ def research_run(*, runs_root: Path, run_id: str, concept: dict[str, Any], corpu
                  sandbox_mode: str, model: OrchestratorModel | None = None, agent_root: Path | None = None,
                  base_url: str = DEFAULT_BASE_URL, budget: dict[str, Any] | None = None,
                  prompt_version: str = "v2", broker: str = "auto", extra_path: tuple[str, ...] = (),
-                 settings: LoopSettings | None = None, spawn: Any = None,
-                 sub_model: Callable[..., OrchestratorModel] | None = None) -> tuple[RunDir, Outcome, dict[str, Any]]:
+                 settings: LoopSettings | None = None, spawn: SpawnSettings | None = None,
+                 sub_model: Callable[[SpawnJob, dict[str, Any], int], OrchestratorModel] | None = None,
+                 ) -> tuple[RunDir, Outcome, dict[str, Any]]:
     """Create runs/<run_id>/, start the broker, run the agent, write pairs.jsonl, close the broker.
 
     `broker` is "process" (BrokerProcess, POSIX), "inprocess" (InProcessBroker) or "auto" (the
