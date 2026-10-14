@@ -131,8 +131,9 @@ class AgenticExtractor:
         items: list[Item] = []
         rejected: list[Rejected] = convert.rejected_claims(record, task.evidence_type)
         for row in (record.get("answer") or {}).get("rows", []):
-            made = convert.row_item(row, task, schema, links, context, claims, index)
+            made, unsupported = convert.row_item(row, task, schema, links, context, claims, index)
             (items if isinstance(made, Item) else rejected).append(made)
+            rejected += unsupported
         items = convert.merge(items)
         scope = [(0, len(text))] if task.scope.kind == "document" or not task.scope.ranges else list(task.scope.ranges)
         outcome = record.get("outcome") or {}

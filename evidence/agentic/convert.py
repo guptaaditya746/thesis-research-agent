@@ -10,7 +10,10 @@
 - **Rejected**: every claim the broker refused (its anchor reason; broker reasons that are not
   anchor reasons map to not_found or schema), and every row that fails a check: no accepted claim
   (empty_quote), fields against the schema (schema), every span outside the scope (out_of_scope),
-  a link to an item not in the context (dangling_link).
+  a link to an item not in the context (dangling_link). A cited claim must support its row
+  (claim_problem: s is the row id, p one of its fields, a value quote states the cell's number);
+  one that does not is rejected (not_found) and not used as a span, and a row left without a
+  supporting claim, or a numeric row without a supporting value claim, is rejected (not_found).
 - **Coverage** is what the agent was shown: a line of the paper counts as read when it occurs in the
   output of one of its commands (the first 8 KB the agent saw). Lines of fewer than MIN_LINE
   characters (blank lines, table rules) take the state of the lines around them. Read runs are
@@ -78,8 +81,10 @@ def _resolve_link(kind: str, value: Any, context: list[Item]) -> str | None:
 
 
 def row_item(row: dict[str, Any], task: ExtractionTask, schema: dict[str, Any], link_names: dict[str, str],
-             context: list[Item], claims: dict[str, dict[str, Any]], index: Index) -> Item | Rejected:
-    """One answer row as an Item, or as a Rejected with the first check it fails.
+             context: list[Item], claims: dict[str, dict[str, Any]], index: Index
+             ) -> tuple[Item | Rejected, list[Rejected]]:
+    """One answer row as an Item, or as a Rejected with the first check it fails; plus a Rejected for
+    each cited claim that does not support the row (claim_problem), whose quote is not used as a span.
 
     Cells of the schema's properties are the fields (a null cell stays null: the schema decides
     whether that is allowed); cells named in `link_names` (link -> evidence type) are links.
@@ -102,27 +107,76 @@ def row_item(row: dict[str, Any], task: ExtractionTask, schema: dict[str, Any], 
             continue
         target = _resolve_link(target_type, value, context)
         if target is None:
-            return rejected("dangling_link", f"{name}={value!r} names no {target_type} item of the context")
+            return rejected("dangling_link", f"{name}={value!r} names no {target_type} item of the context"), []
         links[name] = target
     errors = sorted(e.message for e in Draft202012Validator(schema).iter_errors(fields)) if schema else []
     if errors:
-        return rejected("schema", "; ".join(errors)[:500])
+        return rejected("schema", "; ".join(errors)[:500]), []
     if not cited:
-        return rejected("empty_quote", "no accepted claim cited")
-    spans, outside = {}, 0
+        return rejected("empty_quote", "no accepted claim cited"), []
+    usable, unsupported = [], []
     for c in cited:
+        why = claim_problem(c, row.get("id"), cells, link_names)
+        if why:
+            unsupported.append(Rejected(evidence_type=kind, fields={str(c.get("p")): c.get("o")},
+                                        quotes=(c["quote"],), reason="not_found",
+                                        detail=f"row {row.get('id')}: {c['claim_id']} {why}"))
+        else:
+            usable.append(c)
+    numeric = _number(fields.get("value")) is not None
+    if not usable or (numeric and not any(c.get("p") == "value" for c in usable)):
+        what = "the value" if usable else "this row"
+        return rejected("not_found", f"no cited claim states {what}"), unsupported
+    spans, outside = {}, 0
+    for c in usable:
         try:
             sel = find(index, c["quote"], file=task.document.file)
         except AnchorError as exc:  # the broker anchored it in the same text, so this means a different copy
-            return rejected(exc.reason if exc.reason in ANCHOR_REASONS else "not_found", f"{c['claim_id']}: {exc}")  # type: ignore[arg-type]
+            reason = exc.reason if exc.reason in ANCHOR_REASONS else "not_found"
+            return rejected(reason, f"{c['claim_id']}: {exc}"), unsupported  # type: ignore[arg-type]
         if not task.scope.contains(sel.start, sel.end):
             outside += 1
             continue
         role = span_role(kind, c.get("p"))
         spans[(role, sel.start, sel.end)] = Span.of(role, sel)
     if not spans:
-        return rejected("out_of_scope", f"all {outside} quoted passages lie outside the scope")
-    return Item.build(kind, fields, [spans[k] for k in sorted(spans)], links=links)
+        return rejected("out_of_scope", f"all {outside} quoted passages lie outside the scope"), unsupported
+    return Item.build(kind, fields, [spans[k] for k in sorted(spans)], links=links), unsupported
+
+
+NUMBER = re.compile(r"\d+(?:[.,]\d+)?")
+VALUE_TOLERANCE = 0.005
+
+
+def _number(value: Any) -> float | None:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def quote_states(quote: str, value: float) -> bool:
+    """A number in the quote that normalises to `value`: as written, or as a percentage (62% or 62.0 -> 0.62)."""
+    for raw in NUMBER.findall(quote):
+        n = float(raw.replace(",", "."))
+        if min(abs(n - value), abs(n / 100 - value)) <= VALUE_TOLERANCE + 1e-12:
+            return True
+    return False
+
+
+def claim_problem(claim: dict[str, Any], row_id: Any, cells: dict[str, Any], link_names: dict[str, str]) -> str:
+    """Why a cited claim does not support its row ('' when it does).
+
+    The concept asks for s = the row id and p = the field name; a claim for another row or for no
+    field of this row is not this row's evidence, and a value claim's quote must state the cell's
+    number (within 0.005, as written or as a percentage), so a row cannot borrow another row's span.
+    """
+    if claim.get("s") != row_id:
+        return f"is about {claim.get('s')!r}, not this row"
+    field = claim.get("p")
+    if field not in cells and field not in link_names:
+        return f"names the field {field!r}, which the row does not have"
+    value = _number(cells.get("value"))
+    if field == "value" and value is not None and not quote_states(str(claim.get("quote", "")), value):
+        return f"quotes {claim.get('quote')!r}, which does not state the value {value}"
+    return ""
 
 
 def merge(items: list[Item]) -> list[Item]:
