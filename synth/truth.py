@@ -20,6 +20,8 @@ TRUE_CLAIM = {"supports": "improves", "contradicts": "worsens", "neutral": "no_e
 # The claim a contradictory paper states instead: the usual spin (an improvement where there is none),
 # or "no effect" where the data do show one.
 FALSE_CLAIM = {"supports": "no_effect", "contradicts": "improves", "neutral": "improves"}
+# A decoy lies more than this from every true value: the evaluation tolerance (0.005) plus a margin.
+DECOY_GAP = 0.0075
 
 
 @dataclass(frozen=True)
@@ -197,19 +199,24 @@ def make_study(rng: random.Random, index: int, direction: str) -> Study:
     got, delta = rules.effect(m_rag.value, m_base.value, q.higher_is_better)
     assert got == direction, (sid, got, direction)
     false_claim = FALSE_CLAIM[direction]
-    decoy = _decoy(rng, q, m_base.value, false_claim, taken) if index % 2 else None
+    decoy = _decoy(rng, q, m_base.value, false_claim, [m.value for m in measurements]) if index % 2 else None
     return Study(sid, index, conditions, metrics, datasets, tuple(measurements),
                  Effect(got, delta, q.id, m_rag.id, m_base.id), TRUE_CLAIM[direction], false_claim, decoy)
 
 
-def _decoy(rng: random.Random, metric: Metric, base: float, claim: str, taken: set[float]) -> float:
-    """A rag value that fits the false claim, distinct from every true value of the study."""
+def _decoy(rng: random.Random, metric: Metric, base: float, claim: str, values: list[float]) -> float | None:
+    """A rag value that fits the false claim under rules.effect and lies more than DECOY_GAP from every
+    true value of the study, so an extractor that takes it can never score it as a correct measurement.
+    "No effect" leaves a narrow band: 0.008 or 0.009 from the baseline (rules.MIN_EFFECT is 0.01); when
+    other values block it, the study gets no decoy (None) rather than a misleading one."""
     direction = "supports" if claim == "improves" else "neutral" if claim == "no_effect" else "contradicts"
-    while True:
-        d = _improvement(rng, direction)
+    for _ in range(200):
+        d = rng.choice((1, -1)) * rng.choice((8, 9)) / 1000 if direction == "neutral" else _improvement(rng, direction)
         v = round(base + d if metric.higher_is_better else base - d, 3)
-        if round(v * 1000) % 10 and 0.05 <= v <= 0.95 and v not in taken:
+        if (round(v * 1000) % 10 and 0.05 <= v <= 0.95 and all(abs(v - x) > DECOY_GAP for x in values)
+                and rules.effect(v, base, metric.higher_is_better)[0] == direction):
             return v
+    return None
 
 
 def generate(seed: int, n: int, mix: dict[str, float] | None = None) -> list[Study]:

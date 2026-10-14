@@ -138,28 +138,16 @@
         {
           "id": "S003.c2",
           "role": "rag",
-          "label": "model that consults the document index before answering",
-          "aliases": []
-        },
-        {
-          "id": "S003.c3",
-          "role": "other",
-          "label": "model prompted to reason step by step",
-          "aliases": []
-        },
-        {
-          "id": "S003.c4",
-          "role": "other",
-          "label": "model that samples several answers and votes",
+          "label": "configuration that looks up supporting documents",
           "aliases": []
         }
       ],
       "metrics": [
         {
           "id": "S003.k1",
-          "canonical": "hallucination_rate",
-          "name": "share of answers that contain at least one unsupported statement",
-          "higher_is_better": false
+          "canonical": "factual_accuracy",
+          "name": "proportion of questions answered with correct facts",
+          "higher_is_better": true
         }
       ],
       "measurements": [
@@ -167,29 +155,15 @@
           "id": "S003.m1",
           "condition": "S003.c1",
           "metric": "S003.k1",
-          "value": 0.445,
-          "dataset": "NewsTruthQA"
+          "value": 0.748,
+          "dataset": "LawFactQA"
         },
         {
           "id": "S003.m2",
           "condition": "S003.c2",
           "metric": "S003.k1",
-          "value": 0.447,
-          "dataset": "NewsTruthQA"
-        },
-        {
-          "id": "S003.m3",
-          "condition": "S003.c3",
-          "metric": "S003.k1",
-          "value": 0.346,
-          "dataset": "NewsTruthQA"
-        },
-        {
-          "id": "S003.m4",
-          "condition": "S003.c4",
-          "metric": "S003.k1",
-          "value": 0.281,
-          "dataset": "NewsTruthQA"
+          "value": 0.754,
+          "dataset": "LawFactQA"
         }
       ],
       "author_claim": {
@@ -198,7 +172,7 @@
       },
       "effect": {
         "direction": "neutral",
-        "delta": -0.002,
+        "delta": 0.006,
         "metric": "S003.k1",
         "rag": "S003.m2",
         "baseline": "S003.m1"
@@ -224,7 +198,13 @@
         {
           "id": "S004.c3",
           "role": "other",
-          "label": "model that samples several answers and votes",
+          "label": "variant fed with randomly drawn passages",
+          "aliases": []
+        },
+        {
+          "id": "S004.c4",
+          "role": "other",
+          "label": "model prompted to reason step by step",
           "aliases": []
         }
       ],
@@ -256,6 +236,13 @@
           "condition": "S004.c3",
           "metric": "S004.k1",
           "value": 0.298,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S004.m4",
+          "condition": "S004.c4",
+          "metric": "S004.k1",
+          "value": 0.108,
           "dataset": "LawFactQA"
         }
       ],
@@ -638,169 +625,105 @@
       "fact": "S003.c1",
       "role": "condition_label",
       "paper": "S003",
-      "start": 181,
-      "end": 216,
+      "start": 179,
+      "end": 214,
       "exact": "plain generator with no lookup step"
     },
     {
       "fact": "S003.c2",
       "role": "condition_label",
       "paper": "S003",
-      "start": 226,
-      "end": 281,
-      "exact": "model that consults the document index before answering"
+      "start": 224,
+      "end": 272,
+      "exact": "configuration that looks up supporting documents"
     },
     {
       "fact": "S003.a1",
       "role": "claim",
       "paper": "S003",
-      "start": 298,
-      "end": 369,
-      "exact": "Retrieval augmentation does not measurably reduce hallucinated content."
+      "start": 287,
+      "end": 361,
+      "exact": "Retrieval augmentation does not make the answers measurably more accurate."
     },
     {
       "fact": "S003.c1",
       "role": "condition_label",
       "paper": "S003",
-      "start": 907,
-      "end": 942,
+      "start": 897,
+      "end": 932,
       "exact": "plain generator with no lookup step"
     },
     {
       "fact": "S003.c2",
       "role": "condition_label",
       "paper": "S003",
-      "start": 1013,
-      "end": 1068,
-      "exact": "model that consults the document index before answering"
-    },
-    {
-      "fact": "S003.c3",
-      "role": "condition_label",
-      "paper": "S003",
-      "start": 1175,
-      "end": 1212,
-      "exact": "model prompted to reason step by step"
-    },
-    {
-      "fact": "S003.c4",
-      "role": "condition_label",
-      "paper": "S003",
-      "start": 1303,
-      "end": 1347,
-      "exact": "model that samples several answers and votes"
+      "start": 1003,
+      "end": 1051,
+      "exact": "configuration that looks up supporting documents"
     },
     {
       "fact": "S003.k1",
       "role": "metric_label",
       "paper": "S003",
-      "start": 1439,
-      "end": 1503,
-      "exact": "share of answers that contain at least one unsupported statement"
+      "start": 1166,
+      "end": 1217,
+      "exact": "proportion of questions answered with correct facts"
     },
     {
       "fact": "S003.c1",
       "role": "condition_label",
       "paper": "S003",
-      "start": 1776,
-      "end": 1811,
+      "start": 1488,
+      "end": 1523,
       "exact": "plain generator with no lookup step"
     },
     {
       "fact": "S003.m1",
       "role": "value",
       "paper": "S003",
-      "start": 1820,
-      "end": 1836,
-      "exact": "445 out of 1,000"
+      "start": 1532,
+      "end": 1548,
+      "exact": "748 out of 1,000"
     },
     {
       "fact": "S003.k1",
       "role": "metric_label",
       "paper": "S003",
-      "start": 1863,
-      "end": 1927,
-      "exact": "share of answers that contain at least one unsupported statement"
+      "start": 1575,
+      "end": 1626,
+      "exact": "proportion of questions answered with correct facts"
     },
     {
       "fact": "S003.k1",
       "role": "metric_label",
       "paper": "S003",
-      "start": 1949,
-      "end": 2013,
-      "exact": "share of answers that contain at least one unsupported statement"
+      "start": 1646,
+      "end": 1697,
+      "exact": "proportion of questions answered with correct facts"
     },
     {
       "fact": "S003.c2",
       "role": "condition_label",
       "paper": "S003",
-      "start": 2021,
-      "end": 2076,
-      "exact": "model that consults the document index before answering"
+      "start": 1705,
+      "end": 1753,
+      "exact": "configuration that looks up supporting documents"
     },
     {
       "fact": "S003.m2",
       "role": "value",
       "paper": "S003",
-      "start": 2081,
-      "end": 2086,
-      "exact": "44.7%"
-    },
-    {
-      "fact": "S003.c3",
-      "role": "condition_label",
-      "paper": "S003",
-      "start": 2097,
-      "end": 2134,
-      "exact": "model prompted to reason step by step"
-    },
-    {
-      "fact": "S003.k1",
-      "role": "metric_label",
-      "paper": "S003",
-      "start": 2140,
-      "end": 2204,
-      "exact": "share of answers that contain at least one unsupported statement"
-    },
-    {
-      "fact": "S003.m3",
-      "role": "value",
-      "paper": "S003",
-      "start": 2228,
-      "end": 2233,
-      "exact": "0.346"
-    },
-    {
-      "fact": "S003.c4",
-      "role": "condition_label",
-      "paper": "S003",
-      "start": 2255,
-      "end": 2299,
-      "exact": "model that samples several answers and votes"
-    },
-    {
-      "fact": "S003.m4",
-      "role": "value",
-      "paper": "S003",
-      "start": 2308,
-      "end": 2324,
-      "exact": "281 out of 1,000"
-    },
-    {
-      "fact": "S003.k1",
-      "role": "metric_label",
-      "paper": "S003",
-      "start": 2351,
-      "end": 2415,
-      "exact": "share of answers that contain at least one unsupported statement"
+      "start": 1758,
+      "end": 1763,
+      "exact": "75.4%"
     },
     {
       "fact": "S003.a1",
       "role": "claim",
       "paper": "S003",
-      "start": 2712,
-      "end": 2803,
-      "exact": "Adding retrieved documents leaves the amount of hallucinated content essentially unchanged."
+      "start": 2075,
+      "end": 2162,
+      "exact": "Adding retrieved documents leaves the correctness of the answers essentially unchanged."
     },
     {
       "fact": "S004.c1",
@@ -847,95 +770,127 @@
       "role": "condition_label",
       "paper": "S004",
       "start": 1177,
-      "end": 1221,
-      "exact": "model that samples several answers and votes"
+      "end": 1217,
+      "exact": "variant fed with randomly drawn passages"
+    },
+    {
+      "fact": "S004.c4",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1321,
+      "end": 1358,
+      "exact": "model prompted to reason step by step"
     },
     {
       "fact": "S004.k1",
       "role": "metric_label",
       "paper": "S004",
-      "start": 1313,
-      "end": 1376,
+      "start": 1459,
+      "end": 1522,
       "exact": "proportion of answers with a statement not backed by any source"
     },
     {
       "fact": "S004.k1",
       "role": "metric_label",
       "paper": "S004",
-      "start": 1664,
-      "end": 1727,
+      "start": 1810,
+      "end": 1873,
       "exact": "proportion of answers with a statement not backed by any source"
     },
     {
       "fact": "S004.c1",
       "role": "condition_label",
       "paper": "S004",
-      "start": 1735,
-      "end": 1765,
+      "start": 1881,
+      "end": 1911,
       "exact": "language model used on its own"
     },
     {
       "fact": "S004.m1",
       "role": "value",
       "paper": "S004",
-      "start": 1770,
-      "end": 1775,
+      "start": 1916,
+      "end": 1921,
       "exact": "0.365"
     },
     {
       "fact": "S004.c2",
       "role": "condition_label",
       "paper": "S004",
-      "start": 1795,
-      "end": 1838,
+      "start": 1941,
+      "end": 1984,
       "exact": "variant that reads retrieved evidence first"
     },
     {
       "fact": "S004.m2",
       "role": "value",
       "paper": "S004",
-      "start": 1847,
-      "end": 1863,
+      "start": 1993,
+      "end": 2009,
       "exact": "236 out of 1,000"
     },
     {
       "fact": "S004.k1",
       "role": "metric_label",
       "paper": "S004",
-      "start": 1890,
-      "end": 1953,
+      "start": 2036,
+      "end": 2099,
       "exact": "proportion of answers with a statement not backed by any source"
     },
     {
       "fact": "S004.k1",
       "role": "metric_label",
       "paper": "S004",
-      "start": 1973,
-      "end": 2036,
+      "start": 2119,
+      "end": 2182,
       "exact": "proportion of answers with a statement not backed by any source"
     },
     {
       "fact": "S004.c3",
       "role": "condition_label",
       "paper": "S004",
-      "start": 2044,
-      "end": 2088,
-      "exact": "model that samples several answers and votes"
+      "start": 2190,
+      "end": 2230,
+      "exact": "variant fed with randomly drawn passages"
     },
     {
       "fact": "S004.m3",
       "role": "value",
       "paper": "S004",
-      "start": 2093,
-      "end": 2098,
+      "start": 2235,
+      "end": 2240,
       "exact": "29.8%"
+    },
+    {
+      "fact": "S004.c4",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 2251,
+      "end": 2288,
+      "exact": "model prompted to reason step by step"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 2294,
+      "end": 2357,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S004.m4",
+      "role": "value",
+      "paper": "S004",
+      "start": 2379,
+      "end": 2384,
+      "exact": "0.108"
     },
     {
       "fact": "S004.a1",
       "role": "claim",
       "paper": "S004",
-      "start": 2413,
-      "end": 2496,
+      "start": 2704,
+      "end": 2787,
       "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
     },
     {

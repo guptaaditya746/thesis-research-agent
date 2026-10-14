@@ -9,17 +9,17 @@
     {
       "id": "S002",
       "file": "papers/S002.md",
-      "sha256": "ca077e5a732c520d92974cecaac26b1c81c98877aae4e890d183797c00c1c61e"
+      "sha256": "ecba9cd3e770753dd858430f23e4d6325b29932fabb43ebc529f896c0dc0dc29"
     },
     {
       "id": "S003",
       "file": "papers/S003.md",
-      "sha256": "94197b7e4c5a3b2ed1fe6e6f32d3d8c063e54c53ea4d604375374deaa4f0a6d4"
+      "sha256": "5faf71ef5a2c204899b24fa2b5222dde0ea079d2b2d7631156dfe9aa346016c5"
     },
     {
       "id": "S004",
       "file": "papers/S004.md",
-      "sha256": "527fa6bd58a39fc670ae5155570fe7ddec7a93ae8ee919f88dc59b12545b718d"
+      "sha256": "ef92e1d18ae19d0909b53a7f78e64125b7a7eadb4a8db10f725a7e2b3bb87d7e"
     },
     {
       "id": "S005",
@@ -29,7 +29,7 @@
     {
       "id": "S006",
       "file": "papers/S006.md",
-      "sha256": "ec2d91fb626e65b8c689f6d3f848be3f0ed625b5d049c217271a68babc83dd27"
+      "sha256": "d791955e48b529dbff6ec7d7931d59b0096a34fd713edca8692a6b53ef5a8310"
     }
   ]
 }

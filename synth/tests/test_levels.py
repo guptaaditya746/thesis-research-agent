@@ -87,7 +87,7 @@ def test_contradictory_claim_disagrees_with_the_data() -> None:
         for d in r.decoys:
             decoys += 1
             assert r.text[d.start:d.end] == d.exact and not levelcheck.in_table(r.text, d.start)
-            assert abs(d.stated_value - s.value_of(d.measurement)) >= 0.005
+            assert all(abs(d.stated_value - m.value) > truth.DECOY_GAP for m in s.measurements)
     assert decoys > 0
 
 

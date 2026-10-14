@@ -11,6 +11,7 @@ import re
 from evidence import rules
 from synth.levels import Plan
 from synth.text import Decoy, Placement
+from synth.truth import DECOY_GAP
 
 DISTANCE = 300   # characters between the last code definition and the table (distributed)
 
@@ -113,8 +114,9 @@ def _contradictory(text: str, plan: Plan, ps: list[Placement], decoys: list[Deco
         bad.append(f"claim {plan.claim!r} agrees with the effect {plan.study.effect.direction!r}")
     bad += [f"{p.fact}: value outside the table" for p in ps if p.role == "value" and not in_table(text, p.start)]
     for d in decoys:
-        if abs(d.stated_value - plan.study.value_of(d.measurement)) < 0.005:
-            bad.append(f"decoy for {d.measurement} equals the true value")
+        near = [m.id for m in plan.study.measurements if abs(d.stated_value - m.value) <= DECOY_GAP]
+        if near:
+            bad.append(f"decoy {d.exact!r} within {DECOY_GAP} of the true values of {near}")
         if in_table(text, d.start):
             bad.append("decoy inside the table")
     return bad

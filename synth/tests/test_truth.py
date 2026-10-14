@@ -67,3 +67,14 @@ def test_every_answer_label_can_be_made(mix: dict[str, float], label: str) -> No
     counts = [len(answer[k]) for k in ("supporting", "contradicting", "neutral")]
     assert answer["label"] == rules.label(*counts) == label
     assert sorted(answer["supporting"] + answer["contradicting"] + answer["neutral"]) == [s.study_id for s in studies]
+
+
+@pytest.mark.parametrize("seed", range(1, 21))
+def test_decoy_is_far_from_every_true_value_and_fits_the_false_claim(seed: int) -> None:
+    """Taking a decoy for a measurement must never score as correct (evaluation tolerance 0.005)."""
+    for s in truth.generate(seed, 20):
+        if s.decoy is None:
+            continue
+        assert all(abs(s.decoy - m.value) > truth.DECOY_GAP for m in s.measurements), (s.study_id, s.decoy)
+        base = s.value_of(s.effect.baseline)
+        assert rules.claim_agrees(s.false_claim, rules.effect(s.decoy, base, s.primary.higher_is_better)[0])

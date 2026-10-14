@@ -2,28 +2,28 @@
   {
     "paper": "S002",
     "measurement": "S002.m2",
-    "stated_value": 0.441,
+    "stated_value": 0.454,
     "true_value": 0.567,
     "start": 375,
     "end": 380,
-    "exact": "44.1%"
+    "exact": "45.4%"
   },
   {
     "paper": "S004",
     "measurement": "S004.m2",
-    "stated_value": 0.367,
+    "stated_value": 0.374,
     "true_value": 0.236,
     "start": 392,
     "end": 397,
-    "exact": "36.7%"
+    "exact": "37.4%"
   },
   {
     "paper": "S006",
     "measurement": "S006.m2",
-    "stated_value": 0.364,
+    "stated_value": 0.369,
     "true_value": 0.305,
     "start": 391,
     "end": 396,
-    "exact": "36.4%"
+    "exact": "36.9%"
   }
 ]

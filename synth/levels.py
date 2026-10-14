@@ -35,7 +35,8 @@ DEFINITIONS = {
                "must pick the rag/baseline pair of the question metric on the main dataset.",
     "contradictory": "The values are in a table with full labels, but the author claim (abstract and conclusion) "
                      "disagrees with them (it claims an improvement the table does not show, or no effect where "
-                     "it does); in every second study the abstract also states a wrong rag value (a decoy). The "
+                     "it does); in odd-index studies the abstract also states a wrong rag value (a decoy, more than "
+                     "0.0075 from every true value; left out in the rare study where none fits). The "
                      "table is the truth: the effect is computed from it and the claim is recorded as stated. "
                      "Same facts as explicit.",
 }
