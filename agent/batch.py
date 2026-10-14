@@ -51,6 +51,8 @@ from .rundir import RunDir, attach_state, utc_now
 
 CUT_REASONS = ("job_time_limit", "interrupted")
 MAX_ATTEMPTS = 3
+# SIGTERM to SIGKILL. A run with spawn on (row 2.12) waits for its cancelled subagents at most
+# spawn.STOP_WAIT_S (15 s) in all before it closes its broker, so its clean stop fits too.
 GRACE_S = 30
 
 

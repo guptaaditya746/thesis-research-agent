@@ -354,6 +354,69 @@ def test_a_request_that_fails_unexpectedly_still_gets_a_reply(tmp_path: Path, co
 
 
 @posix_only
+def test_sigterm_stops_the_subagents_inside_the_batch_grace(tmp_path: Path, corpus: tuple[Path, Path],
+                                                             monkeypatch: pytest.MonkeyPatch) -> None:
+    """SIGTERM during a spawn command (row 2.9): the subagent in a command is cancelled and returns;
+    the one in a model call (which cannot be interrupted) is left at the shared stop deadline, with
+    no return record, which verify reports; the queued one never starts. The run stops in time."""
+    import signal
+
+    import agent.spawn
+    from agent import stopping
+    monkeypatch.setattr(stopping, "_requested", False)
+    monkeypatch.setattr(agent.spawn, "STOP_WAIT_S", 2.0)
+    in_call, release, sent = threading.Event(), threading.Event(), []
+
+    def blocked(messages: list[dict[str, Any]]) -> str:  # an HTTP call still in flight when the run stops
+        in_call.set()
+        release.wait(60)
+        return summary("late")
+
+    def sigterm() -> None:
+        if in_call.wait(30):
+            time.sleep(1.0)  # the other subagent is in its command by now
+            sent.append(time.monotonic())
+            os.kill(os.getpid(), signal.SIGTERM)
+
+    subs = SubModels({"cmd": [bash("sleep 60; echo late"), summary("never")], "call": [blocked],
+                      "queued": [summary("never")]})
+    command = ("spawn --task cmd > a.json 2>&1 & spawn --task call > b.json 2>&1 & sleep 0.5; "
+               "spawn --task queued > c.json 2>&1 & wait")
+    previous = signal.getsignal(signal.SIGTERM)
+    stopping.install()
+    threading.Thread(target=sigterm, daemon=True).start()
+    try:
+        with pytest.raises(SystemExit):
+            go(tmp_path, corpus, [bash(command), final([row([])])], spawn=SPAWN, sub_model=subs)
+        assert sent and time.monotonic() - sent[0] < 2.0 + 5  # STOP_WAIT_S and a margin, far inside batch.GRACE_S
+        run = RunDir(tmp_path / "runs" / "r1")
+        spawns = of(run, "spawn")
+        agent_of = {s["used"]["task"]: s["generated"]["agent_id"] for s in spawns if s["custom_metadata"]["event"] == "start"}
+        assert sorted(agent_of) == ["call", "cmd"]
+        returns = {s["generated"]["agent_id"]: s["status"] for s in spawns if s["custom_metadata"]["event"] == "return"}
+        assert returns == {agent_of["cmd"]: "cancelled"}
+        assert [s["used"]["task"] for s in spawns if s["custom_metadata"]["event"] == "cancelled"] == ["queued"]
+        assert f"spawn: {agent_of['call']} started but has no return record" in verify_run(run, *corpus).errors
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+        release.set()  # the left subagent ends now (its records fail: the broker is closed), within this test
+        for worker in [t for t in threading.enumerate() if t.name.startswith("sub-model-")]:
+            worker.join(timeout=10)
+
+
+def test_the_production_sub_model(tmp_path: Path) -> None:
+    """SpawnService._model, which every other test replaces: the slot's alias, name, revision and
+    context, the subagent's seed and reply limit, the run's temperature and endpoint, thinking off."""
+    service = type("Service", (), {"base_url": "http://proxy.invalid/v1", "temperature": 0.3, "settings": SPAWN})()
+    model = SpawnService._model(service, None, SUBAGENTS[1], 1007)  # type: ignore[arg-type]
+    slot = SUBAGENTS[1]
+    assert model.settings == {"model": "sub-model-2", "model_name": slot["name"], "revision": slot["revision"],
+                              "temperature": 0.3, "seed": 1007, "max_tokens": 4096, "thinking": False}
+    assert model.context_tokens == 32_768 and model.config.model_name == "openai/sub-model-2"
+    assert model.config.model_kwargs["api_base"] == "http://proxy.invalid/v1" and model.config.model_kwargs["seed"] == 1007
+
+
+@posix_only
 @pytest.mark.skipif(sandbox.landlock_abi() is None, reason="kernel without Landlock")
 def test_spawn_under_landlock(tmp_path: Path, corpus: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch) -> None:
     """Under Landlock and seccomp the client makes no socket (a pipe goes over the inherited channel), and a

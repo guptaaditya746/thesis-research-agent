@@ -41,7 +41,7 @@ recorded as the command's timeout_s) instead of 120 s, however it called spawn (
 a script; loop.SandboxEnvironment.execute). When a command ends, subagents it started that are
 still queued or running are cancelled (nobody can read their result): a running one stops at its
 next model call or command, and its running command is killed. SIGTERM (row 2.9) stops them the
-same way, before the broker closes.
+same way, and the harness waits for them at most STOP_WAIT_S in all before the broker closes.
 
 Subagent n uses the run's temperature and seed + n.
 """
@@ -73,7 +73,12 @@ MAX_REQUEST = 64 * 1024  # bytes of one request message
 MAX_TASK = 8_000  # characters of a task
 MAX_FILES = 50
 SUMMARY_MAX = 4_000  # characters of a summary passed to the parent
-FINISH_WAIT_S = 10.0  # how long a stopping harness waits for cancelled subagents
+# How long a stopping harness (SIGTERM, row 2.9) waits for its cancelled subagents, in all: the
+# command's channel and the workers share one deadline, so the broker closes well inside the batch
+# runner's grace before SIGKILL (batch.GRACE_S, 30 s). A subagent in a model call cannot be
+# interrupted; past the deadline it is left (its start record then has no return record, which
+# `agent verify` reports, and the batch runner reruns the cut run anyway).
+STOP_WAIT_S = 15.0
 SUMMARY_SCHEMA: dict[str, Any] = {"type": "object", "additionalProperties": False, "required": ["summary"],
                                   "properties": {"summary": {"type": "string"}}}
 RAN = ("submitted", "budget", "context_full", "repeats")  # ran its course: return record status "finished"
@@ -203,9 +208,11 @@ class CommandChannel:
 
         Returns the ids of the subagents it started. Normally all are done (the command waited
         for them). A process that left the command's session and still holds SPAWN_FD cannot
-        keep the channel open: after 2 s the harness end is shut down.
+        keep the channel open: after 2 s the harness end is shut down. A stopping harness waits
+        only until the service's stop deadline.
         """
         self.ended = True
+        self.service.stop_deadline()  # a stopping harness's clock starts here (if it has not already)
         self.thread.join(timeout=2)
         if self.thread.is_alive():
             try:
@@ -218,7 +225,8 @@ class CommandChannel:
             if not job.done.is_set():
                 job.cancel.set()
         for job in self.jobs:
-            job.done.wait(timeout=FINISH_WAIT_S if stopping.requested() else None)
+            deadline = self.service.stop_deadline()
+            job.done.wait(timeout=None if deadline is None else max(0.0, deadline - time.monotonic()))
         return [job.agent_id for job in self.jobs if job.started]
 
 
@@ -317,6 +325,7 @@ class SpawnService:
         self.started = 0  # subagents that ran
         self.tokens = 0  # their tokens
         self.closed = False
+        self._stop_at: float | None = None  # stop_deadline()
         self._lock = threading.Lock()
         self._queue: queue.Queue[SpawnJob | None] = queue.Queue()
         self._live: set[SpawnJob] = set()
@@ -331,16 +340,30 @@ class SpawnService:
         """A SPAWN_FD channel for one command of the parent (SandboxEnvironment.execute)."""
         return CommandChannel(self, step_id, parent_task_id)
 
+    def stop_deadline(self) -> float | None:
+        """None unless the harness is stopping; then STOP_WAIT_S after it was first asked (monotonic)."""
+        if not stopping.requested():
+            return None
+        with self._lock:
+            if self._stop_at is None:
+                self._stop_at = time.monotonic() + STOP_WAIT_S
+            return self._stop_at
+
     def close(self, timeout: float = 30.0) -> None:
-        """Cancel what is left and stop the workers (before the broker closes)."""
+        """Cancel what is left and stop the workers (before the broker closes).
+
+        Waits at most `timeout` in all, or, when the harness is stopping, until the stop deadline
+        it shares with the command's channel (CommandChannel.finish).
+        """
         with self._lock:
             self.closed = True
             for job in self._live:
                 job.cancel.set()
         for _ in self._workers:
             self._queue.put(None)
+        deadline = self.stop_deadline() or time.monotonic() + timeout
         for worker in self._workers:
-            worker.join(timeout=timeout)
+            worker.join(timeout=max(0.0, deadline - time.monotonic()))
 
     def request(self, channel: CommandChannel, msg: bytes, fds: list[int], truncated: bool) -> None:
         """One request from a CommandChannel's thread: queue a SpawnJob, or refuse it (record and reply)."""
