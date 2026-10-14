@@ -90,9 +90,9 @@ def test_links_must_point_to_context_items() -> None:
     value = span_of("62%", "value")
     good = Item.build("measurement", {"value": 0.62, "dataset": None}, [value],
                       links={"condition": cond.item_id, "metric": metric.item_id})
-    dangling = Item.build("measurement", {"value": 0.62, "dataset": None}, [value],
+    dangling = Item.build("measurement", {"value": 0.71, "dataset": None}, [span_of("71%", "value")],
                           links={"condition": "c-unknown", "metric": metric.item_id})
-    wrong_type = Item.build("measurement", {"value": 0.62, "dataset": None}, [value],
+    wrong_type = Item.build("measurement", {"value": 0.62, "dataset": None}, [span_of("62.0", "value")],
                             links={"condition": metric.item_id, "metric": metric.item_id})
     context = {cond.item_id: cond, metric.item_id: metric}
     t = task("measurement", context=tuple(context))
