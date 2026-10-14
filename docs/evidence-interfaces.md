@@ -141,3 +141,26 @@ every system the same way.
 - **Cascade contribution**: per extractor, items only it found (`found_by`).
 - **Stability**: from a re-execution report.
 - **Cost**: from `run.json`.
+
+## 6. As built (14 Oct): where the code goes beyond this page
+
+- **Corpus:** `corpus_id` is derived from the papers' contents, so it reveals no level; `decoys.json` lists
+  the contradictory level's wrong values (not placements). A study failing fidelity at any level is left out
+  of every corpus of its set, so the variants keep the same paper ids (`synth/README.md`).
+- **Run directory:** `run.json` also holds `extractor_specs`, `chain_head` and the run `settings` (corpus,
+  cache, extractor selection, model, imports) so replay and re-execution can repeat the run; `outputs` covers
+  every file except `run.json` and `events.jsonl` (timestamps), whose head is `chain_head`. Replay and
+  re-execution write a new sibling run directory. Extra event fields live in `custom_metadata`
+  (`task_sha256`, `output_sha256`, `model_calls`, `attempt`, `position`); a retried call is a new attempt and
+  never overwrites the record an earlier run replays from.
+- **Protocol:** `bounds` per evidence type (question-metric values must be fractions in [0, 1]) and
+  `synthesis.pairing: same_dataset_table_first` (rag and baseline on the same dataset, a table cell before
+  prose, then document order).
+- **Agentic extractor:** registered lazily as `agentic`; `evidence/protocols/rag-factuality-agentic.yaml` puts
+  it last in every cascade. A cited claim must belong to its row and field, and a value claim's quote must
+  hold the cell's number.
+- **Baselines:** may open only `manifest.json` and files directly in `papers/`. The retrieve-then-answer
+  baseline takes the top 2 BM25 passages of every paper by default (`--retrieval global` for the plain top-k
+  over the corpus); the report shows `answered` and `accuracy_answered` next to direction accuracy.
+- **Scoring:** items are matched to facts one to one per paper and evidence type (Hungarian assignment); the
+  rules are in the `evaluation/score.py` docstring.

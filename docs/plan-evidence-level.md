@@ -1,5 +1,8 @@
 # Plan: evidence-level research with an explicit evidence plan (draft, 14 Oct 2026)
 
+> **Superseded** by the supervisor's second message of 14 Oct (protocol, extractor library, synthetic
+> benchmark), which is built: see [`evidence-interfaces.md`](evidence-interfaces.md). Kept for the record.
+
 Draft for discussion with the supervisor before any code changes. It replaces the framing in
 `docs/STATE.md` ("one contribution: provenance recorded while the agent researches") with the
 supervisor's direction of 14 Oct, and keeps everything already built that still serves it.

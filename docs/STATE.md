@@ -3,11 +3,15 @@
 The one page to plan the implementation from. Everything here is decided or measured; details live in
 the files named at the end, history in git.
 
-> **Superseded framing (14 Oct).** The supervisor redirected the thesis to evidence-level research: an
-> explicit evidence plan per question, one agent, evaluation of how reliably and comprehensively evidence is
-> extracted. The claim_on vs claim_off comparison, the attach step and subagents are dropped. The plan and
-> its decisions are in [`plan-evidence-level.md`](plan-evidence-level.md); this page describes the system
-> as built and is rewritten when that plan is implemented.
+> **Superseded framing (14 Oct).** The supervisor's second message of 14 Oct set the design: question →
+> hand-written executable protocol → Python engine with a library of interchangeable extractors → evidence
+> graph → deterministic synthesis, evaluated on a synthetic corpus with exact ground truth against an
+> answer-level baseline; first question: does RAG improve the factual accuracy of LLM answers? It is built
+> (packages `evidence/`, `synth/`, `evaluation/`; formats in [`evidence-interfaces.md`](evidence-interfaces.md),
+> interface in [`extractor-contract.md`](extractor-contract.md); status on `thesis_pipeline.html`), tested
+> offline, not yet run against live models. Our additions: the research agent as one extractor and as a
+> second baseline, the provenance and replay lane. [`plan-evidence-level.md`](plan-evidence-level.md) (after
+> the first message) and the rest of this page describe the earlier design.
 
 ## Framing (decided 10 Oct, grill doc)
 

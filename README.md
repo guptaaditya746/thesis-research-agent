@@ -15,6 +15,19 @@ Around it: the gold standard it is scored against, the scoring, and a web app to
 | `scoring/` | `score` | Runs against the keys, the paired report with the pre-registered test, the SPARQL store (milestone 4; `scoring/README.md`) |
 | `webapp/` | `webapp` | FastAPI backend and the React frontend in `webapp/web` (`webapp/README.md`, `webapp/web/README.md`) |
 | `questions/` | — | The 12 evaluation questions |
+| `evidence/` | `evidence` | Evidence-level system (supervisor's design, 14 Oct): hand-written protocol, extractor contract and library (regex, single-call LLM, agentic), engine with locate, cascade, hash-chained events, record cache, replay and re-execution, evidence graph, deterministic synthesis, PROV-O |
+| `synth/` | `synth` | Synthetic benchmark: seeded ground truth, five difficulty levels, template and LLM renderers, fidelity checks, controlled variants (`synth/README.md`) |
+| `evaluation/` | `evaluate` | Scoring of extraction (A), integration (B) and synthesis (C), locate recall, cascade contribution; the retrieve-then-answer and agent baselines |
+
+The evidence-level system's files and formats: `docs/evidence-interfaces.md`; the extractor interface:
+`docs/extractor-contract.md`. One synthetic corpus end to end, offline (regex extractors, no model):
+
+```bash
+uv run evidence run --protocol evidence/protocols/rag-factuality.yaml --corpus synth/examples/rag-demo-explicit \
+    --out runs/evidence --extractors regex-only --run-id demo
+uv run evidence replay runs/evidence/demo                  # rebuilds from the record cache; every output hash must match
+uv run evaluate score --run runs/evidence/demo --corpus synth/examples/rag-demo-explicit --out runs/eval/demo
+```
 
 Everything runs through uv (Python 3.13 or later, dependencies pinned in `uv.lock`):
 

@@ -119,6 +119,7 @@
   .status-row .next { color: var(--muted); }
   .state { justify-self: start; font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1.5px solid; white-space: nowrap; }
   .s-works { color: var(--ours); background: var(--ours-soft); border-color: var(--ours); }
+  .s-built { color: var(--ours); background: var(--ours-soft); border-color: var(--ours); border-style: dashed; }
   .s-partial { color: #9a5200; background: var(--now-soft); border-color: var(--now); }
   .s-blocked { color: var(--bad); background: var(--bad-soft); border-color: var(--bad); }
   .s-open { color: var(--tool); background: var(--tool-soft); border-color: var(--tool); }
@@ -924,43 +925,43 @@ const ROLES = {
 /* ---- STATUS: the supervisor's order of work, with what existing code each step can reuse ------------------
    state: "works" | "partial" | "open"   stage: the box its name opens   tests: what exists
    ---------------------------------------------------------------------------------------------- */
-const STATUS_NOTE = "The supervisor's order of work (14 Oct 2026), steps 1–7, and what already exists on branch e2e-build for each. Click a step for its box in the diagram.";
+const STATUS_NOTE = "The supervisor's order of work (14 Oct 2026), steps 1–7, and where each stands on branch main (built 14 Oct; packages evidence/, synth/, evaluation/; file formats in docs/evidence-interfaces.md). Built means tested offline with scripted models; no live model run yet. Click a step for its box in the diagram.";
 const STATUS = [
-  { area: "1 · Protocol by hand", stage: "write",    state: "open",    tests: "agent/schemas/concept.schema.json",
-    evidence: "Not started. The concept brief's typed answer shape (columns with types) is a starting point for the protocol's evidence fields.",
-    next: "Write protocols/rag-factuality.yaml and its pydantic schema." },
-  { area: "2 · Synthetic corpus generator", stage: "truth", state: "open", tests: "gold/llm.py, llm-setup",
-    evidence: "Not started. The structured-call helper (pydantic-ai through LiteLLM, JSON-schema output) and the tested Qwen stack exist.",
-    next: "Ground-truth model and code generator; paper generator prompt; fidelity check." },
-  { area: "3 · Extractor library", stage: "iface", state: "partial", tests: "gold/chunks.py, gold/extract.py, agent/anchor.py, agent/broker.py, agent/loop.py",
-    evidence: "Section-aware chunking, schema-constrained LLM extraction with retries, and the quote check against the file are built and tested (scripted models only). The research agent, for the agentic extractor, is built and has run on the cluster.",
-    next: "Wrap them behind one extractor interface; add conditions, metrics, results and author-claim extractors; the agent as one more implementation." },
-  { area: "Extractor contract", stage: "iface", state: "spec", tests: "docs/extractor-contract.md",
-    evidence: "Written and decided (14 Oct): identity with code and config hashes, task, result with multi-span items, coverage, one hash-chained event per call, cache, exact replay, measured re-execution, cascade, benchmark per version.",
-    next: "Implement it as pydantic models plus the engine's recorder; first extractor behind it: the single-call LLM extractor from gold/extract.py." },
-  { area: "Provenance & replay", stage: "replay", state: "spec", tests: "agent/broker.py, gold/llm.py, agent replay/reexec",
-    evidence: "Specified in the contract; the hash chain, the call cache and the replay and re-execution pattern exist for the agent.",
-    next: "Engine records every extractor call; engine replay and engine reexec." },
-  { area: "4 · Evidence representation", stage: "evgraph", state: "partial", tests: "agent/prov.py, scoring/store.py",
-    evidence: "PROV-O export and a pyoxigraph SPARQL store over run graphs are built and tested.",
-    next: "The study → experiment → condition → measurement model with passages." },
-  { area: "5 · Synthesis rules", stage: "synth", state: "open", tests: "—",
-    evidence: "Not started.",
-    next: "Pairing, effect, labels, flags; the same code computes the expected answer from ground truth." },
-  { area: "6 · Evaluate A, B, C", stage: "evA", state: "partial", tests: "scoring/",
-    evidence: "One-to-one matching at strict / normalised / soft levels, precision, recall, F1 and BCa intervals are built and tested.",
-    next: "Point them at the synthetic ground truth; add association and integration measures." },
-  { area: "7 · Baselines", stage: "baseline", state: "partial", tests: "agent/, scoring/",
-    evidence: "Two baselines (decided 14 Oct): the supervisor's plain retrieve-then-answer system, not started; and our research agent with no protocol, built and tested.",
-    next: "Build the retrieve-then-answer baseline (same model and documents); point the agent at the synthetic corpus." },
+  { area: "1 · Protocol by hand", stage: "write",    state: "built",   tests: "evidence/protocols/rag-factuality.yaml, evidence/protocol.py",
+    evidence: "Hand-written protocol for the RAG question: four evidence types (condition, metric, measurement, author claim) with JSON field schemas, value bounds, an extractor cascade per type, the locate strategy and the synthesis rules; its hash is part of every run. A variant puts the agentic extractor last in every cascade.",
+    next: "Review the protocol with the supervisor." },
+  { area: "2 · Synthetic corpus generator", stage: "truth", state: "built", tests: "synth/",
+    evidence: "Seeded ground truth (studies, conditions, metrics, measurements, author claims, effects by the shared rules), five difficulty levels, a template renderer with exact placements and an LLM renderer with fidelity checks and retries, controlled variants (one corpus per level from one study set), a review sheet for hand checks, six example corpora in the repo.",
+    next: "First LLM-written corpus on the cluster; hand-check a sample for fidelity." },
+  { area: "3 · Extractor library", stage: "iface", state: "built", tests: "evidence/extractors/, evidence/agentic/",
+    evidence: "One registry behind the contract: regex extractors and single-call LLM extractors for each evidence type, and the agentic extractor (our research agent, wrapped without changes). The engine checks every span against the paper, whatever the extractor.",
+    next: "Live runs of the LLM and agentic extractors; benchmark record per version." },
+  { area: "Extractor contract", stage: "iface", state: "built", tests: "evidence/contract.py, docs/extractor-contract.md",
+    evidence: "Implemented as pydantic models: identity with code and config hashes, task, result with multi-span items, rejected items with reasons, coverage.",
+    next: "—" },
+  { area: "Provenance & replay", stage: "replay", state: "built", tests: "evidence/engine.py, evidence/replay.py, evidence/prov.py",
+    evidence: "One hash-chained event per locate step, extractor call, merge and synthesis; a record cache; exact replay (a cache miss is an error) reproduces every output hash; re-execution writes a stability report; PROV-O export.",
+    next: "Re-execution stability of the LLM and agentic extractors on the cluster." },
+  { area: "4 · Evidence representation", stage: "evgraph", state: "built", tests: "evidence/graph.py, evidence/merge.py",
+    evidence: "Merged items with every span and the extractors that found them; graph.json with documents, conditions, metrics, measurements and claims.",
+    next: "Show the graph in the viewer (optional)." },
+  { area: "5 · Synthesis rules", stage: "synth", state: "built", tests: "evidence/rules.py, evidence/synthesis.py",
+    evidence: "Same-dataset rag/baseline pairing (table before prose), effect and label by one shared rule that also computes the expected answer from ground truth; undetermined studies are reported with a reason.",
+    next: "—" },
+  { area: "6 · Evaluate A, B, C", stage: "evA", state: "built", tests: "evaluation/score.py, evaluation/report.py",
+    evidence: "Extraction P/R/F1 per type and level with span accuracy, integration (links and true pair), synthesis (per-study direction, label), locate recall, cascade contribution, cost, stability; per-level comparison. An end-to-end test runs a synthetic corpus through engine, replay and scoring.",
+    next: "Confidence intervals in the comparison; first real numbers with the LLM extractors." },
+  { area: "7 · Baselines", stage: "baseline", state: "built", tests: "evaluation/baselines/",
+    evidence: "Retrieve-then-answer (BM25, top passages per paper by default, one LLM call) and our research agent with the question only; both write the engine's answer shape and never read the ground truth.",
+    next: "Live runs on the cluster." },
   { area: "Models and cluster", stage: "slurm", state: "works", tests: "tests/RESULTS.md",
     evidence: "Slurm stack with Qwen3.8-27B and two Qwen3-30B-A3B replicas behind LiteLLM, tested; first real agent runs done.",
-    next: "A short cluster check once the generator and extractors exist." },
+    next: "A short cluster run: generate an LLM corpus, run the engine with LLM extractors, both baselines, score." },
   { area: "Viewer", stage: "trace", state: "partial", tests: "webapp/",
     evidence: "FastAPI + React app with a fact-to-passage walk, graph view, SPARQL and chat, built for the previous design.",
     next: "Show the evidence graph and the answer's trace (optional)." },
 ];
-const STATE_LABEL = { works: "Works", partial: "Partly reusable", spec: "Specified", blocked: "Blocked", open: "Not built" };
+const STATE_LABEL = { works: "Works", built: "Built, tested offline", partial: "Partly reusable", spec: "Specified", blocked: "Blocked", open: "Not built" };
 
 /* ---- DECISIONS and QUESTIONS: the two lists under the status table ------------------------------ */
 const DECISIONS = [
