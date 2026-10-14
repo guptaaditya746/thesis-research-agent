@@ -100,9 +100,30 @@ def test_chat_tools_read_and_refuse_writes(world: World) -> None:
     assert "baseline-r1" in (script.seen[0][0][-1].instructions or "")  # run id from the request body
 
 
+def test_tool_results_fit_a_32k_model() -> None:
+    """A list longer than the budget is cut and says how many it left out (claims of a long claim_on run
+    would otherwise overflow sub-model-1's 32k context on the next request)."""
+    from webapp.chat import BUDGET, _fit
+    claims = [{"claim_id": f"claim-{n:06d}", "quote": "q" * 600, "s": "s", "p": "p", "o": "o"} for n in range(100)]
+    fitted = _fit(claims)
+    assert len(json.dumps(fitted)) <= BUDGET + 200 and fitted[-1]["more"] == 100 - (len(fitted) - 1)
+    assert fitted[:-1] == claims[:len(fitted) - 1]
+    assert _fit(claims[:3]) == claims[:3]  # small lists are whole, with no marker
+
+
+def test_get_claims_leaves_out_what_the_chat_does_not_need(world: World) -> None:
+    script = Script(("get_claims", {"run_id": "research-r1"}), text=("Done.",))
+    with TestClient(create_app(world.settings, chat_model=FunctionModel(stream_function=script))) as c:
+        assert c.post("/api/chat", json=body("Which claims?")).status_code == 200
+    [claims] = script.outputs()
+    assert claims and all("quote_submitted" not in c and "task_id" not in c for c in claims)
+
+
 def test_chat_rejects_a_malformed_request(world: World) -> None:
     script = Script()
     with TestClient(create_app(world.settings, chat_model=FunctionModel(stream_function=script))) as c:
         assert c.post("/api/chat", json={"messages": "no"}).status_code == 422
-        assert c.post("/api/chat", content=b"{}", headers={"content-type": "text/plain"}).status_code == 415
+        assert c.post("/api/chat", content=b"{}", headers={"content-type": "text/plain"}).status_code == 403  # guard
+        assert c.post("/api/chat", content=b"{}", headers={"content-type": "text/plain",
+                                                            "x-requested-with": "test"}).status_code == 415
     assert script.seen == []
