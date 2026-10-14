@@ -37,7 +37,7 @@ synth = "synth.cli:main"
 evaluate = "evaluation.cli:main"
 
 [dependency-groups]
-dev = ["pytest==8.4.2"]
+dev = ["pytest==9.0.3"]
 frontend = ["nodejs-wheel==22.20.0"]
 
 [build-system]
