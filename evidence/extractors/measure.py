@@ -1,0 +1,164 @@
+"""Measurements for the regex extractor: values in sentences and in Markdown tables, linked to the
+condition and metric items of the task's context.
+
+A label is matched to a context condition by a code the text defines ("variant (R)"), by its label, or
+by condition wording covering the whole label; to a context metric by name, or by its canonical metric
+when only one context metric has it. A value without both links is not reported (R2 requires them).
+"""
+from __future__ import annotations
+
+import re
+from typing import Any
+
+from ..contract import ExtractionTask, Item, Span
+from . import base, terms
+
+Found = tuple[dict[str, Any], dict[str, str], list[Span]]
+CELL = re.compile(r"^[*_]*\s*(\d+(?:\.\d+)?|\.\d+)\s*(%?)\s*[*_]*(?:\s*(?:±|\+/-|\+-)\s*\d+(?:\.\d+)?)?\s*[*_]*$")
+AFTER = re.compile(r"\s*\)?\s*,?\s*(?:for|with|by|of|from|in|using)\s+(?:the\s+|a\s+|an\s+|its\s+|our\s+)?")
+DELTA_BEFORE = re.compile(r"(?i)\b(?:by|of\s+up\s+to|gains?\s+of|improvement\s+of|drop\s+of)\s*$")
+DELTA_AFTER = re.compile(r"(?i)^\s*(?:percentage\s+)?(?:points?|pp)\b")
+DATASET_HEADER = re.compile(r"(?i)^(?:dataset|benchmark|data|task)$")
+
+
+class Resolver:
+    """Labels and mentions to context item ids."""
+
+    def __init__(self, text: str, context: list[Item], patterns: dict[str, Any]) -> None:
+        self.text = text
+        self.cond_patterns = terms.condition_patterns(patterns["conditions"])
+        self.metric_patterns = [tuple(m) for m in patterns["metrics"]]
+        self.question = set(patterns["question_metrics"])
+        self.conditions = [i for i in context if i.evidence_type == "condition"]
+        self.metrics = [i for i in context if i.evidence_type == "metric"]
+        self.codes: dict[str, tuple[Item, tuple[int, int]]] = {}
+        for mention, code, a, b in terms.aliases(text, terms.find_all(text, self.cond_patterns)):
+            item = self.condition_for(mention)
+            if item is not None and code not in self.codes:
+                self.codes[code] = (item, (a, b))
+
+    def condition_for(self, mention: terms.Mention) -> Item | None:
+        same = [i for i in self.conditions if i.fields.get("role") == mention.key]
+        if len(same) == 1:
+            return same[0]
+        named = [i for i in same if terms.norm(str(i.fields.get("label", ""))) == terms.norm(mention.text)]
+        return named[0] if len(named) == 1 else None
+
+    def condition_label(self, label: str) -> tuple[Item, tuple[int, int] | None] | None:
+        """A table label as a condition: a defined code, an item's label, or wording covering the label."""
+        label = label.strip(" *_")
+        if label in self.codes:
+            item, where = self.codes[label]
+            return item, where
+        for item in self.conditions:
+            if terms.norm(str(item.fields.get("label", ""))) == terms.norm(label):
+                return item, None
+        found = terms.find_all(label, self.cond_patterns)
+        if len(found) == 1 and found[0].start == 0 and found[0].end == len(label):
+            item = self.condition_for(found[0])
+            return (item, None) if item is not None else None
+        return None
+
+    def metric_for(self, mention: terms.Mention) -> Item | None:
+        named = [i for i in self.metrics if terms.norm(str(i.fields.get("name", ""))) == terms.norm(mention.text)]
+        if named:
+            return named[0]
+        same = [i for i in self.metrics if i.fields.get("canonical") == mention.key]
+        return same[0] if len(same) == 1 else None
+
+    def metric_label(self, label: str) -> Item | None:
+        found = terms.find_all(label, self.metric_patterns)  # type: ignore[arg-type]
+        return self.metric_for(found[0]) if found else None
+
+    def rate_like(self, metric: Item) -> bool:
+        return metric.fields.get("canonical") in self.question
+
+
+def measurements(task: ExtractionTask, text: str, parts: list[tuple[int, int]], context: list[Item],
+                 patterns: dict[str, Any]) -> list[Found]:
+    resolver = Resolver(text, context, patterns)
+    if not resolver.conditions or not resolver.metrics:
+        return []
+    inside = [t for t in base.tables(text) if any(a <= t.start and t.end <= b for a, b in parts)]
+    found = [f for t in inside for f in _table(task, text, t, resolver)]
+    for a, b in parts:
+        for s, e in base.sentences(text, a, b):
+            found.extend(_sentence(task, text, s, e, resolver))
+    return found
+
+
+def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> list[Found]:
+    header = table.header
+    dataset_col = next((n for n, c in enumerate(header) if DATASET_HEADER.match(c.text.strip(" *_"))), None)
+    percent_table = "%" in table.caption or "percent" in table.caption.casefold()
+    out: list[Found] = []
+    for row in table.rows:
+        if not row:
+            continue
+        dataset = row[dataset_col].text.strip(" *_") or None if dataset_col is not None and dataset_col < len(row) else None
+        as_condition = r.condition_label(row[0].text)
+        row_metric = None if as_condition else r.metric_label(row[0].text)
+        for n, cell in enumerate(row[1:], 1):
+            if n >= len(header) or n == dataset_col:
+                continue
+            hit = CELL.match(cell.text)
+            if not hit:
+                continue
+            col = header[n]
+            if as_condition is not None:
+                condition, metric = as_condition, r.metric_label(col.text)
+            elif row_metric is not None:
+                condition, metric = r.condition_label(col.text), row_metric
+            else:
+                continue
+            if condition is None or metric is None:
+                continue
+            item, defined = condition
+            label_cell = row[0] if as_condition is not None else col
+            metric_cell = col if as_condition is not None else row[0]
+            value = base.to_fraction(hit.group(1) + hit.group(2), rate_like=r.rate_like(metric),
+                                     percent=percent_table or "%" in col.text or "%" in row[0].text)
+            if value is None:
+                continue
+            a = cell.start + hit.start(1)
+            b = cell.start + (hit.end(2) if hit.group(2) else hit.end(1))
+            spans = [base.span(task, text, a, b, "value"),
+                     base.span(task, text, label_cell.start, label_cell.end, "condition_label"),
+                     base.span(task, text, metric_cell.start, metric_cell.end, "metric_label")]
+            if defined is not None:
+                spans.append(base.span(task, text, *defined, "condition_label"))
+            out.append(({"value": value, "dataset": dataset}, {"condition": item.item_id, "metric": metric.item_id}, spans))
+    return out
+
+
+def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> list[Found]:
+    conditions = [(m, r.condition_for(m)) for m in terms.find_all(text, r.cond_patterns, s, e)]
+    conditions = [(m, i) for m, i in conditions if i is not None]
+    metrics = [(m, r.metric_for(m)) for m in terms.find_all(text, r.metric_patterns, s, e)]  # type: ignore[arg-type]
+    metrics = [(m, i) for m, i in metrics if i is not None]
+    if not conditions or not metrics:
+        return []
+    out: list[Found] = []
+    for hit in base.NUMBER.finditer(text, s, e):
+        raw, pct = hit.group(1), bool(hit.group(2))
+        if not pct and not ("." in raw and float(raw) <= 1):
+            continue
+        if DELTA_BEFORE.search(text[max(s, hit.start() - 20):hit.start()]) or DELTA_AFTER.match(text[hit.end():e]):
+            continue
+        after = AFTER.match(text, hit.end(), e)
+        following = next(((m, i) for m, i in conditions if after and m.start == after.end()), None)
+        preceding = [(m, i) for m, i in conditions if m.end <= hit.start()]
+        cond = following or (preceding[-1] if preceding else None)
+        before_metrics = [(m, i) for m, i in metrics if m.end <= hit.start()]
+        met = before_metrics[-1] if before_metrics else next(((m, i) for m, i in metrics if m.start >= hit.end()), None)
+        if cond is None or met is None:
+            continue
+        value = base.to_fraction(raw + ("%" if pct else ""), percent=pct, rate_like=r.rate_like(met[1]))
+        if value is None:
+            continue
+        end = hit.end(2) if pct else hit.end(1)
+        spans = [base.span(task, text, hit.start(1), end, "value"),
+                 base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
+                 base.span(task, text, met[0].start, met[0].end, "metric_label")]
+        out.append(({"value": value, "dataset": None}, {"condition": cond[1].item_id, "metric": met[1].item_id}, spans))
+    return out
