@@ -28,6 +28,11 @@ Each new output's sha256 is compared with the recorded `output_sha256`. <run>/re
 toolchain, errors, claims}; the new output of each differing command is kept in <run>/reexec/.
 Exit codes of `agent reexec`: 0 identical, 1 an output or a claim differs, 2 errors.
 
+Subagents (row 2.12): a `sub-NN` command runs in a fresh scratch of its own, as it ran in
+sub/<id>/scratch apart from the parent's, with the subagent's PATH (never `spawn`). No subagent is
+started again: a parent command that called `spawn` has no spawn channel here, so with spawn on
+(reexec.json `spawn`) its output is expected to differ; the subagents' own commands are compared.
+
 Differences to expect: output that depends on time, randomness, process ids or the scratch path
 (`date`, `$RANDOM`, `pwd`), and with `--steps` a command that reads a file a skipped command wrote.
 In mode unsandboxed (tests only) a command can also reach the run's own scratch directory by its
@@ -262,7 +267,8 @@ def reexec_run(run_dir: Path, corpus: Path, manifest: Path, *, steps: list[int] 
 
     claim_on = config["condition"] == "claim_on"
     scratch = Path(tempfile.mkdtemp(prefix=f"reexec-{run.run_id}-"))
-    envs: dict[bool, Any] = {}  # one sandbox environment per claim setting
+    scratches = {"main": scratch}  # each subagent (row 2.12) had its own working directory, sub/<id>/scratch
+    envs: dict[tuple[bool, str], Any] = {}  # one sandbox environment per claim setting and agent
     out_dir = run.root / OUT_DIR
     shutil.rmtree(out_dir, ignore_errors=True)  # only this re-execution's differing outputs are kept
     report: dict[str, Any] = {
@@ -271,25 +277,33 @@ def reexec_run(run_dir: Path, corpus: Path, manifest: Path, *, steps: list[int] 
         "corpus_manifest_sha256": config["hashes"]["corpus_manifest_sha256"], "toolchain": toolchain_now,
         "toolchain_differs": root_hash["now"] != root_hash["run"],
         "selected_steps": steps, "scratch": str(scratch) if keep_scratch else None, "steps": 0, "identical": 0,
-        "identical_steps": [], "differing": [], "differing_claims": [], "claims": {}, "errors": errors}
+        "identical_steps": [], "differing": [], "differing_claims": [], "claims": {}, "errors": errors,
+        "spawn": bool((config.get("spawn") or {}).get("enabled"))}
     with open(run.root / CLAIMS_FILE, "wb") as log:
         dry = DryBroker(corpus_index, log, recorded)
         try:
             for record in tools:
                 origin = (record.get("custom_metadata") or {}).get("origin", "research")
                 claim = claim_on or origin == "attach"
-                if claim not in envs:
-                    envs[claim] = SandboxEnvironment(
-                        _Dirs(run.out, scratch), corpus=corpus, mode=sandbox_mode, claim=claim,  # type: ignore[arg-type]
-                        agent_root=agent_root, limits=limits, extra_path=extra_path, python=python)
-                env = envs[claim]
+                agent_id = record["agent_id"]
+                if agent_id not in scratches:
+                    scratches[agent_id] = Path(tempfile.mkdtemp(prefix=f"reexec-{run.run_id}-{agent_id}-"))
+                if (claim, agent_id) not in envs:
+                    envs[claim, agent_id] = SandboxEnvironment(
+                        _Dirs(run.out, scratches[agent_id]), corpus=corpus, mode=sandbox_mode,  # type: ignore[arg-type]
+                        claim=claim, agent_root=agent_root, limits=limits, extra_path=extra_path, python=python)
+                env = envs[claim, agent_id]
                 dry.next_claim = before.get(record["task_id"], 0) + 1
                 _compare(run, record, _execute(env, record["used"]["command"], step=record["step_id"],
-                                               agent_id=record["agent_id"], origin=origin, dry=dry if claim else None,
-                                               scratch=scratch, timeout_s=int(limits["timeout_s"])), out_dir, report)
+                                               agent_id=agent_id, origin=origin, dry=dry if claim else None,
+                                               scratch=scratches[agent_id], timeout_s=int(limits["timeout_s"])),
+                         out_dir, report)
         finally:
-            if not keep_scratch:
-                shutil.rmtree(scratch, ignore_errors=True)
+            if keep_scratch:
+                report["scratch_by_agent"] = {a: str(p) for a, p in scratches.items()}
+            else:
+                for path in scratches.values():
+                    shutil.rmtree(path, ignore_errors=True)
         report["claims"] = dict(dry.counts)
         report["differing_claims"] = dry.differing + dry.not_sent_again({(t["step_id"], t["agent_id"]) for t in tools})
     report["ended_at"] = utc_now()

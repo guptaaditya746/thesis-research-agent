@@ -82,6 +82,27 @@ def test_reexec_reproduces_the_run(tmp_path: Path, corpus: tuple[Path, Path], ca
 
 
 @posix_only
+def test_reexec_of_a_run_with_a_subagent(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A subagent's commands run again in a scratch of their own (row 2.12: sub/<id>/scratch), so its
+    files and the parent's stay apart as they were; the parent's spawn command alone differs."""
+    from .test_spawn import SPAWN, SubModels, summary
+
+    subs = SubModels({"Note and claim": [bash("echo sub > notes.txt && ls"), bash(claim_cmd(unique_quote("p1"))),
+                                         summary("p1 states a fact")]})
+    run, outcome, _, _ = go(tmp_path, corpus, [bash("echo parent > notes.txt"),
+                                               bash('spawn --task "Note and claim" > r.json; cat r.json'),
+                                               bash("cat notes.txt"), final([row(["claim-000001"])])],
+                            spawn=SPAWN, sub_model=subs)
+    assert outcome.exit_status == "submitted" and outcome.subagents == 1
+    report = reexec_run(run.root, *corpus)
+    assert report["spawn"] is True and report["errors"] == []
+    assert [(d["agent_id"], d["step"]) for d in report["differing"]] == [("main", 2)]  # no spawn channel here
+    assert report["steps"] == 5 and report["identical"] == 4  # step 3 still reads the parent's own notes.txt
+    assert report["claims"] == {"sent": 1, "accepted": 1, "rejected": 0, "same_as_recorded": 1}
+    assert report["differing_claims"] == []
+
+
+@posix_only
 def test_reexec_against_a_changed_corpus(tmp_path: Path, corpus: tuple[Path, Path], capsys: pytest.CaptureFixture[str]) -> None:
     run, _, _, _ = go(tmp_path, corpus, script(unique_quote("p1"), unique_quote("p2")))
     paper = corpus[0] / "p2.md"
