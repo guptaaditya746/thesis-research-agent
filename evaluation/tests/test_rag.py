@@ -23,7 +23,7 @@ def test_rag_baseline_answers_from_retrieved_passages(tmp_path: Path, monkeypatc
     corpus = fx.write_corpus(tmp_path)
     attempts = guard_corpus(monkeypatch, corpus)
     scripted = Scripted(REPLY)
-    answer = rag.rag_baseline(corpus, model=scripted.model(), k=3, max_chars=200)
+    answer = rag.rag_baseline(corpus, model=scripted.model(), k=3, mode="global", max_chars=200)
     assert attempts == []
     assert answer["system"] == "rag-baseline" and answer["label"] == "mixed"
     assert answer["studies"] == [{"document": "S001", "direction": "supports"},
@@ -45,9 +45,30 @@ def test_retrieval_is_bm25_and_deterministic(tmp_path: Path) -> None:
     corpus = SystemCorpus(fx.write_corpus(tmp_path))
     chunks = rag.passages(corpus, max_chars=200)
     assert all(c.end - c.start <= 200 for c in chunks)
-    hits = rag.retrieve(chunks, "hallucinated fetched passages", k=2)
+    hits = rag.retrieve(chunks, "hallucinated fetched passages", k=2, mode="global")
     assert hits[0][0].document == "S002" and hits[0][1] > 0
-    assert rag.retrieve(list(reversed(chunks)), "hallucinated fetched passages", k=2) == hits
+    assert rag.retrieve(list(reversed(chunks)), "hallucinated fetched passages", k=2, mode="global") == hits
+
+
+def test_default_retrieval_gives_the_model_every_paper(tmp_path: Path) -> None:
+    """Review 3: per paper (k = 2) by default, so a paper the question's words favour cannot crowd out the rest."""
+    loud = "\n\n".join(f"Retrieval-augmented generation improves factual accuracy of answers, part {n}."
+                       for n in range(12))
+    quiet = {f"Q{n:02d}": f"# Study {n}\n\nThe system with documents scored {50 + n}% versus {40 + n}% without."
+             for n in range(6)}
+    corpus = tmp_path / "c"
+    (corpus / "papers").mkdir(parents=True)
+    papers = {"LOUD": loud, **quiet}
+    for pid, text in papers.items():
+        (corpus / "papers" / f"{pid}.md").write_text(text, encoding="utf-8", newline="\n")
+    fx.dump(corpus / "manifest.json", {"corpus_id": "c", "papers": [{"id": p, "file": f"papers/{p}.md"} for p in papers]})
+    scripted = Scripted(REPLY)
+    answer = rag.rag_baseline(corpus, model=scripted.model(), max_chars=120)
+    seen = [r["document"] for r in answer["retrieved"]]
+    assert sorted(set(seen)) == sorted(papers) and all(seen.count(p) <= 2 for p in papers)
+    assert answer["settings"]["retrieval"] == "per_paper" and answer["settings"]["k"] == 2
+    standard = rag.rag_baseline(corpus, model=scripted.model(), mode="global", max_chars=120)
+    assert {r["document"] for r in standard["retrieved"]} == {"LOUD"} and standard["settings"]["k"] == 8
 
 
 def test_cache_makes_a_rerun_free_and_identical(tmp_path: Path) -> None:
@@ -58,7 +79,7 @@ def test_cache_makes_a_rerun_free_and_identical(tmp_path: Path) -> None:
     second = Scripted({"label": "supported", "studies": [], "answer_text": "other"})
     b = rag.rag_baseline(corpus, model=second.model(), cache=JsonlCache(tmp_path / "cache" / "rag.jsonl"))
     assert second.prompts == [] and a == b
-    c = rag.rag_baseline(corpus, model=second.model(), cache=cache, k=1)  # other passages: a new call
+    c = rag.rag_baseline(corpus, model=second.model(), cache=cache, k=1, mode="global")  # other passages: new call
     assert len(second.prompts) == 1 and c["label"] == "supported"
 
 

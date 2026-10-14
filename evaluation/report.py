@@ -71,9 +71,12 @@ def render(report: dict[str, Any]) -> str:
             summary.append({"system": system["system"], "label": system["label"], "expected": system["expected_label"],
                             "label_correct": system["label_correct"], "studies": overall.get("studies"),
                             "direction_accuracy": overall.get("direction_accuracy"),
-                            "answered": overall.get("answered")})
+                            "answered": overall.get("answered"),
+                            "accuracy_answered": overall.get("accuracy_answered")})
         out += [table(summary, ["system", "label", "expected", "label_correct", "studies", "direction_accuracy",
-                                "answered"]), ""]
+                                "answered", "accuracy_answered"]), "",
+                "direction_accuracy counts a study the system did not answer as wrong; accuracy_answered is the "
+                "accuracy over the studies it answered (a baseline may cite only some papers).", ""]
         levels = [{"system": s["system"], **r} for s in report["synthesis"] for r in s["rows"] if r["level"] != "all"]
         if levels:
             levels.sort(key=lambda r: (_level_key(r["level"]), r["system"]))
@@ -138,13 +141,14 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "span_accuracy": a.get("span_accuracy") if engine else None,
                          "association_accuracy": b.get("association_accuracy") if engine else None,
                          "true_pair": b.get("true_pair") if engine else None,
-                         "direction_accuracy": c.get("direction_accuracy"), "label_correct": system["label_correct"]})
+                         "direction_accuracy": c.get("direction_accuracy"), "answered": c.get("answered"),
+                         "accuracy_answered": c.get("accuracy_answered"), "label_correct": system["label_correct"]})
     rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"]))
     return {"rows": rows}
 
 
 COMPARE_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "span_accuracy", "association_accuracy",
-                   "true_pair", "direction_accuracy", "label_correct"]
+                   "true_pair", "direction_accuracy", "answered", "accuracy_answered", "label_correct"]
 
 
 def render_compare(comparison: dict[str, Any]) -> str:
