@@ -36,11 +36,12 @@ Records, all in the run's one hash chain:
 Cost: the parent's budget counts its own calls only (each subagent has its own); `agent verify`
 reports the run's total and each agent's (verify.stats `agents`).
 
-Time: a command that calls spawn gets `command_timeout_s` (1,800 s, recorded) instead of 120 s
-(loop.SandboxEnvironment.timeout_for). When a command ends, subagents it started that are still
-queued or running are cancelled (nobody can read their result): a running one stops at its next
-model call or command, and its running command is killed. SIGTERM (row 2.9) stops them the same
-way, before the broker closes.
+Time: a command whose channel accepted a spawn request gets `command_timeout_s` (1,800 s,
+recorded as the command's timeout_s) instead of 120 s, however it called spawn (directly or from
+a script; loop.SandboxEnvironment.execute). When a command ends, subagents it started that are
+still queued or running are cancelled (nobody can read their result): a running one stops at its
+next model call or command, and its running command is killed. SIGTERM (row 2.9) stops them the
+same way, before the broker closes.
 
 Subagent n uses the run's temperature and seed + n.
 """

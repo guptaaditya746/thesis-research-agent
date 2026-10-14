@@ -355,7 +355,6 @@ class OrchestratorModel(LitellmTextbasedModel):
 
 # --- sandbox environment ---------------------------------------------------------------------------
 
-SPAWN_WORD = re.compile(r"(?<![\w./-])spawn(?![\w.-])")  # `spawn --task ...`, not respawn, spawned or spawn.py
 SPAWN_BIN = "spawn-bin"  # agent/spawn-bin/spawn (row 2.12)
 
 
@@ -366,8 +365,11 @@ class SandboxEnvironment:
     (source_agent_id, spawned_by_step) tag their claim channels, `scratch` is their own working
     directory and `cancel` stops their running command when they are cancelled. The parent's
     environment gets `spawn` (a SpawnService): each command then also gets a SPAWN_FD channel,
-    and a command that calls spawn the service's longer time limit (`timeout_for`), so the
-    parent's 120 s never kills a running subagent.
+    and a command that starts a subagent gets the service's longer time limit, so the parent's
+    120 s never kills a running subagent. Which commands do is known, not guessed from the
+    command text: the wrapper gets the long limit, and the harness ends the command at the usual
+    one unless its channel has accepted a spawn request by then (sandbox.run_command), so spawn
+    called from a script counts as well. `last_timeout_s` is the limit that applied.
     """
 
     def __init__(self, run: RunDir, *, corpus: Path, mode: str, claim: bool, agent_root: Path | None = None,
@@ -392,6 +394,7 @@ class SandboxEnvironment:
         self.spawn = spawn
         self.cancel = cancel
         self.last_spawned: list[str] = []  # subagents the last command started (row 2.12)
+        self.last_timeout_s = int(self.limits["timeout_s"])  # the last command's time limit
         self.config = {"mode": mode, "claim": claim} | ({"spawn": True} if spawn else {})
 
     def path(self) -> str:
@@ -414,12 +417,6 @@ class SandboxEnvironment:
             if venv_python.exists():  # the uv-managed interpreter the venv links to (S5c)
                 paths.append(str(Path(os.path.realpath(venv_python)).parent.parent))
         return [p for p in dict.fromkeys(paths) if os.path.exists(p)]
-
-    def timeout_for(self, command: str) -> int:
-        """The command's time limit: the spawn service's (1,800 s) for a command that calls spawn, else 120 s."""
-        if self.spawn is not None and SPAWN_WORD.search(command):
-            return int(self.spawn.settings.command_timeout_s)
-        return int(self.limits["timeout_s"])
 
     def argv(self, command: str, timeout_s: int | None = None) -> list[str]:
         scratch = str(self.scratch.resolve())
@@ -446,14 +443,16 @@ class SandboxEnvironment:
                 broker: Broker | None = None, parent_task_id: str | None = None) -> sandbox.Result:
         """Run `action["command"]`; with a broker and claim on, the command gets CLAIM_FD for this step.
 
-        With spawn on it also gets SPAWN_FD; when the command has ended, subagents it started and
-        left running (no `wait`, or the time limit) are cancelled, and `last_spawned` names those
-        it started. `parent_task_id` (the model call that asked for the command) is what their
-        spawn records point to.
+        With spawn on it also gets SPAWN_FD and the spawn limit, cut to the usual one unless it
+        starts a subagent; when the command has ended, subagents it started and left running (no
+        `wait`, or the time limit) are cancelled, and `last_spawned` names those it started.
+        `parent_task_id` (the model call that asked for the command) is what their spawn records
+        point to.
         """
         stopping.check()
         command = action["command"]
-        timeout = self.timeout_for(command)
+        short = int(self.limits["timeout_s"])
+        timeout = int(self.spawn.settings.command_timeout_s) if self.spawn is not None else short
         sock = (broker.claim_channel(step_id, agent_id=self.agent_id, origin=self.origin, **self.channel_meta)
                 if broker and self.claim else None)
         spawns = self.spawn.channel(step_id, parent_task_id) if self.spawn is not None else None
@@ -467,11 +466,14 @@ class SandboxEnvironment:
             env = self.environment(sock.fileno() if sock else None, spawns.sandbox_end.fileno() if spawns else None)
             return sandbox.run_command(self.argv(command, timeout), env=env, cwd=str(self.scratch.resolve()),
                                        timeout_s=timeout, pass_fds=tuple(s.fileno() for s in socks),
-                                       before_wait=close_ours, cancel=self.cancel.is_set if self.cancel else None)
+                                       before_wait=close_ours, cancel=self.cancel.is_set if self.cancel else None,
+                                       short_timeout_s=short if timeout > short else None,
+                                       extended=(lambda: bool(spawns.jobs)) if spawns else None)
         finally:
             close_ours()  # no-op after before_wait; closes them if Popen failed
             if spawns:
                 self.last_spawned = spawns.finish()
+            self.last_timeout_s = timeout if spawns and spawns.jobs else short
 
     def get_template_vars(self, **kwargs: Any) -> dict[str, Any]:
         return {}
@@ -880,9 +882,9 @@ class ResearchAgent(DefaultAgent):
         self.repeats = self.repeats + 1 if normal == self.last_command else 1
         self.last_command = normal
         started = utc_now()
-        timeout = self.env.timeout_for(command)
         result = self.env.execute({"command": command}, step_id=step, broker=self.broker,
                                   parent_task_id=self.model_task_id)
+        timeout = self.env.last_timeout_s  # the spawn limit if it started a subagent (row 2.12), else 120 s
         # This agent's claims at this step only: subagents claim in the same run while a spawn command runs.
         claims = claims_sent(self.run_dir, self.agent_id, step) if self.env.claim else 0
         name = f"step-{step:04d}.txt"

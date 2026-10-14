@@ -453,20 +453,41 @@ def test_baseline_with_spawn_has_no_claim_command(tmp_path: Path, corpus: tuple[
 
 # --- pieces (any OS) --------------------------------------------------------------------------------------
 
-def test_spawn_commands_get_the_longer_time_limit(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+def test_spawn_environment_pieces(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
     run = RunDir.create(tmp_path / "runs", "x", CONCEPT, corpus_manifest=corpus[1], condition="claim_on",
                         prompt_version="v2", prompt_sha256="a" * 64, temperature=0.7, seed=1, git_commit="c" * 40,
                         agent_root_manifest_sha256="b" * 64)
     service = type("Service", (), {"settings": SPAWN})()
-    on = SandboxEnvironment(run, corpus=corpus[0], mode="unsandboxed", claim=True, spawn=service)
+    on = SandboxEnvironment(run, corpus=corpus[0], mode="unsandboxed", claim=True, spawn=service)  # type: ignore[arg-type]
     off = SandboxEnvironment(run, corpus=corpus[0], mode="unsandboxed", claim=True)
-    for command, limit in (('spawn --task "x"', 1800), ('a=1; x | spawn --task y & wait', 1800), ("echo spawned", 120),
-                           ("python3 spawn.py", 120), ("respawn", 120), ("rg spawn-only", 120)):
-        assert on.timeout_for(command) == limit, command
-        assert off.timeout_for(command) == 120
     assert "--timeout" in on.argv("spawn --task x", 1800) and "1800" in on.argv("spawn --task x", 1800)
     assert on.environment(None, 9)["SPAWN_FD"] == "9" and "SPAWN_FD" not in off.environment(None)
     assert on.config == {"mode": "unsandboxed", "claim": True, "spawn": True} and "spawn" not in off.config
+    assert on.last_timeout_s == off.last_timeout_s == 120
+
+
+@posix_only
+def test_the_short_limit_holds_unless_the_command_spawned(tmp_path: Path) -> None:
+    """sandbox.run_command: past `short_timeout_s` the command is cut (exit 124) unless `extended()` says yes."""
+    common = dict(env={"PATH": "/usr/bin:/bin"}, cwd=str(tmp_path), timeout_s=60, short_timeout_s=1)
+    t0 = time.monotonic()
+    cut = sandbox.run_command(["bash", "-c", "sleep 30; echo late"], extended=lambda: False, **common)
+    assert (cut.exit_code, cut.timed_out, cut.output) == (sandbox.TIMEOUT_EXIT, True, b"")
+    assert time.monotonic() - t0 < 10
+    kept = sandbox.run_command(["bash", "-c", "sleep 2; echo done"], extended=lambda: True, **common)
+    assert (kept.exit_code, kept.timed_out, kept.output) == (0, False, b"done\n")
+
+
+@posix_only
+def test_the_spawn_limit_follows_the_requests_not_the_command_text(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A command that only names spawn keeps 120 s; one that spawns from a script gets the spawn limit."""
+    subs = SubModels({"t": [summary("done")]})
+    run, outcome, _, _ = go(tmp_path, corpus, [bash("echo 'spawn --task t' > fan.sh"), bash("bash fan.sh"),
+                                               final([row([])])], spawn=SPAWN, sub_model=subs, condition="claim_off")
+    assert outcome.exit_status == "submitted" and outcome.subagents == 1
+    tools = [t["custom_metadata"] for t in of(run, "agent_tool") if t["agent_id"] == "main"]
+    assert [(m["spawned"], m["timeout_s"]) for m in tools] == [([], 120), (["sub-01"], 1800)]
+    assert results_in((run.out / "step-0002.txt").read_text(encoding="utf-8"))[0]["summary"] == "done"
 
 
 def test_cost_per_agent_leaves_the_attach_step_apart() -> None:

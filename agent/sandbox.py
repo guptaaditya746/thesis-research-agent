@@ -282,7 +282,8 @@ CANCEL_POLL_S = 0.5
 
 def run_command(argv: list[str], *, env: dict[str, str], cwd: str, timeout_s: int,
                 pass_fds: tuple[int, ...] = (), before_wait: object = None,
-                cancel: Callable[[], bool] | None = None) -> Result:
+                cancel: Callable[[], bool] | None = None, short_timeout_s: int | None = None,
+                extended: Callable[[], bool] | None = None) -> Result:
     """Run the wrapper `argv` in a new session; return its combined output and exit status.
 
     `timeout` inside the wrapper normally ends the command (exit 124); the guard here waits 30 s
@@ -290,6 +291,10 @@ def run_command(argv: list[str], *, env: dict[str, str], cwd: str, timeout_s: in
     process starts (the harness closes its copy of the claim socket there). `cancel`, if given,
     is asked twice a second; when it says yes the session is killed (exit 137, cleanup
     "cancelled"): a subagent left running by its parent's command stops at once (row 2.12).
+
+    `short_timeout_s` (row 2.12: the wrapper then has the spawn limit as `timeout_s`) is the
+    command's limit unless `extended()` says yes by then (the command started a subagent): past
+    it the harness kills the session itself (exit 124, timed out), as the wrapper would have.
     """
     if os.name != "posix":
         raise OSError("agent commands run on POSIX only (bash, process groups, descriptor passing)")
@@ -300,17 +305,23 @@ def run_command(argv: list[str], *, env: dict[str, str], cwd: str, timeout_s: in
         before_wait()
     timed_out = cancelled = False
     deadline = started + timeout_s + 30
+    short = started + short_timeout_s if short_timeout_s is not None else None
+    polled = cancel is not None or short is not None
     try:
         while True:  # communicate() may be retried after a timeout without losing output
             left = deadline - time.monotonic()
             try:
-                output, _ = process.communicate(timeout=max(0.0, left if cancel is None else min(CANCEL_POLL_S, left)))
+                output, _ = process.communicate(timeout=max(0.0, min(CANCEL_POLL_S, left) if polled else left))
                 code = process.returncode
                 break
             except subprocess.TimeoutExpired:
-                if time.monotonic() < deadline and not (cancel and cancel()):
+                now = time.monotonic()
+                if short is not None and now >= short:
+                    short = None if extended and extended() else now  # extended for good, or cut now
+                cut = short is not None and now >= short
+                if now < deadline and not cut and not (cancel and cancel()):
                     continue
-                cancelled = time.monotonic() < deadline
+                cancelled = now < deadline and not cut
                 _kill_session(process.pid, signal.SIGKILL)
                 output, _ = process.communicate()
                 code = CANCEL_EXIT if cancelled else TIMEOUT_EXIT
