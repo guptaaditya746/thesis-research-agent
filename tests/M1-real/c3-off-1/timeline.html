@@ -1,0 +1,332 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>Trace c3-off-1</title><style>
+:root{--bg:#fff;--fg:#1d1d1f;--muted:#6b6b70;--line:#d8d8dc;--code:#f4f4f6;--ok:#11703a;--bad:#a4161a;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#161618;--fg:#ececf0;--muted:#a0a0a8;--line:#3a3a40;--code:#222226;
+--ok:#5fd38d;--bad:#ff7b7b;--warn:#f0b54a}}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,sans-serif;margin:0 auto;max-width:1000px;padding:16px}
+h1{font-size:20px}.meta{color:var(--muted)}section{border-top:1px solid var(--line);padding:10px 0}
+h2{font-size:15px;margin:0 0 6px}pre{background:var(--code);padding:8px;overflow-x:auto;white-space:pre-wrap;
+word-break:break-word;margin:4px 0}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.tag{font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:6px}
+</style></head><body><h1>Trace c3-off-1</h1><p class=meta>condition claim_off · 61 records · 30 steps</p><section id=step-1><h2>Step 1</h2><div>model call t000001: 992 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3212 bytes</div><pre>echo &quot;CORPUS=$CORPUS&quot;; ls &quot;$CORPUS&quot; | head -50; echo &quot;---count---&quot;; ls &quot;$CORPUS&quot; | wc -l; echo &quot;---manifest---&quot;; head -c 2000 &quot;$CORPUS/manifest.json&quot;</pre><pre class=meta>CORPUS=/mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0
+2025-acl-long-1010.md
+2025-acl-long-102.md
+2025-acl-long-1020.md
+2025-acl-long-1031.md
+2025-acl-long-1042.md
+2025-acl-long-1052.md
+2025-acl-long-1063.md
+2025-acl-long-1074.md
+2025-acl-long-1085.md
+2025-acl-long-1095.md
+2025-acl-long-1106.md
+... 87 more lines in out/step-0001.txt</pre></section><section id=step-2><h2>Step 2</h2><div>model call t000003: 3070 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1155 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;=== manifest ids -&gt; files ===&quot;; jq -r &#x27;.papers[] | .id&#x27; manifest.json | head -5; echo &quot;=== check if filename matches id ===&quot;; ls p2.md 2&gt;/dev/null &amp;&amp; echo &quot;p2.md exists&quot; || echo &quot;no p2.md&quot;; ls 2025-acl-long-102.md 2&gt;/dev/null; echo &quot;=== look for title/abstract in a file ===&quot;; head -20 p2.md 2&gt;/dev/null; echo &quot;=== if no p2.md, find files pattern ===&quot;; ls | grep -E &#x27;^p[0-9]&#x27; | head</pre><pre class=meta>=== manifest ids -&gt; files ===
+p2
+p3
+p4
+p5
+p6
+=== check if filename matches id ===
+p2.md
+p2.md exists
+2025-acl-long-102.md
+=== look for title/abstract in a file ===
+To appear in Advanced Robotics Vol. xx, No. xx, Month 20xx, 1-28
+... 30 more lines in out/step-0002.txt</pre></section><section id=step-3><h2>Step 3</h2><div>model call t000005: 3609 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 293 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;=== files starting with p ===&quot;; ls p*.md 2&gt;/dev/null | wc -l; echo &quot;=== other files ===&quot;; ls | grep -vE &#x27;^p[0-9]+\.md$&#x27; | grep -v manifest | head; echo &quot;=== total md ===&quot;; ls *.md | wc -l</pre><pre class=meta>=== files starting with p ===
+36
+=== other files ===
+2025-acl-long-1010.md
+2025-acl-long-102.md
+2025-acl-long-1020.md
+2025-acl-long-1031.md
+2025-acl-long-1042.md
+2025-acl-long-1052.md
+2025-acl-long-1063.md
+2025-acl-long-1074.md
+2025-acl-long-1085.md
+... 3 more lines in out/step-0003.txt</pre></section><section id=step-4><h2>Step 4</h2><div>model call t000007: 3975 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 970 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;=== total papers in manifest ===&quot;; jq &#x27;.papers | length&#x27; manifest.json; echo &quot;=== sample entries with any filename field ===&quot;; jq -c &#x27;.papers[0], .papers[1]&#x27; manifest.json; echo &quot;=== keys of a paper ===&quot;; jq -r &#x27;.papers[0] | keys[]&#x27; manifest.json</pre><pre class=meta>=== total papers in manifest ===
+337
+=== sample entries with any filename field ===
+{&quot;id&quot;:&quot;p2&quot;,&quot;source_pdf&quot;:&quot;/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/02.pdf&quot;,&quot;source_sha256&quot;:&quot;682074cb270eadb99c0a0c5249eef0ef64150ce2e3f780a7a7d0505e8a9b7e48&quot;,&quot;markdown_sha256&quot;:&quot;89fd60ae6daa14076d6c14910b61f900a8e8bc931358f17e8e84538613045525&quot;,&quot;bytes&quot;:122825,&quot;docling_version&quot;:&quot;2.110.0&quot;,&quot;conversion_seconds&quot;:60.631,&quot;failure&quot;:null}
+{&quot;id&quot;:&quot;p3&quot;,&quot;source_pdf&quot;:&quot;/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/final-final-frontend/corpus_acl_emnlp_2025_input/03.pdf&quot;,&quot;source_sha256&quot;:&quot;c0b91287ed3158b1a9417bebb0983d4c608c5c132fc0c024021d0214177542d8&quot;,&quot;markdown_sha256&quot;:&quot;485b9f73c88c107dde713085847d6b40583d977cda85468519b290ac44b9437c&quot;,&quot;bytes&quot;:39792,&quot;docling_version&quot;:&quot;2.110.0&quot;,&quot;conversion_seconds&quot;:24.717,&quot;failure&quot;:null}
+=== keys of a paper ===
+bytes
+conversion_seconds
+docling_version
+failure
+id
+markdown_sha256
+... 2 more lines in out/step-0004.txt</pre></section><section id=step-5><h2>Step 5</h2><div>model call t000009: 4716 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 698 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;=== p*.md files ===&quot;; ls p*.md | sort -t p -k2 -n; echo &quot;=== count 2025 files ===&quot;; ls 2025-*.md | wc -l; echo &quot;=== does p2.md match manifest p2 (robotics)? ===&quot;; head -3 p2.md; echo &quot;=== what is 2025-acl-long-102.md? ===&quot;; head -5 2025-acl-long-102.md</pre><pre class=meta>=== p*.md files ===
+p2.md
+p3.md
+p4.md
+p5.md
+p6.md
+p7.md
+p8.md
+p9.md
+p10.md
+p11.md
+p12.md
+... 37 more lines in out/step-0005.txt</pre></section><section id=step-6><h2>Step 6</h2><div>model call t000011: 5262 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 1270 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;=== files matching &#x27;retrieval-augmented generation&#x27; (case-insensitive) ===&quot;; rg -li &quot;retrieval[- ]augmented generation&quot; *.md | sort; echo &quot;=== count ===&quot;; rg -li &quot;retrieval[- ]augmented generation&quot; *.md | wc -l</pre><pre class=meta>=== files matching &#x27;retrieval-augmented generation&#x27; (case-insensitive) ===
+2025-acl-long-1106.md
+2025-acl-long-1127.md
+2025-acl-long-1159.md
+2025-acl-long-1191.md
+2025-acl-long-1202.md
+2025-acl-long-1352.md
+2025-acl-long-1394.md
+2025-acl-long-1437.md
+2025-acl-long-1490.md
+2025-acl-long-1554.md
+2025-acl-long-230.md
+... 44 more lines in out/step-0006.txt</pre></section><section id=step-7><h2>Step 7</h2><div>model call t000013: 6262 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 1, 281 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;=== files with word RAG (as a token) ===&quot;; rg -l &quot;\bRAG\b&quot; *.md | sort &gt; /tmp/rag_token.txt; wc -l /tmp/rag_token.txt; echo &quot;=== p*.md files with RAG or retrieval-augmented ===&quot;; rg -li &quot;retrieval[- ]augmented generation|\bRAG\b&quot; p*.md; echo &quot;=== union of the two RAG lists ===&quot;; cat /tmp/rag_token.txt</pre><pre class=meta>=== files with word RAG (as a token) ===
+bash: line 1: /tmp/rag_token.txt: Permission denied
+wc: /tmp/rag_token.txt: No such file or directory
+=== p*.md files with RAG or retrieval-augmented ===
+=== union of the two RAG lists ===
+cat: /tmp/rag_token.txt: No such file or directory</pre></section><section id=step-8><h2>Step 8</h2><div>model call t000015: 6630 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 985 bytes</div><pre>cd &quot;$CORPUS&quot;; mkdir -p &quot;$PWD/work&quot; 2&gt;/dev/null; echo &quot;PWD=$(pwd)&quot;; rg -l &quot;\bRAG\b&quot; *.md | sort &gt; &quot;$PWD/work/rag_token.txt&quot;; echo &quot;RAG-token files: $(wc -l &lt; &quot;$PWD/work/rag_token.txt&quot;)&quot;; echo &quot;=== RAG-token files not in retrieval-augmented list ===&quot;; rg -li &quot;retrieval[- ]augmented generation&quot; *.md | sort &gt; &quot;$PWD/work/rag_full.txt&quot;; comm -23 &quot;$PWD/work/rag_token.txt&quot; &quot;$PWD/work/rag_full.txt&quot;; echo &quot;=== union count ===&quot;; cat &quot;$PWD/work/rag_token.txt&quot; &quot;$PWD/work/rag_full.txt&quot; | sort -u | wc -l</pre><pre class=meta>PWD=/mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0
+bash: line 1: /mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0/work/rag_token.txt: No such file or directory
+bash: line 1: /mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0/work/rag_token.txt: No such file or directory
+RAG-token files: 
+=== RAG-token files not in retrieval-augmented list ===
+bash: line 1: /mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0/work/rag_full.txt: No such file or directory
+comm: /mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0/work/rag_token.txt: No such file or directory
+=== union count ===
+cat: /mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0/work/rag_token.txt: No such file or directory
+cat: /mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0/work/rag_full.txt: No such file or directory
+0</pre></section><section id=step-9><h2>Step 9</h2><div>model call t000017: 7176 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 680 bytes</div><pre>echo &quot;HOME=$HOME&quot;; echo &quot;PWD=$(pwd)&quot;; echo &quot;--- writable test in cwd ---&quot;; touch ./wtest 2&gt;&amp;1 &amp;&amp; echo &quot;cwd writable&quot; &amp;&amp; rm -f ./wtest; echo &quot;--- env workspace vars ---&quot;; env | grep -iE &quot;work|scratch|out|tmp|dir&quot; | head -20</pre><pre class=meta>HOME=/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/scratch
+PWD=/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/scratch
+--- writable test in cwd ---
+cwd writable
+--- env workspace vars ---
+PWD=/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/scratch
+HOME=/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/scratch
+TMPDIR=/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/scratch
+PATH=/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final-3/bin:/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final-3/agent-venv/bin:/usr/local/bin:/usr/bin:/bin
+CORPUS=/mnt/ceph/storage/data-tmp/2026/xepi3167/research-agent-corpus-docling-2.110.0</pre></section><section id=step-10><h2>Step 10</h2><div>model call t000019: 7757 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 506 bytes</div><pre>cd &quot;$CORPUS&quot;; W=&quot;$HOME/work&quot;; mkdir -p &quot;$W&quot;; echo &quot;W=$W&quot;; rg -li &quot;retrieval[- ]augmented generation&quot; *.md | sort &gt; &quot;$W/rag_full.txt&quot;; rg -l &quot;\bRAG\b&quot; *.md | sort &gt; &quot;$W/rag_token.txt&quot;; echo &quot;full-phrase files: $(wc -l &lt; &quot;$W/rag_full.txt&quot;)&quot;; echo &quot;RAG-token files: $(wc -l &lt; &quot;$W/rag_token.txt&quot;)&quot;; echo &quot;=== RAG-token files NOT mentioning full phrase (extra candidates) ===&quot;; comm -23 &quot;$W/rag_token.txt&quot; &quot;$W/rag_full.txt&quot;; echo &quot;=== union ===&quot;; cat &quot;$W/rag_full.txt&quot; &quot;$W/rag_token.txt&quot; | sort -u &gt; &quot;$W/rag_union.txt&quot;; wc -l &quot;$W/rag_union.txt&quot;</pre><pre class=meta>W=/mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/scratch/work
+full-phrase files: 53
+RAG-token files: 52
+=== RAG-token files NOT mentioning full phrase (extra candidates) ===
+2025-acl-long-17.md
+2025-acl-long-198.md
+2025-acl-long-369.md
+2025-acl-long-711.md
+2025-emnlp-main-1225.md
+2025-emnlp-main-1466.md
+2025-emnlp-main-1586.md
+2025-emnlp-main-1683.md
+... 4 more lines in out/step-0010.txt</pre></section><section id=step-11><h2>Step 11</h2><div>model call t000021: 8210 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 7374 bytes</div><pre>cd &quot;$CORPUS&quot;; W=&quot;$HOME/work&quot;; for f in $(cat &quot;$W/rag_union.txt&quot;); do t=$(grep -m1 -E &#x27;^## &#x27; &quot;$f&quot; | sed &#x27;s/^## //&#x27;); if [ -z &quot;$t&quot; ]; then t=$(sed -n &#x27;1p&#x27; &quot;$f&quot;); fi; echo &quot;### $f :: $t&quot;; done</pre><pre class=meta>### 2025-acl-long-1106.md :: Retrieval-Augmented Fine-Tuning With Preference Optimization For Visual Program Generation
+### 2025-acl-long-1127.md :: DRAE: Dynamic Retrieval-Augmented Expert Networks for Lifelong Learning and Task Adaptation in Robotics
+### 2025-acl-long-1159.md :: Graph of Records: Boosting Retrieval Augmented Generation for Long-context Summarization with Graphs
+### 2025-acl-long-1191.md :: Dialogue-RAG: Enhancing Retrieval for LLMs via Node-Linking Utterance Rewriting
+### 2025-acl-long-1202.md :: Graph Counselor: Adaptive Graph Exploration via Multi-Agent Synergy to Enhance LLM Reasoning
+### 2025-acl-long-1352.md :: GRAT: Guiding Retrieval-Augmented Reasoning through Process Rewards Tree Search
+### 2025-acl-long-1394.md :: Pretraining Context Compressor for Large Language Models with Embedding-Based Memory
+### 2025-acl-long-1437.md :: Time-MQA: Time Series Multi-Task Question Answering with Context Enhancement
+### 2025-acl-long-1490.md :: Benchmarking LLMs and LLM-based Agents in Practical Vulnerability Detection for Code Repositories
+### 2025-acl-long-1554.md :: A Multi-Agent Framework for Mitigating Dialect Biases in Privacy Policy Question-Answering Systems
+### 2025-acl-long-17.md :: FACT-AUDIT: An Adaptive Multi-Agent Framework for Dynamic Fact-Checking Evaluation of Large Language Models
+### 2025-acl-long-198.md :: FR-Spec: Accelerating Large-Vocabulary Language Models via Frequency-Ranked Speculative Sampling
+... 51 more lines in out/step-0011.txt</pre></section><section id=step-12><h2>Step 12</h2><div>model call t000023: 10679 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 14587 bytes</div><pre>cd &quot;$CORPUS&quot;; W=&quot;$HOME/work&quot;; echo &quot;=== RAG context in borderline papers (first 2 matching lines each) ===&quot;; for f in 2025-acl-long-892.md 2025-acl-long-561.md 2025-acl-long-1394.md 2025-acl-long-241.md 2025-acl-long-1202.md 2025-acl-long-1106.md 2025-acl-long-1554.md 2025-acl-long-1490.md; do echo &quot;----- $f -----&quot;; rg -i &quot;retrieval[- ]augmented generation|\bRAG\b&quot; &quot;$f&quot; | head -3; done</pre><pre class=meta>=== RAG context in borderline papers (first 2 matching lines each) ===
+----- 2025-acl-long-892.md -----
+## The Distracting Effect: Understanding Irrelevant Passages in RAG
+A well-known issue with Retrieval Augmented Generation (RAG) is that retrieved passages that are irrelevant to the query sometimes distract the answer-generating LLM, causing it to provide an incorrect response. In this paper, we shed light on this core issue and formulate the distracting effect of a passage w.r.t. a query (and an LLM). We provide a quantifiable measure of the distracting effect of a passage and demonstrate its robustness across LLMs. Our research introduces novel methods for identifying and using hard distracting passages to improve RAG systems. By fine-tuning LLMs with these carefully selected distracting passages, we achieve up to a 7.5% increase in answering accuracy compared to counterparts fine-tuned on conventional RAG datasets. Our contribution is two-fold: first, we move beyond the simple binary classification of irrelevant passages as either completely unrelated vs. distracting , and second, we develop and analyze multiple methods for finding hard distracting passages. To our knowledge, no other research has provided such a comprehensive framework for identifying and utilizing hard distracting passages.
+Retrieval Augmented Generation (RAG) is a key method to enable Large Language Models (LLMs) to solve knowledge-intensive tasks such as question-answering (Chen et al., 2017; Petroni et al., 2021). Adding retrieved passages to the prompt of an LLM is shown to ground the LLM response, significantly reducing hallucinations (Fan et al., 2024).
+----- 2025-acl-long-561.md -----
+## Divide-Then-Align: Honest Alignment based on the Knowledge Boundary of RAG
+Large language models (LLMs) augmented with retrieval systems have significantly advanced natural language processing tasks by integrating external knowledge sources, enabling more accurate and contextually rich responses. To improve the robustness of such systems against noisy retrievals, Retrieval-Augmented Fine-Tuning (RAFT) has emerged as a widely adopted method. However, RAFT conditions models to generate answers even in the absence of reliable knowledge. This behavior undermines their reliability in high-stakes domains, where acknowledging uncertainty is critical. To address this issue, we propose DivideThen-Align ( DTA ), a post-training approach designed to endow RAG systems with the ability to respond with &quot;I don&#x27;t know&quot; when the query is out of the knowledge boundary of both the retrieved passages and the model&#x27;s internal knowledge. DTA divides data samples into four knowledge quadrants and constructs tailored preference data for each quadrant, resulting in a curated dataset for Direct Preference Optimization (DPO). Experimental results on three benchmark datasets demonstrate that DTA effectively balances accuracy with appropriate abstention, enhancing the reliability and trustworthiness of retrieval-augmented systems. 1
+Large language models (LLMs) have achieved remarkable success across various NLP tasks (Radford et al., 2019; Brown et al., 2020; Bubeck et al., 2023; OpenAI, 2022). However, these models are constrained by their pretraining knowledge, which may become outdated or insufficient for domainspecific queries (Jiang et al., 2023; Shuster et al., 2021). Retrieval-Augmented Generation (RAG) (Izacard and Grave, 2021; Lewis et al., 2020) addresses this limitation by combining LLMs with retrieval systems that access external knowledge sources (Pasca, 2019; Jin et al., 2019) to provide more accurate and contextually rich responses.
+----- 2025-acl-long-1394.md -----
+Efficient processing of long contexts in large language models (LLMs) is essential for realworld applications like retrieval-augmented generation and in-context learning, especially in resource-constrained environments such as edge computing. This paper explores the embedding-based context compression to reduce inference costs while preserving the downstream LLM configurations. We propose a decoupled compressor-LLM framework, pretrained on text reconstruction and completion tasks, designed to effectively preserve essential contextual information within condensed embedding representations. Our extensive experiments investigate pretraining, model configurations, compression rates, efficiency across tasks, and adaptability to various LLMs. Results demonstrate that our approach outperforms competitive baselines in three domains and across eight datasets while being adaptable to different downstream LLMs. We find that thorough pretraining and carefully selected compression rates, such as 4x and 16x, enable a lightweight compressor to achieve a good balance between accuracy and speed. These findings underscore the potential of embeddingbased compression to enhance LLM efficiency and motivate further research in this area.
+Processing long context as input in large language models (LLMs) is essential for numerous realworld tasks, such as retrieval-augmented generation (RAG) (Gao et al., 2023), in-context learning (Li et al., 2024a) scenarios with extensive content in each demonstration, and life-long AI companions (Zhong et al., 2024) requiring the preservation of past interactions for a consistent experience. Consequently, enabling LLMs with long context processing capabilities (Chen et al., 2023b; Ding et al., 2024) has become a significant trend in newly released models. However, inference with long context poses severe challenges, as the computational cost increases quadratically with the sequence length (as illustrated in Figure A1), which is particularly unfriendly for low-resource devices such as consumer endpoints.
+... 18 more lines in out/step-0012.txt</pre></section><section id=step-13><h2>Step 13</h2><div>model call t000025: 12629 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 0 bytes</div><pre>cd &quot;$CORPUS&quot;; sed -n &#x27;1,400p&#x27; /mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/out/step-0012.txt | sed -n &#x27;40,200p&#x27;</pre><pre class=meta></pre></section><section id=step-14><h2>Step 14</h2><div>model call t000027: 12884 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 4221 bytes</div><pre>cd &quot;$CORPUS&quot;; W=&quot;$HOME/work&quot;; for f in 2025-acl-long-1202.md 2025-acl-long-1106.md 2025-acl-long-1554.md 2025-acl-long-1490.md 2025-acl-long-1127.md 2025-acl-long-465.md 2025-acl-long-775.md 2025-acl-long-81.md; do echo &quot;----- $f -----&quot;; rg -i &quot;retrieval[- ]augmented generation|\bRAG\b&quot; &quot;$f&quot; | head -2 | cut -c1-300; done</pre><pre class=meta>----- 2025-acl-long-1202.md -----
+Graph Retrieval Augmented Generation (GraphRAG) effectively enhances external knowledge integration capabilities by explicitly modeling knowledge relationships, thereby improving the factual accuracy and generation quality of Large Language Models (LLMs) in specialized domains. However, existing met
+Retrieval-Augmented Generation (RAG) improves factual consistency by retrieving relevant information from external textual corpora (Asai et al., 2024; Jeong et al., 2024). However, conventional RAG primarily retrieves independent text units, which limits its ability to reason across multiple segment
+----- 2025-acl-long-1106.md -----
+To validate this, we select LD as a test language and compare supervised fine-tuning (SFT) with retrieval-augmented generation (RAG), where the latter is a commonly used prompting-based method for VPL generation (Zhang et al., 2024b; Xue et al., 2024). Experimental results show that SFT outperforms 
+Figure 2: Performance comparison between SFT and RAG, where RAG uses a larger LLM. N represents the number of retrieved examples in RAG, and SFT&#x27;s performance is represented by a red dotted line. We use XML as the text format.
+----- 2025-acl-long-1554.md -----
+- Pei Liu, Xin Liu, Ruoyu Yao, Junming Liu, Siyuan Meng, Ding Wang, and Jun Ma. 2025. Hm-rag: Hierarchical multi-agent multimodal retrieval augmented generation. In Proceedings of the 33rd ACM international conference on multimedia , pages 2781-2790.
+----- 2025-acl-long-1490.md -----
+Recent studies have explored the use of LLMs for vulnerability detection, highlighting their ability to enhance both the identification and explanation of software vulnerabilities. InferROI (Wang et al., 2025) enhances static resource leak detection with LLM-inferred resource operation oriented inte
+- Xueying Du, Geng Zheng, Kaixin Wang, Jiayi Feng, Wentai Deng, Mingwei Liu, Bihuan Chen, Xin Peng, Tao Ma, and Yiling Lou. 2024. Vulrag: Enhancing llm-based vulnerability detection via knowledge-level rag. arXiv preprint arXiv:2406.11147 .
+----- 2025-acl-long-1127.md -----
+... 10 more lines in out/step-0014.txt</pre></section><section id=step-15><h2>Step 15</h2><div>model call t000029: 14428 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 230 bytes</div><pre>W=&quot;$HOME/work&quot;; cat &gt; &quot;$W/included.txt&quot; &lt;&lt;&#x27;EOF&#x27;
+2025-acl-long-1106.md
+2025-acl-long-1127.md
+2025-acl-long-1159.md
+2025-acl-long-1191.md
+2025-acl-long-1202.md
+2025-acl-long-1352.md
+2025-acl-long-1437.md
+2025-acl-long-230.md
+2025-acl-long-358.md
+2025-acl-long-540.md
+2025-acl-long-561.md
+2025-acl-long-871.md
+2025-acl-long-892.md
+2025-emnlp-main-1393.md
+2025-emnlp-main-1490.md
+2025-emnlp-main-730.md
+2025-emnlp-main-923.md
+2025-emnlp-main-947.md
+EOF
+echo &quot;included count: $(wc -l &lt; &quot;$W/included.txt&quot;)&quot;; echo &quot;=== now check the excluded borderline ones that DO have RAG-based methods but I may have missed ===&quot;; echo &quot;Re-examine: does 1394 (context compressor) report RAG results? Abstract says 8 datasets in 3 domains incl RAG.&quot;</pre><pre class=meta>included count: 18
+=== now check the excluded borderline ones that DO have RAG-based methods but I may have missed ===
+Re-examine: does 1394 (context compressor) report RAG results? Abstract says 8 datasets in 3 domains incl RAG.</pre></section><section id=step-16><h2>Step 16</h2><div>model call t000031: 15243 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 12195 bytes</div><pre>cd &quot;$CORPUS&quot;; for f in 2025-acl-long-1394.md 2025-acl-long-241.md 2025-acl-long-465.md 2025-emnlp-main-115.md 2025-emnlp-main-1116.md 2025-emnlp-main-1140.md 2025-emnlp-main-1249.md 2025-emnlp-main-1466.md 2025-emnlp-main-1333.md 2025-emnlp-main-1550.md 2025-emnlp-main-802.md 2025-emnlp-main-911.md 2025-emnlp-main-1683.md 2025-emnlp-main-1707.md 2025-emnlp-main-320.md 2025-emnlp-main-429.md 2025-emnlp-main-43.md 2025-emnlp-main-549.md 2025-emnlp-main-67.md 2025-emnlp-main-971.md 2025-emnlp-main-983.md 2025-emnlp-main-103.md 2025-emnlp-main-1068.md 2025-emnlp-main-1225.md 2025-emnlp-main-1261.md 2025-emnlp-main-561.md 2025-acl-long-198.md 2025-acl-long-17.md 2025-acl-long-369.md 2025-acl-long-711.md 2025-acl-long-636.md; do echo &quot;===== $f =====&quot;; rg -i &quot;retrieval[- ]augmented generation|\bRAG\b&quot; &quot;$f&quot; | head -2 | cut -c1-220; done</pre><pre class=meta>===== 2025-acl-long-1394.md =====
+Efficient processing of long contexts in large language models (LLMs) is essential for realworld applications like retrieval-augmented generation and in-context learning, especially in resource-constrained environments s
+Processing long context as input in large language models (LLMs) is essential for numerous realworld tasks, such as retrieval-augmented generation (RAG) (Gao et al., 2023), in-context learning (Li et al., 2024a) scenario
+===== 2025-acl-long-241.md =====
+In this work, we provide an empirical investigation of gist-based context compression methods to improve context processing in large language models. We focus on two key questions: (1) How well can these methods replace 
+Large language models (LLMs) are increasingly recognized as a key pathway toward general artificial intelligence (OpenAI, 2023; Zhao et al., 2023), with long-context processing emerging as a critical research frontier (C
+===== 2025-acl-long-465.md =====
+Figure 1: Comparison of ACRE, standard RAG, and efficient long LLMs for information-seeking tasks. Standard RAG retrieves evidence without full-context perception, and long LLMs struggle with contexts exceeding their nat
+To address the challenges posed by excessive KV activations, previous works have proposed various strategies: reducing the precision of activation tensors (Liu et al., 2024; Xu et al., 2024), dividing long contexts into 
+===== 2025-emnlp-main-115.md =====
+Using CondAmbigQA, we develop an experimental protocol to evaluate models on both condition identification and conditional answer generation. Our results demonstrate that incorporating explicit conditions into answer gen
+RAG-based methods have shown promise in improving factual accuracy through retrieval (Lewis et al., 2020; Gao et al., 2023b; Li et al., 2025), but they do not directly address ambiguity arising from implicit assumptions.
+... 71 more lines in out/step-0016.txt</pre></section><section id=step-17><h2>Step 17</h2><div>model call t000033: 17619 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3394 bytes</div><pre>sed -n &#x27;60,200p&#x27; /mnt/ceph/storage/data-tmp/2026/xepi3167/runs/c3-off-1/out/step-0016.txt</pre><pre class=meta>A core advantage of foundational judges is easy adaption to specialized domains. Here, we show the advantage of finetuning SFR-Judge-8B for contextual evaluation (e.g., outputs of retrieval augmented generation or summar
+===== 2025-emnlp-main-1068.md =====
+Distinct from Retrieval-Augmented Generation (RAG) (Gao et al., 2023), which leverages additional pre-existing or externally-retrieved context to enhance reasoning, our step answer mechanism hinges on step guidance where
+===== 2025-emnlp-main-1225.md =====
+Yuelyu Ji, Zhuochun Li, Rui Meng, Sonish Sivarajkumar, Yanshan Wang, Zeshui Yu, Hui Ji, Yushui Han, Hanyu Zeng, and Daqing He. 2024. RAG-RLRCLaySum at BioLaySumm: Integrating retrievalaugmented generation and readability
+===== 2025-emnlp-main-1261.md =====
+metrics such as conversion, etc. Domain-mapping, task-calibration and preference alignment, can be presumably conquered through provisioning of specific context, instructions, examples, in-context learning, prompting, le
+Patrick S. H. Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, Sebastian Riedel, and Douwe Kiela. 2020. Retrieval-augmen
+===== 2025-emnlp-main-561.md =====
+Recently, Large Language Models (LLMs), such as GPT-4 (Achiam et al., 2023), Claude (Anthropic, 2024), Llama (Llama Team, 2024), and more recently, OpenAI&#x27;s o1 (OpenAI, 2024b), have exhibited remarkable potential to revo
+- Yunfan Gao, Yun Xiong, Xinyu Gao, Kangxiang Jia, Jinliu Pan, Yuxi Bi, Yi Dai, Jiawei Sun, and Haofen Wang. 2023. Retrieval-augmented generation for large language models: A survey. arXiv preprint arXiv:2312.10997 .
+===== 2025-acl-long-198.md =====
+... 12 more lines in out/step-0017.txt</pre></section><section id=step-18><h2>Step 18</h2><div>model call t000035: 18910 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3624 bytes</div><pre>cd &quot;$CORPUS&quot;; for f in 2025-acl-long-1106.md 2025-acl-long-540.md 2025-acl-long-1437.md 2025-acl-long-871.md 2025-acl-long-1352.md; do echo &quot;===== $f =====&quot;; rg -in &quot;experiment|dataset|we evaluate|benchmark&quot; &quot;$f&quot; | head -4 | cut -c1-180; done</pre><pre class=meta>===== 2025-acl-long-1106.md =====
+13:Visual programming languages (VPLs) allow users to create programs through graphical interfaces, which results in easier accessibility and their widespread usage in various doma
+25:To validate this, we select LD as a test language and compare supervised fine-tuning (SFT) with retrieval-augmented generation (RAG), where the latter is a commonly used prompti
+61:As LLMs cannot generate complex visual elements directly, prior studies (Xue et al., 2024; Zhang et al., 2024b) generate VPL in text formats. As each format has unique character
+81:Training-based method outperforms promptingbased method To evaluate the effectiveness of the training-based approach compared to the prompting-based approach for industrial VPL 
+===== 2025-acl-long-540.md =====
+9:Interpretation is critical for disease diagnosis, but existing models struggle to balance predictive accuracy with human-understandable rationales. While large language models (L
+29:- State-of-the-art performance in disease diagnosis and rationale generation, validated through extensive experiments on benchmark EHR datasets (Johnson et al., 2016, 2023).
+33:Recent advancements in highly effective attention mechanisms (Vaswani et al., 2017; Niu et al., 2021; Dao, 2023; Yang et al., 2024), large-scale CoT datasets (Cobbe et al., 2021
+133:## 4 Experiments
+===== 2025-acl-long-1437.md =====
+11:Time series data are foundational in finance, healthcare, and energy domains. However, most existing methods and datasets remain focused on a narrow spectrum of tasks, such as f
+... 13 more lines in out/step-0018.txt</pre></section><section id=step-19><h2>Step 19</h2><div>model call t000037: 20149 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 2935 bytes</div><pre>cd &quot;$CORPUS&quot;; for f in 2025-acl-long-1352.md 2025-acl-long-871.md 2025-acl-long-1437.md 2025-acl-long-1191.md 2025-acl-long-1159.md; do echo &quot;############ $f ############&quot;; rg -in &quot;HotPotQA|2WikiMultiHopQA|MuSiQue|Bamboogle|Natural Questions|NQ |TriviaQA|WebQuestions|MuSiQue|MS-MARCO|SQuAD|Trivia|Bamboogle|GridSearch|MetQA|IrisQA|MultiHop|Curated|OpenDomainQA|StrategyQA|2Wiki&quot; &quot;$f&quot; | head -8 | cut -c1-140; done</pre><pre class=meta>############ 2025-acl-long-1352.md ############
+9:Enhancing large models for complex multihop question-answering has become a research focus in the Retrieval-augmented generation (RAG) are
+13:In recent years, retrieval-augmented generation (RAG) has emerged as a key approach to addressing factual errors and hallucinations (Mall
+27:We conducted various experiments on four datasets: HotPotQA (Yang et al., 2018), 2WikiMultiHopQA (Ho et al., 2020), MuSiQue (Trivedi et a
+113:Datasets. To evaluate the ability of different models to answer complex questions, we selected four complex question answering datasets:
+125:Our model, GRAT, outperforms baseline models on the 2WikiMultiHopQA, HotPotQA, and MuSiQue datasets when using Llama3-Instruct-8B, Qwen2
+137:|                 |                      | 2MultiHopQA | HotPotQA   | Bamboogle  | MuSiQue    |
+161:As mentioned in Section 2.5, we use GRAT to perform reasoning and constructing a search tree, and score each sub-path, which can generat
+165:Table 2: Performance of GRAT and InstructRAG before and after self-training on the 2MultiHopQA dataset. The backbone model is Llama3-Ins
+############ 2025-acl-long-871.md ############
+39:- We propose a novel retrieval-augmented framework, namely Q-DREAM , which is modelagnostic and can be easily adapted to various LLMs to 
+141:We use the following three multi-hop QA datasets in the open-domain setting to evaluate Q-DREAM : HotpotQA (Yang et al., 2018), 2WikiMul
+... 13 more lines in out/step-0019.txt</pre></section><section id=step-20><h2>Step 20</h2><div>model call t000039: 21182 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3671 bytes</div><pre>cd &quot;$CORPUS&quot;; for f in 2025-acl-long-1191.md 2025-acl-long-1159.md; do echo &quot;############ $f ############&quot;; rg -in &quot;dataset&quot; &quot;$f&quot; | head -10 | cut -c1-200; done</pre><pre class=meta>############ 2025-acl-long-1191.md ############
+7:Large Language Models (LLMs) and Retrieval Augmented Generation (RAG) methods have demonstrated significant potential on tasks across multiple domains. However, ellipses and coreferences, as common 
+33:To address this limitation, we propose a retrieval enhancement method for RAG, Dialogue-RAG, based on Incomplete Utterance Rewriting (IUR). It completes utterance using IUR, and realizes accurate R
+39:- We manually construct a retrieval-augmented generation dialogue dataset on English and Chinese, which contains multiple rounds of question answering pairs and a knowledge base for retrieval. It c
+141:## 3.3 Dialogue RAG Dataset
+143:To test the performance of LLM and RAG methods in real dialogue scenarios, we manually construct an dialogue dataset on English and Chinese, Dialogue-RAG-MULTI-v1.0 . The dataset provides multiple
+145:Table 1: Dataset setting.
+153:In practical application scenarios, we can not only directly test the multi-round dialogue effect of the model, but also evaluate the dialogue ability of the model enhanced by the RAG method. The 
+159:Dataset. Weconduct knowledge dialogue task on our proposed Dialogue-RAG-MULTI-v1.0 dataset to test the effect of rewriting in RAG augmented human-machine dialogue tasks. To further explore the imp
+163:Baselines for IUR For the IUR task, in the setting without BERT pre-trained language model enhancement, the LSTM encoder is used in the baselines Syntactic, L-Gen, L-Ptr, and L-Ptr-Gen, which are 
+184:Figure 3: Comparison of results with and without rewrite on test sets across three datasets
+############ 2025-acl-long-1159.md ############
+... 10 more lines in out/step-0020.txt</pre></section><section id=step-21><h2>Step 21</h2><div>model call t000041: 22384 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 5540 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;### 1191 around line 159-190 ###&quot;; sed -n &#x27;159,190p&#x27; 2025-acl-long-1191.md | cut -c1-220; echo; echo &quot;### 1437 dataset mentions (TSQA + which eval) ###&quot;; rg -in &quot;TSQA|Time-MQA|we evaluate|dataset|benchmark&quot; 2025-acl-long-1437.md | sed -n &#x27;1,15p&#x27; | cut -c1-200</pre><pre class=meta>### 1191 around line 159-190 ###
+Dataset. Weconduct knowledge dialogue task on our proposed Dialogue-RAG-MULTI-v1.0 dataset to test the effect of rewriting in RAG augmented human-machine dialogue tasks. To further explore the impact of utterance rewriti
+
+Baselines for RAG. In order to verify the effect of our method, we test the knowledge dialogue task in the condition of the generation without IUR and RAG (w/o IUR), the generation without RAG (w/ IUR), the generation wi
+
+Baselines for IUR For the IUR task, in the setting without BERT pre-trained language model enhancement, the LSTM encoder is used in the baselines Syntactic, L-Gen, L-Ptr, and L-Ptr-Gen, which are consistent with our work
+
+Evaluation Metrics. We use BLEU, ROUGE, and BERTScore automatic metrics for RAG enhanced dialogue scene. In the retrieval experiment, we use accuracy, recall and MRR@5 to evaluate the retrieval effect. Besides, we use BL
+
+Model Settings. For the knowledge dialogue task, ChatGLM3-6B (GLM et al., 2024)
+
+Table 2: Main results. B , R , and S are BLEU, ROUGE, and BERT SCORE respectively. The cumulative n-gram BLEU score is denote as B n . For ROUGE metric, it measures the n-gram overlapping (denoted as R n ) and longest ma
+... 38 more lines in out/step-0021.txt</pre></section><section id=step-22><h2>Step 22</h2><div>model call t000043: 24590 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 5673 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;### 1191: look for other dataset names (KB, retrieval sets) ###&quot;; rg -in &quot;three dataset|test set|knowledge base|KB|dataset&quot; 2025-acl-long-1191.md | sed -n &#x27;1,20p&#x27; | cut -c1-160; echo; echo &quot;### 1191 lines 180-215 ###&quot;; sed -n &#x27;180,215p&#x27; 2025-acl-long-1191.md | cut -c1-200</pre><pre class=meta>### 1191: look for other dataset names (KB, retrieval sets) ###
+7:Large Language Models (LLMs) and Retrieval Augmented Generation (RAG) methods have demonstrated significant potential on tasks across multiple domains. Howeve
+33:To address this limitation, we propose a retrieval enhancement method for RAG, Dialogue-RAG, based on Incomplete Utterance Rewriting (IUR). It completes utte
+37:- We explore the dialogue task scenario and design a new retrieval enhancement method for RAG based on IUR. We build an enhanced RAG system based on this app
+39:- We manually construct a retrieval-augmented generation dialogue dataset on English and Chinese, which contains multiple rounds of question answering pairs 
+63:where IUR ( · ) is the rewriting process. Details are provided in Subsection 3.2 of this chapter. Based on Ru i , we match key information through similarit
+141:## 3.3 Dialogue RAG Dataset
+143:To test the performance of LLM and RAG methods in real dialogue scenarios, we manually construct an dialogue dataset on English and Chinese, Dialogue-RAG-MU
+145:Table 1: Dataset setting.
+153:In practical application scenarios, we can not only directly test the multi-round dialogue effect of the model, but also evaluate the dialogue ability of th
+159:Dataset. Weconduct knowledge dialogue task on our proposed Dialogue-RAG-MULTI-v1.0 dataset to test the effect of rewriting in RAG augmented human-machine di
+163:Baselines for IUR For the IUR task, in the setting without BERT pre-trained language model enhancement, the LSTM encoder is used in the baselines Syntactic,
+... 47 more lines in out/step-0022.txt</pre></section><section id=step-23><h2>Step 23</h2><div>model call t000045: 26391 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 5835 bytes</div><pre>cd &quot;$CORPUS&quot;; for f in 2025-acl-long-1106.md 2025-acl-long-230.md 2025-acl-long-358.md 2025-acl-long-540.md 2025-acl-long-561.md; do echo &quot;############ $f ############&quot;; rg -in &quot;dataset|we evaluate|benchmark|MS-MARCO|Natural Questions|TriviaQA|SQuAD|HotPotQA|Medical|EHR|i2b2|MIMIC|CURETRAD|EHRShot|MedQA&quot; &quot;$f&quot; | head -8 | cut -c1-150; done</pre><pre class=meta>############ 2025-acl-long-1106.md ############
+81:Training-based method outperforms promptingbased method To evaluate the effectiveness of the training-based approach compared to the prompting-base
+85:2 Weconducted our experiments using the dataset described in §4.
+107:Visual programming languages often contain recurring subroutines and modules that are reused in similar contexts (Terra-Neves et al., 2021). To le
+141:Dataset Due to the lack of publicly available datasets, we created our own by annotating ladder diagrams from actual production environments.
+143:Using XG5000 (XG5, 2009), we exported these diagrams as XML files and divided them into functional units, where each unit consists of one or more 
+145:Implementation details We utilize Llama-3.18B-Instruct (Dubey et al., 2024) as the main backbone model and also use Qwen2.5-7BInstruct (Yang et al
+179:In this section, we evaluate RAFT-V under different retrieved examples (§6.1), analyze the deletion ratio in graph editing (§6.2), compare graph
+183:To assess whether the number of retrieved examples affects performance, we evaluate RAFT-V trained with different numbers of retrieval examples k 
+############ 2025-acl-long-230.md ############
+3:## SafeRAG: Benchmarking Security in Retrieval-Augmented Generation of Large Language Model
+11:The indexing-retrieval-generation paradigm of retrieval-augmented generation (RAG) has been highly successful in solving knowledgeintensive tasks b
+... 33 more lines in out/step-0023.txt</pre></section><section id=step-24><h2>Step 24</h2><div>model call t000047: 28069 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3586 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;### 358 dataset line 177-185 ###&quot;; sed -n &#x27;177,186p&#x27; 2025-acl-long-358.md | cut -c1-220; echo; echo &quot;### 561 line 148-160 ###&quot;; sed -n &#x27;148,160p&#x27; 2025-acl-long-561.md | cut -c1-200; echo; echo &quot;### 540 dataset section ###&quot;; rg -in &quot;dataset|EHR|benchmark|we evaluate|table&quot; 2025-acl-long-540.md | sed -n &#x27;5,14p&#x27; | cut -c1-160</pre><pre class=meta>### 358 dataset line 177-185 ###
+Datasets. The following benchmarks are used in our work: ARC-Challenge (Clark et al., 2018), MedMCQA (Pal et al., 2022), GPQA (Rein et al., 2024), MMLU (Hendrycks et al., 2020), OpenLLM-Leaderboard (Myrzakhan et al., 202
+
+## 4.1 Models and Experimental Settings
+
+For our experiment we use a set of large-scale teacher models and small student models. The teacher models include GPT-4o (Hurst et al., 2024), DeepSeek-V3 (Liu et al., 2024), Gemini Flash 1.5 (Team et al., 2024a), Claud
+
+Table 1: Comparison with other state-of-the-art RAG frameworks. We compare DRAG (evidence-based) with prior approaches across multiple benchmarks and backbone LLMs. In the table, the &#x27; ↑ &#x27; indicates improvements over o
+
+| Framework                    | BackboneLLM           | MedMCQA Acc   | MMLU Acc        | ARC-C Acc   |
+|------------------------------|-----------------------|---------------|-----------------|-------------|
+
+... 26 more lines in out/step-0024.txt</pre></section><section id=step-25><h2>Step 25</h2><div>model call t000049: 29372 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3806 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;### 358 full dataset sentence ###&quot;; sed -n &#x27;177p&#x27; 2025-acl-long-358.md; sed -n &#x27;178p&#x27; 2025-acl-long-358.md | cut -c1-300; echo; echo &quot;### 540 line 137-145 ###&quot;; sed -n &#x27;137,146p&#x27; 2025-acl-long-540.md | cut -c1-220; echo; echo &quot;### 230 datasets ###&quot;; rg -in &quot;dataset|benchmark|we construct|we evaluate|MS-MARCO|Natural&quot; 2025-acl-long-230.md | sed -n &#x27;1,12p&#x27; | cut -c1-150</pre><pre class=meta>### 358 full dataset sentence ###
+Datasets. The following benchmarks are used in our work: ARC-Challenge (Clark et al., 2018), MedMCQA (Pal et al., 2022), GPQA (Rein et al., 2024), MMLU (Hendrycks et al., 2020), OpenLLM-Leaderboard (Myrzakhan et al., 2024), AVERITEC (Schlichtkrull et al., 2023). More details of these datasets are provided in Appendix A.
+
+
+### 540 line 137-145 ###
+Dataset: We evaluate ClinRaGen on two public EHR datasets: MIMIC-III (Johnson et al., 2016) (28,456 EHRs include medical notes and time series lab tests) and MIMIC-IV (Johnson et al., 2023) (28,900 EHRs). Both datasets u
+
+Table 1: The performance of comparative methods in the disease diagnosis tasks on MIMIC-III and MIMIC-IV. The best results are highlighted in bold, and the second-best results are marked with an underline.
+
+| Models                        | Size          | Modality      | Modality      | Micro                           | Micro                           | Micro                           | Macro                           | Ma
+|-------------------------------|---------------|---------------|---------------|---------------------------------|---------------------------------|---------------------------------|---------------------------------|---
+| Models                        | Size          | Lab           | Note          | Precision                       | Recall                          | F1                              | Precision                       | Re
+... 17 more lines in out/step-0025.txt</pre></section><section id=step-26><h2>Step 26</h2><div>model call t000051: 30632 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3258 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;### 1106 dataset section 141-160 ###&quot;; sed -n &#x27;141,160p&#x27; 2025-acl-long-1106.md | cut -c1-200; echo; echo &quot;### 230 base dataset / news ###&quot;; rg -in &quot;base dataset|news|we collect|MS-MARCO|corpus|foundation|underlying&quot; 2025-acl-long-230.md | sed -n &#x27;1,10p&#x27; | cut -c1-160</pre><pre class=meta>### 1106 dataset section 141-160 ###
+Dataset Due to the lack of publicly available datasets, we created our own by annotating ladder diagrams from actual production environments.
+
+Using XG5000 (XG5, 2009), we exported these diagrams as XML files and divided them into functional units, where each unit consists of one or more interconnected rungs designed to perform a specific fu
+
+Implementation details We utilize Llama-3.18B-Instruct (Dubey et al., 2024) as the main backbone model and also use Qwen2.5-7BInstruct (Yang et al., 2024) to assess the generalizability of our method.
+
+## 5 Main Results
+
+Stage 1 (RAFT-V) improves upon SFT Table 2 compares the performance of SFT, RAFT-V, and our two-stage method across different output formats (XML, JSON, metaprogram) with two backbone models. By incor
+
+Preference optimization (Stage 2) yields further gains Building on Stage 1&#x27;s improvements, Stage 2 further boosts correctness through preference optimization, particularly in terms of exact match (EM)
+... 21 more lines in out/step-0026.txt</pre></section><section id=step-27><h2>Step 27</h2><div>model call t000053: 31849 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 6086 bytes</div><pre>cd &quot;$CORPUS&quot;; for f in 2025-acl-long-1202.md 2025-acl-long-1490.md 2025-emnlp-main-1393.md 2025-emnlp-main-1490.md 2025-emnlp-main-730.md 2025-emnlp-main-923.md 2025-emnlp-main-947.md; do echo &quot;############ $f ############&quot;; rg -in &quot;dataset|we evaluate|benchmark|HotPotQA|2Wiki|MuSiQue|Bamboogle|Natural Questions|TriviaQA|WebQuestion|MS-MARCO|SQuAD|MedQA|table&quot; &quot;$f&quot; | head -6 | cut -c1-150; done</pre><pre class=meta>############ 2025-acl-long-1202.md ############
+43:- Multi-Dataset Empirical Validation : Experiments on various benchmarks show that Graph Counselor outperforms existing methods in reasoning accura
+55:Planning Agent. Given a question or the context from previous reasoning, Planning Agent first analyzes its meaning, identifies information relevant
+109:Dataset. In this study, we used the GRBENCH dataset (Jin et al., 2024) to assess the ability of LLMs to interact with external knowledge graphs. G
+119:Table 1: Model Performance(%) on GRBENCH comparing Base LLMs, Text RAG, GraphRAG(1-hop and 2-hop), Graph-CoT, and Graph Counselor. We evaluate the
+154:The main experimental results are shown in Table 1. From the results, we observe that: 1) Graph Counselor demonstrates a significant advantage ove
+158:To further validate the generality of Graph Counselor, we conducted comparative experiments on an additional KGQA dataset, WebQSP (Yih et al., 201
+############ 2025-acl-long-1490.md ############
+1:## Benchmarking LLMs and LLM-based Agents in Practical Vulnerability Detection for Code Repositories
+11:Large Language Models (LLMs) have shown promise in software vulnerability detection, particularly on function-level benchmarks like Devign and BigV
+13:We introduce JITVUL, a JIT vulnerability detection benchmark linking each function to its vulnerability-introducing and fixing commits. Built from 
+17:Given the success of large language models (LLMs) across various application domains, researchers have begun exploring their effectiveness in softw
+... 37 more lines in out/step-0027.txt</pre></section><section id=step-28><h2>Step 28</h2><div>model call t000055: 33663 tokens, reply command (lenient_tool_call), phase research</div><div>command, exit 0, 3000 bytes</div><pre>cd &quot;$CORPUS&quot;; echo &quot;### 947 line 80-82 ###&quot;; sed -n &#x27;80,82p&#x27; 2025-emnlp-main-947.md | cut -c1-300; echo; echo &quot;### 923 line 31, 101-110 ###&quot;; sed -n &#x27;31p&#x27; 2025-emnlp-main-923.md | cut -c1-300; sed -n &#x27;101,112p&#x27; 2025-emnlp-main-923.md | cut -c1-200; echo; echo &quot;### 730 dataset section ###&quot;; rg -in &quot;dataset|we evaluate|benchmark|HotPotQA|2Wiki|MuSiQue|Bamboogle|MetQA|WebQuestions|GridSearch&quot; 2025-emnlp-main-730.md | sed -n &#x27;1,8p&#x27; | cut -c1-150</pre><pre class=meta>### 947 line 80-82 ###
+Datasets. We assess our method on five knowledge-intensive question answering benchmarks that challenge LLMs with multi-step reasoning and ambiguities. For each dataset, we run experiment on 500 randomly sampled questions. We analyze three multihop question answering datasets: (1) HotpotQA (Yang et 
+
+Evaluation Metrics. We employ COVEREM(Rosset et al., 2021), which assesses whether the generated answer includes the ground truth answer to evaluate multihop questions and ASQA datasets. Following (Stelmakh et al., 2022), we also use Disambig-F1 (Dis-F1) to evaluate performance on the ASQA dataset. 
+
+### 923 line 31, 101-110 ###
+We evaluate the effectiveness of THREAD through experiments in two open-domain, Web Navigation (Deng et al., 2023a), Wikipedia Instructions (Koupaee and Wang, 2018), and one industrial setting, Incident Mitigation (Shetty et al., 2022). Experimental results demonstrate that while existing paradigms 
+## 3.1 Scenarios and Datasets
+
+We evaluate THREAD on two open-domain scenarios: Web Navigation, Wikipedia Instructions, and one industrial setting: Incident Mitigation.
+
+Web Navigation. Mind2Web (Deng et al., 2023a) is a dataset designed for web agents to perform complex tasks on real-world websites based on language instructions. Each task is treated as a multi-choic
+... 17 more lines in out/step-0028.txt</pre></section><section id=step-29><h2>Step 29</h2><div>model call t000057: 34705 tokens, reply command (lenient_tool_call), phase conclude</div><div class=warn>coverage: command_not_run — {&quot;phase&quot;: &quot;conclude&quot;}</div></section><section id=step-30><h2>Step 30</h2><div>model call t000059: 35192 tokens, reply command (lenient_tool_call), phase conclude</div><div class=warn>coverage: command_not_run — {&quot;phase&quot;: &quot;conclude&quot;}</div><div class=warn>coverage: no_final_answer — {&quot;exit_status&quot;: &quot;budget&quot;}</div></section></body></html>

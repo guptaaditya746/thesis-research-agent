@@ -29,6 +29,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
+from typing import Callable
 
 MODES = ("landlock", "unsandboxed")
 TIMEOUT_EXIT = 124  # what `timeout` returns; the harness uses it too when its own guard fires
@@ -184,10 +185,10 @@ def supervise(argv: list[str], timeout_s: int) -> int:
     This is `timeout -k 5 <s>` done here rather than by the coreutils binary: the uutils `timeout`
     on the WSL test machine could not start its command under Landlock plus seccomp ("failed to
     execute process: Operation not permitted"), and the wrapper should not depend on which
-    coreutils a node has. The claim descriptor, if any, is passed on.
+    coreutils a node has. The claim and spawn descriptors, if any, are passed on.
     """
-    fd = os.environ.get("CLAIM_FD", "")
-    child = subprocess.Popen(argv, process_group=0, pass_fds=(int(fd),) if fd.isdigit() else ())
+    fds = tuple(int(v) for v in (os.environ.get("CLAIM_FD", ""), os.environ.get("SPAWN_FD", "")) if v.isdigit())
+    child = subprocess.Popen(argv, process_group=0, pass_fds=fds)
     try:
         return _status(child.wait(timeout=timeout_s))
     except subprocess.TimeoutExpired:
@@ -275,13 +276,25 @@ def _kill_session(sid: int, sig: int) -> bool:
     return found
 
 
+CANCEL_EXIT = 128 + signal.SIGKILL  # a subagent's command stopped because the subagent was cancelled (row 2.12)
+CANCEL_POLL_S = 0.5
+
+
 def run_command(argv: list[str], *, env: dict[str, str], cwd: str, timeout_s: int,
-                pass_fds: tuple[int, ...] = (), before_wait: object = None) -> Result:
+                pass_fds: tuple[int, ...] = (), before_wait: object = None,
+                cancel: Callable[[], bool] | None = None, short_timeout_s: int | None = None,
+                extended: Callable[[], bool] | None = None) -> Result:
     """Run the wrapper `argv` in a new session; return its combined output and exit status.
 
     `timeout` inside the wrapper normally ends the command (exit 124); the guard here waits 30 s
     longer and then kills the session itself. `before_wait`, if given, is called right after the
-    process starts (the harness closes its copy of the claim socket there).
+    process starts (the harness closes its copy of the claim socket there). `cancel`, if given,
+    is asked twice a second; when it says yes the session is killed (exit 137, cleanup
+    "cancelled"): a subagent left running by its parent's command stops at once (row 2.12).
+
+    `short_timeout_s` (row 2.12: the wrapper then has the spawn limit as `timeout_s`) is the
+    command's limit unless `extended()` says yes by then (the command started a subagent): past
+    it the harness kills the session itself (exit 124, timed out), as the wrapper would have.
     """
     if os.name != "posix":
         raise OSError("agent commands run on POSIX only (bash, process groups, descriptor passing)")
@@ -290,23 +303,38 @@ def run_command(argv: list[str], *, env: dict[str, str], cwd: str, timeout_s: in
                                stderr=subprocess.STDOUT, start_new_session=True, pass_fds=pass_fds)
     if callable(before_wait):
         before_wait()
-    timed_out = False
+    timed_out = cancelled = False
+    deadline = started + timeout_s + 30
+    short = started + short_timeout_s if short_timeout_s is not None else None
+    polled = cancel is not None or short is not None
     try:
-        output, _ = process.communicate(timeout=timeout_s + 30)
-        code = process.returncode
-    except subprocess.TimeoutExpired:
-        _kill_session(process.pid, signal.SIGKILL)
-        output, _ = process.communicate()
-        code = TIMEOUT_EXIT
+        while True:  # communicate() may be retried after a timeout without losing output
+            left = deadline - time.monotonic()
+            try:
+                output, _ = process.communicate(timeout=max(0.0, min(CANCEL_POLL_S, left) if polled else left))
+                code = process.returncode
+                break
+            except subprocess.TimeoutExpired:
+                now = time.monotonic()
+                if short is not None and now >= short:
+                    short = None if extended and extended() else now  # extended for good, or cut now
+                cut = short is not None and now >= short
+                if now < deadline and not cut and not (cancel and cancel()):
+                    continue
+                cancelled = now < deadline and not cut
+                _kill_session(process.pid, signal.SIGKILL)
+                output, _ = process.communicate()
+                code = CANCEL_EXIT if cancelled else TIMEOUT_EXIT
+                break
     except BaseException:
         # The harness itself is stopping (e.g. SIGTERM at the job limit, row 2.9): take the command along,
         # so nothing keeps running or holds the claim descriptor open.
         _kill_session(process.pid, signal.SIGKILL)
         process.wait()
         raise
-    timed_out = code == TIMEOUT_EXIT
+    timed_out = code == TIMEOUT_EXIT and not cancelled
     # Anything the command left behind in its session (e.g. `cmd &`) goes now.
-    cleanup = "none-left"
+    cleanup = "cancelled" if cancelled else "none-left"
     if _kill_session(process.pid, signal.SIGTERM):
         cleanup = "sigterm"
         for _ in range(20):

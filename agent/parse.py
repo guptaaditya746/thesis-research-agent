@@ -3,12 +3,18 @@
 Only the reply's `content` is parsed; the reasoning field is never looked at, so nothing in it
 can run. In order:
 
+0. guided (rows 1.13, 1.15): a conclude reply decoded under the answer's JSON schema (vLLM
+   structured outputs) is the bare answer object. When the call was guided, a reply that starts
+   with `{` is the answer, mode `guided_answer`, even if it does not parse (a length cut): the
+   answer check then says why. Anything else falls through to the rules below, in case the
+   server ignored the schema;
 1. strict: exactly one fenced ```bash or ```sh block -> run it;
 2. a reply with no bash block and a ```json block -> the final answer (the last json block);
 3. lenient fallbacks, each logged with its mode:
    - several bash blocks -> run the first and say so (B1: rare, but it happens);
    - one unlabelled ``` fence -> its body (a JSON object there is the answer);
-   - a Qwen tool-call text form `<function=bash><parameter=command>...` -> the command;
+   - a Qwen tool-call text form `<function=bash><parameter=command>...` -> the command (every
+     reply of the four M1-real runs came in this form);
    - no fence: a JSON object is the answer; one non-empty line, or at most 3 lines none of which
      ends like a sentence, is the command verbatim;
 4. otherwise nothing runs and the harness writes a `coverage` record.
@@ -44,8 +50,11 @@ def _json_object(text: str) -> bool:
         return False
 
 
-def parse_reply(content: str | None) -> Parsed:
+def parse_reply(content: str | None, guided: bool = False) -> Parsed:
+    """`guided`: the call was decoded under the answer schema (the conclude phase), see rule 0."""
     text = (content or "").strip()
+    if guided and text.startswith("{"):
+        return Parsed("answer", "guided_answer", answer=text)
     bash = [b.strip() for b in BASH_BLOCK.findall(text)]
     bash = [b for b in bash if b]
     if len(bash) == 1:
@@ -74,21 +83,25 @@ def parse_reply(content: str | None) -> Parsed:
     return Parsed("none", "unparsed")
 
 
-CORPUS_FILE = re.compile(r"(?<![\w.-])(p\d+)\.md\b")
-CORPUS_DIR = re.compile(r'\$\{?CORPUS\}?"?(?!/+p\d+\.md)')
+ANTHOLOGY_ID = r"\d{4}(?:-[a-z]+)+-\d+"  # 2025-acl-long-892, 2025-emnlp-main-1032
+CORPUS_FILE = re.compile(rf"(?<![\w.-])(?:(p\d+)\.md\b|({ANTHOLOGY_ID})(?:\.md\b|(?![\w.-])))")
+CORPUS_DIR = re.compile(rf'\$\{{?CORPUS\}}?"?(?!/+(?:p\d+|{ANTHOLOGY_ID})\.md)')
 
 
 def files_read(command: str) -> tuple[list[str], bool]:
     """Best-effort guess at which corpus files a command reads, for the PROV `uses` edge.
 
-    Heuristic, from the command text only (nothing traces the process): every `p<N>.md` name in
-    the command, whether written as `$CORPUS/p12.md`, `"$CORPUS"/p12.md` or plain `p12.md`, is a
-    file read, returned as corpus-relative names in order of first mention. The second value is
-    True when the command names the corpus directory itself (`$CORPUS` not followed by a file
-    name, e.g. `rg -l RAG "$CORPUS"`), i.e. it may read any file. Files reached through variables,
-    globs (`p1*.md`) or scripts are missed; a name that only appears in a string is over-counted.
+    Heuristic, from the command text only (nothing traces the process). The corpus names its
+    files `p<N>.md` (the first papers) and by ACL Anthology id (`2025-acl-long-892.md`). Every
+    such name in the command, whether written as `$CORPUS/p12.md`, `"$CORPUS"/p12.md` or plain
+    `p12.md`, is a file read, returned as corpus-relative names in order of first mention; an
+    anthology id also counts without `.md` (M1-real loops ran `for f in 2025-acl-long-1106 ...;
+    do rg ... "$f.md"`), a bare `p12` does not. The second value is True when the command names
+    the corpus directory itself (`$CORPUS` not followed by a file name, e.g. `rg -l RAG "$CORPUS"`),
+    i.e. it may read any file. Files reached through variables, globs (`p1*.md`) or scripts are
+    missed; a name that only appears in a string is over-counted.
     """
-    names = list(dict.fromkeys(f"{m}.md" for m in CORPUS_FILE.findall(command)))
+    names = list(dict.fromkeys(f"{p or a}.md" for p, a in CORPUS_FILE.findall(command)))
     return names, bool(CORPUS_DIR.search(command.replace('"/', "/")))
 
 

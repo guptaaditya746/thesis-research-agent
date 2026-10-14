@@ -15,13 +15,21 @@ from .concept import validate_answer, validate_concept
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")
 DIRS = ("out", "scratch")
 ATTACH_FILE = "attach.json"  # the baseline's attach step (row 2.5) writes it when it finishes
+ANSWER_BEFORE = "answer.research.json"  # ... after keeping the run's own answer here
+# The bytes of the agent's draft answer as the harness read them when the run ended without an
+# answer (row 1.13): scratch/ stays writable (the attach step works there), this copy does not change.
+DRAFT_COPY = "answer.draft.json"
 
 # Fixed run settings (milestones-1-2.md). Budget is adjusted once after 1.13, then frozen.
 ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
                 "thinking": False, "max_tokens": 4096, "context_tokens": 65536}
 SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
               "revision": "5a5a776", "context_tokens": 32768} for i in (1, 2)]
-BUDGET = {"steps": 150, "tokens": 400_000, "announced": True}
+# Provisional (e2e-build-plan.md, 13 Oct; the user freezes it after the Slurm test). The token sum
+# counts the whole prompt again at every step, so the M1-real runs' 150 steps / 400k lasted only
+# ~26 steps: 2M tokens over 60 steps is ~33k per step, about what a masked context costs.
+BUDGET = {"steps": 60, "tokens": 2_000_000, "announced": True}
+BUDGET_M1 = {"steps": 150, "tokens": 400_000, "announced": True}  # the M1-real runs (prompt v1), for reruns
 COMMAND_LIMITS = {"timeout_s": 120, "ulimit_v_kib": 2 * 1024 * 1024, "output_cap_bytes": 8192}
 
 
@@ -48,11 +56,13 @@ def run_config(run_id: str, *, condition: str, temperature: float, seed: int, pr
                prompt_sha256: str, concept_sha256: str, corpus_manifest_sha256: str,
                agent_root_manifest_sha256: str, git_commit: str,
                budget: dict[str, Any] | None = None, prompt_files: dict[str, str] | None = None,
-               sandbox: dict[str, Any] | None = None, loop: dict[str, Any] | None = None) -> dict[str, Any]:
+               sandbox: dict[str, Any] | None = None, loop: dict[str, Any] | None = None,
+               spawn: dict[str, Any] | None = None) -> dict[str, Any]:
     """A complete config.json; the fixed settings come from the constants above.
 
     The main loop (row 1.8) adds `prompt_files` (sha256 of each prompt file), `sandbox` (which
-    sandbox mode ran the commands) and `loop` (harness version and model endpoint); all optional.
+    sandbox mode ran the commands), `loop` (harness version and model endpoint) and `spawn`
+    (whether the agent may start subagents and with what, row 2.12); all optional.
     """
     config = {
         "schema_version": 1, "run_id": run_id, "created_at": utc_now(), "condition": condition,
@@ -71,6 +81,8 @@ def run_config(run_id: str, *, condition: str, temperature: float, seed: int, pr
         config["sandbox"] = dict(sandbox)
     if loop is not None:
         config["loop"] = dict(loop)
+    if spawn is not None:
+        config["spawn"] = dict(spawn)
     return config
 
 

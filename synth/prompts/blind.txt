@@ -1,0 +1,5 @@
+Read the research paper below and list every quantitative result it reports for a system or condition: the condition (as the paper names it), the metric, the dataset and the value.
+
+Give values as numbers: percentages as fractions (62.4% -> 0.624, a table cell 62.4 under a "%" header -> 0.624, "624 out of 1,000" -> 0.624), other units as written (1.24 seconds -> 1.24). If a value is given relative to another condition ("7.0 percentage points higher than X"), compute it from X's value. List each result once.
+
+Reply with a JSON object {"measurements": [{"condition": ..., "metric": ..., "dataset": ..., "value": ...}]}.

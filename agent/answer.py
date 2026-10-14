@@ -2,15 +2,74 @@
 
 The agent writes only {"rows": [...], "notes": "..."}; the harness adds the concept hash and the
 answer kind, fills each fact's `claims` (default: none) and `origin` (research), and checks the
-result with validate_answer and against the run's accepted claim ids.
+result with validate_answer and against the run's accepted claim ids. `reply_schema` is that
+reply object as a JSON Schema, for decoding the conclude replies under it (row 1.13).
 """
 from __future__ import annotations
 
+import copy
 import json
+import math
+from collections.abc import Iterable
 from typing import Any
 
-from .concept import concept_sha256, validate_answer
+from .concept import answer_schema_for, concept_sha256, validate_answer
 from .rundir import RunDir
+
+# Dropped from the decoding schema: annotations, and keywords grammar backends ignore or reject.
+NOT_FOR_GRAMMAR = ("$schema", "$id", "title", "description", "uniqueItems")
+
+
+def reply_schema(concept: dict[str, Any], claim_ids: Iterable[str] | None = None) -> dict[str, Any]:
+    """JSON Schema of the agent's reply {rows, notes} for this concept (conclude under structured outputs).
+
+    answer_schema_for(concept) without what the harness sets (concept_sha256, kind, each fact's
+    origin). A fact's `claims` stays optional, as in the reply format (build_answer fills []);
+    `notes` is required, so a forced answer can still say what was not checked. The fact `$ref`
+    is inlined, `oneOf` (graph edge types, disjoint by their consts) becomes `anyOf`, and
+    NOT_FOR_GRAMMAR keys are dropped, which keeps the schema within what xgrammar and llguidance
+    accept. Nothing is lost: build_answer checks the reply against the full schema afterwards.
+
+    `claim_ids`: the run's accepted claims when the reply is asked for (the loop builds the schema
+    at each conclude call). A cited id must then be one of them (`enum`), so the grammar cannot
+    produce the one mistyped id that would make build_answer refuse the whole answer, a failure
+    only claim_on answers could have; with none accepted (claim_off, or no claim yet) a fact has no
+    `claims` at all. None keeps the plain id pattern (tests, readers of the shape).
+
+    Properties keep the order the prompt teaches (agent/prompts.py row_example): a row's `facts`
+    come last, after its cells or edge fields. Grammar backends emit object keys in schema order
+    (xgrammar does), and answer_schema_for lists `facts` second, so the model would otherwise have
+    to write every fact of a row before the cells they support, against the draft it copies from.
+    """
+    full = answer_schema_for(concept)
+    fact = copy.deepcopy(full["$defs"]["fact"])
+    del fact["properties"]["origin"]
+    fact["required"] = [k for k in fact["required"] if k not in ("origin", "claims")]
+    if claim_ids is not None:
+        known = sorted(set(claim_ids))
+        if known:
+            fact["properties"]["claims"] = {"type": "array", "items": {"enum": known}}
+        else:
+            del fact["properties"]["claims"]
+
+    def grammar(node: Any) -> Any:
+        if isinstance(node, list):
+            return [grammar(n) for n in node]
+        if not isinstance(node, dict):
+            return node
+        if node.get("$ref") == "#/$defs/fact":
+            return grammar(fact)
+        out: dict[str, Any] = {}
+        for key, value in node.items():
+            if key == "properties":  # names, not keywords: a column may be called "title"
+                ordered = [n for n in value if n != "facts"] + [n for n in value if n == "facts"]
+                out[key] = {name: grammar(value[name]) for name in ordered}
+            elif key not in NOT_FOR_GRAMMAR:
+                out["anyOf" if key == "oneOf" else key] = grammar(value)
+        return out
+
+    return grammar({"type": "object", "additionalProperties": False, "required": ["rows", "notes"],
+                    "properties": {"rows": full["properties"]["rows"], "notes": {"type": "string"}}})
 
 
 def accepted_claim_ids(run: RunDir) -> set[str]:
@@ -22,13 +81,55 @@ def accepted_claim_ids(run: RunDir) -> set[str]:
     return ids
 
 
+def _finite(text: str) -> float:
+    """json.loads reads NaN, Infinity and 1e400 (inf) as numbers; answer.json (canonical()) cannot hold them."""
+    value = float(text)
+    if not math.isfinite(value):
+        raise ValueError(f"{text} is not a finite number")
+    return value
+
+
+def _not_a_number(name: str) -> float:
+    raise ValueError(f"{name} is not a JSON number")
+
+
+def _depth(value: Any) -> int:
+    """Nesting depth of parsed JSON, without recursion."""
+    deepest, stack = 0, [(value, 1)]
+    while stack:
+        node, depth = stack.pop()
+        deepest = max(deepest, depth)
+        children = node.values() if isinstance(node, dict) else node if isinstance(node, list) else ()
+        stack += [(child, depth + 1) for child in children]
+    return deepest
+
+
+MAX_DEPTH = 32  # an answer is 7 levels deep (answer, rows, row, facts, fact, claims, id); the schema check recurses
+MAX_PROBLEM = 300  # characters: a schema message quotes the value, which may be the agent's whole draft
+
+
 def build_answer(text: str, concept: dict[str, Any], known_claims: set[str] | None = None
                  ) -> tuple[dict[str, Any] | None, list[str]]:
-    """Complete and check the agent's answer. Returns (answer, []) or (None, problems)."""
+    """Complete and check the agent's answer. Returns (answer, []) or (None, problems).
+
+    The text is the agent's (a reply, or its draft file), so nothing in it may raise: wrong types,
+    non-finite numbers (NaN, Infinity, 1e400) and deep nesting are problems like any other, an
+    answer that passes can always be written as canonical JSON, and each problem is short.
+    """
+    answer, problems = _build(text, concept, known_claims)
+    return answer, [p if len(p) <= MAX_PROBLEM else p[:MAX_PROBLEM - 3] + "..." for p in problems]
+
+
+def _build(text: str, concept: dict[str, Any], known_claims: set[str] | None
+           ) -> tuple[dict[str, Any] | None, list[str]]:
     try:
-        given = json.loads(text)
+        given = json.loads(text, parse_float=_finite, parse_constant=_not_a_number)
+    except RecursionError:
+        return None, ["the json block is nested too deeply"]
     except ValueError as exc:
         return None, [f"the json block is not valid JSON: {exc}"]
+    if _depth(given) > MAX_DEPTH:
+        return None, ["the json block is nested too deeply"]
     if not isinstance(given, dict):
         return None, ['the json block must be one object {"rows": [...], "notes": "..."}']
     # concept_sha256 and kind are the harness's to set; anything else is a mistake worth reporting.
@@ -38,7 +139,8 @@ def build_answer(text: str, concept: dict[str, Any], known_claims: set[str] | No
     if not isinstance(rows, list):
         return None, problems + ['"rows" must be a list']
     for row in rows:
-        for fact in (row.get("facts") if isinstance(row, dict) else None) or []:
+        facts = row.get("facts") if isinstance(row, dict) else None
+        for fact in facts if isinstance(facts, list) else []:  # anything else: the schema check says so
             if isinstance(fact, dict):
                 fact.setdefault("claims", [])
                 fact.setdefault("origin", "research")

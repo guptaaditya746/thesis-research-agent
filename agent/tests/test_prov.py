@@ -103,6 +103,19 @@ def test_kg_triples_and_answer_facts(research: Built) -> None:
     assert g.value(iri("fact", "f5"), PROV.wasDerivedFrom) is None
 
 
+def test_answer_was_generated_by_its_final_answer_call(research: Built, baseline: Built) -> None:
+    """The answer links to the main agent's model call marked final_answer, also after an attach step."""
+    for built in (research, baseline):
+        g = export(built)
+        records = rows(built.run.events)
+        final = [r for r in records if r["subtype"] == "ai_model_invocation" and r["custom_metadata"].get("final_answer")]
+        assert len(final) == 1
+        answer = prov.Iris(built.run.run_id)("answer")
+        assert (answer, OURS.answerSource, Literal("final_answer")) in g
+        assert list(g.objects(answer, PROV.wasGeneratedBy)) == [task(built, final[0]["task_id"])]
+    assert prov.answer_source([]) == ("unknown", None)
+
+
 def test_attach_claims_come_from_the_attach_activity(baseline: Built) -> None:
     g = export(baseline)
     iri = prov.Iris(baseline.run.run_id)

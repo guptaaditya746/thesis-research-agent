@@ -24,12 +24,31 @@ agent/prompts/** text eol=lf
 agent/concepts/** text eol=lf
 # Concept sessions (rows 2.1-2.3): concepts/<question-id>/ with the frozen concept.json and its chain.
 concepts/** text eol=lf
+# The 12 questions (row 2.3): the same bytes on every checkout, so the file hash the Slurm scripts print matches.
+questions/** text eol=lf
 # Batch run manifests (row 2.9).
 agent/manifests/** text eol=lf
 agent/bin/** text eol=lf
+# The spawn shim (row 2.12) runs on the Linux node too.
+agent/spawn-bin/** text eol=lf
 
 # Shell and Slurm scripts run on the Linux node; CRLF breaks them.
 *.sh text eol=lf
 *.sbatch text eol=lf
 scripts/omen-tunnels text eol=lf
 scripts/omen-tunnels-external text eol=lf
+
+# The built web app (webapp/web/dist, made by `npm run build`) is committed byte for byte, so the
+# Slurm node serves it without npm.
+webapp/web/dist/** -text
+
+# Evidence-level system: the protocol and extractor prompts are hashed into extractor and protocol ids; the
+# test papers are hashed into their manifest.
+evidence/protocols/** text eol=lf
+evidence/extractors/prompts/** text eol=lf
+evidence/tests/fixtures/** text eol=lf
+
+# Synthetic benchmark (synth/): example corpora (placements are code-point offsets into the papers as stored)
+# and the renderer prompts (hashed into corpus.json).
+synth/examples/** text eol=lf
+synth/prompts/** text eol=lf

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "name": "m4-72",
-  "notes": "Sample for milestone 4: 12 questions x 2 conditions x 3 repeats = 72 runs. Question ids q01-q12 are placeholders until the 12 questions are written (M3); each concept path is the frozen concept.json from row 2.3. Temperature and budget are placeholders until 1.13 fixes them; the budget is the same for both conditions. Run from the repo root: agent batch agent/manifests/m4-72.json (the deadline comes from $SLURM_JOB_END_TIME, the toolchain from $AGENT_ROOT, the corpus from $CORPUS).",
+  "notes": "Sample for milestone 4: 12 questions x 2 conditions x 3 repeats = 72 runs. Questions q01-q12 are the 12 of questions/questions.json, in its order (row 2.3); each concept path is the frozen concept.json that `agent concepts pick` writes into the concept session ($CONCEPTS = concepts). The budget (60 steps / 2,000,000 tokens, prompt v2) is provisional until the user freezes it after the Slurm e2e test (1.13); temperature 0.7 likewise; both are the same for both conditions. spawn stays off (2.12). Run from the repo root: agent batch agent/manifests/m4-72.json (the deadline comes from $SLURM_JOB_END_TIME, the toolchain from $AGENT_ROOT, the corpus from $CORPUS).",
   "runs_root": "runs/m4-72",
   "questions": [
     {"id": "q01", "concept": "concepts/q01/concept.json"},
@@ -21,7 +21,9 @@
   "repeats": 3,
   "temperature": 0.7,
   "seed_base": 1000,
-  "budget": {"steps": 150, "tokens": 400000},
+  "budget": {"steps": 60, "tokens": 2000000},
+  "prompt_version": "v2",
+  "spawn": "off",
   "attach_budget": {"steps": 6, "tokens": 60000},
   "sandbox": "landlock",
   "base_url": "http://127.0.0.1:4000/v1",

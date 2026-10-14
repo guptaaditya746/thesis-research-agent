@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thesis Pipeline</title>
+<title>Evidence-Level Pipeline</title>
 <style>
   :root {
     --bg: #ffffff; --ink: #1d2433; --muted: #5f6b7a; --line: #9aa5b4;
@@ -44,6 +44,8 @@
   .lane-sub { font-size: 14.5px; fill: var(--muted); }
   .node { fill: var(--node); stroke: var(--node-line); stroke-width: 1.6; }
   .node.now { fill: var(--now-soft); stroke: var(--now); stroke-width: 4; }
+  .node.added { stroke: var(--ours); stroke-width: 2.2; stroke-dasharray: 7 4; }
+  .key-added { width: 26px; height: 18px; border: 2px dashed var(--ours); border-radius: 5px; display: inline-block; }
   .name { font-weight: 700; fill: var(--ink); }
   .desc { font-size: 14px; fill: var(--muted); }
   .chip-paper { fill: var(--paper-soft); stroke: var(--paper); stroke-width: 1.2; }
@@ -97,6 +99,14 @@
   .brief td { color: var(--muted); }
   .brief ul { margin: 0; padding-left: 18px; }
   .brief code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--lane-a); padding: 1px 5px; border-radius: 4px; }
+  .brief pre.code { font: 13.5px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--lane-a);
+    border-radius: 8px; padding: 12px 14px; margin: 8px 0 0; overflow-x: auto; white-space: pre; }
+  #protocol { grid-template-columns: minmax(0, 1fr); }
+  ol.notes { margin: 0; padding-left: 24px; font-size: 16px; line-height: 1.5; max-width: 1100px; }
+  ol.notes li + li { margin-top: 6px; }
+  .box-link { font: inherit; font-size: 14px; color: var(--paper); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline dotted; }
+  .brief dl.levels { grid-template-columns: 120px minmax(0, 1fr); gap: 10px 14px; margin-top: 8px; }
+  .brief dl.levels dd { font-family: Georgia, "Times New Roman", serif; font-size: 15.5px; line-height: 1.45; }
   @media (max-width: 760px) { .briefs { grid-template-columns: minmax(0, 1fr); } .brief dl { grid-template-columns: minmax(0, 1fr); } }
   /* setup status */
   .status { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
@@ -109,9 +119,11 @@
   .status-row .next { color: var(--muted); }
   .state { justify-self: start; font-size: 12.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1.5px solid; white-space: nowrap; }
   .s-works { color: var(--ours); background: var(--ours-soft); border-color: var(--ours); }
+  .s-built { color: var(--ours); background: var(--ours-soft); border-color: var(--ours); border-style: dashed; }
   .s-partial { color: #9a5200; background: var(--now-soft); border-color: var(--now); }
   .s-blocked { color: var(--bad); background: var(--bad-soft); border-color: var(--bad); }
   .s-open { color: var(--tool); background: var(--tool-soft); border-color: var(--tool); }
+  .s-spec { color: var(--paper); background: var(--paper-soft); border-color: var(--paper); }
   @media (max-width: 760px) {
     .status-row { grid-template-columns: minmax(0, 1fr) auto; }
     .status-row .evidence, .status-row .next { grid-column: 1 / -1; }
@@ -179,12 +191,19 @@
   </header>
   <div id="diagram" aria-label="Thesis pipeline diagram with the source of each idea"></div>
   <p class="hint">Click any box, chip or reference for what it is, how it works here, and where it comes from.</p>
-  <h2>Setup status</h2>
+  <h2>Order of work and what we can reuse</h2>
   <p class="hint" id="status-note"></p>
   <div class="status" id="status"></div>
-  <h2>What a concept looks like</h2>
-  <p class="hint" id="brief-note"></p>
-  <div class="briefs" id="briefs"></div>
+  <h2>Decisions so far</h2>
+  <ol class="notes" id="decisions"></ol>
+  <h2>Open questions for the supervisor</h2>
+  <ol class="notes" id="questions"></ol>
+  <h2>What a protocol looks like</h2>
+  <p class="hint" id="protocol-note"></p>
+  <div class="briefs" id="protocol"></div>
+  <h2>From ground truth to a synthetic paper</h2>
+  <p class="hint" id="truth-note"></p>
+  <div class="briefs" id="truth"></div>
   <h2>The works we use</h2>
   <div id="refs"></div>
   <footer id="footer"></footer>
@@ -198,45 +217,40 @@
        suggested: true -> dashed chip: a reference proposed but not yet confirmed
    - LANES: one row each, top to bottom. `sources` on a lane = chips under the lane name.
        flow: false -> no arrows between its boxes (alternatives, not steps)
-       open: true  -> greyed out and marked "to be redesigned"
+       open: true  -> greyed out, tagged with OPEN_TAG (optional work)
    - STAGES: boxes. `lane` = row, `col` = position in the row (0 = leftmost).
        llm: true      -> LLM badge (the stage calls a language model)
        people: true   -> people badge (human work)
-       current: true  -> highlighted as "currently working here"
+       current: true  -> highlighted with FLAG_LABEL
        sources: [...] -> keys of SOURCES whose idea this stage uses (chips under the box)
        ours: "text"   -> an "ours" chip: what in this stage is our own contribution (oursTitle: its longer tooltip)
      Stages of one lane are joined left to right automatically (sorted by col).
    - LINKS: extra arrows between lanes: [from id, to id, label].
-   - LLM_ICON_SRC: a data:image/... URI of the Qwen logo, to replace the generic LLM icon.
-   - STAGE_DETAILS / SOURCE_DETAILS (below FOOTER): the text of the panel that opens on a click.
-   Sources marked "TODO" are the ones to double-check against your bibliography.
+   - STAGE_DETAILS / SOURCE_DETAILS: the text of the panel that opens on a click.
+   - STATUS: the "Order of work" table. PROTOCOL_YAML, GROUND_TRUTH, DIFFICULTY: the worked examples.
    =================================================================================== */
 
-const TITLE = "Thesis pipeline";
-const SUBTITLE = "A question becomes standalone concepts; the user picks one; a free agent researches the papers' Markdown files; the answer is a knowledge graph with full provenance. The thesis tests one question (RQ1): does recording each fact with its quote while the agent researches give better-sourced answers than the same agent attaching sources afterwards? 12 questions, each scored against the supervisor's gold document D. The \"Where it runs\" lane is the tested Slurm setup.";
+const TITLE = "Thesis pipeline: evidence-level research";
+const SUBTITLE = "The supervisor's proposal of 14 Oct 2026. A research question is compiled into an executable research protocol; a Python engine runs it with a library of reusable evidence extractors; the evidence becomes a graph, and fixed rules synthesise the answer from it. The prototype is evaluated on a synthetic corpus generated from known ground truth, so extraction, integration and synthesis can be scored separately, and compared with an answer-level baseline. One question first: does RAG improve the factual accuracy of LLM answers?";
 
 const LLM_LABEL = "LLM call (Qwen)";
 const LLM_ICON_SRC = null;   // e.g. "data:image/png;base64,...."  (null = generic LLM icon)
+const FLAG_LABEL = "STEP 1: START HERE";
+const FLAG_LEGEND = "Where the work starts";
+const OPEN_TAG = "OPTIONAL · IF TIME PERMITS";
+const OPEN_LEGEND = "Optional extension";
+const OPEN_NOTE = "Optional: the supervisor names this as an extension if time permits, not a requirement for the thesis.";
 
 const SOURCES = {
-  // ---- we build on: methods, standards, data and code taken over (citations verified 9 Oct 2026)
-  dblp:     { short: "DBLP KG",         kind: "tool",  role: "build", cite: "Ackermann, Bast, Beckermann, Kalmbach, Neises, Ollinger. The dblp Knowledge Graph and SPARQL Endpoint. TGDK 2(2):3:1–3:23, 2024. doi:10.4230/TGDK.2.2.3", url: "https://doi.org/10.4230/TGDK.2.2.3" },
-  cskg:     { short: "CS-KG 2.0",       kind: "tool",  role: "build", cite: "Dessí, Osborne, Buscaldi, Reforgiato Recupero, Motta. CS-KG 2.0: A Large-scale Knowledge Graph of Computer Science. Scientific Data 12:964, 2025. doi:10.1038/s41597-025-05200-8", url: "https://doi.org/10.1038/s41597-025-05200-8" },
-  ambigqa:  { short: "AmbigQA",         kind: "paper", role: "build", cite: "Min, Michael, Hajishirzi, Zettlemoyer. AmbigQA: Answering Ambiguous Open-domain Questions. EMNLP 2020, pp. 5783–5797. doi:10.18653/v1/2020.emnlp-main.466", url: "https://aclanthology.org/2020.emnlp-main.466/" },
-  sweagent: { short: "SWE-agent",       kind: "paper", role: "build", cite: "Yang, Jimenez, Wettig, Lieret, et al. SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering. NeurIPS 2024. arXiv:2405.15793 (mini-SWE-agent has no paper of its own; cite this plus the repository and version)", url: "https://arxiv.org/abs/2405.15793" },
-  codeact:  { short: "CodeAct",         kind: "paper", role: "build", cite: "Wang, Chen, Yuan, Zhang, et al. Executable Code Actions Elicit Better LLM Agents. ICML 2024. arXiv:2402.01030", url: "https://arxiv.org/abs/2402.01030" },
-  latm:     { short: "Tool making",     kind: "paper", role: "build", cite: "Cai, Wang, Ma, Chen, Zhou. Large Language Models as Tool Makers. ICLR 2024 (venue to confirm on OpenReview). arXiv:2305.17126", url: "https://arxiv.org/abs/2305.17126" },
-  skills:   { short: "Agent Skills",    kind: "tool",  role: "build", cite: "Zhang, Lazuka, Murag. Equipping agents for the real world with Agent Skills. Anthropic Engineering Blog, 16 Oct 2025; open standard at agentskills.io since 18 Dec 2025", url: "https://agentskills.io/specification" },
-  provagent:{ short: "PROV-AGENT",      kind: "paper", role: "build", cite: "Souza et al. PROV-AGENT: Unified Provenance for Tracking AI Agent Interactions in Agentic Workflows. IEEE e-Science 2025; code: ORNL/flowcept (MIT)", url: "https://arxiv.org/abs/2508.02866" },
+  // ---- we build on: methods, standards, data and code taken over
   provo:    { short: "PROV-O",          kind: "tool",  role: "build", cite: "Lebo, Sahoo, McGuinness (eds.). PROV-O: The PROV Ontology. W3C Recommendation, 30 April 2013", url: "https://www.w3.org/TR/prov-o/" },
   webanno:  { short: "Web Annotation",  kind: "tool",  role: "build", cite: "Sanderson, Ciccarese, Young (eds.). Web Annotation Data Model. W3C Recommendation, 23 February 2017 (TextQuoteSelector, TextPositionSelector)", url: "https://www.w3.org/TR/annotation-model/" },
+  provagent:{ short: "PROV-AGENT",      kind: "paper", role: "build", cite: "Souza et al. PROV-AGENT: Unified Provenance for Tracking AI Agent Interactions in Agentic Workflows. IEEE e-Science 2025; code: ORNL/flowcept (MIT)", url: "https://arxiv.org/abs/2508.02866" },
+  ledger:   { short: "LEDGER",          kind: "paper", role: "build", cite: "Kim, Miao, Liu. LEDGER: Claim-to-Evidence Trace Graphs for Auditing LLM Agents. arXiv:2608.18398, 2026 (preprint)", url: "https://arxiv.org/abs/2608.18398" },
   edc:      { short: "EDC",             kind: "paper", role: "build", cite: "Zhang, Soh. Extract, Define, Canonicalize: An LLM-based Framework for Knowledge Graph Construction. EMNLP 2024, pp. 9820–9836. doi:10.18653/v1/2024.emnlp-main.548", url: "https://aclanthology.org/2024.emnlp-main.548/" },
   benchie:  { short: "BenchIE",         kind: "paper", role: "build", cite: "Gashteovski, Yu, Kotnis, Lawrence, Niepert, Glavaš. BenchIE: A Framework for Multi-Faceted Fact-Based Open Information Extraction Evaluation. ACL 2022, pp. 4472–4490. doi:10.18653/v1/2022.acl-long.307", url: "https://aclanthology.org/2022.acl-long.307/" },
   webnlg:   { short: "WebNLG+ 2020",    kind: "paper", role: "build", cite: "Castro Ferreira et al. The 2020 Bilingual, Bi-Directional WebNLG+ Shared Task: Overview and Evaluation Results (WebNLG+ 2020). Proc. 3rd WebNLG+ Workshop, ACL, pp. 55–76, 2020", url: "https://aclanthology.org/2020.webnlg-1.7/" },
-  text2kg:  { short: "Text2KGBench",    kind: "paper", role: "build", cite: "Mihindukulasooriya, Tiwari, Enguix, Lata. Text2KGBench: A Benchmark for Ontology-Driven Knowledge Graph Generation from Text. ISWC 2023, LNCS, pp. 247–265. doi:10.1007/978-3-031-47243-5_14", url: "https://doi.org/10.1007/978-3-031-47243-5_14" },
-  euzenat:  { short: "Euzenat 2007",    kind: "paper", role: "build", cite: "Euzenat. Semantic Precision and Recall for Ontology Alignment Evaluation. IJCAI 2007, pp. 348–353" },
   judge:    { short: "LLM judge",       kind: "paper", role: "build", cite: "Zheng et al. Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena. NeurIPS 2023 Datasets and Benchmarks. arXiv:2306.05685", url: "https://arxiv.org/abs/2306.05685" },
-  trec:     { short: "Nugget recall",   kind: "paper", role: "build", cite: "Pradeep, Thakur, Upadhyay, Campos, Craswell, Soboroff, Dang, Lin. The Great Nugget Recall: Automating Fact Extraction and RAG Evaluation with Large Language Models. SIGIR 2025, pp. 180–190. doi:10.1145/3726302.3730090", url: "https://doi.org/10.1145/3726302.3730090" },
   kappa:    { short: "Cohen's κ",       kind: "paper", role: "build", cite: "Cohen. A Coefficient of Agreement for Nominal Scales. Educational and Psychological Measurement 20(1):37–46, 1960; bands from Landis & Koch, Biometrics 33(1):159–174, 1977" },
   bootstrap:{ short: "BCa bootstrap",   kind: "paper", role: "build", cite: "Efron. Better Bootstrap Confidence Intervals. JASA 82(397):171–185, 1987; Efron & Tibshirani. An Introduction to the Bootstrap. Chapman & Hall, 1993" },
   argilla:  { short: "Argilla",         kind: "tool",  role: "build", cite: "Argilla: open-source data annotation tool (version 2.8.0; maintenance mode). github.com/argilla-io/argilla", url: "https://github.com/argilla-io/argilla" },
@@ -244,854 +258,728 @@ const SOURCES = {
   vllm:     { short: "vLLM",            kind: "tool",  role: "build", cite: "vLLM 0.21.0: OpenAI-compatible model server with paged KV cache and prefix caching", url: "https://docs.vllm.ai/" },
   litellm:  { short: "LiteLLM",         kind: "tool",  role: "build", cite: "LiteLLM proxy: one OpenAI-compatible gateway in front of the vLLM backends, with model aliases, routing and limits", url: "https://docs.litellm.ai/" },
   llmsetup: { short: "llm-setup",       kind: "tool",  role: "build", cite: "thesis-llm-setup (our serving repository, submodule llm-setup): Slurm batch job, supervisor, LiteLLM config, status API", url: "https://github.com/guptaaditya746/thesis-llm-setup" },
-  minisweagent: { short: "mini-swe-agent", kind: "tool", role: "build", cite: "mini-swe-agent 2.4.6 (SWE-agent team, MIT): a bash-only agent loop of about 200 lines with pluggable models and environments", url: "https://github.com/SWE-agent/mini-swe-agent" },
-  langfuse: { short: "Langfuse",        kind: "tool",  role: "build", cite: "Langfuse (self-hosted on Omen): LLM trace UI; accepts OpenTelemetry GenAI spans over OTLP HTTP at /api/public/otel from v3.22", url: "https://langfuse.com/integrations/native/opentelemetry" },
-  cookbook: { short: "Research prompts", kind: "tool", role: "build", cite: "Hadfield, Zhang, Lien, Scholz, et al. How we built our multi-agent research system. Anthropic Engineering Blog, 13 Jun 2025; prompts released in anthropics/claude-cookbooks, patterns/agents/prompts (MIT)", url: "https://www.anthropic.com/engineering/multi-agent-research-system" },
-  citeguard:{ short: "citation-guard",  kind: "tool",  role: "build", cite: "GooTec/citation-guard v0.2.0 (MIT): the code, verifier prompts and conformal guard of Goo et al. 2026", url: "https://github.com/GooTec/citation-guard" },
 
-  // ---- we compare against: closest systems and candidate baselines
-  li2026:   { short: "Direct corpus interaction", kind: "paper", role: "compare", cite: "Li, Zhang, Wei, Lu, et al. Beyond Semantic Similarity: Rethinking Retrieval for Agentic Search via Direct Corpus Interaction. arXiv:2605.05242, 2026 (preprint; the repository mentions NeurIPS 2026, not confirmed)", url: "https://arxiv.org/abs/2605.05242" },
-  dcilite:  { short: "DCI-Agent-Lite",  kind: "tool",  role: "compare", cite: "DCI-Agent-Lite (MIT): the official code of Li et al. 2026; bash-only corpus search with five context-management levels", url: "https://github.com/DCI-Agent/DCI-Agent-Lite" },
-  sen2026:  { short: "Grep & harnesses", kind: "paper", role: "compare", cite: "Sen, Kasturi, Lumer, Gulati, Subbiah. Is Grep All You Need? How Agent Harnesses Reshape Agentic Search. arXiv:2605.15184, 2026 (preprint)", url: "https://arxiv.org/abs/2605.15184" },
-  flyaoc:   { short: "FlyAOC",          kind: "paper", role: "compare", cite: "Zhang, Moylan, Xiong, Mei, Luo, Ma. FlyAOC: Evaluating Agentic Ontology Curation of Drosophila Scientific Knowledge Bases. NeurIPS 2026 Evaluations & Datasets. arXiv:2602.09163", url: "https://arxiv.org/abs/2602.09163" },
-  intentrl: { short: "IntentRL",        kind: "paper", role: "compare", cite: "Luo, Li, Xie, Zhang, Li, Shen. IntentRL: Training Proactive User-intent Agents for Open-ended Deep Research via Reinforcement Learning. ICML 2026. arXiv:2602.03468", url: "https://arxiv.org/abs/2602.03468" },
-  rarr:     { short: "RARR",            kind: "paper", role: "compare", cite: "Gao, Dai, Pasupat, Chen, Chaganty, Fan, Zhao, Lao, Lee, Juan, Guu. RARR: Researching and Revising What Language Models Say, Using Language Models. ACL 2023", url: "https://arxiv.org/abs/2210.08726" },
+  // ---- we compare against: the answer-level side
   alce:     { short: "ALCE",            kind: "paper", role: "compare", cite: "Gao, Yen, Yu, Chen. Enabling Large Language Models to Generate Text with Citations. EMNLP 2023", url: "https://arxiv.org/abs/2305.14627" },
-  ledger:   { short: "LEDGER",          kind: "paper", role: "build", cite: "Kim, Miao, Liu. LEDGER: Claim-to-Evidence Trace Graphs for Auditing LLM Agents. arXiv:2608.18398, 2026 (preprint)", url: "https://arxiv.org/abs/2608.18398" },
+  rarr:     { short: "RARR",            kind: "paper", role: "compare", cite: "Gao, Dai, Pasupat, Chen, Chaganty, Fan, Zhao, Lao, Lee, Juan, Guu. RARR: Researching and Revising What Language Models Say, Using Language Models. ACL 2023", url: "https://arxiv.org/abs/2210.08726" },
 
-  // ---- we cite: findings and standards behind a design or evaluation choice
-  underspec:{ short: "Underspecified Qs", kind: "paper", role: "cite", cite: "Huang, Barlacchi, Pezzelle. Who is the richest club in the championship? Detecting and Rewriting Underspecified Questions Improve QA Performance. arXiv:2602.11938, 2026 (preprint)", url: "https://arxiv.org/abs/2602.11938" },
-  disambig: { short: "Disambiguate first", kind: "paper", role: "cite", cite: "Saparina, Lapata. Disambiguate First, Parse Later: Generating Interpretations for Ambiguity Resolution in Semantic Parsing. Findings of ACL 2025. arXiv:2502.18448", url: "https://arxiv.org/abs/2502.18448" },
-  ambrosia: { short: "AMBROSIA",        kind: "paper", role: "cite", cite: "Saparina, Lapata. AMBROSIA: A Benchmark for Parsing Ambiguous Questions into Database Queries. NeurIPS 2024 Datasets and Benchmarks. arXiv:2406.19073", url: "https://arxiv.org/abs/2406.19073" },
-  ambiguity:{ short: "Su & Cardie 2026", kind: "paper", role: "cite", cite: "Su, Cardie. Knowing but Not Showing: LLMs Recognize Ambiguity but Rarely Ask Clarifying Questions. arXiv:2605.25284, 2026 (preprint)", url: "https://arxiv.org/abs/2605.25284" },
-  ambigds:  { short: "Ambig-DS",        kind: "paper", role: "cite", cite: "Stoisser, Boubnovski Martell, Boldsen, Märtens, Kitchen. Ambig-DS: A Benchmark for Task-Framing Ambiguity in Data-Science Agents. arXiv:2605.09698, 2026 (preprint)", url: "https://arxiv.org/abs/2605.09698" },
+  // ---- we cite: findings behind a design or evaluation choice
   laquer:   { short: "LAQuer",          kind: "paper", role: "cite", cite: "Hirsch et al. LAQuer: Localized Attribution Queries in Content-grounded Generation. ACL 2025. arXiv:2506.01187", url: "https://arxiv.org/abs/2506.01187" },
-  qin2026:  { short: "Trace tampering", kind: "paper", role: "cite", cite: "Qin, Schmotz, Prinzhorn, Beurer-Kellner, Prabhu, Andriushchenko. LLM Agents Can Easily Tamper With Their Own Traces. arXiv:2609.30266, 2026 (preprint)", url: "https://arxiv.org/abs/2609.30266" },
   goo2026:  { short: "Citation faithfulness", kind: "paper", role: "cite", cite: "Goo, Kim, Han, Jo, Kim, Kim. Evaluating and Guarding Citation Faithfulness in Agentic Scientific Synthesis. arXiv:2607.20527, 2026 (preprint)", url: "https://arxiv.org/abs/2607.20527" },
-  trace2026:{ short: "TRACE",           kind: "paper", role: "cite", cite: "Kim et al. Beyond the Final Answer: Evaluating the Reasoning Trajectories of Tool-Augmented Agents. ICML 2026. arXiv:2510.02837", url: "https://arxiv.org/abs/2510.02837" },
-  zobel:    { short: "Zobel 1998",      kind: "paper", role: "cite", cite: "Zobel. How Reliable are the Results of Large-Scale Information Retrieval Experiments? SIGIR 1998, pp. 307–314. doi:10.1145/290941.291014", url: "https://doi.org/10.1145/290941.291014" },
 };
 
 const LANES = [
-  { id: "corpus",  name: "Corpus",           sub: "built once, no index" },
-  { id: "toolbox", name: "Agent's toolbox",  sub: "a shell, Python, three harness commands", flow: false },
-  { id: "system",  name: "Research system",  sub: "per question" },
-  { id: "prov",    name: "Trace & provenance", sub: "per run, written by the harness" },
-  { id: "infra",   name: "Where it runs",    sub: "one Slurm GPU job + Omen services", flow: false },
-  { id: "eval",    name: "Evaluation",       sub: "RQ1: ours vs baseline · 12 questions" },
-  { id: "gold",    name: "Gold standard",    sub: "per question, built once" },
+  { id: "protocol",   name: "Question → protocol", sub: "the compiler front end" },
+  { id: "engine",     name: "Execution engine",    sub: "runs one protocol over a corpus" },
+  { id: "extractors", name: "Extractor library",   sub: "one interface, swappable parts", flow: false },
+  { id: "prov",       name: "Provenance & replay", sub: "same data on every replay" },
+  { id: "bench",      name: "Synthetic benchmark", sub: "ground truth → papers" },
+  { id: "eval",       name: "Evaluation",          sub: "locate, A, B, C + two baselines" },
+  { id: "infra",      name: "Where it runs",       sub: "Slurm GPU job, tested", flow: false },
+  { id: "optional",   name: "Extensions",          sub: "not required for the thesis", flow: false, open: true },
 ];
 
 const STAGES = [
-  // Corpus
-  { id: "papers",   lane: "corpus",  col: 0, name: "Papers",          desc: "337 PDFs, 336 used",      llm: false },
-  { id: "md",       lane: "corpus",  col: 1, name: "Markdown",        desc: "one .md per paper, frozen", llm: false, sources: ["docling"] },
-  // Agent's toolbox (no arrows between them: the agent picks)
-  { id: "grep",     lane: "toolbox", col: 1, name: "Shell",           desc: "grep, read, scripts", llm: false, sources: ["sweagent", "dcilite"] },
-  { id: "scripts",  lane: "toolbox", col: 2, name: "Own scripts",     desc: "Python over the .md",     llm: false, sources: ["codeact"] },
-  { id: "subagents",lane: "toolbox", col: 3, name: "Subagents",       desc: "spawn: brief + files",    llm: true,  sources: ["cookbook"], ours: "own log, shared claims" },
-  { id: "newtools", lane: "toolbox", col: 4, name: "New tools",       desc: "save_tool: SKILL.md",     llm: true,  sources: ["latm", "skills"] },
-  { id: "claim",    lane: "toolbox", col: 5, name: "Claim tool",      desc: "fact + quote + step",     llm: false, sources: ["webanno", "laquer"], ours: "only route into the graph", oursTitle: "The claim command is the only way a fact enters the knowledge graph, so provenance is complete by construction" },
-  // Research system (one question)
-  { id: "question", lane: "system",  col: 0, name: "Question",        desc: "as the user asks it",     llm: false },
-  { id: "concepts", lane: "system",  col: 1, name: "Concepts",        desc: "ambiguity axes → briefs", llm: true,  sources: ["ambigqa", "disambig", "ambrosia", "underspec", "ambiguity", "ambigds", "intentrl"], ours: "corpus-blind, checked", oursTitle: "Concepts are generated without looking at the corpus and checked for researchability (structural check, critic, two-procedure test)" },
-  { id: "view",     lane: "system",  col: 2, name: "Research briefs", desc: "definition · shape · CQs", llm: false, sources: ["dblp", "cskg"], ours: "brief; schema derived", oursTitle: "Each concept is a research brief: one-line definition with its measure, an answer shape, competency questions; the subschema is derived from the answer shape" },
-  { id: "pick",     lane: "system",  col: 3, name: "User picks one",  desc: "the concept to research", llm: false, people: true },
-  { id: "agent",    lane: "system",  col: 4, name: "Agent",           desc: "complete freedom",        llm: true,  sources: ["sweagent", "li2026", "sen2026", "flyaoc"], ours: "every step visible" },
-  { id: "kg",       lane: "system",  col: 5, name: "Knowledge graph", desc: "claims → canonical triples", llm: true, sources: ["provo", "edc"], ours: "full provenance" },
-  { id: "trace",    lane: "system",  col: 6, name: "Trace back",      desc: "node → step → .md text",  llm: false, people: true, ours: "user traces any fact" },
-  // Trace & provenance (written by the harness, read by everything else)
-  { id: "log",      lane: "prov",    col: 4, name: "Event log",       desc: "PROV-AGENT records, chained", llm: false, sources: ["provagent", "qin2026"], ours: "logged outside the agent", oursTitle: "The interceptor runs in the harness process; the agent's sandbox cannot see or edit the log" },
-  { id: "views",    lane: "prov",    col: 5, name: "Trace views",     desc: "LEDGER edges: claim → quote", llm: false, sources: ["ledger"] },
-  { id: "replay",   lane: "prov",    col: 6, name: "Replay",          desc: "offline · re-execute",    llm: false, ours: "computed facts re-run" },
-  // Where it runs (one Slurm GPU job; Docker services on Omen through tunnels)
-  { id: "slurm",    lane: "infra",   col: 0, name: "Slurm job",       desc: "3×A100 40 GB · 48 h",     llm: false, sources: ["llmsetup"] },
-  { id: "orch",     lane: "infra",   col: 1, name: "Orchestrator",    desc: "Qwen3.8-27B · GPU 0 · 65k", llm: true, sources: ["vllm"] },
-  { id: "subs",     lane: "infra",   col: 2, name: "Subagent models", desc: "Qwen3-30B-A3B ×2 · pinned", llm: true,  sources: ["vllm"] },
-  { id: "gateway",  lane: "infra",   col: 3, name: "LiteLLM gateway", desc: ":4000 · status :8010",    llm: false, sources: ["litellm"] },
-  { id: "harness",  lane: "infra",   col: 4, name: "Harness",         desc: "next to build", llm: false, current: true, sources: ["minisweagent"], ours: "parser + interceptor", oursTitle: "mini-swe-agent is installed and subclassed: our lenient reply parser, output cap, budgets and the interceptor that writes events.jsonl" },
-  { id: "sandbox",  lane: "infra",   col: 5, name: "Sandbox",         desc: "Landlock + seccomp", llm: false },
-  { id: "omen",     lane: "infra",   col: 6, name: "Omen services",   desc: "optional: Langfuse copy", llm: false, sources: ["langfuse"], ours: "omen-tunnels", oursTitle: "scripts/omen-tunnels chains Omen → laptop → Webis gateway → compute node, because Docker cannot run on Slurm and the node cannot reach Omen directly" },
-  // Evaluation (proposed redesign: three layers)
-  { id: "baseline", lane: "eval",    col: 2, name: "Baseline run",    desc: "claim off · sources after", llm: true,  sources: ["rarr", "alce"], ours: "only the timing differs" },
-  { id: "faith",    lane: "eval",    col: 3, name: "Faithfulness",    desc: "quote supports fact?",    llm: true,  sources: ["goo2026", "citeguard", "judge", "kappa"], ours: "needs no gold" },
-  { id: "correct",  lane: "eval",    col: 4, name: "Correctness",     desc: "vs answer key, 3 levels", llm: true,  sources: ["webnlg", "euzenat", "text2kg", "trec"] },
-  { id: "process",  lane: "eval",    col: 5, name: "Process",         desc: "cost · coverage of D",    llm: false, sources: ["trace2026"], ours: "compared by outcome" },
-  { id: "results",  lane: "eval",    col: 6, name: "Results",         desc: "12 questions × 2 × 3 runs", llm: false, sources: ["bootstrap"] },
-  // Gold standard (to be redesigned: D per concept)
-  { id: "screen",   lane: "gold",    col: 0, name: "Screen papers",   desc: "every paper, per question", llm: true,  ours: "coverage rows" },
-  { id: "extract",  lane: "gold",    col: 1, name: "Extract",         desc: "into the answer shape",   llm: true,  sources: ["edc"] },
-  { id: "D",        lane: "gold",    col: 2, name: "Document D",      desc: "filled answer shape",     llm: false, sources: ["zobel"], ours: "D: supervisor's idea" },
-  { id: "triage",   lane: "gold",    col: 3, name: "Triage",          desc: "answers / context",       llm: true,  ours: "triage + sample" },
-  { id: "human",    lane: "gold",    col: 4, name: "Human review",    desc: "the author, in Argilla",   llm: false, people: true, sources: ["argilla", "kappa"] },
-  { id: "key",      lane: "gold",    col: 5, name: "Answer key",      desc: "gold triples",            llm: false, sources: ["benchie", "ambigqa"] },
+  // Question → protocol
+  { id: "question",  lane: "protocol", col: 0, name: "Research question", desc: "RAG → factual accuracy?", llm: false },
+  { id: "write",     lane: "protocol", col: 1, name: "Write protocol",    desc: "by hand, step 1",          llm: false, people: true, current: true },
+  { id: "protocol",  lane: "protocol", col: 2, name: "Research protocol", desc: "YAML: evidence → answer",  llm: false, ours: "intermediate representation", oursTitle: "The executable research protocol sits between the natural-language question and the evidence graph, like an intermediate representation in a compiler" },
+  // Execution engine
+  { id: "engine",    lane: "engine",   col: 1, name: "Engine",            desc: "Python, runs the protocol", llm: false, sources: ["provagent"], ours: "protocol interpreter" },
+  { id: "locate",    lane: "engine",   col: 2, name: "Locate",            desc: "exhaustive · BM25 · agent", llm: true, added: true, ours: "flexible search, fixed flow", oursTitle: "The protocol fixes which evidence counts, the order of steps and the synthesis; only how a passage is found is flexible (exhaustive screening, keyword retrieval or an agent), within a budget, with the same output contract" },
+  { id: "evgraph",   lane: "engine",   col: 3, name: "Evidence graph",    desc: "study → experiment → result", llm: false, sources: ["provo", "webanno"], ours: "every node has its passage" },
+  { id: "synth",     lane: "engine",   col: 4, name: "Synthesis",         desc: "explicit rules, pro and contra", llm: false, ours: "deterministic first" },
+  { id: "answer",    lane: "engine",   col: 5, name: "Answer",            desc: "verdict + evidence table", llm: false },
+  { id: "trace",     lane: "engine",   col: 6, name: "Trace back",        desc: "answer → result → passage", llm: false, people: true, added: true, sources: ["laquer", "ledger"] },
+  // Extractor library (no arrows: the engine picks the extractor per evidence type)
+  { id: "iface",     lane: "extractors", col: 0, name: "Common interface", desc: "the extractor contract", llm: false, ours: "one contract, written" },
+  { id: "x_cond",    lane: "extractors", col: 1, name: "Conditions",       desc: "models, with / without RAG", llm: true, sources: ["edc"] },
+  { id: "x_metric",  lane: "extractors", col: 2, name: "Metrics",          desc: "how factuality is measured", llm: true },
+  { id: "x_result",  lane: "extractors", col: 3, name: "Results",          desc: "a number per condition", llm: true },
+  { id: "x_claim",   lane: "extractors", col: 4, name: "Author claims",    desc: "what the authors conclude", llm: true, added: true },
+  { id: "x_agent",   lane: "extractors", col: 5, name: "Agentic extractor", desc: "navigates one paper", llm: true, added: true, ours: "our agent, as an extractor", oursTitle: "The existing research agent (sandbox, shell, claim tool with quote check) as one implementation behind the extractor interface, for distributed and complex evidence" },
+  { id: "x_cascade", lane: "extractors", col: 6, name: "Cascade",          desc: "regex → LLM → agent", llm: false, added: true, ours: "who found what" },
+  { id: "x_bench",   lane: "extractors", col: 7, name: "Benchmarked",      desc: "each version, per difficulty", llm: false, ours: "reusable, measured" },
+  // Provenance and replay (the extractor contract, sections 7 and 8)
+  { id: "evlog",     lane: "prov",     col: 1, name: "Event log",         desc: "one event per extractor call", llm: false, added: true, sources: ["provagent"], ours: "hash-chained" },
+  { id: "cache",     lane: "prov",     col: 2, name: "Record cache",      desc: "key: extractor id + task", llm: false, added: true },
+  { id: "replay",    lane: "prov",     col: 3, name: "Replay",            desc: "records only → same data", llm: false, added: true, ours: "identical every time" },
+  { id: "reexec",    lane: "prov",     col: 4, name: "Re-execution",      desc: "run again → measured drift", llm: true, added: true, ours: "stability as a result" },
+  { id: "export",    lane: "prov",     col: 5, name: "PROV-O + SPARQL",   desc: "graph.ttl, queries", llm: false, sources: ["provo"] },
+  // Synthetic benchmark
+  { id: "truth",     lane: "bench",    col: 0, name: "Ground truth",      desc: "fictional studies + results", llm: false, ours: "data first, papers second", oursTitle: "The process is reversed: structured ground truth is generated first, and papers are written from it, so the corpus's intended evidence is known exactly" },
+  { id: "knobs",     lane: "bench",    col: 1, name: "Difficulty knobs",  desc: "explicit → contradictory", llm: false },
+  { id: "gen",       lane: "bench",    col: 2, name: "Paper generator",   desc: "LLM writes each paper", llm: true },
+  { id: "fidelity",  lane: "bench",    col: 3, name: "Fidelity check",    desc: "paper = ground truth?", llm: true, people: true, sources: ["kappa", "judge"] },
+  { id: "corpus",    lane: "bench",    col: 4, name: "Synthetic corpus",  desc: "papers + known evidence", llm: false },
+  { id: "variants",  lane: "bench",    col: 5, name: "Controlled variants", desc: "change one result", llm: false, ours: "predictable answer shift" },
+  // Evaluation
+  { id: "evLoc",     lane: "eval",     col: 0, name: "Locate recall",     desc: "passages found vs placed", llm: false, added: true },
+  { id: "evA",       lane: "eval",     col: 1, name: "A · Extraction",    desc: "P / R / F1 · provenance", llm: false, sources: ["benchie", "webnlg"] },
+  { id: "evB",       lane: "eval",     col: 2, name: "B · Integration",   desc: "links across sections", llm: false },
+  { id: "evC",       lane: "eval",     col: 3, name: "C · Synthesis",     desc: "vs answer from ground truth", llm: false },
+  { id: "errors",    lane: "eval",     col: 4, name: "Error attribution", desc: "never found · extracted · linked · rule", llm: false, ours: "why it fails, not only if" },
+  { id: "baseline",  lane: "eval",     col: 5, name: "Answer-level baseline", desc: "retrieve passages → answer", llm: true, sources: ["alce", "rarr"] },
+  { id: "agentbase", lane: "eval",     col: 6, name: "Agent baseline",    desc: "our agent, no protocol", llm: true, added: true, ours: "a stronger baseline" },
+  { id: "compare",   lane: "eval",     col: 7, name: "Comparison",        desc: "correct · complete · traceable", llm: false, sources: ["bootstrap", "goo2026"] },
+  // Where it runs
+  { id: "slurm",     lane: "infra",    col: 0, name: "Slurm job",         desc: "3×A100 40 GB · 48 h", llm: false, sources: ["llmsetup"] },
+  { id: "models",    lane: "infra",    col: 1, name: "Qwen models",       desc: "27B + 2× 30B-A3B", llm: true, sources: ["vllm"] },
+  { id: "gateway",   lane: "infra",    col: 2, name: "LiteLLM gateway",   desc: ":4000, JSON-schema output", llm: false, sources: ["litellm"] },
+  // Extensions (optional)
+  { id: "protogen",  lane: "optional", col: 1, name: "Protocol generator", desc: "LLM + dialogue with user", llm: true, people: true },
+  { id: "real",      lane: "optional", col: 3, name: "Real papers",       desc: "336 ACL/EMNLP 2025", llm: false, sources: ["docling"] },
+  { id: "realgold",  lane: "optional", col: 4, name: "Real-paper gold",   desc: "built + reviewed in Argilla", llm: true, people: true, added: true, sources: ["argilla"] },
 ];
 
 const LINKS = [
-  ["md",    "grep",     "read-only corpus"],
-  ["agent", "newtools", "chooses freely"],
-  ["claim", "kg",       "claims.jsonl"],
-  ["agent", "log",      "events.jsonl"],
-  ["kg",    "faith",    "every claim + its quote"],
-  ["replay","process",  "cost, coverage"],
-  ["view",  "D",        "answer shape = gold template"],
-  ["key",   "correct",  "gold"],
-  ["harness", "log",    ""],
-  ["baseline","faith",  "sources attached after"],
-  ["log",   "omen",     "copy to Langfuse"],
+  ["protocol", "engine",   "executes"],
+  ["locate",   "iface",    "passages → extractors"],
+  ["x_result", "evgraph",  "typed evidence + span"],
+  ["corpus",   "engine",   "documents"],
+  ["truth",    "evLoc",    "where each fact was placed"],
+  ["x_cascade", "evlog",   "every call recorded"],
+  ["answer",   "evC",      "the system's answer"],
+  ["corpus",   "baseline", "same papers"],
 ];
 
-const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. A box shows at most two chips; its panel lists every work it uses, and the list below groups all works by role. The \"Where it runs\" lane is the infrastructure: its panels give the measured numbers and test ids from tests/RESULTS.md (all rounds, 8–10 Oct 2026). The flagged box (Harness) is what gets built next. Click a box, chip or reference for details (Esc closes); a link ending in #stage=agent or #source=codeact opens that panel directly.";
+const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. A box shows at most two chips; its panel lists every work it uses, and the list below groups all works by role. The flagged box is step 1 of the supervisor's order of work; the table under the diagram gives all seven steps and which existing code each can reuse. Click a box, chip or reference for details (Esc closes); a link ending in #stage=engine opens that panel directly.";
 
 /* ---- STAGE_DETAILS / SOURCE_DETAILS: what the panel shows when a box, chip or lane is clicked -------------------------
-   STAGE_DETAILS: one entry per STAGES id. SOURCE_DETAILS: one per SOURCES key. Every field is optional:
+   Every field is optional:
      what      one or two sentences: what this is
      how       bullet list: how it works in our system
      io        [input, output]
      example   a short worked example
      ours      what in this step is our own contribution
-     differs   (sources) where we deviate from the paper; (stages) known limits
-     settings  settings that change it (name: what it does)
-     code      files where it lives
+     differs   (sources) where we deviate from the paper; (stages) open points and limits
+     code      existing files it can build on
    ---------------------------------------------------------------------------------------------- */
 const STAGE_DETAILS = {
-  // ---------------------------------------------------------------- Corpus
-  papers: {
-    what: "The fixed set of research papers every question is answered from. It does not change during an experiment.",
-    how: [
-      "337 papers, verified against DBLP: 37 original papers, 150 ACL 2025 long papers and 150 EMNLP 2025 main papers.",
-      "Corpus-wide questions (\"which benchmarks do the RAG papers use?\") need many papers at once.",
-    ],
-    io: ["PDF files", "the papers the agent may read"],
-  },
-  md: {
-    what: "Each PDF is converted once into a plain Markdown file. That is the whole \"corpus\": no search index, no embeddings, no pre-extracted facts.",
-    how: [
-      "One .md file per paper, keeping headings, paragraphs, tables and references as text.",
-      "Nothing is prepared for the agent: it decides itself how to find things in these files (see the toolbox).",
-      "Every fact in the final graph must point back to a place in one of these files, so the conversion has to keep the text stable (a fact can be located again later).",
-      "Converter: Docling 2.110.0, OCR off, table structure on. D1 on 10 ACL/EMNLP papers: titles and author order match DBLP 9/10, headings and reference lists 10/10, table rows recovered 10/10 (GROBID: 0/10). D2: a second conversion gave identical SHA-256 hashes for all 10.",
-      "D5 (10 Oct): all 337 PDFs converted in 4 h 52 min as one Slurm job; 336 usable (28.6 MB of Markdown). p38 is a scanned PDF with no text layer and is left out. Every source and output hash is verified, the tree is read-only on Ceph, and the manifest is in the repo (corpus/manifest.json).",
-    ],
-    io: ["PDF", "paper.md (plain text with structure)"],
-    differs: ["Two-column reading order has not been checked by eye yet; interleaved columns would break quotes across column breaks.", "A full paper is 45 to 230 KB (~35k tokens), so the agent and subagents must read sections with grep and sed, never whole files."],
-    code: ["scripts/build-corpus.py, scripts/build-corpus.sbatch", "corpus/manifest.json, tests/D5/"],
-    ours: "No retrieval pipeline is imposed: the corpus is just files, and finding evidence is entirely the agent's job.",
-  },
-
-  // ---------------------------------------------------------------- Agent's toolbox
-  grep: {
-    what: "The agent has one action: a shell command in a sandbox that holds the corpus read-only, a writable scratch directory and Python. Searching, reading, scripting and tool-making all go through it.",
-    how: [
-      "Shell commands such as grep, find, head, sed or a small reader, over the .md folder. Typically the first step: shortlist the papers and sections that mention the concept, then read them.",
-      "One command = one step in the trace, so the log is uniform and trivially replayable (the mini-SWE-agent model).",
-      "Tool output is shown inline, truncated to the first N lines with the path of the full output appended; the agent can head, tail or grep the rest. Sen et al. (2026) find inline output beats output in files.",
-      "Guardrails that do not restrict freedom: read-only corpus, no network, a CPU-time limit per command, and step and token budgets that are announced to the agent rather than enforced silently. \"No network\" cannot be enforced on the node yet (see Sandbox).",
-      "Output is capped at 8 KB per step in the context, with the full output in a file (C1). Older outputs are masked to a one-line stub later, following the context levels of DCI-Agent-Lite (truncation, then compaction, then summarisation). Mask in batches: on Qwen3.8 every mask invalidates the prefix cache after it (see Orchestrator).",
-      "Reply format: exactly one ```bash block; the harness also accepts a single bare command line and otherwise nudges, because compliance is 90 to 100% (B3, L2), not 100%. Two identical commands in a row get a loop notice (B4).",
-    ],
-    io: [".md files + search terms the agent chose", "matching lines, shortlisted papers, read passages"],
-    example: "grep -il \"retrieval-augmented\" corpus/*.md → 41 papers → read their evaluation sections.",
-    settings: ["step budget (e.g. 300 commands)", "token budget", "per-command CPU limit (120 s, extendable with a logged flag)", "inline output lines (N)"],
-  },
-  scripts: {
-    what: "The agent can write and run its own Python over the Markdown files when shell search is not enough.",
-    how: [
-      "Parse tables, count mentions per paper, collect every sentence with a pattern, cross-reference papers, compute aggregates.",
-      "The script and its output are part of the visible trace, so a computed fact can be checked by rerunning it.",
-    ],
-    io: ["a task the agent set itself", "script + its output"],
-    example: "A script that collects every \"evaluated on …\" sentence from the shortlisted papers and groups the dataset names.",
-  },
-  subagents: {
-    what: "The agent can split the work: after shortlisting, it launches one subagent per relevant paper (or per batch of papers) with the spawn command.",
-    how: [
-      "spawn --brief sub.json --files a.md b.md --return schema.json: the subagent receives the chosen concept, a narrow sub-brief written by the parent (\"for these 12 papers, list every dataset the paper reports a number on, with the quote\"), the file list, the schema of what to return, and the same sandbox with its own scratch directory.",
-      "Each subagent has its own event log under sub/<id>/ and the same claim command; its claims go into the shared claims.jsonl tagged with the subagent id, so provenance never has to be merged. Only the result.json files are merged, and the parent reads them as ordinary command output.",
-      "Several spawn calls in one command run in parallel, capped by the harness. Subagents use the smaller model and cannot spawn further (depth 1) in the first version.",
-      "This is the orchestrator-and-workers pattern Anthropic describes for its research system: each worker gets an objective, an output format and a boundary. Its released lead, subagent and citation prompts (claude-cookbooks, MIT) are the starting point for our parent and sub-brief prompts.",
-      "Capacity (L3): two subagent replicas take 4 concurrent 32k subagents, or 6 concurrent 16k ones with a cap of 3 per replica; 8 at 16k preempted. A subagent cannot read whole papers into its 32k context, so its brief says to read sections.",
-    ],
-    io: ["shortlist + a sub-brief per batch", "result.json per subagent + their claims"],
-    ours: "Subagents share the claims file and keep their own log, so the trace of a run is a tree with one provenance store.",
-  },
-  newtools: {
-    what: "If the existing ways are not enough, the agent may build a new tool for itself, register it with save_tool, and then use it.",
-    how: [
-      "The agent writes a script in scratch and runs it (already visible). save_tool --name X --script tools/x.py --description \"...\" copies it into tools/X/ with a SKILL.md header (name, description, usage, inputs, outputs) in the Agent Skills format.",
-      "The harness records a tool_created event with the script's hash and, on the next turn, lists the tool's name and description in the agent's context; the body is read only when used (progressive disclosure).",
-      "Every later call is a normal command whose event carries the tool hash, so a computed fact can cite the exact script version and its inputs.",
-      "Reuse across runs is a switch: off by default so evaluated runs are comparable, on in a \"warm\" mode for an experiment on whether tools accumulate.",
-      "SKILL.md follows the open Agent Skills specification: `name` is 1 to 64 characters of a-z, 0-9 and hyphens (no leading, trailing or double hyphen) and equals the folder name; `description` is 1 to 1024 characters; the body stays under 500 lines. save_tool validates this itself, since the reference validator needs Node.",
-    ],
-    io: ["a recurring need", "tools/<name>/SKILL.md + script, registered and logged"],
-    example: "A table extractor, a citation resolver across the .md files, a matcher for dataset-name variants.",
-  },
-  claim: {
-    what: "The only way a fact enters the knowledge graph. The agent records each finding as it goes, with the exact text that supports it; nothing is extracted from a final report afterwards.",
-    how: [
-      "claim --subject S --predicate P --object O --file paper.md --quote \"...\": the harness looks the quote up in the file and refuses the claim if it is not found, then stores the triple, the anchor and the id of the step it was called from.",
-      "The anchor is three things together: the quoted span with 32 characters of prefix and suffix (Web Annotation TextQuoteSelector), the character offsets (TextPositionSelector), and the SHA-256 of the file. Offsets are the fast path when the hash matches; the quote is the fallback and what the user sees.",
-      "Computed facts: claim --via tools/x.py --inputs ... records a result derived from a script run on named inputs. An aggregate (count, ranking) is accepted only when the per-item facts it aggregates are already claims, so a ranking traces to the script, its hash, and every quote beneath it.",
-      "Predicates are free at emission, with the ontology's relation names given as hints; canonicalisation happens afterwards (see Knowledge graph).",
-    ],
-    io: ["a finding + the supporting text (or a script + inputs)", "a line in claims.jsonl with full provenance"],
-    ours: "Provenance is complete by construction: every fact carries its step and its anchor from the moment it exists.",
-  },
-
-  // ---------------------------------------------------------------- Research system
+  // ---------------------------------------------------------------- Question → protocol
   question: {
-    what: "The user's research question, in their own words.",
+    what: "The research question the prototype is built for. The supervisor proposes one well-defined question for the first prototype: \"Does retrieval-augmented generation (RAG) improve the factual accuracy of LLM-generated answers?\"",
     how: [
-      "Nothing is looked up yet: the question goes straight to concept generation.",
+      "Why this question: its evidence is structured (experiments, conditions, metrics, numbers), and the answer can be computed from that evidence with deterministic rules.",
+      "Answer-level reasoning would collect papers that conclude \"RAG improves factuality\" and summarise them. Evidence-level reasoning extracts the experiments and their reported numbers and derives the answer itself, even when no paper states it.",
+      "Existing assessments (what the authors conclude) are kept as one more kind of evidence, but the answer must not depend on them.",
     ],
-    example: "\"Who is the best author in the corpus?\" or \"Which benchmarks do the RAG papers evaluate on?\"",
+    io: ["natural-language question", "input to protocol writing"],
   },
-  concepts: {
-    what: "From the question alone, the system proposes concepts: standalone, unambiguous versions of what the user could mean, as many as are sensible.",
+  write: {
+    what: "Step 1 of the supervisor's order: write the protocol for the one question by hand. Automatic protocol generation is not needed at first.",
     how: [
-      "Why this step exists: 16% to over 50% of benchmark questions are underspecified (Huang et al. 2026), and agents mostly fail by silently committing to one framing (Ambig-DS 2026).",
-      "Generation by ambiguity axes, not a one-shot list (asked directly, LLMs give mostly the preferred reading: Saparina & Lapata 2025): the model names the open choices (entity type, measure, scope, aggregation unit, undefined predicates such as \"best\"), takes the combinations, drops the meaningless ones (at most 12), writes a research brief for each, then ranks and shows the top 3 to 7.",
-      "Made without looking at the corpus, so the options are not limited to what happens to be easy to find. The generator gets only a corpus fact sheet (337 CS papers, ACL and EMNLP 2025, DBLP metadata, full text, no external citation data) and every brief carries a \"needs\" line.",
-      "Researchable without asking back = the scope names concrete papers, the measure names an operation over named fields, every answer column has a type, no predicate is undefined. Checked three ways: a structural check on the brief JSON, a critic call that judges rather than answers (models flag ambiguity well when asked explicitly: Su & Cardie 2026), and a two-procedure test (the model writes the procedure twice; a judge says whether both give the same table).",
-      "One concept is a result of the axes all having one value, never a shortcut; the pick step is shown even then.",
-      "If the chosen concept cannot be answered from the corpus, the agent's first (traced) step says so and the run ends with a cited \"not answerable because …\" claim.",
+      "Decide the evidence types (experiment, condition, metric, result, author claim), the fields of each, how they link, and the synthesis rules, and write them down as one YAML file.",
+      "Write the protocol's schema at the same time (pydantic models), so the engine can validate any protocol before running it.",
+      "The hand-written protocol is also the specification the synthetic generator writes papers for (see Ground truth): both describe the same evidence model.",
     ],
-    io: ["question", "concepts.json: a list of research briefs"],
-    ours: "Disambiguation happens before any research, is decoupled from what the corpus contains, and is checked for researchability automatically.",
+    io: ["the question", "protocols/rag-factuality.yaml + its schema"],
+    differs: ["Open: the exact synthesis thresholds (what counts as \"no effect\"), and whether lower-is-better metrics (error rates) are flipped or kept apart."],
   },
-  view: {
-    what: "Each concept is shown as a research brief: a one-line definition with its measure, an answer shape (a table or graph template with placeholders), two or three competency questions, and what it needs from the corpus. The subschema is derived from the answer shape and shown on request.",
+  protocol: {
+    what: "The executable research protocol: a declarative file (YAML or JSON) that says how the question is investigated. It is the intermediate representation between the question and the evidence graph.",
     how: [
-      "Brief = {title, definition, measure {operation, of, group_by}, scope, answer_shape {kind: table | graph, columns or node and edge types}, competency_questions, needs, subschema}.",
-      "Why this mix: the definition and the answer shape are what a user can compare at a glance; the competency questions are what evaluation needs (each one is a check the answer must pass); a subschema alone makes \"most papers\" and \"most cited\" look identical; a SPARQL pattern is unreadable and there is no triple store any more.",
-      "Cards side by side; differences between cards are highlighted by diffing the measure and scope fields. Terms come from DBLP (Person, Paper, Venue) and CS-KG 2.0 (Method, Task, Material, Metric).",
-      "The filled answer shape is exactly what the gold answer key for that concept looks like (see Document D).",
+      "What types of evidence are needed, and which extractor finds each one.",
+      "How each piece is represented (typed fields) and connected (a result belongs to an experiment and is measured by a metric).",
+      "How the evidence is synthesised into an answer, including supporting and contradicting evidence.",
+      "The full graph structure is not fixed in advance: the entities and relations come from the protocol, per question.",
+      "SPARQL is no longer the central language: it stays useful for querying the resulting evidence graph.",
     ],
-    io: ["concepts.json", "cards the user can compare; the chosen brief becomes runs/<run>/concept.json"],
-    example: "\"Most first-author papers at ACL 2025\": count Paper group by first_author, scope venue == ACL 2025, columns author (Person), first_author_papers (integer), papers (list<Paper>).",
-    ours: "The research brief as the unit the user chooses from, with the schema derived rather than shown first.",
+    io: ["question (and, later, a dialogue with the user)", "protocol.yaml, validated and hashed"],
+    example: "See \"What a protocol looks like\" below the diagram.",
+    ours: "A declarative, executable protocol per question, so every run is reproducible from the protocol file and the corpus alone.",
   },
-  pick: {
-    what: "The user chooses exactly one concept to research.",
+
+  // ---------------------------------------------------------------- Execution engine
+  engine: {
+    what: "A Python program that reads a protocol and runs it over a corpus: for each evidence type it calls the named extractor on every document, collects the typed evidence, links it, and runs the synthesis rules.",
     how: [
-      "This is the only point where a person steers the run; everything after it is the agent's own work.",
-      "The chosen concept, not the original question, is what the agent receives.",
+      "Validates the protocol against its schema first; refuses unknown extractors or fields.",
+      "Calls extractors through one interface, so swapping a regex extractor for an LLM extractor changes nothing else.",
+      "Records every extractor call (input document, extractor and version, output, model call if any) as provenance, as the current harness records model calls and commands.",
+      "Deterministic given the protocol, the corpus and the extractor outputs; LLM extractor calls are cached, so a rerun repeats exactly.",
     ],
-    io: ["concept view", "one chosen concept"],
+    io: ["protocol.yaml + a corpus (synthetic or real)", "evidence graph + answer + provenance log"],
+    ours: "The protocol interpreter: the part that turns a declarative protocol into an evidence acquisition workflow.",
+    code: ["reusable: agent/events and hash-chained log (agent/broker.py), agent/prov.py for the PROV-O export", "new: engine/ (protocol schema, runner)"],
   },
-  agent: {
-    what: "An LLM agent researches the chosen concept over the Markdown files with complete freedom: no prescribed search method, tools or steps.",
+  locate: {
+    what: "Finds the passages that may hold each evidence type, before the extractors read them. The protocol fixes what to look for and the order of steps; only how the passages are found is flexible.",
     how: [
-      "It decides itself how to search and read: grep, its own Python scripts, subagents per paper, or tools it invents (the toolbox above). Li et al. (2026) show this direct corpus interaction beats sparse, dense and reranking retrieval on BRIGHT and BEIR; Sen et al. (2026) show the harness matters as much as the method.",
-      "No time limit is imposed by design, and an empty result is an acceptable outcome; the point is a faithful, inspectable research process, not speed. Budgets, when reached, are announced to the agent, which is asked to conclude with what it has.",
-      "Every action is recorded by the interceptor (see Event log): each model call, command, script, subagent and output, in order, so the whole run can be replayed and inspected.",
-      "Findings are recorded as it goes with the claim command, each tied to the step and the .md text it came from; these become the knowledge graph.",
-      "Models (chosen in the tests): Qwen3.8-27B-FP8 with a 65k context for the orchestrator, two replicas of Qwen3-30B-A3B-Instruct for subagents, all through LiteLLM; see the \"Where it runs\" lane. Context is kept small by subagents first, inline truncation second, observation masking of old outputs third.",
-      "Not run yet: the harness loop is not built, and model-written commands must wait for a sandbox (S3, S4). The end-to-end tests C3 to C7 are open.",
+      "Per evidence type the protocol names a strategy: `exhaustive` (screen every section of every paper with one yes/no question, as the gold builder does), `bm25` (keyword retrieval with the protocol's terms), or `agent` (an agent searches the corpus freely within a step and token budget).",
+      "Every strategy returns the same thing: passages with checked spans, plus coverage (what was examined, what was not). Everything after this step is fixed again.",
+      "The agent cannot add evidence types, change inclusion criteria or touch the synthesis; its actions are logged and replayed like any extractor call.",
+      "Why: fixed patterns cannot anticipate every way a paper lays out its evidence; reading everything is exact but costly on large corpora.",
+      "Experiment: the same protocol with each strategy, scored by locate recall per difficulty level.",
     ],
-    io: ["runs/<run>/concept.json + the read-only .md files", "claims.jsonl + events.jsonl + tools/ + scratch/"],
-    ours: "Complete freedom for the agent, combined with complete visibility of what it did.",
+    io: ["protocol + corpus", "candidate passages per evidence type, with coverage"],
+    ours: "Flexible search inside a fixed, reproducible control flow.",
+    differs: ["Not discussed with the supervisor yet: his engine runs the protocol; whether one of its steps may be agentic is a question for him."],
+    code: ["reusable: gold/screen.py (exhaustive screening), agent/loop.py (agentic search)"],
   },
-  kg: {
-    what: "The answer, shown as a knowledge graph: the claims the agent recorded, canonicalised onto the ontology, each node and edge linked to its provenance.",
+  evgraph: {
+    what: "The structured evidence representation: studies, experiments, conditions, measurements and author claims, linked to each other and each linked to the exact source passage it came from.",
     how: [
-      "Input is claims.jsonl, written by the claim command during the run; nothing is extracted from a final report. Canonicalisation is a separate, logged step: EDC's Define and Canonicalise map each free predicate onto DBLP, CS-KG 2.0 or our own terms; a predicate that maps to nothing is kept under an ours: namespace and listed, never dropped. Entities are resolved the same way (authors against DBLP metadata, datasets and methods against CS-KG), with the raw mention kept.",
-      "The canonical triple points back to the raw claim (prov:wasDerivedFrom), so nothing is overwritten.",
-      "Provenance is a small PROV-O subset: entities (Claim, Passage, File, Script, Result), activities (Command, ModelCall, by event id), agents (main, each subagent, the model, the user), relations wasGeneratedBy, wasDerivedFrom, used, wasAssociatedWith, wasInformedBy. Exported as graph.ttl.",
-      "Computed facts (counts, rankings) derive from the script and the per-item claims it aggregated, so a ranking shows the script, its hash, and every quote beneath it.",
-      "Target vocabularies: DBLP's RDF schema (CC0) for papers, people and venues; the CS-KG 2.0 ontology (CC BY 4.0) for methods, tasks and materials. CS-KG's relations are verbs with one sub-property per target type, such as executesMethod, analyzesTask, improves and based-on; names like usesMethod or evaluatesOn are not CS-KG terms and go under ours: unless they map.",
-      "EDC's Define and Canonicalise prompts (sd_template.txt, sc_template.txt, commit 02aad17, MIT) are copied with their licence; the calls around them are ours, because EDC's client only talks to OpenAI. The embedder for schema retrieval is Qwen3-Embedding-0.6B instead of EDC's 7B model.",
+      "Nodes: Study (a paper), Experiment, Condition (model, with or without retrieval), Metric, Measurement (a value for one condition and metric), AuthorClaim.",
+      "Edges: Measurement → Experiment, Measurement → Condition, Measurement → Metric, Experiment → Study; every node → its passage (quote + offsets + file hash).",
+      "Kept as JSON for the engine and exported as RDF (PROV-O for provenance) into a SPARQL store, so it can be queried: which experiments show deterioration, which claims disagree with their own numbers.",
     ],
-    io: ["claims.jsonl + events.jsonl", "graph.json for the viewer, graph.ttl (PROV-O)"],
-    example: ":claim_041 prov:wasGeneratedBy :cmd_0187 ; prov:wasDerivedFrom :passage_041 (exact \"We evaluate on HotpotQA …\", start 18422, end 18466, in file sha256 …).",
-    ours: "Full provenance on every node and edge, present from the moment a fact is recorded.",
+    io: ["typed evidence from the extractors", "evidence graph (JSON, graph.ttl), queryable with SPARQL"],
+    ours: "Every node keeps its source passage, so integration errors (a value attached to the wrong condition) are visible and measurable.",
+    code: ["reusable: agent/anchor.py (quote → offsets, file hash), agent/prov.py (PROV-O export), scoring/store.py (pyoxigraph SPARQL store)"],
+  },
+  synth: {
+    what: "Derives the answer from the evidence graph with explicit rules, not with an LLM summary.",
+    how: [
+      "Pair the measurements per experiment and metric: with retrieval vs without.",
+      "Effect = difference in the metric's direction; label each experiment improves / no effect / worse by a threshold fixed in the protocol.",
+      "Answer = how many experiments fall in each label, with the supporting and the contradicting experiments listed.",
+      "Flags: an author claim that disagrees with its own experiment's computed label; duplicated studies; unusually large effects.",
+      "Because the rules are deterministic, the expected answer can be computed from the ground truth with the same code (see C · Synthesis).",
+    ],
+    io: ["evidence graph", "answer: label counts, effect sizes, supporting and contradicting evidence, flags"],
+    ours: "Synthesis as a deterministic, inspectable procedure, so synthesis errors can be separated from extraction errors.",
+  },
+  answer: {
+    what: "The system's answer to the question, as a verdict with the evidence table behind it.",
+    how: [
+      "A verdict (\"RAG improved factual accuracy in 9 of 12 experiments, had no effect in 2, was worse in 1\"), the per-experiment table, and the flagged disagreements.",
+      "Every number in the answer links to the measurements it was computed from.",
+    ],
+    io: ["synthesis output", "answer.json + a readable report"],
   },
   trace: {
-    what: "The user can follow any fact back to where it came from.",
+    what: "Any part of the answer can be followed back to the evidence and the exact passage in the paper.",
     how: [
-      "Click a node or edge → the claim-to-evidence view centred on that claim → the agent step that produced it (command, script, subagent) → the exact text in the .md file, resolved from the anchor.",
-      "Anchors resolve by offsets when the file hash matches the corpus manifest, by quote with prefix and suffix otherwise, and are reported as broken only if the quote is gone; the corpus is frozen, so that can only happen after a new corpus version.",
-      "This is the system's \"understanding back\" to the user: not just an answer, but how it was reached and on what evidence.",
+      "Verdict → the experiments counted → their measurements → the table cell or sentence each value came from.",
+      "The web app built for the current system already shows a claim walk from a fact to its highlighted passage; it can show the evidence graph the same way.",
     ],
-    io: ["a fact in the graph", "its step and its source text"],
-    ours: "Trace from any fact to the step and the source text.",
+    io: ["a number in the answer", "its measurements and passages"],
+    code: ["reusable: webapp/ (FastAPI + React viewer), agent/anchor.py"],
   },
 
-  // ---------------------------------------------------------------- Trace & provenance
-  log: {
-    what: "One append-only JSONL file per run, one record per model call, command or claim, hash-chained, written by a broker outside the sandbox. The record format is PROV-AGENT's; the links between records are LEDGER's (docs/provenance-model.md).",
+  // ---------------------------------------------------------------- Extractor library
+  iface: {
+    what: "The contract every extractor implements, so that implementations are interchangeable. Written down in docs/extractor-contract.md (14 Oct): identity, task, result, spans, coverage, provenance event, cache, replay and re-execution, benchmark per version.",
     how: [
-      "Record fields from PROV-AGENT: task_id, subtype, used, generated, parent_task_id, group_id, agent_id, source_agent_id, started_at, ended_at, status, plus our step_id, prev_hash and hash.",
-      "Subtypes: ai_model_invocation (prompt hash, model and revision, seed; response hash, tokens), agent_tool (command, files read; output hash and file), claim (anchor; claim id), spawn (task; child agent), coverage (a model output that could not be parsed, or a cut output).",
-      "The broker assigns step ids itself; the sandboxed command reaches it only through an inherited descriptor (CLAIM_FD). S7: 100 claims with a forged step id were stored with the real one, and the chain verified.",
-      "A step is one model call or one command: nothing smaller, nothing larger. Phases are labels the viewer infers, never written by the agent.",
-      "Qin et al. (2026) found that every mainstream local agent harness but one let the agent delete its own traces when asked; keeping the log outside the agent's reach is their recommended fix and costs nothing here.",
-      "Optional: a copy to Langfuse on Omen for debugging; events.jsonl stays the source of truth.",
-      "Tested so far: the hash chain verifies after capped outputs (C1) and after a job is cancelled mid-run, ending with a run_aborted event (S2).",
-      "Planned check: run the tampering scenarios released with Qin et al. (aisa-group/perfect-crime; no licence, so run it but copy nothing) against the harness.",
+      "Input: a document (or a section of it) and the evidence type's field schema from the protocol.",
+      "Implementations, simplest first: regex or lookup; a specialised model; a single-call LLM (one schema-constrained call per chunk); an agentic LLM (several steps through one paper: search, read, follow table references). All four return the same thing.",
+      "Output: a list of typed evidence items, each with the exact source span (quote, offsets) and a confidence or status.",
+      "Every span is checked against the document (the quote must be found), as the current claim broker checks quotes.",
+      "Each extractor has a name and version, recorded with every item it produces; its id contains the hash of its code and its configuration, so a changed prompt or pattern is a new extractor.",
+      "An item may have several spans with roles (the value in a table, the meaning of its column in the method section): this is what makes distributed evidence traceable.",
+      "Coverage is part of the result: every part examined is marked found, none, skipped or error, so missed and not there are told apart.",
+      "Decided (14 Oct): a value reported twice in a paper is one item with two spans; items keep normalised values and the raw text; benchmark recall is reported, not enforced.",
     ],
-    io: ["every model call and command of the harness", "runs/<run>/events.jsonl (+ sub/<id>/events.jsonl)"],
-    ours: "Logging from outside the agent, with a hash chain, so a run is a self-verifying record.",
+    io: ["document + field schema", "typed evidence items with spans"],
+    ours: "One interface for regex, model, single-call LLM and agentic LLM extractors, with the quote check built in.",
+    code: ["contract: docs/extractor-contract.md (identity, task, result, spans, coverage, provenance event, cache, replay and re-execution)", "reusable: agent/broker.py and agent/anchor.py (quote check), gold/chunks.py (section-aware chunking)"],
   },
-  views: {
-    what: "Views over events.jsonl and claims.jsonl; the claim-to-evidence graph is the primary one, the one the supervisor uses.",
+  x_cond: {
+    what: "Finds the experimental setup: which models were compared, under which conditions (with or without retrieval), on which dataset.",
+    how: ["An LLM extractor with a JSON schema per call (guided decoding through LiteLLM), over section-sized chunks, as the gold builder already does for any answer shape."],
+    io: ["methods and setup sections", "Experiment and Condition items"],
+    code: ["reusable: gold/extract.py and gold/llm.py (schema-constrained extraction with retries), gold/chunks.py"],
+  },
+  x_metric: {
+    what: "Finds how factual accuracy was measured: the metric's name, what it counts, and whether higher is better.",
+    how: ["A small closed vocabulary of known factuality metrics can be matched first (a regex or lookup extractor), with an LLM extractor for the rest: an example of two implementations behind one interface."],
+    io: ["evaluation sections, table headers", "Metric items"],
+  },
+  x_result: {
+    what: "Finds the reported numbers and attaches each one to its experiment, condition and metric.",
     how: [
-      "Claim-to-evidence graph with LEDGER's edges: a model call informs the command it emitted; the command uses the files it read; the claim is produced by its step, supported by its quoted passage and checked_by the broker's anchor check. Clicking a fact in the knowledge graph opens this view centred on that claim.",
-      "Queries from PROV-AGENT: which command and model call produced this fact; all claims from one step or subagent; anchors that no longer resolve; answer facts with no claim behind them.",
-      "Timeline: every event in order, subagents as collapsible bands, filterable by type. The debugging view.",
-      "Subagent tree with dataflow: parent and children, the files each touched, what it returned (AgentTrails, 2026, shows provenance graphs of actions and artifacts reveal dependencies a chronological log hides).",
-      "All three are projections of one data model, so the views are cheap once the model exists.",
+      "Results are often in tables: a table-aware extractor (rows = conditions, columns = metrics) next to a sentence extractor for numbers stated in text.",
+      "The hardest step for integration: the conditions may be defined in one section and the numbers reported in a table elsewhere.",
     ],
-    io: ["events.jsonl + claims.jsonl", "the three views in the viewer"],
+    io: ["results sections and tables", "Measurement items linked to Experiment, Condition, Metric"],
+  },
+  x_claim: {
+    what: "Finds what the authors conclude about RAG and factuality, kept apart from the measured results.",
+    how: ["Used as additional evidence and to detect conclusions that do not match the paper's own numbers (the contradictory-evidence test)."],
+    io: ["abstract, conclusion", "AuthorClaim items"],
+  },
+  x_bench: {
+    what: "Each extractor is benchmarked on its own against the synthetic ground truth, so the library can grow and its parts can be compared over time.",
+    how: [
+      "Per extractor: precision and recall of its items, and accuracy of their spans, per difficulty level.",
+      "Most new protocols should reuse existing extractors; a new extractor enters the library with its benchmark numbers.",
+      "For the thesis: a small library with the common interface and a few example extractors is enough.",
+    ],
+    ours: "Reusable extractors with their own measured quality.",
+  },
+  x_agent: {
+    what: "The existing research agent as one extractor behind the common interface: for evidence a single pass over one chunk cannot get, it works through one paper with shell commands and records each item with the claim tool.",
+    how: [
+      "Input: one paper, the evidence types and fields from the protocol. Output: the same typed items with checked spans as every other extractor, so the engine does not care which one ran.",
+      "Its strength is navigation: follow \"see Table 2\", match \"variant R\" in the method to the R column of a results table, keep several experiments of one paper apart.",
+      "Experiment (decided 14 Oct): single-pass LLM extractor vs agentic extractor, per difficulty level. Expected: no gain on explicit evidence, a gain on distributed and complex evidence, at a higher cost in steps and tokens. Measured, not assumed.",
+      "Runs with a step and token budget per paper and a fixed seed; its calls are logged and cached like any extractor's, so the engine stays reproducible.",
+    ],
+    io: ["one paper + the protocol's evidence types", "typed evidence items with quote-checked spans"],
+    ours: "An agent used where it is measurable: one swappable extractor, scored against ground truth.",
+    code: ["reusable: agent/loop.py (agent loop), agent/sandbox.py (Landlock sandbox), agent/broker.py and agent/anchor.py (claim with quote check), agent/answer.py (schema-constrained final reply)"],
+    differs: ["Not discussed with the supervisor yet: his extractor list (\"regular expressions, specialized models, LLMs, or other methods\") allows it, but he did not mention agents."],
+  },
+
+  x_cascade: {
+    what: "Several extractors for one evidence type, run in the order the protocol lists them, typically the cheap and exact ones first.",
+    how: [
+      "Example: regex for results stated in one sentence, then a single-call LLM for the rest, then the agentic extractor for what is still missing (distributed, complex).",
+      "Items with equal normalised fields are merged into one item that keeps all spans and a found_by list.",
+      "The report gives each extractor's marginal contribution (items only it found) and what none of them found, against the synthetic ground truth.",
+    ],
+    io: ["one evidence type, ordered extractors", "merged items, each with found_by"],
+    ours: "Answers \"who found what\": a regex that finds 30 % is fine if the report says so and the next extractor covers the rest.",
+    code: ["contract: docs/extractor-contract.md §10"],
+  },
+
+  // ---------------------------------------------------------------- Provenance & replay
+  evlog: {
+    what: "Every extractor call appends one record to the run's hash-chained event log, with the records of every model call inside it.",
+    how: [
+      "Fields: the call id, the extractor id (with code and config hashes), the task hash, the document hash, the output hash, the status, the model calls, the times, prev_hash and hash.",
+      "The format is PROV-AGENT's record (subtype extractor_call); model calls are ai_model_invocation records; the chain is the broker's.",
+      "Written by the engine, never by the extractor: an extractor cannot alter its own record.",
+    ],
+    io: ["each extractor call", "events.jsonl (one line per call, chained)"],
+    code: ["reusable: agent/broker.py (hash chain), agent/canonical.py (canonical hashes)", "contract: docs/extractor-contract.md §7"],
+  },
+  cache: {
+    what: "The stored result of every extractor call, keyed by the extractor id and the task hash.",
+    how: [
+      "Holds the full result and every model call inside it (request and response; for an agent its whole trajectory).",
+      "Append-only; a changed extractor (new code or config hash) has a new id, so it never hits an old entry.",
+    ],
+    io: ["extractor id + task hash", "the recorded result"],
+    code: ["reusable: gold/llm.py (cache_key, JsonlCache)"],
   },
   replay: {
-    what: "A run can be re-rendered without running anything, or re-executed against the frozen corpus to check that its deterministic part reproduces.",
+    what: "Rebuilds the evidence, the graph and the answer from the records alone. A missing record is an error, never a new call.",
     how: [
-      "Offline replay: read the log, show every command's stored output and every model output, verify the hash chain. What the viewer does and what ships with the thesis.",
-      "Re-execution: rerun the commands against the frozen corpus and diff their outputs with the stored ones; model calls are not rerun (stored outputs are injected).",
-      "Computed facts are verified this way: rerun the script on its recorded inputs and compare.",
-      "Ding et al. (2026) coded 24 runnable research-agent systems: 83% release code, 38% release seeds or execution traces. A self-verifying log with replay is a contribution in itself.",
+      "This is what \"every time we run the provenance we get the same data\" means: identical for every kind of extractor, the agentic one included.",
+      "The rebuilt graph and answer must hash the same as recorded; all reported results come from replay.",
     ],
-    io: ["a run directory", "a verified re-rendering, or a diff of re-executed outputs"],
-    ours: "Replay as a built-in check of computed facts.",
+    io: ["a run directory", "the same evidence, graph and answer, verified by hash"],
+    ours: "Exact reproducibility for every extractor, by construction.",
+    code: ["pattern: agent replay"],
+  },
+  reexec: {
+    what: "Runs the extractors again from scratch and compares with the records, per call: identical, same items with other spans, items added, items missing, fields differ.",
+    how: [
+      "Expected: regex and fixed models identical; single-call LLMs (temperature 0, seed, pinned model) nearly identical; agentic extractors variable.",
+      "The differences are a result in themselves: how stable each kind of extractor is.",
+    ],
+    io: ["a run + its records", "a stability report per extractor"],
+    ours: "Instability is measured and reported, not hidden.",
+    code: ["pattern: agent reexec"],
+  },
+  export: {
+    what: "The evidence graph and its provenance exported as RDF and loaded into a SPARQL store.",
+    how: ["Each call is a prov:Activity, each item a prov:Entity derived from its passages, the answer derived from the items it counted. SPARQL answers questions like: which experiments contradict their own abstract?"],
+    io: ["evidence graph + event log", "graph.ttl, SPARQL queries"],
+    code: ["reusable: agent/prov.py, scoring/store.py (pyoxigraph)"],
+  },
+
+  // ---------------------------------------------------------------- Synthetic benchmark
+  truth: {
+    what: "The structured ground truth the corpus is generated from: fictional studies, experiments, conditions and results.",
+    how: [
+      "Example: a study compares an LLM with and without retrieval augmentation on one dataset; factual accuracy 0.68 without retrieval, 0.82 with it; the authors conclude that RAG helps.",
+      "Generated by code, not by an LLM, from parameters: number of studies, experiments per study, effect distribution, share of null and negative effects.",
+      "Written in the same evidence model as the protocol, so the expected extraction and the expected answer are known exactly.",
+    ],
+    io: ["generator parameters + a seed", "ground_truth.json"],
+    example: "See \"From ground truth to a synthetic paper\" below the diagram.",
+    ours: "Ground truth first, papers second: the reverse of asking an LLM for arbitrary papers.",
+  },
+  knobs: {
+    what: "Settings that control how hard the corpus is.",
+    how: [
+      "Explicit: results stated directly in one sentence.",
+      "Paraphrased: the same information in different terminology.",
+      "Distributed: conditions and results in different sections (setup in methods, numbers in a table).",
+      "Complex: several experiments, models, datasets and metrics per paper.",
+      "Contradictory: the authors' conclusion does not match their reported numbers.",
+      "Also: duplicated studies, missing information, methodological limitations, single studies with unusually large effects.",
+    ],
+    io: ["ground truth", "a rendering plan per paper: where each fact appears and how"],
+  },
+  gen: {
+    what: "An LLM writes a realistic scientific paper from each study's ground truth and rendering plan: abstract, method, results, tables.",
+    how: [
+      "The prompt gives the facts to report and where and how to report them; nothing else may be invented about the results.",
+      "Runs on the existing Qwen stack through LiteLLM, with the same structured-call helper the gold builder uses.",
+    ],
+    io: ["ground truth + rendering plan", "paper.md per study"],
+    differs: ["An LLM can add, drop or change facts while writing; that is why the fidelity check exists."],
+    code: ["reusable: gold/llm.py (pydantic-ai calls through LiteLLM), llm-setup (the model stack)"],
+  },
+  fidelity: {
+    what: "Checks that every generated paper faithfully contains its ground truth: no unintended additions, omissions or contradictions.",
+    how: [
+      "Automatic: each ground-truth fact must be found at the planned place (exact value, condition, metric); an independent extraction pass looks for numbers or claims that are not in the ground truth.",
+      "Human: a sample of papers is checked by a person; agreement between the automatic check and the person is reported (κ).",
+      "A paper that fails is regenerated or dropped, and the failure rate is reported.",
+    ],
+    io: ["paper.md + its ground truth", "accepted papers + a fidelity report"],
+    differs: ["The generator's intended content alone is not enough: only the checked documents count as ground truth."],
+  },
+  corpus: {
+    what: "The synthetic corpus: the accepted papers together with their exact ground truth.",
+    how: ["The same files feed the engine and the answer-level baseline, so both systems see identical documents."],
+    io: ["accepted papers", "corpus/ + ground_truth.json + manifest with hashes"],
+  },
+  variants: {
+    what: "Controlled variants of the same corpus: change one study's result and regenerate only that paper.",
+    how: [
+      "The expected answer shifts in a known way, so the test is whether the system's answer shifts too.",
+      "Tests that the system responds to the evidence rather than to wording or to the authors' conclusions.",
+    ],
+    io: ["corpus + one changed fact", "a paired corpus and its expected answer change"],
+    ours: "Counterfactual corpora with a predictable answer shift.",
+  },
+
+  // ---------------------------------------------------------------- Evaluation
+  evLoc: {
+    what: "Did the search find the passages that hold the evidence? Measured before extraction.",
+    how: [
+      "The generator's rendering plan records where each fact was placed in each paper, so the passages that should be found are known exactly.",
+      "Recall of those passages per locate strategy (exhaustive, BM25, agent) and per difficulty level, with the cost of each.",
+      "Lets error attribution start one step earlier: never found, found but extracted wrong, linked wrong, or synthesised wrong.",
+    ],
+  },
+  evA: {
+    what: "A · Evidence extraction: how accurately and completely the system reconstructs the experimental evidence.",
+    how: [
+      "Precision, recall and F1 of extracted items against the ground truth.",
+      "Correct association of measurements with their experimental conditions and metrics.",
+      "Accuracy of provenance: does the recorded span really contain the value?",
+      "Reported per extractor and per difficulty level.",
+    ],
+    code: ["reusable: scoring/ (one-to-one matching at strict / normalised / soft levels, F1, BCa intervals)"],
+  },
+  evB: {
+    what: "B · Evidence integration: whether evidence from different sections or documents is connected correctly.",
+    how: [
+      "A paper may define the conditions in one section and report the numbers in a table elsewhere: is each number linked to the right condition?",
+      "Multiple experiments per paper, repeated results, dependencies between studies: are they kept apart or merged correctly?",
+    ],
+  },
+  evC: {
+    what: "C · Evidence synthesis: whether the system reaches the correct conclusion.",
+    how: [
+      "The expected answer is computed from the ground truth with the protocol's own rules.",
+      "Also computed from the system's own extracted evidence: if the system's answer differs from the rules applied to its evidence, the synthesis is wrong; if the evidence differs from the ground truth, extraction or integration is wrong.",
+    ],
+  },
+  errors: {
+    what: "Separates where a wrong answer comes from: missed evidence, evidence connected wrongly, or a flawed synthesis.",
+    how: ["Each wrong answer is traced back through the evidence graph to its first wrong step, using A, B and C together."],
+    ours: "Explains why the system fails, not only whether it does.",
+  },
+  baseline: {
+    what: "The answer-level baseline: a conventional LLM question-answering system that retrieves relevant passages and directly writes an answer with citations.",
+    how: [
+      "Same documents, same question, same model.",
+      "Key test: papers whose conclusions are overly optimistic or inconsistent with their own numbers. An answer-level system may repeat those conclusions; an evidence-level system should notice the discrepancy.",
+    ],
+    differs: ["The supervisor stresses that evidence-level is not assumed to win: whether, and under which conditions, it helps is the result."],
+  },
+  agentbase: {
+    what: "A second baseline: the existing research agent with the question only, no protocol. It searches the corpus freely and writes its answer from what it reads.",
+    how: [
+      "Stronger than plain retrieve-then-answer: it can search, read whole sections and run scripts. If the protocol-driven system still wins, the gain is not just from reading more.",
+      "Same documents, model and question; it records claims with quotes, so its traceability can be scored too.",
+      "Costs little: the agent, its batch runner, verification and scoring are built and tested.",
+    ],
+    io: ["question + synthetic corpus", "answer with claims and quotes"],
+    code: ["reusable: agent/ (run, batch, verify), scoring/"],
+    differs: ["Not discussed with the supervisor yet; his baseline is the plain retrieve-then-answer system (the box before this one)."],
+  },
+  compare: {
+    what: "Compares the protocol-driven system with both baselines on correctness, completeness and traceability, per difficulty level.",
+    how: ["Means with BCa bootstrap intervals over corpora or seeds; the difficulty knobs show under which conditions each approach breaks."],
   },
 
   // ---------------------------------------------------------------- Where it runs
   slurm: {
-    what: "Everything runs inside one Slurm GPU job on the Webis cluster (gammaweb08 in the tests): the model servers, the gateway, the harness and the agent's commands. Docker is not available on Slurm, so services that need it run on the Omen machine instead (last box).",
-    how: [
-      "Started with `sbatch slurm/llm-stack.sbatch` from llm-setup with `LLM_SETUP_PROFILE=profiles/agent-3x40.yaml`: 3× A100 40 GB, 16 CPUs, 64 GB, 48 h. The job keeps running when the terminal closes, restarts a crashed backend, and stops cleanly at `scancel` or 3 minutes before the limit (SIGTERM).",
-      "The Python environment is rebuilt on node-local `/tmp` in each allocation. `/tmp` is tmpfs, so files there count as memory. The corpus, the run directories and the vLLM compile cache are on Ceph.",
-      "A shell on the same node for the harness, the doctor and the tunnels: `srun --jobid <id> --overlap --pty bash -l`.",
-      "L1: all three backends, LiteLLM and the status API were ready 11m14s after start, and `llm-setup doctor` passed. S2: on `scancel`, a run's hash-chained log ended with a run_aborted event and verified.",
-    ],
-    differs: ["S1: with all three models loaded the job was already at 67.9 GB of its 64 GB request, so there is no memory headroom for agent scripts. Request more memory or cap memory per command.",
-              "The agent layout (roles orch and sub, replicas, extra flags, pinned revisions) is on main of thesis-llm-setup."],
-    settings: ["`#SBATCH --gres=gpu:ampere:3 --mem=64G --time=48:00:00 --signal=B:TERM@180`", "`LLM_SETUP_PROFILE=profiles/agent-3x40.yaml`", "`VLLM_USE_FLASHINFER_SAMPLER=0` (the node has no nvcc)"],
-    code: ["llm-setup/slurm/llm-stack.sbatch", "llm-setup/profiles/", "tests/A1/node.txt, tests/L1/, tests/S1/, tests/S2/"],
+    what: "One Slurm GPU job on the Webis cluster runs the model servers and the gateway; the engine and the generator run as job steps on the same node.",
+    how: ["Tested in the infrastructure rounds and the first real runs (tests/RESULTS.md): 3× A100 40 GB, the stack ready in about 11 minutes."],
+    code: ["llm-setup/slurm/llm-stack.sbatch", "llm-setup/profiles/agent-3x40.yaml"],
   },
-  orch: {
-    what: "The model that runs the main agent: Qwen3.8-27B-FP8 on GPU 0, thinking off, with a 65,536-token context.",
-    how: [
-      "Chosen in round 1 as the only tested model that both holds 65k on one A100 (79,371 KV tokens, 1.21 requests of 65k at once) and follows the one-bash-block rule (B3: 95% direct; L2: 90% on long outputs and 100% on multi-step prompts through LiteLLM).",
-      "Speed: 41.6 tokens/s for one sequence (A5); prefill about 2,400 tokens/s, 26 s to the first token at 60k (A3). A 150-step run is about 18 minutes of decoding.",
-      "Startup: 5m20s with the compile cache on Ceph (L5), 8m27s cold (A2), so the job is started once and kept alive.",
-      "Qwen3.8 mixes 48 linear-attention (Gated DeltaNet) layers with 16 full-attention layers. vLLM 0.21 can reuse a cached prompt prefix only at block boundaries (\"align\" mode, marked experimental), so prefix caching helps less than for a pure-attention model, and masking an old output in the middle of the history invalidates everything after it.",
-    ],
-    differs: ["C2b (10 Oct): block size 784 tokens. At 30k tokens a cold prompt takes 12.0 s to the first token, a cached one 0.35 s (94% cache hits), so Qwen3.8 stays the orchestrator. Masking one output mid-history re-prefills what follows (estimated up to ~12 s at 30k), so mask rarely.",
-              "B8 (10 Oct): thinking off gave 50/50 one-block replies at 0.63 s; thinking on at low effort also 50/50 but 2.51 s. Thinking stays off unless a blind usefulness rating favours low effort.",
-              "The thinking variant (Qwen3-30B-A3B-Thinking) is not used: 26% one-block compliance (B1, B2) and a repeated-command loop (B4)."],
-    settings: ["`--max-model-len 65536 --reasoning-parser qwen3 --generation-config vllm --enable-prefix-caching`", "`chat_template_kwargs: {enable_thinking: false}` on every request", "`max_tokens 4096`"],
-    code: ["tests/A2/serve_qwen38.sh", "tests/A3/, tests/A5/, tests/B/B3/, tests/C2/, tests/L2/"],
-  },
-  subs: {
-    what: "The models the subagents run on: two replicas of Qwen3-30B-A3B-Instruct-2507-FP8 (\"Heavy\"), one per GPU, reachable as sub-model-1 and sub-model-2 (one per replica) and as the shared name sub-model.",
-    how: [
-      "130 tokens/s for one sequence (A5), about 3× the orchestrator; 64,848 KV tokens per replica in the agent layout (L1).",
-      "L3: four concurrent 32k requests ran without preemption. Eight concurrent 16k requests preempted until each replica was capped at 3 active sequences; with the cap, 8 of 8 completed without preemption.",
-      "Under a burst, LiteLLM split the requests unevenly between the two replicas (5/3, then 8/0).",
-    ],
-    differs: ["L7 (10 Oct): no LiteLLM routing strategy split concurrent requests evenly (least-busy 5/3, usage-based 8/0); one alias per replica gave 4/4. The harness therefore assigns each subagent a replica itself.", "Fan-out is 6 concurrent 16k subagents (3 per replica)."],
-    settings: ["`max_num_active_seqs: 3` per replica", "`--max-model-len 32768`"],
-    code: ["tests/A4/, tests/A5/, tests/L3/"],
+  models: {
+    what: "Qwen3.8-27B-FP8 and two replicas of Qwen3-30B-A3B-Instruct-2507-FP8, served by vLLM.",
+    how: ["The smaller, faster replicas suit extraction and paper generation (many independent calls); the 27B model suits longer synthesis or protocol work."],
   },
   gateway: {
-    what: "LiteLLM on port 4000 is the only way the harness reaches the models; the status API on port 8010 reports each backend's health. Both listen on 127.0.0.1 only.",
-    how: [
-      "The harness calls `http://127.0.0.1:4000/v1` with the aliases orch-model and sub-model, never a raw vLLM port (CONSUMERS.md in llm-setup).",
-      "L2: the thinking switch and all response fields (content, reasoning, finish reason, usage) pass through unchanged.",
-      "L4: stopping a replica during a request did not cause a silent retry, and the supervisor brought the backend back in 2m30s. Retries matter here: the event log must record every model call that actually ran.",
-    ],
-    differs: ["L7 (10 Oct): request timeout raised from 120 s to 600 s (the worst measured step is 112.5 s); the seed reaches vLLM, so seeded runs repeat.",
-              "L8 (10 Oct): a prompt over the context limit returns HTTP 400 ContextWindowExceededError with the token counts; the harness treats it as \"context full\" and does not retry.",
-              "S3: the raw vLLM ports answer without credentials; agent commands cannot reach them because the sandbox blocks all sockets (S7).",
-              "Unauthenticated /v1/models returns 500 (missing prisma module); chat completions work, and the harness does not need model listing."],
-    code: ["llm-setup/src/llm_setup/supervisor.py (render_litellm)", "tests/A7/passthrough.py, tests/L2/, tests/L4/, tests/S3/"],
-  },
-  harness: {
-    what: "The program that runs the agent loop: send the history to the model, parse the reply into one shell command, run it, append the output, and log both through the interceptor.",
-    how: [
-      "Built on mini-swe-agent 2.4.6 (MIT), installed and subclassed rather than copied. Our model class replaces its reply format (it expects a ```mswea_bash_command block) with the lenient bash parser; our environment adds the output cap, budgets and loop notices; our interceptor writes events.jsonl.",
-      "Runs as a job step on the same node as the models (`srun --overlap`), because LiteLLM and vLLM listen only on 127.0.0.1.",
-      "Parts already tested on their own: output cap and hash chain (C1), loop behaviour of the models (B4), job-end handling (S2), sandbox and broker (S7), over-context errors (L8). Everything around it is ready; the loop itself is the next thing to build.",
-      "A switch turns claim off for the baseline condition; everything else stays identical.",
-      "First check when the stack next starts: F1 (tests/F1/acceptance.py), one model reply run end to end through parser, sandbox, claim and broker on the frozen corpus.",
-    ],
-    differs: ["mini-swe-agent's own trajectory file is kept only as a debugging aid; events.jsonl is the record."],
-    code: ["planned: src/thesis_agent/harness/", "tests/S5/sandbox.py, tests/S5/run_sandbox.py, tests/H1/broker.py, tests/F1/acceptance.py"],
-  },
-  sandbox: {
-    what: "The boundary every agent command runs inside: corpus and toolchain read-only, one scratch directory writable, no network, no access to the model ports, the log or other processes, and time and memory limits.",
-    how: [
-      "Round 2 found no bwrap, no Apptainer and no user namespaces, and direct internet on the node (A6, S4). Round 3 found Landlock ABI 8 on kernel 7.0 (S5a), which needs no root.",
-      "`tests/S5/sandbox.py` (ctypes Landlock) and `run_sandbox.py` (own process group, killed at the end): files, TCP connect and bind, signals and abstract Unix sockets are blocked; `timeout 120` and `ulimit -v 2G` (S5b, S6, S1b).",
-      "A pinned, hashed, read-only agent-venv plus ripgrep and jq; extra packages only from a local wheel store (S5c).",
-      "A broker outside the sandbox owns events.jsonl and claims.jsonl and assigns step ids (H1).",
-    ],
-    differs: ["S7 (10 Oct): a seccomp filter after no_new_privs closes what Landlock leaves open (UDP, pathname Unix and netlink sockets, socketpair); the broker is reached through an inherited descriptor. Writes stay blocked even after chmod. Toolchain build and check: scripts/build-agent-root.sh and verify-agent-root.sh (B0, 105 s)."],
-    code: ["tests/S5/sandbox.py, tests/S5/run_sandbox.py, tests/H1/, tests/S6/findings.md, docs/slurm-final-runbook.md"],
-  },
-  omen: {
-    what: "Services that need Docker run on the Omen machine, not on Slurm: Langfuse (with its ClickHouse, Redis, MinIO and Postgres) and the thesis Postgres and Redis. The GPU node reaches them through chained SSH tunnels.",
-    how: [
-      "`scripts/omen-tunnels` chains Omen → laptop → Webis gateway → compute node, with one port per service and hop (`omen-tunnels list`). The laptop runs `omen-tunnels-external laptop start …`, and the job runs the matching `compute start …`.",
-      "T2: all five services answered from the node (tracing and ClickHouse HTTP 200, the Postgres SSL probe, Redis asking for auth, MinIO 403). This only worked with the legacy port mapping on both sides, because the laptop's installed omen-tunnels-external does not apply the +1000 offset yet; update the laptop copy from this repository.",
-      "T1: the offset fix in the repository works. T4: a second start on the same node reports \"Already running\" and leaves the first tunnel up.",
-      "events.jsonl on Ceph stays the source of truth; Langfuse gets a copy as OpenTelemetry spans over OTLP HTTP (`/api/public/otel`, basic auth with the project keys).",
-    ],
-    differs: ["The chain passes through the laptop: when it sleeps or loses network, the services disappear for the job, so the harness keeps writing locally and backfills. T3 (8 hours with laptop sleep) has not run."],
-    code: ["scripts/omen-tunnels, scripts/omen-tunnels-external", "tests/T1/, tests/T2/, tests/T4/"],
+    what: "LiteLLM on port 4000: one OpenAI-compatible endpoint with stable model aliases.",
+    how: ["Structured output (a JSON schema per call) is how extractors get typed items back; the helper in gold/llm.py already does this with pydantic-ai."],
+    code: ["gold/llm.py"],
   },
 
-  // ---------------------------------------------------------------- Evaluation (proposed: three layers)
-  baseline: {
-    what: "The comparison condition for RQ1: the same agent, model, budget and corpus, with claim switched off. It writes its answer; afterwards each fact in the answer gets a source found by a separate step. Only the moment provenance is made differs.",
-    how: [
-      "Order as in RARR: answer first, attribution afterwards. The attribution step splits the answer into facts, searches the corpus with the same grep tools, and lets the same model pick the supporting quote.",
-      "Both conditions are scored the same way: against the answer key from D (correct and wrong facts), the share of facts whose quote really supports them, facts with no source, and tokens and time.",
-      "Failure a post-hoc source can hide: a fact half-remembered from one paper gets a citation to another paper that only mentions the term. Recording at the moment of reading prevents that; the comparison measures how often it happens.",
-      "Every outcome is reportable: better-sourced answers (main result), no difference (post-hoc attribution suffices), or fewer facts but better sourced (a trade-off with its size).",
-    ],
-    io: ["question + picked concept", "an answer with sources attached afterwards"],
-    ours: "Only the timing of provenance differs, so the difference is attributable to it.",
-    settings: ["harness switch: claim off", "attribution script: same model, same search"],
+  // ---------------------------------------------------------------- Extensions
+  protogen: {
+    what: "An LLM that writes the protocol from the question, possibly in a dialogue with the user to settle methodological decisions.",
+    how: ["Not needed for the thesis. The earlier concept step (a model proposes briefs, the user picks one) is a starting point for it."],
+    code: ["existing: agent/concept_step.py, questions/"],
   },
-  faith: {
-    what: "Layer 1: does the quoted text support each fact? Needs no gold, so it can start as soon as the harness runs. Applied equally to our runs and to the baseline.",
-    how: [
-      "Three checks per claim, after Onweller et al. (2026): the anchor resolves (100% by construction), the passage is relevant, the passage supports the triple. Computed facts are checked mechanically by re-execution.",
-      "Support is judged by an LLM, calibrated on a sample of 200 to 300 claims the author labels in Argilla, blind to the condition. The threshold is picked on half and agreement is reported on the other half; the judge and protocol are always named.",
-      "Goo et al. (2026) found the measured unsupported-citation rate moved from about 3% to 18% on identical outputs depending only on verifier strictness; Onweller et al. found deep-research agents keep links valid above 94% while factual accuracy against the cited source is 39% to 77%.",
-      "Built from Goo et al.'s released code (citation-guard, MIT): their verifier prompts adapted to \"does this quote support this triple?\", their strictness-sensitivity protocol, and their split-conformal guard on the catch rate.",
-    ],
-    io: ["claims.jsonl + the corpus", "per-claim: resolves / relevant / supported; a run-level faithfulness rate with an interval"],
-    ours: "Faithfulness as the first and cheapest evaluation, measured on every claim of every run.",
+  real: {
+    what: "Running the engine on real scientific papers.",
+    how: ["The 336 converted ACL/EMNLP 2025 papers are ready as a frozen Markdown corpus with hashes."],
+    code: ["corpus/manifest.json"],
   },
-  correct: {
-    what: "Layer 2: is the graph right and complete for the chosen concept? Scored against the answer key built from Document D, at three matching levels.",
-    how: [
-      "Strict: identical after normalising case, spacing, DBLP links, author names and relation aliases.",
-      "Entailed: one triple logically implies the other under the ontology's rules (sub-relations, inverses, symmetric relations, class hierarchy, same-as, domains and ranges). Direction matters: a more specific run triple recovers the gold fact (recall) but the gold does not vouch for its extra detail (precision).",
-      "Soft: also accepts reviewers' variants and, for what the rules leave unmatched, an LLM judge asked \"do these two triples state the same fact?\".",
-      "Table-shaped answers: set F1 over rows of the filled answer shape. Vital recall over the facts reviewers marked essential. DBLP triples the concept did not ask about are not scored (locally closed).",
-      "Implementation plan (licences checked): entailed matching is our own Python on rdflib and owlrl, because Euzenat's semantic precision and recall exists only in the Java Alignment API. WebNLG's four matching modes are reimplemented (its script is GPL-3.0). Text2KGBench's ontology-conformance and hallucination checks (Apache-2.0) are adapted with the quote as context. List-shaped answers also get AutoResearchBench's IoU (Apache-2.0). Vital recall uses nuggetizer (Apache-2.0).",
-    ],
-    io: ["run graph + answer key for the concept", "P / R / F1 at three levels, set F1, vital recall"],
-    example: "Gold: \"MethodX evaluatesOn BenchY\". Run: \"BenchY usedBy MethodX\" \u2192 not strict, but entailed if evaluatesOn \u2291 uses (inverse of usedBy).",
-    differs: ["One-to-one matching is stricter than Euzenat's set-based definition: one run triple that implies two gold facts recovers one.", "The judge only compares triples about the same subject."],
-    code: ["packages/evaluation/src/harness_evaluation/matching.py (carried over)", "relations.py (the rules)", "judge.py (cached judge)"],
+  realgold: {
+    what: "A gold standard on real papers, needed only if the real-paper extension is done.",
+    how: ["The gold builder and the Argilla review built for the previous design (screening, extraction with quote checks, triage, review, answer key, judge) can serve here."],
+    code: ["gold/ (build, review, judge)"],
   },
-  process: {
-    what: "Layer 3: what did the run cost and what did it look at? Route-independent measures, so runs that took different routes can be compared.",
-    how: [
-      "Steps, tokens, wall time, papers opened, coverage (papers opened out of D's relevant papers), commands per claim, tokens per claim, share of claims from subagents, whether a budget stop occurred, subagent count.",
-      "The route itself is never scored; it is described from the trace views, with one or two runs shown in full in the thesis.",
-      "The one tested comparison is ours vs the baseline. Other switches (subagents on or off, output inline vs in files) are described, not tested.",
-    ],
-    io: ["events.jsonl + D's paper list", "cost and coverage per run"],
-    ours: "Comparing free agents by outcome and cost, never by route.",
-  },
-  results: {
-    what: "RQ1's answer: ours vs the baseline on 12 questions (6 corpus-wide, 6 ambiguous), 3 runs each, 72 runs in all, with honest uncertainty.",
-    how: [
-      "Each question is run 3 times per condition (the agent is stochastic); runs are averaged per question first, so every question counts once.",
-      "The difference between conditions is paired by question: 95% BCa bootstrap interval and a sign-flip permutation p-value. A difference under 5 points, or an interval that includes 0, counts as no effect.",
-      "Results also split by question kind (corpus-wide vs ambiguous). Budget: about 80 to 90 GPU-hours, two or three 48 h jobs.",
-    ],
-    io: ["per-run scores of the three layers", "tables with intervals; one or two runs shown in full"],
-    code: ["packages/evaluation/src/harness_evaluation/stats.py (carried over)"],
-  },
+};
 
-  // ---------------------------------------------------------------- Gold standard
-  screen: {
-    what: "For each chosen concept, decide which papers are relevant at all, before any facts are extracted. Because the concept fixes the measure and the scope, the screening question is sharper than it was for a whole ambiguous question (\"does this paper report a number on any dataset?\").",
-    how: [
-      "A reader (one LLM call per paper) sees the paper and says relevant or not, with findings. Without the old index, the reader gets the whole .md or its section headings plus matched passages from a plain grep; to be decided.",
-      "Every paper gets a coverage row: relevant, not relevant, or error, so it is visible what was looked at.",
-      "A trial build (--max-papers N) screens only the N papers our search ranks highest for the question; the real build screens all 336.",
-      "Screening check: a random sample of papers marked not relevant (5 per question) goes to people, giving the miss rate of screening with an interval.",
-    ],
-    io: ["question + every paper", "coverage rows (relevant / not relevant)"],
-    settings: ["HARNESS_DOC_SCREEN_PASSAGES (10)", "HARNESS_DOC_MAX_PAPERS (0 = all)", "HARNESS_DOC_SCREENING_SAMPLE (5)"],
-    code: ["labelling: src/labelling/evidence_doc.py", "labelling screening-sample / screening-report"],
-  },
-  extract: {
-    what: "Extract the facts of every relevant paper for the question, with the same EDC extraction the harness uses.",
-    how: [
-      "Per relevant paper: the passages the reader cited plus the 12 passages our ranker scores highest for the question (or every passage).",
-      "EDC with the exhaustive profile: one passage per batch, unmapped relations kept as new relations.",
-      "Run once per interpretation for ambiguous questions.",
-    ],
-    io: ["relevant papers", "triples with source passages"],
-    differs: ["Which passages are read is decided by our own ranker, so D can share the harness's retrieval bias; HARNESS_DOC_EXTRACT_PASSAGES=0 extracts every passage to avoid that."],
-    settings: ["HARNESS_DOC_EXTRACT_PASSAGES (12; 0 = every passage)"],
-    code: ["labelling: src/labelling/evidence_doc.py"],
-  },
-  D: {
-    what: "The evidence document D: for one chosen concept, everything the corpus says that could answer it, built once, offline, and independent of the runs it later scores. Now per concept instead of per question, and its reviewed content is a filled answer shape.",
-    how: [
-      "Contents: the brief, a coverage row per paper, every extracted row or triple of the answer shape with its passage and evidence.",
-      "Uses: reviewed, it becomes the answer key (Correctness, layer 2); its paper list defines coverage (Process, layer 3). Mode B (D as a run input) is dropped: the agent's job is to find things itself.",
-      "Budget: one D for each of the 12 evaluation questions (for the concept picked for it), chosen to differ in shape (count, list, ranking, comparison).",
-      "Stored as evidence_docs/<question id>/doc.json, with a readable doc.md.",
-      "Builder settings and versions are recorded in it, so a D can be reproduced.",
-    ],
-    io: ["screening + extraction", "doc.json / doc.md per question"],
-    example: "nlp33 \"Which benchmarks and datasets do the indexed RAG papers evaluate on?\" → D lists, per relevant paper, triples such as (paper, evaluatesOn, BenchY) with the passage they come from.",
-    ours: "The supervisor's idea: one exhaustive document per question instead of pooling the compared systems' outputs.",
-    settings: ["make evidence-docs ARGS=\"--only nlp33\"", "HARNESS_EVIDENCE_DOC_ROOT (where the harness finds D)"],
-    code: ["labelling: src/labelling/evidence_doc.py, docs/EVIDENCE_DOCS.md"],
-  },
-  triage: {
-    what: "A model sorts every triple of D into answers / context / irrelevant, so people review the right ones first. Triage orders the review; it never decides the gold.",
-    how: [
-      "People review every \"answers\" and \"context\" triple, plus 50 random others per question.",
-      "From that random sample, the number of answering triples triage missed is estimated with a 95% Wilson interval, and so is the recall of the reviewed tiers.",
-      "Before the review is done, a draft answer key can be made from triage alone (marked draft; not reported).",
-    ],
-    io: ["D's triples", "tiers + a random sample for review"],
-    ours: "Stratified review with a measured miss rate instead of reviewing thousands of triples.",
-    code: ["labelling: src/labelling/triage.py", "make triage / make draft"],
-  },
-  human: {
-    what: "People decide what the gold is, in Argilla.",
-    how: [
-      "Each record: keep, drop, or partly right with a fix; mark vital facts; type other correct wordings (variants); add missing facts.",
-      "The author reviews alone (decided 10 Oct). Instead of a second annotator, a random 10% is reviewed again about two weeks later, blind to the first label, and self-agreement is reported as Cohen's κ.",
-      "The LLM judge is checked the same way: the author labels a sample of its decisions; the judge is used for soft scores only if κ ≥ 0.61.",
-    ],
-    io: ["triaged triples", "reviewed triples"],
-    code: ["labelling: src/labelling/argilla_io.py, gold.py", "guidelines/annotation.md"],
-  },
-  key: {
-    what: "The answer key: per question, the gold triples a run is scored against.",
-    how: [
-      "Each gold triple: weight (vital or okay), its passages, accepted variants, and reviewer-rejected alternatives (used for judged precision).",
-      "Ambiguous questions: one set of gold triples per accepted reading.",
-      "The same fact found in two passages is one gold triple listing both passages.",
-      "Installed into the harness (datasets/gold/candidates.jsonl) and frozen; later harness changes only rerun the evaluation.",
-    ],
-    io: ["reviewed triples", "gold rows (gold-v1.jsonl)"],
-    code: ["labelling: src/labelling/gold.py", "make export / make install"],
-  },
-
+/* ---- ORIGIN: where each box comes from: the supervisor's message of 14 Oct (by section), or our addition.
+   Boxes with `added: true` in STAGES are drawn with a dashed green border. */
+const ORIGIN = {
+  question: "Supervisor §4: suggested as the question for a first prototype.",
+  write:    "Supervisor §8, step 1: \"Define one research question and a corresponding protocol manually.\"",
+  protocol: "Supervisor §2: an executable research protocol as intermediate representation, declarative (YAML or JSON).",
+  engine:   "Supervisor §2: \"executed by a Python-based engine\".",
+  locate:   "Our addition (14 Oct, not yet discussed with the supervisor): flexible search as one step inside his program-run engine.",
+  x_cascade:"Our addition: the extractor contract §10 (several extractors per evidence type, run in order).",
+  evlog:    "Our addition, from the extractor contract §7; it carries over the hash-chained log of the earlier design.",
+  cache:    "Our addition: the extractor contract §8.",
+  replay:   "Our addition: the extractor contract §8, so provenance gives the same data on every replay. Supports the supervisor's aim of reproducible investigations (§9).",
+  reexec:   "Our addition: the extractor contract §8.",
+  export:   "Supervisor §2: \"SPARQL could still be useful for querying the resulting evidence graph.\" The PROV-O export is ours.",
+  evLoc:    "Our addition: measures the locate step; possible because the generator records where each fact was placed.",
+  evgraph:  "Supervisor §2 (evidence graph) and §8 step 4 (connections between studies, experiments, measurements and source passages).",
+  synth:    "Supervisor §4 and §8 step 5: deterministic procedures with explicit rules; §2: supporting and contradicting evidence.",
+  answer:   "Supervisor §2: \"Evidence graph and synthesized answer\".",
+  trace:    "Our addition, carried over from the earlier design. The supervisor asks for traceability (§7) and accurate provenance (§5 A).",
+  iface:    "Supervisor §3: a library of reusable extractors with a common interface; implementations interchangeable.",
+  x_cond:   "Supervisor §8 step 3: \"Focus on experimental conditions, evaluation metrics, and reported results.\"",
+  x_metric: "Supervisor §8 step 3. The regex-plus-LLM example is ours.",
+  x_result: "Supervisor §8 step 3.",
+  x_claim:  "Our addition: needed for the supervisor's test of conclusions that disagree with the reported results (§6, §7).",
+  x_agent:  "Our addition (decided 14 Oct, not yet discussed with the supervisor). His extractor list allows \"other methods\"; he does not mention agents.",
+  x_bench:  "Supervisor §3: extractors \"continuously benchmarked\".",
+  truth:    "Supervisor §5: ground-truth scientific data first, then synthetic papers.",
+  knobs:    "Supervisor §6: explicit, paraphrased, distributed, complex, contradictory evidence, and the further variations he lists.",
+  gen:      "Supervisor §5: an LLM writes a realistic paper reporting the ground truth.",
+  fidelity: "Supervisor §6, last paragraph: the generated papers must be checked. How (automatic check plus a human sample with κ) is our proposal.",
+  corpus:   "Supervisor §5.",
+  variants: "Supervisor §6: controlled variants of the same corpus.",
+  evA:      "Supervisor §5 A: precision, recall, F1, association with conditions, provenance accuracy.",
+  evB:      "Supervisor §5 B.",
+  evC:      "Supervisor §5 C.",
+  errors:   "Supervisor §5 C and §9: tell extraction errors from synthesis errors; why the system succeeds or fails.",
+  baseline: "Supervisor §7: \"a conventional LLM-based question-answering system that retrieves relevant passages and directly synthesizes an answer\".",
+  agentbase:"Our addition (decided 14 Oct, not yet discussed with the supervisor).",
+  compare:  "Supervisor §7: correctness, completeness and traceability. BCa intervals are ours.",
+  slurm:    "Existing infrastructure (ours), not part of the supervisor's message.",
+  models:   "Existing infrastructure (ours).",
+  gateway:  "Existing infrastructure (ours).",
+  protogen: "Supervisor §2 and §8: an optional extension, possibly with a dialogue with the user.",
+  real:     "Supervisor §8: an optional extension (\"test the system on a small collection of real scientific papers\").",
+  realgold: "Our addition: needed only if the real-paper extension is done; the gold pipeline exists from the earlier design.",
 };
 
 const SOURCE_DETAILS = {
-  dblp: {
-    what: "The computer-science bibliography as a knowledge graph: papers, authors, venues, years and citations, with an RDF schema.",
-    how: ["Shared vocabulary for the bibliographic parts of a concept view (Author, Paper, authoredBy, cites, …).",
-          "Access: schema at https://dblp.org/rdf/schema.ttl, SPARQL endpoint sparql.dblp.org, full dump about 6 GB. Licence CC0 1.0, so it can be copied freely."],
-  },
-  cskg: {
-    what: "CS-KG 2.0: a large knowledge graph of computer-science research entities and their relations (67M statements, 24M entities, 219 relations), with an ontology at https://w3id.org/cskg/ontology#. Classes: Method, Task, Material, Metric, OtherEntity.",
-    how: ["Shared vocabulary for the research-content parts of a concept view and the canonicalisation target for the agent's free predicates.",
-          "Its relations are verbs with one sub-property per target type, for example executesMethod, analyzesTask, improves, based-on. Earlier drafts used usesMethod and evaluatesOn, which are not CS-KG terms."],
-    differs: ["Licence CC BY 4.0 (attribution needed). Whether the 2022 download and SPARQL URLs serve version 2.0 is still to be checked."],
-  },
-  ambigqa: {
-    what: "Many questions have several valid interpretations. AmbigQA first decides whether a question is ambiguous and rewrites it into disambiguated interpretations, each answerable on its own.",
-    how: [
-      "Concepts: the question is turned into standalone, unambiguous concepts before any research, and the user picks one.",
-      "Gold (to be redesigned): one answer key per accepted reading.",
-    ],
-    differs: ["AmbigQA answers every interpretation; here the user chooses one concept and only that one is researched. Concepts are proposed without looking at the corpus."],
-  },
-  sweagent: {
-    what: "SWE-agent showed that an LLM agent working freely in a computer environment (a shell, files, its own commands) can solve open-ended tasks, and that the interface it is given shapes how well it works. mini-SWE-agent reduced this to a bash tool and a plain history.",
-    how: ["The research agent works the same way: a free agent in a workspace with the .md files, choosing its own commands, scripts and subagents."],
-    differs: ["No task-specific commands are prepared for it (no search engine, no corpus API): even the way to search is its own choice."],
-  },
-  codeact: {
-    what: "CodeAct: an LLM agent acts by writing and executing code instead of calling a fixed set of tools; code lets it combine, loop and compute, and it reads the output and corrects itself.",
-    how: ["The agent may write its own Python over the .md files (parse, count, cross-reference) whenever shell search is not enough."],
-    differs: ["The action is a shell command, not a Python cell, so scripts are files the agent writes and runs; this keeps one event type per step."],
-  },
-  latm: {
-    what: "LLMs as tool makers: an LLM writes a reusable tool (a function) for a recurring kind of task, then uses it instead of solving each case from scratch.",
-    how: ["The agent may invent a new tool when it needs one (e.g. a table extractor or a dataset-name matcher), register it with save_tool, then use it; every use is logged with the tool's hash."],
-    differs: ["Tools are packaged in the Agent Skills format and, by default, do not carry over between evaluated runs."],
-  },
   provo: {
     what: "PROV-O, the W3C provenance ontology: a standard way to say what an entity was derived from, which activity generated it, and who was responsible.",
-    how: ["The knowledge graph's provenance links, as a small subset: Claim wasGeneratedBy Command; Claim wasDerivedFrom Passage or Result; Command used File or Script; Command wasAssociatedWith an agent; Command wasInformedBy ModelCall. Exported as graph.ttl."],
-    differs: ["Only four entity kinds, two activity kinds and five relations are used; PROV-AGENT (Souza et al., 2025) extends PROV with prompts, responses and decisions and is the closest prior model, but every decision here is already a ModelCall activity."],
+    how: ["The provenance of the evidence graph: each evidence item wasGeneratedBy an extractor call, wasDerivedFrom its passage; the answer wasDerivedFrom the measurements it counts. Exported as graph.ttl (agent/prov.py already writes PROV-O)."],
   },
   webanno: {
     what: "The W3C Web Annotation Data Model defines selectors for pointing at a span of text: TextQuoteSelector (the exact text with a prefix and a suffix) and TextPositionSelector (start and end character offsets).",
-    how: ["Each claim's anchor combines both selectors with a SHA-256 of the file: offsets are the fast path when the hash matches the corpus manifest, the quote with prefix and suffix is the fallback and what the user sees."],
-    differs: ["Line ranges are not used: Markdown lines are long and any edit breaks them. The corpus is frozen, so a broken anchor can only come from a new corpus version."],
-  },
-  li2026: {
-    what: "Direct corpus interaction: an agent searches raw text with general-purpose terminal tools (grep, file reads, scripts) instead of an embedding model, vector index or retrieval API. No offline indexing. Outperforms strong sparse, dense and reranking baselines on several BRIGHT and BEIR datasets and reaches strong accuracy on BrowseComp-Plus and multi-hop QA.",
-    how: ["The closest prior system to the research agent: the same tools over raw files, no index. Cited for the agent's design and as the published evidence that it can work."],
-    differs: ["Their corpora are web and QA collections; ours is 337 scientific papers as Markdown, and the output is a knowledge graph with provenance rather than an answer.",
-              "Code: DCI-Agent-Lite (MIT) is the official release and a possible baseline on our corpus. Follow-ups: GrepSeek released a Qwen3.5-9B trained for grep search (Apache-2.0) that runs on our vLLM setup as a model baseline; DR-DCI and Beyond Top-K release BM25 and dense retrievers usable for a grep-versus-index comparison."],
-  },
-  sen2026: {
-    what: "Compares grep and vector retrieval across harnesses (a custom one, Claude Code, Codex, Gemini CLI) and tool-output styles (inline vs in files). Grep generally wins, and scores depend heavily on the harness and tool-calling style even with identical data.",
-    how: ["Why the harness is a first-class design decision: tool output is shown inline (truncated, with the full output on disk), and the inline-vs-file choice is kept as an ablation switch."],
-    differs: ["Their task is long-memory QA over conversation history; ours is research over papers.",
-              "No code was released, so the inline-vs-file ablation is rebuilt from the paper. Keep it separate from context compaction, which is a different variable."],
-  },
-  ambiguity: {
-    what: "Models recognise ambiguity when explicitly asked to judge it, but in standard QA almost always answer directly instead of asking; retrieved context makes them even less likely to ask.",
-    how: ["The researchability check uses a separate critic call that judges rather than answers. The design moves the one necessary interaction (the pick) to the front, instead of hoping the agent asks mid-run."],
-    differs: ["Related benchmarks: InteractComp (Deng et al., ICML 2026) finds the best search agent at 13.7% on ambiguous queries vs 71.5% with full context; IDRBench (Feng et al., 2026 preprint) finds clarification helps in about 74% of tasks but hurts in about 20%."],
-  },
-  underspec: {
-    what: "Between 16% and over 50% of questions in standard QA benchmarks are underspecified; rewriting them into fully specified questions improves accuracy.",
-    how: ["Evidence that a question like \"who is the best author?\" must be turned into specified concepts before research, and that doing so pays off."],
-  },
-  disambig: {
-    what: "Asked directly, LLMs produce mainly the preferred reading of an ambiguous question; generating the interpretations explicitly first (with an infilling step for the missing ones) improves coverage.",
-    how: ["Why concepts are generated by enumerating ambiguity axes and combining their values instead of asking for a list of interpretations in one shot."],
-    differs: ["Their target is a database query; ours is a research brief over papers. Their finding is a warning that a corpus-blind generator under-produces non-default readings, so concept recall is measured (layer 0)."],
-  },
-  ambrosia: {
-    what: "A benchmark of ambiguous analytical questions (scope, attachment, vagueness), each reading linked to its own executable query; LLMs struggle to recognise and resolve the ambiguity.",
-    how: ["Precedent for the brief's measure field: every interpretation maps to an operation over named fields (count Paper group by first_author), not just to a rephrased question."],
-  },
-  ambigds: {
-    what: "Data-science agents mostly fail by silently committing to the wrong framing of an ambiguous task, not by execution errors; one clarifying question recovers much of the loss, but agents cannot tell when to ask.",
-    how: ["Supports fixing the framing before research and having the system, not the agent, decide when to ask: the user picks one concept up front."],
-  },
-  intentrl: {
-    what: "Trains a deep-research agent to clarify the user's latent intent before long research, beating the clarification modules of commercial deep-research agents.",
-    how: ["The closest system for the concept step: it also clarifies before researching."],
-    differs: ["It refines intent in a multi-turn dialogue learnt with reinforcement learning; we show all concepts at once as research briefs and the user picks one, with no training."],
-  },
-  flyaoc: {
-    what: "Agents search a fixed corpus of 16,898 full-text papers to produce structured knowledge-base annotations; results depend on harness design and tool-use reliability.",
-    how: ["The closest analogue to our setting (a fixed scientific corpus, structured output, process measured), from biology curation."],
-    differs: ["Their output is curation annotations scored against an existing knowledge base; ours is a provenance-complete graph for one user-chosen concept, scored against a gold key built for it."],
-  },
-  laquer: {
-    what: "Attributing generated facts to exact source spans greatly shortens the evidence a reader has to check; attributing decontextualised facts remains hard.",
-    how: ["Supports anchoring every claim to an exact quote rather than to a document or passage."],
-    differs: ["Its hard case is ours too: canonicalised triples are decontextualised, so the anchor is kept on the raw claim and the canonical triple points back to it."],
-  },
-  trace2026: {
-    what: "Tool-using requests have several valid trajectories, so scoring against one reference trajectory is inaccurate; TRACE evaluates trajectories without a reference, on several dimensions.",
-    how: ["Supports scoring free agents by outcome, evidence and cost rather than by route (layer 3)."],
-  },
-  skills: {
-    what: "Agent Skills: a tool is a folder with a SKILL.md (YAML name and description, then the body) and optional bundled scripts. Only name and description are loaded at startup; the body and files are read when the skill is relevant (progressive disclosure).",
-    how: ["The format save_tool writes for invented tools, and the mechanism by which a new tool is announced to the agent on its next turn without filling its context."],
-    differs: ["Skills here are written by the agent during a run, not prepared by people, and carry a content hash so every use is traceable to one version."],
-  },
-  qin2026: {
-    what: "Tests whether local agent harnesses let the agent alter its own trace: every tested harness but one allowed trace deletion when asked, without triggering guardrails, and frontier models tamper with traces on their own when it improves their reward. Recommends logging through an independent interception mechanism outside the agent's control.",
-    how: ["The event log is written by the interceptor in the harness process; the agent's sandbox cannot see or edit it. Each line is hash-chained to the previous one.",
-          "Their scenarios are released (aisa-group/perfect-crime, linked from perfect-crime.ai) and will be run against our harness. The repository has no licence, so it is run, not copied."],
-    differs: ["Their strongest recommendation is to log at a gateway between harness and model. Here the interceptor sits in the harness and LiteLLM is the gateway; that only holds once agent commands cannot reach the raw model ports (see Sandbox)."],
-  },
-  ledger: {
-    what: "LEDGER builds layered trace graphs from agent sessions: trace records, evidence nodes (actions and artifacts as evidence anchors) and workflow phases, with typed edges from claims to the actions, artifacts and checks that support them. Two qualitative case studies, no metrics, no code released (paper CC BY 4.0).",
-    how: ["Adopted (decided 10 Oct): its edge types uses, produces, informs, supports and checked_by; one group id pairing each command with its output; explicit coverage records for any model output the harness could not parse.",
-          "The primary trace view walks from a claim along supports edges to the quoted passage and the step that made it. Mapping in docs/provenance-model.md."],
-    differs: ["LEDGER's links are inferred afterwards by an LLM tracer, and the paper calls the graph \"an audit aid rather than a source of truth\". Ours are written by the broker at the moment of the claim and checked against the frozen corpus; that difference is what RQ1 measures."],
+    how: ["Each evidence item's span: quote with prefix and suffix, offsets, and the file hash, as the current anchor library does."],
   },
   provagent: {
-    what: "PROV-AGENT extends W3C PROV for agent workflows: model calls (AIModelInvocation with Prompt, ResponseData, AIModel), tool calls (AgentTool) and agents (AIAgent), all linked with used, wasGeneratedBy, wasInformedBy and wasAssociatedWith. Implemented in ORNL's Flowcept (MIT). One case study, no metrics.",
-    how: ["Adopted (decided 10 Oct): its record fields for every line of events.jsonl (task_id, subtype, used, generated, parent_task_id, group_id, agent_id, started_at, ended_at, status) and its subtypes ai_model_invocation and agent_tool, plus our claim, spawn and coverage.",
-          "Its five provenance queries become the supervisor's questions: which command and model call produced this fact, all claims of a step or subagent, anchors that no longer resolve."],
-    differs: ["Flowcept stores PROV-style JSON in a database and has no PROV-O export; we write the Turtle export ourselves with rdflib."],
-    code: ["docs/provenance-model.md", "reference: ORNL/flowcept src/flowcept/commons/flowcept_dataclasses/task_object.py, src/flowcept/commons/vocabulary.py"],
+    what: "PROV-AGENT extends W3C PROV for agent workflows: model calls, tool calls and agents, linked with used, wasGeneratedBy, wasInformedBy and wasAssociatedWith.",
+    how: ["The record format of the engine's log: each extractor call that uses a model is an ai_model_invocation; each extractor run is a tool call."],
   },
-  rarr: {
-    what: "RARR writes an answer first, then retrieves evidence for each statement and revises the answer to agree with it: attribution after generation.",
-    how: ["The baseline condition follows this order: the same agent answers with claim switched off, then each fact of the answer gets a source found afterwards with the same model and the same grep search."],
-  },
-  alce: {
-    what: "ALCE is a benchmark and method family for answers with citations; it measures citation recall and precision (does the cited passage support the statement) with an NLI judge.",
-    how: ["Its citation-support measures inform the faithfulness scoring that is applied equally to our runs and to the baseline."],
-  },
-  goo2026: {
-    what: "Audits the verifiers used to check citations in agentic scientific synthesis (OpenScholar, PaperQA2): on identical outputs the measured unsupported-citation rate moved from about 3% to 18% depending only on verifier strictness. Proposes validating the verifier against human gold and a conformal guard on the catch rate.",
-    how: ["The faithfulness layer calibrates its LLM judge on a human-labelled sample, reports agreement on held-out claims, and always names the judge and protocol. Onweller et al. (2026) supply the three dimensions: link works, relevant, fact check."],
+  ledger: {
+    what: "LEDGER builds claim-to-evidence trace graphs: typed edges from claims to the actions, artifacts and checks that support them.",
+    how: ["Its supports and checked_by edges fit the evidence graph: a measurement is supported by its passage and checked by the quote check."],
   },
   edc: {
     what: "Extract, Define, Canonicalize: LLM-based knowledge-graph construction in three steps (extract open triples, define each relation, map relations onto a schema).",
-    how: ["Define and Canonicalise are the logged step that maps the agent's free predicates and entity mentions onto DBLP, CS-KG 2.0 and our own terms after the run; Extract is also used to build the evidence document D on the gold side."],
-    differs: ["The agent's own Extract step is not prescribed: it records claims with free predicates through the claim command, and canonicalisation never overwrites the raw claim.",
-              "Code: clear-nus/edc (MIT, last change August 2024). Only the Define and Canonicalise prompt templates and the WebNLG few-shot file are copied; its client works only with OpenAI and its default embedder is a 7B model, so the calls are ours."],
+    how: ["Here the schema is given by the protocol, so extraction is schema-guided from the start; EDC's canonicalisation idea applies to names (model and dataset variants)."],
   },
-
-  zobel: {
-    what: "Gold built by pooling the outputs of the compared systems is biased towards those systems; systems outside the pool look worse.",
-    how: ["Why the gold is built from an evidence document D made before and independently of the runs, instead of from the runs' outputs."],
-    differs: ["D is built with the harness's own extraction and ranker, so some bias remains; the screening check and the option to extract every passage limit it."],
+  benchie: {
+    what: "Facts can be worded in many correct ways; BenchIE groups all acceptable wordings of a fact so a correct extraction is not counted wrong.",
+    how: ["With synthetic ground truth the values are exact, but names (models, datasets, metrics) still vary in wording: matching accepts known variants."],
   },
-
-  argilla: {
-    what: "An open-source annotation tool.",
-    how: ["All human review: D's triples, the overlap set for agreement, missing facts, the screening check and the judge check."],
-    differs: ["Argilla is in maintenance mode (bug fixes only; latest 2.8.0). Pin that version; κ is computed with scikit-learn, not inside Argilla."],
+  webnlg: {
+    what: "The WebNLG+ 2020 text-to-RDF challenge evaluated generated triples at several matching levels side by side.",
+    how: ["Reporting strict and normalised matching together for extraction (A), so the reader sees how much of the error is wording."],
   },
-
+  judge: {
+    what: "Using a strong LLM to judge outputs; it agrees with people on many tasks but must be validated per task.",
+    how: ["Only where a rule cannot decide: for example whether a generated paper states a fact it should not (fidelity check), checked against people."],
+  },
   kappa: {
     what: "Cohen's κ: agreement between two raters corrected for the agreement expected by chance. 0.61–0.80 is \"substantial\" (Landis & Koch).",
-    how: ["Agreement between the two reviewers on the overlap set; agreement between people and the LLM judge (weighted back to the real yes/no mix, because the judge sample is balanced)."],
+    how: ["Agreement between the automatic fidelity check and a person on a sample of generated papers."],
   },
-
-  benchie: {
-    what: "Facts can be worded in many correct ways; BenchIE groups all acceptable wordings of a fact (a fact synset) so a correct extraction is not counted wrong.",
-    how: ["Reviewers type accepted variants for gold triples; a run triple equal to a variant matches at the soft level."],
-    differs: ["Variants are partial (two or three typical wordings), not exhaustive synsets.", "BenchIE's code licence is non-commercial only, so the synset idea is reimplemented, not copied."],
-  },
-
-  webnlg: {
-    what: "The WebNLG+ 2020 text-to-RDF challenge evaluated generated triples at several matching levels (exact, partial, strict, type) side by side.",
-    how: ["The idea of reporting several matching levels (strict, entailed, soft) together, so the reader sees how much is wording."],
-    differs: ["The official script (WebNLG-Text-to-triples) is GPL-3.0; copying it would make our code GPL, so its four modes are reimplemented and cited."],
-  },
-
-  text2kg: {
-    what: "A benchmark for ontology-driven knowledge-graph generation. Its gold is \"locally closed\": a generated triple is only judged if its relation appears in the gold for that sentence.",
-    how: ["Locally closed scoring of DBLP triples: true but unrequested metadata (e.g. extra authors) is not counted as an error."],
-    differs: ["Applied to DBLP relations only; invented relations are always scored, because they carry the system's real claims.",
-              "Its evaluation script (Apache-2.0) is reused for ontology conformance and subject/object hallucination, with the claim's quote as the context instead of a sentence."],
-  },
-
-  euzenat: {
-    what: "Semantic precision and recall: compare two sets of statements by what they logically imply, not by their wording. Recall counts gold facts implied by the output; precision counts output facts implied by the gold.",
-    how: ["The entailed level, using the ontology's RDFS/OWL rules; triples that imply each other count as one fact."],
-    differs: ["Credit is one-to-one (one run fact recovers at most one gold fact); Euzenat's definition is set-based.",
-              "The only implementation is Java (the Alignment API); ours is about 50 lines of Python with closures from owlrl over rdflib graphs."],
-  },
-
-  judge: {
-    what: "Using a strong LLM to judge outputs; it agrees with people on many tasks but must be validated per task and can favour its own style.",
-    how: ["The soft level asks an LLM \"do these two triples state the same fact?\" for pairs the rules leave unmatched; answers are cached, and the judge is checked against people (κ ≥ 0.61) before its verdicts are reported."],
-  },
-
-  trec: {
-    what: "The TREC 2024 RAG track scores answers by \"nuggets\" (atomic facts), with vital nuggets weighted as essential.",
-    how: ["Vital recall: recall over the gold facts reviewers marked vital."],
-    differs: ["Binary match, i.e. the track's strict vital score (partial support earns nothing).",
-              "Code: castorini/nuggetizer (Apache-2.0) reports strict_vital_score and vital_score. Pin a git commit (PyPI lags) and pass the LiteLLM address as api_base; its use_vllm option ignores the address."],
-  },
-
   bootstrap: {
-    what: "Resampling the questions many times to estimate how much a mean could vary: an honest confidence interval with few questions.",
-    how: ["95% BCa intervals over questions for every reported mean, and for paired differences between paths (with a sign-flip permutation p-value)."],
+    what: "Resampling many times to estimate how much a mean could vary: an honest confidence interval with few units.",
+    how: ["95% BCa intervals for every reported mean and for the difference between the evidence-level system and the baseline."],
   },
-
-  // ---------------------------------------------------------------- infrastructure and reused code
-  vllm: {
-    what: "The model server: each model runs as its own vLLM process on one GPU, with a paged KV cache and an OpenAI-compatible API on a loopback port.",
-    how: ["Version 0.21.0 on the node (A1). Orchestrator on port 8001, the two subagent replicas on 8002 and 8004.",
-          "Measured: KV capacity per model (A2, L1), long prompts (A3), concurrency without preemption (A4, L3), decode speed (A5), prefix caching (C2)."],
-    differs: ["Prefix caching for hybrid models such as Qwen3.8 is experimental in 0.21; releases 0.27 to 0.31 improve it.", "The FlashInfer sampler is disabled because the node has no CUDA compiler."],
-  },
-  litellm: {
-    what: "A proxy that puts one OpenAI-compatible endpoint (port 4000) in front of all vLLM backends, with stable model aliases, limits and routing.",
-    how: ["The harness only talks to LiteLLM (orch-model, sub-model). llm-setup generates its config from the profile: one entry per replica under the same alias, no fallbacks, retries only for server errors."],
-    differs: ["Burst routing across the two subagent replicas was uneven in L3.", "Raw vLLM ports stay reachable around it until commands are isolated (S3)."],
-  },
-  llmsetup: {
-    what: "Our serving repository: one Slurm batch job that starts the vLLM backends, LiteLLM and a status API from a profile, watches them, restarts crashed services and stops cleanly.",
-    how: ["Included as the submodule llm-setup. The agent layout (profile agent-3x40.yaml with roles orch and sub, two sub replicas, extra vLLM flags) was added for round 2 and passed L1."],
-    differs: ["The agent layout was merged into main of thesis-llm-setup on 10 Oct."],
-  },
-  minisweagent: {
-    what: "A minimal agent from the SWE-agent team: about 200 lines of loop, bash as the only tool, the history as a plain list of messages, and pluggable model and environment classes (local, Docker, Singularity, bubblewrap).",
-    how: ["Pinned (2.4.6) and subclassed: our model class (lenient bash parser instead of its ```mswea_bash_command block, LiteLLM address, cost tracking off), our environment (output cap, budgets, sandbox once available), our interceptor around every model call and command."],
-    differs: ["Its trajectory file and inspector are kept for debugging only; events.jsonl is the record.", "Its Singularity environment needs --fakeroot, which the node cannot provide."],
-  },
-  langfuse: {
-    what: "A self-hosted LLM tracing UI, running on Omen with ClickHouse, Redis, MinIO and Postgres.",
-    how: ["Receives a copy of every run as OpenTelemetry GenAI spans over OTLP HTTP (`/api/public/otel`, basic auth with the project keys, Langfuse 3.22 or later), through the Omen tunnel."],
-    differs: ["A convenience view only: events.jsonl on Ceph is the source of truth, because the tunnel can drop."],
+  argilla: {
+    what: "An open-source annotation tool, set up on Omen for the previous design's review.",
+    how: ["Only for the optional real-paper gold, or for a human sample of the fidelity check."],
   },
   docling: {
     what: "A PDF-to-Markdown converter with layout and table-structure models.",
-    how: ["Converts the 337 papers once (D1: tables recovered for 10/10 papers, titles and author order 9/10; D2: identical output on reconversion). The output is frozen with hashes in manifest.json."],
-    differs: ["Finds fewer reference entries than GROBID, so the GROBID reference list is appended (pending). Two-column reading order still needs a visual check."],
+    how: ["Converted the 337 real papers once (336 usable); needed only for the real-paper extension."],
   },
-  dcilite: {
-    what: "The official code of the direct-corpus-interaction paper (Li et al. 2026): an agent that searches raw files with rg, find and sed, with five context-management levels from plain truncation to compaction and summarisation.",
-    how: ["Its context levels are the reference for our truncation and masking. It is also the closest existing system to run as a baseline on our corpus."],
-    differs: ["Its harness is built on another agent framework (Pi); we reuse ideas, not code."],
+  vllm: {
+    what: "The model server: each model runs as its own vLLM process on one GPU, with an OpenAI-compatible API.",
+    how: ["Serves the Qwen models for extractors, the paper generator and the baseline."],
   },
-  cookbook: {
-    what: "The prompts behind Anthropic's multi-agent research system, published in claude-cookbooks: a lead agent, a research subagent and a citations agent.",
-    how: ["Starting point for the orchestrator's delegation instructions and the sub-brief a subagent receives (objective, output format, boundary). Copied with the MIT licence and adapted."],
-    differs: ["No orchestration code is released; spawn, nested logs and shared claims are ours."],
+  litellm: {
+    what: "A proxy that puts one OpenAI-compatible endpoint in front of all vLLM backends, with stable aliases.",
+    how: ["Every LLM call of the engine, the generator and the baseline goes through it."],
   },
-  citeguard: {
-    what: "The released code of Goo et al. 2026: a verifier that checks whether a cited passage supports a statement, a protocol for testing how verifier strictness changes the result, and a split-conformal guard on the catch rate.",
-    how: ["Basis of the faithfulness judge: its verifier prompts adapted to quote-and-triple pairs, calibrated on our own 200 to 300 human-labelled claims."],
-    differs: ["Its gold comes from SciFact, QASA, PubMedQA and ScholarQABench; check its data licences before reusing any labels."],
+  llmsetup: {
+    what: "Our serving repository: one Slurm batch job that starts the vLLM backends, LiteLLM and a status API from a profile, and stops cleanly.",
+    how: ["Unchanged from the previous design; tested in the infrastructure rounds."],
+  },
+  alce: {
+    what: "ALCE is a benchmark and method family for answers with citations; it measures whether the cited passage supports each statement.",
+    how: ["The shape of the answer-level baseline: retrieve passages, write the answer with citations to them; its citation measures apply to the baseline's traceability."],
+  },
+  rarr: {
+    what: "RARR writes an answer first, then retrieves evidence for each statement and revises the answer to agree with it: attribution after generation.",
+    how: ["A second answer-level variant if one baseline is not enough: it attributes, but still reasons from stated answers."],
+  },
+  laquer: {
+    what: "Attributing generated facts to exact source spans greatly shortens the evidence a reader has to check.",
+    how: ["Supports tracing every number in the answer to an exact span, not to a whole paper."],
+  },
+  goo2026: {
+    what: "On identical outputs, the measured unsupported-citation rate of a synthesis system moved from about 3% to 18% depending only on the verifier's strictness.",
+    how: ["Why traceability is measured against exact spans and ground truth here, rather than by an unvalidated verifier."],
   },
 };
 
-/* ---- BRIEFS: worked example of concepts as research briefs (schema: docs/plan.md §5.2) -------------
-   Fields that differ between the briefs (measure, scope) are highlighted automatically.
-   ---------------------------------------------------------------------------------------------- */
-const BRIEF_NOTE = "Question: \"Who is the best author in the corpus?\" Two of the concepts the generator proposes, each as a research brief. Highlighted: where they differ. The user picks exactly one; its filled answer shape is also the template of the gold answer key.";
-const BRIEFS = [
-  {
-    id: "c1",
-    title: "Most papers in the corpus",
-    definition: "The author who appears, in any author position, on the largest number of papers in the corpus.",
-    measure: { operation: "count", of: "Paper", group_by: "author", order: "desc" },
-    scope: { papers: "all 336 papers" },
-    answer_shape: { kind: "table", columns: [{ name: "author", type: "Person" }, { name: "papers_in_corpus", type: "integer" }, { name: "papers", type: "list<Paper>" }] },
-    competency_questions: ["Which corpus papers list X as an author?", "How many corpus papers does each author have?", "Are two spellings of one name merged (one DBLP person)?"],
-    needs: ["author list per paper"],
-    subschema: { classes: ["Person", "Paper"], relations: ["Paper authoredBy Person"] },
-  },
-  {
-    id: "c3",
-    title: "Most first-author papers at ACL 2025",
-    definition: "The author who appears as first author on the largest number of ACL 2025 papers in the corpus.",
-    measure: { operation: "count", of: "Paper", group_by: "first_author", order: "desc" },
-    scope: { papers: "venue == ACL 2025" },
-    answer_shape: { kind: "table", columns: [{ name: "author", type: "Person" }, { name: "first_author_papers", type: "integer" }, { name: "papers", type: "list<Paper>" }] },
-    competency_questions: ["Which ACL 2025 papers list X as first author?", "How many such papers does each author have?", "Are two spellings of one name merged?"],
-    needs: ["author order per paper", "venue per paper"],
-    subschema: { classes: ["Person", "Paper", "Venue"], relations: ["Paper firstAuthor Person", "Paper publishedAt Venue"] },
-  },
+/* ---- worked examples: the protocol, and one study from ground truth to paper -------------------------- */
+const PROTOCOL_NOTE = "A sketch for the first question, written by hand (step 1). Names, fields and thresholds are illustrative, to be decided while writing it.";
+const PROTOCOL_YAML = `protocol: rag-factuality
+version: 0.1
+question: >
+  Does retrieval-augmented generation (RAG) improve the
+  factual accuracy of LLM-generated answers?
+
+evidence:                       # what to collect, and which extractor finds it
+  experiment:
+    extractor: experiment_conditions
+    fields: { model: string, dataset: string }
+  condition:
+    extractor: experiment_conditions
+    fields: { experiment: ref(experiment), retrieval: [none, rag] }
+  metric:
+    extractor: factuality_metric
+    fields: { name: string, higher_is_better: boolean }
+  measurement:
+    extractor: reported_result      # tables and sentences
+    fields: { condition: ref(condition), metric: ref(metric), value: number }
+  author_claim:
+    extractor: author_conclusion    # kept apart: evidence, not the answer
+    fields: { experiment: ref(experiment), says: [improves, no_effect, worse] }
+
+synthesis:                      # deterministic rules
+  pair: measurement by (experiment, metric), rag vs none
+  effect: value(rag) - value(none)        # sign flipped if lower is better
+  label:
+    improves:  effect >  0.01
+    no_effect: abs(effect) <= 0.01
+    worse:     effect < -0.01
+  answer: count experiments per label; list supporting and contradicting ones
+  flag: author_claim.says != label        # optimistic or inconsistent authors`;
+
+const GROUND_TRUTH_NOTE = "One fictional study in the ground truth, then the same facts rendered into a paper at each difficulty level. The generator gets the facts and the rendering plan; the fidelity check confirms the paper says exactly this.";
+const GROUND_TRUTH = `{
+  "study": "S07",
+  "experiment": "S07-E1",
+  "model": "Model-K 8B",
+  "dataset": "a closed-book QA set",
+  "metric": { "name": "factual accuracy", "higher_is_better": true },
+  "results": { "none": 0.68, "rag": 0.82 },
+  "author_claim": "improves"
+}`;
+const DIFFICULTY = [
+  { level: "Explicit", text: "With retrieval augmentation, factual accuracy rose from 0.68 to 0.82." },
+  { level: "Paraphrased", text: "Grounding generation in retrieved passages lifted the share of correct statements from 68% to 82%." },
+  { level: "Distributed", text: "§3: \"We compare the base model (B) with its retrieval-augmented variant (R).\" … Table 2: B 0.68 · R 0.82" },
+  { level: "Complex", text: "Table 4: three models × two datasets × two metrics; the 0.68 / 0.82 pair is one of twelve cells." },
+  { level: "Contradictory", text: "Results: 0.68 vs 0.69 (a changed variant). Abstract: \"Retrieval substantially improves factual accuracy.\"" },
 ];
 
 /* ---- ROLES: the groups of the reference list. Every SOURCES entry has role: "build" | "compare" | "cite" */
 const ROLES = {
-  build:   { title: "We build on", note: "Methods, standards, data and code the system takes over directly. Code is copied only where the licence allows; otherwise the idea is reimplemented." },
-  compare: { title: "We compare against", note: "The closest systems and findings: what the design is positioned against, and candidate baselines on our corpus." },
-  cite:    { title: "We cite", note: "Findings, protocols and standards that justify a design or evaluation choice." },
+  build:   { title: "We build on", note: "Methods, standards and tools the system takes over directly." },
+  compare: { title: "We compare against", note: "The answer-level side: systems that answer from retrieved passages and cite them." },
+  cite:    { title: "We cite", note: "Findings that justify a design or evaluation choice." },
 };
 
-/* ---- STATUS: the "Setup status" table under the diagram -----------------------------------------
-   state: "works" | "partial" | "blocked" | "open"   stage: the box its name opens   tests: ids in tests/RESULTS.md
+/* ---- STATUS: the supervisor's order of work, with what existing code each step can reuse ------------------
+   state: "works" | "partial" | "open"   stage: the box its name opens   tests: what exists
    ---------------------------------------------------------------------------------------------- */
-const STATUS_NOTE = "From tests/RESULTS.md after all infrastructure rounds (8–10 Oct 2026). No further infrastructure session is planned. Click an area for its box in the diagram.";
+const STATUS_NOTE = "The supervisor's order of work (14 Oct 2026), steps 1–7, and where each stands on branch main (built 14 Oct; packages evidence/, synth/, evaluation/; file formats in docs/evidence-interfaces.md). Built means tested offline with scripted models; no live model run yet. Click a step for its box in the diagram.";
 const STATUS = [
-  { area: "Models",       stage: "orch",    state: "works",   tests: "A1–A5, L1, R3, B8, C2b",
-    evidence: "Qwen3.8-27B orchestrator (65k, thinking off, 50/50 one-block replies) and two Qwen3-30B-A3B subagent replicas, pinned by revision. At 30k tokens: 12 s cold, 0.35 s cached to the first token.",
-    next: "Nothing before the harness. Optional: blind usefulness rating of the 50 B8 commands." },
-  { area: "Gateway",      stage: "gateway", state: "works",   tests: "L2, L4, L6–L8",
-    evidence: "LiteLLM :4000 with a 600 s timeout; seed reaches vLLM; over-context prompts return a clear 400 error; one alias per subagent replica (4/4 balance).",
-    next: "The harness assigns subagents to sub-model-1 / sub-model-2." },
-  { area: "Sandbox",      stage: "sandbox", state: "works",   tests: "S5a–S5c, S6, S7, B0, H1",
-    evidence: "Landlock ABI 8 + seccomp: no network or sockets, read-only corpus and toolchain, 2 GB, 120 s; broker owns the log, claims arrive over an inherited descriptor; toolchain built and verified by script.",
-    next: "Run F1 (everything together) on the next stack start." },
-  { area: "Corpus",       stage: "md",      state: "works",   tests: "D1, D2, D5",
-    evidence: "336 of 337 papers converted with Docling 2.110.0 and frozen with hashes (p38 is a scanned PDF and is left out).",
-    next: "Fix the anchor library (file hash, positions, retyped quotes) during implementation." },
-  { area: "Harness",      stage: "harness", state: "open",    tests: "B1–B4, C1, S2, F1",
-    evidence: "All parts around it are tested; the loop on mini-swe-agent, the claim command, the PROV-AGENT/LEDGER log format and the baseline switch are not built.",
-    next: "Build next: the implementation plan starts here." },
-  { area: "Evaluation",   stage: "results", state: "open",    tests: "—",
-    evidence: "Decided: RQ1 ours vs baseline, 12 questions × 2 conditions × 3 runs, gold D per question reviewed by the author in Argilla.",
-    next: "Write the 12 questions; build D after the harness runs." },
-  { area: "Tunnels",      stage: "omen",    state: "partial", tests: "T1–T4",
-    evidence: "Optional. All five Omen services reachable from the node on the legacy mapping (T2); not on the critical path.",
-    next: "Only if the Langfuse copy is wanted." },
+  { area: "1 · Protocol by hand", stage: "write",    state: "built",   tests: "evidence/protocols/rag-factuality.yaml, evidence/protocol.py",
+    evidence: "Hand-written protocol for the RAG question: four evidence types (condition, metric, measurement, author claim) with JSON field schemas, value bounds, an extractor cascade per type, the locate strategy and the synthesis rules; its hash is part of every run. A variant puts the agentic extractor last in every cascade.",
+    next: "Review the protocol with the supervisor." },
+  { area: "2 · Synthetic corpus generator", stage: "truth", state: "built", tests: "synth/",
+    evidence: "Seeded ground truth (studies, conditions, metrics, measurements, author claims, effects by the shared rules), five difficulty levels, a template renderer with exact placements and an LLM renderer with fidelity checks and retries, controlled variants (one corpus per level from one study set), a review sheet for hand checks, six example corpora in the repo.",
+    next: "First LLM-written corpus on the cluster; hand-check a sample for fidelity." },
+  { area: "3 · Extractor library", stage: "iface", state: "built", tests: "evidence/extractors/, evidence/agentic/",
+    evidence: "One registry behind the contract: regex extractors and single-call LLM extractors for each evidence type, and the agentic extractor (our research agent, wrapped without changes). The engine checks every span against the paper, whatever the extractor.",
+    next: "Live runs of the LLM and agentic extractors; benchmark record per version." },
+  { area: "Extractor contract", stage: "iface", state: "built", tests: "evidence/contract.py, docs/extractor-contract.md",
+    evidence: "Implemented as pydantic models: identity with code and config hashes, task, result with multi-span items, rejected items with reasons, coverage.",
+    next: "—" },
+  { area: "Provenance & replay", stage: "replay", state: "built", tests: "evidence/engine.py, evidence/replay.py, evidence/prov.py",
+    evidence: "One hash-chained event per locate step, extractor call, merge and synthesis; a record cache; exact replay (a cache miss is an error) reproduces every output hash; re-execution writes a stability report; PROV-O export.",
+    next: "Re-execution stability of the LLM and agentic extractors on the cluster." },
+  { area: "4 · Evidence representation", stage: "evgraph", state: "built", tests: "evidence/graph.py, evidence/merge.py",
+    evidence: "Merged items with every span and the extractors that found them; graph.json with documents, conditions, metrics, measurements and claims.",
+    next: "Show the graph in the viewer (optional)." },
+  { area: "5 · Synthesis rules", stage: "synth", state: "built", tests: "evidence/rules.py, evidence/synthesis.py",
+    evidence: "Same-dataset rag/baseline pairing (table before prose), effect and label by one shared rule that also computes the expected answer from ground truth; undetermined studies are reported with a reason.",
+    next: "—" },
+  { area: "6 · Evaluate A, B, C", stage: "evA", state: "built", tests: "evaluation/score.py, evaluation/report.py",
+    evidence: "Extraction P/R/F1 per type and level with span accuracy, integration (links and true pair), synthesis (per-study direction, label), locate recall, cascade contribution, cost, stability; per-level comparison. An end-to-end test runs a synthetic corpus through engine, replay and scoring.",
+    next: "Confidence intervals in the comparison; first real numbers with the LLM extractors." },
+  { area: "7 · Baselines", stage: "baseline", state: "built", tests: "evaluation/baselines/",
+    evidence: "Retrieve-then-answer (BM25, top passages per paper by default, one LLM call) and our research agent with the question only; both write the engine's answer shape and never read the ground truth.",
+    next: "Live runs on the cluster." },
+  { area: "Models and cluster", stage: "slurm", state: "works", tests: "tests/RESULTS.md",
+    evidence: "Slurm stack with Qwen3.8-27B and two Qwen3-30B-A3B replicas behind LiteLLM, tested; first real agent runs done.",
+    next: "A short cluster run: generate an LLM corpus, run the engine with LLM extractors, both baselines, score." },
+  { area: "Viewer", stage: "trace", state: "partial", tests: "webapp/",
+    evidence: "FastAPI + React app with a fact-to-passage walk, graph view, SPARQL and chat, built for the previous design.",
+    next: "Show the evidence graph and the answer's trace (optional)." },
 ];
-const STATE_LABEL = { works: "Works", partial: "Partial", blocked: "Blocked", open: "Not built" };
+const STATE_LABEL = { works: "Works", built: "Built, tested offline", partial: "Partly reusable", spec: "Specified", blocked: "Blocked", open: "Not built" };
+
+/* ---- DECISIONS and QUESTIONS: the two lists under the status table ------------------------------ */
+const DECISIONS = [
+  { text: "Follow the supervisor's design: question → hand-written protocol → engine with an extractor library → evidence graph → rule-based synthesis; synthetic benchmark as the main evaluation.", stage: "protocol" },
+  { text: "First question: does RAG improve the factual accuracy of LLM answers?", stage: "question" },
+  { text: "The research agent fits in two places: as one extractor implementation (agentic extractor) and, without a protocol, as a second baseline.", stage: "x_agent" },
+  { text: "Agents at the edges, a program in the middle: the protocol fixes which evidence counts, the order of steps and the synthesis; flexibility only in how evidence is found (locate step, agentic extractor).", stage: "locate" },
+  { text: "Extractor contract written: one interface for regex, model, single-call LLM and agentic extractors, with checked spans, recorded coverage, exact replay and measured re-execution.", stage: "iface" },
+  { text: "A value reported twice in a paper is one item with two spans; items keep normalised values and raw text; benchmark recall is reported, not enforced.", stage: "iface" },
+  { text: "All reported results come from replay of recorded calls, so provenance gives the same data every time; re-execution stability is a measurement.", stage: "replay" },
+];
+const QUESTIONS = [
+  { text: "Is the engine strictly program-run, or may one step (locating the evidence for an evidence type) be done by an agent that searches flexibly within a budget, with the same output contract and every action logged?", stage: "locate" },
+  { text: "Is an agentic extractor acceptable as one implementation behind the extractor interface, replayed from records, with its re-execution stability reported?", stage: "x_agent" },
+  { text: "Is a second baseline welcome: our research agent with the question only and no protocol, next to the retrieve-then-answer baseline?", stage: "agentbase" },
+  { text: "Is RAG and factual accuracy fixed as the first question, or one candidate?", stage: "question" },
+  { text: "How large should the synthetic benchmark be (studies, papers, corpora or seeds), and how many generated papers should a person check for fidelity?", stage: "fidelity" },
+];
 
 /* ============================== drawing (no edits needed below) ============================== */
 const LABEL_W = 250, COL_W = 200, NODE_W = 178, NODE_H = 86, CHIP_H = 22, CHIP_GAP = 5, TOP = 14, FLAG_H = 46;
@@ -1190,7 +1078,7 @@ function draw() {
     const y = laneTop[i];
     const focus = STAGES.some(s => s.lane === lane.id && s.current);
     el("rect", { x: 0, y: y + 4, width: W, height: laneH[i] - 8, rx: 12, class: `lane-bg${i % 2 ? " alt" : ""}${focus ? " focus" : ""}${lane.open ? " open" : ""}` }, svg);
-    if (lane.open) el("text", { x: 22, y: y + 30, class: "lane-open-tag" }, svg).textContent = "TO BE REDESIGNED";
+    if (lane.open) el("text", { x: 22, y: y + 30, class: "lane-open-tag" }, svg).textContent = OPEN_TAG;
     el("text", { x: 22, y: y + 58, class: "lane-name" }, svg).textContent = lane.name;
     el("text", { x: 22, y: y + 82, class: "lane-sub" }, svg).textContent = lane.sub || "";
     (lane.sources || []).forEach((src, k) => {
@@ -1246,7 +1134,7 @@ function draw() {
     const open = LANES.find(l => l.id === s.lane)?.open;
     const g = el("g", { class: `stage${open ? " is-open" : ""}`, "data-stage": s.id, tabindex: 0, role: "button", "aria-label": `${s.name}: details` }, nodeLayer);
     if (s.current) el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: "pulse" }, g);
-    el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: `node${s.current ? " now" : ""}` }, g);
+    el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: `node${s.current ? " now" : ""}${s.added ? " added" : ""}` }, g);
     const name = el("text", { x: x + NODE_W / 2, y: y + 38, "text-anchor": "middle", class: "name" }, g);
     name.textContent = s.name;
     const desc = el("text", { x: x + NODE_W / 2, y: y + 62, "text-anchor": "middle", class: "desc" }, g);
@@ -1262,7 +1150,7 @@ function draw() {
       el("path", { d: `M${fx - 8} ${fy} L${fx} ${fy - 11} L${fx + 8} ${fy} Z`, class: "flag" }, g);
       const pill = el("rect", { y: fy, height: 30, rx: 15, class: "flag" }, g);
       const label = el("text", { x: fx, y: fy + 20, "text-anchor": "middle", class: "flag-text" }, g);
-      label.textContent = "CURRENTLY WORKING HERE";
+      label.textContent = FLAG_LABEL;
       const w = label.getComputedTextLength() + 34;
       pill.setAttribute("x", fx - w / 2);
       pill.setAttribute("width", w);
@@ -1310,29 +1198,27 @@ function references() {
   });
 }
 
-function briefCards() {
-  document.getElementById("brief-note").textContent = BRIEF_NOTE;
-  const box = document.getElementById("briefs");
-  // a sub-field is highlighted when its value is not the same in every brief
-  const differs = (field, sub) => new Set(BRIEFS.map(b => JSON.stringify((b[field] || {})[sub]))).size > 1;
-  const parts = (field, b) => Object.entries(b[field] || {}).map(([k, v], i) =>
-    [i ? " · " : "", h("span", differs(field, k) ? { class: "diff", title: `differs between concepts: ${k}` } : {}, k === "operation" || k === "papers" ? String(v) : `${k.replace("_", " ")} ${v}`)]).flat();
-  for (const b of BRIEFS) {
-    const shape = b.answer_shape;
-    const table = h("table", {},
-      h("thead", {}, h("tr", {}, shape.columns.map(c => h("th", {}, c.name, h("br"), h("small", {}, c.type))))),
-      h("tbody", {}, h("tr", {}, shape.columns.map(() => h("td", {}, "…")))));
-    box.append(h("article", { class: "brief", "aria-label": `Concept ${b.id}: ${b.title}` },
-      h("h3", {}, b.title),
-      h("p", { class: "def" }, b.definition),
-      h("dl", {},
-        h("dt", {}, "Measure"), h("dd", {}, parts("measure", b)),
-        h("dt", {}, "Scope"), h("dd", {}, parts("scope", b)),
-        h("dt", {}, "Answer shape"), h("dd", {}, table),
-        h("dt", {}, "Competency questions"), h("dd", {}, h("ul", {}, b.competency_questions.map(q => h("li", {}, q)))),
-        h("dt", {}, "Needs"), h("dd", {}, b.needs.join("; ")),
-        h("dt", {}, "Subschema"), h("dd", {}, `${b.subschema.classes.join(", ")} · ${b.subschema.relations.join(", ")} (derived, shown on request)`))));
-  }
+function examples() {
+  document.getElementById("protocol-note").textContent = PROTOCOL_NOTE;
+  document.getElementById("protocol").append(
+    h("article", { class: "brief", "aria-label": "Example protocol" },
+      h("h3", {}, "protocols/rag-factuality.yaml"),
+      h("pre", { class: "code" }, PROTOCOL_YAML)));
+  document.getElementById("truth-note").textContent = GROUND_TRUTH_NOTE;
+  document.getElementById("truth").append(
+    h("article", { class: "brief", "aria-label": "Ground truth of one study" },
+      h("h3", {}, "Ground truth (generated by code)"),
+      h("pre", { class: "code" }, GROUND_TRUTH)),
+    h("article", { class: "brief", "aria-label": "The same facts at five difficulty levels" },
+      h("h3", {}, "In the generated paper, by difficulty"),
+      h("dl", { class: "levels" }, DIFFICULTY.map(d => [h("dt", {}, d.level), h("dd", {}, d.text)]).flat())));
+}
+
+function notes() {
+  const fill = (id, rows) => document.getElementById(id).append(...rows.map(r =>
+    h("li", {}, rich(r.text), " ", h("button", { type: "button", class: "box-link", onclick: () => openDetails("stage", r.stage) }, "(box)"))));
+  fill("decisions", DECISIONS);
+  fill("questions", QUESTIONS);
 }
 
 function statusTable() {
@@ -1391,11 +1277,12 @@ function renderStage(id) {
     h("b", { class: "key-chip k-tool" }, s ? `${LANE_NAME[s.lane]} · step ${STAGES.filter(x => x.lane === s.lane && x.col <= s.col).length}` : "Research harness"),
     s && s.llm ? h("span", { class: "badge b-llm" }, "LLM calls") : null,
     s && s.people ? h("span", { class: "badge b-people" }, "People") : null,
-    s && s.current ? h("span", { class: "badge b-now" }, "Currently working here") : null);
+    s && s.current ? h("span", { class: "badge b-now" }, FLAG_LEGEND) : null);
   body.push(kind, h("h3", {}, d.title || (s ? s.name : id)));
   if (s && LANES.find(l => l.id === s.lane)?.open) body.push(h("p", { class: "open-banner" },
-    "To be redesigned for the new research system. Shown as it was in the previous design, where runs came from a fixed pipeline over a corpus index."));
+    OPEN_NOTE));
   if (s && s.desc) body.push(h("p", { class: "lead" }, s.desc));
+  if (ORIGIN[id]) body.push(section("Where this comes from", h("p", { class: s && s.added ? "differs" : "example" }, rich(ORIGIN[id]))));
   if (d.what) body.push(section("What it is", h("p", {}, rich(d.what))));
   if (d.how) body.push(section("How it works here", list(d.how)));
   if (d.io) body.push(section("Input → output", h("div", { class: "io" }, h("div", {}, rich(d.io[0])), h("span", { "aria-hidden": "true" }, "→"), h("div", {}, rich(d.io[1])))));
@@ -1408,7 +1295,7 @@ function renderStage(id) {
   if (before.length || after.length) body.push(section("Connected steps",
     h("div", { class: "links" }, ...before.map(x => h("span", {}, stageButton(x))), before.length ? h("span", { "aria-hidden": "true" }, "→ this step →") : null, ...after.map(stageButton))));
   if (d.settings) body.push(section("Settings", list(d.settings)));
-  if (d.code) body.push(section("Where in the code", list(d.code.map(c => "`" + c + "`"))));
+  if (d.code) body.push(section("Existing code to build on", list(d.code)));
   return body;
 }
 
@@ -1519,11 +1406,12 @@ function legend() {
   item(svg => llmIcon(svg, 15, 15, 13), LLM_LABEL);
   item(svg => peopleIcon(svg, 15, 15, 13), "People");
   const add = html => { const s = document.createElement("span"); s.innerHTML = html; box.appendChild(s); };
-  add('<i class="key-now"></i>Currently working here');
-  add('<b class="key-chip k-paper">EDC</b>Idea from a paper');
-  add('<b class="key-chip k-tool">DBLP</b>Tool or data');
-  add('<b class="key-chip k-ours">full provenance</b>Our contribution');
-  if (LANES.some(l => l.open)) add('<i class="key-open"></i>To be redesigned');
+  add('<i class="key-now"></i>' + FLAG_LEGEND);
+  add('<b class="key-chip k-paper">BenchIE</b>Idea from a paper');
+  add('<b class="key-chip k-tool">PROV-O</b>Tool or data');
+  add('<b class="key-chip k-ours">one contract</b>Our contribution');
+  if (STAGES.some(s => s.added)) add('<i class="key-added"></i>Our addition, not in the supervisor’s message');
+  if (LANES.some(l => l.open)) add('<i class="key-open"></i>' + OPEN_LEGEND);
 }
 
 document.getElementById("title").textContent = TITLE;
@@ -1534,7 +1422,8 @@ draw();
 references();
 wireDetails();
 statusTable();
-briefCards();
+notes();
+examples();
 </script>
 </body>
 </html>

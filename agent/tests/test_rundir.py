@@ -35,7 +35,7 @@ def test_create_layout_and_config(tmp_path: Path) -> None:
         "alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
         "thinking": False, "max_tokens": 4096, "context_tokens": 65536}
     assert [s["alias"] for s in config["models"]["subagents"]] == ["sub-model-1", "sub-model-2"]
-    assert config["budget"] == {"steps": 150, "tokens": 400000, "announced": True}
+    assert config["budget"] == {"steps": 60, "tokens": 2_000_000, "announced": True}  # provisional (1.13)
     assert config["command_limits"] == {"timeout_s": 120, "ulimit_v_kib": 2097152, "output_cap_bytes": 8192}
     assert config["sampling"] == {"temperature": 0.7, "seed": 1234}
     assert config["hashes"]["corpus_manifest_sha256"] == file_sha256(MANIFEST)

@@ -1,27 +1,52 @@
 [project]
 name = "thesis-agent"
-version = "0.1.0"
-description = "Research agent with provenance recorded while it researches (milestone 1)"
+version = "0.2.0"
+description = "Research agent with provenance recorded while it researches, its gold standard, scoring and web app"
 requires-python = ">=3.13"
 dependencies = [
+    "argilla==2.8.0",
+    "fastapi[standard]==0.143.0",
+    "filelock==3.32.7",
+    "httpx==0.28.1",
     "jsonschema==4.25.1",
+    "markdown-it-py==4.2.0",
     "mini-swe-agent==2.4.6",
+    "numpy==2.5.4",
+    "pandas==3.0.6",
+    "pydantic-ai-slim[openai]==2.55.0",
+    "pydantic-settings==2.15.0",
+    "pyoxigraph==0.5.11",
+    "pyyaml==6.0.3",
+    "rank-bm25==0.2.2",
     "rdflib==7.6.0",
+    "regex==2026.9.29",
+    "scikit-learn==1.9.1",
+    "scipy==1.18.1",
+    "sse-starlette==3.5.0",
+    "statsmodels==0.15.0",
+    "tabulate==0.9.0",
 ]
 
 [project.scripts]
 agent = "agent.cli:main"
+gold = "gold.cli:main"
+score = "scoring.cli:main"
+webapp = "webapp.cli:main"
+evidence = "evidence.cli:main"
+synth = "synth.cli:main"
+evaluate = "evaluation.cli:main"
 
 [dependency-groups]
 dev = ["pytest==8.4.2"]
+frontend = ["nodejs-wheel==22.20.0"]
 
 [build-system]
 requires = ["uv_build>=0.9,<0.14"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = "agent"
+module-name = ["agent", "gold", "scoring", "webapp", "evidence", "synth", "evaluation"]
 module-root = ""
 
 [tool.pytest.ini_options]
-testpaths = ["agent/tests"]
+testpaths = ["agent/tests", "gold/tests", "scoring/tests", "webapp/tests", "evidence/tests", "synth/tests", "evaluation/tests"]

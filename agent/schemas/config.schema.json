@@ -118,7 +118,30 @@
         "harness": {"type": "string", "minLength": 1, "description": "e.g. mini-swe-agent 2.4.6"},
         "base_url": {"type": "string", "minLength": 1, "description": "the LiteLLM endpoint; never a key"},
         "conclude_replies": {"type": "integer", "minimum": 1,
-                             "description": "replies allowed after the budget or the context runs out"}
+                             "description": "replies allowed after the budget or the context runs out"},
+        "conclude_decoding": {"enum": ["free", "structured_outputs", "guided_json"],
+                              "description": "conclude replies decoded freely or under the reply schema (extra_body key; rows 1.13)"},
+        "conclude_max_tokens": {"type": ["integer", "null"], "minimum": 1,
+                                "description": "max_tokens of a conclude reply, within what the context leaves; null = the orchestrator's max_tokens"},
+        "masking": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["keep", "keep_tight", "tight_above_prompt_tokens"],
+          "description": "row 1.15: outputs older than the last `keep` commands become stubs; `keep_tight` after a prompt over `tight_above_prompt_tokens`; null = off",
+          "properties": {
+            "keep": {"type": "integer", "minimum": 1},
+            "keep_tight": {"type": "integer", "minimum": 1},
+            "tight_above_prompt_tokens": {"type": "integer", "minimum": 1}
+          }
+        },
+        "budget_warnings": {"type": "array", "items": {"type": "integer", "minimum": 1, "maximum": 99},
+                            "description": "percent of either budget at which the agent gets a one-time notice"},
+        "repeat_stop": {"type": "integer", "minimum": 0,
+                        "description": "identical commands in a row that end research; 0 = never"},
+        "draft_file": {"type": ["string", "null"],
+                       "description": "the agent's draft answer in scratch/, taken when the run ends without an answer"},
+        "m1_notices": {"type": "boolean",
+                       "description": "the M1-real loop's wording (context-full stub without the output file, no reply-limit line); prompt v1"}
       }
     },
     "attach": {
@@ -148,10 +171,49 @@
           }
         },
         "conclude_replies": {"type": "integer", "minimum": 0},
+        "conclude_decoding": {"enum": ["free", "structured_outputs", "guided_json"],
+                              "description": "conclude replies decoded freely or under the result schema (default: the run's loop.conclude_decoding)"},
         "first_step": {"type": "integer", "minimum": 1, "description": "step id of the attach step's first model call"},
         "started_at": {"type": "string", "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(\\.\\d+)?Z$"},
         "base_url": {"type": "string", "minLength": 1},
         "sandbox": {"enum": ["landlock", "unsandboxed"]}
+      }
+    },
+    "spawn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "description": "Row 2.12: the spawn command (subagents on sub-model-1/-2, agent/spawn.py); agent run --spawn on|off, off by default. The rest is set only when enabled",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["steps", "tokens", "announced"],
+          "description": "each subagent's own budget; spawn --steps may lower the steps",
+          "properties": {
+            "steps": {"type": "integer", "minimum": 1},
+            "tokens": {"type": "integer", "minimum": 1},
+            "announced": {"type": "boolean"}
+          }
+        },
+        "max_concurrent": {"type": "integer", "minimum": 1, "description": "subagents running at once (one per sub-model replica); the rest wait"},
+        "max_subagents": {"type": "integer", "minimum": 1, "description": "subagents one run may start"},
+        "command_timeout_s": {"type": "integer", "minimum": 1, "description": "time limit of a command that calls spawn (others keep command_limits.timeout_s)"},
+        "models": {"type": "array", "items": {"type": "string", "minLength": 1}, "description": "the sub-model aliases, one per worker"},
+        "max_tokens": {"type": "integer", "minimum": 1, "description": "a subagent's reply limit"},
+        "claim": {"type": "boolean", "description": "subagents have claim iff the run is claim_on"},
+        "prompt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["version", "sha256", "files"],
+          "properties": {
+            "version": {"type": "string", "minLength": 1},
+            "sha256": {"$ref": "#/$defs/sha256", "description": "sha256 of the subagent system prompt file"},
+            "files": {"type": "object", "additionalProperties": {"$ref": "#/$defs/sha256"}}
+          }
+        },
+        "loop": {"type": "object", "description": "the subagents' loop settings (loop.LoopSettings.config())"}
       }
     }
   },

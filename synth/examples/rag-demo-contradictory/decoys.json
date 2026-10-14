@@ -1,0 +1,29 @@
+[
+  {
+    "paper": "S002",
+    "measurement": "S002.m2",
+    "stated_value": 0.437,
+    "true_value": 0.567,
+    "start": 375,
+    "end": 380,
+    "exact": "43.7%"
+  },
+  {
+    "paper": "S004",
+    "measurement": "S004.m2",
+    "stated_value": 0.357,
+    "true_value": 0.236,
+    "start": 392,
+    "end": 397,
+    "exact": "35.7%"
+  },
+  {
+    "paper": "S006",
+    "measurement": "S006.m2",
+    "stated_value": 0.324,
+    "true_value": 0.184,
+    "start": 376,
+    "end": 381,
+    "exact": "32.4%"
+  }
+]

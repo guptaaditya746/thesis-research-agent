@@ -1,0 +1,16 @@
+{
+  "pass": true,
+  "papers_with_retrieval": 164,
+  "claim_count": 1,
+  "claim_file": "2025-acl-long-1138.md",
+  "claim_quote_verified": true,
+  "events_head": "14d75394cde1ed4d5883edf0c59590071c1417e7d6e80699f2c37942273481b3",
+  "claims_head": "07ff56b124453e2568960d22bd33a26fac1e691b7ba7988d1f77c2c52c32341d",
+  "model_seconds": 8.433013779111207,
+  "prompt_tokens": 305,
+  "completion_tokens": 242,
+  "parse_mode": "one_fenced_block",
+  "agent_root_verified": true,
+  "job_id": "7288",
+  "run_dir": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/tests/F1/run-001"
+}

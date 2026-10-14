@@ -7,13 +7,17 @@ Checks, all reported (not only the first):
   its recorded offsets in the frozen corpus file (status "ok", agent/anchor.py);
 - every claim id an answer fact cites is an accepted claim of this run;
 - for a baseline run with an attach step (2.5): the step finished (attach.json), answer.json is the
-  one it wrote, every fact has origin attach and cites only attach claims.
+  one it wrote, every fact has origin attach and cites only attach claims;
+- when the harness read the agent's draft answer (1.13), its copy (answer.draft.json) has the
+  sha256 the coverage record holds.
 
 Figures: steps (model replies), commands, claims (accepted / rejected), claim steps (commands that
 sent at least one claim), tokens (sum of total_tokens over model calls), and wall time from the
 first record's start to the last record's end. With an attach step, the same figures for the
 attach step alone (`attach`) and for the run without it (`without_attach`), so cost can be reported
-with and without it.
+with and without it. With subagents (row 2.12) the figures are the run's total, and `agents` has
+the research's per agent (main, sub-01, ...; attach apart), `subagents` how many started; and
+each subagent's result.json is the one its spawn record holds the sha256 of.
 """
 from __future__ import annotations
 
@@ -63,14 +67,36 @@ ATTACH_COST = ("steps", "model_calls", "commands", "claims_accepted", "claims_re
                "prompt_tokens", "completion_tokens", "seconds")
 
 
+def started_subagents(records: list[dict[str, Any]]) -> list[str]:
+    """The subagents that started (row 2.12), in order: the child of each spawn start record.
+
+    Not a refusal, and not one cancelled before it started (event "cancelled"); a start record
+    without an event (built by hand) counts as a start.
+    """
+    return [r["generated"]["agent_id"] for r in records
+            if r["subtype"] == "spawn" and isinstance(r["generated"].get("agent_id"), str)
+            and (r["custom_metadata"] or {}).get("event", "start") == "start"]
+
+
 def stats(records: list[dict[str, Any]]) -> dict[str, Any]:
-    """cost() of all records; with an attach step also `attach` (its own cost) and `without_attach`."""
+    """cost() of all records; with an attach step also `attach` (its own cost) and `without_attach`.
+
+    With subagents (row 2.12), `agents` holds cost() of the research per agent: `main` (what its
+    budget counted: the attach step, also agent main, is `attach` alone) and every subagent that
+    started, with or without a model call; `subagents` is their number. The totals stay the run's.
+    """
     out = cost(records)
     attach = [r for r in records if is_attach(r)]
+    research = [r for r in records if not is_attach(r)]
     if attach:
-        mine, rest = cost(attach), cost([r for r in records if not is_attach(r)])
+        mine, rest = cost(attach), cost(research)
         out["attach"] = {k: mine[k] for k in ATTACH_COST}
         out["without_attach"] = {k: rest[k] for k in ATTACH_COST}
+    callers = [r["agent_id"] for r in research if r["subtype"] == "ai_model_invocation"]
+    subagents = list(dict.fromkeys(a for a in [*started_subagents(records), *callers] if a != "main"))
+    if subagents:
+        out["agents"] = {a: cost([r for r in research if r["agent_id"] == a]) for a in ("main", *subagents)}
+        out["subagents"] = len(subagents)
     return out
 
 
@@ -153,7 +179,46 @@ def verify_run(run: RunDir, corpus: Path, manifest: Path) -> RunReport:
         report.errors.append(f"answer: cannot check claim ids ({exc})")
         answer = None
     report.errors += _attach_problems(run, records, answer)
+    report.errors += _draft_problems(run, records)
+    report.errors += _spawn_problems(run, records)
     return report
+
+
+def _spawn_problems(run: RunDir, records: list[dict[str, Any]]) -> list[str]:
+    """Subagents (row 2.12): each started one returned, and its result.json is the result its return record hashed."""
+    spawns = [r for r in records if r["subtype"] == "spawn"]
+    started = {r["generated"]["agent_id"] for r in spawns if r["status"] == "started"}
+    problems = []
+    for record in spawns:
+        if record["custom_metadata"].get("event") != "return":
+            continue
+        gen = record["generated"]
+        started.discard(gen.get("agent_id"))
+        path = run.root / str(gen.get("result_file", ""))
+        if not path.is_file():
+            problems.append(f"spawn: {gen.get('result_file')} of {gen.get('agent_id')} is missing")
+        elif file_sha256(path) != gen.get("result_sha256"):
+            problems.append(f"spawn: {gen.get('result_file')} is not the result {gen.get('agent_id')} returned "
+                            "(sha256 differs)")
+    problems += [f"spawn: {agent} started but has no return record" for agent in sorted(started)]
+    return problems
+
+
+def _draft_problems(run: RunDir, records: list[dict[str, Any]]) -> list[str]:
+    """The agent's draft answer (row 1.13): the copy the harness kept is the draft it recorded reading."""
+    problems = []
+    for record in records:
+        detail = record["generated"].get("detail") if record["subtype"] == "coverage" else None
+        draft = detail.get("draft") if isinstance(detail, dict) else None
+        if not isinstance(draft, dict) or "copy" not in draft:
+            continue
+        path = run.root / draft["copy"]
+        reason = record["generated"].get("reason")
+        if not path.is_file():
+            problems.append(f"draft: {draft['copy']} ({reason}) is missing")
+        elif file_sha256(path) != draft.get("sha256"):
+            problems.append(f"draft: {draft['copy']} is not the draft {reason} recorded (sha256 differs)")
+    return problems
 
 
 def _attach_problems(run: RunDir, records: list[dict[str, Any]], answer: dict[str, Any] | None) -> list[str]:

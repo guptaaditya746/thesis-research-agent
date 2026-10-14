@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
 import pytest
+from filelock import FileLock
 
 pytest.importorskip("minisweagent")
 pytest.importorskip("litellm")
+
+import litellm  # noqa: E402
 
 from agent import concept_step  # noqa: E402
 from agent.broker import Broker, Channel  # noqa: E402
@@ -142,12 +147,23 @@ def test_still_invalid_after_repair_fails_clearly(tmp_path: Path) -> None:
         "invalid_concepts", "invalid_concepts"]
     with pytest.raises(ValueError, match="no proposal"):
         concept_step.pick(session.root, 1)
-    with pytest.raises(ValueError, match="other settings"):
+    # Another question, model, prompt or limits is another session.
+    with pytest.raises(ValueError, match=r"other settings \(question, question_sha256\); move the session aside"):
         concept_step.propose(tmp_path / "concepts", "q01", "Another question?", ScriptedModel([]), **RUN)
-    # Trying again continues the same chain with later step ids.
-    _, proposal, _ = propose(tmp_path, [reply([brief(1)])])
+    with pytest.raises(ValueError, match=r"other settings \(max_briefs\)"):
+        propose(tmp_path, [], max_briefs=3)
+    # Trying again continues the same chain with later step ids, also after a new commit and with another
+    # seed (the same seed tends to give the same invalid briefs); session.json lists both attempts.
+    retry = {**RUN, "git_commit": "d" * 40, "seed": 99}
+    _, proposal = concept_step.propose(tmp_path / "concepts", "q01", QUESTION, ScriptedModel([reply([brief(1)])]), **retry)
     assert [r["step_id"] for r in records(session)] == [1, 1, 2, 2, 3]
     assert proposal["rounds"] == 1 and verify(session.run.events, session.run.claims).ok
+    settings = session.load(concept_step.SESSION_FILE)
+    assert [(a["git_commit"], a["sampling"]["seed"], a["base_url"]) for a in settings["attempts"]] == [
+        ("c" * 40, 1234, RUN["base_url"]), ("d" * 40, 99, RUN["base_url"])]
+    assert (settings["git_commit"], settings["sampling"]) == ("d" * 40, {"temperature": 0.7, "seed": 99})
+    with pytest.raises(ValueError, match="already has a proposal; pick from it, or move the session aside"):
+        propose(tmp_path, [])
 
 
 def test_more_than_five_briefs_are_capped(tmp_path: Path) -> None:
@@ -198,6 +214,207 @@ def test_pick_on_the_terminal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, c
     out = capsys.readouterr().out
     assert "[1] Reading 1:" in out and "[2] Reading 2:" in out and "measure:    count Paper, group by first_author" in out
     assert json.loads(session.path("concept.json").read_text(encoding="utf-8"))["id"] == "c1"
+
+
+def test_pick_records_who_picked_and_can_be_replaced(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    session, _, _ = propose(tmp_path, [reply([brief(1), brief(2), brief(3)])])
+    assert cli(["concepts", "pick", str(session.root), "--choice", "1", "--picked-by", "provisional-first",
+                "--reason", "first by rule"]) == 0
+    assert "(by provisional-first)" in capsys.readouterr().out
+    first = records(session)[-1]
+    assert first["agent_id"] == "provisional-first"
+    assert (first["used"]["picked_by"], first["used"]["reason"]) == ("provisional-first", "first by rule")
+    picks_file = tmp_path / "concepts" / "picks.json"
+    assert json.loads(picks_file.read_text(encoding="utf-8")) == {"q01": {
+        "choice": 1, "title": "Reading 1: Most first-author papers at ACL 2025", "picked_by": "provisional-first",
+        "reason": "first by rule", "concept_sha256": file_sha256(session.path("concept.json"))}}
+    # Frozen unless replaced on purpose (the web app, before gold is built).
+    assert cli(["concepts", "pick", str(session.root), "--choice", "3"]) == 1
+    assert "frozen" in capsys.readouterr().out
+    old = file_sha256(session.path("concept.json"))
+    concept, sha = concept_step.pick(session.root, 3, picked_by="user", reason="counts papers, not authors",
+                                     replace=True, gold=tmp_path / "gold")
+    assert concept["id"] == "c3" and sha != old and file_sha256(session.path("concept.json")) == sha
+    last = records(session)[-1]
+    assert (last["agent_id"], last["used"]["replaces_concept_sha256"], last["step_id"]) == ("user", old, 3)
+    assert concept_step.picks(tmp_path / "concepts")["q01"] == {
+        "choice": 3, "title": concept["title"], "picked_by": "user", "reason": "counts papers, not authors",
+        "concept_sha256": sha}
+    assert json.loads(picks_file.read_text(encoding="utf-8"))["q01"]["choice"] == 3
+    assert concept_step.check_session(session.root) == []
+    with pytest.raises(ValueError, match="picked_by"):
+        concept_step.pick(session.root, 1, picked_by="someone", replace=True)
+
+
+def test_replace_is_refused_once_gold_exists(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                             capsys: pytest.CaptureFixture[str]) -> None:
+    session, _, _ = propose(tmp_path, [reply([brief(1), brief(2)])])
+    gold = tmp_path / "gold"
+    monkeypatch.setenv("GOLD", str(gold))
+    assert cli(["concepts", "pick", str(session.root), "--choice", "1"]) == 0
+    assert concept_step.gold_files("q01") == []
+    (gold / "q01").mkdir(parents=True)
+    (gold / "q01" / "screening.jsonl").write_text("{}\n", encoding="utf-8")
+    assert concept_step.gold_files("q01") == ["screening.jsonl"] == concept_step.gold_files("q01", gold)
+    capsys.readouterr()
+    assert cli(["concepts", "pick", str(session.root), "--choice", "2", "--replace"]) == 1
+    assert (f"the gold build for q01 has started on the current concept ({gold / 'q01'}: screening.jsonl)"
+            in capsys.readouterr().out)
+    assert json.loads(session.path("concept.json").read_text(encoding="utf-8"))["id"] == "c1"
+    # Forced, the pick says which gold files it went past (that gold must be moved aside or rebuilt).
+    assert cli(["concepts", "pick", str(session.root), "--choice", "2", "--replace", "--force",
+                "--reason", "gold will be rebuilt"]) == 0
+    last = records(session)[-1]
+    assert (last["used"]["choice"], last["used"]["forced_past_gold"]) == (2, ["screening.jsonl"])
+    assert concept_step.check_session(session.root) == []
+
+
+def test_concurrent_writers_keep_the_chains_and_picks_json(tmp_path: Path) -> None:
+    """The web app calls pick() from a thread pool: picks on one session, and picks.json rebuilds, never interleave."""
+    root = tmp_path / "concepts"
+    ids = [f"q{n:02d}" for n in range(1, 7)]
+    questions = [dict(QUESTIONS[0], id=qid) for qid in ids]
+    concept_step.propose_all(questions, root, ScriptedModel([reply([brief(1), brief(2), brief(3)])] * 6), **RUN)
+    concept_step.pick(root / "q01", 1)
+    jobs = [("q01", 2, True), ("q01", 3, True), ("q01", 1, True)] + [(qid, 1, False) for qid in ids[1:]]
+    barrier = threading.Barrier(len(jobs))
+
+    def one(job: tuple[str, int, bool]) -> str:
+        barrier.wait()
+        return concept_step.pick(root / job[0], job[1], replace=job[2], gold=tmp_path / "gold")[1]
+
+    with ThreadPoolExecutor(len(jobs)) as pool:
+        list(pool.map(one, jobs))
+    for qid in ids:
+        assert concept_step.check_session(root / qid) == [], qid
+    assert sum(r["subtype"] == "concept_pick" for r in records(concept_step.Session(root / "q01"))) == 4
+    assert json.loads((root / "picks.json").read_text(encoding="utf-8")) == concept_step.picks(root)
+    assert sorted(concept_step.picks(root)) == ids and not list(root.glob(".picks.json.*"))
+
+
+def test_a_busy_session_is_reported(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    session, _, _ = propose(tmp_path, [reply([brief(1)])])
+    monkeypatch.setattr(concept_step, "LOCK_WAIT_S", 0.2)
+    with FileLock(session.root / concept_step.LOCK_FILE):  # another writer
+        with pytest.raises(concept_step.ConceptStepError, match="is busy: pick waited 0.2 s for another writer"):
+            concept_step.pick(session.root, 1)
+    assert concept_step.pick(session.root, 1)[0]["id"] == "c1"
+
+
+QUESTIONS = [
+    {"id": "q01", "category": "corpus_wide", "question": QUESTION, "source": "own", "notes": ""},
+    {"id": "q02", "category": "ambiguous", "question": "Which paper in this corpus is the most influential?",
+     "source": "nlp48", "notes": ""},
+    {"id": "q03", "category": "ambiguous", "question": "Which benchmark is the most popular in the corpus?",
+     "source": "nlp53", "notes": ""},
+]
+
+
+def write_questions(tmp_path: Path, questions: list[dict[str, Any]] = QUESTIONS) -> Path:
+    path = tmp_path / "questions.json"
+    path.write_text(json.dumps({"schema_version": 1, "questions": questions}), encoding="utf-8")
+    return path
+
+
+def test_propose_all_skips_done_and_survives_a_failure(tmp_path: Path) -> None:
+    root = tmp_path / "concepts"
+    questions = concept_step.load_questions(write_questions(tmp_path))
+    lines: list[str] = []
+    model = ScriptedModel([reply([brief(1), brief(2)]), "no block.\nstill none.\nnone.\nnope.", "still no block",
+                           reply([brief(3)])])
+    results = concept_step.propose_all(questions, root, model, **RUN, log=lines.append)
+    assert [(r.id, r.state) for r in results] == [("q01", "proposed"), ("q02", "failed"), ("q03", "proposed")]
+    assert results[1].detail.startswith("ConceptStepError: no valid briefs") and results[1].problems
+    assert lines == [r.line() for r in results] and lines[0] == "q01 proposed 2 briefs in 1 round(s)"
+    # Each question had its own conversation: the question it was asked is its own.
+    assert [p[1]["content"] for p in model.prompts if len(p) == 2] == [f"Question: {q['question']}" for q in QUESTIONS]
+    # Running again retries only the failed question, in the same session (later step ids).
+    model = ScriptedModel([reply([brief(4)])])
+    results = concept_step.propose_all(questions, root, model, **RUN)
+    assert [(r.id, r.state) for r in results] == [("q01", "skipped"), ("q02", "proposed"), ("q03", "skipped")]
+    assert results[0].detail == "has a proposal (2 briefs)" and len(model.prompts) == 1
+    assert [r["step_id"] for r in records(concept_step.Session(root / "q02"))] == [1, 1, 2, 2, 3]
+    # A model or proxy error (a 400 here: never retried) is a failure of that question only.
+    model = ScriptedModel([litellm.exceptions.BadRequestError("proxy says no", "orch-model", "openai"),
+                           reply([brief(5)])])
+    questions5 = questions + [
+        {"id": "q04", "category": "corpus_wide", "question": "What is measured in the corpus?", "source": "own",
+         "notes": ""},
+        {"id": "q05", "category": "ambiguous", "question": "Which method is best in the corpus?", "source": "own",
+         "notes": ""}]
+    results = concept_step.propose_all(questions5, root, model, **RUN)
+    assert [r.state for r in results] == ["skipped", "skipped", "skipped", "failed", "proposed"]
+    assert "BadRequestError" in results[3].detail and "proxy says no" in results[3].detail
+
+
+def test_pick_all_status_and_stale_questions(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    root = tmp_path / "concepts"
+    path = write_questions(tmp_path)
+    questions = concept_step.load_questions(path)
+    concept_step.propose_all(questions[:2], root, ScriptedModel([reply([brief(1), brief(2)]), reply([brief(7)])]), **RUN)
+    assert [r.line() for r in concept_step.status(questions, root)] == [
+        "q01 proposed 2 briefs, none picked", "q02 proposed 1 briefs, none picked", "q03 none"]
+    assert cli(["concepts", "pick", str(root / "q02"), "--choice", "1", "--reason", "mine"]) == 0
+    capsys.readouterr()
+    assert cli(["concepts", "pick-all", str(path), "--root", str(root)]) == 1  # q03 has no proposal
+    out = capsys.readouterr().out
+    assert "q01 picked   [1] Reading 1: Most first-author papers at ACL 2025 sha256=" in out
+    assert "q02 skipped  already picked [1] by user" in out and "q03 missing" in out
+    assert "FAIL 1 missing, 1 picked, 1 skipped (needs action: q03)" in out
+    pick = records(concept_step.Session(root / "q01"))[-1]
+    assert pick["agent_id"] == "provisional-first" and pick["used"]["reason"] == concept_step.RULE_REASON["first"]
+    picks = json.loads((root / "picks.json").read_text(encoding="utf-8"))
+    assert {k: (v["picked_by"], v["reason"]) for k, v in picks.items()} == {
+        "q01": ("provisional-first", concept_step.RULE_REASON["first"]), "q02": ("user", "mine")}
+    assert cli(["concepts", "status", str(path), "--root", str(root)]) == 1
+    out = capsys.readouterr().out
+    assert "q01 picked   [1/2] Reading 1: Most first-author papers at ACL 2025 (by provisional-first) sha256=" in out
+    assert "q03 none" in out
+    # A question whose text changed is stale: its concept no longer belongs to it.
+    changed = [dict(QUESTIONS[0], question="Which authors publish most often at EMNLP 2025?"), *QUESTIONS[1:2]]
+    result = concept_step.status(changed, root)
+    assert result[0].state == "stale" and "move the session" in result[0].detail
+    assert concept_step.propose_all(changed, root, ScriptedModel([]), **RUN)[0].state == "stale"
+    assert concept_step.pick_all(changed, root)[0].state == "stale"
+    # Everything picked and checked: status passes.
+    assert cli(["concepts", "status", str(write_questions(tmp_path, QUESTIONS[:2])), "--root", str(root)]) == 0
+    assert "PASS 2 picked" in capsys.readouterr().out
+
+
+def test_cli_propose_all(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    import agent.loop
+
+    replies = [reply([brief(1)]), "nothing.\nnothing.\nnothing.\nnothing.", "nothing", reply([brief(2)])]
+    made: list[dict[str, Any]] = []
+
+    def model(**kwargs: Any) -> ScriptedModel:
+        made.append(kwargs)
+        return ScriptedModel(replies)
+    monkeypatch.setattr(agent.loop, "OrchestratorModel", model)
+    monkeypatch.setattr("agent.rundir.git_head", lambda repo: "c" * 40)  # a worktree's .git may not resolve in WSL
+    monkeypatch.setenv("CONCEPTS", str(tmp_path / "concepts"))
+    monkeypatch.setenv("LITELLM_BASE_URL", "http://proxy.invalid/v1")
+    args = ["concepts", "propose-all", str(write_questions(tmp_path)), "--temperature", "0.7", "--seed", "1234"]
+    assert cli(args) == 1
+    out = capsys.readouterr().out
+    assert made == [{"base_url": "http://proxy.invalid/v1", "temperature": 0.7, "seed": 1234}]
+    assert "q02 failed   ConceptStepError" in out and "q02: no json block" in out
+    assert "FAIL 1 failed, 2 proposed (needs action: q02)" in out
+    assert concept_step.Session(tmp_path / "concepts" / "q01").load("session.json")["base_url"] == "http://proxy.invalid/v1"
+    # A fix committed in between and another seed: q02's session is continued, not refused (the Slurm loop).
+    replies[:] = [reply([brief(3)])]
+    monkeypatch.setattr("agent.rundir.git_head", lambda repo: "d" * 40)
+    assert cli([*args[:-1], "99"]) == 0
+    assert "PASS 1 proposed, 2 skipped" in capsys.readouterr().out
+    attempts = concept_step.Session(tmp_path / "concepts" / "q02").load("session.json")["attempts"]
+    assert [(a["git_commit"], a["sampling"]["seed"]) for a in attempts] == [("c" * 40, 1234), ("d" * 40, 99)]
+
+
+def test_questions_file_problems(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="duplicate question ids"):
+        concept_step.load_questions(write_questions(tmp_path, [QUESTIONS[0], QUESTIONS[0]]))
+    with pytest.raises(ValueError, match="category"):
+        concept_step.load_questions(write_questions(tmp_path, [dict(QUESTIONS[0], category="hard")]))
 
 
 def test_a_broker_without_corpus_rejects_claims(tmp_path: Path) -> None:

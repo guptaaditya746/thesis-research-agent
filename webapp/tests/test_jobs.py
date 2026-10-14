@@ -1,0 +1,364 @@
+"""Jobs: the manager with fake commands, and the endpoints that start them with a fake interpreter."""
+from __future__ import annotations
+
+import asyncio
+import json
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+import pytest
+from fastapi.testclient import TestClient
+
+from webapp.app import create_app
+from webapp.jobs import JobManager, step
+from webapp.models import Job
+from webapp.settings import Settings
+
+from .test_stream import events
+from .world import World
+
+pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="the fake interpreter is a #! script (POSIX)")
+
+FAKE = '''#!{python}
+"""Stands in for `python -m <module> ...`: logs its argv and writes what the real command would."""
+import json, os, sys, time
+from pathlib import Path
+
+args = sys.argv[1:]
+with open(os.environ["FAKE_LOG"], "a") as fh:
+    fh.write(json.dumps(args) + "\\n")
+print("fake", *args[1:4], flush=True)
+if args[1] == "gold.cli" and os.environ.get("FAKE_SLEEP"):
+    time.sleep(float(os.environ["FAKE_SLEEP"]))
+if args[1:3] == ["agent.cli", "run"]:
+    run = Path(args[args.index("--runs-root") + 1]) / args[args.index("--run-id") + 1]
+    run.mkdir(parents=True)
+    (run / "config.json").write_text("{{}}")
+    (run / "answer.json").write_text("{{}}")
+if args[1:3] == ["agent.cli", "attach"]:
+    (Path(args[3]) / "attach.json").write_text("{{}}")
+if args[1:3] == ["agent.cli", "graph"]:
+    (Path(args[3]) / "graph.json").write_text("{{}}")
+gold = Path(os.environ["GOLD"]) / args[-1]
+outputs = {{"build": "doc.json", "triage": "triage.jsonl", "pool": "pool.jsonl", "draft": "key.draft.json"}}
+if args[1] == "gold.cli" and args[2] in outputs:
+    gold.mkdir(parents=True, exist_ok=True)
+    (gold / outputs[args[2]]).write_text('{{"rows": []}}' if args[2] == "draft" else "{{}}")
+if args[1:3] == ["scoring.cli", "run"] and "--key" not in args:
+    sys.exit(2)  # argparse: --key is required (scoring/cli.py)
+sys.exit(0)
+'''
+
+
+@pytest.fixture
+def fake_python(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    path = tmp_path / "fake-python"
+    path.write_text(FAKE.format(python=sys.executable), encoding="utf-8")
+    path.chmod(0o755)
+    monkeypatch.setenv("FAKE_LOG", str(tmp_path / "fake.log"))
+    return path
+
+
+def calls(tmp_path: Path) -> list[list[str]]:
+    log = tmp_path / "fake.log"
+    return [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
+
+
+def wait(client: TestClient, job_id: str, timeout: float = 30) -> dict[str, Any]:
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        job = client.get(f"/api/jobs/{job_id}").json()
+        if job["state"] not in ("queued", "running"):
+            return job
+        time.sleep(0.05)
+    raise AssertionError(f"job {job_id} did not finish")
+
+
+# --- the manager ------------------------------------------------------------------------------------------
+
+def py(code: str, *args: str) -> list[str]:
+    return [sys.executable, "-c", code, *args]
+
+
+async def finished(manager: JobManager, job: Job, timeout: float = 20) -> Job:
+    end = time.monotonic() + timeout
+    while job.state in ("queued", "running"):
+        assert time.monotonic() < end, "job did not finish"
+        await asyncio.sleep(0.02)
+    return job
+
+
+def test_steps_run_in_order_with_needs_and_optional_failures(tmp_path: Path) -> None:
+    settings = Settings(runs=tmp_path / "runs", WEBAPP_POLL_S=0.02)
+
+    async def main() -> Job:
+        manager = JobManager(settings)
+        job = manager.submit("demo", {"n": 1}, [
+            step("hello", py("print('hello from step 1')")),
+            step("optional", py("import sys; print('broken'); sys.exit(3)"), required=False),
+            step("needs", py("print('never')"), needs=[tmp_path, tmp_path / "missing.json"]),
+            step("last", py("import sys; print('last', sys.argv[1])", "arg with spaces"), needs=tmp_path),
+        ])
+        assert job.state == "queued" and (settings.jobs_dir / f"{job.id}.json").is_file()
+        return await finished(manager, job)
+
+    job = asyncio.run(main())
+    assert (job.state, job.exit_code, job.error) == ("done", 0, None)
+    assert job.warnings == ["optional failed (exit 3); see the log"]  # done, but not silently
+    assert [(s.name, s.state, s.exit_code) for s in job.steps] == [
+        ("hello", "done", 0), ("optional", "failed", 3), ("needs", "skipped", None), ("last", "done", 0)]
+    log = (settings.jobs_dir / f"{job.id}.log").read_text(encoding="utf-8")
+    assert "hello from step 1\n" in log and "# optional exit 3" in log and "never" not in log
+    assert f"# skipped needs: {tmp_path / 'missing.json'} does not exist" in log
+    assert "last arg with spaces" in log and "'arg with spaces'" in log  # the command line, shell-quoted
+    saved = Job.model_validate_json((settings.jobs_dir / f"{job.id}.json").read_text(encoding="utf-8"))
+    assert saved == job
+
+
+def test_a_failed_required_step_fails_the_job(tmp_path: Path) -> None:
+    settings = Settings(runs=tmp_path / "runs")
+
+    async def main() -> Job:
+        manager = JobManager(settings)
+        return await finished(manager, manager.submit("demo", {}, [step("bad", py("import sys; sys.exit(5)")),
+                                                                    step("next", py("pass"))]))
+
+    job = asyncio.run(main())
+    assert (job.state, job.exit_code) == ("failed", 5)
+    assert [s.state for s in job.steps] == ["failed", "done"]  # later steps still run
+
+
+def test_one_job_of_a_kind_at_a_time(tmp_path: Path) -> None:
+    settings = Settings(runs=tmp_path / "runs")
+    trace = tmp_path / "trace.txt"
+    code = "import sys, time; f = open(sys.argv[1], 'a'); f.write('start\\n'); f.flush(); time.sleep(0.3); f.write('end\\n')"
+
+    async def main() -> list[Job]:
+        manager = JobManager(settings)
+        jobs = [manager.submit("run", {}, [step("s", py(code, str(trace)))]) for _ in range(3)]
+        assert [j.state for j in jobs] == ["queued"] * 3
+        for job in jobs:
+            await finished(manager, job)
+        return jobs
+
+    jobs = asyncio.run(main())
+    assert {j.state for j in jobs} == {"done"}
+    assert trace.read_text().split() == ["start", "end"] * 3  # never interleaved
+    assert jobs[0].ended_at <= jobs[1].started_at and jobs[1].ended_at <= jobs[2].started_at
+
+
+def test_cancel(tmp_path: Path) -> None:
+    settings = Settings(runs=tmp_path / "runs")
+
+    async def main() -> tuple[Job, Job]:
+        manager = JobManager(settings)
+        running = manager.submit("run", {}, [step("sleep", py("import time; time.sleep(30)")),
+                                             step("after", py("print('after')"))])
+        queued = manager.submit("run", {}, [step("never", py("print('never')"))])
+        while running.steps[0].state != "running":
+            await asyncio.sleep(0.02)
+        await asyncio.sleep(0.2)
+        manager.cancel(queued.id)
+        assert queued.state == "failed" and queued.error == "cancelled"  # at once
+        t0 = time.monotonic()
+        manager.cancel(running.id)
+        await finished(manager, running)
+        assert time.monotonic() - t0 < 10
+        return running, queued
+
+    running, queued = asyncio.run(main())
+    assert (running.state, running.error) == ("failed", "cancelled")
+    assert [s.state for s in running.steps] == ["failed", "skipped"] and running.steps[0].exit_code != 0
+    assert [s.state for s in queued.steps] == ["skipped"] and queued.started_at is None
+
+
+def test_jobs_survive_a_restart(tmp_path: Path) -> None:
+    settings = Settings(runs=tmp_path / "runs")
+
+    async def main() -> Job:
+        manager = JobManager(settings)
+        return await finished(manager, manager.submit("demo", {"a": 1}, [step("ok", py("pass"))]))
+
+    done = asyncio.run(main())
+    lost = done.model_copy(deep=True, update={"id": "20260101T000000-run-abcdef", "state": "running", "ended_at": None})
+    lost.steps[0].state = "running"
+    (settings.jobs_dir / f"{lost.id}.json").write_text(lost.model_dump_json(), encoding="utf-8")
+    (settings.jobs_dir / "garbage.json").write_text("{not json", encoding="utf-8")
+    older = json.loads(done.model_dump_json()) | {"id": "20250101T000000-run-000000"}  # an earlier server's file:
+    older["steps"][0]["needs"] = "/some/file"  # one path or null, no warnings
+    older.pop("warnings")
+    (settings.jobs_dir / f"{older['id']}.json").write_text(json.dumps(older), encoding="utf-8")
+    manager = JobManager(settings)
+    manager.load()
+    assert manager.get(done.id) == done
+    again = manager.get(lost.id)
+    assert again.state == "failed" and "server stopped" in again.error and again.steps[0].state == "failed"
+    assert json.loads((settings.jobs_dir / f"{lost.id}.json").read_text())["state"] == "failed"
+    assert manager.get(older["id"]).steps[0].needs == ["/some/file"]
+
+
+def test_run_steps_tell_which_step_works_on_a_run(tmp_path: Path) -> None:
+    settings = Settings(runs=tmp_path / "runs")
+
+    async def main() -> tuple[dict | None, dict | None]:
+        manager = JobManager(settings)
+        job = manager.submit("run", {}, [step("run", py("import time; time.sleep(0.3)")), step("verify", py("pass"))],
+                             run_id="web~r1")
+        while job.steps[0].state != "running":
+            await asyncio.sleep(0.02)
+        during = manager.run_steps("web~r1")
+        await finished(manager, job)
+        return during, manager.run_steps("web~r1")
+
+    during, after = asyncio.run(main())
+    assert during == {"run": "running", "verify": "pending"} and after is None
+
+
+# --- the endpoints ----------------------------------------------------------------------------------------
+
+def test_start_a_run_with_its_post_steps(fresh: World, fake_python: Path, tmp_path: Path) -> None:
+    key = fresh.root / "gold-data" / "q01" / "key.draft.json"
+    key.parent.mkdir(parents=True)
+    key.write_text(json.dumps({"qid": "q01", "rows": []}), encoding="utf-8")
+    settings = fresh.with_settings(WEBAPP_PYTHON=str(fake_python))
+    with TestClient(create_app(settings)) as c:
+        response = c.post("/api/runs", json={"qid": "q01", "condition": "claim_off", "seed": 7, "temperature": 0.5,
+                                             "steps": 10, "sandbox": "unsandboxed"})
+        assert response.status_code == 202, response.text
+        job = response.json()
+        assert job["kind"] == "run" and job["run_id"].startswith("web~q01-claim_off-s7-web") and job["qid"] == "q01"
+        job = wait(c, job["id"])
+        with c.stream("GET", f"/api/jobs/{job['id']}/log") as stream:
+            log = events(stream)
+        listed = c.get("/api/jobs").json()
+        [summary] = [r for r in c.get("/api/runs").json() if r["run_id"] == job["run_id"]]  # the fake's run
+    assert (job["state"], job["exit_code"], job["warnings"]) == ("done", 0, []), job
+    assert [(s["name"], s["state"]) for s in job["steps"]] == [
+        ("run", "done"), ("attach", "done"), ("verify", "done"), ("pairs", "done"), ("graph", "done"),
+        ("export-prov", "done"), ("score", "done")]
+    run_dir = fresh.runs / "web" / job["run_id"].split("~")[1]
+    assert (summary["run_id"], summary["batch"], summary["live"]) == (job["run_id"], "web", False)
+    argv = calls(tmp_path)
+    assert [a[1:3] for a in argv] == [["agent.cli", "run"], ["agent.cli", "attach"], ["agent.cli", "verify"],
+                                      ["agent.cli", "pairs"], ["agent.cli", "graph"], ["agent.cli", "export-prov"],
+                                      ["scoring.cli", "run"]]
+    run = argv[0]
+    for flag, value in (("--concept", str(fresh.root / "concepts" / "q01" / "concept.json")),
+                        ("--run-id", run_dir.name), ("--runs-root", str(fresh.runs / "web")),
+                        ("--corpus", str(fresh.corpus)), ("--condition", "claim_off"),
+                        ("--temperature", "0.5"), ("--seed", "7"), ("--steps", "10"), ("--sandbox", "unsandboxed")):
+        assert run[run.index(flag) + 1] == value, flag
+    assert "--tokens" not in run and argv[1][3] == str(run_dir) and argv[4][-1] == str(fresh.manifest)
+    score = argv[-1]
+    assert score[3] == str(run_dir) and score[score.index("--key") + 1] == str(key)  # the draft key: no key.json
+    assert (score[score.index("--gold") + 1], score[score.index("--corpus") + 1]) == (str(fresh.root / "gold-data"),
+                                                                                    str(fresh.corpus))
+    lines = [e["data"] for e in log if e.get("event") == "line"]
+    assert lines[0].startswith("$ ") and "agent.cli run" in lines[0]
+    assert any(line.startswith("fake agent.cli run") for line in lines)
+    assert json.loads(log[-1]["data"])["state"] == "done"
+    assert [j["id"] for j in listed] == [job["id"]]
+    with TestClient(create_app(settings)) as c:  # a restarted server still lists it
+        assert c.get(f"/api/jobs/{job['id']}").json()["state"] == "done"
+
+
+def test_no_score_without_a_key_or_the_attach_step(fresh: World, fake_python: Path, tmp_path: Path) -> None:
+    with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python)))) as c:
+        no_key = wait(c, c.post("/api/runs", json={"qid": "q01", "condition": "claim_on"}).json()["id"])
+        key = fresh.root / "gold-data" / "q01" / "key.json"
+        key.parent.mkdir(parents=True)
+        key.write_text("{}", encoding="utf-8")
+        no_attach = wait(c, c.post("/api/runs", json={"qid": "q01", "condition": "claim_off", "attach": False}).json()["id"])
+    for job in (no_key, no_attach):
+        assert job["steps"][-1]["name"] == "score" and job["steps"][-1]["state"] == "skipped", job
+    assert no_key["steps"][-1]["needs"][1] == str(key)  # key.json, which did not exist yet
+    assert no_attach["steps"][-1]["needs"][-1].endswith("attach.json")
+    assert "scoring.cli" not in {a[1] for a in calls(tmp_path)}
+
+
+def test_a_claim_on_run_has_no_attach_step(fresh: World, fake_python: Path) -> None:
+    with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python)))) as c:
+        job = wait(c, c.post("/api/runs", json={"qid": "q01", "condition": "claim_on", "seed": 1}).json()["id"])
+    assert "attach" not in [s["name"] for s in job["steps"]]
+    assert job["steps"][0]["argv"][job["steps"][0]["argv"].index("--sandbox") + 1] == "landlock"
+
+
+def test_two_requests_in_one_second_make_two_runs(fresh: World, fake_python: Path) -> None:
+    with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python)))) as c:
+        jobs = [c.post("/api/runs", json={"qid": "q01", "seed": 5}).json() for _ in range(2)]
+        done = [wait(c, j["id"]) for j in jobs]
+    assert jobs[0]["run_id"] != jobs[1]["run_id"]
+    assert [j["steps"][0]["state"] for j in done] == ["done", "done"]
+
+
+def test_no_run_next_to_a_live_batch_unless_forced(fresh: World, fake_python: Path) -> None:
+    """A run the batch runner is writing on the cluster shares the orchestrator with any new one."""
+    from agent.rundir import RunDir
+    from agent.tests.conftest import fixture
+    from agent.tests.test_rundir import SETTINGS
+
+    RunDir.create(fresh.runs / "m4-72", "q01-claim_on-r1-a1", fixture("concept_graph.json"),
+                  corpus_manifest=fresh.manifest, **SETTINGS).events.write_text("", encoding="utf-8")
+    with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python), WEBAPP_LIVE_WINDOW_S=600))) as c:
+        refused = c.post("/api/runs", json={"qid": "q01"})
+        assert refused.status_code == 409 and "m4-72~q01-claim_on-r1-a1" in refused.json()["detail"]
+        forced = c.post("/api/runs", json={"qid": "q01", "force": True})
+        assert forced.status_code == 202
+        wait(c, forced.json()["id"])
+
+
+def test_run_requests_that_cannot_start(fresh: World, fake_python: Path) -> None:
+    with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python)))) as c:
+        assert c.post("/api/runs", json={"condition": "claim_on"}).status_code == 400  # no qid, no concept
+        assert c.post("/api/runs", json={"qid": "q01", "concept_path": "x.json"}).status_code == 400
+        assert c.post("/api/runs", json={"qid": "q02"}).status_code == 409  # nothing picked for q02
+        assert c.post("/api/runs", json={"qid": "q01", "condition": "claim_maybe"}).status_code == 422
+        other = c.post("/api/runs", json={"concept_path": "research-r1/concept.json", "condition": "claim_on"})
+        assert other.status_code == 202 and other.json()["run_id"].startswith("web~research-r1-claim_on")
+        assert other.json()["qid"] == "q01"  # research-r1's concept is q01's pick: the run is scored for q01
+        wait(c, other.json()["id"])
+    with TestClient(create_app(fresh.with_settings(corpus=None, WEBAPP_PYTHON=str(fake_python)))) as c:
+        assert c.post("/api/runs", json={"qid": "q01"}).status_code == 409  # no corpus
+
+
+def test_propose_and_gold_jobs(fresh: World, fake_python: Path, tmp_path: Path) -> None:
+    for name in ("key.draft.json", "doc.json"):
+        (fresh.root / "gold-data" / "q02" / name).unlink()
+    with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python)))) as c:
+        assert c.post("/api/questions/q01/concepts/propose", json={}).status_code == 409  # already proposed
+        assert c.post("/api/questions/q99/concepts/propose", json={}).status_code == 404
+        job = c.post("/api/questions/q02/concepts/propose", json={"temperature": 0.5, "seed": 3}).json()
+        assert (job["kind"], job["qid"], job["args"]) == ("concepts", "q02", {"qid": "q02", "temperature": 0.5, "seed": 3})
+        assert wait(c, job["id"])["state"] == "done"
+        gold = wait(c, c.post("/api/gold/q02/build", json={}).json()["id"])
+        q02 = c.get("/api/questions").json()[1]
+    assert gold["state"] == "done" and [s["state"] for s in gold["steps"]] == ["done"] * 4
+    assert q02["gold"]["status"] == "draft"  # the job ends at the draft key, not at `building`
+    propose, *steps = calls(tmp_path)
+    assert propose[1:5] == ["agent.cli", "concepts", "propose", "q02"]
+    assert propose[propose.index("--question") + 1].startswith("What kinds of attacks")
+    assert propose[propose.index("--root") + 1] == str(fresh.root / "concepts")
+    assert (propose[propose.index("--temperature") + 1], propose[propose.index("--seed") + 1]) == ("0.5", "3")
+    assert [s[1:] for s in steps] == [["gold.cli", c, "q02"] for c in ("build", "triage", "pool", "draft")]
+
+
+def test_a_running_gold_build_shows_and_can_be_cancelled(fresh: World, fake_python: Path,
+                                                         monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FAKE_SLEEP", "30")
+    (fresh.root / "gold-data" / "q02" / "key.draft.json").unlink()
+    (fresh.root / "gold-data" / "q02" / "doc.json").unlink()
+    with TestClient(create_app(fresh.with_settings(WEBAPP_PYTHON=str(fake_python)))) as c:
+        job = c.post("/api/gold/q02/build", json={}).json()
+        assert c.post("/api/gold/q02/build", json={}).status_code == 409  # one build per question at a time
+        end = time.monotonic() + 10
+        while c.get(f"/api/jobs/{job['id']}").json()["state"] != "running" and time.monotonic() < end:
+            time.sleep(0.05)
+        q02 = c.get("/api/questions").json()[1]
+        assert q02["gold"]["status"] == "building"
+        assert c.post(f"/api/jobs/{job['id']}/cancel", json={}).json()["id"] == job["id"]
+        job = wait(c, job["id"])
+        assert c.post("/api/jobs/nope/cancel", json={}).status_code == 404
+        assert c.get("/api/jobs/nope/log").status_code == 404
+    assert (job["state"], job["error"]) == ("failed", "cancelled")

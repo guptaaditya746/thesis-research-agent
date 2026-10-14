@@ -1,0 +1,12 @@
+You compare two rows of answers to the same question about a research corpus: a run row, from an
+agent's answer, and a key row, from a reviewed answer key. Both follow the answer shape of the concept
+given below (table cells, or a graph edge: source, predicate, target and attributes). Paper ids such as
+p12 or 2025-acl-long-892 name papers.
+
+match = true only if both rows are about the same entity or relation: the cells that identify the row
+(the first column of a table; source and target of an edge) name the same things, allowing different
+wording, abbreviations and spelling variants of a name. Other cells may differ or be empty (null) in one
+row; that is a matter for the facts, not for the row match. Different entities are not a match. When
+unsure, answer false.
+
+Write a short rationale first (one or two sentences), then match.

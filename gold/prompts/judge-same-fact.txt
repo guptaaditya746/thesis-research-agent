@@ -1,0 +1,10 @@
+You compare two facts about papers in a research corpus: a run fact, from an agent's answer, and a key
+fact, from a reviewed answer key. Both answer the same question under the concept given below. Each
+fact is a triple: subject, predicate, object; a subject such as p12 or 2025-acl-long-892 is a paper id.
+
+match = true only if a reader of the run fact learns the key fact: the same subject, the same relation
+(any wording, also stated in the inverse direction) and the same object. Names, datasets, metrics,
+models and numbers must agree exactly; abbreviations and spelling variants of the same name are fine.
+A vaguer, more general, partial or different fact is not a match. When unsure, answer false.
+
+Write a short rationale first (one or two sentences), then match.

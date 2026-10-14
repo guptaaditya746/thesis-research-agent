@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "e2e-smoke",
+  "notes": "First Slurm test of the whole path (scripts/e2e-batch.sh): one corpus-wide question (q01) and one ambiguous one (q10), claim_on only (claim_off and the attach step are dropped from the design, 14 Oct), two repeats = 4 runs. No budget here: the runs take the `agent run` defaults, so they test what the main runs will use. Concept paths are the frozen concept.json of each concept session ($CONCEPTS = concepts).",
+  "runs_root": "runs/e2e-smoke",
+  "questions": [
+    {"id": "q01", "concept": "concepts/q01/concept.json"},
+    {"id": "q10", "concept": "concepts/q10/concept.json"}
+  ],
+  "conditions": ["claim_on"],
+  "repeats": 2,
+  "temperature": 0.7,
+  "seed_base": 1000,
+  "sandbox": "landlock",
+  "base_url": "http://127.0.0.1:4000/v1",
+  "broker": "auto",
+  "max_attempts": 2
+}

@@ -1,0 +1,45 @@
+{
+  "corpus_id": "rag-demo-906ab0bc",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "1",
+    "code_sha256": "acb0b213e69381f9d96972e73b4f521dba0786c7c3c6db4e37f90d12459a9fb7"
+  },
+  "renderer": "template",
+  "level": "contradictory",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "contradictory"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "contradictory"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "contradictory"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "contradictory"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "contradictory"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "contradictory"
+    }
+  ],
+  "models": null
+}

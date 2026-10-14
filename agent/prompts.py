@@ -1,9 +1,29 @@
 """Versioned prompts (row 1.10): agent/prompts/system-<version>[-baseline].txt and task-<version>.txt.
 
-The system prompt for `claim_on` is system-v1.txt; the baseline (`claim_off`, row 2.4) is
-system-v1-baseline.txt, which is v1 minus its claim block and nothing else: system-v1.diff is
-the checked-in diff and test_prompts checks that it still holds. Files are hashed as stored (LF,
-.gitattributes); `{{steps}}` and `{{tokens}}` are filled in by mini-swe-agent's template step.
+The system prompt for `claim_on` is system-<version>.txt; the baseline (`claim_off`, row 2.4) is
+system-<version>-baseline.txt, which is that prompt minus its claim block and nothing else:
+system-<version>.diff is the checked-in diff and test_prompts checks that it still holds. Files
+are hashed as stored (LF, .gitattributes); `{{steps}}`, `{{tokens}}` and the other template
+values (agent/loop.py, ResearchAgent.extra_template_vars) are filled in by mini-swe-agent's
+template step.
+
+Versions:
+- v1 (1.10): the M1-real runs (tests/M1-real); kept byte for byte so they can be reproduced, and
+  run with the loop settings of that time (loop.LEGACY_V1: no masking, notices, draft or guided
+  conclusion, the old wording) and, unless a budget is given, their budget (loop.budget_for:
+  150 steps / 400,000 tokens): `agent run --prompt-version v1` is the M1-real run.
+- v2 (1.13, 1.15): the corpus's real file names (`p12.md` and ACL Anthology ids such as
+  `2025-acl-long-892.md`; the manifest has no titles), claim a fact in the command that finds it,
+  keep ./answer-draft.json up to date, finish research by about 75% of the budget, what the
+  budget notices and output masking mean, and a conclude reply that is the bare answer object.
+The attach step (agent/attach.py) has its own attach-<version>.txt, and uses the run's version:
+attach-v2 has v2's corpus paragraph and claim rules verbatim (test_attach checks both versions).
+
+Subagents (row 2.12, agent/spawn.py): with `agent run --spawn on` the system prompt gets the
+spawn block spawn-<version>.txt (spawn-<version>-baseline.txt for claim_off: the block minus
+its claim lines), inserted before the draft-answer paragraph; v2 has one, v1 none (the M1-real
+runs had no spawn). A subagent has its own prompts sub-<version>.txt (-baseline.txt without
+the claim block, as for the main prompt) and sub-task-<version>.txt (load_sub).
 """
 from __future__ import annotations
 
@@ -38,11 +58,44 @@ class Prompt:
         return self.files[self.system_name]
 
 
-def load(version: str, condition: str) -> Prompt:
+SPAWN_BEFORE = "Draft answer:"  # the spawn block goes before this paragraph of the system prompt
+
+
+def _for(condition: str, name: str) -> str:
+    """`name`.txt for claim_on, `name`-baseline.txt for claim_off."""
     if condition not in CONDITIONS:
         raise ValueError(f"condition must be one of {CONDITIONS}")
-    system_name = f"system-{version}.txt" if condition == "claim_on" else f"system-{version}-baseline.txt"
+    return f"{name}.txt" if condition == "claim_on" else f"{name}-baseline.txt"
+
+
+def load(version: str, condition: str, spawn: bool = False) -> Prompt:
+    """The run's prompts; with `spawn` the system prompt has the spawn block (row 2.12), hashed in `files` too."""
+    system_name = _for(condition, f"system-{version}")
     task_name = f"task-{version}.txt"
+    system, system_sha = _read(system_name)
+    task, task_sha = _read(task_name)
+    files = {system_name: system_sha, task_name: task_sha}
+    if spawn:
+        block_name = _for(condition, f"spawn-{version}")
+        if not (PROMPT_DIR / block_name).is_file():
+            raise ValueError(f"prompt {version} has no spawn block ({block_name}); spawn needs prompt v2 or later")
+        block, files[block_name] = _read(block_name)
+        system = with_block(system, block)
+    return Prompt(version, system, task, system_name, files)
+
+
+def with_block(system: str, block: str) -> str:
+    """`block` (ending in a blank line) inserted before the paragraph that starts with SPAWN_BEFORE."""
+    at = system.find("\n" + SPAWN_BEFORE)
+    if at < 0:
+        raise ValueError(f"the system prompt has no {SPAWN_BEFORE!r} paragraph to put the spawn block before")
+    return system[:at + 1] + block.rstrip("\n") + "\n\n" + system[at + 1:]
+
+
+def load_sub(version: str, condition: str) -> Prompt:
+    """A subagent's prompts (row 2.12): sub-<version>[-baseline].txt and sub-task-<version>.txt."""
+    system_name = _for(condition, f"sub-{version}")
+    task_name = f"sub-task-{version}.txt"
     system, system_sha = _read(system_name)
     task, task_sha = _read(task_name)
     return Prompt(version, system, task, system_name, {system_name: system_sha, task_name: task_sha})
