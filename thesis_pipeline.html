@@ -436,7 +436,7 @@ const STAGE_DETAILS = {
     ],
     io: ["document + field schema", "typed evidence items with spans"],
     ours: "One interface for regex, model, single-call LLM and agentic LLM extractors, with the quote check built in.",
-    code: ["reusable: agent/broker.py and agent/anchor.py (quote check), gold/chunks.py (section-aware chunking)"],
+    code: ["contract: docs/extractor-contract.md (identity, task, result, spans, coverage, provenance event, cache, replay and re-execution)", "reusable: agent/broker.py and agent/anchor.py (quote check), gold/chunks.py (section-aware chunking)"],
   },
   x_cond: {
     what: "Finds the experimental setup: which models were compared, under which conditions (with or without retrieval), on which dataset.",
@@ -481,7 +481,7 @@ const STAGE_DETAILS = {
     ],
     io: ["one paper + the protocol's evidence types", "typed evidence items with quote-checked spans"],
     ours: "An agent used where it is measurable: one swappable extractor, scored against ground truth.",
-    code: ["reusable: agent/loop.py (agent loop), agent/sandbox and Landlock setup, agent/broker.py and agent/anchor.py (claim with quote check), agent/answer.py (schema-constrained final reply)"],
+    code: ["reusable: agent/loop.py (agent loop), agent/sandbox.py (Landlock sandbox), agent/broker.py and agent/anchor.py (claim with quote check), agent/answer.py (schema-constrained final reply)"],
     differs: ["Not discussed with the supervisor yet: his extractor list (\"regular expressions, specialized models, LLMs, or other methods\") allows it, but he did not mention agents."],
   },
 
