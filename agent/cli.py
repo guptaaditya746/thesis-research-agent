@@ -169,6 +169,60 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def _claim_text(verdict: dict | None) -> str:
+    """A claim verdict of reexec.json as one phrase: 'accepted claim-000002', 'rejected not_found', 'not sent'."""
+    return "not sent" if verdict is None else f"{verdict['status']} {verdict['claim_id'] or verdict['reason']}"
+
+
+def cmd_reexec(args: argparse.Namespace) -> int:
+    from .reexec import ReexecError, parse_steps, reexec_run
+
+    stop_on_sigterm()
+    corpus, manifest = _corpus(args)
+    try:
+        steps = parse_steps(args.steps) if args.steps else None
+        report = reexec_run(args.run_dir, corpus, manifest, steps=steps, sandbox_mode=args.sandbox,
+                            agent_root=args.agent_root, extra_path=tuple(args.path_extra), keep_scratch=args.keep_scratch)
+    except (ReexecError, ValueError, OSError) as exc:
+        print(f"FAIL {exc}")
+        return 2
+    for d in report["differing"]:
+        print(f"DIFF step {d['step']} ({d['agent_id']}) line {d['first_diff_line']}: recorded {d['recorded_line']!r}, "
+              f"now {d['now_line']!r} -> {d['output_file']}")
+    for d in report["differing_claims"]:
+        print(f"DIFF claim {d['n']} of step {d['step']} ({d['agent_id']}): recorded {_claim_text(d['recorded'])}, "
+              f"now {_claim_text(d['now'])}")
+    if report["toolchain_differs"]:
+        t = report["toolchain"]["agent_root_manifest_sha256"]
+        print(f"WARN toolchain differs: agent root manifest sha256 {t['now']} now, {t['run']} in the run; a differing "
+              "output may come from it")
+    for error in report["errors"]:
+        print(f"FAIL {error}")
+    c = report["claims"]
+    print(f"reexec {report['run_id']}: {report['identical']}/{report['steps']} outputs identical, "
+          f"{len(report['differing'])} differing; claims {c.get('same_as_recorded', 0)}/{c.get('sent', 0)} as recorded, "
+          f"{len(report['differing_claims'])} differing -> {args.run_dir / 'reexec.json'}")
+    return 2 if report["errors"] else (1 if report["differing"] or report["differing_claims"] else 0)
+
+
+def cmd_replay(args: argparse.Namespace) -> int:
+    from .replay import replay_run
+
+    report = replay_run(args.run_dir)
+    for error in report["errors"][:50]:
+        print(f"FAIL {error}")
+    if len(report["errors"]) > 50:
+        print(f"... and {len(report['errors']) - 50} more in replay.json")
+    skipped = ", ".join(f"{k} {n}" for k, n in sorted(report["skipped"].items()))
+    # PARTIAL: the research loop replays, but some calls (the attach step's) are not in the trajectory.
+    verdict = "FAIL" if not report["ok"] else ("PASS" if report["complete"] else "PARTIAL")
+    print(f"{verdict} replay {report['run_id']}: {report['matched']}/{report['calls']} model "
+          f"calls rebuilt from trajectory.json, {report['outputs_ok']}/{report['commands']} outputs match"
+          + (f"; {report['unchecked_calls']} calls not checked (not in the trajectory: {skipped})" if skipped else "")
+          + f" -> {args.run_dir / 'replay.json'}")
+    return 0 if report["ok"] else 1
+
+
 def cmd_pairs(args: argparse.Namespace) -> int:
     from .pairs import write_pairs
 
@@ -279,13 +333,84 @@ def cmd_concepts_pick(args: argparse.Namespace) -> int:
             if answer.isdigit() and 1 <= int(answer) <= len(briefs):
                 choice = int(answer)
     try:
-        concept, sha = concept_step.pick(args.session_dir, choice)
+        concept, sha = concept_step.pick(args.session_dir, choice, picked_by=args.picked_by, reason=args.reason,
+                                         replace=args.replace, force=args.force)  # gold: $GOLD
     except (concept_step.ConceptStepError, ValueError) as exc:
         print(f"FAIL {exc}")
         return 1
-    print(f"PASS picked [{choice}] {concept['title']}\nconcept.json sha256={sha} -> "
+    print(f"PASS picked [{choice}] {concept['title']} (by {args.picked_by})\nconcept.json sha256={sha} -> "
           f"{session.path(concept_step.CONCEPT_FILE)}")
     return 0
+
+
+def _questions(path: Path) -> list[dict] | None:
+    from . import concept_step
+
+    try:
+        return concept_step.load_questions(path)
+    except (OSError, ValueError) as exc:
+        print(f"FAIL {exc}")
+        return None
+
+
+def _summary(results: list, ok_states: tuple[str, ...]) -> int:
+    """Print the count per state; 0 when every question ended in one of `ok_states` with no problems."""
+    counts: dict[str, int] = {}
+    for r in results:
+        counts[r.state] = counts.get(r.state, 0) + 1
+    bad = [r for r in results if r.state not in ok_states or r.problems]
+    print(("PASS " if not bad else "FAIL ") + ", ".join(f"{n} {s}" for s, n in sorted(counts.items()))
+          + (f" (needs action: {', '.join(r.id for r in bad)})" if bad else ""))
+    return 1 if bad else 0
+
+
+def cmd_concepts_propose_all(args: argparse.Namespace) -> int:
+    from . import concept_step
+    from .loop import OrchestratorModel  # LiteLLM and mini-swe-agent: slow, so only here
+    from .rundir import git_head
+
+    questions = _questions(args.questions)
+    if questions is None:
+        return 1
+    model = OrchestratorModel(base_url=args.base_url, temperature=args.temperature, seed=args.seed)
+    print(f"proposing for {len(questions)} questions into {args.root} (temperature {args.temperature}, "
+          f"seed {args.seed}, {args.base_url})", flush=True)
+    results = concept_step.propose_all(
+        questions, args.root, model, temperature=args.temperature, seed=args.seed,
+        git_commit=git_head(Path(__file__).resolve().parents[1]), base_url=args.base_url,
+        prompt_version=args.prompt_version, max_briefs=args.max_briefs, log=lambda line: print(line, flush=True))
+    for r in results:
+        for problem in r.problems[:10]:
+            print(f"  {r.id}: {problem}")
+    return _summary(results, ("proposed", "skipped"))
+
+
+def cmd_concepts_pick_all(args: argparse.Namespace) -> int:
+    from . import concept_step
+
+    questions = _questions(args.questions)
+    if questions is None:
+        return 1
+    results = concept_step.pick_all(questions, args.root, rule=args.rule, picked_by=args.picked_by,
+                                    reason=args.reason)
+    for r in results:
+        print(r.line())
+    print(f"picks: {Path(args.root) / concept_step.PICKS_FILE}")
+    return _summary(results, ("picked", "skipped"))
+
+
+def cmd_concepts_status(args: argparse.Namespace) -> int:
+    from . import concept_step
+
+    questions = _questions(args.questions)
+    if questions is None:
+        return 1
+    results = concept_step.status(questions, args.root)
+    for r in results:
+        print(r.line())
+        for problem in r.problems:
+            print(f"  {r.id}: {problem}")
+    return _summary(results, ("picked",))
 
 
 def cmd_concepts_check(args: argparse.Namespace) -> int:
@@ -300,6 +425,8 @@ def cmd_concepts_check(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from .concept_step import PICKED_BY, QUESTIONS_FILE  # standard library and agent core only: cheap
+
     parser = argparse.ArgumentParser(prog="agent")
     sub = parser.add_subparsers(dest="command", required=True)
     chain = sub.add_parser("verify-chain", help="verify the hash chain of events.jsonl and claims.jsonl")
@@ -372,6 +499,21 @@ def main(argv: list[str] | None = None) -> int:
     _corpus_args(ver)
     ver.set_defaults(func=cmd_verify)
 
+    reexec = sub.add_parser("reexec", help="run a run's recorded commands again in a fresh scratch dir and compare "
+                                           "outputs; claims go to a dry broker (row 2.13, C5)")
+    reexec.add_argument("run_dir", type=Path)
+    _corpus_args(reexec)
+    reexec.add_argument("--steps", help="only these step ids, e.g. 1,2,5-7 (default: every command)")
+    reexec.add_argument("--sandbox", choices=("landlock", "unsandboxed"), help="default: the run's sandbox mode")
+    reexec.add_argument("--agent-root", type=Path, help="default: the run's agent root")
+    reexec.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
+    reexec.add_argument("--keep-scratch", action="store_true", help="keep the fresh scratch directory")
+    reexec.set_defaults(func=cmd_reexec)
+    replay = sub.add_parser("replay", help="rebuild the conversation from trajectory.json and out/ and check every "
+                                           "recorded prompt hash (row 2.13, C6)")
+    replay.add_argument("run_dir", type=Path)
+    replay.set_defaults(func=cmd_replay)
+
     pairs = sub.add_parser("pairs", help="write pairs.jsonl: answer facts with their claims' quotes (row 1.12)")
     pairs.add_argument("run_dir", type=Path)
     pairs.set_defaults(func=cmd_pairs)
@@ -401,24 +543,56 @@ def main(argv: list[str] | None = None) -> int:
     query.add_argument("--manifest", type=Path, default=Path("corpus/manifest.json"), help="query 4")
     query.set_defaults(func=cmd_query)
 
-    concepts = sub.add_parser("concepts", help="concept step: propose briefs for a question, pick one (rows 2.1, 2.2)")
+    concepts = sub.add_parser("concepts", help="concept step: propose briefs for a question, pick one (rows 2.1-2.3)")
     csub = concepts.add_subparsers(dest="concepts_command", required=True)
+    concepts_root = Path(os.environ.get("CONCEPTS") or "concepts")
+    base_url = os.environ.get("LITELLM_BASE_URL") or "http://127.0.0.1:4000/v1"
+
+    def model_args(p: argparse.ArgumentParser) -> None:
+        p.add_argument("--temperature", type=float, required=True)
+        p.add_argument("--seed", type=int, required=True)
+        p.add_argument("--base-url", default=base_url,
+                       help="LiteLLM proxy (default: $LITELLM_BASE_URL); key from $LITELLM_MASTER_KEY")
+        p.add_argument("--prompt-version", default="v1")
+        p.add_argument("--max-briefs", type=int, default=5)
+
+    def questions_arg(p: argparse.ArgumentParser, required: bool) -> None:
+        p.add_argument("questions", type=Path, **({} if required else {"nargs": "?"}),
+                       default=QUESTIONS_FILE, help="questions file (default: questions/questions.json)")
+        p.add_argument("--root", type=Path, default=concepts_root, help="concept sessions directory (default: $CONCEPTS)")
+
     propose = csub.add_parser("propose", help="ask orch-model for 1-5 concept briefs (corpus-blind)")
     propose.add_argument("question_id", help="e.g. q01; the session goes to <root>/<question_id>/")
     given = propose.add_mutually_exclusive_group(required=True)
     given.add_argument("--question", help="the question text")
     given.add_argument("--question-file", type=Path, help="file holding the question text")
-    propose.add_argument("--root", type=Path, default=Path("concepts"), help="concept sessions directory")
-    propose.add_argument("--temperature", type=float, required=True)
-    propose.add_argument("--seed", type=int, required=True)
-    propose.add_argument("--base-url", default="http://127.0.0.1:4000/v1", help="LiteLLM proxy; key from $LITELLM_MASTER_KEY")
-    propose.add_argument("--prompt-version", default="v1")
-    propose.add_argument("--max-briefs", type=int, default=5)
+    propose.add_argument("--root", type=Path, default=concepts_root, help="concept sessions directory (default: $CONCEPTS)")
+    model_args(propose)
     propose.set_defaults(func=cmd_concepts_propose)
+    propose_all = csub.add_parser("propose-all", help="propose for every question without a proposal (row 2.3)")
+    questions_arg(propose_all, required=True)
+    model_args(propose_all)
+    propose_all.set_defaults(func=cmd_concepts_propose_all)
     pick = csub.add_parser("pick", help="pick one proposed brief; writes concept.json and concept.sha256")
     pick.add_argument("session_dir", type=Path, help="e.g. concepts/q01")
     pick.add_argument("--choice", type=int, help="brief number (asked on the terminal when left out)")
+    pick.add_argument("--picked-by", choices=PICKED_BY, default="user", help="who picked (recorded as the agent)")
+    pick.add_argument("--reason", default="", help="why this brief (recorded)")
+    pick.add_argument("--replace", action="store_true",
+                      help="change an earlier pick; refused once $GOLD/<question id>/ holds anything of its gold build")
+    pick.add_argument("--force", action="store_true",
+                      help="with --replace: replace even though gold exists (the pick records its files; move that "
+                           "gold aside or rebuild it)")
     pick.set_defaults(func=cmd_concepts_pick)
+    pick_all = csub.add_parser("pick-all", help="pick by a rule in every proposed question not yet picked")
+    questions_arg(pick_all, required=False)
+    pick_all.add_argument("--rule", choices=("first",), default="first", help="first: brief 1")
+    pick_all.add_argument("--picked-by", choices=PICKED_BY, default="provisional-first")
+    pick_all.add_argument("--reason", help="recorded with each pick (default: the rule's reason)")
+    pick_all.set_defaults(func=cmd_concepts_pick_all)
+    cstatus = csub.add_parser("status", help="one line per question: none, failed, proposed, picked or stale")
+    questions_arg(cstatus, required=False)
+    cstatus.set_defaults(func=cmd_concepts_status)
     ccheck = csub.add_parser("check", help="verify a concept session: chain, pick record, concept hash")
     ccheck.add_argument("session_dir", type=Path)
     ccheck.set_defaults(func=cmd_concepts_check)

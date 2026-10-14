@@ -2908,6 +2908,7 @@ source = { editable = "." }
 dependencies = [
     { name = "argilla" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "filelock" },
     { name = "httpx" },
     { name = "jsonschema" },
     { name = "mini-swe-agent" },
@@ -2934,6 +2935,7 @@ frontend = [
 requires-dist = [
     { name = "argilla", specifier = "==2.8.0" },
     { name = "fastapi", extras = ["standard"], specifier = "==0.143.0" },
+    { name = "filelock", specifier = "==3.32.7" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "jsonschema", specifier = "==4.25.1" },
     { name = "mini-swe-agent", specifier = "==2.4.6" },
