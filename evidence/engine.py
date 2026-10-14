@@ -200,7 +200,8 @@ def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, c
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
         retry_errors: bool = False) -> Path:
     """A normal run: cached calls are reused, new ones are made and stored."""
-    settings = Settings(corpus=str(Path(corpus)), cache=str(Path(cache) if cache else Path(out_dir) / "cache"),
+    settings = Settings(corpus=str(Path(corpus).resolve()),
+                        cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []))
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,

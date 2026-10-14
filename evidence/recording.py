@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, TypeVar
 
 from pydantic import BaseModel
@@ -60,8 +61,8 @@ class Recorder:
         settings = llm.settings(temperature=temperature, seed=seed, max_tokens=max_tokens)
         with capture_run_messages() as messages:
             try:
-                reply = asyncio.run(llm.structured_reply(instructions, user_prompt, output_type,
-                                                         model=self.provider(alias), model_settings=settings))
+                reply = _run(llm.structured_reply(instructions, user_prompt, output_type,
+                                                  model=self.provider(alias), model_settings=settings))
             except Exception as exc:  # noqa: BLE001 - every failure becomes a recorded, redacted reason
                 record["error"] = llm.redact(f"{type(exc).__name__}: {exc}")[:300]
                 record["messages"] = _messages(messages)
@@ -71,6 +72,17 @@ class Recorder:
         record["usage"] = {"input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens}
         record["messages"] = _messages(messages)
         return reply.output, call_id
+
+
+def _run(coro: Any) -> Any:
+    """Run a coroutine to completion from sync code, also when the caller is inside an event loop (then on a
+    worker thread with its own loop), so the engine can be driven from async code too."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(asyncio.run, coro).result()
 
 
 def _messages(messages: list[Any]) -> Any:

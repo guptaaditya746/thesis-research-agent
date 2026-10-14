@@ -4,7 +4,8 @@
   protocol, and `wasAssociatedWith` its extractor, a prov:SoftwareAgent carrying its id, version, kind and
   code and config hashes.
 - Each merged evidence item is a prov:Entity `wasGeneratedBy` the merge activity of its document and type,
-  which `wasInformedBy` the calls whose results it merged; the item is `wasAttributedTo` every extractor
+  which `wasInformedBy` the calls whose results it merged (the item `wasInfluencedBy` each call that found
+  it); the item is `wasAttributedTo` every extractor
   that found it and `wasDerivedFrom` its passages: oa:SpecificResource on the document with an
   oa:TextQuoteSelector and an oa:TextPositionSelector (agent/prov.py's pattern). PROV allows one
   generating activity per entity, so the calls are linked through the merge, not as generators.
@@ -95,6 +96,7 @@ def build(run_dir: Path | str) -> Graph:
             for item_id, calls in meta["sources"].items():
                 for call in calls:
                     g.add((node, PROV.wasInformedBy, act(call)))
+                    g.add((_iri("item", item_id), PROV.wasInfluencedBy, act(call)))  # the calls that found it
         if event["subtype"] == "synthesis":
             answer = _iri("run", run_id, "answer")
             g.add((answer, RDF.type, PROV.Entity))
