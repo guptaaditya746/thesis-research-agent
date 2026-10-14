@@ -3,6 +3,7 @@ found_by, the quote retry, the cache (a rerun costs no model call), replay witho
 failures as statuses, and extractor ids that change with prompt and config."""
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from typing import Any
@@ -155,3 +156,13 @@ def test_registry_api() -> None:
         extractors.get("missing_extractor")
     with pytest.raises(ValueError):
         extractors.register("Bad-Name", lambda config: marker)
+
+
+def test_engine_runs_inside_an_event_loop(protocol_file: Path, corpus: Path, tmp_path: Path) -> None:
+    calls: list[str] = []
+
+    async def main() -> Path:
+        return cascade(protocol_file, corpus, tmp_path, calls)
+
+    root = asyncio.run(main())
+    assert calls and any(i["evidence_type"] == "author_claim" and len(i["found_by"]) == 2 for i in evidence(root))
