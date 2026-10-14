@@ -60,16 +60,19 @@ class Writer:
         return respond(info, {"markdown": self.paper(prompt)})
 
 
-def blind(blind_to: list[str]):
-    """A verifier that reads every percent value of an explicit paper, except in the paper that contains
-    all of `blind_to`, where it finds nothing."""
+def blind(studies: list[truth.Study], blind_to: str):
+    """A verifier for explicit papers that reports each condition with its value, read from the plan of
+    the study whose value strings the paper holds; in study `blind_to` it finds nothing."""
+    plans = [make_plan(s, "explicit", plan_rng(SEED, s.study_id, "explicit")) for s in studies]
+
     def reply(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
         text = prompt_of(messages)
-        values = [] if all(s in text for s in blind_to) else [float(x) / 100 for x in re.findall(r"(\d+\.\d)%", text)]
-        return respond(info, {"measurements": [{"condition": "x", "metric": "y", "dataset": "z", "value": v}
-                                               for v in values]})
+        plan = next(p for p in plans if all(v.text in text for v in p.values.values()))
+        found = [] if plan.paper == blind_to else [
+            {"condition": plan.cond_name[m.condition], "metric": plan.metric_name[m.metric], "dataset": m.dataset,
+             "value": m.value} for m in plan.measurements]
+        return respond(info, {"measurements": found})
     return FunctionModel(reply, model_name="fake-verifier")
-
 
 @pytest.fixture
 def studies() -> list[truth.Study]:
@@ -131,8 +134,8 @@ def test_plan_never_tells_the_effect_or_the_answer(studies: list[truth.Study]) -
 
 def test_paper_that_never_passes_is_reported_and_excluded_everywhere(tmp_path: Path,
                                                                      studies: list[truth.Study]) -> None:
-    first = make_plan(studies[0], "explicit", plan_rng(SEED, studies[0].study_id, "explicit"))
-    verifier = blind([v.text for v in first.values.values()])
+    verifier = blind(studies, studies[0].study_id)
+
     renderer = LlmRenderer(FunctionModel(Writer(studies, fail_first=False), model_name="fake-writer"),
                            tmp_path / "cache.jsonl", attempts=2, verify_model=verifier)
     out = corpus.build(name="x", seed=SEED, studies=N, renderer=renderer, out=tmp_path / "c", levels=["explicit"])

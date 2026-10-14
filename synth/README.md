@@ -69,11 +69,11 @@ synonym in paraphrased papers); `aliases` hold the codes.
 Per paper: `lf_only`; `facts_rendered` (every planned fact has a rendering of its role); `anchored` (each
 placement holds its exact text and `anchor.find` with its context lands on it); `values_match` (the rendered
 string reads as the true value; relative ones against the baseline); `values_unique` (a value string occurs
-only where placed); `labels_covered` (every occurrence of a name is a recorded placement of that fact);
+only where placed); `values_associated` (a value's table row names its condition and no other, its column header its metric, its Dataset cell its dataset; in prose its sentence names its condition and metric and no other, a relative value its own condition before and the baseline after; `assoc.py`); `labels_covered` (every occurrence of a name is a recorded placement of that fact);
 `stray_numbers` (no other number reads as one of the study's values as is, as percent or per 1,000);
 `level_<level>` (the level's property); LLM only: `required_strings`, `model_call`, and with
-`--verify-model` `blind_reextraction` (a model that never saw the plan must recover every value within
-0.005). A study failing at any level is left out of every corpus of the set and reported with
+`--verify-model` `blind_reextraction` (a model that never saw the plan must recover every (condition, value) pair:
+the value within 0.005, reported under one of the condition's names or its code). A study failing at any level is left out of every corpus of the set and reported with
 `excluded_reason` and its attempt `history`.
 
 `synth sample` writes `review/review-s<seed>.md` and `.csv`: per sampled paper, every placement with its
