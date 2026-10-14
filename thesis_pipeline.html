@@ -44,6 +44,8 @@
   .lane-sub { font-size: 14.5px; fill: var(--muted); }
   .node { fill: var(--node); stroke: var(--node-line); stroke-width: 1.6; }
   .node.now { fill: var(--now-soft); stroke: var(--now); stroke-width: 4; }
+  .node.added { stroke: var(--ours); stroke-width: 2.2; stroke-dasharray: 7 4; }
+  .key-added { width: 26px; height: 18px; border: 2px dashed var(--ours); border-radius: 5px; display: inline-block; }
   .name { font-weight: 700; fill: var(--ink); }
   .desc { font-size: 14px; fill: var(--muted); }
   .chip-paper { fill: var(--paper-soft); stroke: var(--paper); stroke-width: 1.2; }
@@ -262,7 +264,7 @@ const LANES = [
   { id: "engine",     name: "Execution engine",    sub: "runs one protocol over a corpus" },
   { id: "extractors", name: "Extractor library",   sub: "one interface, swappable parts", flow: false },
   { id: "bench",      name: "Synthetic benchmark", sub: "ground truth → papers" },
-  { id: "eval",       name: "Evaluation",          sub: "A, B, C separately + baseline" },
+  { id: "eval",       name: "Evaluation",          sub: "A, B, C separately + two baselines" },
   { id: "infra",      name: "Where it runs",       sub: "Slurm GPU job, tested", flow: false },
   { id: "optional",   name: "Extensions",          sub: "not required for the thesis", flow: false, open: true },
 ];
@@ -277,13 +279,14 @@ const STAGES = [
   { id: "evgraph",   lane: "engine",   col: 3, name: "Evidence graph",    desc: "study → experiment → result", llm: false, sources: ["provo", "webanno"], ours: "every node has its passage" },
   { id: "synth",     lane: "engine",   col: 4, name: "Synthesis",         desc: "explicit rules, pro and contra", llm: false, ours: "deterministic first" },
   { id: "answer",    lane: "engine",   col: 5, name: "Answer",            desc: "verdict + evidence table", llm: false },
-  { id: "trace",     lane: "engine",   col: 6, name: "Trace back",        desc: "answer → result → passage", llm: false, people: true, sources: ["laquer", "ledger"] },
+  { id: "trace",     lane: "engine",   col: 6, name: "Trace back",        desc: "answer → result → passage", llm: false, people: true, added: true, sources: ["laquer", "ledger"] },
   // Extractor library (no arrows: the engine picks the extractor per evidence type)
-  { id: "iface",     lane: "extractors", col: 1, name: "Common interface", desc: "text in → typed evidence + span", llm: false, ours: "one contract" },
-  { id: "x_cond",    lane: "extractors", col: 2, name: "Conditions",       desc: "models, with / without RAG", llm: true, sources: ["edc"] },
-  { id: "x_metric",  lane: "extractors", col: 3, name: "Metrics",          desc: "how factuality is measured", llm: true },
-  { id: "x_result",  lane: "extractors", col: 4, name: "Results",          desc: "a number per condition", llm: true },
-  { id: "x_claim",   lane: "extractors", col: 5, name: "Author claims",    desc: "what the authors conclude", llm: true },
+  { id: "iface",     lane: "extractors", col: 0, name: "Common interface", desc: "text in → typed evidence + span", llm: false, ours: "one contract" },
+  { id: "x_cond",    lane: "extractors", col: 1, name: "Conditions",       desc: "models, with / without RAG", llm: true, sources: ["edc"] },
+  { id: "x_metric",  lane: "extractors", col: 2, name: "Metrics",          desc: "how factuality is measured", llm: true },
+  { id: "x_result",  lane: "extractors", col: 3, name: "Results",          desc: "a number per condition", llm: true },
+  { id: "x_claim",   lane: "extractors", col: 4, name: "Author claims",    desc: "what the authors conclude", llm: true, added: true },
+  { id: "x_agent",   lane: "extractors", col: 5, name: "Agentic extractor", desc: "navigates one paper", llm: true, added: true, ours: "our agent, as an extractor", oursTitle: "The existing research agent (sandbox, shell, claim tool with quote check) as one implementation behind the extractor interface, for distributed and complex evidence" },
   { id: "x_bench",   lane: "extractors", col: 6, name: "Benchmarked",      desc: "each extractor, over time", llm: false, ours: "reusable, measured" },
   // Synthetic benchmark
   { id: "truth",     lane: "bench",    col: 0, name: "Ground truth",      desc: "fictional studies + results", llm: false, ours: "data first, papers second", oursTitle: "The process is reversed: structured ground truth is generated first, and papers are written from it, so the corpus's intended evidence is known exactly" },
@@ -293,11 +296,12 @@ const STAGES = [
   { id: "corpus",    lane: "bench",    col: 4, name: "Synthetic corpus",  desc: "papers + known evidence", llm: false },
   { id: "variants",  lane: "bench",    col: 5, name: "Controlled variants", desc: "change one result", llm: false, ours: "predictable answer shift" },
   // Evaluation
-  { id: "evA",       lane: "eval",     col: 1, name: "A · Extraction",    desc: "P / R / F1 · provenance", llm: false, sources: ["benchie", "webnlg"] },
-  { id: "evB",       lane: "eval",     col: 2, name: "B · Integration",   desc: "links across sections", llm: false },
-  { id: "evC",       lane: "eval",     col: 3, name: "C · Synthesis",     desc: "vs answer from ground truth", llm: false },
-  { id: "errors",    lane: "eval",     col: 4, name: "Error attribution", desc: "missed · mislinked · rule", llm: false, ours: "why it fails, not only if" },
-  { id: "baseline",  lane: "eval",     col: 5, name: "Answer-level baseline", desc: "retrieve passages → answer", llm: true, sources: ["alce", "rarr"] },
+  { id: "evA",       lane: "eval",     col: 0, name: "A · Extraction",    desc: "P / R / F1 · provenance", llm: false, sources: ["benchie", "webnlg"] },
+  { id: "evB",       lane: "eval",     col: 1, name: "B · Integration",   desc: "links across sections", llm: false },
+  { id: "evC",       lane: "eval",     col: 2, name: "C · Synthesis",     desc: "vs answer from ground truth", llm: false },
+  { id: "errors",    lane: "eval",     col: 3, name: "Error attribution", desc: "missed · mislinked · rule", llm: false, ours: "why it fails, not only if" },
+  { id: "baseline",  lane: "eval",     col: 4, name: "Answer-level baseline", desc: "retrieve passages → answer", llm: true, sources: ["alce", "rarr"] },
+  { id: "agentbase", lane: "eval",     col: 5, name: "Agent baseline",    desc: "our agent, no protocol", llm: true, added: true, ours: "a stronger baseline" },
   { id: "compare",   lane: "eval",     col: 6, name: "Comparison",        desc: "correct · complete · traceable", llm: false, sources: ["bootstrap", "goo2026"] },
   // Where it runs
   { id: "slurm",     lane: "infra",    col: 0, name: "Slurm job",         desc: "3×A100 40 GB · 48 h", llm: false, sources: ["llmsetup"] },
@@ -306,7 +310,7 @@ const STAGES = [
   // Extensions (optional)
   { id: "protogen",  lane: "optional", col: 1, name: "Protocol generator", desc: "LLM + dialogue with user", llm: true, people: true },
   { id: "real",      lane: "optional", col: 3, name: "Real papers",       desc: "336 ACL/EMNLP 2025", llm: false, sources: ["docling"] },
-  { id: "realgold",  lane: "optional", col: 4, name: "Real-paper gold",   desc: "built + reviewed in Argilla", llm: true, people: true, sources: ["argilla"] },
+  { id: "realgold",  lane: "optional", col: 4, name: "Real-paper gold",   desc: "built + reviewed in Argilla", llm: true, people: true, added: true, sources: ["argilla"] },
 ];
 
 const LINKS = [
@@ -466,6 +470,19 @@ const STAGE_DETAILS = {
     ],
     ours: "Reusable extractors with their own measured quality.",
   },
+  x_agent: {
+    what: "The existing research agent as one extractor behind the common interface: for evidence a single pass over one chunk cannot get, it works through one paper with shell commands and records each item with the claim tool.",
+    how: [
+      "Input: one paper, the evidence types and fields from the protocol. Output: the same typed items with checked spans as every other extractor, so the engine does not care which one ran.",
+      "Its strength is navigation: follow \"see Table 2\", match \"variant R\" in the method to the R column of a results table, keep several experiments of one paper apart.",
+      "Experiment (decided 14 Oct): single-pass LLM extractor vs agentic extractor, per difficulty level. Expected: no gain on explicit evidence, a gain on distributed and complex evidence, at a higher cost in steps and tokens. Measured, not assumed.",
+      "Runs with a step and token budget per paper and a fixed seed; its calls are logged and cached like any extractor's, so the engine stays reproducible.",
+    ],
+    io: ["one paper + the protocol's evidence types", "typed evidence items with quote-checked spans"],
+    ours: "An agent used where it is measurable: one swappable extractor, scored against ground truth.",
+    code: ["reusable: agent/loop.py (agent loop), agent/sandbox and Landlock setup, agent/broker.py and agent/anchor.py (claim with quote check), agent/answer.py (schema-constrained final reply)"],
+    differs: ["Not discussed with the supervisor yet: his extractor list (\"regular expressions, specialized models, LLMs, or other methods\") allows it, but he did not mention agents."],
+  },
 
   // ---------------------------------------------------------------- Synthetic benchmark
   truth: {
@@ -564,8 +581,19 @@ const STAGE_DETAILS = {
     ],
     differs: ["The supervisor stresses that evidence-level is not assumed to win: whether, and under which conditions, it helps is the result."],
   },
+  agentbase: {
+    what: "A second baseline: the existing research agent with the question only, no protocol. It searches the corpus freely and writes its answer from what it reads.",
+    how: [
+      "Stronger than plain retrieve-then-answer: it can search, read whole sections and run scripts. If the protocol-driven system still wins, the gain is not just from reading more.",
+      "Same documents, model and question; it records claims with quotes, so its traceability can be scored too.",
+      "Costs little: the agent, its batch runner, verification and scoring are built and tested.",
+    ],
+    io: ["question + synthetic corpus", "answer with claims and quotes"],
+    code: ["reusable: agent/ (run, batch, verify), scoring/"],
+    differs: ["Not discussed with the supervisor yet; his baseline is the plain retrieve-then-answer system (the box before this one)."],
+  },
   compare: {
-    what: "Compares the two approaches on correctness, completeness and traceability, per difficulty level.",
+    what: "Compares the protocol-driven system with both baselines on correctness, completeness and traceability, per difficulty level.",
     how: ["Means with BCa bootstrap intervals over corpora or seeds; the difficulty knobs show under which conditions each approach breaks."],
   },
 
@@ -601,6 +629,45 @@ const STAGE_DETAILS = {
     how: ["The gold builder and the Argilla review built for the previous design (screening, extraction with quote checks, triage, review, answer key, judge) can serve here."],
     code: ["gold/ (build, review, judge)"],
   },
+};
+
+/* ---- ORIGIN: where each box comes from: the supervisor's message of 14 Oct (by section), or our addition.
+   Boxes with `added: true` in STAGES are drawn with a dashed green border. */
+const ORIGIN = {
+  question: "Supervisor §4: suggested as the question for a first prototype.",
+  write:    "Supervisor §8, step 1: \"Define one research question and a corresponding protocol manually.\"",
+  protocol: "Supervisor §2: an executable research protocol as intermediate representation, declarative (YAML or JSON).",
+  engine:   "Supervisor §2: \"executed by a Python-based engine\".",
+  evgraph:  "Supervisor §2 (evidence graph) and §8 step 4 (connections between studies, experiments, measurements and source passages).",
+  synth:    "Supervisor §4 and §8 step 5: deterministic procedures with explicit rules; §2: supporting and contradicting evidence.",
+  answer:   "Supervisor §2: \"Evidence graph and synthesized answer\".",
+  trace:    "Our addition, carried over from the earlier design. The supervisor asks for traceability (§7) and accurate provenance (§5 A).",
+  iface:    "Supervisor §3: a library of reusable extractors with a common interface; implementations interchangeable.",
+  x_cond:   "Supervisor §8 step 3: \"Focus on experimental conditions, evaluation metrics, and reported results.\"",
+  x_metric: "Supervisor §8 step 3. The regex-plus-LLM example is ours.",
+  x_result: "Supervisor §8 step 3.",
+  x_claim:  "Our addition: needed for the supervisor's test of conclusions that disagree with the reported results (§6, §7).",
+  x_agent:  "Our addition (decided 14 Oct, not yet discussed with the supervisor). His extractor list allows \"other methods\"; he does not mention agents.",
+  x_bench:  "Supervisor §3: extractors \"continuously benchmarked\".",
+  truth:    "Supervisor §5: ground-truth scientific data first, then synthetic papers.",
+  knobs:    "Supervisor §6: explicit, paraphrased, distributed, complex, contradictory evidence, and the further variations he lists.",
+  gen:      "Supervisor §5: an LLM writes a realistic paper reporting the ground truth.",
+  fidelity: "Supervisor §6, last paragraph: the generated papers must be checked. How (automatic check plus a human sample with κ) is our proposal.",
+  corpus:   "Supervisor §5.",
+  variants: "Supervisor §6: controlled variants of the same corpus.",
+  evA:      "Supervisor §5 A: precision, recall, F1, association with conditions, provenance accuracy.",
+  evB:      "Supervisor §5 B.",
+  evC:      "Supervisor §5 C.",
+  errors:   "Supervisor §5 C and §9: tell extraction errors from synthesis errors; why the system succeeds or fails.",
+  baseline: "Supervisor §7: \"a conventional LLM-based question-answering system that retrieves relevant passages and directly synthesizes an answer\".",
+  agentbase:"Our addition (decided 14 Oct, not yet discussed with the supervisor).",
+  compare:  "Supervisor §7: correctness, completeness and traceability. BCa intervals are ours.",
+  slurm:    "Existing infrastructure (ours), not part of the supervisor's message.",
+  models:   "Existing infrastructure (ours).",
+  gateway:  "Existing infrastructure (ours).",
+  protogen: "Supervisor §2 and §8: an optional extension, possibly with a dialogue with the user.",
+  real:     "Supervisor §8: an optional extension (\"test the system on a small collection of real scientific papers\").",
+  realgold: "Our addition: needed only if the real-paper extension is done; the gold pipeline exists from the earlier design.",
 };
 
 const SOURCE_DETAILS = {
@@ -753,9 +820,9 @@ const STATUS = [
   { area: "2 · Synthetic corpus generator", stage: "truth", state: "open", tests: "gold/llm.py, llm-setup",
     evidence: "Not started. The structured-call helper (pydantic-ai through LiteLLM, JSON-schema output) and the tested Qwen stack exist.",
     next: "Ground-truth model and code generator; paper generator prompt; fidelity check." },
-  { area: "3 · Extractor library", stage: "iface", state: "partial", tests: "gold/chunks.py, gold/extract.py, agent/anchor.py, agent/broker.py",
-    evidence: "Section-aware chunking, schema-constrained LLM extraction with retries, and the quote check against the file are built and tested (scripted models only).",
-    next: "Wrap them behind one extractor interface; add conditions, metrics, results and author-claim extractors." },
+  { area: "3 · Extractor library", stage: "iface", state: "partial", tests: "gold/chunks.py, gold/extract.py, agent/anchor.py, agent/broker.py, agent/loop.py",
+    evidence: "Section-aware chunking, schema-constrained LLM extraction with retries, and the quote check against the file are built and tested (scripted models only). The research agent, for the agentic extractor, is built and has run on the cluster.",
+    next: "Wrap them behind one extractor interface; add conditions, metrics, results and author-claim extractors; the agent as one more implementation." },
   { area: "4 · Evidence representation", stage: "evgraph", state: "partial", tests: "agent/prov.py, scoring/store.py",
     evidence: "PROV-O export and a pyoxigraph SPARQL store over run graphs are built and tested.",
     next: "The study → experiment → condition → measurement model with passages." },
@@ -765,9 +832,9 @@ const STATUS = [
   { area: "6 · Evaluate A, B, C", stage: "evA", state: "partial", tests: "scoring/",
     evidence: "One-to-one matching at strict / normalised / soft levels, precision, recall, F1 and BCa intervals are built and tested.",
     next: "Point them at the synthetic ground truth; add association and integration measures." },
-  { area: "7 · Answer-level baseline", stage: "baseline", state: "open", tests: "—",
-    evidence: "Not started. The existing research agent is not this baseline (it searches freely); a plain retrieve-then-answer system is.",
-    next: "Retrieve passages, answer with citations, same model and documents." },
+  { area: "7 · Baselines", stage: "baseline", state: "partial", tests: "agent/, scoring/",
+    evidence: "Two baselines (decided 14 Oct): the supervisor's plain retrieve-then-answer system, not started; and our research agent with no protocol, built and tested.",
+    next: "Build the retrieve-then-answer baseline (same model and documents); point the agent at the synthetic corpus." },
   { area: "Models and cluster", stage: "slurm", state: "works", tests: "tests/RESULTS.md",
     evidence: "Slurm stack with Qwen3.8-27B and two Qwen3-30B-A3B replicas behind LiteLLM, tested; first real agent runs done.",
     next: "A short cluster check once the generator and extractors exist." },
@@ -930,7 +997,7 @@ function draw() {
     const open = LANES.find(l => l.id === s.lane)?.open;
     const g = el("g", { class: `stage${open ? " is-open" : ""}`, "data-stage": s.id, tabindex: 0, role: "button", "aria-label": `${s.name}: details` }, nodeLayer);
     if (s.current) el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: "pulse" }, g);
-    el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: `node${s.current ? " now" : ""}` }, g);
+    el("rect", { x, y, width: NODE_W, height: NODE_H, rx: 12, class: `node${s.current ? " now" : ""}${s.added ? " added" : ""}` }, g);
     const name = el("text", { x: x + NODE_W / 2, y: y + 38, "text-anchor": "middle", class: "name" }, g);
     name.textContent = s.name;
     const desc = el("text", { x: x + NODE_W / 2, y: y + 62, "text-anchor": "middle", class: "desc" }, g);
@@ -1071,6 +1138,7 @@ function renderStage(id) {
   if (s && LANES.find(l => l.id === s.lane)?.open) body.push(h("p", { class: "open-banner" },
     OPEN_NOTE));
   if (s && s.desc) body.push(h("p", { class: "lead" }, s.desc));
+  if (ORIGIN[id]) body.push(section("Where this comes from", h("p", { class: s && s.added ? "differs" : "example" }, rich(ORIGIN[id]))));
   if (d.what) body.push(section("What it is", h("p", {}, rich(d.what))));
   if (d.how) body.push(section("How it works here", list(d.how)));
   if (d.io) body.push(section("Input → output", h("div", { class: "io" }, h("div", {}, rich(d.io[0])), h("span", { "aria-hidden": "true" }, "→"), h("div", {}, rich(d.io[1])))));
@@ -1198,6 +1266,7 @@ function legend() {
   add('<b class="key-chip k-paper">BenchIE</b>Idea from a paper');
   add('<b class="key-chip k-tool">PROV-O</b>Tool or data');
   add('<b class="key-chip k-ours">one contract</b>Our contribution');
+  if (STAGES.some(s => s.added)) add('<i class="key-added"></i>Our addition, not in the supervisor’s message');
   if (LANES.some(l => l.open)) add('<i class="key-open"></i>' + OPEN_LEGEND);
 }
 
