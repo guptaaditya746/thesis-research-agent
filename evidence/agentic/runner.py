@@ -18,6 +18,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import tempfile
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Protocol
@@ -132,8 +133,12 @@ class ResearchAgentRunner:
         self.work_dir = Path(work_dir) if work_dir else None
 
     def run(self, job: AgentJob) -> dict[str, Any]:
+        """Each attempt gets a fresh directory (`<run_id>-<random>` under work_dir), so a rerun, a
+        re-execution or a second `evaluate agent-baseline` into the same --out never meets the run
+        directory of an earlier attempt (agent/rundir.py refuses to reuse one). The directory name is in
+        no record: the record's run_id is the job's."""
         if self.work_dir is not None:
-            return self._run(job, self.work_dir / job.run_id)
+            return self._run(job, self.work_dir / f"{job.run_id}-{uuid.uuid4().hex[:12]}")
         with tempfile.TemporaryDirectory(prefix="agentic-") as tmp:
             return self._run(job, Path(tmp))
 
@@ -150,4 +155,5 @@ class ResearchAgentRunner:
             agent_root_manifest_sha256=root_sha, sandbox_mode=s.sandbox_mode, agent_root=agent_root,
             base_url=s.base_url, budget={**BUDGET, **job.budget}, prompt_version=s.prompt_version, broker=s.broker,
             model=self.model_factory(s) if self.model_factory else None)
-        return collect(run.root, dataclasses.asdict(outcome))
+        record = collect(run.root, dataclasses.asdict(outcome))
+        return {**record, "run_id": job.run_id}

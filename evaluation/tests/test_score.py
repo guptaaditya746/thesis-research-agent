@@ -220,3 +220,12 @@ def test_compare_orders_corpora_by_level(tmp_path: Path) -> None:
     assert [r["level"] for r in rows] == ["explicit", "paraphrased"]
     assert rows[0]["extraction_f1"] == 1.0 and rows[0]["label_correct"] is True
     assert "| explicit" in rep.render_compare(rep.compare(reports))
+    assert rows[0]["accuracy_answered"] == 1.0 and "accuracy_answered" in rep.render_compare(rep.compare(reports))
+
+
+def test_report_shows_accuracy_on_answered_studies(tmp_path: Path, corpus: Path) -> None:
+    """Review 3: a baseline citing only some papers is shown with accuracy on what it answered and its label."""
+    fx.dump(tmp_path / "agent.json", fx.baseline_answer("agent-baseline", {"S001": "supports"}, "supported"))
+    text = rep.render(score_answers(corpus, [tmp_path / "agent.json"]))
+    header = next(line for line in text.splitlines() if line.startswith("| system"))
+    assert "direction_accuracy" in header and "accuracy_answered" in header and "label_correct" in header

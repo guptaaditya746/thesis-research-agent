@@ -70,5 +70,6 @@ def test_real_agent_run_becomes_items(tmp_path: Any) -> None:
     assert len(result.model_calls) == 2 and record["trajectory"] is not None
     prompt = holder["model"].prompts[0][1]["content"]  # the task message holds the concept brief
     assert "Every measurement stated in S001.md" in prompt and ids["S001.c2"] in prompt
-    corpus = tmp_path / result.model_calls[0].split("/")[0] / "corpus"
+    (attempt,) = tmp_path.glob(result.model_calls[0].split("/")[0] + "-*")  # one fresh directory per attempt
+    corpus = attempt / "corpus"
     assert sorted(p.name for p in corpus.iterdir()) == ["S001.md", "manifest.json"]  # the agent saw one paper only

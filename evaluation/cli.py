@@ -1,7 +1,7 @@
 """`evaluate` command line: score a run, run the two baselines, compare corpora.
 
     evaluate score --run RUN --corpus CORPUS [--baseline ANSWER.json ...] [--reexec R.json] --out DIR
-    evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--k N]
+    evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval per_paper|global] [--k N]
     evaluate agent-baseline --corpus CORPUS --out DIR [--model ALIAS] [--sandbox ...] [--steps N] [--tokens N]
     evaluate compare REPORT [REPORT ...] --out DIR
 
@@ -69,7 +69,8 @@ def cmd_rag(args: argparse.Namespace) -> int:
 
     model, model_id = _model(args.model)
     answer = rag_baseline(args.corpus, model=model, model_id=model_id, question=_question(args), k=args.k,
-                          max_chars=args.max_chars, cache=_cache(args, "rag-baseline"), seed=args.seed)
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, "rag-baseline"),
+                          seed=args.seed)
     print(f"{_write_answer(answer, args.out)}: label={answer['label']} studies={len(answer['studies'])}")
     return 0
 
@@ -87,8 +88,13 @@ def cmd_agent(args: argparse.Namespace) -> int:
     budget = {"steps": args.steps or BUDGET["steps"], "tokens": args.tokens or BUDGET["tokens"]}
     concept = json.loads(args.concept.read_text(encoding="utf-8")) if args.concept else None
     model, model_id = _model(args.model)
-    answer = agent_baseline(args.corpus, runner=runner, model=model, model_id=model_id, question=_question(args),
-                            concept=concept, budget=budget, cache=_cache(args, "agent-baseline"), run_id=args.run_id)
+    try:
+        answer = agent_baseline(args.corpus, runner=runner, model=model, model_id=model_id, question=_question(args),
+                                concept=concept, budget=budget, cache=_cache(args, "agent-baseline"),
+                                run_id=args.run_id)
+    except RuntimeError as exc:  # already redacted (agent_baseline, common.cached_reply)
+        print(f"FAIL {exc}")
+        return 1
     print(f"{_write_answer(answer, args.out)}: label={answer['label']} studies={len(answer['studies'])} "
           f"agent exit={answer['agent']['exit_status']}")
     return 0
@@ -127,7 +133,9 @@ def parser() -> argparse.ArgumentParser:
 
     r = sub.add_parser("rag-baseline", help="BM25 passages + one schema-constrained call -> answer.json")
     common(r)
-    r.add_argument("--k", type=int, default=8, help="passages given to the model")
+    r.add_argument("--retrieval", choices=("per_paper", "global"), default="per_paper",
+                   help="per_paper: top k passages of every paper (default); global: top k of the corpus")
+    r.add_argument("--k", type=int, help="passages per paper (per_paper, default 2) or in all (global, default 8)")
     r.add_argument("--max-chars", type=int, default=1500, help="passage size limit")
     r.set_defaults(func=cmd_rag)
 

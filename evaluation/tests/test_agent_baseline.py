@@ -15,7 +15,7 @@ from gold.llm import JsonlCache
 
 from . import fixtures as fx
 from .agentic_fakes import FakeRunner
-from .helpers import Scripted, guard_forbidden
+from .helpers import Scripted, guard_corpus
 
 MAPPED = {"label": "mixed", "answer_text": "Retrieval helped in S001 and hurt in S002.",
           "studies": [{"document": "S001", "stance": "supports"}, {"document": "S002", "stance": "contradicts"}]}
@@ -35,7 +35,7 @@ def agent_record() -> dict[str, Any]:
 
 def test_agent_baseline_maps_the_answer_to_label_and_stances(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     corpus = fx.write_corpus(tmp_path)
-    attempts = guard_forbidden(monkeypatch)
+    attempts = guard_corpus(monkeypatch, corpus)
     runner, mapper = FakeRunner(agent_record()), Scripted(MAPPED)
     answer = baseline.agent_baseline(corpus, runner=runner, model=mapper.model())
     assert attempts == []

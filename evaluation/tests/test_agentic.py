@@ -11,8 +11,8 @@ from evidence.agentic.runner import AgentSettings
 from evidence.contract import Extractor, ExtractionResult, Scope
 
 from . import fixtures as fx
-from .agentic_fakes import (CONDITION_SCHEMA, LINKS, MEASUREMENT_SCHEMA, Ctx, FakeRunner, context, recorded_run,
-                            task)
+from .agentic_fakes import (CONDITION_SCHEMA, LINKS, MEASUREMENT_SCHEMA, Ctx, FakeRunner, claim, context,
+                            recorded_run, row, task)
 
 
 def extract(record=None, scope: Scope | None = None) -> tuple[ExtractionResult, FakeRunner]:
@@ -54,6 +54,19 @@ def test_accepted_claims_become_items_with_checked_spans() -> None:
     assert validate_concept(job.concept) == [] and "S001.md" in job.concept["scope"]["paper"]
     assert [c["name"] for c in job.concept["answer_shape"]["columns"]] == ["condition", "metric", "value", "dataset"]
     assert ids["S001.c2"] in job.concept["scope"]["earlier_items"]
+
+
+def test_code_hash_covers_the_agent_and_its_harness(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Review 6: run settings, concept and prompt handling, stopping, spawn and mini-swe-agent change the id."""
+    from importlib import metadata
+
+    from evidence.agentic import extractor as ex
+
+    assert {"rundir.py", "concept.py", "stopping.py", "prompts.py", "spawn.py"} <= set(ex.AGENT_FILES)
+    before = ex.code_sha256()
+    real = metadata.version
+    monkeypatch.setattr(metadata, "version", lambda name: "9.9.9" if name == "mini-swe-agent" else real(name))
+    assert ex.code_sha256() != before
 
 
 def test_register_agentic_uses_the_registry(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -101,6 +114,29 @@ def test_bad_quotes_and_bad_rows_are_rejected_with_reasons() -> None:
     assert reasons == [("dangling_link", ("0.70",)), ("empty_quote", ()), ("not_found", ("R reached 71%",)),
                        ("schema", ("62%",)), ("schema", ("x",))]
     assert all(r.evidence_type == "measurement" for r in result.rejected)
+
+
+def test_a_row_cannot_borrow_another_rows_claim() -> None:
+    """Review 4: a value 0.704 citing r2's "62%" claim, or its own claim quoting another number, is no item."""
+    ids = {k: i.item_id for k, i in fx.perfect_items().items()}
+    cells = {"condition": ids["S001.c2"], "metric": ids["S001.k1"], "dataset": None}
+    record = recorded_run()
+    record["claims"] += [claim(5, "value", 0.62, "62%", s="r7", step=3), claim(6, "dataset", "NQ", "0.70", s="r8"),
+                         claim(7, "value", 0.704, "0.70", s="r8")]
+    record["answer"]["rows"] = [row("r7", {**cells, "value": 0.704}, [3]),        # r2's claim
+                                row("r8", {**cells, "value": 0.704}, [5]),        # its s is r7, not r8
+                                row("r9", {**cells, "value": 0.704}, [6]),        # r8's dataset claim
+                                row("r8", {**cells, "value": 0.704}, [7])]        # 0.70 states 0.704 (within 0.005)
+    result, _ = extract(record)
+    assert [(i.fields["value"], [s.selector["exact"] for s in i.spans]) for i in result.items] == [(0.704, ["0.70"])]
+    rows = sorted(r.detail for r in result.rejected if r.reason == "not_found" and r.detail.startswith("row r7: no"))
+    assert rows == ["row r7: no cited claim states this row"]
+    details = " | ".join(r.detail for r in result.rejected)
+    assert "claim-000003 is about 'r2', not this row" in details
+    assert "claim-000005 is about 'r7', not this row" in details
+    record["answer"]["rows"] = [row("r7", {**cells, "value": 0.704}, [5])]  # its own claim, but "62%" is not 0.704
+    result, _ = extract(record)
+    assert result.items == () and "does not state the value 0.704" in " | ".join(r.detail for r in result.rejected)
 
 
 def test_coverage_is_what_the_agent_read() -> None:

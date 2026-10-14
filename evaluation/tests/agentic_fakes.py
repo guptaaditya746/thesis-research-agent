@@ -51,9 +51,10 @@ def task(kind: str = "measurement", scope: Scope | None = None) -> ExtractionTas
                           scope=scope or Scope(), context=tuple(i.item_id for i in context()))
 
 
-def claim(n: int | None, p: str, o: Any, quote: str, step: int = 2, reason: str | None = None) -> dict[str, Any]:
+def claim(n: int | None, p: str, o: Any, quote: str, step: int = 2, reason: str | None = None,
+          s: str = "r1") -> dict[str, Any]:
     return {"step_id": step, "status": "accepted" if n else "rejected", "claim_id": f"claim-{n:06d}" if n else None,
-            "reason": reason, "s": "r", "p": p, "o": o, "quote": quote, "file": "S001.md", "anchor": None}
+            "reason": reason, "s": s, "p": p, "o": o, "quote": quote, "file": "S001.md", "anchor": None}
 
 
 def row(rid: str, cells: dict[str, Any], claims: list[int]) -> dict[str, Any]:
@@ -70,7 +71,7 @@ def recorded_run() -> dict[str, Any]:
         "run_id": "agentic-test", "outcome": {"exit_status": "submitted", "answer_from": "final", "steps": 4},
         "claims": [claim(1, "value", 0.7, "0.70"), claim(2, "condition", c2, "retrieval-augmented variant (R)"),
                    claim(None, "value", 0.71, "R reached 71%", reason="not_found"),
-                   claim(3, "value", 0.62, "62%"), claim(4, "value", 0.62, "0.62"),
+                   claim(3, "value", 0.62, "62%", s="r2"), claim(4, "value", 0.62, "0.62", s="r3"),
                    claim(None, "value", 0.5, "x", reason="bad_field:o")],
         "commands": [{"step_id": 1, "command": "sed -n '/| System/,/R-noRerank/p' \"$CORPUS/S001.md\"", "output": table,
                       "output_sha256": "0" * 64, "exit_code": 0}],

@@ -12,8 +12,6 @@ import pytest
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from evaluation.baselines.common import FORBIDDEN
-
 
 class Scripted:
     """FunctionModel callable: returns `reply` (a dict, or a function of the user prompt) and records prompts."""
@@ -34,15 +32,23 @@ class Scripted:
         return FunctionModel(self, model_name=name)
 
 
-def guard_forbidden(monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    """Make every open of ground_truth.json, corpus.json or fidelity.json raise; returns the attempts."""
+def guard_corpus(monkeypatch: pytest.MonkeyPatch, corpus: Path) -> list[str]:
+    """Allow-list: inside `corpus`, only manifest.json and files directly in papers/ may be opened.
+
+    Every other open there (ground_truth.json, corpus.json, fidelity.json, decoys.json, ...) raises and
+    is returned in the attempts list."""
     attempts: list[str] = []
     real_open, real_os_open = builtins.open, os.open
+    root = Path(corpus).resolve()
 
     def check(path: Any) -> None:
-        if isinstance(path, (str, bytes, os.PathLike)) and Path(os.fsdecode(path)).name in FORBIDDEN:
-            attempts.append(os.fsdecode(path))
-            raise AssertionError(f"a system under test opened {path}")
+        if not isinstance(path, (str, bytes, os.PathLike)):
+            return
+        p = Path(os.path.abspath(os.fsdecode(path)))
+        inside = p == root or root in p.parents
+        if inside and not (p == root / "manifest.json" or p.parent == root / "papers"):
+            attempts.append(str(p))
+            raise AssertionError(f"a system under test opened {p}")
 
     def guarded_open(file: Any, *args: Any, **kwargs: Any) -> Any:
         check(file)
