@@ -185,10 +185,10 @@ def test_concepts_batch_and_replay_scripts(session: tuple[Path, Proxy]) -> None:
     done = script("e2e-batch.sh", str(manifest))
     assert done.returncode == 0 and "q10-claim_off-r1-a1: checked and exported before" in done.stdout
 
-    # A claim_off run: its attach calls are not in trajectory.json, so the replay is partial (said, not hidden).
+    # A claim_off run: its attach calls are checked from attach-trajectory.json, so it replays in full.
     done = script("e2e-replay.sh", str(manifest), "--reexec")
     assert done.returncode == 0, done.stdout + done.stderr
-    assert "q10-claim_off-r1-a1 replay partial (2 calls not checked), reexec identical\n" in done.stdout
+    assert "q10-claim_off-r1-a1 replay ok, reexec identical\n" in done.stdout
     assert "PASS 1 runs" in done.stdout
 
     # A changed concept (e.g. a pick replaced) stops the batch instead of mixing two concepts' runs in one root.

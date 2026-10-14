@@ -144,8 +144,14 @@ def test_reexec_baseline_and_its_attach_step(tmp_path: Path, corpus: tuple[Path,
     [dry] = jsonl(run.root / "reexec.jsonl")
     assert (dry["step_id"], dry["origin"], dry["claim_id"]) == (3, "attach", "claim-000001")
     assert (run.out / "step-0001.txt").read_text(encoding="utf-8") == "NO_CLAIM\nfd=unset\n"
-    # The attach step's calls are not in trajectory.json: replay counts them and checks the research loop,
-    # and says that the run replayed only partly.
+    # The attach step keeps its conversations in attach-trajectory.json: replay checks its calls too.
+    result = replay.replay_run(run.root)
+    assert result["ok"] and result["skipped"] == {} and result["calls"] == 4
+    assert (result["complete"], result["unchecked_calls"], result["scope"]) == (True, 0, "research+attach")
+    assert cli(["replay", str(run.root)]) == 0
+    assert "PASS replay r1: 4/4 model calls" in capsys.readouterr().out
+    # An attach step run before that file existed: its calls are counted, unchecked, and the replay is partial.
+    (run.root / "attach-trajectory.json").unlink()
     result = replay.replay_run(run.root)
     assert result["ok"] and result["skipped"] == {"main/attach": 2} and result["calls"] == 2
     assert (result["complete"], result["unchecked_calls"], result["scope"]) == (False, 2, "research")

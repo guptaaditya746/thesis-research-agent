@@ -6,9 +6,9 @@
 # runs every command again and takes about as long as the run's commands did. A missing setup stops the script at
 # once; the per-run results are measurements, so every run is done and the summary at the end says which failed
 # (exit 1 if a replay failed or a re-execution could not run; differing outputs or claims alone are reported,
-# exit 0). "replay partial": the research loop replays, but the attach step's calls (claim_off) are not in
-# trajectory.json and stay unchecked. "toolchain differs": the agent root is not the run's, so a difference may
-# be the toolchain's.
+# exit 0). "replay partial": the research loop replays, but some calls are in no trajectory (subagents', or an attach
+# step run before attach-trajectory.json existed) and stay unchecked. "toolchain differs": the agent root is
+# not the run's, so a difference may be the toolchain's.
 set -euo pipefail
 REPO=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 manifest=$(realpath "${1:?usage: scripts/e2e-replay.sh <run manifest> [--reexec]}")
