@@ -31,7 +31,10 @@ Files: config.json gains an `attach` section (prompt hash, per-fact budget, conc
 first step) when the step starts; answer.research.json keeps the answer as the run wrote it;
 answer.json then gets, for every fact, origin "attach" and claims [the attached claim id] or []
 ("no source found"); pairs.jsonl is rewritten; attach.json holds each fact's result (and `how`:
-by the agent's result block or from its claim) and the step's own cost.
+by the agent's result block or from its claim) and the step's own cost; attach-trajectory.json holds
+every fact's conversation (system, task, replies, outputs, notices), as trajectory.json does for the
+research loop, so `agent replay` checks the attach prompts too and the reasoning behind each
+attached claim is kept, as it is for claim_on's.
 
 An attach step is run once. One that was cut (config has `attach`, no attach.json) is not resumed:
 the batch runner (agent/batch.py) reruns the whole run in a fresh run directory.
@@ -48,12 +51,13 @@ from . import sandbox
 from .canonical import canonical, canonical_bytes, file_sha256, sha256_hex, write_json
 from .concept import validate_answer
 from .loop import (DECODINGS, DEFAULT_BASE_URL, POSIX_BROKER, Broker, FailedCall, GuidedRejected, OrchestratorModel,
-                   SandboxEnvironment)
+                   SandboxEnvironment, TimedOut)
 from .parse import files_read, normalise_command, parse_reply
 from .prompts import PROMPT_DIR
 from .rundir import ANSWER_BEFORE, ATTACH_FILE, RunDir, attach_state, utc_now  # noqa: F401  (re-exported)
 
 ATTACH_BUDGET = {"steps": 6, "tokens": 60_000, "announced": True}  # per fact; frozen with the run budget after 1.13
+ATTACH_TRAJECTORY = "attach-trajectory.json"  # every fact's conversation, for `agent replay`
 CONCLUDE_REPLIES = 1
 # The result block as a JSON Schema, for decoding conclude replies under it (the claim id pattern
 # is answer.schema.json's).
@@ -141,6 +145,7 @@ class AttachStep:
         self.step = first_step - 1
         self.config_sha256 = config_sha256
         self.cap = int(env.limits["output_cap_bytes"])
+        self.conversations: list[dict[str, Any]] = []  # attach-trajectory.json (_keep)
 
     # records
 
@@ -215,11 +220,13 @@ class AttachStep:
                                            schema=None if decoding == "free" else RESULT_SCHEMA)
             except FailedCall as exc:
                 rejected = isinstance(exc, GuidedRejected)
+                timed_out = isinstance(exc, TimedOut)
                 failed = self._record_failed(step, exc, len(messages), decoding, fact["id"], phase,
-                                             "guided_decoding_rejected" if rejected else "context_window_exceeded")
+                                             "guided_decoding_rejected" if rejected else "timeout" if timed_out
+                                             else "context_window_exceeded")
                 result.model_calls += 1
-                if not rejected:
-                    result.reason = "context_full"
+                if not rejected:  # context full, or a conclude reply past the proxy timeout (never sent again)
+                    result.reason = "timeout" if timed_out else "context_full"
                     break
                 # The server refused the schema: this reply again, and every later one, decoded freely.
                 self._coverage(step, failed, fact["id"], phase, "guided_decoding_rejected", "",
@@ -268,14 +275,25 @@ class AttachStep:
             result.commands += 1
             result.claims_accepted += accepted
             result.claims_rejected += rejected
-            messages.append({"role": "user", "content": f"{text}\n{budget_line()}"})
+            # `extra` (never sent: the model drops it) marks the command's output for `agent replay`.
+            messages.append({"role": "user", "content": f"{text}\n{budget_line()}",
+                             "extra": {"kind": "observation", "step_id": step}})
         result.last_step = self.step
+        self._keep(row["id"], fact["id"], messages)
         if not given:  # no valid result block: the agent's own matching claim, if it made one
             self._attach_from_claim(spo, row["id"], fact["id"], phase, result)
         if result.status == "no_source":
             self._coverage(self.step, None, fact["id"], phase, "no_source_found", "",
                            {"row_id": row["id"], "reason": result.reason or "no reason given"})
         return result
+
+    def _keep(self, row_id: str, fact_id: str, messages: list[dict[str, Any]]) -> None:
+        """The fact's whole conversation into attach-trajectory.json, rewritten after every fact (so a
+        cut step keeps the facts it finished): with it `agent replay` rebuilds every attach prompt
+        and checks its recorded hash, as trajectory.json does for the research loop."""
+        self.conversations.append({"row_id": row_id, "fact_id": fact_id, "messages": messages})
+        write_json(self.run.root / ATTACH_TRAJECTORY, {"schema_version": 1, "run_id": self.run.run_id,
+                                                        "facts": self.conversations})
 
     def _record_failed(self, step: int, exc: FailedCall, messages: int, decoding: str, fact_id: str, phase: str,
                        error: str) -> str:

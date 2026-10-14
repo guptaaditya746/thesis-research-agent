@@ -29,10 +29,11 @@ When every call matches, the log names every message the model saw, in order and
 so the run can be shown again exactly as it happened (the trace viewer and the claim walk rely on
 that). The result goes to <run>/replay.json.
 
-Scope: the research loop only. Calls outside the main conversation (the attach step's per-fact
-conversations, subagents) are not in trajectory.json; they are counted under `skipped` and
-`unchecked_calls`, and `complete` is false, so a claim_off run after attach replays only partly
-(the CLI says PARTIAL, not PASS).
+The attach step of a claim_off run (row 2.5) keeps each fact's conversation in
+attach-trajectory.json (agent/attach.py); its calls and commands are checked the same way, per fact
+(scope `research+attach`). Calls outside both (subagents; the attach calls of a run attached before
+that file existed) are counted under `skipped` and `unchecked_calls`, and `complete` is false, so such
+a run replays only partly (the CLI says PARTIAL, not PASS).
 """
 from __future__ import annotations
 
@@ -46,6 +47,7 @@ from .chain import verify
 from .rundir import COMMAND_LIMITS, RunDir, utc_now
 
 TRAJECTORY_FILE = "trajectory.json"
+ATTACH_TRAJECTORY = "attach-trajectory.json"  # agent/attach.py ATTACH_TRAJECTORY (not imported: attach imports the loop)
 REPLAY_FILE = "replay.json"
 ORIGINAL = "original_content"  # extra key holding the text first shown (agent/loop.py, ResearchAgent._stub)
 CONTEXT_FULL = "context_window_exceeded"  # generated.error of a call refused as too long (C8)
@@ -93,6 +95,11 @@ def prompt_sha256(messages: list[dict[str, Any]], view: View = View()) -> str:
 def is_main(record: dict[str, Any]) -> bool:
     """A record of the main research loop (not the attach step, a subagent, the batch runner)."""
     return record["agent_id"] == "main" and (record.get("custom_metadata") or {}).get("origin") == "research"
+
+
+def is_attach(record: dict[str, Any]) -> bool:
+    """A record of the attach step (agent/attach.py: agent main, origin attach, the fact id)."""
+    return record["agent_id"] == "main" and (record.get("custom_metadata") or {}).get("origin") == "attach"
 
 
 def _records(run: RunDir) -> list[dict[str, Any]]:
@@ -180,6 +187,27 @@ def _check_outputs(run: RunDir, messages: list[dict[str, Any]], tools: list[dict
         set(observations) - {r["step_id"] for r in tools})]
 
 
+def _fact_of(record: dict[str, Any]) -> str:
+    return str((record.get("custom_metadata") or {}).get("fact_id"))
+
+
+def _check_attach(run: RunDir, path: Path, calls: list[dict[str, Any]], tools: list[dict[str, Any]], cap: int,
+                  report: dict[str, Any]) -> None:
+    """The attach step's calls and commands against each fact's conversation in attach-trajectory.json."""
+    try:
+        facts = {str(f["fact_id"]): f.get("messages") or [] for f in json.loads(path.read_text(encoding="utf-8"))["facts"]}
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        report["errors"].append(f"{ATTACH_TRAJECTORY}: cannot be read ({exc})")
+        return
+    for fact_id in dict.fromkeys(_fact_of(r) for r in [*calls, *tools]):
+        messages = facts.get(fact_id)
+        if messages is None:
+            report["errors"].append(f"attach fact {fact_id}: no conversation in {ATTACH_TRAJECTORY}")
+            continue
+        _check_calls(messages, [r for r in calls if _fact_of(r) == fact_id], report)
+        _check_outputs(run, messages, [r for r in tools if _fact_of(r) == fact_id], cap, report)
+
+
 def replay_run(run_dir: Path) -> dict[str, Any]:
     """Rebuild and check the run's conversation; write and return replay.json's content."""
     run = RunDir(Path(run_dir))
@@ -191,14 +219,24 @@ def replay_run(run_dir: Path) -> dict[str, Any]:
     report["errors"] += [f"chain: {e}" for e in chain.errors]
     records = _records(run)
     calls = [r for r in records if r["subtype"] == "ai_model_invocation"]
+    attach_file = run.root / ATTACH_TRAJECTORY
+    attached = attach_file.is_file()
+    checked = (lambda r: is_main(r) or is_attach(r)) if attached else is_main
     for r in calls:
-        if not is_main(r):
+        if not checked(r):
             key = f"{r['agent_id']}/{(r.get('custom_metadata') or {}).get('origin')}"
             report["skipped"][key] = report["skipped"].get(key, 0) + 1
     report["unchecked_calls"] = sum(report["skipped"].values())
     main_calls = [r for r in calls if is_main(r)]
+    attach_calls = [r for r in calls if is_attach(r)] if attached else []
     tools = [r for r in records if r["subtype"] == "agent_tool" and is_main(r)]
-    report["calls"], report["commands"] = len(main_calls), len(tools)
+    attach_tools = [r for r in records if r["subtype"] == "agent_tool" and is_attach(r)] if attached else []
+    report["calls"] = len(main_calls) + len(attach_calls)
+    report["commands"] = len(tools) + len(attach_tools)
+    try:
+        cap = int(run.load_config()["command_limits"]["output_cap_bytes"])
+    except (OSError, ValueError, KeyError):
+        cap = COMMAND_LIMITS["output_cap_bytes"]
     trajectory = run.root / TRAJECTORY_FILE
     if not trajectory.is_file():
         report["errors"].append(f"no {TRAJECTORY_FILE}: nothing to replay")
@@ -206,12 +244,12 @@ def replay_run(run_dir: Path) -> dict[str, Any]:
         report["trajectory_sha256"] = file_sha256(trajectory)
         messages = json.loads(trajectory.read_text(encoding="utf-8")).get("messages", [])
         report["masked"] = sum(bool((m.get("extra") or {}).get("masked")) for m in messages)  # stubs at the end
-        try:
-            cap = int(run.load_config()["command_limits"]["output_cap_bytes"])
-        except (OSError, ValueError, KeyError):
-            cap = COMMAND_LIMITS["output_cap_bytes"]
         _check_calls(messages, main_calls, report)
         _check_outputs(run, messages, tools, cap, report)
+    if attached:
+        report["scope"] = "research+attach"
+        report["attach_trajectory_sha256"] = file_sha256(attach_file)
+        _check_attach(run, attach_file, attach_calls, attach_tools, cap, report)
     report["matched"] = sum(e["prompt"] == "match" and e["reply"] in ("match", None) for e in report["steps"])
     report["ok"] = not report["errors"] and report["matched"] == report["calls"]
     report["complete"] = report["ok"] and not report["unchecked_calls"]  # every model call of the run checked

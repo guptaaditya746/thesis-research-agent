@@ -17,7 +17,9 @@ from rdflib.namespace import PROV  # noqa: E402
 import litellm  # noqa: E402
 
 from agent import kg, prov, queries  # noqa: E402
-from agent.attach import ATTACH_FILE, RESULT_SCHEMA, AttachError, attach_run, attach_state, load_prompt  # noqa: E402
+from agent.attach import (ATTACH_FILE, ATTACH_TRAJECTORY, RESULT_SCHEMA, AttachError, attach_run,  # noqa: E402
+                          attach_state, load_prompt)
+from agent.replay import replay_run  # noqa: E402
 from agent.canonical import file_sha256  # noqa: E402
 from agent.chain import verify  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
@@ -101,7 +103,7 @@ def test_attach_end_to_end(tmp_path: Path, corpus: tuple[Path, Path], capsys: py
     assert [f["how"] for f in summary["facts"]] == ["result", "result", "", ""] and summary["attached_from_claim"] == 0
     # Only the conclude reply (f4, step 15) was decoded under the result schema.
     assert [i for i, k in enumerate(model.kwargs) if k] == [12]
-    assert model.kwargs[12]["extra_body"]["structured_outputs"] == {"json": RESULT_SCHEMA}
+    assert model.kwargs[12]["extra_body"]["structured_outputs"] == {"json": RESULT_SCHEMA, "disable_any_whitespace": True}
 
     # The model: a fresh conversation per fact, the budget announced, the fact's s/p/o given.
     systems = [p[0]["content"] for p in model.prompts]
@@ -192,6 +194,18 @@ def test_attach_end_to_end(tmp_path: Path, corpus: tuple[Path, Path], capsys: py
     assert (attach_activity, PROV.used, iri("answer-research")) in g
     assert {str(o) for o in g.objects(None, prov.OURS.answerSource)} == {"final_answer"}
 
+    # attach-trajectory.json keeps every fact's conversation: `agent replay` rebuilds every attach prompt
+    # as it does the research loop's, so the baseline replays as completely as claim_on (PASS, not PARTIAL).
+    kept = json.loads((run.root / ATTACH_TRAJECTORY).read_text(encoding="utf-8"))["facts"]
+    assert [f["fact_id"] for f in kept] == ["f1", "f2", "f3", "f4"]
+    assert [m["content"] for m in kept[1]["messages"][:2]] == [p["content"] for p in model.prompts[2]]
+    replayed = replay_run(run.root)
+    assert replayed["errors"] == [] and replayed["ok"] and replayed["complete"], replayed["errors"]
+    assert (replayed["scope"], replayed["skipped"], replayed["calls"], replayed["matched"]) == (
+        "research+attach", {}, 15, 15)
+    assert replayed["commands"] == replayed["outputs_ok"] == 8  # one research command, seven attach commands
+    assert cli(["replay", str(run.root)]) == 0 and "PASS" in capsys.readouterr().out
+
     # Run once only.
     with pytest.raises(AttachError, match="already done"):
         attach_run(run.root, *corpus, model=ScriptedModel([]), sandbox_mode="unsandboxed", broker="inprocess")
@@ -265,7 +279,7 @@ def test_attach_concludes_under_the_schema_and_from_claims(tmp_path: Path, corpu
     assert (summary["attached"], summary["attached_from_claim"]) == (2, 1)
     # Decoding: guided at f1's and f2's conclusion; free after the refusal, for the rest of the step.
     guided = [i for i, k in enumerate(model.kwargs) if "structured_outputs" in k.get("extra_body", {})]
-    assert guided == [2, 5] and model.kwargs[2]["extra_body"]["structured_outputs"] == {"json": RESULT_SCHEMA}
+    assert guided == [2, 5] and model.kwargs[2]["extra_body"]["structured_outputs"]["json"] == RESULT_SCHEMA
     assert model.prompts[2][-1]["content"].startswith("Budget for this fact used up. Reply now with the result alone, "
                                                       "as one JSON object")
     assert model.prompts[5] == model.prompts[6]  # asked again, without the schema
