@@ -114,11 +114,12 @@ class Execution:
                                       context=tuple(i.item_id for i in context),
                                       budget=ref.budget if extractor.spec.kind == "agent" else None)
                 results.append(self._call(extractor, task, text, index, spec, context))
-            items, sources = merge.merge(results, spec)
+            items, sources, collisions = merge.merge(results, spec)
             merged[etype] = items
             self.events.add("merge", used=sorted({i.item_id for _, r in results for i in r.items}),
                             generated=[i.item_id for i in items], agent_id="evidence-engine", group_id=doc.id,
-                            custom={"document": doc.id, "evidence_type": etype, "sources": sources})
+                            custom={"document": doc.id, "evidence_type": etype, "sources": sources,
+                                    "collisions": collisions})
         self.items[doc.id] = sorted((i for t in merged.values() for i in t),
                                     key=lambda i: (i.first_start(), i.evidence_type, i.item_id))
 
