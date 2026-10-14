@@ -59,8 +59,9 @@ npm run build          # tsc -b, then vite build -> dist/ (served by the backend
 npm run preview        # serve dist/ locally
 ```
 
-`dist/` is not committed. Pages are lazy chunks, so React Flow, recharts and the chat load only
-where they are used.
+`dist/` is committed (made by `npm run build`), so the backend on the Slurm node serves the app
+without npm or network access; rebuild and commit it with every frontend change. Pages are lazy
+chunks, so React Flow, recharts and the chat load only where they are used.
 
 ## Checks
 
@@ -86,20 +87,20 @@ worker start (vitest gives a worker 60 s to start).
 
 ## API types
 
-`src/api/types.ts` mirrors the backend's OpenAPI schema (`webapp openapi`, webapp/models.py) by
-hand, field for field and under the schema's names, so switching to generated types is one place:
+The API types are generated from the backend's OpenAPI schema (`webapp openapi`, webapp/models.py)
+with openapi-typescript (a pinned devDependency) into `src/api/schema.d.ts`, and the first half of
+`src/api/types.ts` aliases them (`export type RunSummary = components["schemas"]["RunSummary"]`),
+so the type checker holds the pages, the client and the MSW fixtures to what the backend serves.
+After a change to the backend's models:
 
 ```sh
-webapp openapi > webapp/web/openapi.json
-npm run gen:api        # openapi-typescript -> src/api/schema.d.ts
+uv run webapp openapi -o webapp/web/openapi.json     # from the repo root
+npm run gen:api        # openapi-typescript -> src/api/schema.d.ts (--default-non-nullable false keeps
+                       # fields the backend defaults optional in request bodies)
+npm run typecheck      # then fix what it shows
 ```
 
-then in `types.ts` replace each interface of the first half by
-`export type RunSummary = components["schemas"]["RunSummary"]` and so on. Checked against WP E's
-schema of 13 Oct: every generated response type is assignable to the hand-written one, and every
-hand-written request body to the generated one (`--default-non-nullable false` keeps the fields
-the backend defaults optional in request bodies). The second half of
-`types.ts` types the files the backend passes through as open objects (score.json, report.json, the
+The second half of `types.ts` types the files the backend passes through as open objects (score.json, report.json, the
 gold report and counts, config.json): those stay hand-written, and `src/lib` reads them
 defensively (`lib/results.ts` is the only reader of report.json, `lib/gold.ts` of the gold files,
 `lib/run.ts` of config.json). All HTTP access is in `src/api/` (`client.ts`: one typed client and
