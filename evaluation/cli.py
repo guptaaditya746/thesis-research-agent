@@ -87,8 +87,13 @@ def cmd_agent(args: argparse.Namespace) -> int:
     budget = {"steps": args.steps or BUDGET["steps"], "tokens": args.tokens or BUDGET["tokens"]}
     concept = json.loads(args.concept.read_text(encoding="utf-8")) if args.concept else None
     model, model_id = _model(args.model)
-    answer = agent_baseline(args.corpus, runner=runner, model=model, model_id=model_id, question=_question(args),
-                            concept=concept, budget=budget, cache=_cache(args, "agent-baseline"), run_id=args.run_id)
+    try:
+        answer = agent_baseline(args.corpus, runner=runner, model=model, model_id=model_id, question=_question(args),
+                                concept=concept, budget=budget, cache=_cache(args, "agent-baseline"),
+                                run_id=args.run_id)
+    except RuntimeError as exc:  # already redacted (agent_baseline, common.cached_reply)
+        print(f"FAIL {exc}")
+        return 1
     print(f"{_write_answer(answer, args.out)}: label={answer['label']} studies={len(answer['studies'])} "
           f"agent exit={answer['agent']['exit_status']}")
     return 0

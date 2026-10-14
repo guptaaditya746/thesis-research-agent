@@ -24,7 +24,7 @@ from typing import Any
 from pydantic_ai.models import Model
 
 from evidence.agentic.runner import AgentJob, AgentRunner
-from gold.llm import JsonlCache
+from gold.llm import JsonlCache, redact
 
 from .common import DEFAULT_QUESTION, LABEL_RULES, AnswerReply, SystemCorpus, answer_json, cached_reply
 
@@ -79,7 +79,10 @@ def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, quest
     corpus = SystemCorpus(corpus_dir)
     job = AgentJob(run_id=run_id, files={f"{p.id}.md": p.text for p in corpus.papers},
                    concept=concept or question_concept(question), budget=dict(budget or BUDGET))
-    record = runner.run(job)
+    try:
+        record = runner.run(job)
+    except Exception as exc:  # provider errors can echo the key: only a redacted reason leaves here
+        raise RuntimeError(redact(f"agent run failed: {type(exc).__name__}: {exc}")[:1000]) from None
     text = answer_text(record)
     outcome = record.get("outcome") or {}
     agent = {"run_id": record.get("run_id", run_id), "exit_status": outcome.get("exit_status"),
