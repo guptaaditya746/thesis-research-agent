@@ -170,7 +170,7 @@ def test_concepts_batch_and_replay_scripts(session: tuple[Path, Proxy]) -> None:
     smoke = json.loads((REPO / "agent" / "manifests" / "e2e-smoke.json").read_text(encoding="utf-8"))
     manifest = tmp / "e2e-test.json"
     manifest.write_text(json.dumps(smoke | {"name": "e2e-test", "questions": smoke["questions"][1:],
-                                            "conditions": ["claim_off"]}), encoding="utf-8")
+                                            "conditions": ["claim_off"], "repeats": 1}), encoding="utf-8")
     done = script("e2e-batch.sh", str(manifest))
     assert done.returncode == 0, done.stdout + done.stderr
     effective = json.loads((runs / "manifest.json").read_text(encoding="utf-8"))
