@@ -232,6 +232,41 @@ def test_support_pair_gives_the_paper_and_context(env: Env) -> None:
     assert len(calls) == 1
 
 
+def test_people_see_the_passage_the_judge_sees(env: Env) -> None:
+    """The calibration compares people with the judge on the same input: the Argilla record's passage is
+    context_for's window (CONTEXT_CHARS each side, cut at the same line ends), not the review's wider one."""
+    corpus = review.Corpus(env.corpus)
+    text = anchor.read_text(env.corpus / "p6.md")
+    sel = anchor.find(text, NQ.text, file="p6.md")
+    row = {"id": "judge-x", "fact": {"s": "p6", "p": "evaluatesOn", "o": "NQ"}, "quote": sel.exact, "file": "p6.md",
+           "start": sel.start, "end": sel.end}
+    [record] = judge.records([row], corpus)
+    context = judge.context_for(corpus, "p6.md", sel.start, sel.end).split(":\n", 1)[1]
+    a, b = judge.argilla_io.window(text, sel.start, sel.end, judge.CONTEXT_CHARS)
+    assert context == text[a:b]
+    shown = judge.argilla_io.passage_markdown(text, sel.start, sel.end, chars=judge.CONTEXT_CHARS)
+    assert record["passage"] == shown and text[a:sel.start] + "<mark>" in shown and "</mark>" + text[sel.end:b] in shown
+    wide = judge.argilla_io.passage_markdown(text, sel.start, sel.end)
+    assert wide != shown  # the review's wider window: the fixture tells the two apart
+
+
+def test_sample_from_the_scored_runs_only(tmp_path: Path) -> None:
+    """With report/batch.json under --runs the calibration population is the runs `score batch` scored, not
+    a cut attempt or a web run that lies under the same root; without it, every run (and the manifest says)."""
+    fake_runs(tmp_path / "runs")
+    scored = sorted(p.parent for p in (tmp_path / "runs").rglob("pairs.jsonl"))[:-1]  # q03-claim_on left out
+    items = [{"run_id": d.name, "run_dir": str(d.resolve()), "scored": True} for d in scored]
+    items.append({"run_id": "q09-claim_on-r1-a1", "run_dir": str(tmp_path / "gone"), "scored": False})
+    (tmp_path / "runs" / "report").mkdir()
+    (tmp_path / "runs" / "report" / "batch.json").write_text(json.dumps({"items": items}), encoding="utf-8")
+    rows, manifest = judge.sample_pairs(tmp_path / "runs", size=500, seed="s")
+    assert manifest["population"] == {"claim_on": 80, "claim_off": 20} and manifest["runs"] == 4
+    assert manifest["scored_runs"] == sorted(str(d.resolve()) for d in scored)
+    assert manifest["context_chars"] == judge.CONTEXT_CHARS
+    every = judge.sample_pairs(tmp_path / "runs", size=500, seed="s", all_runs=True)[1]
+    assert every["population"] == {"claim_on": 120, "claim_off": 20} and every["scored_runs"] is None
+
+
 def test_allocate() -> None:
     assert judge.allocate({"claim_on": 300, "claim_off": 50}, 240) == {"claim_on": 190, "claim_off": 50}
     assert judge.allocate({"a": 10, "b": 10}, 240) == {"a": 10, "b": 10}

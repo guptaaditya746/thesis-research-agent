@@ -36,7 +36,8 @@ one that was calibrated; `Judge.support_pair(pair, corpus)` does it for a line o
 A pair whose file the corpus cannot give is an error, never judged without its context.
 
 Calibration (labelling README step 11, adapted from "same fact?" to support): `gold judge-sample` draws
-SAMPLE_SIZE fact-quote pairs from the runs' pairs.jsonl, stratified by condition (equal allocation; the
+SAMPLE_SIZE fact-quote pairs from the pairs.jsonl of the runs `score batch` scored under --runs (its
+report/batch.json; every run below the root without one), stratified by condition (equal allocation; the
 population of each condition, its runs and the sha256 of every pairs.jsonl are recorded; an existing
 sample is never redrawn without `--force`); `gold judge-push` loads them into `<name>-judge`, where people
 answer supports / partial / no without seeing the judge or the condition; `gold judge-agreement` asks the judge (cached),
@@ -399,14 +400,36 @@ def _qid(run_id: str, config: dict[str, Any]) -> str | None:
     return match.group(1) if match else None
 
 
-def pairs_files(runs_root: Path) -> list[Path]:
-    return sorted(Path(runs_root).rglob("pairs.jsonl"))
+BATCH_FILE = Path("report") / "batch.json"  # scoring/batch.py: which runs `score batch` scored
 
 
-def population(runs_root: Path) -> list[dict[str, Any]]:
-    """Every fact-quote pair with a quote in the runs under `runs_root` (any depth: batch roots nest)."""
+def scored_runs(runs_root: Path) -> list[str] | None:
+    """The run directories `score batch` scored under runs_root (its report/batch.json, absolute paths),
+    or None when the root has no batch.json yet."""
+    data = review.read_json(Path(runs_root) / BATCH_FILE)
+    if not isinstance(data, dict):
+        return None
+    return sorted({str(i["run_dir"]) for i in data.get("items") or []
+                   if isinstance(i, dict) and i.get("scored") and i.get("run_dir")})
+
+
+def pairs_files(runs_root: Path, scope: list[str] | None = None) -> list[Path]:
+    """pairs.jsonl below runs_root (any depth: batch roots nest); with `scope`, of those run directories only."""
+    found = sorted(Path(runs_root).rglob("pairs.jsonl"))
+    if scope is None:
+        return found
+    allowed = {Path(d).resolve() for d in scope}
+    return [p for p in found if p.parent.resolve() in allowed]
+
+
+def population(runs_root: Path, scope: list[str] | None = None) -> list[dict[str, Any]]:
+    """Every fact-quote pair with a quote in the runs under `runs_root`, or in the `scope` run directories.
+
+    The calibration's population sizes weight its kappa (N_h / n_h), so they should be the runs the
+    primary outcome is computed on: sample_pairs takes the runs `score batch` scored (report/batch.json),
+    not cut or failed attempts, smoke or web runs that happen to lie under the root."""
     rows = []
-    for path in pairs_files(runs_root):
+    for path in pairs_files(runs_root, scope):
         config = review.read_json(path.parent / "config.json") or {}
         for line in review.read_jsonl(path):
             if not line.get("quote") or not line.get("claim_id"):
@@ -436,10 +459,15 @@ def allocate(sizes: dict[str, int], total: int) -> dict[str, int]:
     return out
 
 
-def sample_pairs(runs_root: Path, *, size: int = SAMPLE_SIZE, seed: str = SAMPLE_SEED,
+def sample_pairs(runs_root: Path, *, size: int = SAMPLE_SIZE, seed: str = SAMPLE_SEED, all_runs: bool = False,
                  ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """A seeded sample of `size` pairs stratified by condition, and its manifest (population, sample)."""
-    rows = population(runs_root)
+    """A seeded sample of `size` pairs stratified by condition, and its manifest (population, sample).
+
+    The population is the runs `score batch` scored under runs_root (report/batch.json: the finished
+    attempt of each run key), else, without a batch.json or with `all_runs`, every run below the root;
+    the manifest's `scored_runs` says which (null: every run)."""
+    scope = None if all_runs else scored_runs(runs_root)
+    rows = population(runs_root, scope)
     groups: dict[str, list[dict[str, Any]]] = {}
     for row in rows:
         groups.setdefault(row["condition"], []).append(row)
@@ -452,8 +480,9 @@ def sample_pairs(runs_root: Path, *, size: int = SAMPLE_SIZE, seed: str = SAMPLE
     chosen = sorted(chosen, key=lambda r: hashlib.sha256(f"{seed}:{r['id']}".encode()).hexdigest())
     root = Path(runs_root)
     manifest = {"seed": seed, "size": size, "runs_root": str(runs_root), "drawn_at": review.utc_now(),
+                "context_chars": CONTEXT_CHARS, "scored_runs": scope,
                 "runs": len({r["run_id"] for r in rows}), "run_ids": sorted({r["run_id"] for r in rows}),
-                "pairs_files": {p.relative_to(root).as_posix(): file_sha256(p) for p in pairs_files(root)},
+                "pairs_files": {p.relative_to(root).as_posix(): file_sha256(p) for p in pairs_files(root, scope)},
                 "population": sizes, "sampled": taken}
     return chosen, manifest
 
@@ -484,9 +513,11 @@ def missing_files(rows: list[dict[str, Any]], corpus: review.Corpus) -> list[str
 def records(rows: list[dict[str, Any]], corpus: review.Corpus) -> list[dict[str, Any]]:
     """Argilla records for the sample: fact, quote and the passage around it (the judge's answer and the
     run's condition are never in a record). Raises review.Rejected for a pair whose file the corpus
-    cannot give: people and the judge must see the same passage."""
+    cannot give: people and the judge must see the same passage, so the window is context_for's
+    (CONTEXT_CHARS on each side, cut at line ends by the same argilla_io.window), not the review's
+    wider PASSAGE_CHARS."""
     return [argilla_io.judge_record(row, passage_md=argilla_io.passage_markdown(
-                corpus.text(row.get("file") or ""), int(row["start"]), int(row["end"])))
+                corpus.text(row.get("file") or ""), int(row["start"]), int(row["end"]), chars=CONTEXT_CHARS))
             for row in rows]
 
 

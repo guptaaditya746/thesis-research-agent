@@ -102,8 +102,8 @@ shuffled, blind), the draft key marked as such.
 
 ```sh
 export CORPUS=/path/to/corpus GOLD=gold-data CONCEPTS=concepts   # LITELLM_BASE_URL, LITELLM_MASTER_KEY as for runs
-gold build q01 --max-papers 20     # a trial on the first 20 papers of the manifest (or --only-papers p3,p7)
-gold build q01                     # the full build; the trial's calls come from the cache
+gold build q01 --max-papers 20 --out $GOLD-trial   # a trial on the first 20 papers (or --only-papers p3,p7)
+gold build q01                     # the full build, once the question's concept pick is final
 gold status                        # one line per question (also while building); --json for tools
 gold triage q01                    # resumable; run again to retry failed batches
 gold pool q01 --sample 50 --seed 0
@@ -119,6 +119,12 @@ quote retry; failures are never cached), so run it again; 3 only failures a reru
 (a chunk too long even in 1,000-character pieces: lower `GOLD_CHUNK_CHARS`; a paper that fails its
 hash: fix the corpus); 143 stopped by SIGTERM (Slurm's time limit), resumable. A stopped build
 resumes; delete `$GOLD/<qid>/cache.jsonl` to pay for everything again.
+
+Run trials into their own directory (`--out $GOLD-trial`): any file in `$GOLD/<qid>/` freezes the
+question's concept pick (`agent concepts pick --replace` and the web app refuse a change once gold
+exists, `concept_step.gold_files`), and the provisional picks (`picked_by: provisional-first`) are meant
+to be changed by the user before gold is built. A trial in `$GOLD` itself is fine only for a question
+whose pick the user has confirmed; then the full build takes the trial's calls from the cache.
 
 A folder holds D for one concept. `gold build` refuses a concept other than the one its doc.json was
 built for (a re-pick after a provisional one): with `--replace` it moves that D and everything made
@@ -342,7 +348,9 @@ to `key.stale.json`, so neither the web app nor scoring keeps using a key the re
 unreviewed records, stale answers, unanchored and repeated quotes, added and rejected lines, merged
 duplicates and problems; `key.review` counts them. `complete` is true only when every record is decided,
 no disagreement is open, the question's missing-facts record is marked reviewed, and every sampled
-screening paper is checked.
+screening paper is checked. Export writes key.json after every pull, also half way through: until
+`review.complete` is true, scoring marks scores against it provisional (as against the draft key) and
+the web app shows the question's gold as `reviewing`, not `reviewed`.
 
 ### The numbers (`report.json`)
 
@@ -394,14 +402,19 @@ Prompts: `gold/prompts/judge-{support,same-fact,same-row}.txt`. The calibration 
 should do the same (`Judge.support_pair(pairs_line, corpus)` does), so the judge it uses is the one that
 was calibrated. A pair whose file the corpus cannot give raises; it is never judged without context.
 
-Calibration: `judge-sample` draws 240 pairs (default; `--size`) with a quote from all runs'
-`pairs.jsonl`, stratified by condition (equal allocation, population recorded); people answer
-supports / partial / no; `judge-agreement` splits the answered pairs into two seeded halves, picks on
+Calibration: `judge-sample --runs $RUNS/m4-72` draws 240 pairs (default; `--size`) with a quote from the
+`pairs.jsonl` of the runs `score batch` scored there (its `report/batch.json`, so cut attempts, smoke
+and web runs are not in the population that weights kappa; `--all-runs`, or no batch.json yet, takes
+every run below the root and the manifest says so), stratified by condition (equal allocation,
+population recorded); people answer supports / partial / no, each record showing the passage the
+judge gets (`context_for`'s 600 characters each side, not the review's 1,500; `context_chars` in
+sample.json and the report); `judge-agreement` splits the answered pairs into two seeded halves, picks on
 the first whether the judge's `partial` counts as yes or no (higher kappa; ties: no), and reports on the
 second Cohen's kappa (raw and weighted by condition population, N_h / n_h), the judge's yes-precision
 P(person yes | judge yes) and P(person yes | judge no) with Wilson intervals, the 3x3 table and each
 person's kappa. People's `supports` is yes, `partial` and `no` are no. Weighted kappa below 0.61: the
-report says to report soft scores without the judge, as the labelling repo did. The report records the
+report says to report soft scores without the judge, as the labelling repo did, and `score report`
+acts on it (`use_judge`: the primary test marked unvalidated, soft outcomes left out). The report records the
 model, the models the server reported, the prompt file and hash, `render_sha256` (how inputs become the
 user prompt) and the settings.
 

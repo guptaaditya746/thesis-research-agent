@@ -214,11 +214,14 @@ def cmd_screening_push(args: argparse.Namespace) -> int:
 # --- judge ---------------------------------------------------------------------------------------------
 
 def cmd_judge_sample(args: argparse.Namespace) -> int:
-    rows, manifest = judge.sample_pairs(args.runs, size=args.size, seed=args.seed)
+    rows, manifest = judge.sample_pairs(args.runs, size=args.size, seed=args.seed, all_runs=args.all_runs)
     try:
         judge.write_sample(_root(args), rows, manifest, force=args.force)
     except judge.SampleExists as exc:
         raise SystemExit(f"gold judge-sample: {exc}") from None
+    if manifest["scored_runs"] is None and not args.all_runs:
+        print(f"WARN no {judge.BATCH_FILE.as_posix()} under {args.runs}: sampled every run below it (run "
+              "`score batch` first to sample only the runs the report is computed on)")
     print(f"population {manifest['population']} from {manifest['runs']} runs -> sampled {manifest['sampled']} "
           f"({len(rows)} pairs)")
     return 0
@@ -297,7 +300,9 @@ def register(sub: Any) -> None:
 
     p = _add(sub, "judge-sample", cmd_judge_sample, "sample fact-quote pairs from runs for judge calibration")
     p.add_argument("--runs", type=Path, default=_env_path("RUNS", "runs"),
-                   help="runs to sample from, e.g. $RUNS/m4-72 (default: $RUNS or runs, every run under it)")
+                   help="the batch root whose scored runs to sample, e.g. $RUNS/m4-72 (default: $RUNS or runs); "
+                        "the runs its report/batch.json lists as scored")
+    p.add_argument("--all-runs", action="store_true", help="every run below --runs, scored or not")
     p.add_argument("--size", type=int, default=judge.SAMPLE_SIZE)
     p.add_argument("--seed", default=judge.SAMPLE_SEED)
     p.add_argument("--force", action="store_true", help="redraw a sample drawn before (answers on it stay in Argilla)")
