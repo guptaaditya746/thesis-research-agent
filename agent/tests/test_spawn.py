@@ -360,8 +360,9 @@ def test_spawn_under_landlock(tmp_path: Path, corpus: tuple[Path, Path], monkeyp
     subagent can claim but not touch its parent's scratch directory."""
     import agent.loop
     code = tmp_path / "agent-code"  # Landlock rules do not hold on WSL's /mnt/c (drvfs): copy the sandbox side
-    (code / "bin" / "spawn-only").mkdir(parents=True)
-    for name in ("sandbox.py", "claim_client.py", "spawn_client.py", "bin/claim", "bin/spawn", "bin/spawn-only/spawn"):
+    for sub in ("bin", "spawn-bin"):
+        (code / sub).mkdir(parents=True)
+    for name in ("sandbox.py", "claim_client.py", "spawn_client.py", "bin/claim", "spawn-bin/spawn"):
         (code / name).write_bytes((agent.loop.AGENT_DIR / name).read_bytes())
         (code / name).chmod(0o755)
     monkeypatch.setattr(agent.loop, "AGENT_DIR", code)
@@ -411,19 +412,31 @@ def test_kept_lines_of_spawn_results_and_claim_replies() -> None:
 # --- spawn off --------------------------------------------------------------------------------------------
 
 @posix_only
-def test_spawn_off_is_refused_or_not_found(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
-    """Off by default: claim_on runs see a spawn that refuses, claim_off runs none at all."""
-    probe = 'spawn --task "read p1"; echo "exit=$?"; echo "fd=${SPAWN_FD:-unset}"'
-    run, outcome, _, model = go(tmp_path / "on", corpus, [bash(probe), final([row([])])])
-    out = (run.out / "step-0001.txt").read_text(encoding="utf-8")
-    assert '"reason": "spawn is not available here' in out and "exit=2" in out and "fd=unset" in out
-    assert run.load_config()["spawn"] == {"enabled": False} and not of(run, "spawn")
-    assert "spawn" not in model.prompts[0][0]["content"]
-    tool = of(run, "agent_tool")[0]
-    assert "spawned" not in tool["custom_metadata"] and "timeout_s" not in tool["custom_metadata"]
-    run, _, _, _ = go(tmp_path / "off", corpus, [bash("command -v spawn || echo NO_SPAWN"), final([row([])])],
-                      condition="claim_off")
-    assert (run.out / "step-0001.txt").read_text(encoding="utf-8").strip() == "NO_SPAWN"
+def test_spawn_off_is_not_there_in_either_condition(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """Off by default, and then the two conditions have the same commands but claim: no spawn in either."""
+    probe = 'command -v spawn || echo NO_SPAWN; echo "fd=${SPAWN_FD:-unset}"'
+    for condition in ("claim_on", "claim_off"):
+        run, outcome, _, model = go(tmp_path / condition, corpus, [bash(probe), final([row([])])], condition=condition)
+        assert (run.out / "step-0001.txt").read_text(encoding="utf-8").split() == ["NO_SPAWN", "fd=unset"]
+        assert run.load_config()["spawn"] == {"enabled": False} and not of(run, "spawn")
+        assert "spawn" not in model.prompts[0][0]["content"]
+        tool = of(run, "agent_tool")[0]
+        assert "spawned" not in tool["custom_metadata"] and "timeout_s" not in tool["custom_metadata"]
+
+
+@posix_only
+def test_a_subagent_cannot_spawn(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """No nested spawn: a subagent has no spawn command and no SPAWN_FD, in both conditions."""
+    probe = 'spawn --task x; echo "exit=$?"; echo "fd=${SPAWN_FD:-unset}"'
+    for condition in ("claim_on", "claim_off"):
+        subs = SubModels({"t": [bash(probe), summary("tried")]})
+        run, outcome, _, _ = go(tmp_path / condition, corpus, [bash("spawn --task t"), final([row([])])],
+                                condition=condition, spawn=SPAWN, sub_model=subs)
+        assert outcome.exit_status == "submitted" and outcome.subagents == 1
+        sub_tool = next(t for t in of(run, "agent_tool") if t["agent_id"] == "sub-01")
+        out = (run.root / sub_tool["generated"]["output_file"]).read_text(encoding="utf-8")
+        assert "exit=127" in out and "fd=unset" in out, out
+        assert [s["generated"].get("agent_id") for s in of(run, "spawn")] == ["sub-01", "sub-01"]  # start, return
 
 
 @posix_only
@@ -432,7 +445,7 @@ def test_baseline_with_spawn_has_no_claim_command(tmp_path: Path, corpus: tuple[
     run, _, _, model = go(tmp_path, corpus, [bash(probe), final([row([])])], condition="claim_off", spawn=SPAWN,
                           sub_model=SubModels({}))
     out = (run.out / "step-0001.txt").read_text(encoding="utf-8").split()
-    assert out[0] == "NO_CLAIM" and out[1].endswith("/bin/spawn-only/spawn")
+    assert out[0] == "NO_CLAIM" and out[1].endswith("/agent/spawn-bin/spawn")
     system = model.prompts[0][0]["content"]
     assert "Subagents with spawn:" in system and "claim" not in system.lower()
     assert run.load_config()["prompt"]["files"]["spawn-v2-baseline.txt"]

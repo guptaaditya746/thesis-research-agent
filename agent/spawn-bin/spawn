@@ -1,0 +1,4 @@
+#!/bin/sh
+# The `spawn` command (row 2.12): runs agent/spawn_client.py, standard library only. Its own directory,
+# on the sandbox PATH iff spawn is on, in either condition (agent/bin, with claim, iff claim_on).
+exec python3 -I "$(dirname "$0")/../spawn_client.py" "$@"

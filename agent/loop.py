@@ -356,6 +356,7 @@ class OrchestratorModel(LitellmTextbasedModel):
 # --- sandbox environment ---------------------------------------------------------------------------
 
 SPAWN_WORD = re.compile(r"(?<![\w./-])spawn(?![\w.-])")  # `spawn --task ...`, not respawn, spawned or spawn.py
+SPAWN_BIN = "spawn-bin"  # agent/spawn-bin/spawn (row 2.12)
 
 
 class SandboxEnvironment:
@@ -394,10 +395,11 @@ class SandboxEnvironment:
         self.config = {"mode": mode, "claim": claim} | ({"spawn": True} if spawn else {})
 
     def path(self) -> str:
-        if self.claim:  # bin/claim, and bin/spawn, which refuses without SPAWN_FD
-            dirs = [str(AGENT_DIR / "bin")]
-        else:  # the baseline (2.4) has no claim command, with or without spawn
-            dirs = [str(AGENT_DIR / "bin" / "spawn-only")] if self.spawn else []
+        # The conditions differ only in claim (2.4): bin/ (claim) iff claim_on, and spawn-bin/
+        # (spawn, row 2.12) iff spawn is on, in either condition; subagents never get spawn.
+        dirs = [str(AGENT_DIR / "bin")] if self.claim else []
+        if self.spawn is not None:
+            dirs.append(str(AGENT_DIR / SPAWN_BIN))
         if self.agent_root:
             dirs += [str(self.agent_root / "bin"), str(self.agent_root / "agent-venv" / "bin")]
         return ":".join([*dirs, *self.extra_path, "/usr/local/bin", "/usr/bin", "/bin"])
@@ -405,7 +407,7 @@ class SandboxEnvironment:
     def readonly(self) -> list[str]:
         paths = [*SYSTEM_DIRS, str(self.corpus), str(self.run.out.resolve()), *self.extra_path]
         if self.claim or self.spawn:
-            paths.append(str(AGENT_DIR))  # bin/claim, bin/spawn and their clients
+            paths.append(str(AGENT_DIR))  # bin/claim, spawn-bin/spawn and their clients
         if self.agent_root:
             paths.append(str(self.agent_root))
             venv_python = self.agent_root / "agent-venv" / "bin" / "python"

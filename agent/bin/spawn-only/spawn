@@ -1,4 +1,0 @@
-#!/bin/sh
-# `spawn` for a claim_off run with spawn on (row 2.12): this directory goes on the sandbox PATH
-# instead of agent/bin, so the baseline gets spawn without a claim command.
-exec python3 -I "$(dirname "$0")/../../spawn_client.py" "$@"

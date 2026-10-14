@@ -1,3 +1,0 @@
-#!/bin/sh
-# The `spawn` command on the sandbox PATH (row 2.12): runs agent/spawn_client.py, standard library only.
-exec python3 -I "$(dirname "$0")/../spawn_client.py" "$@"
