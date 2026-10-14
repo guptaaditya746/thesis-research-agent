@@ -1,4 +1,4 @@
-/** The frame of every page: sidebar, a header with search, chat and theme, and the page. */
+/** The frame of every page: sidebar, the mock-mode banner, a header with search, chat and theme, and the page. */
 import { MessageSquareIcon } from "lucide-react"
 import { Suspense } from "react"
 import { Outlet } from "react-router"
@@ -14,6 +14,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "./AppSidebar"
 import { CommandMenu } from "./CommandMenu"
 import { JobWatcher } from "./JobWatcher"
+import { MockBanner } from "./MockBanner"
 import { ThemeToggle } from "./ThemeToggle"
 
 export function AppLayout() {
@@ -22,6 +23,7 @@ export function AppLayout() {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="min-w-0">
+          <MockBanner />
           <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
