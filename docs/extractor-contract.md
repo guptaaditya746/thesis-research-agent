@@ -238,12 +238,13 @@ schemas are published with the library so results can be validated outside Pytho
 | Replay and re-execution pattern | `agent replay`, `agent reexec` |
 | PROV-O export, SPARQL store | `agent/prov.py`, `scoring/store.py` |
 
-## 14. Open questions
+## 14. Decisions and open questions
 
-1. Item identity when the same value is reported twice in a paper (abstract and table): one item with two
-   spans, or two items merged by synthesis? Proposed: one item, two `value` spans.
-2. Normalised vs raw values: store both (`fields` normalised, the raw text is in the span)? Proposed: yes.
-3. Should a protocol be allowed to require a minimum benchmark recall for an extractor? Proposed: report
-   only, no hard gate, for the thesis.
-4. For the supervisor: is an agentic extractor acceptable as one implementation behind this interface, with
-   its runs replayed from records and its re-execution stability reported?
+Decided (user, 14 Oct):
+
+1. The same value reported twice in a paper (abstract and table) is **one item with two `value` spans**.
+2. Items store **both**: `fields` hold the normalised values; the raw text is in the span.
+3. Benchmark recall is **reported only**; no minimum is enforced for the thesis.
+
+Open, for the supervisor: is an agentic extractor acceptable as one implementation behind this interface,
+with its runs replayed from records and its re-execution stability reported?
