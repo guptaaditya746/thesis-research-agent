@@ -1,9 +1,15 @@
 /**
  * The chat panel (lazy chunk, loaded the first time the chat opens, then kept mounted so the
- * thread survives closing the sheet): one assistant-ui runtime over AI SDK v5's transport to
+ * thread survives closing the sheet): an assistant-ui runtime over AI SDK v5's transport to
  * POST /api/chat, which the backend answers with pydantic-ai's VercelAIAdapter (UI message
  * stream v1). Built from assistant-ui primitives; the assistant's tool calls (list_runs,
- * get_run, sparql, ...) show as one line each, so it is clear what an answer was read from.
+ * get_run, sparql, ...) show as one line each, so it is clear what an answer was read from, and
+ * its text renders as Markdown (tables, lists, code; no raw HTML).
+ *
+ * A thread belongs to one scope: the run in view, or all runs. The request names the run in view
+ * when it is sent, so a thread begun on run A and continued on run B would mix A's answers into
+ * B's ("this run"); the runtime is therefore keyed on the scope, and opening another run starts
+ * a new thread.
  */
 import {
   ActionBarPrimitive,
@@ -23,6 +29,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 import { useChat } from "./context"
+import { Markdown } from "./Markdown"
 import { chatTransport } from "./transport"
 
 const SUGGESTIONS_RUN = [
@@ -33,7 +40,13 @@ const SUGGESTIONS_RUN = [
 const SUGGESTIONS = ["Which runs ended without an answer?", "Compare claim_on and claim_off for q01.", "What is the primary test result?"]
 
 export default function ChatPanel() {
-  const { open, setOpen, runId } = useChat()
+  const { runId } = useChat()
+  // one thread per scope: another run (or leaving the run pages) starts a new one
+  return <ScopedChat key={runId ?? "all runs"} runId={runId} />
+}
+
+function ScopedChat({ runId }: { runId: string | null }) {
+  const { open, setOpen } = useChat()
   const runtime = useChatRuntime({ transport: chatTransport() })
   return (
     <AssistantRuntimeProvider runtime={runtime}>
@@ -45,9 +58,10 @@ export default function ChatPanel() {
               {runId ? (
                 <>
                   Scoped to run <Badge variant="secondary" className="font-mono">{runId}</Badge>
+                  <span className="text-xs">Another run starts a new thread.</span>
                 </>
               ) : (
-                "All runs. Open a run page to ask about one run."
+                "All runs. Open a run page to ask about one run (in a thread of its own)."
               )}
             </SheetDescription>
           </SheetHeader>
@@ -61,7 +75,11 @@ export default function ChatPanel() {
 function Thread({ suggestions }: { suggestions: string[] }) {
   return (
     <ThreadPrimitive.Root className="flex min-h-0 flex-1 flex-col">
-      <ThreadPrimitive.Viewport className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4" aria-live="polite">
+      {/* one short status for screen readers, not the whole thread re-read on every streamed word */}
+      <p role="status" className="sr-only">
+        <AssistantIf condition={({ thread }) => thread.isRunning}>The assistant is answering.</AssistantIf>
+      </p>
+      <ThreadPrimitive.Viewport className="relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
         <AssistantIf condition={({ thread }) => thread.isEmpty}>
           <div className="my-auto space-y-3 text-center">
             <p className="text-sm text-muted-foreground">
@@ -129,7 +147,7 @@ function UserMessage() {
 function AssistantMessage() {
   return (
     <MessagePrimitive.Root className="group mr-8 space-y-2 text-sm">
-      <MessagePrimitive.Parts components={{ Text: TextPart, tools: { Fallback: ToolCall } }} />
+      <MessagePrimitive.Parts components={{ Text: MarkdownPart, tools: { Fallback: ToolCall } }} />
       <MessagePrimitive.Error>
         <p className="text-destructive" role="alert">The assistant could not answer (backend or model error).</p>
       </MessagePrimitive.Error>
@@ -149,8 +167,14 @@ function AssistantMessage() {
   )
 }
 
+/** The user's own text, as typed. */
 function TextPart({ text }: TextMessagePartProps) {
   return <p className="leading-relaxed whitespace-pre-wrap">{text}</p>
+}
+
+/** The assistant's text, as Markdown. */
+function MarkdownPart({ text }: TextMessagePartProps) {
+  return <Markdown text={text} />
 }
 
 function ToolCall({ toolName, argsText, status }: ToolCallMessagePartProps) {

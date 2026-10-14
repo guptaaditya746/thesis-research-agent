@@ -1,7 +1,7 @@
 /**
  * The two concept actions of a question: propose briefs (a job running the corpus-blind concept
  * step, row 2.1; once a question has briefs the backend proposes no more) and pick one (row 2.2,
- * recorded with who picked it and why). A pick can change until the gold build starts on it; a
+ * recorded as the user's pick, with why). A pick can change until the gold build starts on it; a
  * change that leaves runs on the replaced concept needs `force`, which the dialog asks for.
  */
 import { CheckIcon, SparklesIcon } from "lucide-react"
@@ -23,13 +23,12 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { announceError, announceJob } from "@/lib/toasts"
 
-export function ProposeDialog({ qid, disabled }: { qid: string; disabled?: boolean }) {
+export function ProposeDialog({ qid }: { qid: string }) {
   const [open, setOpen] = useState(false)
   const [temperature, setTemperature] = useState("0.7")
   const [seed, setSeed] = useState("1")
@@ -54,7 +53,7 @@ export function ProposeDialog({ qid, disabled }: { qid: string; disabled?: boole
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={disabled}>
+        <Button>
           <SparklesIcon data-icon="inline-start" />
           Propose concepts
         </Button>
@@ -90,11 +89,12 @@ export function ProposeDialog({ qid, disabled }: { qid: string; disabled?: boole
   )
 }
 
-const PICKERS: { value: PickedBy; label: string }[] = [
-  { value: "user", label: "user (you)" },
-  { value: "claude", label: "claude" },
-  { value: "provisional-first", label: "provisional-first" },
-]
+/**
+ * Who a pick from the browser is recorded as: always the person at it. `claude` and
+ * `provisional-first` are set by the CLI (agent concepts pick), never here, so the hash-chained
+ * concept_pick record cannot attribute a person's pick to Claude or to the automatic policy.
+ */
+const PICKED_BY: PickedBy = "user"
 
 export function PickDialog({ qid, choice, title, isPicked, changes, runsOnCurrent, locked }: {
   qid: string
@@ -109,7 +109,6 @@ export function PickDialog({ qid, choice, title, isPicked, changes, runsOnCurren
   locked: string | null
 }) {
   const [open, setOpen] = useState(false)
-  const [pickedBy, setPickedBy] = useState<PickedBy>("user")
   const [reason, setReason] = useState("")
   const [force, setForce] = useState(false)
   const pick = usePickConcept(qid)
@@ -119,7 +118,7 @@ export function PickDialog({ qid, choice, title, isPicked, changes, runsOnCurren
   const submit = (event: FormEvent) => {
     event.preventDefault()
     pick.mutate(
-      { choice, picked_by: pickedBy, reason: reason.trim() || null, force: needsForce && force },
+      { choice, picked_by: PICKED_BY, reason: reason.trim() || null, force: needsForce && force },
       {
         onSuccess: () => {
           setOpen(false)
@@ -144,22 +143,9 @@ export function PickDialog({ qid, choice, title, isPicked, changes, runsOnCurren
             <DialogTitle>Pick brief {choice}</DialogTitle>
             <DialogDescription>
               “{title}” becomes the concept of {qid}: its concept.json and hash are what new runs and the gold standard use. A pick can
-              change until the gold build starts on it.
+              change until the gold build starts on it. The pick is recorded as yours (picked by user).
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor={`${id}-by`}>Picked by</Label>
-            <Select value={pickedBy} onValueChange={(v) => setPickedBy(v as PickedBy)}>
-              <SelectTrigger id={`${id}-by`} className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PICKERS.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="space-y-2">
             <Label htmlFor={`${id}-why`}>Reason</Label>
             <Textarea id={`${id}-why`} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why this brief answers the question best" rows={3} maxLength={2000} />

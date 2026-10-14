@@ -8,7 +8,7 @@ import { Link, useNavigate, useSearchParams } from "react-router"
 
 import { useQuestions, useRuns } from "@/api/hooks"
 import type { RunFilters } from "@/api/types"
-import { ConditionBadge, ExitBadge, LiveDot, VerifyBadge } from "@/components/badges"
+import { ConditionBadge, ExitBadge, LiveDot, SandboxBadge, VerifyBadge } from "@/components/badges"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { NewRunDialog } from "@/components/new-run/NewRunDialog"
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/states"
@@ -134,6 +134,7 @@ export default function RunsPage() {
                             {name}
                           </Link>
                           {r.post_processing && <Loader2Icon className="size-3 animate-spin text-muted-foreground motion-reduce:animate-none" aria-label="verifying and scoring" />}
+                          <SandboxBadge mode={r.sandbox} />
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                           {batch && <Badge variant="secondary" className="h-4 px-1 font-mono text-[10px] font-normal">{batch}</Badge>}

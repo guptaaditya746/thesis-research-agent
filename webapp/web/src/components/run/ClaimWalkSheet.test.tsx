@@ -9,6 +9,7 @@ import { server } from "@/mocks/node"
 import { renderRoutes, renderWithProviders } from "@/test/render"
 
 import { ClaimWalkSheet } from "./ClaimWalkSheet"
+import { WalkContext } from "./walk-context"
 
 // The run page is a lazy chunk; load it up front so the timeouts below measure the UI.
 beforeAll(() => import("@/pages/RunPage"), 180_000)
@@ -41,6 +42,76 @@ describe("claim walk", () => {
     expect(mark.parentElement).toHaveTextContent("NQ (Kwiatkowski et al., 2019), and HotpotQA (Yang et al., 2018) datasets")
     expect(within(sheet).getByText(/How Do Large Vision-Language Models See Text in Image/)).toBeInTheDocument()
     await waitFor(() => expect(scroll.mock.contexts).toContain(mark))
+  })
+
+  it("shows each claim's recorded quote next to today's passage", async () => {
+    renderWithProviders(<ClaimWalkSheet runId={RUN.on} target={{ kind: "fact", factId: "f4" }} onClose={() => {}} />)
+    const sheet = await screen.findByRole("dialog")
+    expect(await within(sheet).findByTestId("recorded-quote")).toHaveTextContent(quoteOf(PASSAGES.hotpotqa))
+    expect(within(sheet).getByText(/the exact text the broker anchored and accepted/)).toBeInTheDocument()
+    expect(within(sheet).getByTestId("quote")).toBeInTheDocument()
+    // the highlight is the recorded quote: no warning
+    expect(within(sheet).queryByText(/is not the recorded quote/)).not.toBeInTheDocument()
+  })
+
+  it("shows the recorded quote, and what the agent sent, when the passage cannot be shown", async () => {
+    const quote = quoteOf(PASSAGES.hotpotqa)
+    // no $CORPUS on the backend: no passage, but the quote the judge read is still there
+    server.use(
+      http.get("/api/runs/:run/facts/:fact/walk", () => {
+        const claim = {
+          claim_id: "claim-000005", task_id: "t5", status: "accepted", s: "p6", p: "evaluatesOn", o: "HotpotQA", step: 6, agent_id: "sub-01",
+          origin: "research", file: "p6.md", paper_id: "p6", quote, quote_submitted: "and  HotpotQA  (Yang et al", anchor: { start: 19702, end: 19726 },
+        }
+        return HttpResponse.json({
+          run_id: RUN.on, row_id: "r4", row: { id: "r4", facts: [] },
+          fact: { id: "f4", s: "p6", p: "evaluatesOn", o: "HotpotQA", claims: ["claim-000005"], origin: "research" },
+          claims: [{ claim_id: "claim-000005", claim, step: null, passage: null, anchor_status: "unknown", support: null }],
+          support: null, label: null,
+        })
+      }),
+    )
+    renderWithProviders(<ClaimWalkSheet runId={RUN.on} target={{ kind: "fact", factId: "f4" }} onClose={() => {}} />)
+    const sheet = await screen.findByRole("dialog")
+    expect(await within(sheet).findByText(/no corpus configured/)).toBeInTheDocument()
+    expect(within(sheet).queryByTestId("quote")).not.toBeInTheDocument()
+    expect(within(sheet).getByTestId("recorded-quote")).toHaveTextContent(quote)
+    // the agent typed extra spaces; the broker matched it to the exact text above
+    expect(within(sheet).getByTestId("quote-submitted").textContent).toContain("“and  HotpotQA  (Yang et al”")
+  })
+
+  it("warns when today's highlighted text is not the claim's recorded quote (the file changed)", async () => {
+    server.use(
+      http.get("/api/corpus/:paper", () =>
+        HttpResponse.json({ ...PASSAGES.megapairs, text: PASSAGES.megapairs.text.replace("MegaPairs: Massive", "MegaPairs - Massive") })),
+    )
+    renderWithProviders(
+      <ClaimWalkSheet runId={RUN.on} target={{ kind: "claims", claimIds: ["claim-000007"], label: "title" }} onClose={() => {}} />,
+    )
+    const sheet = await screen.findByRole("dialog")
+    expect(await within(sheet).findByText(/The highlighted text is not the recorded quote/)).toBeInTheDocument()
+    expect(within(sheet).getByTestId("recorded-quote")).toHaveTextContent("MegaPairs: Massive Data Synthesis")
+  })
+
+  it("walks every claim of a merged edge, each naming the facts that cite it", async () => {
+    const user = userEvent.setup()
+    const open = vi.fn()
+    renderWithProviders(
+      <WalkContext.Provider value={{ runId: RUN.on, open }}>
+        <ClaimWalkSheet
+          runId={RUN.on}
+          target={{ kind: "claims", claimIds: ["claim-000001", "claim-000007"], label: "evaluatesOn", citedBy: { "claim-000001": ["f1"], "claim-000007": [] } }}
+          onClose={() => {}}
+        />
+      </WalkContext.Provider>,
+    )
+    const sheet = await screen.findByRole("dialog")
+    expect(await within(sheet).findByText("2 claims; 1 cited by answer facts (each claim names its facts).")).toBeInTheDocument()
+    expect(within(sheet).getByRole("heading", { name: "Claim claim-000001" })).toBeInTheDocument()
+    expect(within(sheet).getByRole("heading", { name: "Claim claim-000007" })).toBeInTheDocument()
+    expect(within(sheet).getByText("No answer fact cites this claim.")).toBeInTheDocument()
+    await user.click(within(sheet).getByRole("button", { name: "Open the walk of fact f1" }))
+    expect(open).toHaveBeenCalledWith({ kind: "fact", factId: "f1" })
   })
 
   it("says so when a fact has no claim behind it", async () => {

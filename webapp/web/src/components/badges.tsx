@@ -17,6 +17,7 @@ import {
   PencilLineIcon,
   ScissorsIcon,
   ShieldCheckIcon,
+  ShieldOffIcon,
   TriangleAlertIcon,
 } from "lucide-react"
 import type { ReactNode } from "react"
@@ -104,6 +105,19 @@ export function ProvisionalBadge() {
   return (
     <StatusBadge tone="warning" icon={<FlaskConicalIcon />} title="scored against the draft key (before review): tests the pipeline, never a result">
       provisional
+    </StatusBadge>
+  )
+}
+
+/**
+ * A run whose commands did not run in the landlock sandbox (config.json sandbox.mode): unsandboxed
+ * is for tests only, its commands had network and write access. Nothing for landlock or unknown.
+ */
+export function SandboxBadge({ mode }: { mode: string | null | undefined }) {
+  if (!mode || mode === "landlock") return null
+  return (
+    <StatusBadge tone="serious" icon={<ShieldOffIcon />} title="the agent's commands ran without the landlock sandbox (network and write access): for tests only, not a thesis run">
+      {mode}
     </StatusBadge>
   )
 }

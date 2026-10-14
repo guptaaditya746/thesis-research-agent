@@ -8,7 +8,7 @@ import { FileQuestionIcon, InfoIcon } from "lucide-react"
 
 import type { Answer, AnswerRow, ConceptBrief, RunSummary } from "@/api/types"
 import { ProvisionalBadge } from "@/components/badges"
-import { EmptyState } from "@/components/states"
+import { EmptyState, ErrorState } from "@/components/states"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -33,7 +33,7 @@ export function AnswerTab({ runId, answer, concept, summary }: {
   concept: ConceptBrief | null
   summary: RunSummary
 }) {
-  const { statuses, score, loading } = useFactStatuses(runId, answer)
+  const { statuses, score, loading, error, retry } = useFactStatuses(runId, answer)
   const { open } = useWalk()
 
   if (!answer || answer.rows.length === 0) {
@@ -70,10 +70,13 @@ export function AnswerTab({ runId, answer, concept, summary }: {
         <span className="text-xs text-muted-foreground">
           {score
             ? `Verdicts as scored (key ${score.key_version ?? "?"})${partial ? `; partial counts as ${partial === "yes" ? "supported" : "not supported"}` : ""}.`
-            : "Not scored yet: a fact's walk can ask the judge."}{" "}
+            : error
+              ? "The verdicts could not be loaded: the badges show only whether a fact cites a claim."
+              : "Not scored yet: a fact's walk can ask the judge."}{" "}
           Click a fact for its claim walk.
         </span>
       </div>
+      {error ? <ErrorState error={error} title="Could not load score.json" onRetry={retry} /> : null}
       {summary.answer_from === "draft" && (
         <Alert>
           <InfoIcon />

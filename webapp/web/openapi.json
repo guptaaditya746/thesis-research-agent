@@ -3680,6 +3680,18 @@
             ],
             "title": "Created At"
           },
+          "sandbox": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sandbox",
+            "description": "config.json sandbox.mode: landlock, or unsandboxed (for tests only: commands ran with network and write access); null: not recorded"
+          },
           "exit_status": {
             "type": "string",
             "title": "Exit Status",

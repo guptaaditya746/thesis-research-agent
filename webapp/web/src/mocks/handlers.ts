@@ -230,7 +230,10 @@ function chatChunks(runId: string | undefined, question: string): unknown[] {
     ? `(mock reply) Run ${run.run_id} (${run.condition}, seed ${run.seed}) ended with exit status ${run.exit_status}: ` +
       `${run.facts ?? 0} facts, ${run.claims_accepted} accepted and ${run.claims_rejected} rejected claims. ` +
       (run.score?.support_share != null ? `Support share ${(run.score.support_share * 100).toFixed(0)}%. ` : "") +
-      `You asked: “${question}”.`
+      `You asked: “${question}”.\n\n` +
+      // the chat agent answers with Markdown: a table, bold, and (never rendered) raw HTML
+      `| facts | accepted claims | rejected claims |\n|---|---|---|\n| ${run.facts ?? 0} | ${run.claims_accepted} | ${run.claims_rejected} |\n\n` +
+      `**Read from get_run.** <b data-testid="raw-html">raw html</b>`
     : `(mock reply) There are ${db.runs.length} runs over ${new Set(db.runs.map((r) => r.qid)).size} questions. Open a run to ask about it. You asked: “${question}”.`
   const words = text.split(/(?<= )/)
   return [

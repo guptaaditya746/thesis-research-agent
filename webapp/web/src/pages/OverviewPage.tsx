@@ -58,6 +58,12 @@ export default function OverviewPage() {
         description="Twelve questions, two conditions: from the concept pick and the gold key to scored runs and the report."
       />
       <PipelineTiles />
+      {runs.isError && (
+        <ErrorState error={runs.error} title="Could not load the runs: run counts and support means are missing" onRetry={() => void runs.refetch()} />
+      )}
+      {results.isError && (
+        <ErrorState error={results.error} title="Could not load the report" onRetry={() => void results.refetch()} />
+      )}
       {questions.isError ? (
         <ErrorState error={questions.error} onRetry={() => void questions.refetch()} />
       ) : (
@@ -117,6 +123,8 @@ export default function OverviewPage() {
                       <TableCell className="text-right tabular-nums whitespace-nowrap">
                         {runs.isPending ? (
                           <Skeleton className="ml-auto h-4 w-20" />
+                        ) : runs.isError ? (
+                          <span className="text-xs text-destructive">not loaded</span>
                         ) : (
                           <>
                             <MeanCell mean={meanSupport(runs.data ?? [], q.id, "claim_on")} /> / <MeanCell mean={meanSupport(runs.data ?? [], q.id, "claim_off")} />
@@ -169,17 +177,20 @@ function PipelineTiles() {
   const report = results.data
 
   const tiles = [
-    { label: "Concepts picked", value: `${picked} of ${total}`, share: picked / total, note: "a brief per question", pending: questions.isPending },
-    { label: "Gold keys reviewed", value: `${reviewed} of ${total}`, share: reviewed / total, note: `${drafts} draft`, pending: questions.isPending },
+    { label: "Concepts picked", value: `${picked} of ${total}`, share: picked / total, note: "a brief per question", pending: questions.isPending, error: questions.isError },
+    { label: "Gold keys reviewed", value: `${reviewed} of ${total}`, share: reviewed / total, note: `${drafts} draft`, pending: questions.isPending, error: questions.isError },
     {
       label: "Runs scored", value: `${scored} of ${PLANNED_RUNS}`, share: scored / PLANNED_RUNS,
       note: [live ? `${live} running now` : "12 questions × 2 conditions × 3", provisional ? `${provisional} against draft keys` : ""].filter(Boolean).join(" · "),
       pending: runs.isPending,
+      error: runs.isError,
     },
     {
       label: "Report", value: report ? (report.provisional ? "provisional" : "ready") : "not yet", share: report ? 1 : 0,
       note: report ? `${report.runs?.scored ?? "?"} scored runs${report.complete === false ? " · verdicts pending" : ""}` : "`score report` after all runs",
       pending: results.isPending,
+      // a 404 is "no report yet" (null); anything else is an error, not "not yet"
+      error: results.isError,
     },
   ]
   return (
@@ -188,11 +199,19 @@ function PipelineTiles() {
         <Card key={t.label} className="gap-2">
           <CardHeader>
             <CardDescription>{t.label}</CardDescription>
-            <CardTitle className="text-2xl font-semibold">{t.pending ? <Skeleton className="h-7 w-24" /> : t.value}</CardTitle>
+            <CardTitle className="text-2xl font-semibold">
+              {t.error ? <span className="text-destructive">not loaded</span> : t.pending ? <Skeleton className="h-7 w-24" /> : t.value}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Progress value={Math.round(t.share * 100)} aria-label={`${t.label}: ${Math.round(t.share * 100)}%`} />
-            <p className="text-xs text-muted-foreground">{t.note}</p>
+            {t.error ? (
+              <p className="text-xs text-destructive">The request failed; see the error above.</p>
+            ) : (
+              <>
+                <Progress value={Math.round(t.share * 100)} aria-label={`${t.label}: ${Math.round(t.share * 100)}%`} />
+                <p className="text-xs text-muted-foreground">{t.note}</p>
+              </>
+            )}
           </CardContent>
         </Card>
       ))}

@@ -2,8 +2,9 @@
  * Graph tab: the run's knowledge graph (graph.json, row 2.6) in React Flow, laid out by dagre
  * (src/lib/graph.ts). Papers are blue rectangles with a document icon, entities rounded pills,
  * literal values dashed; an edge drawn dashed came from the attach step. Clicking an edge opens
- * the claim walk (of the answer fact that cites its claim, else of the claim itself). Below the
- * canvas the same edges as a list, for keyboard use and screen readers.
+ * the claim walk (of the one answer fact that cites its claims, else of all its claims, each with
+ * the facts citing it). Below the canvas the same edges as a list, for keyboard use and screen
+ * readers; claims whose edge could not be drawn are counted.
  */
 import "@xyflow/react/dist/style.css"
 
@@ -27,10 +28,9 @@ import type { Answer } from "@/api/types"
 import { EmptyState, ErrorState } from "@/components/states"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { factsByClaim } from "@/lib/facts"
 import { toFlow, type FlowEdge, type FlowNode } from "@/lib/graph"
 
-import { useWalk, type WalkTarget } from "./walk-context"
+import { useWalk, walkTargetForClaims, type WalkTarget } from "./walk-context"
 
 function PaperNode({ data }: NodeProps<FlowNode>) {
   return (
@@ -66,16 +66,12 @@ function LiteralNode({ data }: NodeProps<FlowNode>) {
 
 const NODE_TYPES = { paper: PaperNode, entity: EntityNode, literal: LiteralNode }
 
-/** Open the walk of the fact citing the edge's first claim, or of the bare claims. */
-function walkTargetOf(edge: FlowEdge, answer: Answer | null): WalkTarget {
-  const claims = edge.data?.claims ?? []
-  const facts = factsByClaim(answer)
-  const fact = claims.map((c) => facts.get(c)?.[0]).find(Boolean)
-  return fact ? { kind: "fact", factId: fact.fact.id } : { kind: "claims", claimIds: claims, label: edge.data?.predicate }
-}
+/** The walk of an edge: of the one fact citing all its claims, else of all its claims (a merged edge may have several). */
+const walkTargetOf = (edge: FlowEdge, answer: Answer | null): WalkTarget =>
+  walkTargetForClaims(edge.data?.claims ?? [], answer, edge.data?.predicate)
 
-export function GraphTab({ runId, answer }: { runId: string; answer: Answer | null }) {
-  const graph = useGraph(runId)
+export function GraphTab({ runId, answer, live = false }: { runId: string; answer: Answer | null; live?: boolean }) {
+  const graph = useGraph(runId, { live })
   const { open } = useWalk()
   const { resolvedTheme } = useTheme()
   const flow = useMemo(() => (graph.data ? toFlow(graph.data) : null), [graph.data])
@@ -126,8 +122,13 @@ export function GraphTab({ runId, answer }: { runId: string; answer: Answer | nu
         <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-5 rounded-full border" aria-hidden="true" /> entity</span>
         <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-5 rounded-sm border border-dashed" aria-hidden="true" /> literal value</span>
         <span className="flex items-center gap-1.5"><svg width="24" height="6" aria-hidden="true"><line x1="0" y1="3" x2="24" y2="3" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 4" /></svg> from the attach step</span>
-        <span>{flow.nodes.length} nodes · {graph.data.edges.length} claims as {edges.length} edges · click an edge for its claim walk</span>
+        <span>{flow.nodes.length} nodes · {graph.data.edges.length - flow.skipped} claims as {edges.length} edges · click an edge for its claim walk</span>
       </div>
+      {flow.skipped > 0 && (
+        <p className="text-xs text-status-serious" role="status">
+          {flow.skipped} claim{flow.skipped === 1 ? "" : "s"} of graph.json not drawn: an end of the edge is not a node of the graph (see the Claims tab).
+        </p>
+      )}
       <div className="h-[60vh] min-h-96 overflow-hidden rounded-md border" role="region" aria-label="Knowledge graph">
         <ReactFlow<FlowNode, FlowEdge>
           nodes={flow.nodes}

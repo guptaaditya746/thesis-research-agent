@@ -177,6 +177,9 @@ class RunSummary(BaseModel):
     seed: int | None
     temperature: float | None
     created_at: str | None
+    sandbox: str | None = Field(None, description="config.json sandbox.mode: landlock, or unsandboxed (for tests "
+                                                  "only: commands ran with network and write access); null: not "
+                                                  "recorded")
     exit_status: str = Field(description="submitted, budget, context_full, error, cut, running, incomplete, "
                                          "or another exit status the harness recorded")
     answer_from: Literal["final", "draft", "none"] | None = Field(

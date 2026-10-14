@@ -127,14 +127,36 @@ export const useRun = (runId: string, { waiting = false }: { waiting?: boolean }
       query.state.data ? (isBusy(query.state.data.summary) ? LIVE_POLL_MS : false) : waiting ? JOB_POLL_MS : false,
   })
 
-export const useSteps = (runId: string, enabled = true) =>
-  useQuery({ queryKey: keys.runPart(runId, "steps"), queryFn: ({ signal }) => api.steps(runId, signal), enabled: !!runId && enabled })
+/** A part of a run that grows while the agent writes it: polled while `live`. */
+interface PartOptions {
+  enabled?: boolean
+  live?: boolean
+}
 
-export const useClaims = (runId: string, enabled = true) =>
-  useQuery({ queryKey: keys.runPart(runId, "claims"), queryFn: ({ signal }) => api.claims(runId, signal), enabled: !!runId && enabled })
+export const useSteps = (runId: string, { enabled = true, live = false }: PartOptions = {}) =>
+  useQuery({
+    queryKey: keys.runPart(runId, "steps"),
+    queryFn: ({ signal }) => api.steps(runId, signal),
+    enabled: !!runId && enabled,
+    refetchInterval: live ? LIVE_POLL_MS : false,
+  })
 
-export const useGraph = (runId: string, enabled = true) =>
-  useQuery({ queryKey: keys.runPart(runId, "graph"), queryFn: ({ signal }) => api.graph(runId, signal), enabled: !!runId && enabled })
+export const useClaims = (runId: string, { enabled = true, live = false }: PartOptions = {}) =>
+  useQuery({
+    queryKey: keys.runPart(runId, "claims"),
+    queryFn: ({ signal }) => api.claims(runId, signal),
+    enabled: !!runId && enabled,
+    refetchInterval: live ? LIVE_POLL_MS : false,
+  })
+
+/** graph.json, or for a live run the graph the backend builds from the claims so far. */
+export const useGraph = (runId: string, { enabled = true, live = false }: PartOptions = {}) =>
+  useQuery({
+    queryKey: keys.runPart(runId, "graph"),
+    queryFn: ({ signal }) => api.graph(runId, signal),
+    enabled: !!runId && enabled,
+    refetchInterval: live ? LIVE_POLL_MS : false,
+  })
 
 export const useScore = (runId: string, enabled = true) =>
   useQuery({ queryKey: keys.runPart(runId, "score"), queryFn: ({ signal }) => api.score(runId, signal), enabled: !!runId && enabled })
@@ -156,14 +178,6 @@ export const usePassage = (paperId: string | null | undefined, start: number, en
     queryKey: keys.passage(paperId ?? "", start, end),
     queryFn: ({ signal }) => api.passage(paperId!, { start, end }, signal),
     enabled: !!paperId && enabled,
-    staleTime: Infinity,
-  })
-
-export const useStepOutput = (runId: string, step: number | null, agentId?: string | null) =>
-  useQuery({
-    queryKey: keys.runPart(runId, "output", step ?? -1, agentId ?? "main"),
-    queryFn: ({ signal }) => api.stepOutput(runId, step!, agentId, signal),
-    enabled: !!runId && step !== null,
     staleTime: Infinity,
   })
 

@@ -20,13 +20,23 @@ import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 
-const QUERIES: { n: ProvQueryNumber; title: string; text: string; params: (keyof ProvQueryParams)[] }[] = [
+const QUERIES: {
+  n: ProvQueryNumber
+  title: string
+  text: string
+  params: (keyof ProvQueryParams)[]
+  /** at least one parameter must be given (agent/queries.py refuses otherwise) */
+  needsOne?: boolean
+}[] = [
   { n: 1, title: "Edge → passage", text: "Every graph edge (or one) with its claim, the step that made it and the exact passage.", params: ["edge"] },
   { n: 2, title: "Who produced a fact", text: "The command and the model call behind each claim of a fact (or of one claim).", params: ["fact", "claim"] },
-  { n: 3, title: "Claims of a step or agent", text: "All claims made at one step, by one (sub)agent, or both.", params: ["step", "agent"] },
+  { n: 3, title: "Claims of a step or agent", text: "All claims made at one step, by one (sub)agent, or both.", params: ["step", "agent"], needsOne: true },
   { n: 4, title: "Broken anchors", text: "Claims whose anchor no longer resolves at its offsets in today's corpus.", params: [] },
   { n: 5, title: "Unsourced facts", text: "Answer facts with no claim behind them.", params: [] },
 ]
+
+/** Parameters that take a whole number (the step id). */
+const NUMERIC: Partial<Record<keyof ProvQueryParams, true>> = { step: true }
 
 const PLACEHOLDER: Record<keyof ProvQueryParams, string> = {
   edge: "edge-000001", fact: "f1", claim: "claim-000001", step: "3", agent: "main",
@@ -104,10 +114,12 @@ function QueryCard({ runId, query }: { runId: string; query: (typeof QUERIES)[nu
   const run = useProvQuery(runId)
   const [params, setParams] = useState<ProvQueryParams>({})
   const id = useId()
+  const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v && v.trim()).map(([k, v]) => [k, v!.trim()])) as ProvQueryParams
+  const missing = !!query.needsOne && Object.keys(clean).length === 0
+  const hint = query.needsOne ? query.params.join(" or ") + " (one required)" : null
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v && v.trim()).map(([k, v]) => [k, v!.trim()])) as ProvQueryParams
-    run.mutate({ n: query.n, params: clean })
+    if (!missing) run.mutate({ n: query.n, params: clean })
   }
   return (
     <Card className="min-w-0 gap-3">
@@ -121,20 +133,26 @@ function QueryCard({ runId, query }: { runId: string; query: (typeof QUERIES)[nu
         <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
           {query.params.map((p) => (
             <div key={p} className="space-y-1">
-              <Label htmlFor={`${id}-${p}`} className="text-xs text-muted-foreground">{p} (optional)</Label>
+              <Label htmlFor={`${id}-${p}`} className="text-xs text-muted-foreground">{p}{query.needsOne ? "" : " (optional)"}</Label>
               <Input
                 id={`${id}-${p}`}
                 className="h-8 w-32 font-mono text-xs"
+                type={NUMERIC[p] ? "number" : "text"}
+                min={NUMERIC[p] ? 0 : undefined}
+                step={NUMERIC[p] ? 1 : undefined}
+                inputMode={NUMERIC[p] ? "numeric" : undefined}
                 placeholder={PLACEHOLDER[p]}
                 value={params[p] ?? ""}
+                aria-describedby={hint ? `${id}-hint` : undefined}
                 onChange={(e) => setParams({ ...params, [p]: e.target.value })}
               />
             </div>
           ))}
-          <Button type="submit" size="sm" disabled={run.isPending}>
+          <Button type="submit" size="sm" disabled={run.isPending || missing}>
             {run.isPending ? <Spinner data-icon="inline-start" /> : <PlayIcon data-icon="inline-start" />}
             Run query {query.n}
           </Button>
+          {hint && <p id={`${id}-hint`} className="w-full text-xs text-muted-foreground">{hint}</p>}
         </form>
         {run.isError && <ErrorState error={run.error} title={`Query ${query.n} failed`} />}
         {run.data &&

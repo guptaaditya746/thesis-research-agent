@@ -1,8 +1,9 @@
 /**
  * Timeline tab: the run's steps in order, live while the agent writes the run (the run stream
  * folded into the summarised steps, src/api/stream.ts), with the budget line and the notices the
- * agent got at 50/75/90 % of it, phase changes (research -> conclude, attach), coverage notices
- * and each step's claims. Successor of the static timeline.html of row 1.14.
+ * agent got (at the thresholds its config.json records; none for a run that recorded none), phase
+ * changes (research -> conclude, attach), coverage notices and each step's claims. Successor of
+ * the static timeline.html of row 1.14.
  */
 import { ArrowRightIcon, CheckIcon, GaugeIcon, GitBranchIcon, RotateCwIcon, TriangleAlertIcon, XIcon } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -21,7 +22,7 @@ import { Progress } from "@/components/ui/progress"
 import { Switch } from "@/components/ui/switch"
 import { term } from "@/lib/facts"
 import { duration, int, tokens as fmtTokens } from "@/lib/format"
-import { BUDGET_WARNINGS, summarize, type BudgetNotice, type PhaseChange, type TimelineStep } from "@/lib/timeline"
+import { budgetNoticeAsk, summarize, type BudgetNotice, type PhaseChange, type TimelineStep } from "@/lib/timeline"
 import { cn } from "@/lib/utils"
 
 import { StepView } from "./ClaimWalkSheet"
@@ -44,14 +45,19 @@ const STREAM_LABEL: Record<StreamStatus, string> = {
   idle: "not live",
   connecting: "connecting",
   open: "streaming",
+  reconnecting: "connection dropped, resuming",
   done: "finished",
-  error: "stream lost, reconnecting",
+  error: "stream lost",
 }
 
-export function TimelineTab({ runId, live, budget }: { runId: string; live: boolean; budget: RunConfig["budget"] }) {
+const NO_NOTICES: readonly number[] = []
+
+export function TimelineTab({ runId, live, config }: { runId: string; live: boolean; config: RunConfig }) {
   const steps = useSteps(runId)
   const { timeline, status, reconnect } = useRunStream(runId, { live, seed: steps.data })
-  const summary = useMemo(() => summarize(timeline, budget), [timeline, budget])
+  const { budget, loop } = config
+  const warnings = loop?.budget_warnings ?? NO_NOTICES
+  const summary = useMemo(() => summarize(timeline, budget, warnings), [timeline, budget, warnings])
   const [follow, setFollow] = useState(true)
   const end = useRef<HTMLDivElement>(null)
   const count = summary.steps.length
@@ -71,8 +77,13 @@ export function TimelineTab({ runId, live, budget }: { runId: string; live: bool
     <div className="space-y-4">
       <Card className="py-4">
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <BudgetMeter label="Research steps" used={summary.researchSteps} limit={budget?.steps} format={int} />
-          <BudgetMeter label="Tokens (main agent)" used={summary.mainTokens} limit={budget?.tokens} format={fmtTokens} />
+          <BudgetMeter label="Research steps" used={summary.researchSteps} limit={budget?.steps} format={int} ticks={warnings} />
+          <BudgetMeter label="Tokens (main agent)" used={summary.mainTokens} limit={budget?.tokens} format={fmtTokens} ticks={warnings} />
+          {warnings.length === 0 && (
+            <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-4">
+              config.json records no budget notices for this run, so the agent got none (prompt v1, or a harness before the notices).
+            </p>
+          )}
           <div className="space-y-1 text-sm">
             <p className="text-muted-foreground">Claims</p>
             <p className="tabular-nums">
@@ -109,7 +120,7 @@ export function TimelineTab({ runId, live, budget }: { runId: string; live: bool
             <li key={s.key} className="space-y-3">
               <PhaseSeparator change={phaseAt.get(s.key)} />
               <StepCard runId={runId} step={s} />
-              <BudgetSeparator notice={noticeAt.get(s.key)} />
+              <BudgetSeparator notice={noticeAt.get(s.key)} draftFile={loop?.draft_file ?? null} />
             </li>
           ))}
         </ol>
@@ -130,19 +141,27 @@ function PhaseSeparator({ change }: { change: PhaseChange | undefined }) {
   )
 }
 
-function BudgetSeparator({ notice }: { notice: BudgetNotice | undefined }) {
+function BudgetSeparator({ notice, draftFile }: { notice: BudgetNotice | undefined; draftFile: string | null }) {
   if (!notice) return null
+  const ask = budgetNoticeAsk(notice.percent, draftFile)
   return (
     <div className="flex items-center gap-2 text-xs text-muted-foreground" role="separator" aria-label={`Budget notice: ${notice.percent}% used`}>
       <span className="h-px flex-1 bg-status-warning/50" />
       <GaugeIcon className={cn("size-3.5", notice.percent >= 90 ? "text-status-critical" : "text-status-warning")} aria-hidden="true" />
-      budget notice: {notice.percent}% used{notice.percent >= 90 ? ", conclude now" : notice.percent >= 75 ? ", no new leads" : ", update the draft"}
+      budget notice: {notice.percent}% used{ask ? `, ${ask}` : ""}
       <span className="h-px flex-1 bg-status-warning/50" />
     </div>
   )
 }
 
-function BudgetMeter({ label, used, limit, format }: { label: string; used: number; limit: number | undefined; format: (n: number) => string }) {
+function BudgetMeter({ label, used, limit, format, ticks }: {
+  label: string
+  used: number
+  limit: number | undefined
+  format: (n: number) => string
+  /** the run's notice thresholds in % */
+  ticks: readonly number[]
+}) {
   const share = limit ? Math.min(1, used / limit) : 0
   return (
     <div className="space-y-1 text-sm">
@@ -158,7 +177,7 @@ function BudgetMeter({ label, used, limit, format }: { label: string; used: numb
             aria-label={`${label}: ${Math.round(share * 100)}% of the budget`}
             className={cn(share >= 0.9 && "[&>[data-slot=progress-indicator]]:bg-status-critical", share >= 0.75 && share < 0.9 && "[&>[data-slot=progress-indicator]]:bg-status-warning")}
           />
-          {BUDGET_WARNINGS.map((p) => (
+          {ticks.map((p) => (
             <span key={p} className="absolute top-0 h-full w-px bg-background" style={{ left: `${p}%` }} aria-hidden="true" />
           ))}
         </div>

@@ -16,6 +16,9 @@ export function runConfig(config: Record<string, unknown> | null | undefined): R
   const prompt = obj(c.prompt)
   const sampling = obj(c.sampling)
   const orchestrator = obj(obj(c.models)?.orchestrator)
+  const loop = obj(c.loop)
+  const sandbox = obj(c.sandbox)
+  const warnings = Array.isArray(loop?.budget_warnings) ? loop.budget_warnings : []
   return {
     run_id: str(c.run_id),
     created_at: str(c.created_at),
@@ -25,6 +28,9 @@ export function runConfig(config: Record<string, unknown> | null | undefined): R
     prompt: prompt && { version: str(prompt.version), sha256: str(prompt.sha256) },
     models: orchestrator && { orchestrator: { alias: str(orchestrator.alias), name: str(orchestrator.name), revision: str(orchestrator.revision) } },
     git_commit: str(c.git_commit),
+    // no thresholds recorded: the run got no notices (prompt v1, or a loop before the setting)
+    loop: { budget_warnings: warnings.filter((p): p is number => num(p) !== undefined), draft_file: str(loop?.draft_file) ?? null },
+    sandbox: sandbox && { mode: str(sandbox.mode) },
   }
 }
 

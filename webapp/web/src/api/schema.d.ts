@@ -1285,6 +1285,11 @@ export interface components {
             /** Created At */
             created_at: string | null;
             /**
+             * Sandbox
+             * @description config.json sandbox.mode: landlock, or unsandboxed (for tests only: commands ran with network and write access); null: not recorded
+             */
+            sandbox?: string | null;
+            /**
              * Exit Status
              * @description submitted, budget, context_full, error, cut, running, incomplete, or another exit status the harness recorded
              */

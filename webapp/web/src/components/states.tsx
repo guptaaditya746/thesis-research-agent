@@ -3,7 +3,6 @@
  * that is coming, an Empty block that says what is missing and how to get it, and an error
  * alert with the backend's reason and a retry.
  */
-import type { UseQueryResult } from "@tanstack/react-query"
 import { AlertTriangleIcon, InboxIcon, RotateCwIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
@@ -85,24 +84,4 @@ export function CardsSkeleton({ count = 3, className }: { count?: number; classN
       ))}
     </div>
   )
-}
-
-/**
- * One query's three states: `loading` while there is no data, the error with a retry, else
- * the children with the data. A background refetch keeps the old data on screen.
- */
-export function QueryView<T>({
-  query,
-  loading,
-  errorTitle,
-  children,
-}: {
-  query: UseQueryResult<T>
-  loading: ReactNode
-  errorTitle?: string
-  children: (data: T) => ReactNode
-}) {
-  if (query.isPending) return <>{loading}</>
-  if (query.isError) return <ErrorState error={query.error} title={errorTitle} onRetry={() => void query.refetch()} />
-  return <>{children(query.data)}</>
 }

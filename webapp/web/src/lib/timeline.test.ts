@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { EventRecord, Step } from "@/api/types"
 import { LIVE_RECORDS, RUN, STEPS } from "@/mocks/fixtures"
 
-import { initialTimeline, patchFromRecord, summarize, timelineReducer, type TimelineState } from "./timeline"
+import { budgetNoticeAsk, initialTimeline, patchFromRecord, summarize, timelineReducer, type TimelineState } from "./timeline"
 
 const fold = (records: EventRecord[], state: TimelineState = initialTimeline) =>
   records.reduce((s, record) => timelineReducer(s, { type: "record", record }), state)
@@ -60,7 +60,7 @@ describe("timeline reducer", () => {
     expect(summary.claimsAccepted).toBe(1)
     expect(summary.claimsRejected).toBe(1)
     expect(summary.phaseChanges).toEqual([{ at: "main:6", from: "research", to: "conclude" }])
-    expect(summary.coverage).toEqual([{ at: "main:3", reason: "unparsed" }])
+    expect(summary.steps.find((s) => s.key === "main:3")?.coverage).toEqual(["unparsed"])
     expect(summary.steps.at(-1)?.final_answer).toBe(true)
   })
 
@@ -99,10 +99,10 @@ describe("timeline reducer", () => {
     expect(summarize(fold([noTotal])).tokens).toBe(100)
   })
 
-  it("marks done and resets", () => {
+  it("marks done once", () => {
     const done = timelineReducer(fold([call(1, 10)]), { type: "done" })
     expect(done.done).toBe(true)
-    expect(timelineReducer(done, { type: "reset" })).toEqual(initialTimeline)
+    expect(timelineReducer(done, { type: "done" })).toBe(done)
   })
 
   it("seeds from the steps endpoint as they are", () => {
@@ -118,10 +118,11 @@ describe("timeline reducer", () => {
 
 describe("budget notices", () => {
   const research = (n: number, tokens: number) => call(n, tokens)
+  const V2 = [50, 75, 90] // agent/loop.py LoopSettings().budget_warnings, as config.json records it
 
   it("marks where research passed 50, 75 and 90 % of the step budget, once each", () => {
     const state = fold([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => research(n, 100)))
-    const summary = summarize(state, { steps: 10, tokens: 1_000_000 })
+    const summary = summarize(state, { steps: 10, tokens: 1_000_000 }, V2)
     expect(summary.researchSteps).toBe(10)
     expect(summary.budgetNotices).toEqual([
       { at: "main:5", percent: 50 },
@@ -132,7 +133,7 @@ describe("budget notices", () => {
 
   it("takes the higher of the two budgets and gives one notice, the highest, when a step passes several", () => {
     // one large prompt jumps from 40 % to 95 % of the token budget
-    const summary = summarize(fold([research(1, 400), research(2, 550)]), { steps: 60, tokens: 1_000 })
+    const summary = summarize(fold([research(1, 400), research(2, 550)]), { steps: 60, tokens: 1_000 }, V2)
     expect(summary.mainTokens).toBe(950)
     expect(summary.budgetNotices).toEqual([{ at: "main:2", percent: 90 }])
   })
@@ -140,10 +141,26 @@ describe("budget notices", () => {
   it("counts only the main agent's research steps, and gives no notice without a budget", () => {
     const sub: EventRecord = { ...call(2, 900), task_id: "sub2", agent_id: "sub-01" }
     const conclude = call(3, 900, "conclude", { task_id: "c3" })
-    const summary = summarize(fold([research(1, 100), sub, conclude]), { steps: 2, tokens: 10_000 })
+    const summary = summarize(fold([research(1, 100), sub, conclude]), { steps: 2, tokens: 10_000 }, V2)
     expect(summary.researchSteps).toBe(1)
     expect(summary.mainTokens).toBe(1_000) // the conclude call counts toward the tokens, not the steps
     expect(summary.budgetNotices).toEqual([{ at: "main:1", percent: 50 }])
-    expect(summarize(fold([research(1, 100)])).budgetNotices).toEqual([])
+    expect(summarize(fold([research(1, 100)]), undefined, V2).budgetNotices).toEqual([])
+  })
+
+  it("follows the thresholds the run recorded, and draws none for a run that recorded none (prompt v1)", () => {
+    const state = fold([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => research(n, 100)))
+    expect(summarize(state, { steps: 10, tokens: 1_000_000 }, [80]).budgetNotices).toEqual([{ at: "main:8", percent: 80 }])
+    // agent/loop.py LEGACY_V1 has budget_warnings=(); older harnesses record no list: no notices
+    expect(summarize(state, { steps: 10, tokens: 1_000_000 }, []).budgetNotices).toEqual([])
+    expect(summarize(state, { steps: 10, tokens: 1_000_000 }).budgetNotices).toEqual([])
+  })
+
+  it("words each notice as the loop did, with the draft file only when the run had one", () => {
+    expect(budgetNoticeAsk(90, "answer-draft.json")).toBe("conclude now")
+    expect(budgetNoticeAsk(75, "answer-draft.json")).toBe("stop opening new leads, update answer-draft.json")
+    expect(budgetNoticeAsk(50, "answer-draft.json")).toBe("bring answer-draft.json up to date")
+    expect(budgetNoticeAsk(75, null)).toBe("stop opening new leads")
+    expect(budgetNoticeAsk(50, null)).toBeNull()
   })
 })

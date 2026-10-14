@@ -15,8 +15,21 @@ export interface GoldView {
   report: GoldReport | null
   /** records decided of all review records (Argilla), when the review has a report */
   review: { decided: number; records: number; kept: number | null; disagreements: number } | null
-  /** Cohen's kappa of the `keep` decision on the overlap, with the bar it should meet */
-  kappa: { value: number | null; items: number | null; bar: number | null; meetsBar: boolean | null; independent: boolean | null } | null
+  /**
+   * Cohen's kappa of the `keep` decision on the overlap, with its bootstrap 95 % interval, the bar
+   * it should meet, and whether the overlap records are all from the independent round (if not,
+   * gold/agreement.py's `warning` says why the value is no agreement result)
+   */
+  kappa: {
+    value: number | null
+    low: number | null
+    high: number | null
+    items: number | null
+    bar: number | null
+    meetsBar: boolean | null
+    independent: boolean | null
+    warning: string | null
+  } | null
   /** facts triage left outside the reviewed tiers (estimate, 95 % Wilson bounds) */
   triageMissed: { estimate: number | null; low: number | null; high: number | null } | null
   /** share of sampled not-relevant papers someone found relevant (95 % Wilson bounds) */
@@ -38,9 +51,11 @@ export function goldView(entry: GoldEntry): GoldView {
       : null,
     kappa: kappa
       ? {
-          value: n(kappa.keep?.kappa), items: n(kappa.keep?.items) ?? n(kappa.items), bar: n(kappa.bar),
+          value: n(kappa.keep?.kappa), low: n(kappa.keep?.kappa_95?.[0]), high: n(kappa.keep?.kappa_95?.[1]),
+          items: n(kappa.keep?.items) ?? n(kappa.items), bar: n(kappa.bar),
           meetsBar: typeof kappa.keep_kappa_meets_bar === "boolean" ? kappa.keep_kappa_meets_bar : null,
           independent: typeof kappa.independent === "boolean" ? kappa.independent : null,
+          warning: typeof kappa.warning === "string" && kappa.warning ? kappa.warning : null,
         }
       : null,
     triageMissed: triage
@@ -54,6 +69,14 @@ export function goldView(entry: GoldEntry): GoldView {
       : null,
   }
 }
+
+/**
+ * The gold build stopped short of a draft key: `building` with the builder's stage done (D is
+ * there, triage, pool or draft did not run) or failed. With no gold job active, it can be run again
+ * (POST /api/gold/{qid}/build reruns build, triage, pool and draft).
+ */
+export const buildStopped = (entry: Pick<GoldEntry, "status" | "stage">): boolean =>
+  entry.status === "building" && (entry.stage === "done" || entry.stage === "failed")
 
 /** The builder's stage in words, for a question whose gold is being built. */
 export function stageText(entry: Pick<GoldEntry, "status" | "stage">): string | null {

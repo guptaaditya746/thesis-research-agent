@@ -7,13 +7,15 @@ import { LIVE_RECORDS, RUN, STEPS } from "@/mocks/fixtures"
 import { summarize } from "@/lib/timeline"
 import { testClient } from "@/test/render"
 
-import { useJobLog, useRunStream } from "./stream"
+import { liveReducer, useJobLog, useRunStream } from "./stream"
 
 /** EventSource stand-in: the test plays the server's side. */
 class FakeEventSource {
   static instances: FakeEventSource[] = []
   readonly url: string
   closed = false
+  /** 0 CONNECTING, 1 OPEN, 2 CLOSED, as EventSource */
+  readyState = 0
   onopen: (() => void) | null = null
   onerror: (() => void) | null = null
   private listeners = new Map<string, ((event: MessageEvent) => void)[]>()
@@ -27,6 +29,7 @@ class FakeEventSource {
   }
   close() {
     this.closed = true
+    this.readyState = 2
   }
   emit(name: string, data: string) {
     for (const fn of this.listeners.get(name) ?? []) fn(new MessageEvent(name, { data }))
@@ -81,20 +84,58 @@ describe("useRunStream", () => {
     expect(summarize(result.current.timeline).steps).toHaveLength(8)
   })
 
-  it("reconnects after an error, and a replay adds nothing", () => {
-    vi.useFakeTimers()
+  it("leaves a dropped connection to EventSource's own reconnection (Last-Event-ID), keeping the same source", () => {
+    const { result } = renderHook(() => useRunStream("q01-on-s2", { live: true, seed: undefined }), { wrapper })
+    const source = FakeEventSource.last()
+    act(() => {
+      source.onopen?.()
+      source.emit("record", JSON.stringify(LIVE_RECORDS[0]))
+    })
+    // a network blip: the browser is reconnecting by itself (readyState CONNECTING)
+    act(() => {
+      source.readyState = 0
+      source.onerror?.()
+    })
+    expect(result.current.status).toBe("reconnecting")
+    expect(source.closed).toBe(false)
+    expect(FakeEventSource.instances).toHaveLength(1)
+    // it resumes after the last id: the next record, not a replay
+    act(() => {
+      source.readyState = 1
+      source.onopen?.()
+      source.emit("record", JSON.stringify(LIVE_RECORDS[1]))
+    })
+    expect(result.current.status).toBe("open")
+    expect(result.current.timeline.records).toBe(2)
+  })
+
+  it("is an error only when the browser gives up; reconnecting by hand replays, and the replay adds nothing", () => {
     const { result } = renderHook(() => useRunStream("q01-on-s2", { live: true, seed: undefined }), { wrapper })
     const first = FakeEventSource.last()
     act(() => first.emit("record", JSON.stringify(LIVE_RECORDS[0])))
-    act(() => first.onerror?.())
+    act(() => {
+      first.readyState = 2 // CLOSED: an HTTP error, no automatic reconnection
+      first.onerror?.()
+    })
     expect(result.current.status).toBe("error")
-    expect(first.closed).toBe(true)
-    act(() => vi.advanceTimersByTime(3_000))
+    act(() => result.current.reconnect())
     const second = FakeEventSource.last()
     expect(second).not.toBe(first)
-    act(() => second.emit("record", JSON.stringify(LIVE_RECORDS[0])))
-    expect(summarize(result.current.timeline).steps).toHaveLength(1)
-    expect(result.current.timeline.records).toBe(1)
+    expect(first.closed).toBe(true)
+    act(() => {
+      for (const record of LIVE_RECORDS.slice(0, 2)) second.emit("record", JSON.stringify(record))
+    })
+    expect(summarize(result.current.timeline).steps).toHaveLength(1) // both records are step 4's
+    expect(result.current.timeline.records).toBe(2) // the replayed first record is not folded twice
+  })
+
+  it("keeps each live record once, so a replay does not grow the buffer", () => {
+    type Live = Parameters<typeof liveReducer>[0]
+    const empty: Live = { records: [], seen: {}, done: false }
+    const once = LIVE_RECORDS.reduce<Live>((s, record) => liveReducer(s, { type: "record", record }), empty)
+    const twice = LIVE_RECORDS.reduce<Live>((s, record) => liveReducer(s, { type: "record", record }), once)
+    expect(twice.records).toHaveLength(LIVE_RECORDS.length)
+    expect(twice).toBe(once)
   })
 })
 
@@ -115,5 +156,25 @@ describe("useJobLog", () => {
     expect(result.current.lines).toEqual([])
     act(() => FakeEventSource.last().emit("line", "$ agent run"))
     expect(result.current.lines).toEqual(["$ agent run"])
+  })
+
+  it("keeps its lines through a dropped connection: the browser resumes after the last line", () => {
+    const { result } = renderHook(() => useJobLog("job-0006", true), { wrapper })
+    const source = FakeEventSource.last()
+    act(() => {
+      source.onopen?.()
+      source.emit("line", "step 1")
+    })
+    act(() => {
+      source.readyState = 0
+      source.onerror?.()
+    })
+    expect(result.current.status).toBe("reconnecting")
+    act(() => {
+      source.onopen?.()
+      source.emit("line", "step 2")
+    })
+    expect(result.current.lines).toEqual(["step 1", "step 2"])
+    expect(FakeEventSource.instances).toHaveLength(1)
   })
 })

@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { factsByClaim, term } from "@/lib/facts"
 
-import { useWalk } from "./walk-context"
+import { useWalk, walkTargetForClaims } from "./walk-context"
 
 type Filter = "all" | "accepted" | "rejected"
 
@@ -25,7 +25,7 @@ const matches = (c: Claim, text: string) =>
   !text || [c.claim_id, term(c.s), term(c.p), term(c.o), c.file, c.quote, c.reason, c.agent_id].some((v) => v?.toLowerCase().includes(text))
 
 export function ClaimsTab({ runId, answer, live }: { runId: string; answer: Answer | null; live: boolean }) {
-  const claims = useClaims(runId)
+  const claims = useClaims(runId, { live })
   const { open } = useWalk()
   const [filter, setFilter] = useState<Filter>("all")
   const [search, setSearch] = useState("")
@@ -36,7 +36,7 @@ export function ClaimsTab({ runId, answer, live }: { runId: string; answer: Answ
     return (
       <EmptyState
         title="No claims"
-        description={live ? "Claims appear as the agent records them." : "The run recorded no claims (claim off without attach, or the agent never claimed)."}
+        description={live ? "Claims appear as the agent records them (this list refreshes every few seconds)." : "The run recorded no claims (claim off without attach, or the agent never claimed)."}
       />
     )
   }
@@ -107,10 +107,7 @@ export function ClaimsTab({ runId, answer, live }: { runId: string; answer: Answ
                       variant="ghost"
                       size="xs"
                       aria-label={`Walk ${c.claim_id}`}
-                      onClick={() => {
-                        const fact = cited.get(c.claim_id!)?.[0]
-                        open(fact ? { kind: "fact", factId: fact.fact.id } : { kind: "claims", claimIds: [c.claim_id!] })
-                      }}
+                      onClick={() => open(walkTargetForClaims([c.claim_id!], answer))}
                     >
                       <FootprintsIcon data-icon="inline-start" />
                       Walk

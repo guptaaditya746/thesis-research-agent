@@ -7,18 +7,19 @@
 import { CheckCircle2Icon, CircleDotIcon, CircleSlashIcon, GaugeIcon, HourglassIcon, PlusCircleIcon, XCircleIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
-import { useScore } from "@/api/hooks"
-import type { FactScores, FactTriple, Score, ScoreSupport } from "@/api/types"
+import { useGoldKey, useScore } from "@/api/hooks"
+import type { Answer, AnswerKey, FactScores, FactTriple, KeyRow, Score, ScoreSupport } from "@/api/types"
 import { ProvisionalBadge, StatusBadge } from "@/components/badges"
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { term } from "@/lib/facts"
+import { supportNote, term } from "@/lib/facts"
 import { dateTime, duration, int, num, pct, tokens } from "@/lib/format"
 
-export function ScoreTab({ runId }: { runId: string }) {
+export function ScoreTab({ runId, answer = null }: { runId: string; answer?: Answer | null }) {
   const score = useScore(runId)
+  const key = useGoldKey(score.data?.qid ?? null)
   if (score.isPending) return <TableSkeleton rows={6} columns={6} />
   if (score.isError) return <ErrorState error={score.error} onRetry={() => void score.refetch()} />
   if (!score.data) {
@@ -30,13 +31,23 @@ export function ScoreTab({ runId }: { runId: string }) {
       />
     )
   }
-  return <ScoreView score={score.data} />
+  return <ScoreView score={score.data} answer={answer} answerKey={key.data ?? null} />
 }
 
 const spo = (t: FactTriple) => `(${term(t.s)}, ${term(t.p)}, ${term(t.o)})`
 
-export function ScoreView({ score }: { score: Score }) {
+/** Facts of an answer or key by `row/fact`, for the matched pairs' triples. */
+function triples(rows: { id: string; facts?: { id: string; s: unknown; p: unknown; o: unknown }[] }[] | null | undefined): Map<string, FactTriple> {
+  const map = new Map<string, FactTriple>()
+  for (const row of rows ?? []) for (const f of row.facts ?? []) map.set(`${row.id}/${f.id}`, { s: f.s, p: f.p, o: f.o })
+  return map
+}
+export function ScoreView({ score, answer = null, answerKey = null }: { score: Score; answer?: Answer | null; answerKey?: AnswerKey | null }) {
   const s = score.support ?? {}
+  // the key is the one scored against only if its version is the score's
+  const keyRows = answerKey && answerKey.version === score.key_version ? (answerKey.rows as unknown as KeyRow[]) : null
+  const runFacts = triples(answer?.rows)
+  const keyFacts = triples(keyRows)
   const soft = score.facts?.soft ?? {}
   const pairs = score.detail?.facts?.pairs ?? []
   const missed = score.detail?.facts?.missed ?? []
@@ -56,7 +67,7 @@ export function ScoreView({ score }: { score: Score }) {
         {score.scored_at && <span>scored {dateTime(score.scored_at)}</span>}
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Tile label="Support share" value={pct(s.support_share)} note={`${int(s.supports)} of ${int(s.facts)} facts supported by their quote${s.partial_counts_as === "yes" ? " (partial counts)" : ""}`} />
+        <Tile label="Support share" value={pct(s.support_share)} note={supportNote(s)} />
         <Tile label="Fact F1 (soft)" value={num(soft.f1)} note={`precision ${num(soft.precision)} · recall ${num(soft.recall)}`} />
         <Tile label="Row F1" value={num(score.rows?.f1)} note={`${int(score.rows?.tp)} matched of ${int((score.rows?.tp ?? 0) + (score.rows?.fn ?? 0))} key rows`} />
         <Tile label="Vital recall" value={pct(score.vital_recall)} note="key facts marked vital that the answer has" />
@@ -79,7 +90,10 @@ export function ScoreView({ score }: { score: Score }) {
       <Card>
         <CardHeader>
           <CardTitle>Against the key</CardTitle>
-          <CardDescription>Matched: in the answer and the key (one to one); extra: in the answer only; missed: in the key only.</CardDescription>
+          <CardDescription>
+            Matched: in the answer and the key (one to one), the run's fact ≈ the key's at the level it matched; extra: in the answer
+            only; missed: in the key only.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Table>
@@ -112,7 +126,15 @@ export function ScoreView({ score }: { score: Score }) {
               <FactList
                 title="Matched"
                 icon={<CheckCircle2Icon className="text-status-good" />}
-                items={pairs.map((p) => ({ key: `${p.run.row}/${p.run.fact}`, text: `${p.run.fact} = ${p.key.fact}`, note: `${p.level}${p.vital ? " · vital" : ""}` }))}
+                items={pairs.map((p) => {
+                  const run = runFacts.get(`${p.run.row}/${p.run.fact}`)
+                  const key = keyFacts.get(`${p.key.row}/${p.key.fact}`)
+                  return {
+                    key: `${p.run.row}/${p.run.fact}`,
+                    text: run && key ? `${spo(run)} ≈ ${spo(key)}` : `${p.run.fact} = ${p.key.fact}`,
+                    note: `${run && key ? `${p.run.fact} = ${p.key.fact} · ` : ""}${p.level}${p.vital ? " · vital" : ""}`,
+                  }
+                })}
               />
               <FactList
                 title="Extra"

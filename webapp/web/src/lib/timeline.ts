@@ -11,8 +11,10 @@
  * reason and triple), coverage reasons as a set. So the stream may replay from the first line,
  * reconnect, or start after the seed without duplicating anything.
  *
- * Derived numbers (tokens used, research steps, phase changes, the budget notices the agent got
- * at 50/75/90 %) are computed from the steps in `summarize`, never accumulated, for the same reason.
+ * Derived numbers (tokens used, research steps, phase changes, the budget notices the agent got)
+ * are computed from the steps in `summarize`, never accumulated, for the same reason. The notices
+ * follow the thresholds the run's config.json records (`loop.budget_warnings`, agent/loop.py); a
+ * run without them (prompt v1, or a harness before the setting) got none, and none are drawn.
  */
 import type { ClaimRef, EventRecord, ModelCall, Step } from "@/api/types"
 
@@ -50,7 +52,6 @@ export type TimelineAction =
   | { type: "seed"; steps: Step[] }
   | { type: "record"; record: EventRecord }
   | { type: "done" }
-  | { type: "reset" }
 
 export const initialTimeline: TimelineState = { steps: {}, seen: {}, records: 0, done: false }
 
@@ -163,8 +164,6 @@ function seedPatch(s: Step): Patch {
 
 export function timelineReducer(state: TimelineState, action: TimelineAction): TimelineState {
   switch (action.type) {
-    case "reset":
-      return initialTimeline
     case "done":
       return state.done ? state : { ...state, done: true }
     case "seed":
@@ -209,17 +208,33 @@ export interface TimelineSummary {
   claimsAccepted: number
   claimsRejected: number
   phaseChanges: PhaseChange[]
-  coverage: { at: string; reason: string }[]
   budgetNotices: BudgetNotice[]
 }
 
-export const BUDGET_WARNINGS = [50, 75, 90] as const
+/**
+ * What a budget notice asked of the agent, in short (agent/loop.py _warning): from 90 % conclude,
+ * from 75 % open no new leads, below that bring the draft file up to date; without a draft file
+ * (prompt v1) the lowest notice asks nothing.
+ */
+export function budgetNoticeAsk(percent: number, draftFile: string | null | undefined): string | null {
+  if (percent >= 90) return "conclude now"
+  if (percent >= 75) return draftFile ? `stop opening new leads, update ${draftFile}` : "stop opening new leads"
+  return draftFile ? `bring ${draftFile} up to date` : null
+}
 
 const agentOrder = (a: string) => (a === "main" ? "" : a)
 const isResearch = (s: TimelineStep) => (s.phase ?? "research") === "research" && s.origin === "research"
 
-/** Steps in order (step number, main agent first) plus the numbers the budget line shows. */
-export function summarize(state: TimelineState, budget?: { steps?: number; tokens?: number }): TimelineSummary {
+/**
+ * Steps in order (step number, main agent first) plus the numbers the budget line shows.
+ * `warnings`: the run's notice thresholds in % (config.json loop.budget_warnings); empty, as for a
+ * run that recorded none, gives no notices.
+ */
+export function summarize(
+  state: TimelineState,
+  budget?: { steps?: number; tokens?: number },
+  warnings: readonly number[] = [],
+): TimelineSummary {
   const steps = Object.values(state.steps).sort(
     (a, b) => a.step - b.step || agentOrder(a.agent_id).localeCompare(agentOrder(b.agent_id)),
   )
@@ -242,7 +257,7 @@ export function summarize(state: TimelineState, budget?: { steps?: number; token
     researchSteps += 1
     // as the loop does after each research step: the highest threshold newly passed of either budget
     const used = 100 * Math.max(budget?.steps ? researchSteps / budget.steps : 0, budget?.tokens ? mainTokens / budget.tokens : 0)
-    const passed = BUDGET_WARNINGS.filter((p) => used >= p && !warned.has(p))
+    const passed = warnings.filter((p) => used >= p && !warned.has(p))
     if (passed.length) {
       passed.forEach((p) => warned.add(p))
       budgetNotices.push({ at: s.key, percent: Math.max(...passed) })
@@ -257,7 +272,6 @@ export function summarize(state: TimelineState, budget?: { steps?: number; token
     claimsAccepted: steps.reduce((n, s) => n + s.claims.filter((c) => c.status === "accepted").length, 0),
     claimsRejected: steps.reduce((n, s) => n + s.claims.filter((c) => c.status === "rejected").length, 0),
     phaseChanges,
-    coverage: steps.flatMap((s) => s.coverage.map((reason) => ({ at: s.key, reason }))),
     budgetNotices,
   }
 }

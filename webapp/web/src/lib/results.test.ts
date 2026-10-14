@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { ResultsReport } from "@/api/types"
 import { RESULTS } from "@/mocks/fixtures"
 
-import { conditionBars, costGroups, differences, errorOf, metricGroups, outcomeKind, pairedDifferences, questionRows, sensitivity, shareDomainMax } from "./results"
+import { conditionBars, costGroups, countText, differences, errorOf, metricGroups, outcomeKind, pairedDifferences, questionRows, sensitivity, shareDomainMax } from "./results"
 
 const summary = RESULTS.summary!
 
@@ -37,6 +37,19 @@ describe("results report to chart data", () => {
     expect(groups[0]).toMatchObject({ claim_on: 0.54, claim_off: 0.53, claim_on_ci: [0.46, 0.62], claim_off_ci: [0.45, 0.61] })
     expect(groups[1].claim_off_error?.[0]).toBeCloseTo(0.08)
     expect(metricGroups(RESULTS, ["fact_f1"], { fact_f1: "fact F1" })[0].label).toBe("fact F1")
+  })
+
+  it("carries the questions and runs behind each mean, for the tooltip and the secondary table", () => {
+    const report: ResultsReport = {
+      summary: { fact_f1: { ...summary.fact_f1!, claim_off: { n: 10, mean: 0.5, low: 0.4, high: 0.6, method: "BCa", runs: 33, runs_without_value: 3 } } },
+    }
+    const [on, off] = conditionBars(report, "fact_f1")
+    expect(on).toMatchObject({ n: 12, runs: 36, runsWithoutValue: 0 })
+    expect(off).toMatchObject({ n: 10, runs: 33, runsWithoutValue: 3 })
+    const [group] = metricGroups(report, ["fact_f1"])
+    expect(countText(group.claim_off_n)).toBe("10 questions, 33 runs (3 without a value)")
+    expect(countText(group.claim_on_n)).toBe("12 questions, 36 runs")
+    expect(countText({ questions: 1, runs: null, runsWithoutValue: null })).toBe("1 question")
   })
 
   it("shows cost with and without attach, colour kept per condition", () => {

@@ -89,10 +89,10 @@ export default function RunPage() {
             <AnswerTab runId={runId} answer={detail.answer} concept={detail.concept} summary={detail.summary} />
           </TabsContent>
           <TabsContent value="graph" className="pt-2">
-            <GraphTab runId={runId} answer={detail.answer} />
+            <GraphTab runId={runId} answer={detail.answer} live={live} />
           </TabsContent>
           <TabsContent value="timeline" className="pt-2">
-            <TimelineTab runId={runId} live={live} budget={config.budget} />
+            <TimelineTab runId={runId} live={live} config={config} />
           </TabsContent>
           <TabsContent value="claims" className="pt-2">
             <ClaimsTab runId={runId} answer={detail.answer} live={live} />
@@ -101,7 +101,7 @@ export default function RunPage() {
             <ProvenanceTab runId={runId} />
           </TabsContent>
           <TabsContent value="score" className="pt-2">
-            <ScoreTab runId={runId} />
+            <ScoreTab runId={runId} answer={detail.answer} />
           </TabsContent>
         </Tabs>
         <ClaimWalkSheet runId={runId} target={walk} onClose={() => setWalkState({ runId, target: null })} />

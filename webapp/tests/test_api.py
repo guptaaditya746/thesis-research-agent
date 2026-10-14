@@ -75,6 +75,7 @@ def test_run_detail(client: TestClient) -> None:
     assert d["summary"]["verify"] == "ok" and d["verify"]["ok"] is True and d["verify"]["errors"] == []
     assert d["verify"]["stats"]["facts_with_claims"] == 4
     assert d["config"]["condition"] == "claim_on" and d["concept"]["title"] == "Benchmarks used by RAG papers"
+    assert d["summary"]["sandbox"] == (d["config"].get("sandbox") or {}).get("mode")
     assert [row["id"] for row in d["answer"]["rows"]] == ["r1", "r2", "r3", "r4", "r5"]
     assert d["answer"]["rows"][0]["source"] == "p1" and d["answer"]["rows"][0]["facts"][0]["claims"] == ["claim-000001"]
     assert client.get("/api/runs/nope").status_code == 404

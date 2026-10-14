@@ -158,7 +158,15 @@ function JobLog({ jobId }: { jobId: string }) {
         {j ? <JobBadge state={j.state} /> : job.isPending ? <Skeleton className="h-5 w-16" /> : null}
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground" role="status">
           {status === "open" && <LiveDot />}
-          {status === "open" ? "streaming" : status === "done" ? "end of log" : status === "error" ? "stream closed" : status}
+          {status === "open"
+            ? "streaming"
+            : status === "done"
+              ? "end of log"
+              : status === "error"
+                ? "stream closed"
+                : status === "reconnecting"
+                  ? "connection dropped, resuming"
+                  : status}
         </span>
         <div className="ml-auto flex items-center gap-2">
           {j && isActiveJob(j) && (

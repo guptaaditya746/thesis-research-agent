@@ -330,6 +330,7 @@ class Runs:
             concept_sha256=(config.get("hashes") or {}).get("concept_sha256"), concept_current=current,
             condition=str(config.get("condition", "")), seed=sampling.get("seed"),
             temperature=sampling.get("temperature"), created_at=config.get("created_at"),
+            sandbox=sandbox_mode(config),
             exit_status=self.status(run, digest, live), answer_from=digest.answer_from if answer is not None else None,
             steps=cost["steps"], model_calls=cost["model_calls"], tokens=cost["tokens"], seconds=cost["seconds"],
             tokens_without_attach=cost["without_attach"]["tokens"] if "without_attach" in cost else None,
@@ -510,6 +511,13 @@ class Runs:
 
 def _coverage(record: dict[str, Any]) -> str | None:
     return (record.get("generated") or {}).get("reason") if record.get("subtype") == "coverage" else None
+
+
+def sandbox_mode(config: dict[str, Any]) -> str | None:
+    """config.json sandbox.mode (agent/loop.py): landlock, or unsandboxed; None when not recorded."""
+    sandbox = config.get("sandbox")
+    mode = sandbox.get("mode") if isinstance(sandbox, dict) else None
+    return mode if isinstance(mode, str) else None
 
 
 def scored_verify(run: RunDir, score: Any) -> tuple[bool | None, str | None]:

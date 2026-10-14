@@ -5,11 +5,13 @@
  *   timeline reducer (src/lib/timeline.ts);
  * - GET /api/jobs/{id}/log: `event: line` per log line, then `event: done` -> `useJobLog`.
  *
- * EventSource reconnects by itself after any drop, and a finished stream would then replay
- * forever. So a stream is closed on `done` and on error; the run stream reconnects after a
- * pause while the run is live with a new EventSource, which the server replays from the first
- * line (the reducer is idempotent, a replay is harmless); the job log starts again from an empty
- * buffer when reconnected by hand.
+ * Every record is sent with `id: <line>`, and the backend reads `Last-Event-ID`. So after a drop
+ * (an SSH-tunnel hiccup, an idle proxy) the stream is left to EventSource's own reconnection,
+ * which sends the last id, and the server resumes after that line: nothing is replayed and the
+ * job log keeps its lines. Only when the browser gives up (readyState CLOSED: an HTTP error) is
+ * the stream an error, and `reconnect()` opens a new one, which the server replays from the first
+ * line (the run's records are deduplicated by task id, and the job log starts an empty buffer).
+ * A finished stream would be reopened forever by the browser, so it is closed on `done`.
  */
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
@@ -20,21 +22,26 @@ import { initialTimeline, timelineReducer, type TimelineState } from "@/lib/time
 import { urls } from "./client"
 import { keys } from "./hooks"
 
-export type StreamStatus = "idle" | "connecting" | "open" | "done" | "error"
+/** reconnecting: the connection dropped and EventSource is reconnecting by itself (Last-Event-ID). */
+export type StreamStatus = "idle" | "connecting" | "open" | "reconnecting" | "done" | "error"
 
 type Handlers = Record<string, (data: string) => void>
 
+/** EventSource.CLOSED (2): the browser will not reconnect by itself. */
+const CLOSED = 2
+
 interface StreamOptions {
   enabled: boolean
-  /** reconnect this long after an error; null = stay closed until `reconnect()` */
-  reconnectMs?: number | null
   /** event names that end the stream */
   doneEvents?: string[]
 }
 
-/** One EventSource for `url` with named-event handlers; returns its status and a reconnect action. */
+/**
+ * One EventSource for `url` with named-event handlers; returns its status and a reconnect action
+ * (a new EventSource, for a stream the browser gave up on). `key` changes with every new one.
+ */
 export function useEventSource(url: string | null, handlers: Handlers, options: StreamOptions) {
-  const { enabled, reconnectMs = null } = options
+  const { enabled } = options
   const doneEvents = (options.doneEvents ?? ["done"]).join(",")
   const names = Object.keys(handlers).sort().join(",")
   const current = useRef(handlers)
@@ -52,16 +59,15 @@ export function useEventSource(url: string | null, handlers: Handlers, options: 
       return
     }
     const source = new EventSource(url)
-    let timer: ReturnType<typeof setTimeout> | undefined
     const finish = () => {
       source.close()
       setState({ key, status: "done" })
     }
     source.onopen = () => setState({ key, status: "open" })
     source.onerror = () => {
-      source.close()
-      setState((s) => (s.key === key && s.status === "done" ? s : { key, status: "error" }))
-      if (reconnectMs !== null) timer = setTimeout(() => setAttempt((a) => a + 1), reconnectMs)
+      // CONNECTING: the browser reconnects by itself and resumes after the last id; CLOSED: it gave up
+      const status: StreamStatus = source.readyState === CLOSED ? "error" : "reconnecting"
+      setState((s) => (s.key === key && s.status === "done" ? s : { key, status }))
     }
     const ends = doneEvents.split(",")
     for (const name of new Set([...names.split(","), ...ends])) {
@@ -71,11 +77,8 @@ export function useEventSource(url: string | null, handlers: Handlers, options: 
         if (ends.includes(name)) finish()
       })
     }
-    return () => {
-      clearTimeout(timer)
-      source.close()
-    }
-  }, [url, enabled, key, names, doneEvents, reconnectMs])
+    return () => source.close()
+  }, [url, enabled, key, names, doneEvents])
 
   const reconnect = useCallback(() => setAttempt((a) => a + 1), [])
   const status: StreamStatus = !url || !enabled ? "idle" : state.key === key ? state.status : "connecting"
@@ -86,13 +89,19 @@ export function useEventSource(url: string | null, handlers: Handlers, options: 
 
 interface LiveState {
   records: EventRecord[]
+  /** task ids already kept: a stream opened again replays from the first line, which adds nothing */
+  seen: Record<string, true>
   done: boolean
 }
 
 type LiveAction = { type: "record"; record: EventRecord } | { type: "done" }
 
-function liveReducer(state: LiveState, action: LiveAction): LiveState {
-  return action.type === "done" ? { ...state, done: true } : { ...state, records: [...state.records, action.record] }
+/** The live records of a run, each kept once (exported for its test). */
+export function liveReducer(state: LiveState, action: LiveAction): LiveState {
+  if (action.type === "done") return { ...state, done: true }
+  const id = action.record.task_id
+  if (id && state.seen[id]) return state
+  return { ...state, records: [...state.records, action.record], seen: id ? { ...state.seen, [id]: true } : state.seen }
 }
 
 function parseRecord(data: string): EventRecord | null {
@@ -110,7 +119,7 @@ function parseRecord(data: string): EventRecord | null {
  */
 export function useRunStream(runId: string, { live, seed }: { live: boolean; seed: Step[] | undefined }) {
   const client = useQueryClient()
-  const [liveState, dispatch] = useReducer(liveReducer, { records: [], done: false })
+  const [liveState, dispatch] = useReducer(liveReducer, { records: [], seen: {}, done: false })
   const { status, reconnect } = useEventSource(
     live ? urls.runStream(runId) : null,
     {
@@ -124,7 +133,7 @@ export function useRunStream(runId: string, { live, seed }: { live: boolean; see
         void client.invalidateQueries({ queryKey: keys.runs, exact: false })
       },
     },
-    { enabled: live && !liveState.done, reconnectMs: 3_000 },
+    { enabled: live && !liveState.done },
   )
   const timeline: TimelineState = useMemo(() => {
     const seeded = seed ? timelineReducer(initialTimeline, { type: "seed", steps: seed }) : initialTimeline
@@ -139,9 +148,10 @@ export function useRunStream(runId: string, { live, seed }: { live: boolean; see
 const MAX_LINES = 5_000
 
 /**
- * The live log of a job (`event: line` per line, `event: done` with the job); lines restart empty
- * on every (re)connection, since a new EventSource is replayed from the first line. On `done` the
- * job's queries are refetched, so its state and steps catch up with the log.
+ * The live log of a job (`event: line` per line, `event: done` with the job). After a drop the
+ * browser resumes after the last line (Last-Event-ID), so the lines carry on; a stream opened
+ * again by hand (`reconnect`) is replayed from the first line, so its lines start empty. On
+ * `done` the job's queries are refetched, so its state and steps catch up with the log.
  */
 export function useJobLog(jobId: string | null, enabled: boolean) {
   const client = useQueryClient()

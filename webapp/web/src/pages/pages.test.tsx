@@ -5,7 +5,7 @@ import { http, HttpResponse } from "msw"
 import { beforeAll, describe, expect, it } from "vitest"
 
 import { routes } from "@/app/routes"
-import { initialRunDetails, RUN } from "@/mocks/fixtures"
+import { GOLD, initialRunDetails, RUN } from "@/mocks/fixtures"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
 
@@ -40,12 +40,20 @@ describe("pages", () => {
     expect(within(briefs).getAllByRole("button", { name: /^Pick brief \d$/ })).toHaveLength(3)
     expect(within(briefs).getByRole("figure", { name: "Answer shape: graph" })).toBeInTheDocument()
     expect(screen.getByText("No brief is picked yet. Compare the briefs and pick the one that makes the question answerable.")).toBeInTheDocument()
+    const bodies: unknown[] = []
+    server.events.on("request:start", ({ request }) => {
+      if (request.method === "POST" && request.url.endsWith("/concepts/pick")) void request.clone().json().then((b) => bodies.push(b))
+    })
     await user.click(screen.getByRole("button", { name: "Pick brief 2" }))
     const dialog = await screen.findByRole("dialog")
+    // the browser records only the user's own pick: no "picked by" choice
+    expect(within(dialog).queryByRole("combobox")).not.toBeInTheDocument()
     await user.type(within(dialog).getByLabelText("Reason"), "pairwise comparisons answer 'best'")
     await user.click(within(dialog).getByRole("button", { name: "Record the pick" }))
     expect(await screen.findByRole("button", { name: "Picked" }, T)).toBeDisabled()
     expect(screen.getByText(/picked by user/)).toBeInTheDocument()
+    await waitFor(() => expect(bodies).toEqual([expect.objectContaining({ choice: 2, picked_by: "user" })]))
+    server.events.removeAllListeners("request:start")
     // now picked, the question offers its gold build
     expect(screen.getByRole("button", { name: /Build the gold standard/ })).toBeEnabled()
   })
@@ -105,6 +113,24 @@ describe("pages", () => {
     server.events.removeAllListeners("request:start")
   })
 
+  it("new run dialog asks for an explicit yes before an unsandboxed run, and such runs are marked", async () => {
+    const user = userEvent.setup()
+    renderRoutes(routes, "/runs?qid=q07")
+    // the q07 run in the fixtures ran unsandboxed: the table says so
+    expect(await screen.findByText("unsandboxed", {}, T)).toBeInTheDocument()
+    await user.click(screen.getAllByRole("button", { name: "New run" })[0])
+    const dialog = await screen.findByRole("dialog")
+    await user.click(within(dialog).getByRole("combobox", { name: "Question" }))
+    await user.click(await screen.findByRole("option", { name: /q01/ }))
+    await user.click(within(dialog).getByRole("combobox", { name: "Sandbox" }))
+    await user.click(await screen.findByRole("option", { name: "unsandboxed (tests only)" }))
+    expect(within(dialog).getByText("Unsandboxed is for tests only")).toBeInTheDocument()
+    const start = within(dialog).getByRole("button", { name: "Start run" })
+    expect(start).toBeDisabled()
+    await user.click(within(dialog).getByRole("switch", { name: "Run it without the sandbox" }))
+    expect(start).toBeEnabled()
+  })
+
   it("new run dialog offers to start anyway when a cluster batch is live", async () => {
     const user = userEvent.setup()
     const forced: boolean[] = []
@@ -161,7 +187,9 @@ describe("pages", () => {
     expect(within(primary).getByText("each fact judged by its first cited claim only")).toBeInTheDocument()
     expect(screen.getByRole("img", { name: "Support share by condition" })).toBeInTheDocument()
     expect(screen.getByRole("img", { name: "Difference in support share per question" })).toBeInTheDocument()
-    expect(screen.getByRole("table", { name: "Secondary outcomes by condition" })).toBeInTheDocument()
+    const secondary = screen.getByRole("table", { name: "Secondary outcomes by condition" })
+    expect(within(secondary).getByRole("columnheader", { name: "Paired questions" })).toBeInTheDocument()
+    expect(within(secondary).getAllByText("36 / 36").length).toBeGreaterThan(0) // runs on / off behind each mean
     const perQuestion = screen.getByRole("table", { name: "Outcomes per question and condition" })
     expect(within(perQuestion).getAllByRole("row")).toHaveLength(13)
   })
@@ -225,12 +253,73 @@ describe("pages", () => {
     expect(await within(sheet).findByText("q01-k6-f1")).toBeInTheDocument()
   })
 
+  it("gold page shows κ with its interval, and says when the overlap was not independent", async () => {
+    server.use(http.get("/api/gold", () => HttpResponse.json([
+      {
+        ...GOLD[0],
+        report: {
+          ...(GOLD[0].report as object),
+          kappa: {
+            items: 31, keep: { items: 31, kappa: 0.7, kappa_95: [0.41, 0.88] }, bar: 0.61, keep_kappa_meets_bar: true, independent: false,
+            warning: "overlap records from the last pull, not the independent round",
+          },
+        },
+      },
+    ])))
+    renderRoutes(routes, "/gold")
+    expect(await screen.findByText("0.70", {}, T)).toBeInTheDocument()
+    expect(screen.getByText("[0.41, 0.88]")).toBeInTheDocument()
+    expect(screen.getByText("overlap records from the last pull, not the independent round")).toBeInTheDocument()
+  })
+
+  it("gold page and question page offer to run a stopped gold build again", async () => {
+    const user = userEvent.setup()
+    const stopped = { qid: "q01", status: "building", stage: "failed", key_version: null, rows: null, facts: null, coverage: null, counts: null, report: null }
+    server.use(
+      http.get("/api/gold", () => HttpResponse.json([stopped])),
+      http.get("/api/jobs", () => HttpResponse.json([])),
+    )
+    renderRoutes(routes, "/gold")
+    expect(await screen.findByText("the build stopped; run it again", {}, T)).toBeInTheDocument()
+    await user.click(await screen.findByRole("button", { name: "Run the gold build of q01 again" }, T))
+    expect(await screen.findByText(/Building the gold standard of q01/, {}, T)).toBeInTheDocument()
+  })
+
   it("compare page puts both conditions side by side with the differences", async () => {
     renderRoutes(routes, "/compare/q01")
     expect(await screen.findByText("claim on minus claim off", {}, T)).toBeInTheDocument()
     expect(screen.getByText("+10.0 pp")).toBeInTheDocument() // support share 0.6 vs 0.5
     expect(await screen.findByRole("list", { name: `Answer of ${RUN.on}` }, T)).toBeInTheDocument()
     expect(screen.getByRole("list", { name: `Answer of ${RUN.off}` })).toBeInTheDocument()
+  })
+
+  it("overview says when the runs or the report could not be loaded, rather than 'nothing scored'", async () => {
+    server.use(
+      http.get("/api/runs", () => HttpResponse.json({ detail: "runs root unreadable" }, { status: 500 })),
+      http.get("/api/results", () => HttpResponse.json({ detail: "report.json is not JSON" }, { status: 500 })),
+    )
+    renderRoutes(routes, "/")
+    expect(await screen.findByText(/Could not load the runs/, {}, T)).toBeInTheDocument()
+    expect(screen.getByText(/Could not load the report/)).toBeInTheDocument()
+    expect(screen.getByText("runs root unreadable")).toBeInTheDocument()
+    expect(screen.queryByText(/0 of 72/)).not.toBeInTheDocument()
+    expect(screen.queryByText("not yet")).not.toBeInTheDocument()
+    expect(screen.getAllByText("not loaded").length).toBeGreaterThan(2) // two tiles and the support column
+  })
+
+  it("answer tab and compare say when score.json failed, rather than 'not scored yet'", async () => {
+    server.use(http.get("/api/runs/:run/score", () => HttpResponse.json({ detail: "score.json is not JSON" }, { status: 500 })))
+    renderRoutes(routes, `/runs/${encodeURIComponent(RUN.on)}`)
+    expect(await screen.findByText("Could not load score.json", { exact: false }, T)).toBeInTheDocument()
+    expect(screen.getByText(/The verdicts could not be loaded/)).toBeInTheDocument()
+    expect(screen.queryByText(/Not scored yet/)).not.toBeInTheDocument()
+  })
+
+  it("compare says when a score failed to load", async () => {
+    server.use(http.get("/api/runs/:run/score", () => HttpResponse.json({ detail: "score.json is not JSON" }, { status: 500 })))
+    renderRoutes(routes, "/compare/q01")
+    expect(await screen.findByText(/Could not load the scores to compare/, {}, T)).toBeInTheDocument()
+    expect(screen.queryByText(/The differences appear when both runs are scored/)).not.toBeInTheDocument()
   })
 
   it("an API error shows the backend's reason and a retry", async () => {

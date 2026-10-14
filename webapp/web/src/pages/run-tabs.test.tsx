@@ -15,13 +15,17 @@ beforeAll(async () => {
 }, 180_000)
 
 describe("run page tabs", () => {
-  it("header shows the run's stats against its budget", async () => {
+  it("header puts what the budget counts against it: the main agent's research steps and tokens", async () => {
     renderRoutes(routes, runPath(RUN.on))
     expect(await screen.findByRole("heading", { name: "q01-claim_on-r1-a1" }, T)).toBeInTheDocument()
     expect(screen.getByText("m4-72")).toBeInTheDocument()
-    expect(screen.getByText("71.4K")).toBeInTheDocument()
-    expect(screen.getByText("/ 2M")).toBeInTheDocument()
-    expect(screen.getByText("/ 60")).toBeInTheDocument()
+    // steps 1-5 and 7 are main-agent research; 6 is the subagent's, 8 the conclude reply
+    const steps = (await screen.findByText("Research steps", {}, T)).parentElement!
+    expect(steps).toHaveTextContent("6 / 60")
+    expect(steps).toHaveTextContent("8 model steps in all")
+    const tokens = screen.getByText("Tokens (main agent)").parentElement!
+    expect(tokens).toHaveTextContent("65.2K / 2M")
+    expect(tokens).toHaveTextContent("71.4K in all")
     expect(screen.getByText("verified")).toBeInTheDocument()
     expect(screen.getByText("submitted")).toBeInTheDocument()
   })
@@ -61,8 +65,15 @@ describe("run page tabs", () => {
     expect(within(steps).getByText("sub-01")).toBeInTheDocument()
     expect(within(steps).getByText("not_found")).toBeInTheDocument()
     expect(within(steps).getByRole("separator", { name: "Phase research to conclude" })).toBeInTheDocument()
-    expect(screen.getByText("Research steps")).toBeInTheDocument()
+    expect(screen.getAllByText("Research steps")).toHaveLength(2) // the header's and the timeline's budget line
     expect(screen.getByText("of 60")).toBeInTheDocument()
+  })
+
+  it("timeline: a prompt v1 run shows no budget notices, since its loop gave none", async () => {
+    renderRoutes(routes, runPath(RUN.q02on, "timeline"))
+    const steps = await screen.findByRole("list", { name: "Steps" }, T)
+    expect(within(steps).queryByRole("separator", { name: /Budget notice/ })).not.toBeInTheDocument()
+    expect(screen.getByText(/config\.json records no budget notices for this run/)).toBeInTheDocument()
   })
 
   it("timeline: a coverage notice explains itself", async () => {
@@ -109,8 +120,15 @@ describe("run page tabs", () => {
     await user.click(await screen.findByRole("button", { name: "Run query 5" }, T))
     const result = await screen.findByRole("table", { name: "Query 5 results" })
     expect(within(result).getByText("HellaSwag")).toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: "Run query 3" }))
-    expect(await screen.findByText("query 3 needs a step, an agent, or both")).toBeInTheDocument()
+    // query 3 needs a step or an agent: the button waits for one; the step takes a number
+    const query3 = screen.getByRole("button", { name: "Run query 3" })
+    expect(query3).toBeDisabled()
+    expect(screen.getByText("step or agent (one required)")).toBeInTheDocument()
+    const step = screen.getByRole("spinbutton", { name: "step" })
+    await user.type(step, "3")
+    expect(query3).toBeEnabled()
+    await user.click(query3)
+    expect(await screen.findByRole("table", { name: "Query 3 results" })).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Run" }))
     expect(await screen.findByText("7 rows")).toBeInTheDocument()
   })
@@ -123,6 +141,11 @@ describe("run page tabs", () => {
     expect(within(missed).getByText(/q01-k6-f1/)).toBeInTheDocument()
     expect(within(screen.getByRole("region", { name: "Extra facts" })).getByText(/HellaSwag/)).toBeInTheDocument()
     expect(screen.getByText("Matched (4)")).toBeInTheDocument()
+    expect(screen.getByText("3 of 5 facts supported by their quote")).toBeInTheDocument() // partial counts as no here
+    // matched pairs show both facts, the run's and the key's (looked up in the answer and the key scored against)
+    const matched = screen.getByRole("region", { name: "Matched facts" })
+    expect(await within(matched).findByText("(p1, evaluatesOn, Spider) ≈ (p1, evaluatesOn, Spider)", {}, T)).toBeInTheDocument()
+    expect(within(matched).getByText(/f3 = q01-k4-f1 · normalised/)).toBeInTheDocument()
   })
 
   it("score: a run without score.json says how to get one", async () => {

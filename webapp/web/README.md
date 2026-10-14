@@ -8,7 +8,8 @@ the API at `/api`.
 
 Stack: Vite 7, React 19, TypeScript (strict), Tailwind CSS 4, shadcn/ui (Radix), TanStack Query,
 React Router 7, React Flow (`@xyflow/react`) with dagre, recharts through shadcn `chart`,
-assistant-ui with the AI SDK v5 (`ai`), sonner, lucide-react, next-themes. Tests: Vitest, Testing
+assistant-ui with the AI SDK v5 (`ai`), react-markdown with remark-gfm (the chat's replies; no raw
+HTML), sonner, lucide-react, next-themes. Tests: Vitest, Testing
 Library, MSW. Every dependency is pinned exactly (`.npmrc` has `save-exact=true`) and
 `package-lock.json` is committed.
 
@@ -38,7 +39,8 @@ finishes); runs that ended at the budget; gold state with a review report; a res
 intervals and the primary test; jobs with steps and logs; and a chat that answers in the AI SDK UI
 message stream. State is in memory: picks, new jobs and cancellations last until the page reloads.
 The refusals are the backend's (409 for a pick the gold build depends on, a second proposal, a run
-while a batch is live, and so on).
+while a batch is live, and so on). A banner on every page says the data is mock data, and the
+fixture paths are under `/mock/`, so no screenshot of the mock server passes for a result.
 
 ## Develop against the backend
 
@@ -111,14 +113,14 @@ the stream URLs; `hooks.ts`: TanStack Query hooks; `stream.ts`: the SSE hooks).
 | Page | Route | Notes |
 |---|---|---|
 | Overview | `/` | pipeline tiles (picks, reviewed keys, scored runs, report); one row per question |
-| Question | `/questions/:qid` | briefs side by side with the answer shape; pick (with `force` when runs depend on it; locked once gold is built); propose; gold build |
-| Runs | `/runs?qid=&condition=&stale=1` | filterable table; New run (one condition or both with one seed; "start anyway" when a batch is live) |
-| Run | `/runs/:runId?tab=` | stats header; Answer (fact badges from score.json), Graph, Timeline (live), Claims, Provenance, Score; the claim walk sheet |
+| Question | `/questions/:qid` | briefs side by side with the answer shape; pick (recorded as `picked_by: user`: `claude` and `provisional-first` are the CLI's; with `force` when runs depend on it; locked once gold is built); propose; gold build, and again when it stopped |
+| Runs | `/runs?qid=&condition=&stale=1` | filterable table (unsandboxed runs marked); New run (one condition or both with one seed; unsandboxed only after an explicit yes; "start anyway" when a batch is live) |
+| Run | `/runs/:runId?tab=` | stats header (the main agent's research steps and tokens against the budget); Answer (fact badges from score.json), Graph, Timeline (live; budget notices at the thresholds config.json records, none for prompt v1), Claims, Provenance, Score; the claim walk sheet (each claim's recorded quote beside today's passage) |
 | Compare | `/compare/:qid?on=&off=` | a claim_on and a claim_off run side by side, with their differences |
-| Results | `/results` | warnings, primary test with sensitivity analyses, charts with BCa intervals, per-question differences, secondary outcomes, per-question table |
-| Gold | `/gold` | coverage, candidates, key, review progress, κ, triage miss, screening false negatives, key sheet |
-| Jobs | `/jobs/:jobId?` | jobs with their steps, live log, cancel |
-| Chat | everywhere (Ctrl+J) | assistant-ui thread in a sheet; on a run page it sends the run id |
+| Results | `/results` | warnings, primary test with sensitivity analyses, charts with BCa intervals (questions and runs in the tooltips), per-question differences, secondary outcomes (with paired questions and runs), per-question table |
+| Gold | `/gold` | coverage, candidates, key, review progress, κ with its interval (and the warning when the overlap was not independent), triage miss, screening false negatives, key sheet; run a stopped build again |
+| Jobs | `/jobs/:jobId?` | jobs with their steps, live log (resumes after a dropped connection), cancel |
+| Chat | everywhere (Ctrl+J) | assistant-ui thread in a sheet, replies as Markdown; on a run page it sends the run id, and another run starts a new thread |
 
 Ctrl+K opens the command menu (pages, questions, runs, theme). Colours of the two conditions are
 series 1 and 2 of the validated chart palette (light and dark); status colours always come with an

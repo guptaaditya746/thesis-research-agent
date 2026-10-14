@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import { buildStopped, stageText } from "@/lib/gold"
 import { announceError, announceJob } from "@/lib/toasts"
 
 export default function QuestionPage() {
@@ -59,6 +60,7 @@ export default function QuestionPage() {
             {q?.category && <Badge variant="outline" className="font-normal">{q.category.replace("_", " ")}</Badge>}
             {q && <ConceptBadge status={q.concept.status} pickedBy={q.concept.picked_by} />}
             {q && <>gold <GoldBadge status={q.gold.status} /></>}
+            {q && !goldJob && buildStopped(q.gold) && <span className="text-xs">({stageText(q.gold)})</span>}
             {q?.source && <span className="text-xs">from {q.source}</span>}
           </span>
         }
@@ -76,10 +78,10 @@ export default function QuestionPage() {
                 Compare
               </Link>
             </Button>
-            {q?.picked && q.gold.status === "none" && (
+            {q?.picked && (q.gold.status === "none" || buildStopped(q.gold)) && (
               <Button variant="outline" onClick={startGold} disabled={buildGold.isPending || !!goldJob}>
                 {buildGold.isPending || goldJob ? <Spinner data-icon="inline-start" /> : <AwardIcon data-icon="inline-start" />}
-                {goldJob ? "Gold build running" : "Build the gold standard"}
+                {goldJob ? "Gold build running" : q.gold.status === "none" ? "Build the gold standard" : "Run the gold build again"}
               </Button>
             )}
           </>

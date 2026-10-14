@@ -163,6 +163,14 @@ export interface RunConfig {
   prompt?: { version?: string; sha256?: string }
   models?: { orchestrator?: { alias?: string; name?: string; revision?: string } }
   git_commit?: string
+  /**
+   * agent/loop.py LoopSettings.config(), the part the app reads: the budget notice thresholds in %
+   * (empty for prompt v1, and for runs of a harness before the setting: they got no notice) and
+   * the agent's draft file (null: none, prompt v1).
+   */
+  loop?: { budget_warnings: number[]; draft_file: string | null }
+  /** which sandbox ran the commands: landlock, or unsandboxed (tests only) */
+  sandbox?: { mode?: string }
 }
 
 // --- score.json (scoring/README.md, schema_version 2) ----------------------------------------------

@@ -49,8 +49,9 @@ function literalLabel(value: unknown): string {
   return typeof value === "string" ? `“${value}”` : String(value)
 }
 
-/** Nodes and merged edges, without positions. */
-export function graphElements(graph: KnowledgeGraph): { nodes: FlowNode[]; edges: FlowEdge[] } {
+/** Nodes and merged edges, without positions; `skipped`: claims whose edge has an end that is no node. */
+export function graphElements(graph: KnowledgeGraph): { nodes: FlowNode[]; edges: FlowEdge[]; skipped: number } {
+  let skipped = 0
   const degree = new Map<string, number>()
   const bump = (id: string) => degree.set(id, (degree.get(id) ?? 0) + 1)
   const nodes: FlowNode[] = graph.nodes.map((n) => ({
@@ -71,7 +72,10 @@ export function graphElements(graph: KnowledgeGraph): { nodes: FlowNode[]; edges
       })
       known.add(target)
     }
-    if (!known.has(e.source) || !known.has(target)) continue // dangling edge: skip rather than crash
+    if (!known.has(e.source) || !known.has(target)) {
+      skipped += 1 // dangling edge: skip rather than crash, and count it
+      continue
+    }
     bump(e.source)
     bump(target)
     const key = `${e.source}|${e.predicate.curie}|${target}`
@@ -92,7 +96,7 @@ export function graphElements(graph: KnowledgeGraph): { nodes: FlowNode[]; edges
     })
   }
   for (const n of nodes) n.data.degree = degree.get(n.id) ?? 0
-  return { nodes, edges: [...merged.values()] }
+  return { nodes, edges: [...merged.values()], skipped }
 }
 
 /** dagre layout: positions are top-left corners, as React Flow expects. */
@@ -114,7 +118,7 @@ export function layout(nodes: FlowNode[], edges: FlowEdge[], direction: "LR" | "
 }
 
 /** The knowledge graph as laid-out React Flow elements. */
-export function toFlow(graph: KnowledgeGraph, direction: "LR" | "TB" = "LR"): { nodes: FlowNode[]; edges: FlowEdge[] } {
-  const { nodes, edges } = graphElements(graph)
-  return { nodes: layout(nodes, edges, direction), edges }
+export function toFlow(graph: KnowledgeGraph, direction: "LR" | "TB" = "LR"): { nodes: FlowNode[]; edges: FlowEdge[]; skipped: number } {
+  const { nodes, edges, skipped } = graphElements(graph)
+  return { nodes: layout(nodes, edges, direction), edges, skipped }
 }

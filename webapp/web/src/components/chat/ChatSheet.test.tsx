@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeAll, describe, expect, it } from "vitest"
 
@@ -41,7 +41,31 @@ describe("chat", () => {
     expect(within(sheet).getByText(/get_run\(/)).toBeInTheDocument()
     expect(bodies).toHaveLength(1)
     expect(bodies[0]).toMatchObject({ run_id: RUN.on, trigger: "submit-message" })
+    // the reply is Markdown: its table and bold render, its raw HTML does not
+    const table = await within(sheet).findByRole("table", {}, { timeout: 10_000 })
+    expect(within(table).getByRole("columnheader", { name: "accepted claims" })).toBeInTheDocument()
+    expect((await within(sheet).findByText("Read from get_run.", {}, { timeout: 10_000 })).tagName).toBe("STRONG")
+    expect(within(sheet).queryByTestId("raw-html")).not.toBeInTheDocument()
+    expect(sheet.querySelector("b")).toBeNull()
     server.events.removeAllListeners("request:start")
+  })
+
+  it("starts a new thread when another run is in view, so one run's answers never sit in another's thread", async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutes(routes, `/runs/${encodeURIComponent(RUN.on)}`)
+    await user.click(await screen.findByRole("button", { name: "Ask about this run" }, T))
+    const input = await screen.findByRole("textbox", { name: "Message" }, T)
+    await user.type(input, "Summarise this run.{Enter}")
+    let sheet = screen.getByRole("dialog", { name: "Chat about runs" })
+    expect(await within(sheet).findByText(new RegExp(`\\(mock reply\\) Run ${RUN.on}`), {}, { timeout: 10_000 })).toBeInTheDocument()
+    await user.click(within(sheet).getByRole("button", { name: "Close" }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    await router.navigate(`/runs/${encodeURIComponent(RUN.off)}`)
+    await user.click(await screen.findByRole("button", { name: "Ask about this run" }, T))
+    sheet = await screen.findByRole("dialog", { name: "Chat about runs" }, T)
+    expect(within(sheet).getByText(RUN.off)).toBeInTheDocument()
+    expect(within(sheet).queryByText("Summarise this run.")).not.toBeInTheDocument()
+    expect(within(sheet).queryByText(/\(mock reply\)/)).not.toBeInTheDocument()
   })
 
   it("opens from any page with Ctrl+J and is not scoped there", async () => {
@@ -52,7 +76,7 @@ describe("chat", () => {
     await user.keyboard("{Control>}j{/Control}")
     const input = await screen.findByRole("textbox", { name: "Message" }, T)
     const sheet = screen.getByRole("dialog", { name: "Chat about runs" })
-    expect(within(sheet).getByText(/All runs\. Open a run page to ask about one run\./)).toBeInTheDocument()
+    expect(within(sheet).getByText(/All runs\. Open a run page to ask about one run/)).toBeInTheDocument()
     await user.type(input, "How many runs are there?{Enter}")
     expect(await within(sheet).findByText(/\(mock reply\) There are 6 runs/, {}, { timeout: 10_000 })).toBeInTheDocument()
     expect(bodies[0]).not.toHaveProperty("run_id")
