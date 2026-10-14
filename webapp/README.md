@@ -53,7 +53,7 @@ their recorded time, a secondary outcome. Send `force: true` only when that does
 | `GET /api/health`, `GET /api/config` | `Health`, `AppConfig` (whether the LLM key is set, never the key) |
 | `GET /api/questions`, `GET /api/questions/{qid}` | `Question` (concept, gold and run status), `QuestionDetail` (+ briefs, pick) |
 | `POST /api/questions/{qid}/concepts/propose` `{temperature, seed}` | `Job` running `agent concepts propose` |
-| `POST /api/questions/{qid}/concepts/pick` `{choice, picked_by, reason, force}` | `QuestionDetail`; `picked_by` is `user`, `claude` or `provisional-first` |
+| `POST /api/questions/{qid}/concepts/pick` `{choice, picked_by, reason, force}` | `QuestionDetail`; `picked_by` is `user`, `claude` or `provisional-first` (the web UI always sends `user`; the other two are the CLI's) |
 | `GET /api/runs?qid=&condition=&verify=&include_stale=` | `[RunSummary]` (`qid`: the question's runs on its current concept; `verify=true` runs `agent verify` on runs not checked yet; without it, a run the app has not verified shows score.json's `verify_ok` when the scorer checked it after its last record, `verify_from: score`) |
 | `POST /api/runs` `{qid \| concept_path, condition, temperature, seed, steps, tokens, sandbox, attach, force}` | `Job`: `agent run` into `$RUNS/web/`, attach (claim_off), verify, pairs, graph, export-prov, `score run --key` |
 | `GET /api/runs/{id}` | `RunDetail` (summary, config, concept, answer, verify) |

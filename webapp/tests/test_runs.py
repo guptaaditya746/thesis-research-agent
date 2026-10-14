@@ -16,7 +16,7 @@ from agent.tests.runs import Driver
 from agent.tests.test_rundir import SETTINGS
 from webapp.app import create_app
 from webapp.corpus import Corpus
-from webapp.runs import Digest, Runs, score_summary
+from webapp.runs import Digest, Runs, sandbox_mode, score_summary
 from webapp.settings import Settings
 
 from .test_stream import events
@@ -132,3 +132,9 @@ def test_the_stream_ends_with_the_attach_step(fresh: World) -> None:
         with c.stream("GET", "/api/runs/web~r2/stream") as response:
             got = events(response)
     assert got[-1]["event"] == "done"
+
+
+def test_sandbox_mode() -> None:
+    assert sandbox_mode({"sandbox": {"mode": "unsandboxed", "landlock_abi": None}}) == "unsandboxed"
+    assert sandbox_mode({"sandbox": {"mode": "landlock", "landlock_abi": 6}}) == "landlock"
+    assert sandbox_mode({}) is None and sandbox_mode({"sandbox": "landlock"}) is None
