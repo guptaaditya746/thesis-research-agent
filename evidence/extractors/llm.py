@@ -27,8 +27,10 @@ QUOTE_REASONS = ("not_found", "ambiguous", "partial_number", "empty_quote")
 DEFAULTS: dict[str, Any] = {"model": "sub-model-1", "prompt": "extract-v1.md", "retry_prompt": "retry-v1.md",
                             "temperature": 0.0, "seed": 0, "max_tokens": 4096, "retry_max_tokens": 2048,
                             "chunk_chars": 12000, "quote_retry": 1}
-CODE_SHA256 = base.source_sha256(base.HERE / "llm.py", base.HERE / "llm_schema.py", base.HERE / "base.py",
-                                 llm_schema.PROMPT_DIR / "extract-v1.md", llm_schema.PROMPT_DIR / "retry-v1.md")
+SOURCES = (base.HERE / "llm.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "extract-v1.md",
+           llm_schema.PROMPT_DIR / "retry-v1.md", base.ROOT / "gold" / "llm.py", base.ROOT / "evidence" / "recording.py",
+           *base.SHARED_SOURCES)
+CODE_SHA256 = base.source_sha256(*SOURCES)
 
 
 @dataclass
@@ -59,7 +61,12 @@ class LLMExtractor:
                                           "retry_max_tokens", "chunk_chars", "quote_retry")}
         config_out |= {"evidence_type": evidence_type,
                        "prompt_sha256": gold_llm.prompt_sha256(self.instructions, self.output_type),
-                       "retry_prompt_sha256": gold_llm.prompt_sha256(self.retry_instructions, llm_schema.Retry)}
+                       "retry_prompt_sha256": gold_llm.prompt_sha256(self.retry_instructions, llm_schema.Retry),
+                       # what every call sends (thinking off via extra_body): a change is a new extractor id
+                       "model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
+                                                                max_tokens=cfg["max_tokens"])),
+                       "retry_model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
+                                                                      max_tokens=cfg["retry_max_tokens"]))}
         self.spec = ExtractorSpec(name=f"llm_{evidence_type}", version=VERSION, kind="llm",
                                   evidence_types=(evidence_type,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config=config_out, determinism="near_exact")

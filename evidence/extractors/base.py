@@ -17,14 +17,19 @@ from agent.canonical import sha256_hex
 from ..contract import Coverage, ExtractionTask, Item, Span, digest
 
 HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+# Modules every extractor's behaviour depends on: offsets and anchoring, sections and chunks, these helpers.
+SHARED_SOURCES = (HERE / "base.py", ROOT / "agent" / "anchor.py", ROOT / "agent" / "canonical.py",
+                  ROOT / "gold" / "chunks.py", ROOT / "evidence" / "contract.py")
 
 
 def source_sha256(*paths: Path) -> str:
-    """Hash of source files (name and LF-normalised bytes), the `code_sha256` of an extractor."""
+    """Hash of source files (repository path and LF-normalised bytes), the `code_sha256` of an extractor:
+    a change to any module its behaviour depends on gives a new id, so a stale cache entry is never used."""
     parts = []
     for path in paths:
         data = path.read_bytes().replace(b"\r\n", b"\n")
-        parts.append([path.name, sha256_hex(data)])
+        parts.append([path.resolve().relative_to(ROOT).as_posix(), sha256_hex(data)])
     return digest(parts)
 
 
