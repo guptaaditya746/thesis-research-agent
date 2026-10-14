@@ -16,6 +16,7 @@ from agent import anchor
 from synth import assoc, levelcheck
 from synth.levels import Plan, parse_value
 from synth.text import Decoy, Placement
+from synth.truth import DECOY_GAP
 
 NUMBER = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 TOLERANCE = 0.005      # evaluation's value tolerance; a blind re-extraction must land within it
@@ -129,8 +130,17 @@ def stray_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy
     return bad
 
 
+def values_apart(plan: Plan) -> list[str]:
+    """The study's true values (in the units they are scored in) are pairwise more than DECOY_GAP apart,
+    so no value matches another fact within the evaluation tolerance."""
+    ms = sorted(plan.study.measurements, key=lambda m: m.value)
+    return [f"{a.id}={a.value} and {b.id}={b.value} are within {DECOY_GAP}"
+            for a, b in zip(ms, ms[1:]) if b.value - a.value <= DECOY_GAP]
+
+
 def check_paper(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[Check]:
     return [
+        _check("values_apart", values_apart(plan)),
         Check("lf_only", "\r" not in text, "carriage return in text" if "\r" in text else ""),
         _check("facts_rendered", facts_rendered(plan, ps)),
         _check("anchored", anchored(text, ps)),

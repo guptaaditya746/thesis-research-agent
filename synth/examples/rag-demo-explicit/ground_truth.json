@@ -1,5 +1,5 @@
 {
-  "corpus_id": "rag-demo-3ab5e277",
+  "corpus_id": "rag-demo-eaa9b89e",
   "seed": 1,
   "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
   "studies": [
@@ -140,6 +140,12 @@
           "role": "rag",
           "label": "retrieve-then-read model",
           "aliases": []
+        },
+        {
+          "id": "S003.c3",
+          "role": "other",
+          "label": "RAG with random passages",
+          "aliases": []
         }
       ],
       "metrics": [
@@ -162,7 +168,14 @@
           "id": "S003.m2",
           "condition": "S003.c2",
           "metric": "S003.k1",
-          "value": 0.754,
+          "value": 0.757,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S003.m3",
+          "condition": "S003.c3",
+          "metric": "S003.k1",
+          "value": 0.322,
           "dataset": "LawFactQA"
         }
       ],
@@ -172,7 +185,7 @@
       },
       "effect": {
         "direction": "neutral",
-        "delta": 0.006,
+        "delta": 0.009,
         "metric": "S003.k1",
         "rag": "S003.m2",
         "baseline": "S003.m1"
@@ -266,13 +279,25 @@
         {
           "id": "S005.c1",
           "role": "baseline",
-          "label": "no-retrieval baseline",
+          "label": "parametric-only model",
           "aliases": []
         },
         {
           "id": "S005.c2",
           "role": "rag",
-          "label": "RAG pipeline",
+          "label": "retrieval-augmented model",
+          "aliases": []
+        },
+        {
+          "id": "S005.c3",
+          "role": "other",
+          "label": "RAG with random passages",
+          "aliases": []
+        },
+        {
+          "id": "S005.c4",
+          "role": "other",
+          "label": "self-consistency decoding",
           "aliases": []
         }
       ],
@@ -289,15 +314,29 @@
           "id": "S005.m1",
           "condition": "S005.c1",
           "metric": "S005.k1",
-          "value": 0.185,
-          "dataset": "SciFactBench"
+          "value": 0.107,
+          "dataset": "OpenFactQA"
         },
         {
           "id": "S005.m2",
           "condition": "S005.c2",
           "metric": "S005.k1",
-          "value": 0.247,
-          "dataset": "SciFactBench"
+          "value": 0.172,
+          "dataset": "OpenFactQA"
+        },
+        {
+          "id": "S005.m3",
+          "condition": "S005.c3",
+          "metric": "S005.k1",
+          "value": 0.136,
+          "dataset": "OpenFactQA"
+        },
+        {
+          "id": "S005.m4",
+          "condition": "S005.c4",
+          "metric": "S005.k1",
+          "value": 0.488,
+          "dataset": "OpenFactQA"
         }
       ],
       "author_claim": {
@@ -306,7 +345,7 @@
       },
       "effect": {
         "direction": "contradicts",
-        "delta": -0.062,
+        "delta": -0.065,
         "metric": "S005.k1",
         "rag": "S005.m2",
         "baseline": "S005.m1"
@@ -320,19 +359,19 @@
         {
           "id": "S006.c1",
           "role": "baseline",
-          "label": "closed-book model",
+          "label": "no-retrieval baseline",
           "aliases": []
         },
         {
           "id": "S006.c2",
           "role": "rag",
-          "label": "retrieval-augmented generator",
+          "label": "retrieve-then-read model",
           "aliases": []
         },
         {
           "id": "S006.c3",
           "role": "other",
-          "label": "RAG without reranking",
+          "label": "chain-of-thought prompting",
           "aliases": []
         }
       ],
@@ -340,7 +379,7 @@
         {
           "id": "S006.k1",
           "canonical": "hallucination_rate",
-          "name": "unsupported-answer rate",
+          "name": "hallucination rate",
           "higher_is_better": false
         }
       ],
@@ -349,22 +388,22 @@
           "id": "S006.m1",
           "condition": "S006.c1",
           "metric": "S006.k1",
-          "value": 0.361,
-          "dataset": "TriviaCheck"
+          "value": 0.315,
+          "dataset": "GeoFacts"
         },
         {
           "id": "S006.m2",
           "condition": "S006.c2",
           "metric": "S006.k1",
-          "value": 0.305,
-          "dataset": "TriviaCheck"
+          "value": 0.184,
+          "dataset": "GeoFacts"
         },
         {
           "id": "S006.m3",
           "condition": "S006.c3",
           "metric": "S006.k1",
-          "value": 0.195,
-          "dataset": "TriviaCheck"
+          "value": 0.453,
+          "dataset": "GeoFacts"
         }
       ],
       "author_claim": {
@@ -373,7 +412,7 @@
       },
       "effect": {
         "direction": "supports",
-        "delta": 0.056,
+        "delta": 0.131,
         "metric": "S006.k1",
         "rag": "S006.m2",
         "baseline": "S006.m1"
@@ -678,75 +717,107 @@
       "exact": "retrieve-then-read model"
     },
     {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1093,
+      "end": 1117,
+      "exact": "RAG with random passages"
+    },
+    {
       "fact": "S003.k1",
       "role": "metric_label",
       "paper": "S003",
-      "start": 1103,
-      "end": 1118,
+      "start": 1231,
+      "end": 1246,
       "exact": "answer accuracy"
     },
     {
       "fact": "S003.k1",
       "role": "metric_label",
       "paper": "S003",
-      "start": 1124,
-      "end": 1175,
+      "start": 1252,
+      "end": 1303,
       "exact": "proportion of questions answered with correct facts"
     },
     {
       "fact": "S003.c1",
       "role": "condition_label",
       "paper": "S003",
-      "start": 1465,
-      "end": 1476,
+      "start": 1593,
+      "end": 1604,
       "exact": "vanilla LLM"
     },
     {
       "fact": "S003.m1",
       "role": "value",
       "paper": "S003",
-      "start": 1481,
-      "end": 1486,
+      "start": 1609,
+      "end": 1614,
       "exact": "74.8%"
     },
     {
       "fact": "S003.k1",
       "role": "metric_label",
       "paper": "S003",
-      "start": 1487,
-      "end": 1502,
+      "start": 1615,
+      "end": 1630,
       "exact": "answer accuracy"
     },
     {
       "fact": "S003.m2",
       "role": "value",
       "paper": "S003",
-      "start": 1515,
-      "end": 1520,
-      "exact": "75.4%"
+      "start": 1643,
+      "end": 1648,
+      "exact": "75.7%"
     },
     {
       "fact": "S003.k1",
       "role": "metric_label",
       "paper": "S003",
-      "start": 1521,
-      "end": 1536,
+      "start": 1649,
+      "end": 1664,
       "exact": "answer accuracy"
     },
     {
       "fact": "S003.c2",
       "role": "condition_label",
       "paper": "S003",
-      "start": 1545,
-      "end": 1569,
+      "start": 1673,
+      "end": 1697,
       "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1716,
+      "end": 1740,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S003.m3",
+      "role": "value",
+      "paper": "S003",
+      "start": 1747,
+      "end": 1752,
+      "exact": "32.2%"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1753,
+      "end": 1768,
+      "exact": "answer accuracy"
     },
     {
       "fact": "S003.a1",
       "role": "claim",
       "paper": "S003",
-      "start": 1879,
-      "end": 1966,
+      "start": 2094,
+      "end": 2181,
       "exact": "Adding retrieved documents leaves the correctness of the answers essentially unchanged."
     },
     {
@@ -929,256 +1000,320 @@
       "fact": "S005.c1",
       "role": "condition_label",
       "paper": "S005",
-      "start": 183,
-      "end": 204,
-      "exact": "no-retrieval baseline"
+      "start": 181,
+      "end": 202,
+      "exact": "parametric-only model"
     },
     {
       "fact": "S005.c2",
       "role": "condition_label",
       "paper": "S005",
-      "start": 214,
-      "end": 226,
-      "exact": "RAG pipeline"
+      "start": 212,
+      "end": 237,
+      "exact": "retrieval-augmented model"
     },
     {
       "fact": "S005.a1",
       "role": "claim",
       "paper": "S005",
-      "start": 244,
-      "end": 313,
+      "start": 253,
+      "end": 322,
       "exact": "Retrieval augmentation increases hallucinated content in the answers."
     },
     {
       "fact": "S005.c1",
       "role": "condition_label",
       "paper": "S005",
-      "start": 856,
-      "end": 877,
-      "exact": "no-retrieval baseline"
+      "start": 863,
+      "end": 884,
+      "exact": "parametric-only model"
     },
     {
       "fact": "S005.c2",
       "role": "condition_label",
       "paper": "S005",
-      "start": 960,
-      "end": 972,
-      "exact": "RAG pipeline"
+      "start": 983,
+      "end": 1008,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S005.c3",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1115,
+      "end": 1139,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1243,
+      "end": 1268,
+      "exact": "self-consistency decoding"
     },
     {
       "fact": "S005.k1",
       "role": "metric_label",
       "paper": "S005",
-      "start": 1099,
-      "end": 1117,
+      "start": 1360,
+      "end": 1378,
       "exact": "hallucination rate"
     },
     {
       "fact": "S005.k1",
       "role": "metric_label",
       "paper": "S005",
-      "start": 1123,
-      "end": 1187,
+      "start": 1384,
+      "end": 1448,
       "exact": "share of answers that contain at least one unsupported statement"
     },
     {
       "fact": "S005.c1",
       "role": "condition_label",
       "paper": "S005",
-      "start": 1477,
-      "end": 1498,
-      "exact": "no-retrieval baseline"
+      "start": 1736,
+      "end": 1757,
+      "exact": "parametric-only model"
     },
     {
       "fact": "S005.m1",
       "role": "value",
       "paper": "S005",
-      "start": 1503,
-      "end": 1508,
-      "exact": "18.5%"
+      "start": 1762,
+      "end": 1767,
+      "exact": "10.7%"
     },
     {
       "fact": "S005.k1",
       "role": "metric_label",
       "paper": "S005",
-      "start": 1509,
-      "end": 1527,
+      "start": 1768,
+      "end": 1786,
       "exact": "hallucination rate"
     },
     {
       "fact": "S005.m2",
       "role": "value",
       "paper": "S005",
-      "start": 1540,
-      "end": 1545,
-      "exact": "24.7%"
+      "start": 1799,
+      "end": 1804,
+      "exact": "17.2%"
     },
     {
       "fact": "S005.k1",
       "role": "metric_label",
       "paper": "S005",
-      "start": 1546,
-      "end": 1564,
+      "start": 1805,
+      "end": 1823,
       "exact": "hallucination rate"
     },
     {
       "fact": "S005.c2",
       "role": "condition_label",
       "paper": "S005",
-      "start": 1573,
-      "end": 1585,
-      "exact": "RAG pipeline"
+      "start": 1832,
+      "end": 1857,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S005.m3",
+      "role": "value",
+      "paper": "S005",
+      "start": 1884,
+      "end": 1889,
+      "exact": "13.6%"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 1890,
+      "end": 1908,
+      "exact": "hallucination rate"
+    },
+    {
+      "fact": "S005.c3",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1917,
+      "end": 1941,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1976,
+      "end": 2001,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S005.m4",
+      "role": "value",
+      "paper": "S005",
+      "start": 2006,
+      "end": 2011,
+      "exact": "48.8%"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2012,
+      "end": 2030,
+      "exact": "hallucination rate"
     },
     {
       "fact": "S005.a1",
       "role": "claim",
       "paper": "S005",
-      "start": 1898,
-      "end": 1980,
+      "start": 2327,
+      "end": 2409,
       "exact": "Grounding the generator in retrieved documents leads to more hallucinated answers."
     },
     {
       "fact": "S006.c1",
       "role": "condition_label",
       "paper": "S006",
-      "start": 182,
-      "end": 199,
-      "exact": "closed-book model"
+      "start": 179,
+      "end": 200,
+      "exact": "no-retrieval baseline"
     },
     {
       "fact": "S006.c2",
       "role": "condition_label",
       "paper": "S006",
-      "start": 209,
-      "end": 238,
-      "exact": "retrieval-augmented generator"
+      "start": 210,
+      "end": 234,
+      "exact": "retrieve-then-read model"
     },
     {
       "fact": "S006.a1",
       "role": "claim",
       "paper": "S006",
-      "start": 255,
-      "end": 330,
+      "start": 248,
+      "end": 323,
       "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
     },
     {
       "fact": "S006.c1",
       "role": "condition_label",
       "paper": "S006",
-      "start": 855,
-      "end": 872,
-      "exact": "closed-book model"
+      "start": 845,
+      "end": 866,
+      "exact": "no-retrieval baseline"
     },
     {
       "fact": "S006.c2",
       "role": "condition_label",
       "paper": "S006",
-      "start": 988,
-      "end": 1017,
-      "exact": "retrieval-augmented generator"
+      "start": 949,
+      "end": 973,
+      "exact": "retrieve-then-read model"
     },
     {
       "fact": "S006.c3",
       "role": "condition_label",
       "paper": "S006",
-      "start": 1115,
-      "end": 1136,
-      "exact": "RAG without reranking"
+      "start": 1078,
+      "end": 1104,
+      "exact": "chain-of-thought prompting"
     },
     {
       "fact": "S006.k1",
       "role": "metric_label",
       "paper": "S006",
-      "start": 1241,
-      "end": 1264,
-      "exact": "unsupported-answer rate"
+      "start": 1205,
+      "end": 1223,
+      "exact": "hallucination rate"
     },
     {
       "fact": "S006.k1",
       "role": "metric_label",
       "paper": "S006",
-      "start": 1270,
-      "end": 1333,
-      "exact": "proportion of answers with a statement not backed by any source"
+      "start": 1229,
+      "end": 1293,
+      "exact": "share of answers that contain at least one unsupported statement"
     },
     {
       "fact": "S006.m1",
       "role": "value",
       "paper": "S006",
-      "start": 1612,
-      "end": 1617,
-      "exact": "36.1%"
+      "start": 1572,
+      "end": 1577,
+      "exact": "31.5%"
     },
     {
       "fact": "S006.k1",
       "role": "metric_label",
       "paper": "S006",
-      "start": 1618,
-      "end": 1641,
-      "exact": "unsupported-answer rate"
+      "start": 1578,
+      "end": 1596,
+      "exact": "hallucination rate"
     },
     {
       "fact": "S006.c1",
       "role": "condition_label",
       "paper": "S006",
-      "start": 1650,
-      "end": 1667,
-      "exact": "closed-book model"
+      "start": 1605,
+      "end": 1626,
+      "exact": "no-retrieval baseline"
     },
     {
       "fact": "S006.c2",
       "role": "condition_label",
       "paper": "S006",
-      "start": 1688,
-      "end": 1717,
-      "exact": "retrieval-augmented generator"
+      "start": 1644,
+      "end": 1668,
+      "exact": "retrieve-then-read model"
     },
     {
       "fact": "S006.m2",
       "role": "value",
       "paper": "S006",
+      "start": 1675,
+      "end": 1680,
+      "exact": "18.4%"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 1681,
+      "end": 1699,
+      "exact": "hallucination rate"
+    },
+    {
+      "fact": "S006.m3",
+      "role": "value",
+      "paper": "S006",
       "start": 1724,
       "end": 1729,
-      "exact": "30.5%"
+      "exact": "45.3%"
     },
     {
       "fact": "S006.k1",
       "role": "metric_label",
       "paper": "S006",
       "start": 1730,
-      "end": 1753,
-      "exact": "unsupported-answer rate"
-    },
-    {
-      "fact": "S006.m3",
-      "role": "value",
-      "paper": "S006",
-      "start": 1781,
-      "end": 1786,
-      "exact": "19.5%"
-    },
-    {
-      "fact": "S006.k1",
-      "role": "metric_label",
-      "paper": "S006",
-      "start": 1787,
-      "end": 1810,
-      "exact": "unsupported-answer rate"
+      "end": 1748,
+      "exact": "hallucination rate"
     },
     {
       "fact": "S006.c3",
       "role": "condition_label",
       "paper": "S006",
-      "start": 1819,
-      "end": 1840,
-      "exact": "RAG without reranking"
+      "start": 1757,
+      "end": 1783,
+      "exact": "chain-of-thought prompting"
     },
     {
       "fact": "S006.a1",
       "role": "claim",
       "paper": "S006",
-      "start": 2184,
-      "end": 2267,
+      "start": 2124,
+      "end": 2207,
       "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
     }
   ],

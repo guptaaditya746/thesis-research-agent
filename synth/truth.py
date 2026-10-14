@@ -118,7 +118,14 @@ def _improvement(rng: random.Random, direction: str) -> float:
         return _thousandths(rng, 0.03, 0.15)
     if direction == "contradicts":
         return -_thousandths(rng, 0.03, 0.10)
-    return rng.choice((1, -1)) * rng.randint(2, 6) / 1000
+    # neutral: below rules.MIN_EFFECT (0.01) yet more than DECOY_GAP, so rag and baseline stay apart
+    return rng.choice((1, -1)) * rng.choice((8, 9)) / 1000
+
+
+def _far(v: float, taken: set[float]) -> bool:
+    """`v` lies more than DECOY_GAP from every value already in the study, so a value read from the wrong
+    cell can never match another fact by value alone (the evaluation's tolerance is 0.005)."""
+    return all(abs(v - x) > DECOY_GAP for x in taken)
 
 
 def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float]) -> tuple[float, float]:
@@ -128,7 +135,7 @@ def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float])
         base = _thousandths(rng, low, high)
         delta = _improvement(rng, direction)
         rag = round(base + delta if metric.higher_is_better else base - delta, 3)
-        if (round(rag * 1000) % 10 and 0.05 <= rag <= 0.95 and base not in taken and rag not in taken
+        if (round(rag * 1000) % 10 and 0.05 <= rag <= 0.95 and _far(base, taken) and _far(rag, taken)
                 and rules.effect(rag, base, metric.higher_is_better)[0] == direction):
             return base, rag
 
@@ -144,7 +151,7 @@ def _value(rng: random.Random, metric: Metric, taken: set[float]) -> float:
             v = _thousandths(rng, 0.10, 0.55)
         else:
             v = _thousandths(rng, 0.30, 0.80) if metric.higher_is_better else _thousandths(rng, 0.08, 0.50)
-        if v not in taken:
+        if _far(v, taken):
             return v
 
 

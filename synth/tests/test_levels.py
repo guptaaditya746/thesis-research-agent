@@ -120,6 +120,16 @@ def failing(plan, text, ps, decoys) -> set[str]:
     return {c.name for c in fidelity.check_paper(text, plan, ps, decoys) if not c.ok}
 
 
+def test_values_apart_check_flags_close_true_values() -> None:
+    plan, text, ps, decoys = _fixture()
+    s = plan.study
+    ms = list(s.measurements)
+    ms[-1] = dataclasses.replace(ms[-1], value=round(ms[0].value + 0.004, 3))
+    close = dataclasses.replace(plan, study=dataclasses.replace(s, measurements=tuple(ms)))
+    assert "values_apart" in failing(close, text, ps, decoys)
+    assert "values_apart" not in failing(plan, text, ps, decoys)
+
+
 def test_checks_catch_moved_placement_and_wrong_value() -> None:
     plan, text, ps, decoys = _fixture()
     v = next(i for i, p in enumerate(ps) if p.role == "value")
