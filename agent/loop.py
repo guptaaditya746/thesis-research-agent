@@ -49,7 +49,7 @@ taken), so every run directory is complete.
 
 Subagents (row 2.12, agent/spawn.py; `spawn` off unless asked for): the same ResearchAgent runs
 them, with hooks for another agent id, its record metadata and its result; the agent's commands
-get a SPAWN_FD channel and, when they call spawn, a longer time limit (SandboxEnvironment);
+get a SPAWN_FD channel and, when they start a subagent, a longer time limit (SandboxEnvironment);
 step ids come from one StepCounter per run, so they stay unique while subagents run. A masked
 spawn result keeps one short line (agent id, status, claim ids), the same in both conditions.
 """
