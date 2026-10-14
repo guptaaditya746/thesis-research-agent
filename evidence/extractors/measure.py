@@ -26,8 +26,9 @@ DELTA_AFTER = re.compile(r"(?i)^\s*(?:percentage\s+)?(?:points?|pp)\b")
 DATASET_HEADER = re.compile(r"(?i)^(?:dataset|benchmark|data|task)$")
 SIGNED = re.compile(r"[+±\-−–]\s*$")
 FROM_TO = re.compile(r"(?i)\bfrom\s+\d+(?:\.\d+)?\s*%?\s+to\s+\d+(?:\.\d+)?\s*%?")
-BLOCKERS = re.compile(r"\d|(?i:\b(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader"
-                      r"|retriever|ablation)s?\b)")
+_SYSTEMS = r"(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader|retriever|ablation)s?"
+BLOCKERS = re.compile(r"\d|(?i:\b" + _SYSTEMS + r"\b)")
+HEAD_NOUN = re.compile(r"(?i:\s+" + _SYSTEMS + r"\b)")
 
 
 class Resolver:
@@ -161,7 +162,8 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         after = AFTER.match(text, hit.end(), e)
         following = next(((m, i) for m, i in conditions if after and m.start == after.end()), None)
         preceding = [(m, i) for m, i in conditions if m.end <= hit.start()]
-        if preceding and BLOCKERS.search(text, preceding[-1][0].end, hit.start()):
+        head = HEAD_NOUN.match(text, preceding[-1][0].end) if preceding else None   # the mention's own noun
+        if preceding and BLOCKERS.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
             preceding = []   # another system or another number stands between: the value is not its
         cond = following or (preceding[-1] if preceding else None)
         before_metrics = [(m, i) for m, i in metrics if m.end <= hit.start()]
