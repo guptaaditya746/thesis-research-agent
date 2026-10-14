@@ -7,10 +7,14 @@ each one's offsets are recorded as it is written. Same plan and generator state,
 from __future__ import annotations
 
 import random
+from collections.abc import Sequence
 
 from synth import vocab
-from synth.levels import Plan
+from synth.corpus import Rendered
+from synth.fidelity import PaperFidelity, check_paper
+from synth.levels import Plan, make_plan, plan_rng
 from synth.text import Decoy, Doc, Placement, Seg
+from synth.truth import Study
 
 EXPLICIT = (
     "On {dataset}, the {cond} has {value} {metric}.",
@@ -155,3 +159,22 @@ def render(plan: Plan, rng: random.Random) -> tuple[str, list[Placement], list[D
     sentences(doc, rng, vocab.CONCLUSION, 2)
     doc.add("\n")
     return doc.text, doc.placements, doc.decoys
+
+
+def render_study(study: Study, level: str, seed: int) -> Rendered:
+    plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
+    text, placements, decoys = render(plan, plan_rng(seed, study.study_id, level + ":text"))
+    checks = check_paper(text, plan, placements, decoys)
+    return Rendered(study, plan, text, placements, decoys,
+                    PaperFidelity(study.study_id, all(c.ok for c in checks), checks))
+
+
+class TemplateRenderer:
+    """The deterministic renderer behind `synth build --renderer template`."""
+    name = "template"
+
+    def render_all(self, jobs: Sequence[tuple[Study, str]], seed: int) -> dict[tuple[str, str], Rendered]:
+        return {(s.study_id, level): render_study(s, level, seed) for s, level in jobs}
+
+    def models(self) -> None:
+        return None

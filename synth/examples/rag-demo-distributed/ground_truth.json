@@ -1,0 +1,1279 @@
+{
+  "corpus_id": "rag-demo-69d163da",
+  "seed": 1,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "study_id": "S001",
+      "paper": "S001",
+      "level": "distributed",
+      "conditions": [
+        {
+          "id": "S001.c1",
+          "role": "baseline",
+          "label": "closed-book model",
+          "aliases": [
+            "B"
+          ]
+        },
+        {
+          "id": "S001.c2",
+          "role": "rag",
+          "label": "retrieve-then-read model",
+          "aliases": [
+            "R"
+          ]
+        },
+        {
+          "id": "S001.c3",
+          "role": "other",
+          "label": "self-consistency decoding",
+          "aliases": [
+            "A1"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S001.k1",
+          "canonical": "hallucination_rate",
+          "name": "hallucination frequency",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S001.m1",
+          "condition": "S001.c1",
+          "metric": "S001.k1",
+          "value": 0.115,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S001.m2",
+          "condition": "S001.c2",
+          "metric": "S001.k1",
+          "value": 0.083,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S001.m3",
+          "condition": "S001.c3",
+          "metric": "S001.k1",
+          "value": 0.275,
+          "dataset": "TriviaCheck"
+        }
+      ],
+      "author_claim": {
+        "id": "S001.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.032,
+        "metric": "S001.k1",
+        "rag": "S001.m2",
+        "baseline": "S001.m1"
+      }
+    },
+    {
+      "study_id": "S002",
+      "paper": "S002",
+      "level": "distributed",
+      "conditions": [
+        {
+          "id": "S002.c1",
+          "role": "baseline",
+          "label": "no-retrieval baseline",
+          "aliases": [
+            "B"
+          ]
+        },
+        {
+          "id": "S002.c2",
+          "role": "rag",
+          "label": "RAG pipeline",
+          "aliases": [
+            "R"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S002.k1",
+          "canonical": "factual_accuracy",
+          "name": "answer accuracy",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S002.m1",
+          "condition": "S002.c1",
+          "metric": "S002.k1",
+          "value": 0.445,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m2",
+          "condition": "S002.c2",
+          "metric": "S002.k1",
+          "value": 0.567,
+          "dataset": "LawFactQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S002.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.122,
+        "metric": "S002.k1",
+        "rag": "S002.m2",
+        "baseline": "S002.m1"
+      }
+    },
+    {
+      "study_id": "S003",
+      "paper": "S003",
+      "level": "distributed",
+      "conditions": [
+        {
+          "id": "S003.c1",
+          "role": "baseline",
+          "label": "vanilla LLM",
+          "aliases": [
+            "B"
+          ]
+        },
+        {
+          "id": "S003.c2",
+          "role": "rag",
+          "label": "retrieval-augmented model",
+          "aliases": [
+            "R"
+          ]
+        },
+        {
+          "id": "S003.c3",
+          "role": "other",
+          "label": "chain-of-thought prompting",
+          "aliases": [
+            "A1"
+          ]
+        },
+        {
+          "id": "S003.c4",
+          "role": "other",
+          "label": "self-consistency decoding",
+          "aliases": [
+            "A2"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S003.k1",
+          "canonical": "hallucination_rate",
+          "name": "hallucination rate",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S003.m1",
+          "condition": "S003.c1",
+          "metric": "S003.k1",
+          "value": 0.445,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m2",
+          "condition": "S003.c2",
+          "metric": "S003.k1",
+          "value": 0.447,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m3",
+          "condition": "S003.c3",
+          "metric": "S003.k1",
+          "value": 0.346,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m4",
+          "condition": "S003.c4",
+          "metric": "S003.k1",
+          "value": 0.281,
+          "dataset": "NewsTruthQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S003.a1",
+        "direction": "no_effect"
+      },
+      "effect": {
+        "direction": "neutral",
+        "delta": -0.002,
+        "metric": "S003.k1",
+        "rag": "S003.m2",
+        "baseline": "S003.m1"
+      }
+    },
+    {
+      "study_id": "S004",
+      "paper": "S004",
+      "level": "distributed",
+      "conditions": [
+        {
+          "id": "S004.c1",
+          "role": "baseline",
+          "label": "no-retrieval baseline",
+          "aliases": [
+            "B"
+          ]
+        },
+        {
+          "id": "S004.c2",
+          "role": "rag",
+          "label": "retrieval-augmented generator",
+          "aliases": [
+            "R"
+          ]
+        },
+        {
+          "id": "S004.c3",
+          "role": "other",
+          "label": "self-consistency decoding",
+          "aliases": [
+            "A1"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S004.k1",
+          "canonical": "hallucination_rate",
+          "name": "unsupported-answer rate",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S004.m1",
+          "condition": "S004.c1",
+          "metric": "S004.k1",
+          "value": 0.365,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S004.m2",
+          "condition": "S004.c2",
+          "metric": "S004.k1",
+          "value": 0.236,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S004.m3",
+          "condition": "S004.c3",
+          "metric": "S004.k1",
+          "value": 0.298,
+          "dataset": "LawFactQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S004.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.129,
+        "metric": "S004.k1",
+        "rag": "S004.m2",
+        "baseline": "S004.m1"
+      }
+    },
+    {
+      "study_id": "S005",
+      "paper": "S005",
+      "level": "distributed",
+      "conditions": [
+        {
+          "id": "S005.c1",
+          "role": "baseline",
+          "label": "no-retrieval baseline",
+          "aliases": [
+            "B"
+          ]
+        },
+        {
+          "id": "S005.c2",
+          "role": "rag",
+          "label": "RAG pipeline",
+          "aliases": [
+            "R"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S005.k1",
+          "canonical": "hallucination_rate",
+          "name": "hallucination rate",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S005.m1",
+          "condition": "S005.c1",
+          "metric": "S005.k1",
+          "value": 0.185,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m2",
+          "condition": "S005.c2",
+          "metric": "S005.k1",
+          "value": 0.247,
+          "dataset": "SciFactBench"
+        }
+      ],
+      "author_claim": {
+        "id": "S005.a1",
+        "direction": "worsens"
+      },
+      "effect": {
+        "direction": "contradicts",
+        "delta": -0.062,
+        "metric": "S005.k1",
+        "rag": "S005.m2",
+        "baseline": "S005.m1"
+      }
+    },
+    {
+      "study_id": "S006",
+      "paper": "S006",
+      "level": "distributed",
+      "conditions": [
+        {
+          "id": "S006.c1",
+          "role": "baseline",
+          "label": "closed-book model",
+          "aliases": [
+            "B"
+          ]
+        },
+        {
+          "id": "S006.c2",
+          "role": "rag",
+          "label": "retrieval-augmented generator",
+          "aliases": [
+            "R"
+          ]
+        },
+        {
+          "id": "S006.c3",
+          "role": "other",
+          "label": "RAG without reranking",
+          "aliases": [
+            "A1"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S006.k1",
+          "canonical": "hallucination_rate",
+          "name": "unsupported-answer rate",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S006.m1",
+          "condition": "S006.c1",
+          "metric": "S006.k1",
+          "value": 0.361,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S006.m2",
+          "condition": "S006.c2",
+          "metric": "S006.k1",
+          "value": 0.305,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S006.m3",
+          "condition": "S006.c3",
+          "metric": "S006.k1",
+          "value": 0.195,
+          "dataset": "TriviaCheck"
+        }
+      ],
+      "author_claim": {
+        "id": "S006.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.056,
+        "metric": "S006.k1",
+        "rag": "S006.m2",
+        "baseline": "S006.m1"
+      }
+    }
+  ],
+  "placements": [
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 302,
+      "end": 377,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 918,
+      "end": 935,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1052,
+      "end": 1053,
+      "exact": "B"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1070,
+      "end": 1094,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1200,
+      "end": 1201,
+      "exact": "R"
+    },
+    {
+      "fact": "S001.c3",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1218,
+      "end": 1243,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S001.c3",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1326,
+      "end": 1328,
+      "exact": "A1"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1355,
+      "end": 1378,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1384,
+      "end": 1436,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1466,
+      "end": 1468,
+      "exact": "HF"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2492,
+      "end": 2494,
+      "exact": "HF"
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2514,
+      "end": 2515,
+      "exact": "B"
+    },
+    {
+      "fact": "S001.m1",
+      "role": "value",
+      "paper": "S001",
+      "start": 2518,
+      "end": 2522,
+      "exact": "11.5"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2527,
+      "end": 2528,
+      "exact": "R"
+    },
+    {
+      "fact": "S001.m2",
+      "role": "value",
+      "paper": "S001",
+      "start": 2531,
+      "end": 2534,
+      "exact": "8.3"
+    },
+    {
+      "fact": "S001.c3",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2539,
+      "end": 2541,
+      "exact": "A1"
+    },
+    {
+      "fact": "S001.m3",
+      "role": "value",
+      "paper": "S001",
+      "start": 2544,
+      "end": 2548,
+      "exact": "27.5"
+    },
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 2897,
+      "end": 2980,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    },
+    {
+      "fact": "S002.a1",
+      "role": "claim",
+      "paper": "S002",
+      "start": 279,
+      "end": 352,
+      "exact": "Retrieval augmentation makes the generated answers clearly more accurate."
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 881,
+      "end": 902,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 986,
+      "end": 987,
+      "exact": "B"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1004,
+      "end": 1016,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1134,
+      "end": 1135,
+      "exact": "R"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1162,
+      "end": 1177,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1183,
+      "end": 1234,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1264,
+      "end": 1266,
+      "exact": "AA"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2260,
+      "end": 2262,
+      "exact": "AA"
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2282,
+      "end": 2283,
+      "exact": "B"
+    },
+    {
+      "fact": "S002.m1",
+      "role": "value",
+      "paper": "S002",
+      "start": 2286,
+      "end": 2290,
+      "exact": "44.5"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2295,
+      "end": 2296,
+      "exact": "R"
+    },
+    {
+      "fact": "S002.m2",
+      "role": "value",
+      "paper": "S002",
+      "start": 2299,
+      "end": 2303,
+      "exact": "56.7"
+    },
+    {
+      "fact": "S002.a1",
+      "role": "claim",
+      "paper": "S002",
+      "start": 2667,
+      "end": 2743,
+      "exact": "Grounding the generator in retrieved documents yields more accurate answers."
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 289,
+      "end": 360,
+      "exact": "Retrieval augmentation does not measurably reduce hallucinated content."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 881,
+      "end": 892,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 964,
+      "end": 965,
+      "exact": "B"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 982,
+      "end": 1007,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1115,
+      "end": 1116,
+      "exact": "R"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1133,
+      "end": 1159,
+      "exact": "chain-of-thought prompting"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1251,
+      "end": 1253,
+      "exact": "A1"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1270,
+      "end": 1295,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1378,
+      "end": 1380,
+      "exact": "A2"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1407,
+      "end": 1425,
+      "exact": "hallucination rate"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1431,
+      "end": 1495,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1525,
+      "end": 1527,
+      "exact": "HR"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2582,
+      "end": 2584,
+      "exact": "HR"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2604,
+      "end": 2605,
+      "exact": "B"
+    },
+    {
+      "fact": "S003.m1",
+      "role": "value",
+      "paper": "S003",
+      "start": 2608,
+      "end": 2612,
+      "exact": "44.5"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2617,
+      "end": 2618,
+      "exact": "R"
+    },
+    {
+      "fact": "S003.m2",
+      "role": "value",
+      "paper": "S003",
+      "start": 2621,
+      "end": 2625,
+      "exact": "44.7"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2630,
+      "end": 2632,
+      "exact": "A1"
+    },
+    {
+      "fact": "S003.m3",
+      "role": "value",
+      "paper": "S003",
+      "start": 2635,
+      "end": 2639,
+      "exact": "34.6"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2644,
+      "end": 2646,
+      "exact": "A2"
+    },
+    {
+      "fact": "S003.m4",
+      "role": "value",
+      "paper": "S003",
+      "start": 2649,
+      "end": 2653,
+      "exact": "28.1"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 3006,
+      "end": 3097,
+      "exact": "Adding retrieved documents leaves the amount of hallucinated content essentially unchanged."
+    },
+    {
+      "fact": "S004.a1",
+      "role": "claim",
+      "paper": "S004",
+      "start": 306,
+      "end": 381,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S004.c1",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 912,
+      "end": 933,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S004.c1",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1017,
+      "end": 1018,
+      "exact": "B"
+    },
+    {
+      "fact": "S004.c2",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1035,
+      "end": 1064,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S004.c2",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1163,
+      "end": 1164,
+      "exact": "R"
+    },
+    {
+      "fact": "S004.c3",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1181,
+      "end": 1206,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S004.c3",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 1289,
+      "end": 1291,
+      "exact": "A1"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 1318,
+      "end": 1341,
+      "exact": "unsupported-answer rate"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 1347,
+      "end": 1410,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 1440,
+      "end": 1443,
+      "exact": "UAR"
+    },
+    {
+      "fact": "S004.k1",
+      "role": "metric_label",
+      "paper": "S004",
+      "start": 2473,
+      "end": 2476,
+      "exact": "UAR"
+    },
+    {
+      "fact": "S004.c1",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 2496,
+      "end": 2497,
+      "exact": "B"
+    },
+    {
+      "fact": "S004.m1",
+      "role": "value",
+      "paper": "S004",
+      "start": 2500,
+      "end": 2504,
+      "exact": "36.5"
+    },
+    {
+      "fact": "S004.c2",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 2509,
+      "end": 2510,
+      "exact": "R"
+    },
+    {
+      "fact": "S004.m2",
+      "role": "value",
+      "paper": "S004",
+      "start": 2513,
+      "end": 2517,
+      "exact": "23.6"
+    },
+    {
+      "fact": "S004.c3",
+      "role": "condition_label",
+      "paper": "S004",
+      "start": 2522,
+      "end": 2524,
+      "exact": "A1"
+    },
+    {
+      "fact": "S004.m3",
+      "role": "value",
+      "paper": "S004",
+      "start": 2527,
+      "end": 2531,
+      "exact": "29.8"
+    },
+    {
+      "fact": "S004.a1",
+      "role": "claim",
+      "paper": "S004",
+      "start": 2902,
+      "end": 2985,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    },
+    {
+      "fact": "S005.a1",
+      "role": "claim",
+      "paper": "S005",
+      "start": 278,
+      "end": 347,
+      "exact": "Retrieval augmentation increases hallucinated content in the answers."
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 880,
+      "end": 901,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 985,
+      "end": 986,
+      "exact": "B"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1003,
+      "end": 1015,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1133,
+      "end": 1134,
+      "exact": "R"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 1161,
+      "end": 1179,
+      "exact": "hallucination rate"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 1185,
+      "end": 1249,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 1279,
+      "end": 1281,
+      "exact": "HR"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2321,
+      "end": 2323,
+      "exact": "HR"
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 2343,
+      "end": 2344,
+      "exact": "B"
+    },
+    {
+      "fact": "S005.m1",
+      "role": "value",
+      "paper": "S005",
+      "start": 2347,
+      "end": 2351,
+      "exact": "18.5"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 2356,
+      "end": 2357,
+      "exact": "R"
+    },
+    {
+      "fact": "S005.m2",
+      "role": "value",
+      "paper": "S005",
+      "start": 2360,
+      "end": 2364,
+      "exact": "24.7"
+    },
+    {
+      "fact": "S005.a1",
+      "role": "claim",
+      "paper": "S005",
+      "start": 2749,
+      "end": 2831,
+      "exact": "Grounding the generator in retrieved documents leads to more hallucinated answers."
+    },
+    {
+      "fact": "S006.a1",
+      "role": "claim",
+      "paper": "S006",
+      "start": 282,
+      "end": 357,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S006.c1",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 882,
+      "end": 899,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S006.c1",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1016,
+      "end": 1017,
+      "exact": "B"
+    },
+    {
+      "fact": "S006.c2",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1034,
+      "end": 1063,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S006.c2",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1162,
+      "end": 1163,
+      "exact": "R"
+    },
+    {
+      "fact": "S006.c3",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1180,
+      "end": 1201,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S006.c3",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 1297,
+      "end": 1299,
+      "exact": "A1"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 1326,
+      "end": 1349,
+      "exact": "unsupported-answer rate"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 1355,
+      "end": 1418,
+      "exact": "proportion of answers with a statement not backed by any source"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 1448,
+      "end": 1451,
+      "exact": "UAR"
+    },
+    {
+      "fact": "S006.k1",
+      "role": "metric_label",
+      "paper": "S006",
+      "start": 2463,
+      "end": 2466,
+      "exact": "UAR"
+    },
+    {
+      "fact": "S006.c1",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 2486,
+      "end": 2487,
+      "exact": "B"
+    },
+    {
+      "fact": "S006.m1",
+      "role": "value",
+      "paper": "S006",
+      "start": 2490,
+      "end": 2494,
+      "exact": "36.1"
+    },
+    {
+      "fact": "S006.c2",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 2499,
+      "end": 2500,
+      "exact": "R"
+    },
+    {
+      "fact": "S006.m2",
+      "role": "value",
+      "paper": "S006",
+      "start": 2503,
+      "end": 2507,
+      "exact": "30.5"
+    },
+    {
+      "fact": "S006.c3",
+      "role": "condition_label",
+      "paper": "S006",
+      "start": 2512,
+      "end": 2514,
+      "exact": "A1"
+    },
+    {
+      "fact": "S006.m3",
+      "role": "value",
+      "paper": "S006",
+      "start": 2517,
+      "end": 2521,
+      "exact": "19.5"
+    },
+    {
+      "fact": "S006.a1",
+      "role": "claim",
+      "paper": "S006",
+      "start": 2906,
+      "end": 2989,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    }
+  ],
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S001",
+      "S002",
+      "S004",
+      "S006"
+    ],
+    "contradicting": [
+      "S005"
+    ],
+    "neutral": [
+      "S003"
+    ]
+  }
+}

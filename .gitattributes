@@ -41,3 +41,8 @@ scripts/omen-tunnels-external text eol=lf
 # The built web app (webapp/web/dist, made by `npm run build`) is committed byte for byte, so the
 # Slurm node serves it without npm.
 webapp/web/dist/** -text
+
+# Synthetic benchmark (synth/): example corpora (placements are code-point offsets into the papers as stored)
+# and the renderer prompts (hashed into corpus.json).
+synth/examples/** text eol=lf
+synth/prompts/** text eol=lf

@@ -1,0 +1,294 @@
+{
+  "corpus_id": "rag-demo-9578a766",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": true,
+      "checks": [
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_complex",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S002",
+      "ok": true,
+      "checks": [
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_complex",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S003",
+      "ok": true,
+      "checks": [
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_complex",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S004",
+      "ok": true,
+      "checks": [
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_complex",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S005",
+      "ok": true,
+      "checks": [
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_complex",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S006",
+      "ok": true,
+      "checks": [
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_complex",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    }
+  ],
+  "excluded": []
+}
