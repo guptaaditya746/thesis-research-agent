@@ -134,3 +134,18 @@ def test_refuses_to_overwrite_a_foreign_directory(tmp_path: Path) -> None:
     (tmp_path / "t-explicit" / "notes.txt").write_text("mine")
     with pytest.raises(SystemExit):
         build(tmp_path, studies=2, levels=["explicit"])
+
+
+def test_corpus_id_is_a_hash_of_the_papers_not_of_the_level(built: Path) -> None:
+    """Review item 7: an id hashed from (name, level, seed, renderer) gave the level away by brute force."""
+    from agent.canonical import canonical_bytes, sha256_hex
+    ids = set()
+    for lv in ALL:
+        m = load(built / f"t-{lv}", "manifest.json")
+        digest = sha256_hex(canonical_bytes([[p["id"], p["sha256"]] for p in m["papers"]]))[:8]
+        assert m["corpus_id"] == f"t-{digest}"
+        guesses = {sha256_hex(canonical_bytes(["t", level, seed, r]))[:8]
+                   for level in ALL for seed in range(10) for r in ("template", "llm")}
+        assert digest not in guesses
+        ids.add(m["corpus_id"])
+    assert len(ids) == len(ALL)

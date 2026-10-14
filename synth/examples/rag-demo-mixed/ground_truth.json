@@ -1,5 +1,5 @@
 {
-  "corpus_id": "rag-demo-f46faad7",
+  "corpus_id": "rag-demo-319f4361",
   "seed": 1,
   "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
   "studies": [

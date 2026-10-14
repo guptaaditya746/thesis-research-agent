@@ -6,7 +6,8 @@ paper of its level's corpus. A study that fails fidelity at any level is left ou
 set (so the variants stay comparable) and reported in each fidelity.json.
 
 The manifest holds only {corpus_id, papers: [{id, file, sha256}]}; the corpus id is the set's name plus a
-hash, so it does not name the level (the directory name does, for people; systems read the manifest).
+hash of the papers' hashes, so it does not reveal the level (the directory name does, for people; systems
+read the manifest).
 """
 from __future__ import annotations
 
@@ -61,8 +62,10 @@ def dump(obj: Any) -> bytes:
     return (json.dumps(obj, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
 
-def corpus_id(name: str, level: str, seed: int, renderer: str) -> str:
-    return f"{name}-{sha256_hex(canonical_bytes([name, level, seed, renderer]))[:8]}"
+def corpus_id(name: str, papers: list[dict[str, str]]) -> str:
+    """`<name>-<8 hex>` from the papers' ids and hashes: deterministic, distinct per variant, and nothing
+    in it can be traced back to the level, the seed or the renderer."""
+    return f"{name}-{sha256_hex(canonical_bytes([[p['id'], p['sha256']] for p in papers]))[:8]}"
 
 
 def study_truth(r: Rendered) -> dict[str, Any]:
@@ -95,13 +98,13 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
                  studies: list[Study], papers: dict[str, Rendered], failed: dict[str, list[str]]) -> str:
     """Write one corpus; `papers` maps every study id to its rendering for this corpus."""
     prepare(directory)
-    cid = corpus_id(name, level, seed, renderer.name)
     kept = [s for s in studies if s.study_id not in failed]
     manifest = []
     for s in kept:
         data = papers[s.study_id].text.encode("utf-8")
         (directory / "papers" / f"{s.study_id}.md").write_bytes(data)
         manifest.append({"id": s.study_id, "file": f"papers/{s.study_id}.md", "sha256": hashlib.sha256(data).hexdigest()})
+    cid = corpus_id(name, manifest)
     (directory / "manifest.json").write_bytes(dump({"corpus_id": cid, "papers": manifest}))
     (directory / "corpus.json").write_bytes(dump({
         "corpus_id": cid, "seed": seed,

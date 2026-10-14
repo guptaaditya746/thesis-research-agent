@@ -89,8 +89,9 @@ is in `corpus.json`). `.gitattributes` keeps it LF on every checkout.
 
 ## Deviations from docs/evidence-interfaces.md
 
-- `corpus_id` is `<name>-<8 hex>` (a hash of name, level, seed, renderer), not `<name>-<level>`: the
-  manifest must not hint at the level. The directory name is `<name>-<level>` as documented.
+- `corpus_id` is `<name>-<8 hex>`, the hex from the hash of the papers' ids and sha256s, not
+  `<name>-<level>`: the manifest must not hint at the level (a hash of name and level could be guessed).
+  Two corpora with the very same papers (a one-level build and its mixed corpus) share the id. The directory name is `<name>-<level>` as documented.
 - Extra file `decoys.json` (the contradictory level's wrong stated values with offsets); systems under test
   never read it.
 - `fidelity.json` is `{corpus_id, papers: [{id, ok, checks, attempts, history, excluded_reason?}],
