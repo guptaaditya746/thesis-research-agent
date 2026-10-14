@@ -62,6 +62,9 @@ class Synthesis(Strict):
     metrics: tuple[str, ...]                # canonical question metrics, in priority order (rules.METRICS)
     min_effect: float = rules.MIN_EFFECT
     label_rule: Literal["rules.label"] = "rules.label"
+    # how a study's rag and baseline measurements are chosen (evidence/synthesis.py): same dataset, first
+    # dataset in document order, a table cell before prose, then document order of the value
+    pairing: Literal["same_dataset_table_first"] = "same_dataset_table_first"
 
     @model_validator(mode="after")
     def _known_metrics(self) -> Synthesis:

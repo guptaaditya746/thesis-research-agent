@@ -1,15 +1,26 @@
 """Deterministic synthesis: from the evidence of each document to answer.json (docs/evidence-interfaces.md §4).
 
 Per document: the question metrics are tried in the protocol's order, and within a metric the metric
-items in document order; the first metric item with a measurement linked to a `rag` condition and one
-linked to a `baseline` condition (on the same dataset when both name one) gives the study's effect with
-`rules.effect` (higher-is-better from `rules.METRICS`, the shared definition, not the extracted field).
-Among several candidates the first in document order is taken. The author claim is the document's first
-author_claim item; it agrees with the data per `rules.claim_agrees`. A document without a usable pair is
-`undetermined` with the reason and does not count; the label is `rules.label` of the counts.
+items in document order; the first metric item with a usable rag/baseline pair gives the study's effect
+with `rules.effect` (higher-is-better from `rules.METRICS`, the shared definition, not the extracted field).
+
+Pairing rule (protocol `synthesis.pairing: same_dataset_table_first`):
+1. A measurement's place in the document is the start of its first `value` span (where the number is),
+   not of its label or alias spans.
+2. rag and baseline are paired on the SAME dataset: the datasets are tried in the order they first appear
+   (by value position), and the first one with both a rag and a baseline measurement is used. Only when no
+   dataset has both, a measurement without a dataset is paired with one that has one (or none).
+3. Among several measurements of one condition on one metric and dataset, a value in a Markdown table cell
+   beats one in prose (abstracts and discussions may restate or misstate results; the table is the
+   result), then the earlier one wins.
+
+The author claim is the document's first author_claim item; it agrees with the data per
+`rules.claim_agrees`. A document without a usable pair is `undetermined` with the reason and does not
+count; the label is `rules.label` of the counts.
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from . import rules
@@ -17,14 +28,41 @@ from .contract import Item
 from .protocol import Protocol
 
 SYSTEM = "evidence-engine"
+CELL_BEFORE = re.compile(r"\|[\s*_]*$")
+CELL_AFTER = re.compile(r"^[^\n|]*\|")
+
+
+def value_start(m: Item) -> int:
+    starts = [s.selector["start"] for s in m.spans if s.role == "value"]
+    return min(starts) if starts else m.first_start()
+
+
+def in_table(m: Item) -> bool:
+    """The measurement's first value span sits in a Markdown table cell (a pipe before and after on its line)."""
+    spans = sorted((s for s in m.spans if s.role == "value"), key=lambda s: s.selector["start"])
+    return any(CELL_BEFORE.search(s.selector.get("prefix", "")) and CELL_AFTER.match(s.selector.get("suffix", ""))
+               for s in spans)
+
+
+def _best(ms: list[Item]) -> Item:
+    return min(ms, key=lambda m: (not in_table(m), value_start(m), m.item_id))
 
 
 def _pair(rag: list[Item], base: list[Item]) -> tuple[Item, Item] | None:
-    for r in rag:
-        for b in base:
-            dr, db = r.fields.get("dataset"), b.fields.get("dataset")
-            if dr is None or db is None or dr == db:
-                return r, b
+    order: list[Any] = []
+    for m in sorted(rag + base, key=lambda m: (value_start(m), m.item_id)):
+        if m.fields.get("dataset") not in order:
+            order.append(m.fields.get("dataset"))
+    for dataset in order:  # the same dataset on both sides, first dataset in document order
+        r = [m for m in rag if m.fields.get("dataset") == dataset]
+        b = [m for m in base if m.fields.get("dataset") == dataset]
+        if r and b:
+            return _best(r), _best(b)
+    for dataset in order:  # fallback: one side names no dataset
+        r = [m for m in rag if m.fields.get("dataset") in (dataset, None)]
+        b = [m for m in base if m.fields.get("dataset") in (dataset, None)]
+        if r and b and (dataset is None or any(m.fields.get("dataset") is None for m in r + b)):
+            return _best(r), _best(b)
     return None
 
 

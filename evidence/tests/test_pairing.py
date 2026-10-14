@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
-
 from .conftest import regex_run
 
 HEAD = "# T\n\n## Setup\n\nWe compare a closed-book baseline (B) with its retrieval-augmented variant (R).\n\n## Results\n\n"

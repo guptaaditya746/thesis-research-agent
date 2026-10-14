@@ -96,3 +96,7 @@ synthesis:
   metrics: [factual_accuracy, hallucination_rate]   # the primary metric is the first one with a usable pair
   min_effect: 0.01
   label_rule: rules.label
+  # rag and baseline are paired on the same dataset (the first dataset in document order that has both);
+  # among several values of one condition, metric and dataset a table cell beats prose (abstracts may
+  # restate or misstate results), then the earlier value wins (evidence/synthesis.py)
+  pairing: same_dataset_table_first
