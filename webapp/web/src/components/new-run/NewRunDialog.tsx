@@ -6,6 +6,7 @@
  *
  * Budget fields left empty use the agent's defaults. When a run the app did not start is live (a
  * batch on the cluster), the backend refuses with 409; the dialog then offers to start anyway.
+ * The sandbox defaults to landlock; unsandboxed (tests only) has to be confirmed.
  */
 import { PlayIcon, TriangleAlertIcon } from "lucide-react"
 import { useId, useState, type FormEvent } from "react"
@@ -65,8 +66,10 @@ export function NewRunDialog({ defaultQid }: { defaultQid?: string }) {
     setForm((f) => ({ ...f, [key]: value }))
     setConflict(null)
   }
+  // unsandboxed (tests only) needs an explicit yes
+  const [unsandboxedOk, setUnsandboxedOk] = useState(false)
   const picked = questions.data?.filter((q) => q.concept.status === "picked") ?? []
-  const ready = form.source === "question" ? !!form.qid : !!form.conceptPath.trim()
+  const ready = (form.source === "question" ? !!form.qid : !!form.conceptPath.trim()) && (form.sandbox === "landlock" || unsandboxedOk)
 
   const requestFor = (condition: Condition, force: boolean): RunRequest => ({
     ...(form.source === "question" ? { qid: form.qid } : { concept_path: form.conceptPath.trim() }),
@@ -170,14 +173,33 @@ export function NewRunDialog({ defaultQid }: { defaultQid?: string }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor={`${id}-sandbox`}>Sandbox</Label>
-              <Select value={form.sandbox} onValueChange={(v) => set("sandbox", v as Form["sandbox"])}>
-                <SelectTrigger id={`${id}-sandbox`} className="w-full"><SelectValue /></SelectTrigger>
+              <Select value={form.sandbox} onValueChange={(v) => { set("sandbox", v as Form["sandbox"]); setUnsandboxedOk(false) }}>
+                <SelectTrigger id={`${id}-sandbox`} className="w-full" aria-describedby={`${id}-sandbox-help`}><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="landlock">landlock</SelectItem>
-                  <SelectItem value="unsandboxed">unsandboxed</SelectItem>
+                  <SelectItem value="unsandboxed">unsandboxed (tests only)</SelectItem>
                 </SelectContent>
               </Select>
+              <p id={`${id}-sandbox-help`} className="text-xs text-muted-foreground">
+                landlock: the agent's commands read the corpus and write only their scratch directory.
+              </p>
             </div>
+            {form.sandbox === "unsandboxed" && (
+              <Alert className="border-status-serious/60 sm:col-span-2">
+                <TriangleAlertIcon className="text-status-serious" />
+                <AlertTitle>Unsandboxed is for tests only</AlertTitle>
+                <AlertDescription>
+                  <p>
+                    The agent's commands run with network and write access. config.json records it, and the run is marked unsandboxed on
+                    every page; it is no thesis run.
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Switch id={`${id}-unsandboxed-ok`} checked={unsandboxedOk} onCheckedChange={setUnsandboxedOk} />
+                    <Label htmlFor={`${id}-unsandboxed-ok`} className="font-normal">Run it without the sandbox</Label>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor={`${id}-t`}>Temperature</Label>
               <Input id={`${id}-t`} type="number" min={0} max={2} step={0.1} required value={form.temperature} onChange={(e) => set("temperature", e.target.value)} />

@@ -314,7 +314,11 @@ function Secondary({ report }: { report: ResultsReport }) {
     <Card>
       <CardHeader>
         <CardTitle>Secondary outcomes</CardTitle>
-        <CardDescription>Means by condition and the paired mean difference with its 95% interval (no tests, as pre-registered).</CardDescription>
+        <CardDescription>
+          Means by condition and the paired mean difference with its 95% interval (no tests, as pre-registered). Paired: the
+          questions with a value in both conditions; runs: the scored runs behind each mean, and how many had no value (a pending
+          verdict, no facts), which the mean leaves out.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {rows.length === 0 ? (
@@ -329,12 +333,15 @@ function Secondary({ report }: { report: ResultsReport }) {
                 <TableHead className="text-right">claim off</TableHead>
                 <TableHead className="text-right">Δ mean</TableHead>
                 <TableHead className="text-right">95% interval</TableHead>
+                <TableHead className="text-right">Paired questions</TableHead>
+                <TableHead className="text-right">Runs on / off</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((d) => {
                 const [on, off] = conditionBars(report, d.outcome)
                 const v = (x: number | null) => outcomeValue(d.kind, x)
+                const without = (on.runsWithoutValue ?? 0) + (off.runsWithoutValue ?? 0)
                 return (
                   <TableRow key={d.outcome}>
                     <TableCell>{d.label}</TableCell>
@@ -343,6 +350,11 @@ function Secondary({ report }: { report: ResultsReport }) {
                     <TableCell className="text-right font-medium tabular-nums">{outcomeDifference(d.kind, d.mean)}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {d.low !== null && d.high !== null ? `[${outcomeDifference(d.kind, d.low)}, ${outcomeDifference(d.kind, d.high)}]` : "—"}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{d.n}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {on.runs ?? "—"} / {off.runs ?? "—"}
+                      {without > 0 && <span className="block text-xs text-muted-foreground">{without} without a value</span>}
                     </TableCell>
                   </TableRow>
                 )

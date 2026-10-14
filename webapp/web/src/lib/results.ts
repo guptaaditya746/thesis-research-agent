@@ -63,6 +63,9 @@ export interface ConditionBar {
   error: [number, number] | null
   /** questions the mean is over */
   n: number
+  /** scored runs behind it, and how many of them had no value (pending verdicts, no facts); null: not reported */
+  runs: number | null
+  runsWithoutValue: number | null
   method: string | null
 }
 
@@ -71,8 +74,11 @@ const EMPTY: Interval = { n: 0, mean: null, low: null, high: null, method: null 
 /** One bar per condition for one outcome, with its interval. Conditions without data are kept (mean null). */
 export function conditionBars(report: ResultsReport, outcome: Outcome): ConditionBar[] {
   return CONDITIONS.map((condition) => {
-    const { mean, low, high, n, method } = report.summary?.[outcome]?.[condition] ?? EMPTY
-    return { condition, label: CONDITION_LABEL[condition], mean, low, high, error: errorOf(mean, low, high), n, method }
+    const { mean, low, high, n, method, runs, runs_without_value } = report.summary?.[outcome]?.[condition] ?? EMPTY
+    return {
+      condition, label: CONDITION_LABEL[condition], mean, low, high, error: errorOf(mean, low, high), n,
+      runs: runs ?? null, runsWithoutValue: runs_without_value ?? null, method,
+    }
   })
 }
 
@@ -86,9 +92,20 @@ export interface MetricGroup {
   claim_off_error: [number, number] | null
   claim_on_ci: [number, number] | null
   claim_off_ci: [number, number] | null
+  /** questions and runs behind each mean (the tooltip says them) */
+  claim_on_n: CountOf
+  claim_off_n: CountOf
+}
+
+/** How many questions a mean is over, and how many scored runs (of them, without a value). */
+export interface CountOf {
+  questions: number
+  runs: number | null
+  runsWithoutValue: number | null
 }
 
 const ci = (b: ConditionBar): [number, number] | null => (b.low !== null && b.high !== null ? [b.low, b.high] : null)
+const countOf = (b: ConditionBar): CountOf => ({ questions: b.n, runs: b.runs, runsWithoutValue: b.runsWithoutValue })
 
 export function metricGroups(report: ResultsReport, outcomes: Outcome[], short: Partial<Record<Outcome, string>> = {}): MetricGroup[] {
   return outcomes.map((outcome) => {
@@ -96,9 +113,16 @@ export function metricGroups(report: ResultsReport, outcomes: Outcome[], short: 
     return {
       outcome, label: short[outcome] ?? outcomeLabel(report, outcome),
       claim_on: on.mean, claim_off: off.mean, claim_on_error: on.error, claim_off_error: off.error,
-      claim_on_ci: ci(on), claim_off_ci: ci(off),
+      claim_on_ci: ci(on), claim_off_ci: ci(off), claim_on_n: countOf(on), claim_off_n: countOf(off),
     }
   })
+}
+
+/** "12 questions, 36 runs (2 without a value)" */
+export function countText(c: CountOf | null | undefined): string {
+  if (!c) return ""
+  const runs = c.runs === null ? "" : `, ${c.runs} runs${c.runsWithoutValue ? ` (${c.runsWithoutValue} without a value)` : ""}`
+  return `${c.questions} question${c.questions === 1 ? "" : "s"}${runs}`
 }
 
 /**

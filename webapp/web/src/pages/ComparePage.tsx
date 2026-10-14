@@ -10,7 +10,7 @@ import { Link, useParams, useSearchParams } from "react-router"
 
 import { useQuestion, useRun, useRuns, useScore } from "@/api/hooks"
 import type { Condition, RunSummary } from "@/api/types"
-import { ConditionBadge, ExitBadge, ProvisionalBadge, VerifyBadge } from "@/components/badges"
+import { ConditionBadge, ExitBadge, ProvisionalBadge, SandboxBadge, VerifyBadge } from "@/components/badges"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { ClaimWalkSheet } from "@/components/run/ClaimWalkSheet"
 import { FactBadge } from "@/components/run/FactBadge"
@@ -104,6 +104,18 @@ function Differences({ on, off }: { on?: string; off?: string }) {
   const a = useScore(on ?? "", !!on)
   const b = useScore(off ?? "", !!off)
   if (!on || !off) return null
+  if (a.isError || b.isError) {
+    return (
+      <ErrorState
+        error={a.error ?? b.error}
+        title="Could not load the scores to compare"
+        onRetry={() => {
+          if (a.isError) void a.refetch()
+          if (b.isError) void b.refetch()
+        }}
+      />
+    )
+  }
   if (a.isPending || b.isPending) return <Skeleton className="h-24 w-full" />
   if (!a.data || !b.data) {
     return <p className="text-sm text-muted-foreground">The differences appear when both runs are scored.</p>
@@ -142,7 +154,7 @@ function Differences({ on, off }: { on?: string; off?: string }) {
 
 function RunColumn({ runId }: { runId: string }) {
   const run = useRun(runId)
-  const { statuses, score } = useFactStatuses(runId, run.data?.answer)
+  const { statuses, score, error: scoreError, retry } = useFactStatuses(runId, run.data?.answer)
   const [walk, setWalk] = useState<WalkTarget | null>(null)
   const api = useMemo(() => ({ runId, open: setWalk }), [runId])
 
@@ -161,6 +173,7 @@ function RunColumn({ runId }: { runId: string }) {
           <CardDescription className="flex flex-wrap items-center gap-2">
             <ExitBadge status={s.exit_status} live={s.live} />
             <VerifyBadge verify={s.verify} />
+            <SandboxBadge mode={s.sandbox} />
             <span className="tabular-nums">seed {s.seed ?? "—"} · {tokens(s.tokens)} tokens · {duration(s.seconds)} · {s.claims_accepted} claims</span>
           </CardDescription>
         </CardHeader>
@@ -173,6 +186,8 @@ function RunColumn({ runId }: { runId: string }) {
                 <span className="font-medium tabular-nums">{num(score.facts?.soft?.f1)}</span>
               </p>
             </>
+          ) : scoreError ? (
+            <ErrorState error={scoreError} title="Could not load score.json: the facts below show only whether they cite a claim" onRetry={retry} />
           ) : (
             <p className="text-sm text-muted-foreground">Not scored yet: the facts below show whether they cite a claim.</p>
           )}

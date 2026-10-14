@@ -4,7 +4,7 @@
  * miss and screening false-negative estimates (gold/README.md, Review), the answer key itself, and the
  * gold build job for a question whose concept is picked.
  */
-import { AwardIcon, ExternalLinkIcon, HammerIcon, KeyRoundIcon } from "lucide-react"
+import { AwardIcon, ExternalLinkIcon, HammerIcon, KeyRoundIcon, TriangleAlertIcon } from "lucide-react"
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
 
@@ -23,7 +23,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { term } from "@/lib/facts"
 import { cell, int, num, pct } from "@/lib/format"
-import { goldView, stageText } from "@/lib/gold"
+import { buildStopped, goldView, stageText } from "@/lib/gold"
 import { announceError, announceJob } from "@/lib/toasts"
 
 export default function GoldPage() {
@@ -66,7 +66,7 @@ export default function GoldPage() {
                   <TableHead className="text-right">Candidates</TableHead>
                   <TableHead className="text-right">Key rows / facts</TableHead>
                   <TableHead className="min-w-36">Review</TableHead>
-                  <TableHead className="text-right">κ (keep)</TableHead>
+                  <TableHead className="text-right">κ (keep) [95%]</TableHead>
                   <TableHead className="text-right">Triage missed [95%]</TableHead>
                   <TableHead className="text-right">Screening FN [95%]</TableHead>
                   <TableHead className="pr-4"><span className="sr-only">Actions</span></TableHead>
@@ -134,11 +134,20 @@ function GoldRow({ gold: g, onKey }: { gold: GoldEntry; onKey: () => void }) {
       </TableCell>
       <TableCell className="text-right text-xs tabular-nums">
         {v.kappa?.value != null ? (
-          <span title={`${v.kappa.items ?? "?"} overlap records${v.kappa.independent === false ? "; not all from the independent round" : ""}`}>
-            <span className="text-sm font-medium">{num(v.kappa.value)}</span>
-            {v.kappa.bar != null && <span className="text-muted-foreground"> {v.kappa.meetsBar ? "≥" : "<"} {num(v.kappa.bar)}</span>}
+          <div className="space-y-0.5">
+            <div>
+              <span className="text-sm font-medium">{num(v.kappa.value)}</span>
+              {v.kappa.low != null && v.kappa.high != null && <span> [{num(v.kappa.low)}, {num(v.kappa.high)}]</span>}
+              {v.kappa.bar != null && <span className="text-muted-foreground"> {v.kappa.meetsBar ? "≥" : "<"} {num(v.kappa.bar)}</span>}
+            </div>
             <div className="text-muted-foreground">{int(v.kappa.items)} items</div>
-          </span>
+            {v.kappa.independent === false && (
+              <div className="ml-auto flex max-w-48 items-start justify-end gap-1 text-left whitespace-normal text-status-warning">
+                <TriangleAlertIcon className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
+                <span>{v.kappa.warning ?? "Not all overlap records are from the independent round: this κ is no agreement result."}</span>
+              </div>
+            )}
+          </div>
         ) : "—"}
       </TableCell>
       <TableCell className="text-right text-xs tabular-nums">
@@ -153,18 +162,24 @@ function GoldRow({ gold: g, onKey }: { gold: GoldEntry; onKey: () => void }) {
         {g.status === "none" ? (
           <BuildButton qid={g.qid} />
         ) : (
-          <Button variant="ghost" size="xs" onClick={onKey} disabled={g.status === "building"}>
-            <KeyRoundIcon data-icon="inline-start" />
-            Key
-          </Button>
+          <div className="flex flex-wrap items-center gap-1">
+            {buildStopped(g) && <BuildButton qid={g.qid} again />}
+            <Button variant="ghost" size="xs" onClick={onKey} disabled={g.status === "building"}>
+              <KeyRoundIcon data-icon="inline-start" />
+              Key
+            </Button>
+          </div>
         )}
       </TableCell>
     </TableRow>
   )
 }
 
-/** Start the gold build (POST /api/gold/{qid}/build) for a question with a picked concept. */
-function BuildButton({ qid }: { qid: string }) {
+/**
+ * Start the gold build (POST /api/gold/{qid}/build) for a question with a picked concept; `again`:
+ * a build that stopped (failed, or D built but no draft key yet) runs again.
+ */
+function BuildButton({ qid, again = false }: { qid: string; again?: boolean }) {
   const questions = useQuestions()
   const jobs = useJobs()
   const build = useBuildGold()
@@ -177,6 +192,7 @@ function BuildButton({ qid }: { qid: string }) {
       variant="outline"
       size="xs"
       disabled={build.isPending || running}
+      aria-label={again && !running ? `Run the gold build of ${qid} again` : undefined}
       onClick={() =>
         build.mutate(qid, {
           onSuccess: (job) => announceJob(job, navigate, `Building the gold standard of ${qid}`),
@@ -185,7 +201,7 @@ function BuildButton({ qid }: { qid: string }) {
       }
     >
       {build.isPending || running ? <Spinner data-icon="inline-start" /> : <HammerIcon data-icon="inline-start" />}
-      {running ? "Building" : "Build"}
+      {running ? "Building" : again ? "Run again" : "Build"}
     </Button>
   )
 }
