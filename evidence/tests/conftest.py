@@ -35,6 +35,36 @@ def make_corpus(root: Path, docs: tuple[str, ...] = DOCS) -> Path:
     return root
 
 
+def corpus_of(root: Path, docs: dict[str, str]) -> Path:
+    """A corpus from paper texts given inline (id -> Markdown)."""
+    (root / "papers").mkdir(parents=True)
+    papers = []
+    for doc, text in docs.items():
+        data = text.encode("utf-8")
+        (root / "papers" / f"{doc}.md").write_bytes(data)
+        papers.append({"id": doc, "file": f"papers/{doc}.md", "sha256": sha256_hex(data)})
+    (root / "manifest.json").write_text(json.dumps({"corpus_id": "inline", "papers": papers}), encoding="utf-8")
+    return root
+
+
+def regex_run(docs: dict[str, str], tmp: Path, protocol: Path = PROTOCOL) -> tuple[dict[str, Any], dict[str, Any]]:
+    """(answer.json, evidence items by id) of a regex-only run over inline papers."""
+    from evidence import engine
+    run = engine.run(protocol, corpus_of(tmp / "corpus", docs), tmp / "runs", selection="regex-only", provider=None)
+    items = [json.loads(x) for x in (run / "evidence.jsonl").read_text(encoding="utf-8").splitlines()]
+    return json.loads((run / "answer.json").read_text(encoding="utf-8")), {i["item_id"]: i for i in items}
+
+
+def measurements(items: dict[str, Any], doc: str) -> list[tuple[str, float]]:
+    """(condition role, value) of a document's measurements, by value position."""
+    out = []
+    for i in items.values():
+        if i["evidence_type"] == "measurement" and i["spans"][0]["selector"]["file"] == f"papers/{doc}.md":
+            start = min(s["selector"]["start"] for s in i["spans"] if s["role"] == "value")
+            out.append((start, items[i["links"]["condition"]]["fields"]["role"], i["fields"]["value"]))
+    return [(role, value) for _, role, value in sorted(out)]
+
+
 @pytest.fixture
 def corpus(tmp_path: Path) -> Path:
     return make_corpus(tmp_path / "corpus")

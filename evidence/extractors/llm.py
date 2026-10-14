@@ -27,8 +27,10 @@ QUOTE_REASONS = ("not_found", "ambiguous", "partial_number", "empty_quote")
 DEFAULTS: dict[str, Any] = {"model": "sub-model-1", "prompt": "extract-v1.md", "retry_prompt": "retry-v1.md",
                             "temperature": 0.0, "seed": 0, "max_tokens": 4096, "retry_max_tokens": 2048,
                             "chunk_chars": 12000, "quote_retry": 1}
-CODE_SHA256 = base.source_sha256(base.HERE / "llm.py", base.HERE / "llm_schema.py", base.HERE / "base.py",
-                                 llm_schema.PROMPT_DIR / "extract-v1.md", llm_schema.PROMPT_DIR / "retry-v1.md")
+SOURCES = (base.HERE / "llm.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "extract-v1.md",
+           llm_schema.PROMPT_DIR / "retry-v1.md", base.ROOT / "gold" / "llm.py", base.ROOT / "evidence" / "recording.py",
+           *base.SHARED_SOURCES)
+CODE_SHA256 = base.source_sha256(*SOURCES)
 
 
 @dataclass
@@ -59,7 +61,12 @@ class LLMExtractor:
                                           "retry_max_tokens", "chunk_chars", "quote_retry")}
         config_out |= {"evidence_type": evidence_type,
                        "prompt_sha256": gold_llm.prompt_sha256(self.instructions, self.output_type),
-                       "retry_prompt_sha256": gold_llm.prompt_sha256(self.retry_instructions, llm_schema.Retry)}
+                       "retry_prompt_sha256": gold_llm.prompt_sha256(self.retry_instructions, llm_schema.Retry),
+                       # what every call sends (thinking off via extra_body): a change is a new extractor id
+                       "model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
+                                                                max_tokens=cfg["max_tokens"])),
+                       "retry_model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
+                                                                      max_tokens=cfg["retry_max_tokens"]))}
         self.spec = ExtractorSpec(name=f"llm_{evidence_type}", version=VERSION, kind="llm",
                                   evidence_types=(evidence_type,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256, config=config_out, determinism="near_exact")
@@ -78,12 +85,14 @@ class LLMExtractor:
         coverage = []
         model_calls: list[str] = []
         errors: list[str] = []
+        retry_errors: list[str] = []
         for n, (a, b) in enumerate(chunks, 1):
             prompt = llm_schema.user_prompt(task.document.id, n, len(chunks), a, b, text[a:b], context)
             try:
                 reply, call = self._ask(ctx, self.instructions, prompt, self.output_type, self.cfg["max_tokens"])
                 model_calls.append(call)
             except ModelCallError as exc:
+                model_calls += [exc.call_id] if exc.call_id else []
                 errors.append(exc.reason)
                 coverage.append(Coverage(range=(a, b), status="error", reason=exc.reason))
                 continue
@@ -92,7 +101,10 @@ class LLMExtractor:
                 self._anchor(index, task, p)
             failed = [(p, role) for p in proposals for role, reason in p.failed.items() if reason in QUOTE_REASONS]
             if failed and self.cfg["quote_retry"]:
-                model_calls.extend(self._retry(ctx, index, task, prompt, failed))
+                calls, retry_error = self._retry(ctx, index, task, prompt, failed)
+                model_calls.extend(calls)
+                if retry_error:
+                    retry_errors.append(f"retry: {retry_error}")
             kept = 0
             for p in proposals:
                 item, rejects = self._finish(task, text, p, context)
@@ -103,7 +115,10 @@ class LLMExtractor:
             coverage.append(Coverage(range=(a, b), status="found" if kept else "none", found=kept))
         items = base.group(self.evidence_type, found)
         status = "ok" if not errors else ("error" if len(errors) == len(chunks) else "partial")
-        error = ExtractionError(reason="model_call", detail="; ".join(sorted(set(errors)))[:300]) if errors else None
+        if retry_errors and status == "ok":
+            status = "partial"   # the retry failed: its quotes stay rejected, but the call is not clean
+        problems = errors + retry_errors
+        error = ExtractionError(reason="model_call", detail="; ".join(sorted(set(problems)))[:300]) if problems else None
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status=status,
                                 error=error, items=tuple(items), rejected=tuple(rejected), coverage=tuple(coverage),
                                 model_calls=tuple(model_calls)).canonical()
@@ -122,21 +137,21 @@ class LLMExtractor:
                 p.failed[role] = exc.reason
 
     def _retry(self, ctx: Any, index: Any, task: ExtractionTask, prompt: str,
-               failed: list[tuple[Proposal, str]]) -> list[str]:
-        """One call for every rejected quote of the chunk, then the check again."""
+               failed: list[tuple[Proposal, str]]) -> tuple[list[str], str | None]:
+        """One call for every rejected quote of the chunk, then the check again: (model call ids, error)."""
         listing = [{"id": f"q{n}", "role": role, "fields": p.fields, "quote": p.quotes[role], "reason": p.failed[role]}
                    for n, (p, role) in enumerate(failed, 1)]
         extra = prompt + "\n\nRejected quotes:\n" + json.dumps(listing, ensure_ascii=False, indent=1)
         try:
             reply, call = self._ask(ctx, self.retry_instructions, extra, llm_schema.Retry, self.cfg["retry_max_tokens"])
-        except ModelCallError:
-            return []
+        except ModelCallError as exc:
+            return ([exc.call_id] if exc.call_id else []), exc.reason
         new = {q.id: q.quote for q in reply.quotes}
         for n, (p, role) in enumerate(failed, 1):
             if f"q{n}" in new:
                 p.quotes[role] = new[f"q{n}"]
                 self._anchor(index, task, p, [role])
-        return [call]
+        return [call], None
 
     def _finish(self, task: ExtractionTask, text: str, p: Proposal,
                 context: dict[str, Item]) -> tuple[tuple[dict[str, Any], dict[str, str], list[Span]] | None, list[Rejected]]:

@@ -106,24 +106,25 @@ class Execution:
                                                      "scope": found.scope.model_dump(mode="json")})
             context = [i for t in spec.context for i in merged.get(t, [])]
             results = []
-            for ref, extractor in self.cascades.get(etype, []):
+            for position, (ref, extractor) in enumerate(self.cascades.get(etype, [])):
                 if spec.cascade == "until_found" and any(r.items for _, r in results):
                     break
                 task = ExtractionTask(protocol=self.ref, evidence_type=etype,  # type: ignore[arg-type]
                                       field_schema_sha256=spec.schema_sha256, document=doc, scope=found.scope,
                                       context=tuple(i.item_id for i in context),
                                       budget=ref.budget if extractor.spec.kind == "agent" else None)
-                results.append(self._call(extractor, task, text, index, spec, context))
-            items, sources = merge.merge(results, spec)
+                results.append(self._call(extractor, task, text, index, spec, context, position))
+            items, sources, collisions = merge.merge(results, spec)
             merged[etype] = items
             self.events.add("merge", used=sorted({i.item_id for _, r in results for i in r.items}),
                             generated=[i.item_id for i in items], agent_id="evidence-engine", group_id=doc.id,
-                            custom={"document": doc.id, "evidence_type": etype, "sources": sources})
+                            custom={"document": doc.id, "evidence_type": etype, "sources": sources,
+                                    "collisions": collisions})
         self.items[doc.id] = sorted((i for t in merged.values() for i in t),
                                     key=lambda i: (i.first_start(), i.evidence_type, i.item_id))
 
     def _call(self, extractor: Extractor, task: ExtractionTask, text: str, index: Index, spec: EvidenceTypeSpec,
-              context: list[Item]) -> tuple[str, Any]:
+              context: list[Item], position: int = 0) -> tuple[str, Any]:
         started = utc_now()
         outcome = self.calls.call(extractor, task, lambda: EngineContext(text, index, context, spec.fields, self.provider))
         result = checks.check(outcome.raw, task, index, spec, {i.item_id: i for i in context})
@@ -144,6 +145,7 @@ class Execution:
                         custom={"task_sha256": task.task_sha256, "output_sha256": result.output_sha256,
                                 "model_calls": list(result.model_calls), "document": task.document.id,
                                 "evidence_type": task.evidence_type, "source": outcome.source,
+                                "attempt": outcome.attempt, "position": position,
                                 "rejected": len(result.rejected)})
         return call_id, result
 
@@ -163,7 +165,8 @@ class Execution:
 
 def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, *, mode: Mode = "run",
                 run_id: str | None = None, provider: Provider | None = None, locator: Locator | None = None,
-                bypass: Any = None, retry_errors: bool = False, source_run: str | None = None) -> Path:
+                bypass: Any = None, retry_errors: bool = False, source_run: str | None = None,
+                attempts: dict[str, int] | None = None) -> Path:
     """Execute and write one run directory; returns its path."""
     for module in settings.imports:
         importlib.import_module(module)
@@ -174,7 +177,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     root.mkdir(parents=True, exist_ok=False)
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
     cascades = build_extractors(protocol, settings.selection, settings.model)
-    cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors)
+    cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     t0 = time.monotonic()

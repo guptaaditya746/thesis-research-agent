@@ -18,8 +18,8 @@ from . import base, terms
 from .measure import measurements
 
 VERSION = 1
-CODE_SHA256 = base.source_sha256(base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "terms.py",
-                                 base.HERE / "base.py")
+SOURCES = (base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
+CODE_SHA256 = base.source_sha256(*SOURCES)
 INJECTED = ("evidence_type", "field_schema", "links", "roles")   # what the engine adds to every config
 
 

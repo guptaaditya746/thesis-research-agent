@@ -30,9 +30,10 @@ Provider = Callable[[str], Model]
 class ModelCallError(Exception):
     """A model call failed; `reason` is short and redacted."""
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: str, call_id: str = "") -> None:
         super().__init__(reason)
         self.reason = reason
+        self.call_id = call_id         # the record of the failed call (empty when none was made)
 
 
 class NoModel(ModelCallError):
@@ -57,7 +58,7 @@ class Recorder:
         self.records.append(record)
         if self.provider is None:
             record["error"] = "no model provider: this run cannot make model calls"
-            raise NoModel(record["error"])
+            raise NoModel(record["error"], call_id)
         settings = llm.settings(temperature=temperature, seed=seed, max_tokens=max_tokens)
         with capture_run_messages() as messages:
             try:
@@ -66,7 +67,7 @@ class Recorder:
             except Exception as exc:  # noqa: BLE001 - every failure becomes a recorded, redacted reason
                 record["error"] = llm.redact(f"{type(exc).__name__}: {exc}")[:300]
                 record["messages"] = _messages(messages)
-                raise ModelCallError(record["error"]) from exc
+                raise ModelCallError(record["error"], call_id) from exc
         record["response"] = {"output": reply.output.model_dump(mode="json"), "model": reply.model,
                               "served_model": reply.served_model}
         record["usage"] = {"input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens}

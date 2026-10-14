@@ -4,6 +4,11 @@ condition and metric items of the task's context.
 A label is matched to a context condition by a code the text defines ("variant (R)"), by its label, or
 by condition wording covering the whole label; to a context metric by name, or by its canonical metric
 when only one context metric has it. A value without both links is not reported (R2 requires them).
+
+In a sentence, a value belongs to the condition named right after it ("62% for the closed-book model"),
+else to the nearest condition named before it, but never across another system noun or another number
+("71%, while a fine-tuned model reaches 57%": 57% is nobody's). Signed numbers ("+9%") are deltas and
+"from 62% to 71%" is a change, not two results; neither gives a value.
 """
 from __future__ import annotations
 
@@ -19,6 +24,11 @@ AFTER = re.compile(r"\s*\)?\s*,?\s*(?:for|with|by|of|from|in|using)\s+(?:the\s+|
 DELTA_BEFORE = re.compile(r"(?i)\b(?:by|of\s+up\s+to|gains?\s+of|improvement\s+of|drop\s+of)\s*$")
 DELTA_AFTER = re.compile(r"(?i)^\s*(?:percentage\s+)?(?:points?|pp)\b")
 DATASET_HEADER = re.compile(r"(?i)^(?:dataset|benchmark|data|task)$")
+SIGNED = re.compile(r"[+±\-−–]\s*$")
+FROM_TO = re.compile(r"(?i)\bfrom\s+\d+(?:\.\d+)?\s*%?\s+to\s+\d+(?:\.\d+)?\s*%?")
+_SYSTEMS = r"(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader|retriever|ablation)s?"
+BLOCKERS = re.compile(r"\d|(?i:\b" + _SYSTEMS + r"\b)")
+HEAD_NOUN = re.compile(r"(?i:\s+" + _SYSTEMS + r"\b)")
 
 
 class Resolver:
@@ -139,15 +149,22 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
     if not conditions or not metrics:
         return []
     out: list[Found] = []
+    changes = [(m.start(), m.end()) for m in FROM_TO.finditer(text, s, e)]
     for hit in base.NUMBER.finditer(text, s, e):
         raw, pct = hit.group(1), bool(hit.group(2))
         if not pct and not ("." in raw and float(raw) <= 1):
             continue
-        if DELTA_BEFORE.search(text[max(s, hit.start() - 20):hit.start()]) or DELTA_AFTER.match(text[hit.end():e]):
+        before = text[max(s, hit.start() - 20):hit.start()]
+        if DELTA_BEFORE.search(before) or DELTA_AFTER.match(text[hit.end():e]) or SIGNED.search(before):
+            continue
+        if any(a <= hit.start() < b for a, b in changes):
             continue
         after = AFTER.match(text, hit.end(), e)
         following = next(((m, i) for m, i in conditions if after and m.start == after.end()), None)
         preceding = [(m, i) for m, i in conditions if m.end <= hit.start()]
+        head = HEAD_NOUN.match(text, preceding[-1][0].end) if preceding else None   # the mention's own noun
+        if preceding and BLOCKERS.search(text, head.end() if head else preceding[-1][0].end, hit.start()):
+            preceding = []   # another system or another number stands between: the value is not its
         cond = following or (preceding[-1] if preceding else None)
         before_metrics = [(m, i) for m, i in metrics if m.end <= hit.start()]
         met = before_metrics[-1] if before_metrics else next(((m, i) for m, i in metrics if m.start >= hit.end()), None)
