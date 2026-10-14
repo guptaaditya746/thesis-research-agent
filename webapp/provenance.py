@@ -10,7 +10,9 @@ second process holding it open would lock that command out.
 RunStore names a run's graph after its directory (`urn:thesis-agent:run:<name>`), and graph.ttl's
 IRIs are scoped by that name too, so two batches' runs of the same name (e2e-smoke and m4-72 both
 have q01-claim_on-r1-a1) cannot both be in one store: the first one listed is loaded, as
-`score store` does (load_tree), and a query scoped to the other is refused.
+`score store` does (load_tree), and a query scoped to the other is refused. Naming the graph after
+the API id would not help: the union graph would still merge both runs' nodes, whose IRIs carry the
+directory name. So $RUNS is one batch root (webapp/settings.py), where names are unique.
 
 `/api/queries/{n}` runs agent/queries.py's queries on the run's graph.ttl with rdflib, as
 `agent query` does; parsed graphs are cached by the file's signature.

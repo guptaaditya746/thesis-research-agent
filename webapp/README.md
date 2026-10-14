@@ -17,17 +17,24 @@ All settings and their defaults are in `webapp/settings.py` (`CORPUS`, `RUNS`, `
 `QUESTIONS`, `LITELLM_BASE_URL`, `ARGILLA_API_URL`, `AGENT_ROOT`, and `WEBAPP_DIST`,
 `WEBAPP_PYTHON`, `WEBAPP_CHAT_MODEL`, `WEBAPP_LIVE_WINDOW_S`, `WEBAPP_POLL_S`).
 
-`RUNS` is the root above the batches, not a batch: the app lists the runs directly in it and one
-level down, in each batch root (`$RUNS/e2e-smoke/`, `$RUNS/m4-72/`, as `scripts/e2e-batch.sh` and
-the manifests write them) and in `$RUNS/web/`, where the runs it starts go. A run one level down has
-the id `<batch>~<name>` (`m4-72~q01-claim_on-r1-a1`), since two batches have runs of the same name.
+`RUNS` is one batch root: the `RUNS_ROOT` `scripts/e2e-batch.sh` prints for a manifest
+(`RUNS=$RUNS/m4-72` for the experiment, `$RUNS/e2e-smoke` for the smoke batch; docs/e2e-build-plan.md,
+Environment), the same root `score batch`, `score report` and `score store` take, so the Results page
+shows that batch's report/. The app lists the runs directly in it and one level down: in
+`$RUNS/web/`, where the runs it starts go (id `web~<name>`), and in any batch root below it (id
+`<batch>~<name>`). Do not point it at the directory above several batches: run ids are directory
+names and graph.ttl's IRIs are scoped by them, so the smoke batch's `q01-claim_on-r1-a1` would stand
+in for the experiment's in SPARQL (the provenance store loads the first run of a name and refuses a
+query scoped to the second) and the Overview's run counts would add both batches together.
 
 ### On the Slurm node, through a tunnel
 
-The app has no authentication and binds to 127.0.0.1. Start it on the node that runs the LLM
-stack (inside the job, or on the login node with the runs on Ceph), with the same `RUNS`,
-`CONCEPTS`, `GOLD` and `CORPUS` as `scripts/e2e-env.sh` exports (`RUNS=$repo/runs`), then from
-your laptop:
+The app has no authentication and binds to 127.0.0.1; it answers only loopback Host names and
+takes a write only as a same-origin JSON request (webapp/guard.py), so another web page open in the
+browser can neither start jobs nor read the API through DNS rebinding (`WEBAPP_ALLOWED_HOSTS` adds
+names). Start it on the node that runs the LLM stack (inside the job, or on the login node with the
+runs on Ceph), with the `CONCEPTS`, `GOLD` and `CORPUS` that `scripts/e2e-env.sh` exports and `RUNS`
+set to the batch root (`RUNS=$RUNS/m4-72`), then from your laptop:
 
 ```sh
 ssh -L 8080:127.0.0.1:8080 <user>@<slurm-node>     # add -J <login-node> if the node is behind one
@@ -47,7 +54,7 @@ their recorded time, a secondary outcome. Send `force: true` only when that does
 | `GET /api/questions`, `GET /api/questions/{qid}` | `Question` (concept, gold and run status), `QuestionDetail` (+ briefs, pick) |
 | `POST /api/questions/{qid}/concepts/propose` `{temperature, seed}` | `Job` running `agent concepts propose` |
 | `POST /api/questions/{qid}/concepts/pick` `{choice, picked_by, reason, force}` | `QuestionDetail`; `picked_by` is `user`, `claude` or `provisional-first` |
-| `GET /api/runs?qid=&condition=&verify=&include_stale=` | `[RunSummary]` (`qid`: the question's runs on its current concept; `verify=true` runs `agent verify` on runs not checked yet) |
+| `GET /api/runs?qid=&condition=&verify=&include_stale=` | `[RunSummary]` (`qid`: the question's runs on its current concept; `verify=true` runs `agent verify` on runs not checked yet; without it, a run the app has not verified shows score.json's `verify_ok` when the scorer checked it after its last record, `verify_from: score`) |
 | `POST /api/runs` `{qid \| concept_path, condition, temperature, seed, steps, tokens, sandbox, attach, force}` | `Job`: `agent run` into `$RUNS/web/`, attach (claim_off), verify, pairs, graph, export-prov, `score run --key` |
 | `GET /api/runs/{id}` | `RunDetail` (summary, config, concept, answer, verify) |
 | `GET /api/runs/{id}/steps`, `.../steps/{n}/output` | `[Step]`; the command's full output as text |
@@ -76,7 +83,7 @@ uv run webapp openapi -o webapp/web/openapi.json
   module rebuilds from the chains). Everything else is written by the jobs it starts, except one
   thing: a claim walk with `?judge=true` asks the judge, which appends to `$GOLD/judge-cache.jsonl`.
   Ids in URLs must be plain names (`batch~name` for runs one level down), and every path is
-  checked to stay inside its root. SPARQL goes through `scoring/store.py`, which refuses updates;
+  checked to stay inside its root. SPARQL goes through `scoring/store.py`, which refuses updates and SERVICE (no request leaves the server);
   the server keeps its own in-memory store so it never locks `$RUNS/.oxigraph` away from
   `score store`.
 - **Picks** are `concept_pick` records in the session's hash chain, so `agent concepts check`
@@ -103,7 +110,10 @@ uv run webapp openapi -o webapp/web/openapi.json
   `source: judge`). A score against the draft key is `provisional`.
 - **Chat** uses `sub-model-1` through LiteLLM with read-only tools: `list_runs`, `get_run`,
   `get_answer`, `get_claims`, `walk_fact` (scored verdicts only), `sparql`, `read_passage`,
-  `get_results`.
+  `get_results`. A list a tool returns is cut to about 16,000 characters of JSON with a last item
+  saying how many were left out, so a long run's claims do not overflow the model's 32k context.
+- **Gold status** is `reviewing` while key.json comes from an export half way through the review
+  (`review.complete` false); scores against it are provisional, as against the draft key.
 
 ## Tests
 

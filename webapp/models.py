@@ -15,7 +15,7 @@ Condition = Literal["claim_on", "claim_off"]
 JobState = Literal["queued", "running", "done", "failed"]
 StepState = Literal["pending", "running", "done", "failed", "skipped"]
 PickedBy = Literal["user", "claude", "provisional-first"]  # agent/concept_step.py PICKED_BY (WP B)
-GoldState = Literal["none", "building", "draft", "reviewed"]
+GoldState = Literal["none", "building", "draft", "reviewing", "reviewed"]
 
 
 class Open(BaseModel):
@@ -195,6 +195,9 @@ class RunSummary(BaseModel):
     claims_rejected: int
     attach: Literal["not_applicable", "pending", "cut", "done"]
     verify: Literal["ok", "failed", "unknown"]
+    verify_from: Literal["verify", "score"] | None = Field(
+        None, description="where `verify` comes from: the app's own `agent verify` (cached while the server runs), "
+                          "or score.json's verify_ok when the scorer checked the run after its last record")
     score: ScoreSummary | None
     live: bool = Field(description="the agent is still writing the run (research, or the attach step)")
     post_processing: bool = Field(False, description="a web-app job still runs verify, pairs, graph, export-prov or "

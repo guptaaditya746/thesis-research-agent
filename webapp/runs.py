@@ -317,6 +317,8 @@ class Runs:
         answer = read_json(run.answer) if run.answer.is_file() else None
         rows = answer.get("rows") if isinstance(answer, dict) else None
         check = self.verification(run, compute=verify)
+        score = read_json(run.root / "score.json")
+        verified, verify_from = scored_verify(run, score) if check is None else (check.ok, "verify")
         sampling = config.get("sampling") or {}
         qid, current = self.question_of(run, config, concepts)
         try:
@@ -335,8 +337,8 @@ class Runs:
             rows=len(rows) if isinstance(rows, list) else None,
             facts=sum(len(r.get("facts", [])) for r in rows) if isinstance(rows, list) else None,
             claims_accepted=cost["claims_accepted"], claims_rejected=cost["claims_rejected"], attach=attach,
-            verify="unknown" if check is None else ("ok" if check.ok else "failed"),
-            score=score_summary(read_json(run.root / "score.json")), live=live,
+            verify="unknown" if verified is None else ("ok" if verified else "failed"), verify_from=verify_from,
+            score=score_summary(score), live=live,
             post_processing=not live and self.job_steps(self.key(run)) is not None)
 
     def summaries(self, qid: str | None = None, condition: str | None = None, verify: bool = False,
@@ -508,6 +510,21 @@ class Runs:
 
 def _coverage(record: dict[str, Any]) -> str | None:
     return (record.get("generated") or {}).get("reason") if record.get("subtype") == "coverage" else None
+
+
+def scored_verify(run: RunDir, score: Any) -> tuple[bool | None, str | None]:
+    """`agent verify`'s outcome as the scorer recorded it (score.json verify_ok), while the app has not
+    verified the run itself: only when score.json is newer than every file verify reads (a run changed
+    after scoring, by its attach step for one, has to be verified again)."""
+    if not isinstance(score, dict) or not isinstance(score.get("verify_ok"), bool):
+        return None, None
+    try:
+        scored = (run.root / "score.json").stat().st_mtime
+        newest = max(p.stat().st_mtime for p in (run.events, run.claims, run.answer, run.root / ATTACH_FILE)
+                     if p.is_file())
+    except (OSError, ValueError):
+        return None, None
+    return (score["verify_ok"], "score") if scored >= newest else (None, None)
 
 
 def score_summary(score: Any) -> ScoreSummary | None:

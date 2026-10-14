@@ -2280,6 +2280,7 @@
               "none",
               "building",
               "draft",
+              "reviewing",
               "reviewed"
             ],
             "title": "Status"
@@ -2381,6 +2382,7 @@
               "none",
               "building",
               "draft",
+              "reviewing",
               "reviewed"
             ],
             "title": "Status"
@@ -3786,6 +3788,22 @@
               "unknown"
             ],
             "title": "Verify"
+          },
+          "verify_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "verify",
+                  "score"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verify From",
+            "description": "where `verify` comes from: the app's own `agent verify` (cached while the server runs), or score.json's verify_ok when the scorer checked the run after its last record"
           },
           "score": {
             "anyOf": [

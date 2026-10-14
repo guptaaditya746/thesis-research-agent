@@ -316,6 +316,36 @@ def test_gold_lists_question_directories_only(fresh: World) -> None:
     assert (entries["q07"]["status"], entries["q07"]["stage"]) == ("building", "failed")  # stopped, not running
 
 
+def test_gold_of_an_unfinished_review_is_reviewing(fresh: World) -> None:
+    """key.json from an export half way through the review (review.complete false) is not `reviewed`."""
+    folder = fresh.root / "gold-data" / "q02"
+    key = {**KEY_DRAFT, "version": "v1", "reviewed": True, "review": {"complete": False, "unreviewed": 3}}
+    (folder / "key.json").write_text(json.dumps(key), encoding="utf-8")
+    with TestClient(create_app(fresh.settings)) as c:
+        assert {g["qid"]: g["status"] for g in c.get("/api/gold").json()}["q02"] == "reviewing"
+        assert next(q for q in c.get("/api/questions").json() if q["id"] == "q02")["gold"]["status"] == "reviewing"
+        (folder / "key.json").write_text(json.dumps(key | {"review": {"complete": True}}), encoding="utf-8")
+        assert {g["qid"]: g["status"] for g in c.get("/api/gold").json()}["q02"] == "reviewed"
+
+
+def test_runs_list_shows_the_scorers_verify(fresh: World) -> None:
+    """The list computes no `agent verify`; a run scored after its last record shows the scorer's verify_ok
+    (`verify_from: score`), one changed since shows unknown until it is verified again."""
+    score_file = fresh.research.run.root / "score.json"
+    score_file.write_text(json.dumps(json.loads(score_file.read_text(encoding="utf-8")) | {"verify_ok": False}),
+                          encoding="utf-8")
+    newest = max(p.stat().st_mtime for p in (fresh.research.run.events, fresh.research.run.answer))
+    os.utime(score_file, (newest + 10, newest + 10))
+    with TestClient(create_app(fresh.settings)) as c:
+        runs = {r["run_id"]: r for r in c.get("/api/runs").json()}
+        assert (runs["research-r1"]["verify"], runs["research-r1"]["verify_from"]) == ("failed", "score")
+        assert (runs["baseline-r1"]["verify"], runs["baseline-r1"]["verify_from"]) == ("unknown", None)  # no score
+        os.utime(fresh.research.run.events, (newest + 20, newest + 20))  # the run changed after scoring
+        assert {r["run_id"]: r["verify"] for r in c.get("/api/runs").json()}["research-r1"] == "unknown"
+        checked = {r["run_id"]: (r["verify"], r["verify_from"]) for r in c.get("/api/runs", params={"verify": True}).json()}
+        assert checked["research-r1"] == ("ok", "verify")  # the app's own check wins
+
+
 def test_results(client: TestClient, fresh: World) -> None:
     assert client.get("/api/results").json() == {"primary": {"p_value": 0.03}}
     (fresh.runs / "report" / "report.json").unlink()

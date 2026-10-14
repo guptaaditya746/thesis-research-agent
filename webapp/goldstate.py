@@ -2,8 +2,9 @@
 
 The gold builder (C1) and the review (C2) write these files; this module only reads them, and any
 of them may be missing (a question whose gold is not built yet): status `none`, then `building`
-(the builder has written something, or a web-app gold job runs), `draft` (key.draft.json) and
-`reviewed` (key.json). The builder's own stage (progress.json: building, failed, done, ...) is
+(the builder has written something, or a web-app gold job runs), `draft` (key.draft.json),
+`reviewing` (key.json from an export half way through the review: `review.complete` false) and
+`reviewed` (key.json of a finished review). The builder's own stage (progress.json: building, failed, done, ...) is
 passed along, so `building` after a build that stopped (D there, no draft yet) can be told from
 one in progress.
 
@@ -57,12 +58,21 @@ def stage(folder: Path) -> str | None:
     return str(progress["stage"]) if isinstance(progress, dict) and progress.get("stage") else None
 
 
+def review_finished(key_data: dict[str, Any]) -> bool:
+    """False for a key.json `gold export` wrote half way through the review (review.complete false);
+    scoring marks scores against it provisional too (scoring/run_score.py)."""
+    review = key_data.get("review")
+    return not isinstance(review, dict) or review.get("complete") is not False
+
+
 def status(root: Path, qid: str, building: bool = False) -> GoldStatus:
     folder = qdir(root, qid)
     for name, state in ((KEY, "reviewed"), (DRAFT, "draft")):
         data = read_json(folder / name)
         if isinstance(data, dict):
             rows, facts = counts(data)
+            if state == "reviewed" and not review_finished(data):
+                state = "reviewing"
             return GoldStatus(status=state, rows=rows, facts=facts, stage=stage(folder))
     if building or any((folder / name).exists() for name in (*BUILDER_FILES, PROGRESS)):
         doc = read_json(folder / "doc.json")
