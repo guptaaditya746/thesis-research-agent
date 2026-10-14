@@ -71,10 +71,11 @@ def test_smoke_manifest_is_one_question_of_each_kind() -> None:
     ids = [q["id"] for q in smoke.data["questions"]]
     assert ids == ["q01", "q10"]
     assert [questions[i]["category"] for i in ids] == ["corpus_wide", "ambiguous"]
-    assert smoke.data["conditions"] == ["claim_on", "claim_off"] and smoke.data["repeats"] == 1
+    # claim_on only: claim_off and the attach step are dropped from the design (14 Oct).
+    assert smoke.data["conditions"] == ["claim_on"] and smoke.data["repeats"] == 2
     plan = smoke.plan()
-    assert [e.key for e in plan] == ["q01-claim_on-r1", "q01-claim_off-r1", "q10-claim_on-r1", "q10-claim_off-r1"]
-    assert plan[0].seed == plan[1].seed != plan[2].seed == plan[3].seed
-    # No budget of its own: the runs take the `agent run` / `agent attach` defaults (work package A owns them).
+    assert [e.key for e in plan] == ["q01-claim_on-r1", "q10-claim_on-r1", "q01-claim_on-r2", "q10-claim_on-r2"]
+    assert len({e.seed for e in plan}) == 4
+    # No budget of its own: the runs take the `agent run` defaults (work package A owns them).
     assert "budget" not in smoke.data and "attach_budget" not in smoke.data
     assert smoke.runs_root.as_posix() == "runs/e2e-smoke"

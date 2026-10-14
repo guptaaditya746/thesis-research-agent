@@ -3,8 +3,14 @@
 Everything in milestones 1–4 is built on `e2e-build` and tested only against scripted models, fake
 servers, an in-memory Argilla and the D1 fixture papers (`docs/milestones-3-4.md`, `tests/RESULTS.md`).
 This one session runs every part on the cluster for the first time, together: the fixed agent loop, the 12
-concepts, a gold trial and two gold builds, the e2e smoke batch with attach, replay and re-execution, a
-spawn run, scoring and the SPARQL store, the web app with the real chat model, and (if reachable) Argilla.
+concepts, a gold trial and two gold builds, the e2e smoke batch, replay and re-execution, scoring and the
+SPARQL store, the web app with the real chat model, and (if reachable) Argilla.
+
+**Scope (14 Oct).** The thesis design changed after this build: one agent, `claim` always on. The claim_off
+condition, the attach step and subagents (`spawn`) are dropped, so this session runs **claim_on only**
+(`agent/manifests/e2e-smoke.json`: q01 and q10, two repeats) and **no** `--spawn on` run. The code for them is
+still in the branch (it is removed later); do not run or test it here. Concepts are still proposed and picked
+as written: they become evidence plans later, and this session measures the propose step on the real model.
 
 **Failures are expected.** When a step fails, record it (below) and go on with the next step that does not
 depend on it. The point is that every part has met the real models, the corpus and the node once, and that
@@ -73,7 +79,6 @@ Every command from step 0.4 on runs **inside the stack job** with the session en
 | 4a e2e smoke batch, **in parallel with 3a/3b** | orch-model | 2 (q01, q10) | 2–6 h |
 | 3b gold full builds q01, q10 | sub-models | 3a (its call rate) | hours |
 | 4b replay, re-execution | CPU | 4a | 30 min |
-| 4c spawn run | orch + sub-models | 2 (q01); after 3b, so the sub-models are free | ≤ 1.5 h |
 | 5 scoring, store | sub-models (judge) | 4a, and a key from 3b (else 3a) | 30 min |
 | 6 web app, chat | sub-model-1 | 4a (5 for scores) | 30 min |
 | 7 Argilla push (**USER**: tunnel and key) | — | a pool from 3b (else 3a) | 30 min |
@@ -313,9 +318,9 @@ uv run python scripts/e2e-measure.py gold "$GOLD" q01 q10 --json "$E2E/measure/g
 Row `E2E-gold-full`: per question the same numbers as the trial, plus wall time. Note that a file in
 `$GOLD/q01` freezes q01's pick only for this session's `$GOLD`; the thesis gold directory stays empty.
 
-## 4. The e2e smoke batch (rows 2.9, 2.10, 2.13, 2.12)
+## 4. The e2e smoke batch (rows 2.9, 2.10, 2.13)
 
-### 4a. Batch: q01 and q10, both conditions, one repeat (4 runs, attach for claim_off)
+### 4a. Batch: q01 and q10, claim_on, two repeats (4 runs)
 
 **(long)**
 
@@ -325,10 +330,10 @@ nohup srun --jobid "$JOB" --overlap "$E2E/in-job.sh" scripts/e2e-batch.sh agent/
 echo $! > "$E2E/logs/4a-batch.pid"
 ```
 
-Expect in the log: `PASS 2 questions x 2 conditions x 1 repeats, sandbox landlock, ...`, `== job <id> ends <time>`
+Expect in the log: `PASS 2 questions x 1 conditions x 2 repeats, sandbox landlock, ...`, `== job <id> ends <time>`
 (if this line is missing, the deadline was not found: record it; the batch then runs without one), the four
-runs and the attach steps, `== agent batch exit 0`, the status lines `q01-claim_on-r1 seed=<n>:
-q01-claim_on-r1-a1=finished` (four keys: q01 and q10, claim_on and claim_off), per finished run `verify, pairs, timeline, graph, export-prov`
+runs, `== agent batch exit 0`, the status lines `q01-claim_on-r1 seed=<n>:
+q01-claim_on-r1-a1=finished` (four keys: q01 and q10, repeats r1 and r2), per finished run `verify, pairs, timeline, graph, export-prov`
 with `PASS` lines, and last `RUNS_ROOT=.../runs/e2e-smoke`. Batch exit 2 = out of time, 1 = a run gave up
 after its attempts: record and continue with the runs that finished.
 
@@ -347,7 +352,7 @@ done
 uv run python scripts/e2e-measure.py runs "$SMOKE"/q*-a* --json "$E2E/measure/smoke.jsonl"
 ```
 
-For a claim_off run the claims (and so queries 1–3) come from the attach step. Read three accepted quotes per
+Read three accepted quotes per
 run against their paper (`uv run agent query 1 "$R" --edge edge-00000N` shows the passage) and write one line
 each: does the quote support the fact? (B5: also note any rejected claim and its reason.)
 
@@ -360,7 +365,7 @@ srun --jobid "$JOB" --overlap "$E2E/in-job.sh" scripts/e2e-replay.sh agent/manif
   2>&1 | tee "$E2E/logs/4b-replay.log"
 ```
 
-Expect per run `PASS replay <id>: N/N model calls rebuilt from trajectory.json[ and attach-trajectory.json], M/M
+Expect per run `PASS replay <id>: N/N model calls rebuilt from trajectory.json, M/M
 outputs match`, the summary `<id> replay ok` per run and `PASS 4 runs`. Then re-execution of the q01 claim_on
 run (its finished attempt, normally `-a1`) — it reruns every command, about as long as the run's commands took:
 
@@ -371,24 +376,6 @@ uv run agent reexec "$SMOKE/q01-claim_on-r1-a1" --corpus "$CORPUS" 2>&1 | tee "$
 Exit 0: every output and claim verdict as recorded; 1: some differ (the `DIFF step` / `DIFF claim` lines say
 which; a measurement, not a failure); 2: it could not run (a failure). `WARN toolchain differs` means the agent
 root is not the run's. Row `E2E-replay-reexec`: replay per run, reexec `identical/steps` and claims as recorded.
-
-### 4c. One run with subagents (row 2.12, C4)
-
-After 3b has finished (or was skipped), so the sub-models serve only this run. **(long)**
-
-```bash
-nohup srun --jobid "$JOB" --overlap "$E2E/in-job.sh" uv run agent run \
-  --concept "$CONCEPTS/q01/concept.json" --run-id spawn-on-1 --runs-root "$E2E/runs/spawn" \
-  --condition claim_on --temperature 0.7 --seed 1 --agent-root "$AGENT_ROOT" --spawn on \
-  > "$E2E/logs/4c-spawn.log" 2>&1 &
-echo $! > "$E2E/logs/4c-spawn.pid"
-```
-
-The last line adds `subagents=<n> run_tokens=<n>`. Then `verify` (it prints one `agent sub-NN:` line per
-subagent), `pairs`, `timeline`, `graph`, `export-prov`, `replay` (expect `PARTIAL`: subagents' calls are
-not in a trajectory) and `e2e-measure.py runs`, as in step 1, with `R=$RUNS/spawn/spawn-on-1`. If the agent
-never called `spawn` (`subagents=0`), that is the result. Row `E2E-spawn`: subagents started, their status,
-steps and tokens per agent, whether the parent's answer used their claims, time.
 
 ## 5. Scoring with the draft keys (provisional), and the store
 
@@ -405,8 +392,8 @@ fewer scored; if 3b did not produce `$GOLD/q01/key.draft.json`, score once more 
 and say so: a 20-paper key, meaningful only as a path test); `report` prints `primary: not computed (...)`
 (fewer than 6 paired questions), `PROVISIONAL: ...`, `JUDGE NOT CALIBRATED: ...`, then
 `wrote .../report/report.json, report.md and CSV tables`; `store` prints `4 runs with graph.ttl, 4 (re)loaded`;
-`sparql` prints `{"vars": ["n"], "rows": [...]}` with a count above 0. Also score the spawn run against its
-key: `uv run score run "$RUNS/spawn/spawn-on-1" --gold "$GOLD" --corpus "$CORPUS"`.
+`sparql` prints `{"vars": ["n"], "rows": [...]}` with a count above 0. The report's paired claim_on/claim_off
+sections are empty (no claim_off runs): expected, not a failure.
 
 Row `E2E-score`: per run support share, fact F1 (strict / normalised / soft), row F1, unsourced share,
 pending judge decisions, judge calls and errors (`score.json` `judge`), the report's warnings; all marked
@@ -427,11 +414,11 @@ Then in the job shell (the app answers only on the node's 127.0.0.1):
 
 ```bash
 A=http://127.0.0.1:8080
-ON=q01-claim_on-r1-a1; OFF=q01-claim_off-r1-a1                       # the finished attempts
+ON=q01-claim_on-r1-a1; ON2=q01-claim_on-r2-a1                        # the finished attempts
 F=$(uv run python -c 'import json,sys; a=json.load(open(sys.argv[1])); print(a["rows"][0]["facts"][0]["id"])' "$SMOKE/$ON/answer.json")
 for p in /api/health /api/config /api/questions /api/questions/q01 /api/runs "/api/runs/$ON" "/api/runs/$ON/steps" \
          "/api/runs/$ON/steps/1/output" "/api/runs/$ON/claims" "/api/runs/$ON/graph" "/api/runs/$ON/score" \
-         "/api/runs/$ON/facts/$F/walk" "/api/runs/$OFF/claims" "/api/corpus/p1?start=100&end=140&context=200" \
+         "/api/runs/$ON/facts/$F/walk" "/api/runs/$ON2/claims" "/api/corpus/p1?start=100&end=140&context=200" \
          "/api/queries/5?run_id=$ON" /api/gold /api/gold/q01/key /api/results /api/jobs / "/runs/$ON"; do
   curl -sS -o /dev/null -w "%{http_code} $p\n" "$A$p"
 done | tee "$E2E/logs/6-endpoints.log"
@@ -490,17 +477,16 @@ Tell the user the test datasets exist, to delete them after looking.
 ## 8. Measurements and the proposed budget
 
 ```bash
-uv run python scripts/e2e-measure.py runs "$RUNS/agent-fix"/fix-on-* "$SMOKE"/q*-a* "$RUNS/spawn/spawn-on-1" \
+uv run python scripts/e2e-measure.py runs "$RUNS/agent-fix"/fix-on-* "$SMOKE"/q*-a* \
   --json "$E2E/measure/runs.jsonl" | tee "$E2E/measure/runs.md"
 uv run python scripts/e2e-measure.py gold "$GOLD-trial" q01 --json "$E2E/measure/gold-trial.jsonl" | tee "$E2E/measure/gold-trial.md"
 uv run python scripts/e2e-measure.py gold "$GOLD" q01 q10 --json "$E2E/measure/gold.jsonl" | tee "$E2E/measure/gold.md"
 ```
 
-Per run (`runs.md`): steps, model calls, tokens and seconds (research; the attach step apart), exit status,
+Per run (`runs.md`): steps, model calls, tokens and seconds, exit status,
 answer source, rows and facts, claims accepted/rejected (`rejected_by_reason` in the JSON), largest prompt,
 most outputs masked, guided answer yes/no, guided calls refused / timed out / cut, longest guided call,
-unparsed replies, subagents, and for claim_off the attach step (facts, attached, from a claim, no source,
-tokens, seconds; in the JSON the largest per-fact tokens and steps and the facts that ran out of budget).
+unparsed replies. (The attach and subagent columns stay empty.)
 Per gold D (`gold*.md`): papers, relevant papers, chunks, relevant chunks, candidates, anchor ok share,
 rows, triage split answers/context/irrelevant, pool, draft facts, calls, input tokens, seconds.
 
@@ -509,20 +495,18 @@ Then propose, for the user to freeze (**USER**), each with the measured number i
 | Setting | Now (provisional) | Rests on |
 |---|---|---|
 | Run budget, steps / tokens | 60 / 2,000,000 | where each run's answer came (submitted before the budget, or at the budget through the conclude replies), steps and tokens used, largest prompt against 61,440 |
-| Attach budget per fact | 6 steps / 60,000 tokens | largest per-fact steps and tokens, facts that ran out (`gave_up`) |
 | Conclude decoding | `structured_outputs` | refused, cut and timed-out guided calls; longest guided call against the 600 s proxy timeout |
-| Spawn for the 72 runs | off | step 4c |
-| Time of the 72 runs | — | 36 × mean seconds of claim_on runs + 36 × mean seconds of claim_off runs with attach, in 48-hour jobs (minus ~15 min stack start each) |
+| Time of the 36 main runs | — | 36 × mean seconds of the claim_on runs (12 questions × 3 repeats), in 48-hour jobs (minus ~15 min stack start each) |
 | Gold for 12 questions | — | seconds and calls per full build (3b, else the trial × papers_in_corpus / 20) × 12 |
 
 ## Finish
 
 1. `tests/RESULTS.md`: one row per step, ids `E2E-setup`, `E2E-agent-fix`, `E2E-concepts`, `E2E-gold-trial`,
-   `E2E-gold-full`, `E2E-smoke <run id>` (one per run), `E2E-replay-reexec`, `E2E-spawn`, `E2E-score`,
+   `E2E-gold-full`, `E2E-smoke <run id>` (one per run), `E2E-replay-reexec`, `E2E-score`,
    `E2E-webapp`, `E2E-argilla`; date, config (job id, node, commit), PASS / PARTIAL / FAIL / NOT RUN, the numbers,
    notes with the paths on Ceph.
 2. Copy into `tests/E2E/` only these (each under 1 MB; a larger one stays on Ceph, give its path in the row):
-   - `runs/<run id>/`: `config.json`, `answer.json`, `attach.json` (claim_off), `pairs.jsonl`, `timeline.html`,
+   - `runs/<run id>/`: `config.json`, `answer.json`, `pairs.jsonl`, `timeline.html`,
      `replay.json`, `reexec.json` (the one run), `score.json`, and `verify.txt` (from `$E2E/verify/`);
    - `gold/<trial|full>/<qid>/`: `doc.md`, `key.draft.json`, `pool.strata.json`, `progress.json`;
    - `report/`: `report.json`, `report.md`, `batch.json`, `*.csv` from `$SMOKE/report/`;
@@ -533,9 +517,9 @@ Then propose, for the user to freeze (**USER**), each with the measured number i
    `grep -rlF -f <(printf '%s\n' "$LITELLM_MASTER_KEY") tests/E2E` must print nothing (the same for
    `$ARGILLA_API_KEY` if set). Never add `$E2E/in-job.env`.
 3. `docs/STATE.md`: in Decided add the first real result to the rows "Main loop", "Concepts, attach, batch",
-   "Questions and picks", "Re-execution and replay", "Subagents", "Gold D", "Judge", "Scoring and report",
+   "Questions and picks", "Re-execution and replay", "Gold D", "Judge", "Scoring and report",
    "Web app" (one clause each, with the number that matters); in Numbers add the gold call rate (seconds and
-   calls per paper), the longest conclude reply, attach tokens per fact; in Open keep "Run budget" with the
+   calls per paper), the longest conclude reply; in Open keep "Run budget" with the
    proposed numbers (the user freezes them) and update "Concept picks" (12 provisional picks committed) and
    "Gold and judge"; rewrite the "Later" paragraph for what is still open. In `docs/milestones-1-2.md` set the
    2.10 progress row (done or what failed); in `docs/milestones-3-4.md` mark each "Still needs the cluster"
