@@ -97,5 +97,7 @@ def test_numbers_and_tables() -> None:
     (table,) = base.tables(text)
     assert [c.text for c in table.header] == ["a", "b"] and text[table.rows[0][1].start:table.rows[0][1].end] == "1.5"
     assert table.caption.startswith("Table 3")
-    assert [text[a:b] for a, b in base.sentences("One here. Two there.\n\n## Head\n\nThree.")] == \
-        ["One here.", "Two there.", "Three."]
+    prose = "One here. Two there.\n\n## Head\n\nThree.\n\n" + text
+    assert [prose[a:b] for a, b in base.sentences(prose)][:4] == ["One here.", "Two there.", "Three.",
+                                                                 "Table 3: accuracy (%)"]
+    assert "|" not in "".join(prose[a:b] for a, b in base.sentences(prose))   # table lines are not prose

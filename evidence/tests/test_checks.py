@@ -1,7 +1,6 @@
 """The engine's central checks (contract R1-R3, R7) on results an extractor might return, and the protocol."""
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 import yaml
@@ -126,4 +125,3 @@ def test_protocol_hash_ignores_layout_and_phases_follow_context() -> None:
 def test_rejected_reasons_are_the_contract_ones() -> None:
     with pytest.raises(ValueError):
         Rejected(evidence_type="condition", fields={}, reason="made_up")  # type: ignore[arg-type]
-    assert Path(PROTOCOL).is_file()
