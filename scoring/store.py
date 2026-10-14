@@ -3,7 +3,8 @@
 One named graph per run, `urn:thesis-agent:run:<run_id>` (the run-scoped IRI prefix agent/prov.py
 uses), so a query can address one run with GRAPH or all runs through the union default graph.
 The store is a cache: it can always be rebuilt from the run directories, and a run whose graph.ttl
-changed (by hash) is reloaded. Queries are read-only: SELECT, ASK, CONSTRUCT and DESCRIBE.
+changed (by hash) is reloaded. Queries are read-only: SELECT, ASK, CONSTRUCT and DESCRIBE, without
+SERVICE (pyoxigraph would send an HTTP request to the IRI a SERVICE clause names; `federated`).
 `score store <runs_root>` loads every run below the root into $RUNS/.oxigraph (`load_tree`);
 `score sparql <query-file> [--run ID]` queries it (scoring/cli.py).
 """
@@ -24,6 +25,19 @@ LOADED_FILE = "loaded.json"  # run_id -> sha256 of the graph.ttl in the store
 # Prologue (comments, PREFIX and BASE declarations), then the query form.
 READ_ONLY = re.compile(r"^\s*(?:#[^\n]*\n\s*|PREFIX\s+[^\s:]*:\s*<[^>]*>\s*|BASE\s*<[^>]*>\s*)*"
                        r"(SELECT|ASK|CONSTRUCT|DESCRIBE)\b", re.I)
+# What a query may hold that is not SPARQL keywords: string literals (long forms first), IRIs and
+# comments. They are blanked before looking for SERVICE, so a literal "service" is no keyword.
+NOT_KEYWORDS = re.compile(r"'''.*?'''|\"\"\".*?\"\"\"|'(?:[^'\\\n]|\\.)*'|\"(?:[^\"\\\n]|\\.)*\"|<[^<>\"{}|^`\\\s]*>"
+                          r"|#[^\n]*", re.S)
+SERVICE = re.compile(r"\bSERVICE\b", re.I)
+
+
+def federated(sparql: str) -> bool:
+    """Whether the query has a SERVICE clause. pyoxigraph evaluates one by sending an HTTP request to
+    the IRI it names, so the server would fetch any URL a query (or a prompt-injected chat agent)
+    names: a federated query is refused like an update. The check is on the query's text with its
+    literals, IRIs and comments blanked; a word SERVICE anywhere else counts (refusing too much is safe)."""
+    return bool(SERVICE.search(NOT_KEYWORDS.sub(" ", sparql)))
 
 
 def run_graph(run_id: str) -> NamedNode:
@@ -112,6 +126,8 @@ class RunStore:
         """Run a read-only query; `run_id` restricts the default graph to that run."""
         if not READ_ONLY.match(sparql):
             raise ValueError("only SELECT, ASK, CONSTRUCT and DESCRIBE queries are allowed")
+        if federated(sparql):
+            raise ValueError("SERVICE (federated query) is not allowed: the store only reads the runs' graphs")
         kwargs: dict[str, Any] = ({"default_graph": run_graph(run_id)} if run_id
                                   else {"use_default_graph_as_union": True})
         result = self.store.query(sparql, **kwargs)

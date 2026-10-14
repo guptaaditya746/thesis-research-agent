@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from scoring.store import RunStore
+from scoring.store import RunStore, federated
 
 TTL = """@prefix prov: <http://www.w3.org/ns/prov#> .
 <urn:thesis-agent:run:{run}/claim/claim-000001> a prov:Entity ;
@@ -52,3 +52,22 @@ def test_updates_are_refused(tmp_path):
         store.query("DELETE WHERE { ?s ?p ?o }")
     with pytest.raises(ValueError):
         store.query("INSERT DATA { <urn:a> <urn:b> <urn:c> }")
+
+
+@pytest.mark.parametrize("query", [
+    "SELECT * WHERE { SERVICE <http://127.0.0.1:9/x> { ?s ?p ?o } }",
+    "select * where { service silent <http://127.0.0.1:9/x> { ?s ?p ?o } }",
+    "PREFIX ex: <http://127.0.0.1:9/>\nASK { SERVICE ex:x { ?s ?p ?o } }",
+    "SELECT * WHERE { ?a ?b \"x\" . SERVICE ?endpoint { ?s ?p ?o } }",
+])
+def test_federated_queries_are_refused(query):
+    """pyoxigraph sends an HTTP request for a SERVICE clause: refused before it is evaluated."""
+    with pytest.raises(ValueError, match="SERVICE"):
+        RunStore().query(query)
+
+
+def test_the_word_service_elsewhere_is_no_service_clause():
+    assert not federated('SELECT ?s WHERE { ?s ?p "a SERVICE desk" }')
+    assert not federated("SELECT ?s WHERE { ?s <urn:x:SERVICE> ?o } # SERVICE")
+    assert not federated("SELECT ?s WHERE { ?s ?p '''multi\nline SERVICE''' }")
+    assert federated('SELECT ?s WHERE { ?s ?p "x" } SERVICE')  # outside any literal: refused (too much is safe)
