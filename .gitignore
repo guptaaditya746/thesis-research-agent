@@ -6,3 +6,4 @@ gold-data/
 concepts/*/cache/
 webapp/web/node_modules/
 .venv-*/
+.synth-cache/
