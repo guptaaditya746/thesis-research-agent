@@ -50,7 +50,8 @@ taken), so every run directory is complete.
 Subagents (row 2.12, agent/spawn.py; `spawn` off unless asked for): the same ResearchAgent runs
 them, with hooks for another agent id, its record metadata and its result; the agent's commands
 get a SPAWN_FD channel and, when they call spawn, a longer time limit (SandboxEnvironment);
-step ids come from one StepCounter per run, so they stay unique while subagents run.
+step ids come from one StepCounter per run, so they stay unique while subagents run. A masked
+spawn result keeps one short line (agent id, status, claim ids), the same in both conditions.
 """
 from __future__ import annotations
 
@@ -159,6 +160,37 @@ def settings_for(prompt_version: str) -> LoopSettings:
 def budget_for(prompt_version: str) -> dict[str, Any]:
     """The default run budget: the M1-real runs' for prompt v1, the provisional one (rundir.BUDGET) otherwise."""
     return dict(BUDGET_M1 if prompt_version == "v1" else BUDGET)
+
+
+# What a stub keeps of a spawn result line (row 2.12; the client prints the result on one JSON
+# line, keys sorted). A JSON string escapes its quotes, so a summary quoting these never matches.
+SPAWN_RESULT = re.compile(r'"agent_id": ?"(sub-\d+)"')
+SPAWN_STATUS = re.compile(r'"status": ?"([a-z_]+)"')
+SPAWN_CLAIMS = re.compile(r'"claims": ?\[')
+CLAIM_ID = re.compile(r'"claim_id": ?"(claim-\d+)"')
+
+
+def kept_lines(text: str) -> list[str]:
+    """The lines of an output that its stub keeps (row 1.15): claim replies, and spawn results short.
+
+    A claim reply ({"ok": true, "claim_id": ...} or {"ok": false, "reason": ...}) is kept as it
+    is. A spawn result (row 2.12) becomes {"agent_id", "status"} plus, in a claim_on run, the ids
+    of the claims it lists: its summary goes in both conditions alike. (A claim_on result holds
+    "claim_id", so the plain rule would keep its summary for the rest of the run in claim_on
+    only: a difference between the conditions that is not the claim mechanism.)
+    """
+    kept = []
+    for line in text.splitlines():
+        sub = SPAWN_RESULT.search(line)
+        if sub:
+            status = SPAWN_STATUS.search(line)
+            short: dict[str, Any] = {"agent_id": sub.group(1), "status": status.group(1) if status else None}
+            if SPAWN_CLAIMS.search(line):
+                short["claims"] = CLAIM_ID.findall(line)
+            kept.append(json.dumps(short))
+        elif '"claim_id"' in line or '"reason"' in line:
+            kept.append(line)
+    return kept
 
 
 def read_draft(path: Path, limit: int = DRAFT_MAX_BYTES) -> tuple[bytes | None, str]:
@@ -647,11 +679,11 @@ class ResearchAgent(DefaultAgent):
         The text the model saw before is kept in `extra.original_content` (the API never gets
         `extra`): trajectory.json is the only copy of the prompts, and with it every call's
         `prompt_sha256` can still be checked (stubs are always the oldest outputs, and the call
-        record says how many there were).
+        record says how many there were). Spawn results stay as one short line (kept_lines).
         """
         extra = message["extra"]
         extra.setdefault("original_content", message["content"])
-        kept = [ln for ln in message["content"].splitlines() if '"claim_id"' in ln or '"reason"' in ln]
+        kept = kept_lines(message["content"])
         file = (self.run_dir.root / extra["output_file"]).resolve()
         if why == "context_full" and self.settings.m1_notices:
             head = "[output removed: context full]"

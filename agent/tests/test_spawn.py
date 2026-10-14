@@ -26,7 +26,7 @@ from rdflib.namespace import PROV  # noqa: E402
 from agent import prompts, prov, queries, sandbox, schema  # noqa: E402
 from agent.batch import Batch, Manifest  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
-from agent.loop import POSIX_BROKER, LoopSettings, Outcome, SandboxEnvironment  # noqa: E402
+from agent.loop import POSIX_BROKER, LoopSettings, Outcome, SandboxEnvironment, kept_lines  # noqa: E402
 from agent.rundir import SUBAGENTS, RunDir  # noqa: E402
 from agent.spawn import SpawnJob, SpawnSettings  # noqa: E402
 from agent.verify import verify_run  # noqa: E402
@@ -301,6 +301,37 @@ def test_spawn_under_landlock(tmp_path: Path, corpus: tuple[Path, Path], monkeyp
     sub_tool = next(t for t in of(run, "agent_tool") if t["agent_id"] == "sub-01")
     assert "PARENT_SCRATCH_CLOSED" in (run.root / sub_tool["generated"]["output_file"]).read_text(encoding="utf-8")
     assert not (run.scratch / "x").exists() and verify_run(run, *corpus).ok
+
+
+@posix_only
+def test_masking_shortens_a_spawn_result_alike_in_both_conditions(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """An old spawn result keeps its agent id and status (and in claim_on its claim ids), never its summary."""
+    settings = LoopSettings(mask_keep=1, mask_keep_tight=1)
+    stubs = {}
+    for condition in ("claim_on", "claim_off"):
+        work = bash(claim_cmd(unique_quote())) if condition == "claim_on" else bash("echo read")
+        subs = SubModels({"t": [work, summary("SUMMARY-TEXT " * 200)]})
+        run, outcome, _, model = go(tmp_path / condition, corpus, [
+            bash("spawn --task t --files p1.md"), bash("echo next"), bash("echo again"), final([row([])])],
+            condition=condition, settings=settings, spawn=SPAWN, sub_model=subs)
+        assert outcome.exit_status == "submitted"
+        assert "SUMMARY-TEXT" in model.prompts[1][3]["content"]  # the next call sees the whole result
+        stub = model.prompts[2][3]["content"]  # the call after that: step 1's output is a stub
+        assert stub.startswith("[Output of step 1 removed") and "SUMMARY-TEXT" not in stub
+        stubs[condition] = json.loads(stub.splitlines()[1])
+    assert stubs["claim_off"] == {"agent_id": "sub-01", "status": "submitted"}
+    assert stubs["claim_on"] == stubs["claim_off"] | {"claims": ["claim-000001"]}
+
+
+def test_kept_lines_of_spawn_results_and_claim_replies() -> None:
+    result = json.dumps({"agent_id": "sub-02", "claims": [{"claim_id": "claim-000003", "s": 'a "agent_id": "sub-09"'}],
+                         "ok": True, "status": "budget", "summary": 'says "claim_id": "claim-000009"'})
+    reply = '{"ok": true, "claim_id": "claim-000004"}'
+    short = '{"agent_id": "sub-02", "status": "budget", "claims": ["claim-000003"]}'
+    assert kept_lines(f"{result}\nnoise\n{reply}") == [short, reply]
+    assert kept_lines("a.json:" + result[:40]) == ['{"agent_id": "sub-02", "status": null, "claims": []}']  # cut by the 8 KB cap
+    assert kept_lines(json.dumps({"agent_id": "sub-01", "ok": True, "status": "error", "summary": "s"})) == [
+        '{"agent_id": "sub-01", "status": "error"}']  # claim_off: no claims key
 
 
 # --- spawn off --------------------------------------------------------------------------------------------
