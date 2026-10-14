@@ -99,18 +99,22 @@ def prose_results(doc: Doc, plan: Plan, rng: random.Random) -> None:
         doc.add(" " if i + 1 < len(out) else "\n")
 
 
-def table(doc: Doc, plan: Plan, dataset: str, use_codes: bool) -> None:
-    doc.add("| System |")
+def table(doc: Doc, plan: Plan, use_codes: bool) -> None:
+    """One table; with several datasets, one row per dataset and condition (a single header, so every
+    cell's context is unique)."""
+    several = len(plan.datasets) > 1
+    doc.add("| System |" + (" Dataset |" if several else ""))
     for k in plan.metrics:
         doc.fill(" {k} ({u}) |", k=plan.metric(k.id, k.abbr if use_codes else None), u=CELL[k.unit])
-    doc.add("\n|---|" + "---:|" * len(plan.metrics) + "\n")
-    for c in plan.conditions:
-        doc.fill("| {c} |", c=plan.code(c.id) if use_codes else plan.cond(c.id))
-        for k in plan.metrics:
-            m = plan.study.measurement(c.id, k.id, dataset)
-            v = plan.values[m.id]
-            doc.fill(" {v} |", v="see text" if v.fmt == "relative" else v)
-        doc.add("\n")
+    doc.add("\n|---|" + ("---|" if several else "") + "---:|" * len(plan.metrics) + "\n")
+    for dataset in plan.datasets:
+        for c in plan.conditions:
+            doc.fill("| {c} |", c=plan.code(c.id) if use_codes else plan.cond(c.id))
+            doc.add(f" {dataset} |" if several else "")
+            for k in plan.metrics:
+                v = plan.values[plan.study.measurement(c.id, k.id, dataset).id]
+                doc.fill(" {v} |", v="see text" if v.fmt == "relative" else v)
+            doc.add("\n")
 
 
 def results(doc: Doc, plan: Plan, rng: random.Random) -> None:
@@ -119,18 +123,16 @@ def results(doc: Doc, plan: Plan, rng: random.Random) -> None:
         prose_results(doc, plan, rng)
         return
     if plan.level == "complex":
-        doc.add(f"The first table reports the results on {plan.datasets[0]}, the second those on "
-                f"{plan.datasets[1]}.\n\n")
-        for dataset in plan.datasets:
-            table(doc, plan, dataset, use_codes=False)
-            doc.add("\n")
+        doc.add(f"The table below reports the results on {plan.datasets[0]} and on {plan.datasets[1]}.\n\n")
+        table(doc, plan, use_codes=False)
+        doc.add("\n")
         base, rag = plan.study.condition("baseline").id, plan.study.condition("rag").id
         rel = plan.values[plan.study.effect.rag]
         doc.fill("On {d}, the {r} scores {v} than the {b} in {k}.\n", d=plan.datasets[0], r=plan.cond(rag),
                  k=plan.metric(plan.metrics[0].id), v=rel, b=plan.cond(base))
         return
     doc.add(f"The table below lists the results of all systems on {plan.datasets[0]}.\n\n")
-    table(doc, plan, plan.datasets[0], use_codes=plan.level == "distributed")
+    table(doc, plan, use_codes=plan.level == "distributed")
     doc.add("\nAll systems were evaluated under the same conditions.\n")
 
 

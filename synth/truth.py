@@ -126,7 +126,7 @@ def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float])
         base = _thousandths(rng, low, high)
         delta = _improvement(rng, direction)
         rag = round(base + delta if metric.higher_is_better else base - delta, 3)
-        if (round(rag * 1000) % 10 and 0.0 < rag < 1.0 and base not in taken and rag not in taken
+        if (round(rag * 1000) % 10 and 0.05 <= rag <= 0.95 and base not in taken and rag not in taken
                 and rules.effect(rag, base, metric.higher_is_better)[0] == direction):
             return base, rag
 
@@ -134,7 +134,10 @@ def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float])
 def _value(rng: random.Random, metric: Metric, taken: set[float]) -> float:
     while True:
         if metric.unit == "seconds":
-            v = rng.randint(40, 350) / 100
+            k = rng.randint(40, 350)
+            if not k % 10:          # 1.00 or 2.50 would equal a count denominator or a round filler number
+                continue
+            v = k / 100
         elif metric.canonical == "other":
             v = _thousandths(rng, 0.10, 0.55)
         else:
@@ -177,6 +180,8 @@ def make_study(rng: random.Random, index: int, direction: str) -> Study:
         b, r = _pair(rng, q, direction, taken)
         values[(base.id, q.id, dataset)], values[(rag.id, q.id, dataset)] = b, r
         taken |= {b, r}
+        if dataset == datasets[0]:      # the complex level writes this difference ("7.0 percentage points"):
+            taken.add(abs(round(r - b, 3)))   # no other value may read the same
     measurements = []
     for dataset in datasets:
         for metric in metrics:
@@ -203,7 +208,7 @@ def _decoy(rng: random.Random, metric: Metric, base: float, claim: str, taken: s
     while True:
         d = _improvement(rng, direction)
         v = round(base + d if metric.higher_is_better else base - d, 3)
-        if round(v * 1000) % 10 and 0.0 < v < 1.0 and v not in taken:
+        if round(v * 1000) % 10 and 0.05 <= v <= 0.95 and v not in taken:
             return v
 
 
