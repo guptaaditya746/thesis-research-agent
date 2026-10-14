@@ -18,8 +18,18 @@ class ResizeObserverStub {
   disconnect() {}
 }
 
+/** What React Flow reads of DOMMatrixReadOnly (its testing guide's stub): the zoom from `scale(...)`. */
+class DOMMatrixReadOnlyStub {
+  m22: number
+  constructor(transform?: string) {
+    const scale = transform?.match(/scale\(([1-9.]+)\)/)?.[1]
+    this.m22 = scale !== undefined ? Number(scale) : 1
+  }
+}
+
 function stubBrowserGaps() {
   globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver
+  globalThis.DOMMatrixReadOnly ??= DOMMatrixReadOnlyStub as unknown as typeof DOMMatrixReadOnly
   if (!window.matchMedia) {
     window.matchMedia = (query: string) =>
       ({
