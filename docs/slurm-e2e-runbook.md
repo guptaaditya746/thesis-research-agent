@@ -103,7 +103,7 @@ uv sync --locked --all-groups
 uv run pytest -q -W ignore::SyntaxWarning 2>&1 | tail -n 3
 ```
 
-Expect `775 passed, 1 skipped` and 0 failed (the count on `e2e-build` in WSL, 32 min on `/mnt/c`; the skip is
+Expect `776 passed, 1 skipped` and 0 failed (the count on `e2e-build` in WSL, 6 min from a Linux-side clone; the skip is
 the "Landlock missing" test, so on a node with Landlock the split may differ by one). A failure here is a failure of the build: record it, look at it, and fix it on the branch only if
 it is clearly a test-environment difference (for example a path); otherwise record and continue.
 
