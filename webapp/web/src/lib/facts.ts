@@ -7,7 +7,7 @@
  * still *unsourced* (claim_on: never claimed; claim_off: the attach step found no source), and
  * one with claims is *not judged yet*; its walk can ask the judge.
  */
-import type { Answer, AnswerRow, Fact, FactLabel, Score } from "@/api/types"
+import type { Answer, AnswerRow, Fact, FactLabel, Score, ScoreSupport } from "@/api/types"
 
 export type FactStatus = "supported" | "partial" | "not_supported" | "unsourced" | "pending" | "unjudged"
 
@@ -89,6 +89,18 @@ export function statusCounts(statuses: Iterable<FactStatus>): Record<FactStatus,
   const counts = Object.fromEntries(FACT_STATUSES.map((s) => [s, 0])) as Record<FactStatus, number>
   for (const status of statuses) counts[status] += 1
   return counts
+}
+
+/**
+ * The count behind a run's support share, as scoring/support.py counts it: the facts the judge
+ * said their quote supports, plus the partial ones when the calibration says partial counts as yes.
+ */
+export function supportNote(s: Pick<ScoreSupport, "supports" | "partial" | "facts" | "partial_counts_as">): string {
+  const n = (v: number | null | undefined) => (v ?? 0).toLocaleString("en")
+  const partialCounts = s.partial_counts_as === "yes"
+  const counted = (s.supports ?? 0) + (partialCounts ? (s.partial ?? 0) : 0)
+  const detail = partialCounts && s.partial ? ` (${n(s.supports)} supported + ${n(s.partial)} partial, which counts as supported)` : ""
+  return `${n(counted)} of ${n(s.facts)} facts supported by their quote${detail}`
 }
 
 /** A triple's value as text (s, p, o may be any JSON value in a claim). */

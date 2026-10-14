@@ -1,13 +1,16 @@
 /**
- * The claim walk (plan "Frontend pages" 4, Answer tab): fact -> claim(s) -> the step that made
- * each claim (the model call's numbers, never its reasoning; the command; the head of its output)
- * -> the passage of the corpus file with the claim's quote highlighted and scrolled into view.
- * This is the "easier to check" of the thesis in one panel.
+ * The claim walk (plan "Frontend pages" 4, Answer tab): fact -> claim(s), each with its recorded
+ * quote (the exact text the broker anchored and accepted, which the judge judged) -> the step that
+ * made each claim (the model call's numbers, never its reasoning; the command; the head of its
+ * output) -> the passage of today's corpus file with the claim's span highlighted and scrolled
+ * into view, flagged when the highlighted text is no longer the recorded quote. This is the
+ * "easier to check" of the thesis in one panel.
  *
  * A fact opens GET .../facts/{id}/walk: one request, with the verdicts scoring counted. When a
  * verdict is missing (the run is not scored yet, or the judge was down), "Ask the judge" asks
- * for the walk again with `judge=true`. Claims without a fact (a graph edge no answer fact cites)
- * are assembled here from the run's claims and steps and GET /api/corpus for each passage.
+ * for the walk again with `judge=true`. Bare claims (a graph edge, possibly merged from several
+ * claims, or a claim several facts cite) are assembled here from the run's claims and steps and
+ * GET /api/corpus for each passage, each naming the facts that cite it.
  */
 import { ArrowDownIcon, ExternalLinkIcon, FileTextIcon, GavelIcon, QuoteIcon, TerminalIcon, TriangleAlertIcon } from "lucide-react"
 import { useEffect, useRef, useState, type ReactNode } from "react"
@@ -28,14 +31,14 @@ import { duration, int } from "@/lib/format"
 import { splitPassage } from "@/lib/passage"
 
 import { FactStatusIcon } from "./FactBadge"
-import type { WalkTarget } from "./walk-context"
+import { useWalk, type WalkTarget } from "./walk-context"
 
 export function ClaimWalkSheet({ runId, target, onClose }: { runId: string; target: WalkTarget | null; onClose: () => void }) {
   return (
     <Sheet open={target !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-2xl">
         {target?.kind === "fact" && <FactWalkView key={target.factId} runId={runId} factId={target.factId} />}
-        {target?.kind === "claims" && <ClaimsWalkView runId={runId} claimIds={target.claimIds} label={target.label} />}
+        {target?.kind === "claims" && <ClaimsWalkView runId={runId} claimIds={target.claimIds} label={target.label} citedBy={target.citedBy} />}
       </SheetContent>
     </Sheet>
   )
@@ -176,7 +179,13 @@ function WalkClaimChain({ runId, item }: { runId: string; item: WalkClaim }) {
   )
 }
 
-function ClaimsWalkView({ runId, claimIds, label }: { runId: string; claimIds: string[]; label?: string }) {
+function ClaimsWalkView({ runId, claimIds, label, citedBy = {} }: {
+  runId: string
+  claimIds: string[]
+  label?: string
+  /** claim id -> the answer facts citing it */
+  citedBy?: Record<string, string[]>
+}) {
   const claims = useClaims(runId)
   const steps = useSteps(runId)
   const title = `Claim walk · ${label ?? claimIds.join(", ")}`
@@ -198,9 +207,18 @@ function ClaimsWalkView({ runId, claimIds, label }: { runId: string; claimIds: s
     )
   }
   const found = claimIds.map((id) => claims.data?.find((c) => c.claim_id === id)).filter((c): c is Claim => !!c)
+  const cited = found.filter((c) => (citedBy[c.claim_id!] ?? []).length > 0).length
+  const n = found.length
   return (
     <>
-      <Header title={title} description={`${found.length} claim${found.length === 1 ? "" : "s"}; no answer fact cites ${found.length === 1 ? "it" : "them"}.`} />
+      <Header
+        title={title}
+        description={
+          cited === 0
+            ? `${n} claim${n === 1 ? "" : "s"}; no answer fact cites ${n === 1 ? "it" : "them"}.`
+            : `${n} claims; ${cited} cited by answer facts (each claim names its facts).`
+        }
+      />
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <ol className="space-y-4" aria-label="Claim walk">
           {found.map((claim) => (
@@ -208,6 +226,7 @@ function ClaimsWalkView({ runId, claimIds, label }: { runId: string; claimIds: s
               key={claim.claim_id}
               runId={runId}
               claim={claim}
+              citedBy={citedBy[claim.claim_id!] ?? []}
               step={steps.data?.find((s) => s.step === claim.step && s.agent_id === claim.agent_id) ?? null}
             />
           ))}
@@ -217,7 +236,8 @@ function ClaimsWalkView({ runId, claimIds, label }: { runId: string; claimIds: s
   )
 }
 
-function ClaimWithPassage({ runId, claim, step }: { runId: string; claim: Claim; step: Step | null }) {
+/** A claim no fact walk covers: its passage is fetched at the recorded offsets, with no anchor check. */
+function ClaimWithPassage({ runId, claim, step, citedBy }: { runId: string; claim: Claim; step: Step | null; citedBy: string[] }) {
   const passage = usePassage(claim.paper_id, claim.anchor?.start ?? 0, claim.anchor?.end ?? 0, !!claim.anchor)
   return (
     <ClaimChain
@@ -229,11 +249,12 @@ function ClaimWithPassage({ runId, claim, step }: { runId: string; claim: Claim;
       passageLoading={passage.isLoading}
       verdict={null}
       anchorNote={claim.anchor ? null : "The claim has no anchor in the corpus."}
+      citedBy={citedBy}
     />
   )
 }
 
-function ClaimChain({ runId, claim, step, passage, passageError, passageLoading, verdict, anchorNote }: {
+function ClaimChain({ runId, claim, step, passage, passageError, passageLoading, verdict, anchorNote, citedBy }: {
   runId: string
   claim: Claim
   step: Step | null
@@ -242,7 +263,12 @@ function ClaimChain({ runId, claim, step, passage, passageError, passageLoading,
   passageLoading?: boolean
   verdict: Verdict | null
   anchorNote: string | null
+  /** the answer facts citing the claim (claims walk only) */
+  citedBy?: string[]
 }) {
+  // today's highlighted text against the recorded quote: they differ when the file changed since the run
+  const highlighted = passage ? splitPassage(passage).match : null
+  const differs = highlighted !== null && !!claim.quote && highlighted !== claim.quote
   return (
     <>
       <WalkStep icon={<ArrowDownIcon />} title={`Claim ${claim.claim_id ?? "(rejected)"}`}>
@@ -254,16 +280,26 @@ function ClaimChain({ runId, claim, step, passage, passageError, passageLoading,
           <span>origin {claim.origin}</span>
           {claim.anchor && <span className="tabular-nums">chars {claim.anchor.start}–{claim.anchor.end}</span>}
         </div>
+        <RecordedQuote claim={claim} />
+        {citedBy && <CitedBy factIds={citedBy} />}
         {verdict && <VerdictView verdict={verdict} title="Verdict on this quote" />}
       </WalkStep>
       <WalkStep icon={<TerminalIcon />} title={step ? `Step ${step.step} · ${step.agent_id} · ${step.phase ?? step.origin}` : `Step ${claim.step}`}>
         {step ? <StepView runId={runId} step={step} /> : <p className="text-sm text-muted-foreground">The step record is missing.</p>}
       </WalkStep>
-      <WalkStep icon={<FileTextIcon />} title="Passage">
+      <WalkStep icon={<FileTextIcon />} title="Passage in today's corpus file">
         {anchorNote && (
           <Alert className="mb-2 py-2">
             <TriangleAlertIcon />
             <AlertDescription className="text-xs">{anchorNote}</AlertDescription>
+          </Alert>
+        )}
+        {differs && (
+          <Alert className="mb-2 border-status-serious/60 py-2">
+            <TriangleAlertIcon className="text-status-serious" />
+            <AlertDescription className="text-xs">
+              The highlighted text is not the recorded quote: the corpus file has changed at these offsets since the run. The recorded quote above is what the claim says.
+            </AlertDescription>
           </Alert>
         )}
         {passage ? (
@@ -277,6 +313,47 @@ function ClaimChain({ runId, claim, step, passage, passageError, passageLoading,
         ) : null}
       </WalkStep>
     </>
+  )
+}
+
+/**
+ * The claim's quote as recorded: for an accepted claim the exact text the broker anchored in the
+ * corpus and accepted (what the judge judged), and the agent's own text when that differed.
+ */
+function RecordedQuote({ claim }: { claim: Claim }) {
+  if (!claim.quote) return null
+  const typed = claim.quote_submitted && claim.quote_submitted !== claim.quote ? claim.quote_submitted : null
+  const accepted = claim.status === "accepted"
+  return (
+    <figure className="mt-2 space-y-1">
+      <figcaption className="text-xs text-muted-foreground">
+        {accepted ? "Recorded quote: the exact text the broker anchored and accepted (what the judge reads)" : "Quote as the agent sent it (rejected)"}
+      </figcaption>
+      <blockquote data-testid="recorded-quote" className="rounded-md border-l-2 border-primary/60 bg-muted/30 px-3 py-2 font-serif text-sm whitespace-pre-wrap">
+        {claim.quote}
+      </blockquote>
+      {accepted && typed && (
+        <p className="text-xs text-muted-foreground" data-testid="quote-submitted">
+          The agent sent: <span className="font-serif text-foreground">“{typed}”</span> (the broker matched it to the text above)
+        </p>
+      )}
+    </figure>
+  )
+}
+
+/** The answer facts that cite a claim, each opening its own walk. */
+function CitedBy({ factIds }: { factIds: string[] }) {
+  const { open } = useWalk()
+  if (factIds.length === 0) return <p className="mt-2 text-xs text-muted-foreground">No answer fact cites this claim.</p>
+  return (
+    <p className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+      Cited by
+      {factIds.map((id) => (
+        <Button key={id} size="xs" variant="outline" className="font-mono" onClick={() => open({ kind: "fact", factId: id })} aria-label={`Open the walk of fact ${id}`}>
+          {id}
+        </Button>
+      ))}
+    </p>
   )
 }
 

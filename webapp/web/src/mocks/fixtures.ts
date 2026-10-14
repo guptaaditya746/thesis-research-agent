@@ -102,10 +102,10 @@ export const anchorOf = (p: Passage) => ({ start: p.offset + p.highlight!.start,
 // --- config and questions ------------------------------------------------------------------------
 
 export const config: AppConfig = {
-  corpus: "/scratch/thesis/corpus-md",
-  runs_root: "/scratch/thesis/runs",
-  gold_root: "/scratch/thesis/gold-data",
-  concepts_root: "/scratch/thesis/concepts",
+  corpus: "/mock/thesis/corpus-md",
+  runs_root: "/mock/thesis/runs",
+  gold_root: "/mock/thesis/gold-data",
+  concepts_root: "/mock/thesis/concepts",
   llm_base_url: "http://127.0.0.1:4000/v1",
   llm_key_set: true,
   argilla_url: "http://127.0.0.1:26900",
@@ -280,15 +280,28 @@ function accepted(id: string, s: string, p: string, o: string, from: Passage, at
 
 const ref = (c: Claim) => ({ claim_id: c.claim_id, status: c.status, reason: c.reason, s: c.s, p: c.p, o: c.o })
 
-const configFor = (runId: string, condition: string, seed: number, created: string): Record<string, unknown> => ({
+/** agent/loop.py LoopSettings.config(): the v2 loop, and LEGACY_V1 (prompt v1: no budget notices, no draft file). */
+const LOOP_V2 = {
+  harness: "mini-swe-agent 2.4.6", base_url: "http://127.0.0.1:4000/v1", conclude_replies: 2, conclude_decoding: "guided",
+  conclude_max_tokens: 4096, masking: { keep: 8, keep_tight: 4, tight_above_prompt_tokens: 45_000 }, budget_warnings: [50, 75, 90],
+  repeat_stop: 6, draft_file: "answer-draft.json", m1_notices: false,
+}
+const LOOP_V1 = {
+  ...LOOP_V2, conclude_decoding: "free", conclude_max_tokens: null, masking: null, budget_warnings: [], repeat_stop: 0, draft_file: null, m1_notices: true,
+}
+
+const configFor = (runId: string, condition: string, seed: number, created: string, promptV1 = false): Record<string, unknown> => ({
   schema_version: 1, run_id: runId.split("~").at(-1), created_at: created, condition,
   models: { orchestrator: { alias: "orch-model", name: "Qwen/Qwen3.8-27B-FP8", revision: "017b9c7", thinking: false } },
   budget: { steps: 60, tokens: 2_000_000, announced: true },
   sampling: { temperature: 0.7, seed },
-  prompt: { version: condition === "claim_on" ? "v2" : "v2-baseline", sha256: "4be1c3d0a8f2e7b96c51d3a0f4e2b8c7d6a5f4e3d2c1b0a9f8e7d6c5b4a39281" },
+  prompt: {
+    version: promptV1 ? "v1" : condition === "claim_on" ? "v2" : "v2-baseline",
+    sha256: "4be1c3d0a8f2e7b96c51d3a0f4e2b8c7d6a5f4e3d2c1b0a9f8e7d6c5b4a39281",
+  },
   hashes: { concept_sha256: Q01_SHA },
   git_commit: "bcbbb36",
-  sandbox: { mode: "landlock", abi: 8 },
+  loop: promptV1 ? LOOP_V1 : LOOP_V2,
 })
 
 // RUN.on: claim on, finished (agent/tests/runs.py research_run, with real quotes).
@@ -564,7 +577,7 @@ export const SCORES: Record<string, Score> = {
 
 const summary = (s: Partial<RunSummary> & Pick<RunSummary, "run_id" | "qid" | "condition" | "seed" | "created_at">): RunSummary => ({
   batch: s.run_id.includes("~") ? s.run_id.split("~")[0] : null, concept_sha256: null, concept_current: true,
-  temperature: 0.7, exit_status: "submitted", answer_from: "final", steps: 0, model_calls: 0, tokens: 0, seconds: 0,
+  temperature: 0.7, sandbox: "landlock", exit_status: "submitted", answer_from: "final", steps: 0, model_calls: 0, tokens: 0, seconds: 0,
   tokens_without_attach: null, seconds_without_attach: null, rows: 0, facts: 0, claims_accepted: 0, claims_rejected: 0,
   attach: s.condition === "claim_off" ? "done" : "not_applicable", verify: "ok", score: null, live: false, post_processing: false, ...s,
 })
@@ -597,6 +610,7 @@ export const RUNS: RunSummary[] = [
   summary({
     run_id: RUN.q07, qid: "q07", condition: "claim_on", seed: 1, created_at: "2026-10-12T14:05:00Z", exit_status: "context_full", answer_from: "none",
     concept_current: null, steps: 41, model_calls: 44, tokens: 1_310_902, seconds: 3_901.5, claims_accepted: 5, claims_rejected: 3, verify: "failed",
+    sandbox: "unsandboxed", // a test run started from the web app without the sandbox
   }),
 ]
 
@@ -606,11 +620,14 @@ const EMPTY_STEPS: Step[] = [
   step(60, { phase: "conclude", model_call: call(61_022, 41.2, "none", "unparsed"), coverage: ["unparsed", "no_final_answer"] }),
 ]
 
-function detail(s: RunSummary, concept: ConceptBrief, answer: Answer | null): RunDetail {
+function detail(s: RunSummary, concept: ConceptBrief, answer: Answer | null, promptV1 = false): RunDetail {
   const failed = s.verify === "failed"
   return {
     summary: s,
-    config: configFor(s.run_id, s.condition, s.seed ?? 1, s.created_at ?? ""),
+    config: {
+      ...configFor(s.run_id, s.condition, s.seed ?? 1, s.created_at ?? "", promptV1),
+      sandbox: { mode: s.sandbox ?? "landlock", landlock_abi: s.sandbox === "unsandboxed" ? null : 8 },
+    },
     concept,
     answer,
     verify: s.verify === "unknown" ? null : {
@@ -631,8 +648,9 @@ export function initialRunDetails(): Record<string, RunDetail> {
     [RUN.on]: detail(byId[RUN.on], Q01_CONCEPT, onAnswer),
     [RUN.off]: detail(byId[RUN.off], Q01_CONCEPT, offAnswer),
     [RUN.live]: detail(byId[RUN.live], Q01_CONCEPT, null),
-    [RUN.q02on]: detail(byId[RUN.q02on], BRIEFS.q02[0], emptyAnswer("table", "exit status budget")),
-    [RUN.q02off]: detail(byId[RUN.q02off], BRIEFS.q02[0], emptyAnswer("table", "exit status budget")),
+    // q02's runs reproduce the M1-real runs: prompt v1, whose loop gave no budget notices
+    [RUN.q02on]: detail(byId[RUN.q02on], BRIEFS.q02[0], emptyAnswer("table", "exit status budget"), true),
+    [RUN.q02off]: detail(byId[RUN.q02off], BRIEFS.q02[0], emptyAnswer("table", "exit status budget"), true),
     [RUN.q07]: detail(byId[RUN.q07], BRIEFS.q07[0], emptyAnswer("table", "exit status context_full")),
   }
 }
@@ -729,7 +747,7 @@ export const GOLD: GoldEntry[] = [
       review: { records: 155, decided: 155, kept: 131, unreviewed: 0, disagreements: 0, stale: 0 },
       kappa: {
         reviewers: ["aditya", "reviewer-2"], items: 31,
-        label: { items: 31, kappa: 0.78, raw_agreement: 0.9 }, keep: { items: 31, kappa: 0.81, raw_agreement: 0.94 },
+        label: { items: 31, kappa: 0.78, raw_agreement: 0.9 }, keep: { items: 31, kappa: 0.81, raw_agreement: 0.94, kappa_95: [0.62, 0.95] },
         vital: { items: 24, kappa: 0.66, raw_agreement: 0.83 }, bar: 0.61, keep_kappa_meets_bar: true, independent: true,
       },
       triage: { estimated_missed: 2.4, estimated_missed_95: [0.6, 8.9], estimated_recall: 0.98, estimated_recall_95: [0.94, 0.99], sample_reviewed: 24, sampled: 24 },
@@ -806,7 +824,7 @@ const test = (outcomeName: string, mean: number, low: number, high: number, p: n
 export const RESULTS: ResultsReport = {
   schema_version: 2,
   generated_at: "2026-10-13T06:00:00Z",
-  runs_root: "/scratch/thesis/runs/m4-72",
+  runs_root: "/mock/thesis/runs/m4-72",
   provisional: false, provisional_runs: 0, complete: true,
   completeness: { pending_support_runs: [], pending_soft_runs: [], unverified_runs: [], verify_failed_runs: [] },
   settings: { interval: "BCa bootstrap over questions", confidence: 0.95, resamples: 2000, alpha: 0.05, min_pairs: 6 },
@@ -851,12 +869,12 @@ const jobStep = (name: string, command: string, state: JobStep["state"], exit_co
 })
 
 const runSteps = (name: string, condition: string, states: JobStep["state"][]): JobStep[] => {
-  const dir = `/scratch/thesis/runs/web/${name}`
+  const dir = `/mock/thesis/runs/web/${name}`
   const names = ["run", ...(condition === "claim_off" ? ["attach"] : []), "verify", "pairs", "graph", "export-prov", "score"]
   const commands: Record<string, string> = {
     run: `python -m agent.cli run --concept concepts/q01/concept.json --run-id ${name} --condition ${condition} --seed 1 --temperature 0.7`,
-    attach: `python -m agent.cli attach ${dir} --corpus /scratch/thesis/corpus-md`,
-    verify: `python -m agent.cli verify ${dir} --corpus /scratch/thesis/corpus-md`,
+    attach: `python -m agent.cli attach ${dir} --corpus /mock/thesis/corpus-md`,
+    verify: `python -m agent.cli verify ${dir} --corpus /mock/thesis/corpus-md`,
     pairs: `python -m agent.cli pairs ${dir}`,
     graph: `python -m agent.cli graph ${dir}`,
     "export-prov": `python -m agent.cli export-prov ${dir}`,

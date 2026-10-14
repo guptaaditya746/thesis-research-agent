@@ -46,9 +46,11 @@ describe("graph.json to React Flow", () => {
     expect(degree["entity:gsm8k"]).toBe(1)
   })
 
-  it("skips edges whose nodes are missing instead of crashing", () => {
+  it("skips edges whose nodes are missing instead of crashing, and counts them", () => {
     const broken: KnowledgeGraph = { ...graph, edges: [{ ...graph.edges[0], source: "paper:p404" }] }
     expect(graphElements(broken).edges).toEqual([])
+    expect(graphElements(broken).skipped).toBe(1)
+    expect(graphElements(graph).skipped).toBe(0)
   })
 
   it("lays the graph out left to right with dagre, papers before their objects", () => {
@@ -66,7 +68,7 @@ describe("graph.json to React Flow", () => {
   })
 
   it("handles an empty graph", () => {
-    expect(toFlow({ schema_version: 1, run_id: "x", nodes: [], edges: [] })).toEqual({ nodes: [], edges: [] })
+    expect(toFlow({ schema_version: 1, run_id: "x", nodes: [], edges: [] })).toEqual({ nodes: [], edges: [], skipped: 0 })
   })
 
   it("sizes nodes by their label within limits", () => {
