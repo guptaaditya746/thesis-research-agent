@@ -2,8 +2,9 @@
 
 Hard rule (docs/evidence-interfaces.md): a baseline reads `manifest.json` and the files it lists
 under `papers/`, nothing else of the corpus directory. `SystemCorpus` is the only reader the baselines
-use; it opens exactly those files, checks each against its manifest sha256, and refuses a listed file
-that resolves outside the corpus or is one of the evaluation's files.
+use; it opens exactly those files, checks each against its manifest sha256, and refuses (allow-list)
+any listed file that does not resolve to a file directly in `<corpus>/papers/`, so neither
+ground_truth.json, corpus.json, fidelity.json, decoys.json nor any later evaluation file can be read.
 """
 from __future__ import annotations
 
@@ -21,7 +22,6 @@ from evidence.rules import Label, label as rule_label
 from gold.llm import JsonlCache, cache_key, model_name, prompt_sha256, redact, settings, structured_reply
 
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
-FORBIDDEN = ("ground_truth.json", "corpus.json", "fidelity.json")
 Stance = Literal["supports", "contradicts", "neutral"]
 GROUPS = {"supports": "supporting", "contradicts": "contradicting", "neutral": "neutral"}
 
@@ -44,8 +44,9 @@ class SystemCorpus:
         for entry in manifest["papers"]:
             file = entry.get("file") or f"papers/{entry['id']}.md"
             path = (self.root / file).resolve()
-            if path.name in FORBIDDEN or self.root not in path.parents:
-                raise ValueError(f"manifest lists {file!r}, which a system under test may not read")
+            if path.parent != self.root / "papers":
+                raise ValueError(f"manifest lists {file!r}, which a system under test may not read "
+                                 "(only files in papers/)")
             data = path.read_bytes()
             if entry.get("sha256") and sha256_hex(data) != entry["sha256"]:
                 raise ValueError(f"{file}: sha256 differs from the manifest")

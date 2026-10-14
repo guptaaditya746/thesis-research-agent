@@ -120,7 +120,7 @@ def ground_truth(corpus_id: str = "test-mixed") -> dict[str, Any]:
 
 
 def write_corpus(root: Path, corpus_id: str = "test-mixed", poison: bool = True) -> Path:
-    """manifest.json, papers/, ground_truth.json, and (poison) corpus.json and fidelity.json."""
+    """manifest.json, papers/, ground_truth.json, and (poison) corpus.json, fidelity.json and decoys.json."""
     corpus = Path(root) / corpus_id
     (corpus / "papers").mkdir(parents=True)
     entries = []
@@ -133,6 +133,7 @@ def write_corpus(root: Path, corpus_id: str = "test-mixed", poison: bool = True)
     if poison:
         dump(corpus / "corpus.json", {"corpus_id": corpus_id, "question": QUESTION, "level": "mixed"})
         dump(corpus / "fidelity.json", {"papers": []})
+        dump(corpus / "decoys.json", [])
     return corpus
 
 

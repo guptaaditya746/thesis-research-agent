@@ -12,7 +12,7 @@ from evaluation.score import score_answers
 from gold.llm import JsonlCache
 
 from . import fixtures as fx
-from .helpers import Scripted, guard_forbidden
+from .helpers import Scripted, guard_corpus
 
 REPLY = {"label": "mixed", "answer_text": "S001 improves accuracy; S002 hallucinates more with retrieval.",
          "studies": [{"document": "S001", "stance": "supports"}, {"document": "S002", "stance": "contradicts"},
@@ -21,7 +21,7 @@ REPLY = {"label": "mixed", "answer_text": "S001 improves accuracy; S002 hallucin
 
 def test_rag_baseline_answers_from_retrieved_passages(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     corpus = fx.write_corpus(tmp_path)
-    attempts = guard_forbidden(monkeypatch)
+    attempts = guard_corpus(monkeypatch, corpus)
     scripted = Scripted(REPLY)
     answer = rag.rag_baseline(corpus, model=scripted.model(), k=3, max_chars=200)
     assert attempts == []
@@ -62,10 +62,14 @@ def test_cache_makes_a_rerun_free_and_identical(tmp_path: Path) -> None:
     assert len(second.prompts) == 1 and c["label"] == "supported"
 
 
-def test_manifest_cannot_point_a_baseline_at_the_ground_truth(tmp_path: Path) -> None:
+@pytest.mark.parametrize("file", ["ground_truth.json", "decoys.json", "papers/../decoys.json", "notes/S001.md"])
+def test_manifest_can_point_a_baseline_only_into_papers(tmp_path: Path, file: str) -> None:
+    """Review 8: an allow-list (files directly in papers/), not a list of known evaluation files."""
     corpus = fx.write_corpus(tmp_path)
+    (corpus / "notes").mkdir()
+    (corpus / "notes" / "S001.md").write_text(fx.S001, encoding="utf-8")
     manifest = json.loads((corpus / "manifest.json").read_text(encoding="utf-8"))
-    manifest["papers"].append({"id": "GT", "file": "ground_truth.json", "sha256": ""})
+    manifest["papers"].append({"id": "X", "file": file, "sha256": ""})
     fx.dump(corpus / "manifest.json", manifest)
     with pytest.raises(ValueError, match="may not read"):
         SystemCorpus(corpus)
