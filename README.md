@@ -48,7 +48,8 @@ Node. To work on the frontend: `cd webapp/web && uv run --group frontend npm ci`
 | `docs/e2e-build-plan.md` | The end-to-end build: decisions, file contracts between packages, the backend API |
 | `docs/milestones-1-2.md` | Triaged build plan and progress for milestones 1 and 2 |
 | `docs/milestones-3-4.md` | What was built for milestones 3 and 4, and what still needs the cluster or people |
-| `docs/slurm-m1-runbook.md` | First real runs on Slurm, rows 1.1 and 1.13 (Codex runs it) |
+| `docs/slurm-m1-runbook.md` | First real runs on Slurm, rows 1.1 and 1.13 (Codex ran it) |
+| `docs/slurm-e2e-runbook.md` | The whole system on Slurm, end to end: concepts, gold trial, smoke batch, scoring, web app (Codex runs it) |
 | `docs/slurm-final-runbook.md` | The final infrastructure session (done) |
 | `docs/plan.md` | The design; to be revised from STATE.md |
 | `docs/decisions-after-tests.md` | Why each decision was taken, test by test |
@@ -57,6 +58,6 @@ Node. To work on the frontend: `cd webapp/web && uv run --group frontend npm ci`
 | `tests/RESULTS.md` | Every infrastructure test result; logs and scripts under `tests/<id>/` |
 | `thesis_pipeline.html` | One-page diagram of the design (click any box for details) |
 | `llm-setup/` | Submodule [`thesis-llm-setup`](https://github.com/guptaaditya746/thesis-llm-setup): vLLM + LiteLLM on Slurm |
-| `scripts/` | `e2e-*.sh` for the Slurm session, `omen-tunnels*` (Argilla, Langfuse), the agent root and corpus builds |
+| `scripts/` | `e2e-*.sh` and `e2e-measure.py` for the Slurm session, `omen-tunnels*` (Argilla, Langfuse), the agent root and corpus builds |
 
 Framing discussion: https://claude.ai/code/artifact/c4258535-0673-4590-83f9-4377ee7057fa
