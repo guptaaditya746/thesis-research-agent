@@ -10,21 +10,23 @@ import {
   CircleHelpIcon,
   CircleSlashIcon,
   ClockIcon,
+  FlaskConicalIcon,
   HammerIcon,
   Loader2Icon,
   OctagonXIcon,
   PencilLineIcon,
+  ScissorsIcon,
   ShieldCheckIcon,
   TriangleAlertIcon,
 } from "lucide-react"
 import type { ReactNode } from "react"
 
-import type { Condition, ConceptStatus, ExitStatus, GoldStatus, JobState, PickedBy, VerifyState } from "@/api/types"
+import type { ConceptState, GoldState, JobState, VerifyState } from "@/api/types"
 import { Badge } from "@/components/ui/badge"
-import { CONDITION_LABEL } from "@/lib/format"
+import { CONDITION_COLOR, conditionLabel } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
-type Tone = "good" | "warning" | "serious" | "critical" | "neutral"
+export type Tone = "good" | "warning" | "serious" | "critical" | "neutral"
 
 const ICON_TONE: Record<Tone, string> = {
   good: "text-status-good",
@@ -45,29 +47,26 @@ export function StatusBadge({ tone, icon, children, title }: { tone: Tone; icon:
   )
 }
 
-const CONDITION_COLOR: Record<Condition, string> = { claim_on: "var(--chart-1)", claim_off: "var(--chart-2)" }
-
-export function ConditionBadge({ condition }: { condition: Condition }) {
+export function ConditionBadge({ condition }: { condition: string }) {
   return (
     <Badge variant="outline" className="gap-1.5 font-normal">
-      <span className="size-2 rounded-full" style={{ background: CONDITION_COLOR[condition] }} aria-hidden="true" />
-      {CONDITION_LABEL[condition]}
+      <span className="size-2 rounded-full" style={{ background: CONDITION_COLOR[condition] ?? "var(--muted-foreground)" }} aria-hidden="true" />
+      {conditionLabel(condition)}
     </Badge>
   )
 }
 
-export function ExitBadge({ status, live }: { status: ExitStatus | null; live?: boolean }) {
-  if (live || status === null) {
-    return (
-      <StatusBadge tone="neutral" icon={<Loader2Icon className="animate-spin motion-reduce:animate-none" />}>
-        running
-      </StatusBadge>
-    )
-  }
+const Spin = () => <Loader2Icon className="animate-spin motion-reduce:animate-none" />
+
+/** The run's exit status (agent/loop.py, the backend's running / incomplete / cut). */
+export function ExitBadge({ status, live }: { status: string | null | undefined; live?: boolean }) {
+  if (live || status === "running") return <StatusBadge tone="neutral" icon={<Spin />}>running</StatusBadge>
   if (status === "submitted") return <StatusBadge tone="good" icon={<CheckCircle2Icon />}>submitted</StatusBadge>
   if (status === "budget") return <StatusBadge tone="warning" icon={<ClockIcon />}>budget</StatusBadge>
   if (status === "context_full") return <StatusBadge tone="serious" icon={<TriangleAlertIcon />}>context full</StatusBadge>
-  return <StatusBadge tone="critical" icon={<OctagonXIcon />}>{status}</StatusBadge>
+  if (status === "cut") return <StatusBadge tone="serious" icon={<ScissorsIcon />} title="the batch job's time limit cut the run">cut</StatusBadge>
+  if (status === "incomplete") return <StatusBadge tone="neutral" icon={<CircleDashedIcon />} title="the agent stopped writing without an outcome">incomplete</StatusBadge>
+  return <StatusBadge tone="critical" icon={<OctagonXIcon />}>{status ?? "unknown"}</StatusBadge>
 }
 
 export function VerifyBadge({ verify }: { verify: VerifyState }) {
@@ -76,7 +75,7 @@ export function VerifyBadge({ verify }: { verify: VerifyState }) {
   return <StatusBadge tone="neutral" icon={<CircleHelpIcon />}>not verified</StatusBadge>
 }
 
-export function ConceptBadge({ status, pickedBy }: { status: ConceptStatus; pickedBy?: PickedBy | null }) {
+export function ConceptBadge({ status, pickedBy }: { status: ConceptState; pickedBy?: string | null }) {
   if (status === "picked") {
     return <StatusBadge tone="good" icon={<CheckCircle2Icon />}>picked{pickedBy ? ` · ${pickedBy}` : ""}</StatusBadge>
   }
@@ -84,7 +83,7 @@ export function ConceptBadge({ status, pickedBy }: { status: ConceptStatus; pick
   return <StatusBadge tone="neutral" icon={<CircleDashedIcon />}>none</StatusBadge>
 }
 
-export function GoldBadge({ status }: { status: GoldStatus }) {
+export function GoldBadge({ status }: { status: GoldState }) {
   if (status === "reviewed") return <StatusBadge tone="good" icon={<CheckCircle2Icon />}>reviewed</StatusBadge>
   if (status === "draft") return <StatusBadge tone="warning" icon={<PencilLineIcon />}>draft</StatusBadge>
   if (status === "building") return <StatusBadge tone="neutral" icon={<HammerIcon />}>building</StatusBadge>
@@ -94,16 +93,23 @@ export function GoldBadge({ status }: { status: GoldStatus }) {
 export function JobBadge({ state }: { state: JobState }) {
   if (state === "done") return <StatusBadge tone="good" icon={<CheckCircle2Icon />}>done</StatusBadge>
   if (state === "failed") return <StatusBadge tone="critical" icon={<OctagonXIcon />}>failed</StatusBadge>
-  if (state === "running") {
-    return <StatusBadge tone="neutral" icon={<Loader2Icon className="animate-spin motion-reduce:animate-none" />}>running</StatusBadge>
-  }
+  if (state === "running") return <StatusBadge tone="neutral" icon={<Spin />}>running</StatusBadge>
   return <StatusBadge tone="neutral" icon={<ClockIcon />}>queued</StatusBadge>
 }
 
-/** A pulsing dot with a label for screen readers: the thing is live. */
-export function LiveDot({ className }: { className?: string }) {
+/** A score against the draft key tests the pipeline; it is never a result. */
+export function ProvisionalBadge() {
   return (
-    <span className={cn("relative inline-flex size-2", className)} role="status" aria-label="live">
+    <StatusBadge tone="warning" icon={<FlaskConicalIcon />} title="scored against the draft key (before review): tests the pipeline, never a result">
+      provisional
+    </StatusBadge>
+  )
+}
+
+/** A pulsing dot with a label for screen readers: the thing is live. */
+export function LiveDot({ className, label = "live" }: { className?: string; label?: string }) {
+  return (
+    <span className={cn("relative inline-flex size-2 shrink-0", className)} role="img" aria-label={label}>
       <span className="absolute inline-flex size-full animate-ping rounded-full bg-status-good opacity-60 motion-reduce:animate-none" />
       <span className="relative inline-flex size-2 rounded-full bg-status-good" />
     </span>

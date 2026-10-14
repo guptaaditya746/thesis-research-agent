@@ -2,11 +2,11 @@
  * TanStack Query hooks over `api` (src/api/client.ts): one hook per endpoint, query keys in
  * one table so mutations and the live streams invalidate exactly what they change.
  *
- * Live data polls only while something is live: a run list with a live run, a run that is
- * still going, a job queue with queued or running jobs. Everything else is fetched once and
- * refetched on focus.
+ * Live data polls only while something is live: a run list with a live run (or one a job is still
+ * verifying and scoring), such a run's detail, a job queue with queued or running jobs. Everything
+ * else is fetched once and refetched on focus.
  */
-import { keepPreviousData, QueryClient, useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
+import { keepPreviousData, QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { ApiError, api } from "./client"
 import type {
@@ -16,8 +16,9 @@ import type {
   ProvQueryNumber,
   ProvQueryParams,
   RunFilters,
+  RunRequest,
+  RunSummary,
   SparqlRequest,
-  StartRunRequest,
 } from "./types"
 
 const LIVE_POLL_MS = 5_000
@@ -35,7 +36,7 @@ export const keys = {
   passage: (paperId: string, start: number, end: number) => ["passage", paperId, start, end] as const,
   gold: ["gold"] as const,
   goldKey: (qid: string) => ["gold", qid, "key"] as const,
-  results: ["results"] as const,
+  results: (batch?: string) => ["results", batch ?? ""] as const,
   jobs: ["jobs"] as const,
   job: (id: string) => ["jobs", id] as const,
 }
@@ -51,6 +52,9 @@ export function createQueryClient(): QueryClient {
     },
   })
 }
+
+/** Something about the run still changes: the agent writes it, or a job verifies and scores it. */
+export const isBusy = (run: Pick<RunSummary, "live" | "post_processing">) => run.live || !!run.post_processing
 
 // --- general -----------------------------------------------------------------------------------
 
@@ -82,6 +86,7 @@ export function usePickConcept(qid: string) {
     onSuccess: (question) => {
       client.setQueryData(keys.question(qid), question)
       void client.invalidateQueries({ queryKey: keys.questions, exact: true })
+      void client.invalidateQueries({ queryKey: keys.runs })
     },
   })
 }
@@ -93,13 +98,13 @@ export const useRuns = (filters: RunFilters = {}) =>
     queryKey: keys.runList(filters),
     queryFn: ({ signal }) => api.runs(filters, signal),
     placeholderData: keepPreviousData,
-    refetchInterval: (query) => (query.state.data?.some((r) => r.live) ? LIVE_POLL_MS : false),
+    refetchInterval: (query) => (query.state.data?.some(isBusy) ? LIVE_POLL_MS : false),
   })
 
 export function useStartRun() {
   const client = useQueryClient()
   return useMutation({
-    mutationFn: (body: StartRunRequest) => api.startRun(body),
+    mutationFn: (body: RunRequest) => api.startRun(body),
     onSuccess: (job) => {
       client.setQueryData(keys.job(job.id), job)
       void client.invalidateQueries({ queryKey: keys.jobs })
@@ -113,7 +118,7 @@ export const useRun = (runId: string) =>
     queryKey: keys.run(runId),
     queryFn: ({ signal }) => api.run(runId, signal),
     enabled: !!runId,
-    refetchInterval: (query) => (query.state.data?.summary.live ? LIVE_POLL_MS : false),
+    refetchInterval: (query) => (query.state.data && isBusy(query.state.data.summary) ? LIVE_POLL_MS : false),
   })
 
 export const useSteps = (runId: string, enabled = true) =>
@@ -128,30 +133,19 @@ export const useGraph = (runId: string, enabled = true) =>
 export const useScore = (runId: string, enabled = true) =>
   useQuery({ queryKey: keys.runPart(runId, "score"), queryFn: ({ signal }) => api.score(runId, signal), enabled: !!runId && enabled })
 
-/** The claim walk of one fact; cached long, since a finished run's walk does not change. */
-export const useFactWalk = (runId: string, factId: string | null, enabled = true) =>
+/**
+ * The claim walk of one fact. Without `judge` it carries the verdicts score.json counted (no model
+ * call); with it, the backend asks the judge about quotes that have none yet.
+ */
+export const useFactWalk = (runId: string, factId: string | null, { judge = false }: { judge?: boolean } = {}) =>
   useQuery({
-    queryKey: keys.runPart(runId, "walk", factId ?? ""),
-    queryFn: ({ signal }) => api.factWalk(runId, factId!, signal),
-    enabled: !!runId && !!factId && enabled,
+    queryKey: keys.runPart(runId, "walk", factId ?? "", judge ? "judge" : "scored"),
+    queryFn: ({ signal }) => api.factWalk(runId, factId!, { judge }, signal),
+    enabled: !!runId && !!factId,
     staleTime: 5 * 60_000,
   })
 
-/**
- * The walks of all sourced facts of an answer (for their support badges), sharing the cache
- * with useFactWalk, so opening a fact's claim walk afterwards needs no request.
- */
-export function useFactWalks(runId: string, factIds: string[]) {
-  return useQueries({
-    queries: factIds.map((factId) => ({
-      queryKey: keys.runPart(runId, "walk", factId),
-      queryFn: ({ signal }: { signal: AbortSignal }) => api.factWalk(runId, factId, signal),
-      staleTime: 5 * 60_000,
-    })),
-  })
-}
-
-export const usePassage = (paperId: string | null, start: number, end: number, enabled = true) =>
+export const usePassage = (paperId: string | null | undefined, start: number, end: number, enabled = true) =>
   useQuery({
     queryKey: keys.passage(paperId ?? "", start, end),
     queryFn: ({ signal }) => api.passage(paperId!, { start, end }, signal),
@@ -159,10 +153,10 @@ export const usePassage = (paperId: string | null, start: number, end: number, e
     staleTime: Infinity,
   })
 
-export const useStepOutput = (runId: string, step: number | null) =>
+export const useStepOutput = (runId: string, step: number | null, agentId?: string | null) =>
   useQuery({
-    queryKey: keys.runPart(runId, "output", step ?? -1),
-    queryFn: ({ signal }) => api.stepOutput(runId, step!, signal),
+    queryKey: keys.runPart(runId, "output", step ?? -1, agentId ?? "main"),
+    queryFn: ({ signal }) => api.stepOutput(runId, step!, agentId, signal),
     enabled: !!runId && step !== null,
     staleTime: Infinity,
   })
@@ -174,7 +168,20 @@ export const useGold = () => useQuery({ queryKey: keys.gold, queryFn: ({ signal 
 export const useGoldKey = (qid: string | null) =>
   useQuery({ queryKey: keys.goldKey(qid ?? ""), queryFn: ({ signal }) => api.goldKey(qid!, signal), enabled: !!qid })
 
-export const useResults = () => useQuery({ queryKey: keys.results, queryFn: ({ signal }) => api.results(signal) })
+export function useBuildGold() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (qid: string) => api.buildGold(qid),
+    onSuccess: (job) => {
+      client.setQueryData(keys.job(job.id), job)
+      void client.invalidateQueries({ queryKey: keys.jobs })
+      void client.invalidateQueries({ queryKey: keys.gold })
+    },
+  })
+}
+
+export const useResults = (batch?: string) =>
+  useQuery({ queryKey: keys.results(batch), queryFn: ({ signal }) => api.results(batch, signal) })
 
 export const useSparql = () => useMutation({ mutationFn: (body: SparqlRequest) => api.sparql(body) })
 
@@ -183,13 +190,13 @@ export const useProvQuery = (runId: string) =>
 
 // --- jobs ------------------------------------------------------------------------------------------
 
-const busy = (jobs: Job[] | undefined) => jobs?.some((j) => j.state === "queued" || j.state === "running") ?? false
+export const isActiveJob = (job: Pick<Job, "state">) => job.state === "queued" || job.state === "running"
 
 export const useJobs = () =>
   useQuery({
     queryKey: keys.jobs,
     queryFn: ({ signal }) => api.jobs(signal),
-    refetchInterval: (query) => (busy(query.state.data) ? JOB_POLL_MS : 15_000),
+    refetchInterval: (query) => (query.state.data?.some(isActiveJob) ? JOB_POLL_MS : 15_000),
   })
 
 export const useJob = (id: string | null) =>
@@ -197,5 +204,16 @@ export const useJob = (id: string | null) =>
     queryKey: keys.job(id ?? ""),
     queryFn: ({ signal }) => api.job(id!, signal),
     enabled: !!id,
-    refetchInterval: (query) => (busy(query.state.data ? [query.state.data] : undefined) ? JOB_POLL_MS : false),
+    refetchInterval: (query) => (query.state.data && isActiveJob(query.state.data) ? JOB_POLL_MS : false),
   })
+
+export function useCancelJob() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.cancelJob(id),
+    onSuccess: (job) => {
+      client.setQueryData(keys.job(job.id), job)
+      void client.invalidateQueries({ queryKey: keys.jobs })
+    },
+  })
+}

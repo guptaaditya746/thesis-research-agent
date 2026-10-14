@@ -86,7 +86,7 @@ export function CommandMenu() {
           </CommandGroup>
           <CommandGroup heading="Runs">
             {runs.data?.slice(0, 50).map((r) => (
-              <CommandItem key={r.run_id} value={`${r.run_id} ${r.qid} ${r.condition}`} onSelect={() => go(`/runs/${r.run_id}`)}>
+              <CommandItem key={r.run_id} value={`${r.run_id} ${r.qid} ${r.condition}`} onSelect={() => go(`/runs/${encodeURIComponent(r.run_id)}`)}>
                 <ListChecksIcon />
                 <span className="font-mono">{r.run_id}</span>
                 <CommandShortcut>{r.condition}</CommandShortcut>

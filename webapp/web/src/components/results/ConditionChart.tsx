@@ -1,15 +1,15 @@
 /**
- * Grouped bars of claim on vs claim off (shadcn chart on recharts), with the report's interval
- * as error bars where it has one. Colour follows the condition (series 1 and 2 of the validated
- * palette); bars are at most 24 px wide with rounded data ends; one y axis; hairline grid; the
- * tooltip shows the mean and its interval, the legend names the conditions, and the page's
- * tables carry every value too.
+ * Grouped bars of claim on vs claim off (shadcn chart on recharts), with the report's 95 % BCa
+ * interval as error bars where it has one. Colour follows the condition (series 1 and 2 of the
+ * validated palette, checked light and dark with the dataviz validator); bars are at most 24 px
+ * wide with rounded data ends and a 2 px gap; one y axis; hairline grid; the tooltip shows each
+ * mean with its interval, the legend names the conditions, and the page's tables carry every value.
  */
 import { Bar, BarChart, CartesianGrid, ErrorBar, XAxis, YAxis } from "recharts"
 
 import type { Condition } from "@/api/types"
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, type ChartConfig } from "@/components/ui/chart"
-import { CONDITION_LABEL } from "@/lib/format"
+import { CONDITION_COLOR, CONDITION_LABEL } from "@/lib/format"
 
 export interface ConditionRow {
   label: string
@@ -22,8 +22,8 @@ export interface ConditionRow {
 }
 
 const CONFIG = {
-  claim_on: { label: CONDITION_LABEL.claim_on, color: "var(--chart-1)" },
-  claim_off: { label: CONDITION_LABEL.claim_off, color: "var(--chart-2)" },
+  claim_on: { label: CONDITION_LABEL.claim_on, color: CONDITION_COLOR.claim_on },
+  claim_off: { label: CONDITION_LABEL.claim_off, color: CONDITION_COLOR.claim_off },
 } satisfies ChartConfig
 
 interface TooltipProps {
@@ -70,7 +70,7 @@ export function ConditionChart({ data, format, domain, height = 240, label }: {
       <BarChart data={data} margin={{ top: 12, right: 8, left: 0, bottom: 0 }} barGap={2} accessibilityLayer>
         <CartesianGrid vertical={false} />
         <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} />
-        <YAxis tickLine={false} axisLine={false} width={56} tickFormatter={(v: number) => format(v)} domain={domain ?? [0, "auto"]} />
+        <YAxis tickLine={false} axisLine={false} width={64} tickFormatter={(v: number) => format(v)} domain={domain ?? [0, "auto"]} />
         <ChartTooltip cursor={{ fillOpacity: 0.4 }} content={tooltip} />
         <ChartLegend content={<ChartLegendContent />} />
         {(["claim_on", "claim_off"] as const).map((c) => (

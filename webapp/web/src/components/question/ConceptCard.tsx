@@ -2,7 +2,7 @@
 import { CheckCircle2Icon } from "lucide-react"
 import type { ReactNode } from "react"
 
-import type { ConceptBrief, ConceptPick } from "@/api/types"
+import type { ConceptBrief, Pick as ConceptPick } from "@/api/types"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { measureText } from "@/lib/concept"
@@ -14,7 +14,7 @@ export function ConceptCard({ brief, choice, picked, action }: {
   brief: ConceptBrief
   /** 1-based number of the brief, as `agent concept pick` takes it */
   choice: number
-  picked: ConceptPick | null
+  picked: ConceptPick | null | undefined
   action: ReactNode
 }) {
   const isPicked = picked?.choice === choice

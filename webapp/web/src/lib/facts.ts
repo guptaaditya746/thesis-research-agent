@@ -1,18 +1,28 @@
 /**
- * Answer facts and their support status (Run page, Answer tab and Compare).
+ * Answer facts and their support status (Run page, Answer tab, and Compare).
  *
- * A fact with no claim is *unsourced* (claim_on: never claimed; claim_off: the attach step
- * found no source). A fact with claims gets the judge's verdict from its claim walk
- * (gold/judge.py: supports / partial / no); before the judge has run it is *sourced* only.
+ * A fact's badge must show the verdict behind the primary outcome, so it is the label scoring
+ * wrote to score.json (`detail.support`: supports / partial / no / unsourced / pending; the
+ * walk's `label` is the same value). Before a run is scored a fact with no accepted claim is
+ * still *unsourced* (claim_on: never claimed; claim_off: the attach step found no source), and
+ * one with claims is *not judged yet*; its walk can ask the judge.
  */
-import type { Answer, AnswerFact, AnswerRow, GraphRow, Verdict } from "@/api/types"
+import type { Answer, AnswerRow, Fact, FactLabel, Score } from "@/api/types"
 
-export type FactStatus = "supported" | "partial" | "not_supported" | "unsourced" | "unjudged"
+export type FactStatus = "supported" | "partial" | "not_supported" | "unsourced" | "pending" | "unjudged"
 
-export function factStatus(fact: Pick<AnswerFact, "claims">, verdict: Verdict | null | undefined): FactStatus {
-  if (fact.claims.length === 0) return "unsourced"
-  if (!verdict) return "unjudged"
-  return verdict.label === "supports" ? "supported" : verdict.label === "partial" ? "partial" : "not_supported"
+const FROM_LABEL: Record<FactLabel, FactStatus> = {
+  supports: "supported",
+  partial: "partial",
+  no: "not_supported",
+  unsourced: "unsourced",
+  pending: "pending",
+}
+
+/** The status of a fact from scoring's label, else from whether it cites any claim. */
+export function factStatus(fact: Pick<Fact, "claims">, label: FactLabel | null | undefined): FactStatus {
+  if (label && label in FROM_LABEL) return FROM_LABEL[label]
+  return fact.claims.length === 0 ? "unsourced" : "unjudged"
 }
 
 export const FACT_STATUS_LABEL: Record<FactStatus, string> = {
@@ -20,15 +30,43 @@ export const FACT_STATUS_LABEL: Record<FactStatus, string> = {
   partial: "partial",
   not_supported: "not supported",
   unsourced: "unsourced",
-  unjudged: "sourced, not judged",
+  pending: "verdict pending",
+  unjudged: "not judged yet",
 }
 
-export function isGraphRow(row: AnswerRow): row is GraphRow {
-  return "source" in row && "predicate" in row
+export const FACT_STATUSES = Object.keys(FACT_STATUS_LABEL) as FactStatus[]
+
+const factKey = (rowId: string, factId: string) => `${rowId}\u0000${factId}`
+
+/** Scoring's label per fact (row id + fact id) from score.json's detail.support. */
+export function scoredLabels(score: Score | null | undefined): Map<string, FactLabel> {
+  const map = new Map<string, FactLabel>()
+  for (const entry of score?.detail?.support ?? []) {
+    if (entry && typeof entry.fact_id === "string") map.set(factKey(entry.row_id, entry.fact_id), entry.label)
+  }
+  return map
+}
+
+/** Every fact's status, keyed by row and fact id (fact ids are unique per answer, rows make sure). */
+export function factStatuses(answer: Answer | null | undefined, score: Score | null | undefined): Map<string, FactStatus> {
+  const labels = scoredLabels(score)
+  const map = new Map<string, FactStatus>()
+  for (const { fact, rowId } of answerFacts(answer)) {
+    map.set(factKey(rowId, fact.id), factStatus(fact, labels.get(factKey(rowId, fact.id))))
+  }
+  return map
+}
+
+export const statusOf = (statuses: Map<string, FactStatus>, rowId: string, fact: Fact): FactStatus =>
+  statuses.get(factKey(rowId, fact.id)) ?? factStatus(fact, null)
+
+/** A graph answer's row (an edge) rather than a table row. */
+export function isGraphRow(row: AnswerRow): row is AnswerRow & { source: string; predicate: string; target: string } {
+  return typeof row.source === "string" && typeof row.predicate === "string" && typeof row.target === "string"
 }
 
 export interface FactRef {
-  fact: AnswerFact
+  fact: Fact
   rowId: string
 }
 
@@ -47,8 +85,12 @@ export function factsByClaim(answer: Answer | null | undefined): Map<string, Fac
 }
 
 /** Counts per status, for the answer's legend line. */
-export function statusCounts(statuses: FactStatus[]): Record<FactStatus, number> {
-  const counts: Record<FactStatus, number> = { supported: 0, partial: 0, not_supported: 0, unsourced: 0, unjudged: 0 }
+export function statusCounts(statuses: Iterable<FactStatus>): Record<FactStatus, number> {
+  const counts = Object.fromEntries(FACT_STATUSES.map((s) => [s, 0])) as Record<FactStatus, number>
   for (const status of statuses) counts[status] += 1
   return counts
 }
+
+/** A triple's value as text (s, p, o may be any JSON value in a claim). */
+export const term = (value: unknown): string =>
+  value === null || value === undefined ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value)

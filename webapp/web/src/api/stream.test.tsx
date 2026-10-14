@@ -3,7 +3,7 @@ import { act, renderHook } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { LIVE_RECORDS, STEPS } from "@/mocks/fixtures"
+import { LIVE_RECORDS, RUN, STEPS } from "@/mocks/fixtures"
 import { summarize } from "@/lib/timeline"
 import { testClient } from "@/test/render"
 
@@ -51,7 +51,7 @@ afterEach(() => {
 
 describe("useRunStream", () => {
   it("folds the live records into the seeded steps and stops on done", () => {
-    const { result } = renderHook(() => useRunStream("q01-on-s2", { live: true, seed: STEPS["q01-on-s2"] }), { wrapper })
+    const { result } = renderHook(() => useRunStream("q01-on-s2", { live: true, seed: STEPS[RUN.live] }), { wrapper })
     const source = FakeEventSource.last()
     expect(source.url).toBe("http://localhost:5173/api/runs/q01-on-s2/stream")
     expect(result.current.status).toBe("connecting")
@@ -75,7 +75,7 @@ describe("useRunStream", () => {
   })
 
   it("opens no stream for a finished run", () => {
-    const { result } = renderHook(() => useRunStream("q01-on-s1", { live: false, seed: STEPS["q01-on-s1"] }), { wrapper })
+    const { result } = renderHook(() => useRunStream("q01-on-s1", { live: false, seed: STEPS[RUN.on] }), { wrapper })
     expect(FakeEventSource.instances).toHaveLength(0)
     expect(result.current.status).toBe("idle")
     expect(summarize(result.current.timeline).steps).toHaveLength(8)

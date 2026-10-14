@@ -1,20 +1,15 @@
-import { useFactWalks } from "@/api/hooks"
+import { useMemo } from "react"
+
+import { useScore } from "@/api/hooks"
 import type { Answer } from "@/api/types"
-import { answerFacts, factStatus, type FactStatus } from "@/lib/facts"
+import { factStatuses } from "@/lib/facts"
 
 /**
- * Support status per fact id (and whether its walk is still loading): unsourced facts need no
- * request; sourced ones take the judge's verdict from their walk.
+ * Support status per fact of a run's answer, from one request: the labels score.json's
+ * detail.support holds (src/lib/facts.ts). Before scoring, facts are unsourced or not judged yet.
  */
 export function useFactStatuses(runId: string, answer: Answer | null | undefined) {
-  const facts = answerFacts(answer).map((r) => r.fact)
-  const sourced = facts.filter((f) => f.claims.length > 0)
-  const walks = useFactWalks(runId, sourced.map((f) => f.id))
-  const byId = new Map<string, { status: FactStatus; loading: boolean }>()
-  for (const fact of facts) {
-    const index = sourced.indexOf(fact)
-    const walk = index >= 0 ? walks[index] : undefined
-    byId.set(fact.id, { status: factStatus(fact, walk?.data?.support), loading: !!walk?.isPending })
-  }
-  return byId
+  const score = useScore(runId, !!answer && answer.rows.length > 0)
+  const statuses = useMemo(() => factStatuses(answer, score.data), [answer, score.data])
+  return { statuses, score: score.data ?? null, loading: score.isLoading }
 }

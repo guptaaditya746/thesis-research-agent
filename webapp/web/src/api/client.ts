@@ -11,7 +11,7 @@ import type {
   AppConfig,
   Claim,
   FactWalk,
-  GoldSummary,
+  GoldEntry,
   Health,
   Job,
   KnowledgeGraph,
@@ -20,16 +20,17 @@ import type {
   ProposeRequest,
   ProvQueryNumber,
   ProvQueryParams,
+  Question,
   QuestionDetail,
-  QuestionSummary,
+  QueryResult,
   ResultsReport,
   RunDetail,
   RunFilters,
+  RunRequest,
   RunSummary,
   Score,
   SparqlRequest,
   SparqlResult,
-  StartRunRequest,
   Step,
 } from "./types"
 
@@ -48,6 +49,8 @@ export class ApiError extends Error {
 }
 
 export const isNotFound = (error: unknown) => error instanceof ApiError && error.status === 404
+/** 409: the backend refuses because of the state (a job already running, a pick runs depend on, ...). */
+export const isConflict = (error: unknown) => error instanceof ApiError && error.status === 409
 
 type Params = Record<string, string | number | boolean | null | undefined>
 
@@ -56,7 +59,7 @@ export function apiUrl(path: string, params?: Params): string {
   const base = (import.meta.env.VITE_API_BASE as string | undefined) ?? ""
   const url = new URL(base + path, window.location.origin)
   for (const [key, value] of Object.entries(params ?? {})) {
-    if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value))
+    if (value !== undefined && value !== null && value !== "" && value !== false) url.searchParams.set(key, String(value))
   }
   return url.toString()
 }
@@ -117,47 +120,55 @@ async function orNull<T>(promise: Promise<T>): Promise<T | null> {
 const get = <T>(path: string, params?: Params, signal?: AbortSignal) => json<T>("GET", path, { params, signal })
 const post = <T>(path: string, body: unknown, signal?: AbortSignal) => json<T>("POST", path, { body, signal })
 
+/** A step's output file: the main agent's by default, a subagent's with its id. */
+const outputPath = (runId: string, step: number) => `/api/runs/${seg(runId)}/steps/${step}/output`
+const outputParams = (agentId?: string | null) => ({ agent_id: agentId && agentId !== "main" ? agentId : undefined })
+
 export const api = {
   health: (signal?: AbortSignal) => get<Health>("/api/health", undefined, signal),
   config: (signal?: AbortSignal) => get<AppConfig>("/api/config", undefined, signal),
 
-  questions: (signal?: AbortSignal) => get<QuestionSummary[]>("/api/questions", undefined, signal),
+  questions: (signal?: AbortSignal) => get<Question[]>("/api/questions", undefined, signal),
   question: (qid: string, signal?: AbortSignal) => get<QuestionDetail>(`/api/questions/${seg(qid)}`, undefined, signal),
   proposeConcepts: (qid: string, body: ProposeRequest) => post<Job>(`/api/questions/${seg(qid)}/concepts/propose`, body),
   pickConcept: (qid: string, body: PickRequest) => post<QuestionDetail>(`/api/questions/${seg(qid)}/concepts/pick`, body),
 
   runs: (filters: RunFilters = {}, signal?: AbortSignal) =>
-    get<RunSummary[]>("/api/runs", { qid: filters.qid, condition: filters.condition }, signal),
-  startRun: (body: StartRunRequest) => post<Job>("/api/runs", body),
+    get<RunSummary[]>("/api/runs", { qid: filters.qid, condition: filters.condition, include_stale: filters.include_stale }, signal),
+  startRun: (body: RunRequest) => post<Job>("/api/runs", body),
   run: (runId: string, signal?: AbortSignal) => get<RunDetail>(`/api/runs/${seg(runId)}`, undefined, signal),
   steps: (runId: string, signal?: AbortSignal) => get<Step[]>(`/api/runs/${seg(runId)}/steps`, undefined, signal),
-  stepOutput: async (runId: string, step: number, signal?: AbortSignal) =>
-    (await request("GET", `/api/runs/${seg(runId)}/steps/${step}/output`, { signal })).text(),
+  stepOutput: async (runId: string, step: number, agentId?: string | null, signal?: AbortSignal) =>
+    (await request("GET", outputPath(runId, step), { params: outputParams(agentId), signal })).text(),
   claims: (runId: string, signal?: AbortSignal) => get<Claim[]>(`/api/runs/${seg(runId)}/claims`, undefined, signal),
   graph: (runId: string, signal?: AbortSignal) => get<KnowledgeGraph>(`/api/runs/${seg(runId)}/graph`, undefined, signal),
-  factWalk: (runId: string, factId: string, signal?: AbortSignal) =>
-    get<FactWalk>(`/api/runs/${seg(runId)}/facts/${seg(factId)}/walk`, undefined, signal),
+  /** `judge`: also ask the judge (a model call per quote it has not cached) about quotes score.json has no verdict for. */
+  factWalk: (runId: string, factId: string, { judge = false }: { judge?: boolean } = {}, signal?: AbortSignal) =>
+    get<FactWalk>(`/api/runs/${seg(runId)}/facts/${seg(factId)}/walk`, { judge }, signal),
   score: (runId: string, signal?: AbortSignal) => orNull(get<Score>(`/api/runs/${seg(runId)}/score`, undefined, signal)),
 
   passage: (paperId: string, span: { start: number; end: number; context?: number }, signal?: AbortSignal) =>
     get<Passage>(`/api/corpus/${seg(paperId)}`, { start: span.start, end: span.end, context: span.context ?? 1500 }, signal),
 
-  gold: (signal?: AbortSignal) => get<GoldSummary[]>("/api/gold", undefined, signal),
+  gold: (signal?: AbortSignal) => get<GoldEntry[]>("/api/gold", undefined, signal),
   goldKey: (qid: string, signal?: AbortSignal) => orNull(get<AnswerKey>(`/api/gold/${seg(qid)}/key`, undefined, signal)),
-  results: (signal?: AbortSignal) => orNull(get<ResultsReport>("/api/results", undefined, signal)),
+  buildGold: (qid: string) => post<Job>(`/api/gold/${seg(qid)}/build`, {}),
+  /** report.json of $RUNS/report, else of the newest batch, or of `batch` ($RUNS/<batch>/report). */
+  results: (batch?: string, signal?: AbortSignal) => orNull(get<ResultsReport>("/api/results", { batch }, signal)),
 
   sparql: (body: SparqlRequest, signal?: AbortSignal) => post<SparqlResult>("/api/sparql", body, signal),
   provQuery: (n: ProvQueryNumber, runId: string, params: ProvQueryParams = {}, signal?: AbortSignal) =>
-    get<Record<string, unknown>[]>(`/api/queries/${n}`, { run_id: runId, ...params }, signal),
+    get<QueryResult>(`/api/queries/${n}`, { run_id: runId, ...params }, signal),
 
   jobs: (signal?: AbortSignal) => get<Job[]>("/api/jobs", undefined, signal),
   job: (id: string, signal?: AbortSignal) => get<Job>(`/api/jobs/${seg(id)}`, undefined, signal),
+  cancelJob: (id: string) => post<Job>(`/api/jobs/${seg(id)}/cancel`, {}),
 }
 
 /** Stream and link URLs (EventSource, <a href>, the chat transport). */
 export const urls = {
   runStream: (runId: string) => apiUrl(`/api/runs/${seg(runId)}/stream`),
   jobLog: (jobId: string) => apiUrl(`/api/jobs/${seg(jobId)}/log`),
-  stepOutput: (runId: string, step: number) => apiUrl(`/api/runs/${seg(runId)}/steps/${step}/output`),
+  stepOutput: (runId: string, step: number, agentId?: string | null) => apiUrl(outputPath(runId, step), outputParams(agentId)),
   chat: () => apiUrl("/api/chat"),
 }

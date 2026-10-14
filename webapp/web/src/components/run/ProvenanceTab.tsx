@@ -1,6 +1,6 @@
 /**
  * Provenance tab: the five provenance queries of agent/queries.py (row 2.8) as buttons, each
- * with its parameters, and a read-only SPARQL editor over the pyoxigraph store of all runs
+ * with its parameters, and a read-only SPARQL editor over the store of every run's graph.ttl
  * (scoring/store.py; one named graph per run, scoped to this run by default).
  */
 import { PlayIcon } from "lucide-react"
@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Kbd } from "@/components/ui/kbd"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
@@ -31,15 +32,57 @@ const PLACEHOLDER: Record<keyof ProvQueryParams, string> = {
   edge: "edge-000001", fact: "f1", claim: "claim-000001", step: "3", agent: "main",
 }
 
-const DEFAULT_SPARQL = `PREFIX prov: <http://www.w3.org/ns/prov#>
+const PREFIXES = `PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX oa: <http://www.w3.org/ns/oa#>
 PREFIX ours: <urn:thesis-agent:vocab#>
+`
 
-SELECT ?claim_id ?s ?p ?o ?step_id WHERE {
+/** Starting points in the vocabulary of agent/prov.py (as agent/queries.py uses it). */
+const EXAMPLES: { id: string; label: string; query: string }[] = [
+  {
+    id: "claims",
+    label: "Claims with their step and agent",
+    query: `${PREFIXES}
+SELECT ?claim_id ?s ?p ?o ?step_id ?agent_id WHERE {
   ?claim a ours:Claim ; ours:claimId ?claim_id ; ours:s ?s ; ours:p ?p ; ours:o ?o ;
          prov:wasGeneratedBy ?step .
-  ?step ours:stepId ?step_id .
+  ?step ours:stepId ?step_id ; prov:wasAssociatedWith ?agent .
+  ?agent ours:agentId ?agent_id .
 } ORDER BY ?claim_id
-LIMIT 200`
+LIMIT 200`,
+  },
+  {
+    id: "quotes",
+    label: "Claims with the quote and its offsets",
+    query: `${PREFIXES}
+SELECT ?claim_id ?file ?start ?end ?exact WHERE {
+  ?claim a ours:Claim ; ours:claimId ?claim_id ; prov:wasDerivedFrom ?anchor .
+  ?anchor oa:hasSource ?source ; oa:hasSelector ?quote, ?pos .
+  ?source ours:fileName ?file .
+  ?quote a oa:TextQuoteSelector ; oa:exact ?exact .
+  ?pos a oa:TextPositionSelector ; oa:start ?start ; oa:end ?end .
+} ORDER BY ?claim_id
+LIMIT 200`,
+  },
+  {
+    id: "facts",
+    label: "Answer facts and the claims they cite",
+    query: `${PREFIXES}
+SELECT ?fact_id ?s ?p ?o ?claim_id WHERE {
+  ?fact a ours:AnswerFact ; ours:factId ?fact_id ; ours:s ?s ; ours:p ?p ; ours:o ?o .
+  OPTIONAL { ?fact prov:wasDerivedFrom ?claim . ?claim a ours:Claim ; ours:claimId ?claim_id }
+} ORDER BY ?fact_id`,
+  },
+  {
+    id: "ask",
+    label: "Is any fact unsourced? (ASK)",
+    query: `${PREFIXES}
+ASK {
+  ?fact a ours:AnswerFact .
+  FILTER NOT EXISTS { ?fact prov:wasDerivedFrom ?c . ?c a ours:Claim }
+}`,
+  },
+]
 
 export function ProvenanceTab({ runId }: { runId: string }) {
   return (
@@ -63,22 +106,22 @@ function QueryCard({ runId, query }: { runId: string; query: (typeof QUERIES)[nu
   const id = useId()
   const submit = (event: FormEvent) => {
     event.preventDefault()
-    const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v && v.trim())) as ProvQueryParams
+    const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v && v.trim()).map(([k, v]) => [k, v!.trim()])) as ProvQueryParams
     run.mutate({ n: query.n, params: clean })
   }
   return (
-    <Card className="gap-3">
+    <Card className="min-w-0 gap-3">
       <CardHeader>
         <CardTitle className="text-sm">
           {query.n}. {query.title}
         </CardTitle>
         <CardDescription>{query.text}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="min-w-0 space-y-3">
         <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
           {query.params.map((p) => (
             <div key={p} className="space-y-1">
-              <Label htmlFor={`${id}-${p}`} className="text-xs text-muted-foreground">{p}</Label>
+              <Label htmlFor={`${id}-${p}`} className="text-xs text-muted-foreground">{p} (optional)</Label>
               <Input
                 id={`${id}-${p}`}
                 className="h-8 w-32 font-mono text-xs"
@@ -95,10 +138,13 @@ function QueryCard({ runId, query }: { runId: string; query: (typeof QUERIES)[nu
         </form>
         {run.isError && <ErrorState error={run.error} title={`Query ${query.n} failed`} />}
         {run.data &&
-          (run.data.length === 0 ? (
+          (run.data.rows.length === 0 ? (
             <p className="text-sm text-muted-foreground" role="status">No rows{query.n === 4 ? ": every anchor still resolves." : query.n === 5 ? ": every fact has a claim." : "."}</p>
           ) : (
-            <ResultTable rows={run.data} caption={`Query ${query.n} results`} />
+            <>
+              <p className="text-xs text-muted-foreground" role="status">{run.data.rows.length} rows · {run.data.name}</p>
+              <ResultTable rows={run.data.rows} caption={`Query ${query.n} results`} />
+            </>
           ))}
       </CardContent>
     </Card>
@@ -107,21 +153,35 @@ function QueryCard({ runId, query }: { runId: string; query: (typeof QUERIES)[nu
 
 function SparqlEditor({ runId }: { runId: string }) {
   const sparql = useSparql()
-  const [query, setQuery] = useState(DEFAULT_SPARQL)
+  const [query, setQuery] = useState(EXAMPLES[0].query)
   const [scoped, setScoped] = useState(true)
-  const run = () => sparql.mutate({ query, ...(scoped ? { run_id: runId } : {}) })
+  const run = () => sparql.mutate({ query, run_id: scoped ? runId : null })
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault()
       run()
     }
   }
+  const result = sparql.data
   return (
     <section className="space-y-3" aria-labelledby="prov-sparql">
-      <h2 id="prov-sparql" className="text-base font-semibold">SPARQL</h2>
-      <p className="text-sm text-muted-foreground">
-        Read-only (SELECT, ASK, CONSTRUCT) over every run's graph.ttl, one named graph per run.
-      </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="space-y-1">
+          <h2 id="prov-sparql" className="text-base font-semibold">SPARQL</h2>
+          <p className="text-sm text-muted-foreground">
+            Read-only (SELECT, ASK, CONSTRUCT, DESCRIBE) over every run's graph.ttl, one named graph per run.
+          </p>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="sparql-example" className="text-xs text-muted-foreground">Example</Label>
+          <Select onValueChange={(v) => setQuery(EXAMPLES.find((e) => e.id === v)?.query ?? query)}>
+            <SelectTrigger id="sparql-example" className="w-72"><SelectValue placeholder="Start from an example" /></SelectTrigger>
+            <SelectContent>
+              {EXAMPLES.map((e) => <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
       <Label htmlFor="sparql-query" className="sr-only">SPARQL query</Label>
       <Textarea
         id="sparql-query"
@@ -140,17 +200,19 @@ function SparqlEditor({ runId }: { runId: string }) {
         <span className="text-xs text-muted-foreground"><Kbd>Ctrl</Kbd> + <Kbd>Enter</Kbd></span>
         <div className="flex items-center gap-2">
           <Switch id="sparql-scope" checked={scoped} onCheckedChange={setScoped} />
-          <Label htmlFor="sparql-scope" className="text-sm">Only this run ({runId})</Label>
+          <Label htmlFor="sparql-scope" className="text-sm">Only this run</Label>
         </div>
       </div>
       {sparql.isError && <ErrorState error={sparql.error} title="The query failed" />}
-      {sparql.data &&
-        (sparql.data.rows.length === 0 ? (
+      {result &&
+        (result.boolean !== null && result.boolean !== undefined ? (
+          <p className="text-sm" role="status">ASK: <span className="font-medium">{result.boolean ? "yes" : "no"}</span></p>
+        ) : result.rows.length === 0 ? (
           <EmptyState title="No results" description="The query matched nothing." />
         ) : (
           <>
-            <p className="text-xs text-muted-foreground" role="status">{sparql.data.rows.length} rows</p>
-            <ResultTable rows={sparql.data.rows} columns={sparql.data.vars} caption="SPARQL results" />
+            <p className="text-xs text-muted-foreground" role="status">{result.rows.length} rows</p>
+            <ResultTable rows={result.rows} columns={result.vars} caption="SPARQL results" />
           </>
         ))}
     </section>

@@ -21,6 +21,7 @@ import { FileTextIcon, NetworkIcon, TagIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useMemo } from "react"
 
+import { isNotFound } from "@/api/client"
 import { useGraph } from "@/api/hooks"
 import type { Answer } from "@/api/types"
 import { EmptyState, ErrorState } from "@/components/states"
@@ -96,6 +97,15 @@ export function GraphTab({ runId, answer }: { runId: string; answer: Answer | nu
   )
 
   if (graph.isPending) return <Skeleton className="h-[60vh] w-full" />
+  if (isNotFound(graph.error)) {
+    return (
+      <EmptyState
+        icon={<NetworkIcon />}
+        title="No graph yet"
+        description="graph.json is built by `agent graph` once the run (and, for claim off, the attach step) has finished."
+      />
+    )
+  }
   if (graph.isError) return <ErrorState error={graph.error} title="Could not load graph.json" onRetry={() => void graph.refetch()} />
   if (!flow || flow.nodes.length === 0) {
     return (

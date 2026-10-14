@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { EventRecord, Step } from "@/api/types"
-import { LIVE_RECORDS, STEPS } from "@/mocks/fixtures"
+import { LIVE_RECORDS, RUN, STEPS } from "@/mocks/fixtures"
 
 import { initialTimeline, patchFromRecord, summarize, timelineReducer, type TimelineState } from "./timeline"
 
@@ -41,19 +41,19 @@ describe("timeline reducer", () => {
   })
 
   it("merges the live records into the seeded steps without duplicates", () => {
-    const seeded = timelineReducer(initialTimeline, { type: "seed", steps: STEPS["q01-on-s2"] })
+    const seeded = timelineReducer(initialTimeline, { type: "seed", steps: STEPS[RUN.live] })
     const state = fold(LIVE_RECORDS, seeded)
     const summary = summarize(state)
     expect(summary.steps.map((s) => s.step)).toEqual([1, 2, 3, 4, 5, 6])
     // seeded output heads survive; the stream does not carry them
     expect(summary.steps[0].output_head).toContain("p1.md")
     // a record for a seeded step fills only what the seed lacked
-    const again = timelineReducer(state, { type: "seed", steps: STEPS["q01-on-s2"] })
+    const again = timelineReducer(state, { type: "seed", steps: STEPS[RUN.live] })
     expect(summarize(again).steps).toEqual(summary.steps)
   })
 
   it("sums tokens, counts research steps and claims, and finds phase changes", () => {
-    const seeded = timelineReducer(initialTimeline, { type: "seed", steps: STEPS["q01-on-s2"] })
+    const seeded = timelineReducer(initialTimeline, { type: "seed", steps: STEPS[RUN.live] })
     const summary = summarize(fold(LIVE_RECORDS, seeded))
     expect(summary.tokens).toBe(8_870 + 9_502 + 1_210 + 10_090 + 10_802 + 1_840)
     expect(summary.researchSteps).toBe(5) // step 6 is the conclude phase
@@ -65,7 +65,7 @@ describe("timeline reducer", () => {
   })
 
   it("keeps sub-agent steps apart and orders the main agent first", () => {
-    const summary = summarize(timelineReducer(initialTimeline, { type: "seed", steps: STEPS["q01-on-s1"] }))
+    const summary = summarize(timelineReducer(initialTimeline, { type: "seed", steps: STEPS[RUN.on] }))
     const keys = summary.steps.map((s) => s.key)
     expect(keys).toContain("sub-01:6")
     expect(keys.indexOf("main:5")).toBeLessThan(keys.indexOf("sub-01:6"))
@@ -106,10 +106,44 @@ describe("timeline reducer", () => {
   })
 
   it("seeds from the steps endpoint as they are", () => {
-    const steps: Step[] = STEPS["q01-off-s1"]
+    const steps: Step[] = STEPS[RUN.off]
     const summary = summarize(timelineReducer(initialTimeline, { type: "seed", steps }))
     expect(summary.steps).toHaveLength(8)
     expect(summary.steps.filter((s) => s.origin === "attach")).toHaveLength(4)
+    expect(summary.steps.find((s) => s.step === 8)).toMatchObject({ fact_id: "f4", coverage: ["no_source_found"] })
+    expect(summary.steps.find((s) => s.step === 4)?.final_answer).toBe(true)
     expect(summary.tokens).toBe(48_900)
+  })
+})
+
+describe("budget notices", () => {
+  const research = (n: number, tokens: number) => call(n, tokens)
+
+  it("marks where research passed 50, 75 and 90 % of the step budget, once each", () => {
+    const state = fold([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => research(n, 100)))
+    const summary = summarize(state, { steps: 10, tokens: 1_000_000 })
+    expect(summary.researchSteps).toBe(10)
+    expect(summary.budgetNotices).toEqual([
+      { at: "main:5", percent: 50 },
+      { at: "main:8", percent: 75 },
+      { at: "main:9", percent: 90 },
+    ])
+  })
+
+  it("takes the higher of the two budgets and gives one notice, the highest, when a step passes several", () => {
+    // one large prompt jumps from 40 % to 95 % of the token budget
+    const summary = summarize(fold([research(1, 400), research(2, 550)]), { steps: 60, tokens: 1_000 })
+    expect(summary.mainTokens).toBe(950)
+    expect(summary.budgetNotices).toEqual([{ at: "main:2", percent: 90 }])
+  })
+
+  it("counts only the main agent's research steps, and gives no notice without a budget", () => {
+    const sub: EventRecord = { ...call(2, 900), task_id: "sub2", agent_id: "sub-01" }
+    const conclude = call(3, 900, "conclude", { task_id: "c3" })
+    const summary = summarize(fold([research(1, 100), sub, conclude]), { steps: 2, tokens: 10_000 })
+    expect(summary.researchSteps).toBe(1)
+    expect(summary.mainTokens).toBe(1_000) // the conclude call counts toward the tokens, not the steps
+    expect(summary.budgetNotices).toEqual([{ at: "main:1", percent: 50 }])
+    expect(summarize(fold([research(1, 100)])).budgetNotices).toEqual([])
   })
 })

@@ -4,28 +4,29 @@
  */
 import { ArrowRightIcon } from "lucide-react"
 
-import type { ConceptBrief } from "@/api/types"
+import type { AnswerShape } from "@/api/types"
 
-export function AnswerShapePreview({ shape }: { shape: ConceptBrief["answer_shape"] }) {
+export function AnswerShapePreview({ shape }: { shape: AnswerShape }) {
   if (shape.kind === "table") {
+    const columns = shape.columns ?? []
     return (
       <div className="overflow-x-auto rounded-md border" role="figure" aria-label="Answer shape: table">
         <table className="w-full text-xs">
           <thead className="bg-muted/50">
             <tr>
-              {shape.columns.map((c) => (
+              {columns.map((c) => (
                 <th key={c.name} scope="col" className="px-2 py-1 text-left font-mono font-medium">{c.name}</th>
               ))}
             </tr>
           </thead>
           <tbody className="text-muted-foreground">
             <tr className="border-t">
-              {shape.columns.map((c) => (
+              {columns.map((c) => (
                 <td key={c.name} className="px-2 py-1 italic">{c.type}</td>
               ))}
             </tr>
             <tr className="border-t">
-              {shape.columns.map((c) => (
+              {columns.map((c) => (
                 <td key={c.name} className="px-2 py-1" aria-hidden="true">…</td>
               ))}
             </tr>
@@ -36,7 +37,7 @@ export function AnswerShapePreview({ shape }: { shape: ConceptBrief["answer_shap
   }
   return (
     <div className="space-y-2 rounded-md border p-2" role="figure" aria-label="Answer shape: graph">
-      {shape.edges.map((e) => (
+      {(shape.edges ?? []).map((e) => (
         <div key={`${e.source}-${e.predicate}-${e.target}`} className="space-y-1">
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
             <NodeChip type={e.source} />
@@ -53,9 +54,11 @@ export function AnswerShapePreview({ shape }: { shape: ConceptBrief["answer_shap
           )}
         </div>
       ))}
-      <div className="text-xs text-muted-foreground">
-        node types: {shape.nodes.map((n) => n.type).join(", ")}
-      </div>
+      {shape.nodes && shape.nodes.length > 0 && (
+        <div className="text-xs text-muted-foreground">
+          node types: {shape.nodes.map((n) => n.type).join(", ")}
+        </div>
+      )}
     </div>
   )
 }

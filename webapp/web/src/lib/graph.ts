@@ -14,14 +14,14 @@
 import dagre, { type GraphLabel, type NodeLabel } from "@dagrejs/dagre"
 import type { Edge, Node } from "@xyflow/react"
 
-import type { GraphEdge, KnowledgeGraph, Origin } from "@/api/types"
+import type { GraphEdge, KnowledgeGraph } from "@/api/types"
 
 export type FlowNodeKind = "paper" | "entity" | "literal"
 
 export type FlowNodeData = {
   label: string
   kind: FlowNodeKind
-  paper?: string
+  paper?: string | null
   /** number of edges touching the node (shown on papers) */
   degree: number
 }
@@ -30,7 +30,7 @@ export type FlowEdgeData = {
   predicate: string
   curie: string
   claims: string[]
-  origins: Origin[]
+  origins: string[]
   evidence: GraphEdge["evidence"][]
 }
 

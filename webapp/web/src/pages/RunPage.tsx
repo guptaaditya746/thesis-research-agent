@@ -22,6 +22,7 @@ import { CardsSkeleton, EmptyState, ErrorState } from "@/components/states"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { runConfig } from "@/lib/run"
 
 const TABS = [
   { value: "answer", label: "Answer" },
@@ -40,12 +41,12 @@ export default function RunPage() {
   // The open walk belongs to one run: navigating to another run closes it.
   const [walkState, setWalkState] = useState<{ runId: string; target: WalkTarget | null }>({ runId, target: null })
   const walk = walkState.runId === runId ? walkState.target : null
-  const setWalk = (target: WalkTarget | null) => setWalkState({ runId, target })
   const walkApi = useMemo(() => ({ runId, open: (target: WalkTarget) => setWalkState({ runId, target }) }), [runId])
+  const config = useMemo(() => runConfig(run.data?.config), [run.data?.config])
 
   if (run.isError) {
     return isNotFound(run.error) ? (
-      <EmptyState icon={<SearchXIcon />} title={`No run ${runId}`} description="There is no such directory under the runs root.">
+      <EmptyState icon={<SearchXIcon />} title={`No run ${runId}`} description="There is no such run directory under the runs root.">
         <Button asChild variant="outline"><Link to="/runs">All runs</Link></Button>
       </EmptyState>
     ) : (
@@ -54,8 +55,8 @@ export default function RunPage() {
   }
   if (run.isPending) {
     return (
-      <div className="space-y-4" aria-busy="true">
-        <Skeleton className="h-8 w-80" />
+      <div className="space-y-4" aria-busy="true" aria-label="Loading the run">
+        <Skeleton className="h-8 w-80 max-w-full" />
         <Skeleton className="h-16 w-full" />
         <CardsSkeleton count={2} />
       </div>
@@ -67,7 +68,7 @@ export default function RunPage() {
   return (
     <WalkContext.Provider value={walkApi}>
       <div className="space-y-4" key={runId}>
-        <RunHeader detail={detail} />
+        <RunHeader detail={detail} config={config} />
         <Tabs value={tab} onValueChange={(value) => setParams({ tab: value }, { replace: true })}>
           <div className="overflow-x-auto">
             <TabsList>
@@ -77,13 +78,13 @@ export default function RunPage() {
             </TabsList>
           </div>
           <TabsContent value="answer" className="pt-2">
-            <AnswerTab runId={runId} answer={detail.answer} concept={detail.concept} live={live} />
+            <AnswerTab runId={runId} answer={detail.answer} concept={detail.concept} summary={detail.summary} />
           </TabsContent>
           <TabsContent value="graph" className="pt-2">
             <GraphTab runId={runId} answer={detail.answer} />
           </TabsContent>
           <TabsContent value="timeline" className="pt-2">
-            <TimelineTab runId={runId} live={live} budget={detail.config.budget} />
+            <TimelineTab runId={runId} live={live} budget={config.budget} />
           </TabsContent>
           <TabsContent value="claims" className="pt-2">
             <ClaimsTab runId={runId} answer={detail.answer} live={live} />
@@ -95,7 +96,7 @@ export default function RunPage() {
             <ScoreTab runId={runId} />
           </TabsContent>
         </Tabs>
-        <ClaimWalkSheet runId={runId} target={walk} onClose={() => setWalk(null)} />
+        <ClaimWalkSheet runId={runId} target={walk} onClose={() => setWalkState({ runId, target: null })} />
       </div>
     </WalkContext.Provider>
   )

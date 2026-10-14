@@ -1,28 +1,38 @@
 /**
- * Backend API types, written by hand from docs/e2e-build-plan.md ("Backend API", "File
- * contracts between packages") while the backend (WP E) is built in parallel.
+ * Backend API types (docs/e2e-build-plan.md, "Backend API"), written by hand, field for field, from
+ * the backend's OpenAPI schema (webapp/web/openapi.json of WP E, made by `webapp openapi` from
+ * webapp/models.py). The interface names are the schema names, and a field is optional (`?`) where
+ * the schema does not require it, so swapping this module for the types `npm run gen:api` generates
+ * (openapi-typescript) is one step: `export type RunSummary = components["schemas"]["RunSummary"]`
+ * and so on, here, with nothing else in the app changing.
  *
- * Every type the app uses comes from this one module, so replacing it with the types that
- * `npm run gen:api` generates from webapp/web/openapi.json (openapi-typescript) is one swap:
- * re-export the generated `components["schemas"][...]` under these names.
- *
- * Field names are the backend's (snake_case), never renamed on the way in. Fields the plan
- * names but does not spell out (ClaimRef, the report, gold counts) are typed from the files
- * they come from (agent/broker.py, agent/kg.py, the scoring contract) and marked "assumed".
+ * Field names are the backend's (snake_case), never renamed on the way in. Values the schema types
+ * as "any" (a claim's s, p, o) are `unknown`. Where the backend passes another package's file
+ * through as an open object (score.json, report.json, the gold report, graph.json, config.json),
+ * the second half of this module types that file from its writer's documentation (scoring/README.md,
+ * gold/REVIEW.md, gold/README.md, agent/rundir.py, agent/kg.py). Those "file contract" types stay
+ * hand-written after the swap; src/lib reads them defensively, since a file of an older writer may
+ * lack fields.
  */
 
-// --- shared ---------------------------------------------------------------------------------
+// --- shared value types ------------------------------------------------------------------------
 
 export type Condition = "claim_on" | "claim_off"
 export type Category = "corpus_wide" | "ambiguous"
-export type PickedBy = "provisional-first" | "user" | "claude"
-export type ConceptStatus = "none" | "proposed" | "picked"
-export type GoldStatus = "none" | "building" | "draft" | "reviewed"
+/** agent/concept_step.py PICKED_BY */
+export type PickedBy = "user" | "claude" | "provisional-first"
+export type ConceptState = "none" | "proposed" | "picked"
+export type GoldState = "none" | "building" | "draft" | "reviewed"
 export type VerifyState = "ok" | "failed" | "unknown"
-/** agent/loop.py Outcome.exit_status; null while the run is still going. */
-export type ExitStatus = "submitted" | "budget" | "context_full" | "error" | string
-export type Origin = "research" | "attach"
-export type Phase = "research" | "conclude" | "attach" | string
+export type AttachState = "not_applicable" | "pending" | "cut" | "done"
+export type AnswerFrom = "final" | "draft" | "none"
+export type JobState = "queued" | "running" | "done" | "failed"
+export type JobStepState = "pending" | "running" | "done" | "failed" | "skipped"
+export type SupportLabel = "supports" | "partial" | "no"
+/** A fact's label as scoring defines it (FactWalk.label, score.json detail.support[].label). */
+export type FactLabel = SupportLabel | "unsourced" | "pending"
+
+// --- app -----------------------------------------------------------------------------------------
 
 /** GET /api/health */
 export interface Health {
@@ -41,526 +51,520 @@ export interface AppConfig {
   argilla_url: string | null
 }
 
-// --- questions and concepts ---------------------------------------------------------------
+// --- questions and concepts --------------------------------------------------------------------
 
-/** One brief of agent/schemas/concept.schema.json. */
+export interface ConceptStatus {
+  status: ConceptState
+  title?: string | null
+  /** user, claude or provisional-first (the pick record's) */
+  picked_by?: string | null
+}
+
+export interface GoldStatus {
+  status: GoldState
+  rows?: number | null
+  facts?: number | null
+  /** the gold builder's own stage (progress.json: starting, building, failed, writing, done) */
+  stage?: string | null
+}
+
+export interface RunCounts {
+  claim_on?: number
+  claim_off?: number
+}
+
+/** GET /api/questions (one item) */
+export interface Question {
+  id: string
+  category?: string | null
+  question: string
+  source?: string | null
+  notes?: string | null
+  concept: ConceptStatus
+  gold: GoldStatus
+  /** runs per condition on the question's current concept */
+  runs: RunCounts
+}
+
+export interface Measure {
+  operation: string
+  of: string
+  group_by?: string | null
+  filter?: string | null
+  order?: "asc" | "desc" | null
+  limit?: number | null
+  [extra: string]: unknown
+}
+
+export interface Column {
+  name: string
+  type: string
+}
+
+export interface NodeType {
+  type: string
+}
+
+export interface EdgeType {
+  source: string
+  predicate: string
+  target: string
+  attributes?: Column[]
+}
+
+/** A table (columns) or a graph (node types and edge types): the brief's answer template. */
+export interface AnswerShape {
+  kind: "table" | "graph"
+  columns?: Column[] | null
+  nodes?: NodeType[] | null
+  edges?: EdgeType[] | null
+}
+
+/** One reading of a question (agent/schemas/concept.schema.json). */
 export interface ConceptBrief {
-  id?: string
+  id?: string | null
   title: string
   definition: string
-  measure: {
-    operation: string
-    of: string
-    group_by?: string
-    filter?: string
-    order?: "asc" | "desc"
-    limit?: number
-  }
+  measure: Measure
   scope: Record<string, string>
-  answer_shape: TableShape | GraphShape
+  answer_shape: AnswerShape
   competency_questions: string[]
-  needs?: string[]
+  needs?: string[] | null
+  [extra: string]: unknown
 }
 
-export interface TableShape {
-  kind: "table"
-  columns: { name: string; type: string }[]
-}
-
-export interface GraphShape {
-  kind: "graph"
-  nodes: { type: string }[]
-  edges: {
-    source: string
-    predicate: string
-    target: string
-    attributes?: { name: string; type: string }[]
-  }[]
-}
-
-/** GET /api/questions (one item). */
-export interface QuestionSummary {
-  id: string
-  category: Category
-  question: string
-  source?: string
-  notes?: string
-  concept: { status: ConceptStatus; title: string | null; picked_by: PickedBy | null }
-  gold: { status: GoldStatus; rows: number | null; facts: number | null }
-  /** Number of runs per condition. */
-  runs: { claim_on: number; claim_off: number }
-}
-
-/** $CONCEPTS/picks.json entry, as GET /api/questions/{qid} returns it. */
-export interface ConceptPick {
+/** The current pick: the last `concept_pick` record of the question's session. */
+export interface Pick {
+  /** 1-based, as `agent concept pick` takes it */
   choice: number
-  picked_by: PickedBy
-  reason: string
-  title?: string
-  concept_sha256?: string
+  title?: string | null
+  picked_by: string
+  reason?: string | null
+  concept_sha256?: string | null
+  /** the concept this pick replaced, if it changed one */
+  replaces_concept_sha256?: string | null
 }
 
-/** GET /api/questions/{qid}; also the reply of POST .../concepts/pick. */
-export interface QuestionDetail extends QuestionSummary {
-  briefs: ConceptBrief[]
-  picked: ConceptPick | null
+/** GET /api/questions/{qid}; also the reply of POST .../concepts/pick */
+export interface QuestionDetail extends Question {
+  briefs?: ConceptBrief[]
+  picked?: Pick | null
+  /** the frozen concept.json, once picked */
+  concept_brief?: ConceptBrief | null
 }
 
 /** POST /api/questions/{qid}/concepts/propose */
 export interface ProposeRequest {
-  temperature: number
-  seed: number
+  temperature?: number
+  seed?: number
 }
 
-/** POST /api/questions/{qid}/concepts/pick; `choice` is 1-based like `agent concept pick`. */
+/** POST /api/questions/{qid}/concepts/pick */
 export interface PickRequest {
   choice: number
-  picked_by: PickedBy
-  reason: string
+  picked_by?: PickedBy
+  reason?: string | null
+  /** change the pick although runs use the current concept (409 otherwise) */
+  force?: boolean
 }
 
-// --- runs -----------------------------------------------------------------------------------
+// --- runs ----------------------------------------------------------------------------------------
 
-export interface ScoreHeadline {
-  support_share: number | null
-  fact_f1: number | null
-  row_f1: number | null
+export interface ScoreSummary {
+  support_share?: number | null
+  /** soft fact F1, else normalised, else strict */
+  fact_f1?: number | null
+  row_f1?: number | null
+  /** v1, or v1-draft */
+  key_version?: string | null
+  /** scored against the draft key: tests the pipeline, never a result */
+  provisional?: boolean | null
 }
 
-/** GET /api/runs (one item). */
+/** GET /api/runs (one item) */
 export interface RunSummary {
+  /** the run directory's name, or <batch>~<name> for a run one level down ($RUNS/<batch>/<name>) */
   run_id: string
-  qid: string
-  condition: Condition
-  seed: number
-  temperature: number
-  created_at: string
-  exit_status: ExitStatus | null
+  /** a batch manifest's name, or `web` for runs the web app started */
+  batch?: string | null
+  qid: string | null
+  concept_sha256?: string | null
+  /** the run used the question's current pick; false: a replaced or another concept; null: no pick */
+  concept_current?: boolean | null
+  condition: string
+  seed: number | null
+  temperature: number | null
+  created_at: string | null
+  /** submitted, budget, context_full, error, cut, running, incomplete, or another recorded status */
+  exit_status: string
+  answer_from?: AnswerFrom | null
   steps: number
   model_calls: number
   tokens: number
   seconds: number
-  rows: number
-  facts: number
+  tokens_without_attach?: number | null
+  seconds_without_attach?: number | null
+  rows: number | null
+  facts: number | null
   claims_accepted: number
   claims_rejected: number
+  attach: AttachState
   verify: VerifyState
-  score: ScoreHeadline | null
+  score: ScoreSummary | null
+  /** the agent is still writing the run (research, or the attach step) */
   live: boolean
+  /** a web-app job still runs verify, pairs, graph, export-prov or score on the finished run */
+  post_processing?: boolean
 }
 
+/** GET /api/runs?qid=&condition=&include_stale= */
 export interface RunFilters {
   qid?: string
-  condition?: Condition
+  condition?: string
+  /** with qid: also runs on a replaced concept */
+  include_stale?: boolean
 }
 
-/** POST /api/runs: either `qid` (the picked concept) or `concept_path`. */
-export interface StartRunRequest {
-  qid?: string
-  concept_path?: string
-  condition: Condition
-  temperature: number
-  seed: number
-  steps: number
-  tokens: number
-  sandbox: "landlock" | "unsandboxed"
-  attach: boolean
-}
-
-/** answer.json fact (agent/schemas/answer.schema.json). */
-export interface AnswerFact {
-  id: string
-  s: string
-  p: string
-  o: string | number | boolean
-  claims: string[]
-  origin: Origin
-}
-
-export interface TableRow {
-  id: string
-  cells: Record<string, unknown>
-  facts: AnswerFact[]
-}
-
-export interface GraphRow {
-  id: string
-  source: string
-  source_type: string
-  predicate: string
-  target: string
-  target_type: string
-  attributes?: Record<string, unknown>
-  facts: AnswerFact[]
-}
-
-export type AnswerRow = TableRow | GraphRow
-
-export interface Answer {
-  concept_sha256: string
-  kind: "table" | "graph"
-  rows: AnswerRow[]
-  notes?: string
-}
-
-/** The run's config.json (agent/rundir.py run_config); only the fields the app reads are typed. */
-export interface RunConfig {
-  run_id: string
-  created_at: string
-  condition: Condition
-  budget: { steps: number; tokens: number; announced?: boolean }
-  sampling: { temperature: number; seed: number }
-  prompt: { version: string; sha256: string }
-  models?: { orchestrator: { alias: string; name: string; revision: string } }
-  git_commit?: string
-  sandbox?: Record<string, unknown>
-  [key: string]: unknown
-}
-
-/** `agent verify`: chain and answer checks; `stats` is agent/verify.py stats() (nested for attach). */
-export interface VerifyReport {
+export interface Verification {
   ok: boolean
   errors: string[]
   stats: Record<string, unknown>
 }
 
-/** GET /api/runs/{run_id} */
-export interface RunDetail {
-  summary: RunSummary
-  config: RunConfig
-  concept: ConceptBrief
-  answer: Answer | null
-  verify: VerifyReport
-}
-
-/** Assumed: one claim sent in a step (an events.jsonl claim record, reduced). */
-export interface ClaimRef {
-  claim_id: string | null
-  status: "accepted" | "rejected"
-  reason: string | null
-  s?: string
-  p?: string
-  o?: string | number | boolean
-}
-
-export interface ModelCallStats {
-  tokens: number | null
-  seconds: number | null
-  /** parse mode (agent/parse.py), e.g. strict or lenient */
-  parse: string | null
-  /** what the reply was: command, final answer, none, ... */
-  reply: string | null
-  finish_reason: string | null
-}
-
-/** GET /api/runs/{run_id}/steps (one item). */
-export interface Step {
-  step: number
-  phase: Phase
-  model_call: ModelCallStats | null
-  command: string | null
-  exit_code: number | null
-  timed_out: boolean
-  output_head: string | null
-  output_bytes: number | null
-  claims: ClaimRef[]
-  /** coverage reasons recorded at this step (unparsed, invalid_final_answer, ...) */
-  coverage: string[]
-  agent_id: string
-  origin: Origin
-}
-
-/** GET /api/runs/{run_id}/claims (one item). */
-export interface Claim {
-  claim_id: string | null
-  status: "accepted" | "rejected"
-  reason: string | null
+/** An answer fact (agent/schemas/answer.schema.json). */
+export interface Fact {
+  id: string
   s: string
   p: string
   o: string | number | boolean
-  file: string | null
-  paper_id: string | null
-  quote: string
-  step: number
-  agent_id: string
-  origin: Origin
-  anchor: { start: number; end: number } | null
+  claims: string[]
+  /** research or attach */
+  origin: string
 }
 
-// --- knowledge graph (agent/kg.py graph.json, as is) ------------------------------------------
+/** A table row (`cells`) or a graph row (source, predicate, target, ...), with its facts. */
+export interface AnswerRow {
+  id: string
+  facts: Fact[]
+  cells?: Record<string, unknown> | null
+  source?: string | null
+  source_type?: string | null
+  predicate?: string | null
+  target?: string | null
+  target_type?: string | null
+  attributes?: Record<string, unknown> | null
+  [extra: string]: unknown
+}
+
+export interface Answer {
+  concept_sha256: string
+  kind: "table" | "graph"
+  rows: AnswerRow[]
+  notes?: string | null
+}
+
+/** GET /api/runs/{run_id}; `config` is the run's config.json (RunConfig below). */
+export interface RunDetail {
+  summary: RunSummary
+  config: Record<string, unknown>
+  concept: ConceptBrief | null
+  answer: Answer | null
+  verify: Verification | null
+}
+
+/** A step's model call: its numbers only (the reasoning is never recorded). */
+export interface ModelCall {
+  task_id: string
+  status: string
+  tokens?: number | null
+  prompt_tokens?: number | null
+  completion_tokens?: number | null
+  seconds?: number | null
+  /** how the reply was read (agent/parse.py) */
+  parse?: string | null
+  /** what the reply was: command, answer, none, ... */
+  reply?: string | null
+  finish_reason?: string | null
+  final_answer?: boolean
+  error?: string | null
+}
+
+/** One claim sent in a step (an events.jsonl claim record, reduced). */
+export interface ClaimRef {
+  claim_id: string | null
+  status: "accepted" | "rejected"
+  reason?: string | null
+  s?: unknown
+  p?: unknown
+  o?: unknown
+}
+
+/** GET /api/runs/{run_id}/steps (one item): one per (agent, step id), in chain order. */
+export interface Step {
+  step: number
+  agent_id: string
+  /** research, attach, concept or batch */
+  origin: string
+  /** research, conclude, attach, ... (the model call's phase) */
+  phase?: string | null
+  started_at?: string | null
+  ended_at?: string | null
+  model_call?: ModelCall | null
+  command?: string | null
+  exit_code?: number | null
+  timed_out?: boolean
+  output_head?: string | null
+  output_bytes?: number | null
+  output_file?: string | null
+  repeat?: number | null
+  claims?: ClaimRef[]
+  /** coverage reasons recorded at this step (unparsed, invalid_final_answer, ...) */
+  coverage?: string[]
+  /** subagents started in this step */
+  spawned?: string[]
+  /** attach step: the answer fact this step works on */
+  fact_id?: string | null
+}
+
+export interface Anchor {
+  start: number
+  end: number
+}
+
+/** GET /api/runs/{run_id}/claims (one item) */
+export interface Claim {
+  claim_id: string | null
+  task_id: string
+  status: "accepted" | "rejected"
+  reason?: string | null
+  s?: unknown
+  p?: unknown
+  o?: unknown
+  file?: string | null
+  paper_id?: string | null
+  /** accepted: the exact text anchored in the corpus; rejected: the quote as sent */
+  quote?: string | null
+  quote_submitted?: string | null
+  step: number
+  agent_id: string
+  origin: string
+  /** raw offsets in the corpus file, in code points */
+  anchor?: Anchor | null
+}
+
+export interface Highlight {
+  start: number
+  end: number
+}
+
+/**
+ * GET /api/corpus/{paper_id}: a window of the paper's text. `highlight` is the span inside `text`
+ * in code points (Python, the anchors); `highlight_utf16` the same span in UTF-16 code units, which
+ * is what `text.slice()` takes in JavaScript. `offset` is where `text` starts in the file.
+ */
+export interface Passage {
+  paper_id: string
+  title: string
+  text: string
+  highlight: Highlight | null
+  highlight_utf16?: Highlight | null
+  offset: number
+  length: number
+}
+
+/** gold/judge.py support() verdict, as scoring counted it (source score) or asked live (judge). */
+export interface Verdict {
+  label: SupportLabel
+  rationale?: string | null
+  model?: string | null
+  prompt_sha256?: string | null
+  cached?: boolean | null
+  source?: "score" | "judge" | null
+  [extra: string]: unknown
+}
+
+export interface WalkClaim {
+  claim_id: string
+  /** null when the id is not an accepted claim of this run */
+  claim: Claim | null
+  step: Step | null
+  passage: Passage | null
+  /** ok, relocated, ambiguous, broken, missing, or unknown (no corpus) */
+  anchor_status: string
+  support?: Verdict | null
+}
+
+/** GET /api/runs/{run_id}/facts/{fact_id}/walk[?judge=true] */
+export interface FactWalk {
+  run_id: string
+  fact: Fact
+  row_id: string
+  row: AnswerRow
+  claims: WalkClaim[]
+  /** the best verdict over the fact's quotes, or null */
+  support: Verdict | null
+  /** null: nothing judged yet */
+  label?: FactLabel | null
+}
+
+// --- knowledge graph (GET /api/runs/{run_id}/graph: agent/kg.py graph.json as is) --------------
 
 export interface GraphNode {
   id: string
   kind: "paper" | "entity"
   label: string
-  paper?: string
+  paper?: string | null
+  [extra: string]: unknown
+}
+
+export interface Predicate {
+  text: string
+  curie: string
+  iri: string
+  vocabulary: string
+  [extra: string]: unknown
+}
+
+export interface Evidence {
+  file: string
+  paper: string | null
+  start: number
+  end: number
+  [extra: string]: unknown
 }
 
 export interface GraphEdge {
   id: string
   claim: string
-  origin: Origin
+  origin: string
   step_id: number
   agent_id: string
   source: string
-  predicate: { text: string; curie: string; iri: string; vocabulary: string }
   /** node id, or null when the object is a literal */
   target: string | null
-  literal: string | number | boolean | null
-  evidence: { file: string; paper: string | null; start: number; end: number }
+  literal?: unknown
+  predicate: Predicate
+  evidence: Evidence
+  [extra: string]: unknown
 }
 
 export interface KnowledgeGraph {
-  schema_version: number
   run_id: string
-  sources?: Record<string, string>
-  namespaces?: Record<string, string>
   nodes: GraphNode[]
   edges: GraphEdge[]
+  namespaces?: Record<string, string>
+  [extra: string]: unknown
 }
 
-// --- claim walk -------------------------------------------------------------------------------
+// --- jobs ------------------------------------------------------------------------------------------
 
-/** GET /api/corpus/{paper_id}: `text` starts at file offset `offset`; `highlight` is in file offsets. */
-export interface Passage {
-  paper_id: string
-  title: string | null
-  text: string
-  highlight: { start: number; end: number }
-  offset: number
+export interface JobStep {
+  name: string
+  argv: string[]
+  /** argv as one shell-quoted line, for reading */
+  command: string
+  /** a failure fails the job (an optional step's failure is a warning) */
+  required?: boolean
+  /** files the step needs; it is skipped when one is missing */
+  needs?: string[]
+  state?: JobStepState
+  exit_code?: number | null
+  started_at?: string | null
+  ended_at?: string | null
 }
-
-/** gold/judge.py support() verdict. */
-export interface Verdict {
-  label: "supports" | "partial" | "no"
-  rationale: string
-  model: string
-  prompt_sha256: string
-  cached: boolean
-}
-
-export interface WalkClaim {
-  claim: Claim
-  step: Step
-  passage: Passage
-}
-
-/** GET /api/runs/{run_id}/facts/{fact_id}/walk */
-export interface FactWalk {
-  fact: AnswerFact
-  row_id: string
-  claims: WalkClaim[]
-  support: Verdict | null
-}
-
-// --- score (scoring contract, <run>/score.json) ------------------------------------------------
-
-export interface PRF {
-  tp: number
-  fp: number
-  fn: number
-  precision: number | null
-  recall: number | null
-  f1: number | null
-}
-
-/** Assumed optional detail: which facts matched the key, were missed or were wrong. */
-export interface FactMatches {
-  matched: { fact_id: string; key_fact_id: string }[]
-  missed: string[]
-  wrong: string[]
-}
-
-/** GET /api/runs/{run_id}/score */
-export interface Score {
-  run_id: string
-  qid: string
-  condition: Condition
-  seed: number
-  exit_status: ExitStatus | null
-  verify_ok: boolean
-  key_version: string
-  rows: PRF
-  facts: { strict: PRF; normalised: PRF; soft: PRF }
-  vital_recall: number | null
-  support: {
-    facts: number
-    with_claims: number
-    supports: number
-    partial: number
-    no: number
-    unsourced: number
-    support_share: number | null
-  }
-  cost: {
-    steps: number
-    model_calls: number
-    tokens: number
-    tokens_without_attach: number
-    seconds: number
-    seconds_without_attach: number
-    claim_steps: number
-    claim_step_tokens: number
-  }
-  matches?: FactMatches
-}
-
-// --- gold ---------------------------------------------------------------------------------------
-
-export interface WilsonRate {
-  rate: number | null
-  low: number | null
-  high: number | null
-  n?: number
-}
-
-/** gold report.json (C2), reduced. Assumed field names. */
-export interface GoldReport {
-  kappa: { value: number | null; low: number | null; high: number | null; n?: number } | null
-  triage_miss: WilsonRate | null
-  screening_false_negative: WilsonRate | null
-}
-
-/** GET /api/gold (one item). */
-export interface GoldSummary {
-  qid: string
-  status: GoldStatus
-  coverage: { papers: number; relevant: number; not_relevant: number; no_text: number; error: number } | null
-  /** doc.json counts plus review progress; assumed keys: candidates, rows, facts, pool, reviewed */
-  counts: Record<string, number>
-  key_version: string | null
-  report: GoldReport | null
-}
-
-export interface KeyFact {
-  id: string
-  s: string
-  p: string
-  o: string | number | boolean
-  paper_id: string
-  quote: string
-  vital: boolean
-  candidate_id: string
-}
-
-/** GET /api/gold/{qid}/key: key.json or key.draft.json */
-export interface AnswerKey {
-  qid: string
-  concept_sha256: string
-  kind: "table" | "graph"
-  version: string
-  reviewed: boolean
-  rows: KeyRow[]
-  notes?: string
-}
-
-export type KeyRow = (Omit<TableRow, "facts"> | Omit<GraphRow, "facts">) & { facts: KeyFact[] }
-
-// --- results ($RUNS/report/report.json) -----------------------------------------------------------
-
-/** Assumed: an interval as the scoring report writes it (BCa bootstrap or Wilson). */
-export interface Interval {
-  low: number
-  high: number
-  level?: number
-  method?: string
-}
-
-export interface MetricStat {
-  mean: number | null
-  ci: Interval | null
-  n: number
-}
-
-/** Metrics the report aggregates per condition (fact_f1 = soft fact F1). */
-export type MetricName =
-  | "support_share"
-  | "fact_precision"
-  | "fact_recall"
-  | "fact_f1"
-  | "row_f1"
-  | "vital_recall"
-  | "unsourced_share"
-  | "tokens"
-  | "tokens_without_attach"
-  | "seconds"
-  | "seconds_without_attach"
-
-export interface PairedTest {
-  metric: MetricName
-  n: number
-  mean_difference: number | null
-  ci: Interval | null
-  wilcoxon: { statistic: number | null; p_value: number | null } | null
-}
-
-export interface PrimaryTest extends PairedTest {
-  hypothesis: string
-  test: string
-  alternative: "two-sided" | "greater" | "less"
-  alpha: number
-  significant: boolean | null
-}
-
-export interface QuestionResult {
-  qid: string
-  category: Category
-  runs: Record<Condition, number>
-  claim_on: Partial<Record<MetricName, number | null>>
-  claim_off: Partial<Record<MetricName, number | null>>
-}
-
-/** GET /api/results. Assumed shape (WP D owns it); src/lib/results.ts is the only reader. */
-export interface ResultsReport {
-  generated_at: string
-  key_version: string | null
-  n_questions: number
-  repeats: number
-  conditions: Record<Condition, Partial<Record<MetricName, MetricStat>>>
-  per_question: QuestionResult[]
-  paired: Partial<Record<MetricName, PairedTest>>
-  primary: PrimaryTest | null
-}
-
-// --- provenance queries ---------------------------------------------------------------------------
-
-/** POST /api/sparql */
-export interface SparqlRequest {
-  query: string
-  run_id?: string
-}
-
-/** Rows may come as objects keyed by variable or as arrays in `vars` order. */
-export interface SparqlResult {
-  vars: string[]
-  rows: (Record<string, unknown> | unknown[])[]
-}
-
-/** The five queries of agent/queries.py; the parameters each takes. */
-export type ProvQueryNumber = 1 | 2 | 3 | 4 | 5
-export type ProvQueryParams = Partial<Record<"edge" | "fact" | "claim" | "step" | "agent", string>>
-
-// --- jobs -------------------------------------------------------------------------------------------
-
-export type JobState = "queued" | "running" | "done" | "failed"
 
 /** GET /api/jobs, /api/jobs/{id}; returned by every POST that starts work. */
 export interface Job {
   id: string
+  /** concepts, run or gold; one job of a kind runs at a time */
   kind: string
-  args: string[] | Record<string, unknown>
+  args: Record<string, unknown>
   state: JobState
-  started_at: string | null
-  ended_at: string | null
+  created_at: string
+  started_at?: string | null
+  ended_at?: string | null
   run_id?: string | null
-  exit_code: number | null
+  qid?: string | null
+  exit_code?: number | null
+  error?: string | null
+  /** optional steps that failed (the job can still be done) */
+  warnings?: string[]
+  steps?: JobStep[]
 }
 
-// --- streams ----------------------------------------------------------------------------------------
+/** POST /api/runs: `qid` (its picked concept) or `concept_path`. */
+export interface RunRequest {
+  qid?: string | null
+  concept_path?: string | null
+  condition?: Condition
+  temperature?: number
+  seed?: number
+  /** null: the agent's default budget */
+  steps?: number | null
+  tokens?: number | null
+  sandbox?: "landlock" | "unsandboxed"
+  /** claim_off: run the attach step after the run */
+  attach?: boolean
+  /** start although a run the web app did not start (a cluster batch) is live */
+  force?: boolean
+}
 
-/** One events.jsonl record (agent/broker.py), as `event: record` of /api/runs/{id}/stream sends it. */
+// --- gold, results, provenance ---------------------------------------------------------------------
+
+/** GET /api/gold (one item); coverage, counts and report are the gold files (below). */
+export interface GoldEntry {
+  qid: string
+  status: GoldState
+  stage?: string | null
+  coverage?: Record<string, unknown> | null
+  counts?: Record<string, unknown> | null
+  key_version?: string | null
+  report?: Record<string, unknown> | null
+  rows?: number | null
+  facts?: number | null
+}
+
+/** GET /api/gold/{qid}/key: key.json, else key.draft.json (rows: KeyRow below). */
+export interface AnswerKey {
+  qid?: string | null
+  concept_sha256?: string | null
+  kind?: string | null
+  version?: string | null
+  reviewed?: boolean | null
+  rows?: Record<string, unknown>[]
+  notes?: unknown
+  [extra: string]: unknown
+}
+
+/** POST /api/sparql */
+export interface SparqlRequest {
+  query: string
+  run_id?: string | null
+}
+
+export interface SparqlResult {
+  vars: string[]
+  rows: Record<string, unknown>[]
+  /** ASK queries: the answer (vars and rows are empty) */
+  boolean?: boolean | null
+}
+
+/** GET /api/queries/{n}?run_id=&...: one of agent/queries.py's five queries on one run. */
+export interface QueryResult {
+  n: number
+  name: string
+  run_id: string
+  rows: Record<string, unknown>[]
+}
+
+export type ProvQueryNumber = 1 | 2 | 3 | 4 | 5
+export type ProvQueryParams = Partial<Record<"edge" | "fact" | "claim" | "step" | "agent", string>>
+
+// --- streams ---------------------------------------------------------------------------------------
+
+/** One events.jsonl record (agent/broker.py), the data of `event: record` of /api/runs/{id}/stream. */
 export interface EventRecord {
-  subtype: "ai_model_invocation" | "agent_tool" | "claim" | "coverage" | "spawn" | "concept_pick" | string
+  subtype: "ai_model_invocation" | "agent_tool" | "claim" | "coverage" | "spawn" | "concept_pick" | (string & {})
   step_id: number
   task_id?: string
   agent_id?: string
@@ -572,4 +576,325 @@ export interface EventRecord {
   generated?: Record<string, unknown>
   custom_metadata?: Record<string, unknown>
   hash?: string
+}
+
+// =================================================================================================
+// File contracts inside the open schemas (hand-written; see the module comment)
+// =================================================================================================
+
+/** The run's config.json (agent/rundir.py run_config), the fields the app reads. */
+export interface RunConfig {
+  run_id?: string
+  created_at?: string
+  condition?: string
+  budget?: { steps?: number; tokens?: number; announced?: boolean }
+  sampling?: { temperature?: number; seed?: number }
+  prompt?: { version?: string; sha256?: string }
+  models?: { orchestrator?: { alias?: string; name?: string; revision?: string } }
+  git_commit?: string
+}
+
+// --- score.json (scoring/README.md, schema_version 2) ----------------------------------------------
+
+export interface FactScores {
+  tp?: number | null
+  fp?: number | null
+  fn?: number | null
+  precision?: number | null
+  recall?: number | null
+  f1?: number | null
+  vital?: number | null
+  vital_tp?: number | null
+  vital_recall?: number | null
+  asked?: number | null
+  pending?: number | null
+}
+
+/** A fact of the run or of the key in the match detail: its row and fact id. */
+export interface FactRefIds {
+  row: string
+  fact: string
+}
+
+export interface FactTriple {
+  s: unknown
+  p: unknown
+  o: unknown
+}
+
+export interface SupportDetail {
+  row_id: string
+  fact_id: string
+  origin?: string
+  label: FactLabel
+  first_claim_label?: FactLabel | null
+  claims?: { claim_id: string; file?: string; label: SupportLabel | null; rationale?: string | null; model?: string | null }[]
+}
+
+export interface ScoreSupport {
+  facts?: number
+  with_claims?: number
+  supports?: number
+  partial?: number
+  no?: number
+  unsourced?: number
+  pending?: number
+  /** how the judge's `partial` counts (the calibration's choice) */
+  partial_counts_as?: "yes" | "no" | null
+  support_share?: number | null
+  support_share_partial_no?: number | null
+  support_share_partial_yes?: number | null
+  support_share_first_claim?: number | null
+  claims_per_fact?: number | null
+  unsourced_share?: number | null
+  context?: string | null
+}
+
+export interface ScoreCost {
+  steps?: number
+  model_calls?: number
+  tokens?: number
+  tokens_without_attach?: number
+  seconds?: number
+  seconds_without_attach?: number
+  wall_seconds?: number
+  claim_steps?: number
+  claim_step_tokens?: number
+  attach_tokens?: number
+  attach_seconds?: number
+}
+
+/** GET /api/runs/{run_id}/score: <run>/score.json. */
+export interface Score {
+  schema_version?: number
+  run_id?: string | null
+  qid?: string | null
+  condition?: string | null
+  seed?: number | null
+  exit_status?: string | null
+  answer_from?: AnswerFrom | null
+  verify_ok?: boolean | null
+  verify_errors?: string[]
+  key_version?: string | null
+  key_reviewed?: boolean | null
+  provisional?: boolean | null
+  key_problems?: unknown[]
+  /** soft level */
+  rows?: FactScores | null
+  rows_by_level?: { normalised?: FactScores; soft?: FactScores } | null
+  facts?: { strict?: FactScores; normalised?: FactScores; soft?: FactScores } | null
+  vital_recall?: number | null
+  judged_precision?: { correct?: number; wrong?: number | null; precision?: number | null; coverage?: number | null } | null
+  support?: ScoreSupport | null
+  pending?: { support?: number; same_fact?: number; same_row?: number } | null
+  cost?: ScoreCost | null
+  detail?: {
+    rows?: { pairs?: { run: string; key: string; level: string }[]; missed?: string[]; extra?: string[]; duplicates?: number }
+    facts?: {
+      pairs?: { run: FactRefIds; run_same?: FactRefIds[]; key: FactRefIds; level: string; vital?: boolean }[]
+      missed?: { key: FactRefIds; spo: FactTriple; vital?: boolean }[]
+      extra?: { run: FactRefIds; same?: FactRefIds[]; spo: FactTriple; wrong?: boolean | null }[]
+      duplicates?: number
+    }
+    support?: SupportDetail[]
+  } | null
+  scored_at?: string | null
+  [extra: string]: unknown
+}
+
+// --- answer key (key.json / key.draft.json) ------------------------------------------------------
+
+export interface KeyFact extends Fact {
+  paper_id: string
+  quote: string
+  vital: boolean
+  candidate_id: string
+}
+
+/** A key row: an answer row whose facts carry the gold-only fields (one of AnswerKey.rows). */
+export type KeyRow = {
+  id: string
+  cells?: Record<string, unknown> | null
+  source?: string | null
+  source_type?: string | null
+  predicate?: string | null
+  target?: string | null
+  target_type?: string | null
+  attributes?: Record<string, unknown> | null
+  facts: KeyFact[]
+}
+
+// --- gold files (gold/README.md doc.json; gold/REVIEW.md report.json) -----------------------------
+
+export interface GoldCoverage {
+  papers?: number
+  relevant?: number
+  not_relevant?: number
+  no_text?: number
+  error?: number
+  papers_in_corpus?: number
+  partial?: boolean
+}
+
+/** doc.json `counts` (gold/build.py counts()): D's size and what it cost. */
+export interface GoldCounts {
+  chunks?: number
+  chunks_relevant?: number
+  chunks_error?: number
+  extraction_errors?: number
+  candidates?: number
+  anchored?: number
+  /** candidates whose quote did not anchor, by reason */
+  rejected?: Record<string, number>
+  /** rows of D (before review) */
+  rows?: number
+  papers_with_candidates?: number
+  model_calls?: { made?: number; cached?: number; failed?: number; total?: number }
+  cost?: { invocations?: number; seconds?: number; calls_made?: number; input_tokens?: number; output_tokens?: number }
+}
+
+export interface KappaField {
+  items?: number
+  kappa?: number | null
+  raw_agreement?: number | null
+  kappa_95?: [number | null, number | null] | null
+}
+
+/** $GOLD/<qid>/report.json (gold agreement). */
+export interface GoldReport {
+  qid?: string
+  generated_at?: string
+  review?: { records?: number; decided?: number; kept?: number; unreviewed?: number; disagreements?: number; stale?: number }
+  kappa?: {
+    reviewers?: string[]
+    items?: number
+    label?: KappaField
+    keep?: KappaField
+    vital?: KappaField
+    bar?: number
+    keep_kappa_meets_bar?: boolean | null
+    independent?: boolean
+    warning?: string
+  } | null
+  triage?: {
+    estimated_missed?: number | null
+    estimated_missed_95?: [number, number] | null
+    estimated_recall?: number | null
+    estimated_recall_95?: [number, number] | null
+    sample_reviewed?: number
+    sampled?: number
+  } | null
+  screening?: {
+    not_relevant?: number
+    checked?: number
+    found_relevant?: number
+    false_negative_rate?: number | null
+    false_negative_rate_95?: [number | null, number | null] | null
+  } | null
+}
+
+// --- results ($RUNS/report/report.json, scoring/report.py schema_version 2) ----------------------
+
+/** The outcomes the report aggregates (scoring/report.py OUTCOMES). */
+export type Outcome =
+  | "support_share"
+  | "fact_precision"
+  | "fact_recall"
+  | "fact_f1"
+  | "fact_f1_normalised"
+  | "fact_f1_strict"
+  | "row_f1"
+  | "row_f1_normalised"
+  | "vital_recall"
+  | "judged_precision"
+  | "unsourced_share"
+  | "claims_per_fact"
+  | "tokens"
+  | "tokens_without_attach"
+  | "seconds"
+  | "seconds_without_attach"
+
+/** A mean over questions with its BCa bootstrap interval (null bounds: fewer than 2 questions). */
+export interface Interval {
+  n: number
+  mean: number | null
+  low: number | null
+  high: number | null
+  method: string | null
+  runs?: number
+  runs_without_value?: number
+}
+
+export interface OutcomeSummary {
+  label: string
+  claim_on: Interval
+  claim_off: Interval
+  /** the paired mean difference claim_on - claim_off over the questions with both */
+  difference: Interval
+}
+
+/** The pre-registered Wilcoxon test (scoring/report.py primary()). */
+export interface PairedTest {
+  outcome: string
+  test: string
+  alternative: string
+  zero_method?: string
+  alpha: number
+  n_pairs: number
+  n_nonzero: number
+  computed: boolean
+  /** why the test was not computed (too few pairs, pending verdicts) */
+  reason: string | null
+  statistic: number | null
+  p_value: number | null
+  significant: boolean | null
+  t_plus?: number | null
+  t_minus?: number | null
+  /** matched-pairs rank-biserial correlation (T+ - T-) / (T+ + T-) */
+  rank_biserial: number | null
+  mean_difference: number | null
+  ci_low: number | null
+  ci_high: number | null
+  ci_method: string | null
+  questions: string[]
+  excluded_questions: string[]
+  label?: string
+}
+
+export interface PrimaryTest extends PairedTest {
+  sensitivity_empty_as_zero?: PairedTest
+  sensitivity_other_mapping?: PairedTest
+  sensitivity_first_claim?: PairedTest
+}
+
+/** One question x condition of report.json `per_question`: means over the repeats. */
+export type QuestionResult = {
+  qid: string
+  condition: string
+  runs: number
+  answered: number
+  primary_runs: number
+  pending_runs: number
+} & Partial<Record<Outcome, number | null>>
+
+/** GET /api/results: report.json. */
+export interface ResultsReport {
+  schema_version?: number
+  generated_at?: string
+  runs_root?: string
+  /** some runs were scored against a draft key: the numbers test the pipeline, they are no result */
+  provisional?: boolean
+  provisional_runs?: number
+  complete?: boolean
+  completeness?: { pending_support_runs?: string[]; pending_soft_runs?: string[]; unverified_runs?: string[]; verify_failed_runs?: string[] }
+  settings?: { interval?: string; confidence?: number; resamples?: number; alpha?: number; min_pairs?: number }
+  runs?: { scored?: number; by_condition?: Partial<Record<Condition, number>>; by_exit_status?: Record<string, Record<string, number>> }
+  coverage?: Partial<Record<Condition, { scored: number; answered: number; answered_share: number | null; not_scored: number }>>
+  questions?: string[]
+  per_question?: QuestionResult[]
+  paired?: ({ qid: string } & Partial<Record<Outcome, { claim_on: number | null; claim_off: number | null; difference: number | null }>>)[]
+  summary?: Partial<Record<Outcome, OutcomeSummary>>
+  primary?: PrimaryTest | null
+  secondary?: string[]
+  [extra: string]: unknown
 }

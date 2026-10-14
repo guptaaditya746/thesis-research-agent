@@ -13,6 +13,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 
 import { AppSidebar } from "./AppSidebar"
 import { CommandMenu } from "./CommandMenu"
+import { JobWatcher } from "./JobWatcher"
 import { ThemeToggle } from "./ThemeToggle"
 
 export function AppLayout() {
@@ -36,6 +37,7 @@ export function AppLayout() {
           </main>
         </SidebarInset>
         <ChatSheet />
+        <JobWatcher />
       </SidebarProvider>
     </ChatProvider>
   )

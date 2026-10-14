@@ -1,13 +1,15 @@
 /**
- * Server-sent event streams of the backend (plan "Backend API"):
- * - GET /api/runs/{id}/stream: `event: record` per new events.jsonl line, `event: done` when
- *   answer.json appears -> `useRunStream`, folded by the timeline reducer (src/lib/timeline.ts);
- * - GET /api/jobs/{id}/log: the job's log lines -> `useJobLog`.
+ * Server-sent event streams of the backend (webapp/runs.py stream, webapp/jobs.py log_stream):
+ * - GET /api/runs/{id}/stream: `event: record` per events.jsonl line (id = line number), then
+ *   `event: done` when the agent no longer writes the run -> `useRunStream`, folded by the
+ *   timeline reducer (src/lib/timeline.ts);
+ * - GET /api/jobs/{id}/log: `event: line` per log line, then `event: done` -> `useJobLog`.
  *
  * EventSource reconnects by itself after any drop, and a finished stream would then replay
  * forever. So a stream is closed on `done` and on error; the run stream reconnects after a
- * pause while the run is live (its reducer is idempotent, a replay is harmless), the job log
- * starts again from an empty buffer when reconnected by hand.
+ * pause while the run is live with a new EventSource, which the server replays from the first
+ * line (the reducer is idempotent, a replay is harmless); the job log starts again from an empty
+ * buffer when reconnected by hand.
  */
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react"
@@ -136,8 +138,13 @@ export function useRunStream(runId: string, { live, seed }: { live: boolean; see
 
 const MAX_LINES = 5_000
 
-/** The live log of a job; lines restart empty on every (re)connection, since the server replays. */
+/**
+ * The live log of a job (`event: line` per line, `event: done` with the job); lines restart empty
+ * on every (re)connection, since a new EventSource is replayed from the first line. On `done` the
+ * job's queries are refetched, so its state and steps catch up with the log.
+ */
 export function useJobLog(jobId: string | null, enabled: boolean) {
+  const client = useQueryClient()
   const [buffer, setBuffer] = useState<{ key: string; lines: string[] }>({ key: "", lines: [] })
   const keyRef = useRef("")
   const append = (line: string) =>
@@ -148,8 +155,8 @@ export function useJobLog(jobId: string | null, enabled: boolean) {
     })
   const { status, reconnect, key } = useEventSource(
     jobId ? urls.jobLog(jobId) : null,
-    { message: append, line: append },
-    { enabled: !!jobId && enabled, doneEvents: ["done", "end"] },
+    { message: append, line: append, done: () => void client.invalidateQueries({ queryKey: keys.jobs }) },
+    { enabled: !!jobId && enabled, doneEvents: ["done"] },
   )
   useEffect(() => {
     keyRef.current = key

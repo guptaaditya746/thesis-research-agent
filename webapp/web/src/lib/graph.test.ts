@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest"
 
 import type { GraphEdge, KnowledgeGraph } from "@/api/types"
-import { GRAPHS } from "@/mocks/fixtures"
+import { GRAPHS, RUN } from "@/mocks/fixtures"
 
 import { graphElements, NODE_HEIGHT, nodeWidth, toFlow } from "./graph"
 
 describe("graph.json to React Flow", () => {
-  const graph = GRAPHS["q01-on-s1"]
+  const graph = GRAPHS[RUN.on]
 
   it("keeps paper and entity nodes apart and gives literals their own node", () => {
     const { nodes } = graphElements(graph)
