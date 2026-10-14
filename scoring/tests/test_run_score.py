@@ -93,7 +93,8 @@ def test_cost_with_and_without_attach(baseline: Built, tmp_path: Path) -> None:
 
 def test_time_with_attach_leaves_out_the_wait_between_jobs() -> None:
     def call(step: int, start: str, end: str, origin: str | None = None) -> dict:
-        return {"subtype": "ai_model_invocation", "step_id": step, "started_at": f"2026-10-13T{start}:00Z",
+        return {"subtype": "ai_model_invocation", "step_id": step, "agent_id": "main",  # as the broker writes it
+                "started_at": f"2026-10-13T{start}:00Z",
                 "ended_at": f"2026-10-13T{end}:00Z", "generated": {"usage": {"total_tokens": 10}},
                 "custom_metadata": {"origin": origin} if origin else {}}
 
