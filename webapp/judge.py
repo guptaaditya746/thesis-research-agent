@@ -7,11 +7,14 @@ rationale, model}]}]). Reading them costs no model call and cannot disagree with
 
 Only when the request asks for it (`?judge=true`), claims that have no scored verdict (the run is
 not scored yet, or the judge was unreachable then) are put to the judge (WP C2, gold/judge.py:
-`support(fact, quote, *, context=None)`) live, with the inputs scoring gives it: the fact's s/p/o,
-the claim's exact quote and scoring's own context line (scoring.support.quote_context) when that
-module is there, so the judge's cache ($GOLD/judge-cache.jsonl, keyed by those inputs) is shared
-with scoring. Those verdicts are marked `source: judge`; the calls run concurrently, each with a
-timeout, and a judge call appends to the judge's cache, the one write a GET can cause.
+`support(fact, quote, *, context=None)`) live, with the inputs scoring gives it through
+`support_pair`: the fact's s/p/o, the claim's exact quote and the calibrated context
+(gold.judge.context_for: the paper id and the text around the quote, read through gold.review.Corpus,
+the frozen corpus with its manifest check). So the verdict is the one the judge was calibrated on, and
+the judge's cache ($GOLD/judge-cache.jsonl, keyed by those inputs) is shared with scoring. A quote
+whose context the corpus cannot give is not asked, as scoring leaves it pending. Those verdicts are
+marked `source: judge`; the calls run concurrently, each with a timeout, and a judge call appends to
+the judge's cache, the one write a GET can cause.
 
 Both modules are looked up with importlib (which honours sys.modules) when needed, and the app can
 be given its own judge callable instead (tests use a fake); anything going wrong (no judge yet, no
@@ -20,6 +23,7 @@ model reachable, a reply of another shape) leaves the verdict out instead of fai
 from __future__ import annotations
 
 import asyncio
+import functools
 import importlib
 import inspect
 import logging
@@ -49,10 +53,29 @@ def default_support() -> Callable[..., Any] | None:
     return _attr("gold.judge", "support")
 
 
-def scoring_context(file: str | None, corpus: Path | None) -> str | None:
-    """The context line scoring passes to the judge with a quote (scoring.support.quote_context)."""
-    fn = _attr("scoring.support", "quote_context")
-    return fn(file, corpus) if fn is not None and file else None
+NO_CONTEXT = object()  # the corpus cannot give the quote's context: the quote is not asked
+
+
+@functools.lru_cache(maxsize=4)
+def _corpus(root: str) -> Any:
+    """gold.review.Corpus over the corpus directory (manifest-checked reads, bounded text caches)."""
+    return importlib.import_module("gold.review").Corpus(root)
+
+
+def calibrated_context(file: str | None, anchor: Any, corpus: Path | None) -> Any:
+    """The context scoring's support_pair gives the judge with a quote (gold.judge.context_for over
+    the anchor's raw offsets); None when gold.judge has no context_for (a stand-in judge module);
+    NO_CONTEXT when there is no corpus, no anchor, or the corpus refuses the file."""
+    fn = _attr("gold.judge", "context_for")
+    if fn is None:
+        return None
+    if corpus is None or not file or anchor is None:
+        return NO_CONTEXT
+    try:
+        return fn(_corpus(str(corpus)), file, int(anchor.start), int(anchor.end))
+    except Exception as exc:  # review.Rejected, a missing manifest: scoring would leave it pending too
+        logger.warning("no judge context for %s: %s: %s", file, type(exc).__name__, exc)
+        return NO_CONTEXT
 
 
 def verdict(data: Any, source: str) -> Verdict | None:
@@ -125,8 +148,10 @@ async def add_live(walk: FactWalk, fn: Callable[..., Any] | None, corpus: Path |
     if fn is None or not todo:
         return
     fact = walk.fact.model_dump()
-    found = await asyncio.gather(*(ask(fn, fact, item.claim.quote, scoring_context(item.claim.file, corpus))
-                                   for item in todo))
+    contexts = [calibrated_context(item.claim.file, item.claim.anchor, corpus) for item in todo]
+    todo, contexts = ([t for t, c in zip(todo, contexts) if c is not NO_CONTEXT],
+                      [c for c in contexts if c is not NO_CONTEXT])
+    found = await asyncio.gather(*(ask(fn, fact, item.claim.quote, context) for item, context in zip(todo, contexts)))
     for item, v in zip(todo, found):
         item.support = v
     verdicts = [item.support for item in walk.claims if item.claim is not None]  # scoring's pairs: accepted claims

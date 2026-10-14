@@ -13,13 +13,11 @@ concepts check` passes after any of them, and the pick shown here is read from t
 
 The user may change a pick until the gold build for the question has started, and only with
 `force` once runs used the current concept (they would then be runs on a replaced concept,
-webapp/runs.py). Changing a pick needs B's `replace`; with a concept_step.py that has no such
-parameter (before WP B) a second pick is refused, as is a pick by anyone but the user, which that
-version cannot record.
+webapp/runs.py). concept_step.pick gets $GOLD too, so its own rule (no replace once $GOLD/<qid>/
+holds anything) applies as well.
 """
 from __future__ import annotations
 
-import inspect
 import threading
 from collections.abc import Callable
 from pathlib import Path
@@ -32,10 +30,6 @@ from . import goldstate
 from .files import ID, BadRequest, Conflict, NotFound, check_id, inside, read_json, read_jsonl
 from .models import ConceptBrief, ConceptStatus, Pick, PickRequest, Question, QuestionDetail, RunCounts
 from .settings import Settings
-
-
-def pick_parameters() -> set[str]:
-    return set(inspect.signature(concept_step.pick).parameters)
 
 
 class Questions:
@@ -148,22 +142,12 @@ class Questions:
             raise BadRequest(f"choice must be 1..{len(briefs)}")
         if goldstate.started(self.settings.gold, qid) or self.gold_building(qid):
             raise Conflict(f"the gold build for {qid} has started on the current pick; it can no longer change")
-        params = pick_parameters()
         with self._lock:
             current = self.picked(qid, briefs)
-            kwargs: dict[str, Any] = {}
-            if "picked_by" in params:
-                kwargs.update(picked_by=request.picked_by, reason=self._reason(qid, request, current))
-            elif request.picked_by != "user":
-                raise Conflict("this agent/concept_step.py records every pick as the user's; "
-                               f"picked_by={request.picked_by!r} needs its picked_by parameter (WP B)")
-            if current is not None:
-                if "replace" not in params:
-                    raise Conflict(f"{qid} is picked and this agent/concept_step.py keeps the first pick "
-                                   "(changing it needs its replace parameter, WP B)")
-                kwargs["replace"] = True
             try:
-                concept_step.pick(session, request.choice, **kwargs)
+                concept_step.pick(session, request.choice, picked_by=request.picked_by,
+                                  reason=self._reason(qid, request, current), replace=current is not None,
+                                  gold=self.settings.gold)
             except (concept_step.ConceptStepError, ValueError) as exc:
                 raise Conflict(str(exc)) from exc
         return self.detail(qid)

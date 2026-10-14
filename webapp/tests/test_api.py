@@ -195,20 +195,39 @@ def test_walk_shows_the_verdicts_scoring_counted(fresh: World) -> None:
     assert [a[:2] for a in asked] == [({"s": "p1", "p": "evaluatesOn", "o": "Spider"}, SPIDER_BIRD.text)]
 
 
-def test_walk_asks_the_judge_with_scorings_context(fresh: World, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Unscored runs: the judge is asked live, per quote, with the context line scoring gives it."""
+def test_walk_asks_the_judge_with_scorings_context(fresh: World) -> None:
+    """Unscored runs: the judge is asked live, per quote, with the calibrated context scoring's
+    support_pair gives it (gold.judge.context_for), so the verdict and its cache line are scoring's."""
+    from gold import judge as gold_judge
+    from gold import review
+
     asked = []
 
     async def judge(fact, quote, *, context=None):
         asked.append(context)
         return {"label": "supports", "rationale": "names it", "model": "m", "prompt_sha256": "b" * 64, "cached": True}
 
-    monkeypatch.setitem(sys.modules, "scoring.support",
-                        types.SimpleNamespace(quote_context=lambda file, corpus: f"from {file} in {corpus.name}"))
     with TestClient(create_app(fresh.settings, judge=judge)) as c:
         walk = c.get("/api/runs/baseline-r1/facts/f1/walk", params={"judge": True}).json()
     assert (walk["label"], walk["support"]["source"], walk["claims"][0]["support"]["cached"]) == ("supports", "judge", True)
-    assert asked == [f"from {walk['claims'][0]['claim']['file']} in corpus"]
+    claim = walk["claims"][0]["claim"]
+    expected = gold_judge.context_for(review.Corpus(fresh.settings.corpus), claim["file"],
+                                      claim["anchor"]["start"], claim["anchor"]["end"])
+    assert asked == [expected] and expected.startswith(f"Paper {Path(claim['file']).stem} (")
+
+
+def test_no_judge_context_without_corpus_anchor_or_the_frozen_file(fresh: World) -> None:
+    """Without the quote's context the judge is not asked (scoring leaves such a quote pending)."""
+    from webapp import judge as walk_judge
+    from webapp.models import Anchor
+
+    span = Anchor(start=0, end=10)
+    assert isinstance(walk_judge.calibrated_context("p1.md", span, fresh.corpus), str)
+    assert walk_judge.calibrated_context("p1.md", None, fresh.corpus) is walk_judge.NO_CONTEXT
+    assert walk_judge.calibrated_context("p1.md", span, None) is walk_judge.NO_CONTEXT
+    assert walk_judge.calibrated_context("p77.md", span, fresh.corpus) is walk_judge.NO_CONTEXT
+    (fresh.corpus / "p2.md").write_text("another text", encoding="utf-8")  # no longer the frozen file
+    assert walk_judge.calibrated_context("p2.md", span, fresh.corpus) is walk_judge.NO_CONTEXT
 
 
 def test_the_default_judge_is_found_through_sys_modules(fresh: World, monkeypatch: pytest.MonkeyPatch) -> None:

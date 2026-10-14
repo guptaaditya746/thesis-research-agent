@@ -1,8 +1,7 @@
 """Picking a concept brief in the web app (row 2.2): every pick goes through agent/concept_step.py.
 
 The chain is the record of every pick, so `agent concepts check` (concept_step.check_session) must
-pass after each one. Changing a pick needs WP B's `pick(..., replace=True)`; the tests of that path
-are skipped with a concept_step.py that does not have it.
+pass after each one. Changing a pick goes through its `pick(..., replace=True)`.
 """
 from __future__ import annotations
 
@@ -16,12 +15,8 @@ from fastapi.testclient import TestClient
 from agent import concept_step
 from agent.canonical import file_sha256
 from webapp.app import create_app
-from webapp.questions import pick_parameters
 
 from .world import build_world, propose_q01
-
-B = pytest.mark.skipif("replace" not in pick_parameters(), reason="needs WP B's concept_step.pick(replace=...)")
-BASE = pytest.mark.skipif("replace" in pick_parameters(), reason="concept_step.pick can change picks (WP B)")
 
 
 @pytest.fixture
@@ -64,22 +59,6 @@ def test_pick_problems(unpicked) -> None:
     assert concept_step.check_session(unpicked.root / "concepts" / "q01") == []
 
 
-@BASE
-def test_without_replace_a_pick_is_final(unpicked) -> None:
-    """Before WP B, concept_step.pick freezes the first pick and records only the user."""
-    session = unpicked.root / "concepts" / "q01"
-    with TestClient(create_app(unpicked.settings)) as c:
-        claude = c.post("/api/questions/q01/concepts/pick", json={"choice": 1, "picked_by": "claude"})
-        assert claude.status_code == 409 and "picked_by" in claude.json()["detail"]
-        assert c.post("/api/questions/q01/concepts/pick", json={"choice": 1}).status_code == 200
-        for choice in (2, 1):
-            response = c.post("/api/questions/q01/concepts/pick", json={"choice": choice})
-            assert response.status_code == 409 and "replace" in response.json()["detail"]
-    assert len(pick_records(session)) == 1 and concept_step.check_session(session) == []
-    assert not list(session.glob("concept.replaced-*")) and not (unpicked.root / "concepts" / "picks.json").exists()
-
-
-@B
 def test_change_the_pick(unpicked) -> None:
     """Each pick, a confirmation too, is a concept_pick record; B rewrites picks.json from the chains."""
     session = unpicked.root / "concepts" / "q01"
@@ -102,7 +81,6 @@ def test_change_the_pick(unpicked) -> None:
                                                        "picked_by": "claude", "reason": "checked", "concept_sha256": None}
 
 
-@B
 def test_a_pick_runs_used_changes_only_with_force(unpicked) -> None:
     with TestClient(create_app(unpicked.settings)) as c:
         c.post("/api/questions/q01/concepts/pick", json={"choice": 1})  # the fixture runs' concept
