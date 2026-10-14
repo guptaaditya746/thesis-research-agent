@@ -15,8 +15,9 @@ Each attempt at a key is its own run directory <runs_root>/<key>-a<N>. Per key, 
   attempt in a fresh run directory, up to `max_attempts` per key. A partly done run or attach step
   is never resumed in place: a cut run's chain stays as it was, ends with the cut, and is kept.
 
-Runs and attach steps run sequentially as child processes (`python -m agent.cli run|attach`),
-inside the job's time limit: `--deadline` (ISO time or epoch seconds), `--time-limit` (seconds from
+Runs and attach steps run sequentially as child processes (`python -m agent.cli run|attach`,
+with the manifest's budget, prompt version, conclude decoding, spawn switch and subagent budget
+(row 2.12) when it gives them), inside the job's time limit: `--deadline` (ISO time or epoch seconds), `--time-limit` (seconds from
 now) or $SLURM_JOB_END_TIME (epoch seconds, set by Slurm), whichever comes first. A child still
 running `--margin` seconds before the deadline gets SIGTERM (which `agent run` and `agent attach`
 turn into a clean stop: broker closed, sandboxed command killed), then SIGKILL after a grace
@@ -50,6 +51,8 @@ from .rundir import RunDir, attach_state, utc_now
 
 CUT_REASONS = ("job_time_limit", "interrupted")
 MAX_ATTEMPTS = 3
+# SIGTERM to SIGKILL. A run with spawn on (row 2.12) waits for its cancelled subagents at most
+# spawn.STOP_WAIT_S (15 s) in all before it closes its broker, so its clean stop fits too.
 GRACE_S = 30
 
 
@@ -150,7 +153,10 @@ def run_state(run: RunDir, corpus: Path, manifest: Path) -> tuple[str, str]:
 
     if not run.config.is_file():
         return "incomplete", "no config.json"
-    reasons = [r["generated"].get("reason") for r in _records(run) if r["subtype"] == "coverage"]
+    # The run's own coverage (main agent, attach step, this runner): a subagent's (row 2.12) never
+    # fails the run; it records its failure as subagent_error, and the parent goes on.
+    reasons = [r["generated"].get("reason") for r in _records(run)
+               if r["subtype"] == "coverage" and r["agent_id"] in ("main", "batch")]
     cut = [r for r in reasons if r in CUT_REASONS]
     if cut:
         return "cut", cut[-1]
@@ -246,7 +252,13 @@ class Batch:
         for key in ("steps", "tokens"):
             if key in budget:
                 argv += [f"--{key}", str(budget[key])]
-        return argv
+        if "spawn" in d:  # row 2.12; the attach step never spawns
+            argv += ["--spawn", d["spawn"]]
+        if d.get("spawn") == "on":  # each subagent's budget (provisional, like the run's)
+            for key in ("steps", "tokens"):
+                if key in d.get("spawn_budget", {}):
+                    argv += [f"--spawn-{key}", str(d["spawn_budget"][key])]
+        return argv + self._loop_args()
 
     def attach_argv(self, run: RunDir) -> list[str]:
         budget = self.manifest.data.get("attach_budget", {})
@@ -256,7 +268,16 @@ class Batch:
         for key in ("steps", "tokens"):
             if key in budget:
                 argv += [f"--{key}-per-fact", str(budget[key])]
-        return argv
+        return argv + self._loop_args()
+
+    def _loop_args(self) -> list[str]:
+        """Prompt version and conclude decoding, for the run and its attach step alike (rows 1.13)."""
+        d, out = self.manifest.data, []
+        if "prompt_version" in d:
+            out += ["--prompt-version", d["prompt_version"]]
+        if "conclude_decoding" in d:  # e.g. guided_json if the cluster's vLLM predates structured_outputs
+            out += ["--conclude-decoding", d["conclude_decoding"]]
+        return out
 
     def _child(self, argv: list[str]) -> tuple[int | None, str]:
         """Run one child; (exit code, "") or (None, why it was stopped)."""

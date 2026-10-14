@@ -27,6 +27,8 @@ concepts/** text eol=lf
 # Batch run manifests (row 2.9).
 agent/manifests/** text eol=lf
 agent/bin/** text eol=lf
+# The spawn shim (row 2.12) runs on the Linux node too.
+agent/spawn-bin/** text eol=lf
 
 # Shell and Slurm scripts run on the Linux node; CRLF breaks them.
 *.sh text eol=lf

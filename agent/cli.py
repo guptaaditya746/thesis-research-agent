@@ -9,7 +9,9 @@ from pathlib import Path
 from . import kg
 from .canonical import canonical, file_sha256, sha256_hex
 from .chain import verify
-from .rundir import RunDir
+from .rundir import BUDGET as RUN_BUDGET, BUDGET_M1 as RUN_BUDGET_M1, RunDir
+
+DECODING_CHOICES = ("structured_outputs", "guided_json", "free")  # loop.DECODINGS, without importing the loop
 
 
 def cmd_check_run(args: argparse.Namespace) -> int:
@@ -51,8 +53,11 @@ def stop_on_sigterm() -> None:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
-    from .loop import research_run  # imports LiteLLM and mini-swe-agent: slow, so only here
-    from .rundir import BUDGET, git_head
+    import dataclasses
+
+    from .loop import budget_for, research_run, settings_for  # imports LiteLLM and mini-swe-agent: slow, so only here
+    from .rundir import git_head
+    from .spawn import SpawnSettings
 
     stop_on_sigterm()
 
@@ -60,14 +65,39 @@ def cmd_run(args: argparse.Namespace) -> int:
     concept = json.loads(args.concept.read_text(encoding="utf-8"))
     agent_root_sha = (file_sha256(args.agent_root / "agent-root.sha256") if args.agent_root
                       else sha256_hex(b""))  # no agent root (tests, laptops): hash of nothing
+    settings = settings_for(args.prompt_version)  # v1: the loop of the M1-real runs
+    if args.conclude_decoding:
+        settings = dataclasses.replace(settings, conclude_decoding=args.conclude_decoding)
+    budget = budget_for(args.prompt_version)  # v1: the M1-real runs' 150 steps / 400k tokens
+    budget |= {k: v for k, v in (("steps", args.steps), ("tokens", args.tokens)) if v is not None}
+    spawn_budget = {k: v for k, v in (("steps", args.spawn_steps), ("tokens", args.spawn_tokens)) if v is not None}
+    if spawn_budget and args.spawn != "on":
+        print("FAIL --spawn-steps and --spawn-tokens need --spawn on")
+        return 1
+    try:  # each subagent's budget: provisional, like the run's (frozen after the Slurm test)
+        spawn = SpawnSettings(enabled=args.spawn == "on", **spawn_budget)
+    except ValueError as exc:
+        print(f"FAIL {exc}")
+        return 1
+    if spawn.enabled:
+        from . import prompts
+        try:  # v1 (the M1-real runs) has no spawn block
+            prompts.load(args.prompt_version, args.condition, spawn=True)
+        except ValueError as exc:
+            print(f"FAIL {exc}")
+            return 1
     _, outcome, head = research_run(
         runs_root=args.runs_root, run_id=args.run_id, concept=concept, corpus=corpus, manifest=manifest,
         condition=args.condition, temperature=args.temperature, seed=args.seed,
         git_commit=git_head(Path(__file__).resolve().parents[1]), agent_root_manifest_sha256=agent_root_sha,
         sandbox_mode=args.sandbox, agent_root=args.agent_root, base_url=args.base_url,
-        budget={**BUDGET, "steps": args.steps, "tokens": args.tokens}, broker=args.broker, extra_path=tuple(args.path_extra))
+        budget=budget, broker=args.broker, extra_path=tuple(args.path_extra),
+        prompt_version=args.prompt_version, settings=settings, spawn=spawn)
+    # steps and tokens are the agent's own (its budget); with subagents the run's total is reported too.
+    subagents = (f" subagents={outcome.subagents} run_tokens={outcome.tokens + outcome.subagent_tokens}"
+                 if args.spawn == "on" else "")
     print(f"run {args.run_id}: exit={outcome.exit_status} steps={outcome.steps} tokens={outcome.tokens} "
-          f"rows={outcome.answer_rows} head={head.get('head')}")
+          f"rows={outcome.answer_rows} answer={outcome.answer_from}{subagents} head={head.get('head')}")
     return 0 if outcome.exit_status == "submitted" else 1
 
 
@@ -81,13 +111,15 @@ def cmd_attach(args: argparse.Namespace) -> int:
     try:
         summary = attach_run(args.run_dir, corpus, manifest, base_url=args.base_url, sandbox_mode=args.sandbox,
                              agent_root=args.agent_root, budget=budget, broker=args.broker,
-                             extra_path=tuple(args.path_extra))
+                             extra_path=tuple(args.path_extra), prompt_version=args.prompt_version,
+                             conclude_decoding=args.conclude_decoding)
     except AttachError as exc:
         print(f"FAIL {exc}")
         return 1
     c = summary["cost"]
     print(f"attach {summary['run_id']}: facts={len(summary['facts'])} attached={summary['attached']} "
-          f"no_source={summary['no_source']} tokens={c['tokens']} time={c['seconds']}s head={summary['chain_head']}")
+          f"(from claims {summary['attached_from_claim']}) no_source={summary['no_source']} tokens={c['tokens']} "
+          f"time={c['seconds']}s head={summary['chain_head']}")
     return 0
 
 
@@ -129,6 +161,9 @@ def cmd_verify(args: argparse.Namespace) -> int:
               f"time={a['seconds']}s")
         print(f"without attach: steps={w['steps']} tokens={w['tokens']} time={w['seconds']}s; "
               f"with attach: tokens={s.get('tokens', 0)} time={s.get('seconds', 0)}s")
+    for agent_id, a in s.get("agents", {}).items():  # row 2.12: the totals above are the run's, these each agent's
+        print(f"agent {agent_id}: steps={a['steps']} model_calls={a['model_calls']} commands={a['commands']} "
+              f"claims={a['claims_accepted']} accepted / {a['claims_rejected']} rejected tokens={a['tokens']}")
     if report.ok:
         print(f"PASS {args.run_dir} records={s.get('records')} head={s.get('head')}")
     return 0 if report.ok else 1
@@ -288,10 +323,23 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--sandbox", choices=("landlock", "unsandboxed"), default="landlock",
                      help="unsandboxed runs commands without Landlock/seccomp: tests and machines without Landlock only")
     run.add_argument("--agent-root", type=Path, help="pinned toolchain ($AGENT_ROOT); its agent-root.sha256 is hashed")
-    run.add_argument("--steps", type=int, default=150)
-    run.add_argument("--tokens", type=int, default=400_000)
+    run.add_argument("--steps", type=int, help=f"step budget (default {RUN_BUDGET['steps']}; "
+                                                f"{RUN_BUDGET_M1['steps']} with --prompt-version v1)")
+    run.add_argument("--tokens", type=int, help=f"token budget (default {RUN_BUDGET['tokens']:,}; "
+                                                 f"{RUN_BUDGET_M1['tokens']:,} with --prompt-version v1)")
+    run.add_argument("--prompt-version", default="v2",
+                     help="agent/prompts/system-<version>.txt; v1 reproduces the M1-real runs: their loop settings "
+                          "and, unless --steps/--tokens say otherwise, their budget (150 steps / 400,000 tokens)")
+    run.add_argument("--conclude-decoding", choices=DECODING_CHOICES,
+                     help="how conclude replies are decoded (default: the prompt version's; structured_outputs is "
+                          "vLLM >= 0.10's extra_body key, guided_json older vLLM's, free no schema)")
     run.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
     run.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
+    run.add_argument("--spawn", choices=("on", "off"), default="off",
+                     help="the spawn command: subagents on sub-model-1/-2 with their own budget (row 2.12; "
+                          "recorded in config.json; off for the 72 runs unless decided otherwise)")
+    run.add_argument("--spawn-steps", type=int, help="each subagent's step budget, with --spawn on (default 15)")
+    run.add_argument("--spawn-tokens", type=int, help="each subagent's token budget, with --spawn on (default 300,000)")
     run.set_defaults(func=cmd_run)
 
     attach = sub.add_parser("attach", help="baseline attach step: one quote or 'no source found' per answer fact (row 2.5)")
@@ -302,6 +350,9 @@ def main(argv: list[str] | None = None) -> int:
     attach.add_argument("--agent-root", type=Path, help="default: the run's agent root")
     attach.add_argument("--steps-per-fact", type=int)
     attach.add_argument("--tokens-per-fact", type=int)
+    attach.add_argument("--prompt-version", help="agent/prompts/attach-<version>.txt (default: the run's prompt version)")
+    attach.add_argument("--conclude-decoding", choices=DECODING_CHOICES,
+                        help="how conclude replies are decoded (default: the run's)")
     attach.add_argument("--broker", choices=("auto", "process", "inprocess"), default="auto")
     attach.add_argument("--path-extra", action="append", default=[], help="extra directory on the sandbox PATH")
     attach.set_defaults(func=cmd_attach)

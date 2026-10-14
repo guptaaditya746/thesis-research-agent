@@ -48,6 +48,46 @@ def test_sample_manifest_is_72_paired_runs() -> None:
     assert {e.concept.as_posix() for e in plan} =={f"concepts/q{n:02d}/concept.json" for n in range(1, 13)}
 
 
+def test_sample_manifest_budget_and_prompt(tmp_path: Path) -> None:
+    """1.13: the provisional budget and prompt v2 reach every run; the attach budget is unchanged."""
+    batch = Batch(Manifest.load(SAMPLE), deadline=None, corpus=tmp_path)
+    entry = batch.manifest.plan()[0]
+    argv = batch.run_argv(entry, "q01-claim_on-r1-a1")
+    assert argv[argv.index("--steps"):argv.index("--steps") + 4] == ["--steps", "60", "--tokens", "2000000"]
+    assert argv[argv.index("--prompt-version") + 1] == "v2"
+    assert batch.manifest.data["attach_budget"] == {"steps": 6, "tokens": 60000}
+    data = json.loads(SAMPLE.read_text(encoding="utf-8"))
+    del data["prompt_version"]
+    (tmp_path / "m.json").write_text(json.dumps(data), encoding="utf-8")
+    assert "--prompt-version" not in Batch(Manifest.load(tmp_path / "m.json"), deadline=None,
+                                           corpus=tmp_path).run_argv(entry, "x")  # agent run's default
+    (tmp_path / "m.json").write_text(json.dumps(data | {"prompt_version": "2"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="prompt_version"):
+        Manifest.load(tmp_path / "m.json")
+
+
+def test_manifest_prompt_and_decoding_reach_run_and_attach(tmp_path: Path) -> None:
+    """The attach step gets the run's prompt version; the conclude decoding can be switched from the manifest
+    (e.g. guided_json if the cluster's vLLM predates structured_outputs) without a code change."""
+    data = json.loads(SAMPLE.read_text(encoding="utf-8")) | {"conclude_decoding": "guided_json"}
+    (tmp_path / "m.json").write_text(json.dumps(data), encoding="utf-8")
+    batch = Batch(Manifest.load(tmp_path / "m.json"), deadline=None, corpus=tmp_path)
+    run_argv = batch.run_argv(batch.manifest.plan()[0], "x")
+    attach_argv = batch.attach_argv(RunDir(tmp_path / "runs" / "x"))
+    for argv in (run_argv, attach_argv):
+        assert argv[argv.index("--prompt-version") + 1] == "v2"
+        assert argv[argv.index("--conclude-decoding") + 1] == "guided_json"
+    assert "attach" in attach_argv and "--steps-per-fact" in attach_argv
+    for bad in ("regex", 3):
+        (tmp_path / "m.json").write_text(json.dumps(data | {"conclude_decoding": bad}), encoding="utf-8")
+        with pytest.raises(ValueError, match="conclude_decoding"):
+            Manifest.load(tmp_path / "m.json")
+    del data["conclude_decoding"]
+    (tmp_path / "m.json").write_text(json.dumps(data), encoding="utf-8")
+    assert "--conclude-decoding" not in Batch(Manifest.load(tmp_path / "m.json"), deadline=None,
+                                              corpus=tmp_path).run_argv(batch.manifest.plan()[0], "x")
+
+
 def test_manifest_problems(tmp_path: Path) -> None:
     data = json.loads(SAMPLE.read_text(encoding="utf-8"))
     for change, problem in [({"repeats": 0}, "repeats"), ({"conditions": ["claim_maybe"]}, "conditions"),

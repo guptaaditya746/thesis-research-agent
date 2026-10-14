@@ -6,7 +6,8 @@ claims.jsonl and keeps one hash chain over all records (agent/chain.py), fsync'e
 Input A, the harness channel: an AF_UNIX SOCK_SEQPACKET socket from the parent process. One JSON
 object per message, one reply per message:
   {"op": "record", "record": {...}}           -> {"ok": true, "task_id": ..., "hash": ...}
-  {"op": "claim_channel", "step_id": n, "agent_id": "main", "origin": "research"} plus one fd
+  {"op": "claim_channel", "step_id": n, "agent_id": "main", "origin": "research",
+   "source_agent_id": null, "spawned_by_step": null} plus one fd
                                               -> {"ok": true}
   {"op": "head"}                              -> {"ok": true, "head": ..., "records": n, "claims": n}
   {"op": "close"}                             -> same as head, then the broker exits
@@ -16,7 +17,9 @@ this channel. A broker without a corpus (the corpus-blind concept step) rejects 
 
 Input B, one claim channel per command: a stream socket whose other end the sandbox gets as
 CLAIM_FD. Newline-delimited JSON {s, p, o, file, quote}; every request is tagged with the step id
-the channel was opened for, whatever the request says. Each claim's quote is anchored in the
+(and agent) the channel was opened for, whatever the request says. A subagent's channel (row
+2.12, agent/spawn.py) also carries its parent (`source_agent_id`) and the parent's step that
+spawned it (`custom_metadata.spawned_by_step`). Each claim's quote is anchored in the
 corpus file named by `file` (agent/anchor.py), after checking the file against its manifest hash.
 Reply {"ok": true, "claim_id": ...} or {"ok": false, "reason": ...}; both outcomes are logged.
 
@@ -98,6 +101,19 @@ class Channel:
     step_id: int
     agent_id: str = "main"
     origin: str = "research"
+    source_agent_id: str | None = None  # a subagent's parent (row 2.12)
+    spawned_by_step: int | None = None  # ... and the parent's step that spawned it
+
+
+def channel_of(request: dict[str, Any]) -> Channel | None:
+    """The Channel a claim_channel request asks for, or None if a field has the wrong type."""
+    channel = Channel(request.get("step_id"), request.get("agent_id", "main"), request.get("origin", "research"),
+                      request.get("source_agent_id"), request.get("spawned_by_step"))
+    ints = [channel.step_id] + ([channel.spawned_by_step] if channel.spawned_by_step is not None else [])
+    texts = [channel.agent_id, channel.origin] + ([channel.source_agent_id] if channel.source_agent_id is not None else [])
+    ok = (all(isinstance(i, int) and not isinstance(i, bool) for i in ints)
+          and all(isinstance(t, str) and t for t in texts))
+    return channel if ok else None
 
 
 class Broker:
@@ -181,6 +197,8 @@ class Broker:
         """Input B: check and log one claim request received on `channel`. Returns the reply."""
         started = utc_now()
         meta: dict[str, Any] = {"origin": channel.origin}
+        if channel.spawned_by_step is not None:
+            meta["spawned_by_step"] = channel.spawned_by_step
         used: dict[str, Any] = {}
         try:
             request = self._parse(raw, meta)
@@ -201,7 +219,7 @@ class Broker:
         record = {
             "subtype": "claim", "step_id": channel.step_id, "used": used, "generated": {},
             "parent_task_id": None, "group_id": f"step-{channel.step_id}",
-            "agent_id": channel.agent_id, "source_agent_id": None,
+            "agent_id": channel.agent_id, "source_agent_id": channel.source_agent_id,
             "workflow_id": self.run.run_id, "started_at": started, "ended_at": utc_now(),
             "status": status, "custom_metadata": meta,
         }
@@ -275,8 +293,7 @@ def serve_harness(broker: Broker, sock: socket.socket) -> dict[str, Any]:
             request, op = {}, None
         if op == "record":
             reply = broker.record(request.get("record"))
-        elif op == "claim_channel" and len(fds) == 1 and isinstance(request.get("step_id"), int):
-            channel = Channel(request["step_id"], request.get("agent_id", "main"), request.get("origin", "research"))
+        elif op == "claim_channel" and len(fds) == 1 and (channel := channel_of(request)) is not None:
             thread = threading.Thread(target=serve_claims, args=(broker, socket.socket(fileno=fds.pop()), channel),
                                       daemon=True)
             thread.start()

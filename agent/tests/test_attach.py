@@ -14,8 +14,10 @@ pytest.importorskip("litellm")
 from rdflib import Literal  # noqa: E402
 from rdflib.namespace import PROV  # noqa: E402
 
+import litellm  # noqa: E402
+
 from agent import kg, prov, queries  # noqa: E402
-from agent.attach import ATTACH_FILE, AttachError, attach_run, attach_state, load_prompt  # noqa: E402
+from agent.attach import ATTACH_FILE, RESULT_SCHEMA, AttachError, attach_run, attach_state, load_prompt  # noqa: E402
 from agent.canonical import file_sha256  # noqa: E402
 from agent.chain import verify  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
@@ -90,11 +92,16 @@ def test_attach_end_to_end(tmp_path: Path, corpus: tuple[Path, Path], capsys: py
     assert summary["answer_research_sha256"] == file_sha256(run.root / "answer.research.json")
     assert summary["answer_sha256"] == file_sha256(run.answer)
 
-    # config.json: the attach step's own prompt hash and per-fact budget.
+    # config.json: the attach step's own prompt hash (the run's version, v2) and per-fact budget.
     config = run.load_config()["attach"]
-    assert config["prompt"]["sha256"] == file_sha256(PROMPT_DIR / "attach-v1.txt") == load_prompt().sha256
+    assert config["prompt"]["sha256"] == file_sha256(PROMPT_DIR / "attach-v2.txt") == load_prompt("v2").sha256
+    assert config["prompt"]["version"] == "v2" and config["conclude_decoding"] == "structured_outputs"
     assert config["budget_per_fact"] == BUDGET and config["first_step"] == 3 and config["sandbox"] == "unsandboxed"
     assert run.validate(complete=True) == []
+    assert [f["how"] for f in summary["facts"]] == ["result", "result", "", ""] and summary["attached_from_claim"] == 0
+    # Only the conclude reply (f4, step 15) was decoded under the result schema.
+    assert [i for i, k in enumerate(model.kwargs) if k] == [12]
+    assert model.kwargs[12]["extra_body"]["structured_outputs"] == {"json": RESULT_SCHEMA}
 
     # The model: a fresh conversation per fact, the budget announced, the fact's s/p/o given.
     systems = [p[0]["content"] for p in model.prompts]
@@ -176,6 +183,14 @@ def test_attach_end_to_end(tmp_path: Path, corpus: tuple[Path, Path], capsys: py
     assert [(r["fact_id"], r["origin"]) for r in queries.unsourced_facts(g)] == [("f3", "attach"), ("f4", "attach")]
     assert queries.unresolved_anchors(g, *corpus) == []
     assert (iri("fact", "f3"), prov.OURS.origin, Literal("attach")) in g
+    # answer.json is the attach step's; the research answer it was derived from is the final-answer call's.
+    final_call = next(r for r in research if r["subtype"] == "ai_model_invocation" and r["custom_metadata"]["final_answer"])
+    assert list(g.objects(iri("answer"), PROV.wasGeneratedBy)) == [attach_activity]
+    assert (iri("answer"), PROV.wasDerivedFrom, iri("answer-research")) in g
+    assert list(g.objects(iri("answer-research"), PROV.wasGeneratedBy)) == [iri("task", final_call["task_id"])]
+    assert (iri("answer-research"), prov.OURS.sha256, Literal(summary["answer_research_sha256"])) in g
+    assert (attach_activity, PROV.used, iri("answer-research")) in g
+    assert {str(o) for o in g.objects(None, prov.OURS.answerSource)} == {"final_answer"}
 
     # Run once only.
     with pytest.raises(AttachError, match="already done"):
@@ -221,6 +236,88 @@ def test_a_cut_attach_step_is_not_resumed(tmp_path: Path, corpus: tuple[Path, Pa
     assert "attach: the attach step started but did not finish (no attach.json)" in verify_run(run, *corpus).errors
     with pytest.raises(AttachError, match="started and cut"):
         attach_run(run.root, *corpus, model=ScriptedModel([]), sandbox_mode="unsandboxed", broker="inprocess")
+
+
+def tool_call(command: str) -> str:
+    """How Qwen3.8 replied in M1-real when asked to conclude (a command, not the result)."""
+    return f"<tool_call>\n<function=bash>\n<parameter=command>\n{command}\n</parameter>\n</function>\n</tool_call>"
+
+
+@posix_only
+def test_attach_concludes_under_the_schema_and_from_claims(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """1.13 for the attach step: conclude replies decoded under RESULT_SCHEMA (a refused schema falls back to
+    free decoding), and a fact left without a result gets its own matching claim, the last if several."""
+    run = baseline(tmp_path, corpus)
+    q1, q2 = unique_quote("p1"), unique_quote("p2")
+    refused = litellm.exceptions.BadRequestError("xgrammar: unsupported pattern", "orch-model", "openai")
+    model = ScriptedModel([
+        bash(claim_cmd(q1, "p1.md", "a fact")), bash("echo 1"), '{"claim_id": "claim-000001"}',  # f1: steps 3-5
+        bash(claim_cmd(q2, "p2.md", "fact two")), bash(claim_cmd(q2, "p2.md", "fact two")),     # f2: steps 6, 7
+        refused, tool_call("ls"),                                                                  # f2: steps 8, 9
+        result(no_source="nothing states it"),                                                     # f3: step 10
+        bash("echo 1"), bash("echo 2"), tool_call("ls"),                                           # f4: steps 11-13
+    ])
+    budget = {"steps": 2, "tokens": 400_000, "announced": True}
+    summary = attach_run(run.root, *corpus, model=model, sandbox_mode="unsandboxed", broker="inprocess", budget=budget)
+    got = {f["fact_id"]: (f["status"], f["claim_id"], f["reason"], f["how"]) for f in summary["facts"]}
+    assert got == {"f1": ("attached", "claim-000001", "", "result"), "f2": ("attached", "claim-000003", "", "claim"),
+                   "f3": ("no_source", None, "nothing states it", ""), "f4": ("no_source", None, "budget", "")}
+    assert (summary["attached"], summary["attached_from_claim"]) == (2, 1)
+    # Decoding: guided at f1's and f2's conclusion; free after the refusal, for the rest of the step.
+    guided = [i for i, k in enumerate(model.kwargs) if "structured_outputs" in k.get("extra_body", {})]
+    assert guided == [2, 5] and model.kwargs[2]["extra_body"]["structured_outputs"] == {"json": RESULT_SCHEMA}
+    assert model.prompts[2][-1]["content"].startswith("Budget for this fact used up. Reply now with the result alone, "
+                                                      "as one JSON object")
+    assert model.prompts[5] == model.prompts[6]  # asked again, without the schema
+    assert model.prompts[10][-1]["content"].startswith("Budget for this fact used up. Reply now with your reasoning")
+    attach = [r for r in records(run) if r["custom_metadata"].get("origin") == "attach"]
+    calls = {r["step_id"]: r for r in attach if r["subtype"] == "ai_model_invocation"}
+    assert calls[5]["generated"]["parse"] == "guided_answer" and calls[5]["used"]["decoding"] == "structured_outputs"
+    assert calls[8]["status"] == "failed" and calls[8]["generated"] == {"error": "guided_decoding_rejected"}
+    assert calls[9]["used"]["decoding"] == "free" and calls[9]["generated"]["parse"] == "lenient_tool_call"
+    coverage = [(r["step_id"], r["generated"]["reason"], r["custom_metadata"]["fact_id"]) for r in attach
+                if r["subtype"] == "coverage"]
+    assert coverage == [(8, "guided_decoding_rejected", "f2"), (9, "command_not_run", "f2"), (9, "attach_from_claim", "f2"),
+                        (10, "no_source_found", "f3"), (13, "command_not_run", "f4"), (13, "no_source_found", "f4")]
+    taken = next(r for r in attach if r["subtype"] == "coverage" and r["generated"]["reason"] == "attach_from_claim")
+    assert taken["generated"]["detail"] == {"row_id": "r1", "claim_id": "claim-000003",
+                                            "candidates": ["claim-000002", "claim-000003"], "why": "budget"}
+    answer = json.loads(run.answer.read_text(encoding="utf-8"))
+    assert [f["claims"] for r in answer["rows"] for f in r["facts"]] == [["claim-000001"], ["claim-000003"], [], []]
+    assert verify_run(run, *corpus).ok
+
+
+@posix_only
+def test_attach_of_a_v1_run_is_v1(tmp_path: Path, corpus: tuple[Path, Path]) -> None:
+    """A prompt v1 run (M1-real) attaches with attach-v1 and free decoding, as the M1-real attach did."""
+    run, outcome, _, _ = go(tmp_path, corpus, [final(answer_rows())], condition="claim_off", prompt_version="v1")
+    assert outcome.exit_status == "submitted"
+    model = ScriptedModel([result(no_source="not looked for")] * 4)
+    attach_run(run.root, *corpus, model=model, sandbox_mode="unsandboxed", broker="inprocess")
+    config = run.load_config()["attach"]
+    assert config["prompt"]["version"] == "v1" and config["prompt"]["sha256"] == load_prompt("v1").sha256
+    assert config["conclude_decoding"] == "free" and model.kwargs == [{}] * 4
+    assert "(p1.md, p2.md, ...)" in model.prompts[0][0]["content"]
+    with pytest.raises(AttachError, match="no attach prompt for version v9"):
+        attach_run(go(tmp_path, corpus, [final(answer_rows())], run_id="r2", condition="claim_off")[0].root, *corpus,
+                   model=ScriptedModel([]), sandbox_mode="unsandboxed", broker="inprocess", prompt_version="v9")
+
+
+def test_attach_prompt_v2_describes_the_corpus_like_prompt_v2() -> None:
+    """The attach step of a v2 run sees v2's corpus description and claim rules, verbatim (not v1's p1.md, p2.md)."""
+    assert b"\r" not in (PROMPT_DIR / "attach-v2.txt").read_bytes()
+    v2 = (PROMPT_DIR / "system-v2.txt").read_text(encoding="utf-8").splitlines()
+    attach = (PROMPT_DIR / "attach-v2.txt").read_text(encoding="utf-8").splitlines()
+    start = next(i for i, line in enumerate(v2) if line.startswith("- Copy the quote"))
+    end = next(i for i, line in enumerate(v2) if "corpus_file_hash_mismatch" in line)
+    rules = v2[start:end + 1]
+    a = attach.index(rules[0])
+    assert attach[a:a + len(rules)] == rules
+    assert attach[0] == v2[0]  # the same corpus, file names, shell, tools and limits
+    text = "\n".join(attach)
+    assert "(p1.md, p2.md, ...)" not in text and "2025-acl-long-892.md" in text and "result alone, as one JSON object" in text
+    prompt = load_prompt("v2")
+    assert prompt.task == load_prompt("v1").task and "{{steps}}" in prompt.system
 
 
 def test_attach_prompt_quotes_like_prompt_v1() -> None:

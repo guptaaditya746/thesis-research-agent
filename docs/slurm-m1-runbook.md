@@ -1,5 +1,11 @@
 # Runbook: first real runs on Slurm (rows 1.1 and 1.13)
 
+> Since the 1.13 fix (`e2e/agent-fix`), `agent run` defaults to prompt v2 at 60 steps / 2,000,000 tokens.
+> The commands below were run with the defaults of that time; to repeat them as they ran (prompt v1, its
+> loop, 150 steps / 400,000 tokens, attach prompt v1) add `--prompt-version v1` to each `agent run`
+> (`agent attach` then follows the run's prompt version). Without it they start v2 runs, and the budget
+> row of the measurement table below no longer applies.
+
 Everything in milestones 1 and 2 that can be built without the cluster is on `main` and passes its tests with a
 scripted model (`tests/RESULTS.md`, M2-run). This session runs it on the real models for the first time. The
 results decide the run budget, which is then frozen for both conditions.
