@@ -41,3 +41,9 @@ scripts/omen-tunnels-external text eol=lf
 # The built web app (webapp/web/dist, made by `npm run build`) is committed byte for byte, so the
 # Slurm node serves it without npm.
 webapp/web/dist/** -text
+
+# Evidence-level system: the protocol and extractor prompts are hashed into extractor and protocol ids; the
+# test papers are hashed into their manifest.
+evidence/protocols/** text eol=lf
+evidence/extractors/prompts/** text eol=lf
+evidence/tests/fixtures/** text eol=lf
