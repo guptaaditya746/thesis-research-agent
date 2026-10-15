@@ -13,6 +13,7 @@ import tempfile
 
 
 # name: (Omen service port, laptop port, gateway port, compute port)
+# `harness-ui` is the reverse path: its server runs on compute and the browser is on laptop.
 SERVICES = {
     "tracing": (3004, 23004, 29304, 33004),
     "postgres": (5432, 25432, 29432, 35432),
@@ -40,6 +41,7 @@ SERVICES = {
     "tracing-clickhouse-http": (18123, 38123, 58123, 48123),
     "tracing-clickhouse-native": (19000, 39000, 59000, 49000),
     "argilla": (6900, 26900, 46900, 36900),
+    "harness-ui": (None, 25173, 24173, 8080),
 }
 
 DEFAULT_SERVICES = ("tracing", "postgres")
@@ -78,6 +80,14 @@ def forward_args(role: str, names: list[str]) -> list[str]:
     for name in names:
         omen, laptop, gateway, compute = SERVICES[name]
         gateway += GATEWAY_PORT_OFFSET
+        if name == "harness-ui":
+            if role == "gateway":
+                # Laptop browser -> gateway reverse listener -> compute web app.
+                args += ["-L", f"127.0.0.1:{laptop}:127.0.0.1:{gateway}"]
+            elif role == "compute":
+                # Gateway listener -> compute web app. Keep the remote listener loopback-only.
+                args += ["-R", f"127.0.0.1:{gateway}:127.0.0.1:{compute}"]
+            continue
         if role == "omen":
             args += ["-L", f"127.0.0.1:{laptop}:127.0.0.1:{omen}"]
         elif role == "gateway":
@@ -129,14 +139,18 @@ def close(sock: Path, target: str) -> None:
         sock.unlink()
 
 
-def roles_for(machine: str) -> list[tuple[str, str]]:
-    return [("omen", OMEN), ("gateway", GATEWAY)] if machine == "laptop" else [("compute", GATEWAY)]
+def roles_for(machine: str, names: list[str]) -> list[tuple[str, str]]:
+    if machine != "laptop":
+        return [("compute", GATEWAY)]
+    roles = [("omen", OMEN)] if any(SERVICES[name][0] is not None for name in names) else []
+    return [*roles, ("gateway", GATEWAY)]
 
 
 def list_services() -> None:
     print(f"{'SERVICE':29} {'OMEN':>5} {'LAPTOP':>7} {'GATEWAY':>7} {'COMPUTE':>7}")
     for name, ports in SERVICES.items():
-        print(f"{name:29} {ports[0]:5} {ports[1]:7} {ports[2] + GATEWAY_PORT_OFFSET:7} {ports[3]:7}")
+        omen = "-" if ports[0] is None else str(ports[0])
+        print(f"{name:29} {omen:>5} {ports[1]:7} {ports[2] + GATEWAY_PORT_OFFSET:7} {ports[3]:7}")
 
 
 def main() -> int:
@@ -151,14 +165,16 @@ def main() -> int:
         return 0
     if not args.action:
         parser.error("choose start, status, or stop")
-    roles = roles_for(args.machine)
     folder = runtime_dir()
     state = folder / f"{args.machine}.json"
     recorded = json.loads(state.read_text()) if state.exists() else {}
     recorded_targets = recorded.get("targets", {})
+    names = selected_services(args.services) if args.action == "start" else recorded.get("services", [])
+    if not names:
+        names = selected_services(args.services)
+    roles = roles_for(args.machine, names)
     old_roles = [(role, recorded_targets.get(role, target)) for role, target in roles]
     if args.action == "start":
-        names = selected_services(args.services)
         if args.dry_run:
             for role, _ in roles:
                 print(shlex.join(ssh_command(role, names, folder / f"{role}.sock")))
@@ -202,7 +218,10 @@ def main() -> int:
             raise
         print("Ready. On the compute node use the same service names.")
         for name in names:
-            print(f"  {name}: 127.0.0.1:{SERVICES[name][3]} on compute")
+            if name == "harness-ui":
+                print(f"  {name}: http://127.0.0.1:{SERVICES[name][1]} in the laptop browser")
+            else:
+                print(f"  {name}: 127.0.0.1:{SERVICES[name][3]} on compute")
         return 0
     if args.action == "status":
         names = recorded.get("services", [])
