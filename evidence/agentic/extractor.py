@@ -12,6 +12,7 @@ context ran out) and items were kept; error when the run failed or left no answe
 """
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -91,8 +92,13 @@ class AgenticExtractor:
         """The registry's factory: AgentSettings fields, `budget`, `work_dir` (keep the agent's run
         directories), and the engine's `evidence_type`, `links`, `description`; other keys are ignored."""
         fields = {k: v for k, v in config.items() if k in AgentSettings.__dataclass_fields__}
+        # Paths are the node's, not the protocol's (they are not hashed): as `agent batch` does, the pinned
+        # toolchain falls back to $AGENT_ROOT, and the agent's run directories are kept under
+        # $EVIDENCE_AGENT_WORK_DIR when it is set.
+        fields.setdefault("agent_root", os.environ.get("AGENT_ROOT") or None)
         settings = AgentSettings(**fields)
-        runner = ResearchAgentRunner(settings, work_dir=Path(config["work_dir"]) if config.get("work_dir") else None)
+        work_dir = config.get("work_dir") or os.environ.get("EVIDENCE_AGENT_WORK_DIR")
+        runner = ResearchAgentRunner(settings, work_dir=Path(work_dir) if work_dir else None)
         return cls(runner, settings, config.get("budget"), evidence_type=config.get("evidence_type"),
                    links=config.get("links"), description=config.get("description") or "")
 
