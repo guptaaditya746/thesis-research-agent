@@ -48,7 +48,7 @@ def cmd_build(args: argparse.Namespace) -> int:
                                verify_model=openai_model(args.verify_model) if args.verify_model else None,
                                concurrency=args.concurrency)
     result = corpus.build(name=args.name, seed=args.seed, studies=args.studies, renderer=renderer, out=args.out,
-                          levels=args.levels, mix=args.effects)
+                          levels=args.levels, mix=args.effects, protocol=args.protocol)
     print(json.dumps(result, indent=2))
     if result["excluded"]:
         print(f"WARNING: {len(result['excluded'])} studies failed fidelity and were left out; see fidelity.json")
@@ -74,6 +74,8 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--effects", type=parse_effects, default=None,
                    help="true effect mix, e.g. supports=0.6,contradicts=0.2,neutral=0.2 (the default)")
     b.add_argument("--out", type=Path, default=Path("corpora"))
+    b.add_argument("--protocol", type=Path, default=None,
+                   help="the protocol whose synthesis block defines the ground truth (default: the RAG protocol)")
     b.add_argument("--model", default="sub-model-1", help="LiteLLM alias of the writing model (llm renderer)")
     b.add_argument("--verify-model", default=None, help="LiteLLM alias for the blind re-extraction check")
     b.add_argument("--attempts", type=int, default=3)

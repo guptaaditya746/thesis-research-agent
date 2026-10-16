@@ -6,27 +6,41 @@ import pytest
 from evidence import rules
 from synth import truth
 
+SPEC = truth.default_spec()
+
 
 def test_same_seed_same_studies_other_seed_other_studies() -> None:
     assert truth.generate(7, 12) == truth.generate(7, 12)
     assert truth.generate(7, 12) != truth.generate(8, 12)
 
 
+def test_the_protocol_defines_the_truth() -> None:
+    """Another protocol (a wider neutral band) gives other studies with the same seed; one that leaves
+    no neutral band above the decoy gap is refused."""
+    wide = SPEC.model_copy(update={"min_effect": 0.02})
+    studies = truth.generate(5, 10, {"neutral": 1}, wide)
+    assert all(s.effect.direction == "neutral" and abs(s.effect.delta) < 0.02 for s in studies)
+    assert any(abs(s.effect.delta) >= 0.01 for s in studies)
+    with pytest.raises(ValueError, match="neutral band"):
+        truth.generate(5, 2, {"neutral": 1}, SPEC.model_copy(update={"min_effect": 0.008}))
+
+
 @pytest.mark.parametrize("seed", range(1, 21))
 def test_effect_is_rules_effect_on_main_pair(seed: int) -> None:
     for s in truth.generate(seed, 10):
         q = s.primary
-        assert q.canonical in rules.METRICS and q.higher_is_better == rules.METRICS[q.canonical]
+        assert q.canonical in SPEC.metric_names and q.higher_is_better == SPEC.higher_is_better(q.canonical)
         base = s.measurement(s.condition("baseline").id, q.id, s.datasets[0])
         rag = s.measurement(s.condition("rag").id, q.id, s.datasets[0])
-        assert (s.effect.rag, s.effect.baseline, s.effect.metric) == (rag.id, base.id, q.id)
-        assert (s.effect.direction, s.effect.delta) == rules.effect(rag.value, base.value, q.higher_is_better)
+        assert (s.effect.treatment, s.effect.control, s.effect.metric) == (rag.id, base.id, q.id)
+        assert (s.effect.direction, s.effect.delta) == rules.effect(rag.value, base.value, q.higher_is_better,
+                                                                    SPEC.min_effect)
         # the second dataset shows the same direction, so either pair gives the same answer
         b2 = s.measurement(s.condition("baseline").id, q.id, s.datasets[1])
         r2 = s.measurement(s.condition("rag").id, q.id, s.datasets[1])
-        assert rules.effect(r2.value, b2.value, q.higher_is_better)[0] == s.effect.direction
-        assert rules.claim_agrees(s.claim, s.effect.direction)
-        assert not rules.claim_agrees(s.false_claim, s.effect.direction)
+        assert rules.effect(r2.value, b2.value, q.higher_is_better, SPEC.min_effect)[0] == s.effect.direction
+        assert rules.claim_agrees(s.claim, s.effect.direction, SPEC.claim_map)
+        assert not rules.claim_agrees(s.false_claim, s.effect.direction, SPEC.claim_map)
 
 
 @pytest.mark.parametrize("seed", range(1, 21))
@@ -64,8 +78,8 @@ def test_effect_counts_largest_remainder() -> None:
 def test_every_answer_label_can_be_made(mix: dict[str, float], label: str) -> None:
     studies = truth.generate(3, 8, mix)
     answer = truth.answer(studies)
-    counts = [len(answer[k]) for k in ("supporting", "contradicting", "neutral")]
-    assert answer["label"] == rules.label(*counts) == label
+    counts = {k: len(answer[k]) for k in ("supporting", "contradicting", "neutral")}
+    assert answer["label"] == rules.label(counts, SPEC.table) == label
     assert sorted(answer["supporting"] + answer["contradicting"] + answer["neutral"]) == [s.study_id for s in studies]
 
 
@@ -76,8 +90,9 @@ def test_decoy_is_far_from_every_true_value_and_fits_the_false_claim(seed: int) 
         if s.decoy is None:
             continue
         assert all(abs(s.decoy - m.value) > truth.DECOY_GAP for m in s.measurements), (s.study_id, s.decoy)
-        base = s.value_of(s.effect.baseline)
-        assert rules.claim_agrees(s.false_claim, rules.effect(s.decoy, base, s.primary.higher_is_better)[0])
+        base = s.value_of(s.effect.control)
+        assert rules.claim_agrees(s.false_claim, rules.effect(s.decoy, base, s.primary.higher_is_better,
+                                                             SPEC.min_effect)[0], SPEC.claim_map)
 
 
 @pytest.mark.parametrize("seed", range(1, 41))

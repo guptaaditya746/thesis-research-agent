@@ -20,6 +20,8 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from agent.canonical import canonical_bytes, sha256_hex
+from evidence import protocol as protocol_module
+from evidence.protocol import Protocol
 from synth import truth, vocab
 from synth.fidelity import PaperFidelity
 from synth.levels import LEVELS, Plan
@@ -80,8 +82,8 @@ def study_truth(r: Rendered) -> dict[str, Any]:
         "measurements": [{"id": m.id, "condition": m.condition, "metric": m.metric, "value": m.value,
                           "dataset": m.dataset} for m in p.measurements],
         "author_claim": {"id": f"{s.study_id}.a1", "direction": p.claim},
-        "effect": {"direction": e.direction, "delta": e.delta, "metric": e.metric, "rag": e.rag,
-                   "baseline": e.baseline},
+        "effect": {"direction": e.direction, "delta": e.delta, "metric": e.metric, "treatment": e.treatment,
+                   "control": e.control},
     }
 
 
@@ -94,9 +96,10 @@ def prepare(directory: Path) -> None:
     (directory / "papers").mkdir(parents=True)
 
 
-def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer,
+def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer, protocol: Protocol,
                  studies: list[Study], papers: dict[str, Rendered], failed: dict[str, list[str]]) -> str:
-    """Write one corpus; `papers` maps every study id to its rendering for this corpus."""
+    """Write one corpus; `papers` maps every study id to its rendering for this corpus. The protocol whose
+    synthesis block made the ground truth is recorded (id and sha256), never its file."""
     prepare(directory)
     kept = [s for s in studies if s.study_id not in failed]
     manifest = []
@@ -109,17 +112,19 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
     (directory / "corpus.json").write_bytes(dump({
         "corpus_id": cid, "seed": seed,
         "generator": {"name": GENERATOR, "version": GENERATOR_VERSION, "code_sha256": code_sha256()},
-        "renderer": renderer.name, "level": level, "question": vocab.QUESTION,
+        "renderer": renderer.name, "level": level, "question": protocol.question,
+        "protocol": {"id": protocol.id, "sha256": protocol.sha256},
         "papers": [{"id": s.study_id, "study_id": s.study_id, "level": papers[s.study_id].plan.level} for s in kept],
         "models": renderer.models(),
     }))
     placements = sorted((p for s in kept for p in papers[s.study_id].placements),
                         key=lambda p: (p.paper, p.start, p.end, p.role, p.fact))
     (directory / "ground_truth.json").write_bytes(dump({
-        "corpus_id": cid, "seed": seed, "question": vocab.QUESTION,
+        "corpus_id": cid, "seed": seed, "question": protocol.question,
+        "protocol": {"id": protocol.id, "sha256": protocol.sha256},
         "studies": [study_truth(papers[s.study_id]) for s in kept],
         "placements": [p.json() for p in placements],
-        "answer": truth.answer(kept),
+        "answer": truth.answer(kept, protocol.synthesis),
     }))
     records = []
     for s in studies:
@@ -137,12 +142,17 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
 
 
 def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
-          levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None) -> dict[str, Any]:
-    """Generate the study set, render it at every level, write the level corpora and the mixed one."""
+          levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None,
+          protocol: Protocol | Path | str | None = None) -> dict[str, Any]:
+    """Generate the study set for the protocol's question (its synthesis block gives the roles, metrics,
+    neutral band, claim vocabulary and label table; default evidence/protocols/rag-factuality.yaml), render
+    it at every level, write the level corpora and the mixed one."""
     unknown = [lv for lv in levels if lv not in LEVELS]
     if unknown or not levels:
         raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(LEVELS)}")
-    study_set = truth.generate(seed, studies, mix)
+    if not isinstance(protocol, Protocol):
+        protocol = protocol_module.load(protocol or truth.DEFAULT_PROTOCOL)
+    study_set = truth.generate(seed, studies, mix, protocol.synthesis)
     rendered = renderer.render_all([(s, lv) for lv in levels for s in study_set], seed)
     failed: dict[str, list[str]] = {}
     for (sid, lv), r in sorted(rendered.items()):
@@ -154,6 +164,6 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
         papers = {sid: rendered[(sid, a)] for sid, a in assign.items()}
         directory = out / f"{name}-{lv}"
         written[str(directory)] = write_corpus(directory, name=name, level=lv, seed=seed, renderer=renderer,
-                                               studies=study_set, papers=papers, failed=failed)
-    return {"corpora": written, "excluded": failed, "answer": truth.answer(
-        [s for s in study_set if s.study_id not in failed])}
+                                               protocol=protocol, studies=study_set, papers=papers, failed=failed)
+    return {"corpora": written, "excluded": failed, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
+            "answer": truth.answer([s for s in study_set if s.study_id not in failed], protocol.synthesis)}

@@ -87,8 +87,8 @@ def studies() -> list[dict[str, Any]]:
                           {"id": "S001.m2", "condition": "S001.c2", "metric": "S001.k1", "value": 0.70, "dataset": "NQ"},
                           {"id": "S001.m3", "condition": "S001.c3", "metric": "S001.k1", "value": 0.66, "dataset": "NQ"}],
          "author_claim": {"id": "S001.a1", "direction": "improves"},
-         "effect": {"direction": "supports", "delta": 0.08, "metric": "S001.k1", "rag": "S001.m2",
-                    "baseline": "S001.m1"}},
+         "effect": {"direction": "supports", "delta": 0.08, "metric": "S001.k1", "treatment": "S001.m2",
+                    "control": "S001.m1"}},
         {"study_id": "S002", "paper": "S002", "level": "paraphrased",
          "conditions": [{"id": "S002.c1", "role": "baseline", "label": "plain generator", "aliases": []},
                         {"id": "S002.c2", "role": "rag", "label": "augmented pipeline", "aliases": []}],
@@ -97,8 +97,8 @@ def studies() -> list[dict[str, Any]]:
          "measurements": [{"id": "S002.m1", "condition": "S002.c1", "metric": "S002.k1", "value": 0.20, "dataset": "x"},
                           {"id": "S002.m2", "condition": "S002.c2", "metric": "S002.k1", "value": 0.25, "dataset": "x"}],
          "author_claim": {"id": "S002.a1", "direction": "no_effect"},
-         "effect": {"direction": "contradicts", "delta": -0.05, "metric": "S002.k1", "rag": "S002.m2",
-                    "baseline": "S002.m1"}},
+         "effect": {"direction": "contradicts", "delta": -0.05, "metric": "S002.k1", "treatment": "S002.m2",
+                    "control": "S002.m1"}},
     ]
 
 
@@ -181,11 +181,11 @@ def engine_answer(items: dict[str, Item]) -> dict[str, Any]:
     return {"system": "evidence-engine", "question": QUESTION, "label": "mixed",
             "counts": {"supporting": 1, "contradicting": 1, "neutral": 0, "undetermined": 0},
             "studies": [{"document": "S001", "direction": "supports", "delta": 0.08, "metric": "factual_accuracy",
-                         "rag": side("S001.m2", "S001.c2", 0.70), "baseline": side("S001.m1", "S001.c1", 0.62),
+                         "treatment": side("S001.m2", "S001.c2", 0.70), "control": side("S001.m1", "S001.c1", 0.62),
                          "author_claim": {"item": items["S001.a1"].item_id, "direction": "improves",
                                           "agrees_with_data": True}, "reason": None},
                         {"document": "S002", "direction": "contradicts", "delta": -0.05, "metric": "hallucination_rate",
-                         "rag": side("S002.m2", "S002.c2", 0.25), "baseline": side("S002.m1", "S002.c1", 0.20),
+                         "treatment": side("S002.m2", "S002.c2", 0.25), "control": side("S002.m1", "S002.c1", 0.20),
                          "author_claim": {"item": items["S002.a1"].item_id, "direction": "no_effect",
                                           "agrees_with_data": False}, "reason": None}],
             "supporting": ["S001"], "contradicting": ["S002"], "neutral": [], "undetermined": []}

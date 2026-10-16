@@ -88,11 +88,11 @@ He wrote no numbered research questions. Read from his text:
 | Funnel engine (ours) | Per paper: screen (is there a RAG-vs-baseline experiment? else skip with a reason) → regex → completeness check against a rule the protocol declares (a RAG and a baseline condition, a shared metric, values for both on the same dataset) → escalate only the gaps (LLM, then the agent with a targeted task) → stop when complete or exhausted; gaps recorded. Modes `all` (every extractor on everything, for benchmarking) and `gaps` (answering, the 337-paper check). |
 | Proposal flow (ours) | PICO-style frame → draft (EDC-style definitions; each field's source: ontology, protocol or invented) → critic checklist → fixed choice-point cards with LLM defaults, the user decides with a reason (`decisions:` log) → freeze with a hash and a pinned vocabulary snapshot → PROSPERO/OSF-style amendments (version, amended hash, reason, impact, before the main run or not). |
 | Ontology | Optional offline vocabulary snapshot (CS-KG 2.0 terms and synonyms, Papers with Code metric names, ML-Schema measurement shape, EXPO roles; DBLP only for metadata), used **only in the proposal flow**. The evidence graph stays plain JSON with the PROV-O / Web Annotation export; no OWL. |
-| Synthesis | The rules move from Python (`evidence/rules.py`, `evidence/synthesis.py`) into the protocol YAML; incomplete studies are reported with their reason. |
+| Synthesis | The rules move from Python (`evidence/rules.py`, `evidence/synthesis.py`) into the protocol YAML; incomplete studies are reported with their reason. **Built 17 Oct** (protocol version 2, Part C): `synthesis` holds roles, metrics with direction, `min_effect`, pairing, claim map, label decision table and flag thresholds; `rules.py` knows nothing of the question; `synth` reads the same block (`--protocol`). |
 
 ## 5. Order of work
 
-1. Contract: funnel engine, declarative synthesis, proposal flow (written before any code).
+1. Contract: funnel engine, declarative synthesis, proposal flow (written before any code). **Done 17 Oct**: Parts C–G of `evidence-system.md`; the declarative synthesis is built (protocol version 2).
 2. The conflict fixes (RAG baseline, fidelity check, attribution).
 3. Finish ev2.
 4. Funnel engine.
@@ -111,20 +111,21 @@ see §7).
 
 | Step (supervisor's order) | State | Where |
 |---|---|---|
-| Protocol by hand | built | `evidence/protocols/rag-factuality.yaml` (four evidence types: condition, metric, measurement, author claim; field schemas, value bounds, cascade per type, locate strategy, synthesis settings), `evidence/protocol.py` |
+| Protocol by hand | built, version 2 | `evidence/protocols/rag-factuality.yaml` (four evidence types: condition, metric, measurement, author claim; field schemas, value bounds, cascade per type, locate strategy, a screening question, every synthesis parameter), `evidence/protocol.py` |
 | Synthetic corpus generator | built | `synth/`: seeded ground truth, five levels plus `mixed`, template and LLM renderers, fidelity checks with retries, one corpus per level from one study set, a review sheet, six example corpora ([`synth/README.md`](../synth/README.md)) |
 | Extractor library | built | `evidence/extractors/` (regex and single-call LLM per evidence type), `evidence/agentic/`; contract `evidence/contract.py` (Part B) |
 | Provenance and replay (ours) | built | `evidence/engine.py`, `replay.py`, `prov.py` |
 | Evidence representation | built | `evidence/merge.py`, `graph.py`: merged items with every span and `found_by`; `graph.json` |
-| Synthesis rules | built (in Python) | `evidence/rules.py`, `synthesis.py`: same-dataset pairing, table before prose; undetermined studies with a reason |
+| Synthesis rules | built, in the protocol (17 Oct) | parameters in the protocol's `synthesis` block (Part C); machinery `evidence/rules.py`, `synthesis.py`: same-dataset pairing, table before prose; undetermined studies with a reason code |
 | Evaluation A, B, C | built | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis, locate recall, cascade contribution, cost, stability |
 | Baselines | built | `evaluation/baselines/rag.py` (to be changed, §4), `agent.py` |
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
 | Viewer | earlier design | `webapp/`, to be rebuilt |
 
 Not built: the supervisor's controlled variant and the §6 knobs (in the ev2 bundle), confidence intervals in
-the comparison, per-extractor benchmark records (B11), the funnel engine, the proposal flow, synthesis rules
-in the protocol, the 337-paper check.
+the comparison, per-extractor benchmark records (B11), the funnel engine, the proposal flow, the 337-paper
+check. Their contracts are written: [`evidence-system.md`](evidence-system.md) Parts D (funnel), E
+(proposal flow), F (ev2), G (the conflict fixes of §4).
 
 ## 7. Open
 
@@ -134,7 +135,6 @@ in the protocol, the 337-paper check.
 | Model choice in the runbook | `slurm-evidence-runbook.md` uses `sub-model-1` for the LLM extractors and `orch-model` for the agentic extractor and both baselines, and `orch-model` writes the synthetic papers. The 16 Oct decision (one model for all extractors and baselines) needs the runbook changed, and the paper writer then on other weights than the extractors (step 6). |
 | RAG baseline, fidelity check | The conflict fixes of §4 are not built (step 2). |
 | Controlled variants | What is built is one study set rendered per level; the supervisor's variant (change one study, predictable shift) is in ev2. |
-| Synthesis rules | Still in Python; move to the protocol (step 1 contract, then the funnel engine). |
 | 337-paper check | Which of the 337 papers are RAG papers, and their gold (the `gold/` method; never run on the real model, [`earlier-work.md`](earlier-work.md) §6). |
 | Structured outputs on the server | pydantic-ai's `response_format` calls (LLM extractors, gold, judge) cannot ask for `disable_any_whitespace` per request; proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the `llm-setup` profile (a submodule, not changed here); count `finish_reason` length on guided calls on Slurm either way. |
 | Statistics | Intervals for the per-level comparison and the baseline comparison are not decided yet (ev2 has a bootstrap draft). |

@@ -18,8 +18,8 @@ def test_pairs_on_the_first_dataset_with_both(tmp_path: Path) -> None:
     answer, items = regex_run(docs, tmp_path)
     for study, (a, _) in zip(answer["studies"], values, strict=True):
         assert study["direction"] == "supports", study
-        assert study["rag"]["value"] == a / 100 and study["baseline"]["value"] == 0.6
-        assert items[study["rag"]["measurement"]]["fields"]["dataset"] == "NQ"
+        assert study["treatment"]["value"] == a / 100 and study["control"]["value"] == 0.6
+        assert items[study["treatment"]["measurement"]]["fields"]["dataset"] == "NQ"
 
 
 def test_dataset_order_follows_the_values_not_the_labels(tmp_path: Path) -> None:
@@ -27,7 +27,7 @@ def test_dataset_order_follows_the_values_not_the_labels(tmp_path: Path) -> None
     table = ("| System | Dataset | Accuracy (%) |\n|---|---|---|\n| R | TQA | 40.0 |\n| B | TQA | 60.0 |\n"
              "| R | NQ | 80.0 |\n| B | NQ | 60.0 |\n")
     answer, _ = regex_run({"T": HEAD + table}, tmp_path)
-    assert answer["studies"][0]["direction"] == "contradicts" and answer["studies"][0]["rag"]["value"] == 0.4
+    assert answer["studies"][0]["direction"] == "contradicts" and answer["studies"][0]["treatment"]["value"] == 0.4
 
 
 def test_a_table_cell_beats_a_decoy_in_the_abstract(tmp_path: Path) -> None:
@@ -36,4 +36,4 @@ def test_a_table_cell_beats_a_decoy_in_the_abstract(tmp_path: Path) -> None:
             "| Retrieval-augmented model | 60.0 |\n")
     answer, _ = regex_run({"D": text}, tmp_path)
     study = answer["studies"][0]
-    assert (study["rag"]["value"], study["baseline"]["value"], study["direction"]) == (0.6, 0.64, "contradicts")
+    assert (study["treatment"]["value"], study["control"]["value"], study["direction"]) == (0.6, 0.64, "contradicts")

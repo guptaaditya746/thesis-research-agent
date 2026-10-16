@@ -2,6 +2,10 @@
   "corpus_id": "rag-demo-5a7d6168",
   "seed": 1,
   "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
   "studies": [
     {
       "study_id": "S001",
@@ -66,8 +70,8 @@
         "direction": "supports",
         "delta": 0.032,
         "metric": "S001.k1",
-        "rag": "S001.m2",
-        "baseline": "S001.m1"
+        "treatment": "S001.m2",
+        "control": "S001.m1"
       }
     },
     {
@@ -120,8 +124,8 @@
         "direction": "supports",
         "delta": 0.122,
         "metric": "S002.k1",
-        "rag": "S002.m2",
-        "baseline": "S002.m1"
+        "treatment": "S002.m2",
+        "control": "S002.m1"
       }
     },
     {
@@ -187,8 +191,8 @@
         "direction": "neutral",
         "delta": 0.009,
         "metric": "S003.k1",
-        "rag": "S003.m2",
-        "baseline": "S003.m1"
+        "treatment": "S003.m2",
+        "control": "S003.m1"
       }
     },
     {
@@ -267,8 +271,8 @@
         "direction": "supports",
         "delta": 0.129,
         "metric": "S004.k1",
-        "rag": "S004.m2",
-        "baseline": "S004.m1"
+        "treatment": "S004.m2",
+        "control": "S004.m1"
       }
     },
     {
@@ -347,8 +351,8 @@
         "direction": "contradicts",
         "delta": -0.065,
         "metric": "S005.k1",
-        "rag": "S005.m2",
-        "baseline": "S005.m1"
+        "treatment": "S005.m2",
+        "control": "S005.m1"
       }
     },
     {
@@ -414,8 +418,8 @@
         "direction": "supports",
         "delta": 0.131,
         "metric": "S006.k1",
-        "rag": "S006.m2",
-        "baseline": "S006.m1"
+        "treatment": "S006.m2",
+        "control": "S006.m1"
       }
     }
   ],

@@ -65,7 +65,9 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade",
         chosen = []
         for ref in spec.extractors:
             config = {**ref.config, "evidence_type": etype, "field_schema": spec.fields, "links": dict(spec.links),
-                      "roles": list(spec.roles), "description": spec.description}
+                      "roles": list(spec.roles), "description": spec.description,
+                      "question_metrics": list(protocol.synthesis.metric_names),
+                      "compare": protocol.synthesis.compare.model_dump()}
             extractor = extractors.get(ref.name, config)
             if model and extractor.spec.kind in ("llm", "agent"):
                 extractor = extractors.get(ref.name, {**config, "model": model})
@@ -159,7 +161,7 @@ class Execution:
         self.outputs[GRAPH_FILE] = write_canonical(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
         self.events.add("synthesis", used=sorted(set(used)), generated=["answer"], agent_id="evidence-engine",
                         custom={"label": answer["label"], "counts": answer["counts"],
-                                "answer_sha256": self.outputs[ANSWER_FILE], "rule": self.protocol.synthesis.label_rule})
+                                "answer_sha256": self.outputs[ANSWER_FILE], "rule": "label_table"})
         return answer
 
 

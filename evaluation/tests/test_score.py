@@ -89,7 +89,7 @@ def test_value_linked_to_wrong_condition_counts_in_a_but_fails_b(tmp_path: Path,
 def test_wrong_pair_fails_the_true_pair_check(tmp_path: Path, corpus: Path) -> None:
     items = fx.perfect_items()
     answer = fx.engine_answer(items)
-    answer["studies"][0]["rag"]["measurement"] = items["S001.m3"].item_id  # the distractor as RAG
+    answer["studies"][0]["treatment"]["measurement"] = items["S001.m3"].item_id  # the distractor as RAG
     result = score(run_with(tmp_path, items, answer), corpus)
     assert row(result["integration"]["rows"], level="all")["true_pair"] == 0.5
     assert row(result["integration"]["rows"], level="explicit")["true_pair"] == 0.0

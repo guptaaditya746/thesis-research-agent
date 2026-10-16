@@ -130,8 +130,8 @@ def results(doc: Doc, plan: Plan, rng: random.Random) -> None:
         doc.add(f"The table below reports the results on {plan.datasets[0]} and on {plan.datasets[1]}.\n\n")
         table(doc, plan, use_codes=False)
         doc.add("\n")
-        base, rag = plan.study.condition("baseline").id, plan.study.condition("rag").id
-        rel = plan.values[plan.study.effect.rag]
+        base, rag = plan.study.conditions[0].id, plan.study.conditions[1].id
+        rel = plan.values[plan.study.effect.treatment]
         doc.fill("On {d}, the {r} scores {v} than the {b} in {k}.\n", d=plan.datasets[0], r=plan.cond(rag),
                  k=plan.metric(plan.metrics[0].id), v=rel, b=plan.cond(base))
         return

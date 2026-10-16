@@ -18,9 +18,10 @@ from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
 
 from agent.canonical import sha256_hex
-from evidence.rules import Label, label as rule_label
+from evidence import protocol as protocol_module, rules
 from gold.llm import JsonlCache, cache_key, model_name, prompt_sha256, redact, settings, structured_reply
 
+DEFAULT_PROTOCOL = Path(__file__).resolve().parents[2] / "evidence" / "protocols" / "rag-factuality.yaml"
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
 Stance = Literal["supports", "contradicts", "neutral"]
 GROUPS = {"supports": "supporting", "contradicts": "contradicting", "neutral": "neutral"}
@@ -64,7 +65,7 @@ class StudyStance(BaseModel):
 
 class AnswerReply(BaseModel):
     """The one schema both baselines' model calls are decoded under."""
-    label: Label = Field(description="supported, refuted, mixed, no_effect or insufficient")
+    label: rules.Label = Field(description="supported, refuted, mixed, no_effect or insufficient")
     studies: list[StudyStance] = Field(description="one entry per paper the answer relies on")
     answer_text: str = Field(description="the answer in a few sentences")
 
@@ -82,8 +83,9 @@ def answer_json(system: str, question: str, reply: AnswerReply, known: list[str]
     """answer.json (section 4) for a baseline: the model's label and per-paper stances, as stated.
 
     Entries for papers not in the corpus are dropped (listed in `dropped`); a paper named twice keeps
-    its first stance. `label_by_rule` is evidence.rules.label over the stated stances, for reference;
-    the score uses the model's own `label`.
+    its first stance. `label_by_rule` is evidence.rules.label over the stated stances by the label table of
+    the default protocol (the baseline reads no corpus file for it), for reference; the score uses the
+    model's own `label`.
     """
     studies, dropped, seen = [], [], set()
     for s in reply.studies:
@@ -97,7 +99,7 @@ def answer_json(system: str, question: str, reply: AnswerReply, known: list[str]
     counts = {g: len(v) for g, v in groups.items()} | {"undetermined": 0}
     return {"system": system, "question": question, "label": reply.label, "counts": counts, "studies": studies,
             **groups, "undetermined": [], "answer_text": reply.answer_text,
-            "label_by_rule": rule_label(counts["supporting"], counts["contradicting"], counts["neutral"]),
+            "label_by_rule": rules.label(counts, protocol_module.load(DEFAULT_PROTOCOL).synthesis.table),
             "dropped": dropped, **extra}
 
 

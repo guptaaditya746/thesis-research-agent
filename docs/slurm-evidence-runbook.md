@@ -16,8 +16,8 @@ it. The point is that every part meets the real models once and the first number
 - **Fixes** are allowed on `evidence-cluster`: one commit per fix, each with a test, and
   `uv run pytest <package>/tests -q` green for the package you changed. **Never** change, to make something
   pass: the protocols (`evidence/protocols/`), the extractor prompts (`evidence/extractors/prompts/`), the
-  regex vocabularies (`evidence/extractors/terms.py`), the synthesis rules (`evidence/rules.py`,
-  `evidence/synthesis.py`), the level definitions and fidelity checks (`synth/levels.py`, `synth/levelcheck.py`,
+  regex vocabularies (`evidence/extractors/terms.py`), the synthesis machinery (`evidence/rules.py`,
+  `evidence/synthesis.py`; its parameters are in the protocols), the level definitions and fidelity checks (`synth/levels.py`, `synth/levelcheck.py`,
   `synth/fidelity.py`, `synth/assoc.py`), the renderer prompts (`synth/prompts/`), the scoring rules
   (`evaluation/score.py`), the agent's prompts and budgets (`agent/prompts/`, `agent/rundir.py`), the anchor
   rules (`agent/anchor.py`) or any threshold or tolerance. Record and continue. Do not change the `llm-setup`

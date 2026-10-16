@@ -7,12 +7,14 @@ from pathlib import Path
 import pytest
 
 from agent.anchor import read_text
-from evidence import rules
-from synth import corpus
+from evidence import protocol, rules
+from synth import corpus, truth
 from synth.levels import LEVELS
 from synth.render_template import TemplateRenderer
 
 ALL = (*LEVELS, "mixed")
+PROTO = protocol.load(truth.DEFAULT_PROTOCOL)
+SPEC = PROTO.synthesis
 
 
 def build(out: Path, seed: int = 5, studies: int = 10, **kw) -> dict:
@@ -83,15 +85,16 @@ def test_effects_and_answer_follow_rules(built: Path) -> None:
         for s in gt["studies"]:
             ms = {m["id"]: m for m in s["measurements"]}
             metric = next(k for k in s["metrics"] if k["id"] == s["effect"]["metric"])
-            assert metric is s["metrics"][0] and metric["canonical"] in rules.METRICS
+            assert metric is s["metrics"][0] and metric["canonical"] in SPEC.metric_names
             roles = {c["id"]: c["role"] for c in s["conditions"]}
-            rag, base = ms[s["effect"]["rag"]], ms[s["effect"]["baseline"]]
+            rag, base = ms[s["effect"]["treatment"]], ms[s["effect"]["control"]]
             assert (roles[rag["condition"]], roles[base["condition"]]) == ("rag", "baseline")
             assert rag["dataset"] == base["dataset"] and rag["metric"] == base["metric"] == metric["id"]
-            direction, delta = rules.effect(rag["value"], base["value"], metric["higher_is_better"])
+            direction, delta = rules.effect(rag["value"], base["value"], metric["higher_is_better"], SPEC.min_effect)
             assert (s["effect"]["direction"], s["effect"]["delta"]) == (direction, delta)
             counts[direction].append(s["paper"])
-        assert gt["answer"] == {"label": rules.label(*(len(v) for v in counts.values())),
+        assert gt["protocol"] == {"id": "rag-factuality", "sha256": PROTO.sha256}
+        assert gt["answer"] == {"label": rules.label({rules.GROUP_OF[d]: len(v) for d, v in counts.items()}, SPEC.table),
                                 "supporting": counts["supports"], "contradicting": counts["contradicts"],
                                 "neutral": counts["neutral"]}
 

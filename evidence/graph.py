@@ -1,7 +1,7 @@
 """The evidence graph (graph.json): documents and evidence items as nodes, their relations as edges.
 
 Edges: `in_document` (item -> its document), `condition` and `metric` (measurement -> the items its links
-name), and `supports` / `contradicts` (the rag measurement a study's effect rests on -> the baseline
+name), and `supports` / `contradicts` (the treatment measurement a study's effect rests on -> the control
 measurement it was compared with, as synthesis decided; a neutral study has no such edge). Nodes and
 edges are sorted, so the same evidence gives the same file.
 """
@@ -26,7 +26,7 @@ def build(papers: list[Paper], items: dict[str, list[Item]], answer: dict[str, A
                 edges.append({"src": item.item_id, "dst": target, "rel": name})
     for entry in answer["studies"]:
         if entry["direction"] in ("supports", "contradicts"):
-            edges.append({"src": entry["rag"]["measurement"], "dst": entry["baseline"]["measurement"],
+            edges.append({"src": entry["treatment"]["measurement"], "dst": entry["control"]["measurement"],
                           "rel": entry["direction"]})
     order = {p.id: n for n, p in enumerate(papers)}
     nodes.sort(key=lambda n: (order[n["id"] if n["type"] == "document" else n["document"]], n["type"] != "document",

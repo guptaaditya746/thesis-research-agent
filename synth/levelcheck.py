@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import re
 
-from evidence import rules
 from synth.levels import Plan
 from synth.text import Decoy, Placement
 from synth.truth import DECOY_GAP
@@ -129,8 +128,8 @@ def _complex(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     if not any(m.canonical == "other" for m in plan.metrics):
         bad.append("no distractor metric")
     rel = [p for p in ps if p.role == "value" and p.fmt == "relative"]
-    if [p.fact for p in rel] != [plan.study.effect.rag]:
-        bad.append(f"expected one relative value for {plan.study.effect.rag}, got {[p.fact for p in rel]}")
+    if [p.fact for p in rel] != [plan.study.effect.treatment]:
+        bad.append(f"expected one relative value for {plan.study.effect.treatment}, got {[p.fact for p in rel]}")
     rows = [text[a:b] for a, b in table_lines(text)]
     for dataset in plan.datasets:
         if sum(f"| {dataset} |" in r for r in rows) != len(plan.conditions):
@@ -140,7 +139,7 @@ def _complex(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
 
 def _contradictory(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:
     bad = []
-    if rules.claim_agrees(plan.claim, plan.study.effect.direction):
+    if plan.claim == plan.study.claim:
         bad.append(f"claim {plan.claim!r} agrees with the effect {plan.study.effect.direction!r}")
     bad += [f"{p.fact}: value outside the table" for p in ps if p.role == "value" and not in_table(text, p.start)]
     for d in decoys:
@@ -158,6 +157,6 @@ def check_level(text: str, plan: Plan, placements: list[Placement], decoys: list
     fn = {"explicit": _explicit, "paraphrased": _paraphrased, "distributed": _distributed,
           "complex": _complex}[plan.level]
     bad = fn(text, plan, placements)
-    if plan.level != "contradictory" and not rules.claim_agrees(plan.claim, plan.study.effect.direction):
+    if plan.level != "contradictory" and plan.claim != plan.study.claim:
         bad.append("claim disagrees with the effect outside the contradictory level")
     return bad

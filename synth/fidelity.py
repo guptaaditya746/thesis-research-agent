@@ -81,7 +81,7 @@ def anchored(text: str, ps: list[Placement]) -> list[str]:
 def values_match(plan: Plan, ps: list[Placement]) -> list[str]:
     """Each value rendering states its fact's value (a relative one, relative to the baseline)."""
     study, bad = plan.study, []
-    base = study.value_of(study.effect.baseline)
+    base = study.value_of(study.effect.control)
     for p in ps:
         if p.role != "value":
             continue

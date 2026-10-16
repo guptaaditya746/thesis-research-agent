@@ -27,7 +27,7 @@ def paper(s: truth.Study, level: str) -> tuple[Plan, str]:
 def swap_pair(s: truth.Study, plan: Plan) -> tuple[str, str]:
     """The rag and baseline measurements, or, where the rag value is relative (complex), the baseline and
     a distractor condition's value; failing that, the baseline and a value of the second dataset."""
-    rag, base = s.effect.rag, s.effect.baseline
+    rag, base = s.effect.treatment, s.effect.control
     if plan.values[rag].fmt != "relative":
         return rag, base
     other = next((m.id for m in plan.measurements if m.id not in (rag, base) and m.metric == s.effect.metric
@@ -87,7 +87,7 @@ def test_relative_value_must_name_rag_before_and_baseline_after() -> None:
     s = truth.generate(SEED, 6)[0]
     plan, text = paper(s, "complex")
     rag, base = plan.cond_name[s.condition("rag").id], plan.cond_name[s.condition("baseline").id]
-    rel = plan.values[s.effect.rag].text
+    rel = plan.values[s.effect.treatment].text
     start = text.index(rel)
     a, b = text.rindex("\n", 0, start) + 1, text.index("\n", start)
     sentence = text[a:b]

@@ -36,8 +36,8 @@ B: of the matched measurements, the condition link (`links.condition`, else `fie
 point to a condition item whose `role` is the true condition's role, and the metric link to a metric
 item whose `canonical` is the true metric's canonical (`association` = both). `condition_exact` and
 `metric_exact` are the stricter variants: the linked item is the one A matched to the true condition
-(metric) fact. True pair: the engine's answer names measurement items for rag and baseline per study;
-the pair is true when A matched them to the facts `effect.rag` and `effect.baseline`.
+(metric) fact. True pair: the engine's answer names measurement items for treatment and control per
+study; the pair is true when A matched them to the facts `effect.treatment` and `effect.control`.
 
 C: for every ground-truth study, the system's `studies` entry with `document` = the study's paper
 gives a direction; it is correct when it equals `effect.direction`. A missing or `undetermined` entry
@@ -224,14 +224,15 @@ def score_integration(m: Matching, answer: dict[str, Any] | None) -> dict[str, A
     per_study = []
     for study in truth.studies:
         effect = study.get("effect") or {}
-        if not effect.get("rag") or not effect.get("baseline"):
+        if not effect.get("treatment") or not effect.get("control"):
             continue
         given = studies.get(study["paper"], {})
-        rag = (given.get("rag") or {}).get("measurement")
-        base = (given.get("baseline") or {}).get("measurement")
-        ok = bool(rag and base and m.fact_of.get(rag) == effect["rag"] and m.fact_of.get(base) == effect["baseline"])
+        treatment = (given.get("treatment") or {}).get("measurement")
+        control = (given.get("control") or {}).get("measurement")
+        ok = bool(treatment and control and m.fact_of.get(treatment) == effect["treatment"]
+                  and m.fact_of.get(control) == effect["control"])
         per_study.append({"study": study["study_id"], "paper": study["paper"], "level": study["level"],
-                          "true_pair": ok, "rag": rag, "baseline": base})
+                          "true_pair": ok, "treatment": treatment, "control": control})
         for level in (study["level"], ALL):
             pairs[level].update(studies=1, true_pair=ok)
     rows = []

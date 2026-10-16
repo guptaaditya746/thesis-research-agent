@@ -46,7 +46,7 @@ def test_prov_walks_from_the_answer_to_the_table_cell(protocol_file: Path, corpu
     answer = URIRef("urn:thesis-evidence:run/r1/answer")
     derived = set(g.objects(answer, PROV.wasDerivedFrom))
     s2 = json.loads((out / "r1" / "answer.json").read_text())["studies"][1]
-    rag = URIRef(f"urn:thesis-evidence:item/{s2['rag']['measurement']}")
+    rag = URIRef(f"urn:thesis-evidence:item/{s2['treatment']['measurement']}")
     assert rag in derived
     passages = list(g.objects(rag, PROV.wasDerivedFrom))
     exacts = {str(e) for p in passages for sel in g.objects(p, URIRef("http://www.w3.org/ns/oa#hasSelector"))
@@ -79,13 +79,14 @@ def test_synthesis_pairs_on_the_primary_metric_and_datasets() -> None:
                                            (0.1, None, rag, hal), (0.3, None, base_c, hal)])]
     entry, used = synthesis.study(proto, "D", [rag, base_c, acc, hal, *m])
     assert entry["direction"] == "contradicts" and entry["delta"] == pytest.approx(-0.1)   # dataset A with A
-    assert entry["baseline"]["measurement"] == m[2].item_id and m[0].item_id in used
+    assert entry["control"]["measurement"] == m[2].item_id and m[0].item_id in used
     entry, _ = synthesis.study(proto, "D", [rag, base_c, hal, m[3], m[4]])
     assert entry["direction"] == "supports" and entry["metric"] == "hallucination_rate"
     entry, _ = synthesis.study(proto, "D", [rag, acc])
-    assert entry["direction"] == "undetermined" and entry["reason"] == "no baseline condition found"
+    assert entry["direction"] == "undetermined" and entry["reason"]["code"] == "no_control_condition"
+    assert entry["reason"]["text"] == "no baseline condition found"
     entry, _ = synthesis.study(proto, "D", [rag, base_c, acc])
-    assert entry["reason"] == "no rag and baseline measurement on a question metric"
+    assert entry["reason"] == {"code": "no_pair", "text": "no rag and baseline measurement on a question metric"}
 
 
 def test_numbers_and_tables() -> None:

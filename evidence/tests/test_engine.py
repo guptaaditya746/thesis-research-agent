@@ -43,12 +43,12 @@ def test_run_directory_and_answer(protocol_file: Path, corpus: Path, tmp_path: P
                                                                 "undetermined": 1}
     s1, s2, s3, s4, s5 = answer["studies"]
     assert s1["delta"] == pytest.approx(0.09) and s1["metric"] == "factual_accuracy"
-    assert s1["rag"]["value"] == 0.71 and s1["baseline"]["value"] == 0.62
-    assert s2["rag"]["value"] == 0.665 and s2["baseline"]["value"] == 0.58      # table codes R and B
+    assert s1["treatment"]["value"] == 0.71 and s1["control"]["value"] == 0.62
+    assert s2["treatment"]["value"] == 0.665 and s2["control"]["value"] == 0.58      # table codes R and B
     assert s3["metric"] == "hallucination_rate" and s3["delta"] == pytest.approx(-0.03)
     assert s3["author_claim"]["direction"] == "improves" and s3["author_claim"]["agrees_with_data"] is False
     assert s4["author_claim"]["direction"] == "no_effect" and s4["author_claim"]["agrees_with_data"] is True
-    assert s5["reason"] == "no baseline condition found" and s5["delta"] is None
+    assert s5["reason"] == {"code": "no_control_condition", "text": "no baseline condition found"} and s5["delta"] is None
     assert verify(root / "events.jsonl", head=record["chain_head"]).ok
 
 

@@ -17,10 +17,10 @@ from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, Ru
 from . import base, terms
 from .measure import measurements
 
-VERSION = 1
+VERSION = 2
 SOURCES = (base.HERE / "regex.py", base.HERE / "measure.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
-INJECTED = ("evidence_type", "field_schema", "links", "roles")   # what the engine adds to every config
+INJECTED = ("evidence_type", "field_schema", "links", "roles", "question_metrics", "compare")   # added by the engine
 
 
 class RegexExtractor:
@@ -30,6 +30,7 @@ class RegexExtractor:
 
     def __init__(self, config: dict[str, Any]) -> None:
         given = {k: v for k, v in config.items() if k in INJECTED}
+        self.given = given
         self.patterns = self.default_patterns() | {k: v for k, v in config.items() if k not in INJECTED}
         self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="regex",
                                   evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
@@ -96,11 +97,12 @@ class MeasurementRegex(RegexExtractor):
     evidence_type, name = "measurement", "regex_measurement"
 
     def default_patterns(self) -> dict[str, Any]:
-        return {"conditions": terms.CONDITIONS, "metrics": [list(m) for m in terms.METRICS], "alias": terms.ALIAS,
-                "question_metrics": ["factual_accuracy", "hallucination_rate"]}
+        return {"conditions": terms.CONDITIONS, "metrics": [list(m) for m in terms.METRICS], "alias": terms.ALIAS}
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
-        found = measurements(task, text, parts, ctx.context_items(), self.patterns)
+        # the question metrics come from the protocol's synthesis block (the engine injects them), never from here
+        found = measurements(task, text, parts, ctx.context_items(),
+                             {**self.patterns, "question_metrics": self.given.get("question_metrics", [])})
         return base.group("measurement", found)
 
 

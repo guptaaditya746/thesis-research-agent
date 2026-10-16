@@ -5,7 +5,11 @@ The file formats and the extractor interface of the evidence-level system (`evid
 `docs/evidence-interfaces.md` (packages and the files between them), **Part B** was
 `docs/extractor-contract.md` (the interface every extractor implements). Section numbers are kept with a
 prefix, so "interfaces section 3" is now **A3** and "contract §10" is **B10**; only cross-references and
-heading prefixes were changed. Current state and plan: [`STATE.md`](STATE.md).
+heading prefixes were changed. **Parts C–G** (17 Oct 2026) are the contracts of the realigned plan
+([`STATE.md`](STATE.md) §5): C protocol version 2 (the synthesis rules in the protocol, built), D the funnel
+engine, E the proposal flow, F the second build (flags, knobs, variants, intervals), G the changes to the
+RAG baseline, the fidelity check and the model choice. Where C changes a shape of Part A, C3 says so;
+Part A itself is left as written.
 
 Attribution: the pipeline (question → hand-written protocol → engine with interchangeable extractors →
 evidence graph → deterministic synthesis, synthetic benchmark with scores A/B/C, answer-level baseline) is
@@ -429,3 +433,258 @@ Decided (user, 14 Oct):
 
 Open, for the supervisor: is an agentic extractor acceptable as one implementation behind this interface,
 with its runs replayed from records and its re-execution stability reported?
+
+# Part C. Protocol version 2: the rules in the protocol (17 Oct 2026)
+
+The supervisor's protocol says "how the evidence is synthesised" (§2). Until 16 Oct the engine's synthesis
+was Python with the question's names inside it (`rules.METRICS`, `rules.label`); the protocol only named
+them. From version 2 the protocol holds every parameter and `evidence/rules.py` holds only the machinery,
+with no knowledge of the question. The benchmark generator (`synth`) reads the same block (`synth build
+--protocol P`, default `evidence/protocols/rag-factuality.yaml`) and records the protocol's id and sha256
+in `corpus.json` and `ground_truth.json`, so "the engine and the generator share one definition" is
+literal. Our design (not the supervisor's): the choice of parameters and the decision-table form.
+
+## C1. `synthesis`
+
+```yaml
+synthesis:
+  compare: {treatment: rag, control: baseline}   # condition roles a study's pair is made of
+  metrics:                                       # question metrics, priority order, with their direction
+    - {canonical: factual_accuracy, higher_is_better: true}
+    - {canonical: hallucination_rate, higher_is_better: false}
+  min_effect: 0.01                               # |delta| below this is neutral
+  pairing: {rule: same_dataset, prefer: [table_cell, document_order]}
+  claim_map: {improves: supports, worsens: contradicts, no_effect: neutral}   # author claim -> direction
+  label:                                         # ordered decision table over the counts
+    - {when: {supporting: ">0", contradicting: ">0"}, then: mixed}
+    - {when: {supporting: ">0"}, then: supported}
+    - {when: {contradicting: ">0"}, then: refuted}
+    - {when: {neutral: ">0"}, then: no_effect}
+    - {then: insufficient}
+  flags: {duplicates: true, large_effect: {factor: 3.0, min_studies: 3}}   # Part F
+```
+
+- `compare`: the two roles must differ and, when the `condition` type declares a `role` enum, be in it.
+- `metrics`: canonical names in priority order (the first with a usable pair decides a study), each with
+  `higher_is_better`; when the `metric` type declares a `canonical` enum, every name must be in it. The
+  engine injects `question_metrics` and `compare` into every extractor's config (the regex measurement
+  extractor used a hard-coded list before; regex `VERSION` is 2).
+- `pairing.rule: same_dataset` (the only rule): treatment and control on the first dataset, in document
+  order of the values, that has both; `prefer` orders the tie-break among several values of one
+  condition, metric and dataset: `table_cell` (a Markdown table cell before prose), `document_order`.
+- `claim_map`: every author-claim value (the `author_claim` type's `direction` enum, exactly) to the
+  direction it asserts; `agrees_with_data` is `claim_map[claim] == direction`.
+- `label`: rows in order; a row matches when every condition in `when` holds on the counts
+  (`supporting`, `contradicting`, `neutral`; a condition is `<op><int>`, op in `> >= < <= ==`); the first
+  matching row's `then` is the label. The last row must have no `when`; no earlier row may lack one.
+  No expression language: `rules.condition_holds` is the whole parser.
+- `rules.py` exports `effect(treatment, control, higher_is_better, min_effect)`, `claim_agrees(claim,
+  direction, claim_map)`, `label(counts, table)`, `duplicates`, `large_effects`; the constants `METRICS`
+  and `MIN_EFFECT` are gone.
+
+## C2. `screen` (used by the funnel, Part D; parsed and recorded from version 2)
+
+```yaml
+screen:
+  question: Does the paper report an experiment that compares a retrieval-augmented system with the same model answering without retrieval?
+  terms: [retrieval-augmented, RAG, retrieval, closed-book, without retrieval]
+  extractors: [{name: regex_screen}, {name: llm_screen}]
+  on_fail: skip               # skip | extract_anyway
+```
+
+`regex_screen` answers "not relevant" when no term occurs; otherwise the next extractor answers the
+question. Optional: a protocol without `screen` extracts from every document.
+
+## C3. Changes to the shapes of Part A
+
+- **A2 `ground_truth.json`**: `effect` is `{direction, delta, metric, treatment, control}` (measurement
+  ids; were `rag`/`baseline`); top level gains `protocol: {id, sha256}`. `corpus.json` gains the same
+  `protocol` and takes `question` from the protocol.
+- **A4 `answer.json`**: a study's pair is `treatment: {condition, measurement, value}` and `control: {…}`
+  (were `rag`/`baseline`); `reason` is `null` or `{code, text}` with codes `screened_out`,
+  `no_treatment_condition`, `no_control_condition`, `no_question_metric`, `no_pair` (the text names the
+  protocol's roles, e.g. "no baseline condition found").
+- **`graph.json`**: the `supports`/`contradicts` edge runs from the treatment measurement to the control
+  measurement (unchanged meaning, renamed source).
+- **Evaluation B**: `true_pair` compares the answer's `treatment`/`control` with `effect.treatment`/
+  `effect.control`; its per-study rows carry `treatment` and `control` item ids.
+- **Evidence type names** stay the four of `contract.EvidenceType` (`condition`, `metric`, `measurement`,
+  `author_claim`): version 2 protocols describe questions of the shape "does treatment improve a metric
+  over control". Free type names are a later extension, not planned work.
+- The synthesis event's `rule` is `label_table`.
+
+# Part D. Funnel engine (contract, 17 Oct 2026; our design)
+
+The engine of Part A runs every extractor of every cascade on every document (`all`). The funnel runs
+the cheap steps first and escalates only what is still missing, per document:
+
+```
+screen ─► position 0 of every type (regex) ─► complete? ─► stop
+                                                 │ no: gap types
+                                                 ▼
+                                   position 1 for the gap types (LLM) ─► complete? ─► stop
+                                                 │ no
+                                                 ▼
+                                   position 2 for the gap types (agentic, targeted) ─► stop (gap recorded)
+```
+
+- **Setting** `strategy: all | gaps` (`evidence run --strategy`, default `all`; in `run.json.settings`).
+- **Screen** (both strategies, when the protocol has `screen`): the screen cascade runs as extractor calls
+  on a pseudo evidence type `screen` (one item: `{relevant: bool, reason: str}`, a span on the first
+  matching term or the model's quote; checked, cached, replayed like any call). In `gaps` with
+  `on_fail: skip`, a document screened out gets no extraction and the study `undetermined` with reason
+  `screened_out` and the screen's text; in `all` the decision is recorded and extraction runs anyway, so
+  screening precision and recall can be scored on the same run.
+- **Completeness** = `synthesis.study()` on the document's merged items gives a direction. The gap is the
+  reason code; its evidence types (`synthesis.GAP_TYPES`: `no_*_condition` → condition,
+  `no_question_metric` → metric, `no_pair` → measurement) are the only types the next position runs,
+  with the merged items of their context types as context.
+- **Targeted task**: `ExtractionTask.focus: {gap: code, have: {roles: [...], metrics: [...]}, want: text}`
+  (`null` on untargeted tasks; part of `task_sha256`). The LLM extractor appends a "Focus" paragraph to
+  the user prompt (the prompt file and so the extractor id are unchanged); the agentic brief adds
+  `scope.focus` (`TEMPLATE_VERSION` `agentic-task-v2`). No live cache exists before this change, so the
+  task-hash change costs nothing.
+- **Events**: `screen` (document, relevant, reason, extractor id) and `completeness` (document,
+  after_position, complete, gap code, gap types); `extractor_call` unchanged. **`funnel.json`**: per
+  document the ordered steps run (position, types, calls) and each decision; in `run.json.outputs`.
+  `answer.json` studies gain `funnel: {screened: bool, stopped_after: position | null}`.
+- **Replay and re-execution**: unchanged keys (document, type, position, extractor name); every decision
+  depends only on checked results, so a `gaps` run replays from its own cache and reproduces every hash.
+- **Evaluation** gains `funnel`: calls, model calls and tokens per document against the same protocol in
+  `all`; the stop-position histogram; screen precision and recall against the ground truth's `relevant`.
+- **Protocol**: no new keys beyond `screen`; `cascade: until_found` stays for `all`.
+
+# Part E. Proposal flow (contract, 17 Oct 2026; our design)
+
+The supervisor marked LLM protocol generation "with user dialogue" optional (§8). This is that dialogue
+as files, so Codex, tests and later the web app drive it the same way. Directory `proposals/<slug>/`:
+
+| Step | Command | Writes | Human |
+|---|---|---|---|
+| frame | `evidence propose frame --question Q [--vocab V] --out DIR` | `frame.json`: population (which papers), treatment, control, outcomes (canonical, direction), effect labels, candidate synonyms; every entry `source: ontology | invented` | may edit |
+| draft | `evidence propose draft DIR` | `draft.yaml` (a version-2 protocol from the frame and the example protocol); `draft.sources.json`: per field and term `ontology | protocol | invented`, with the vocabulary entry id | — |
+| critic | `evidence propose critic DIR` | `critic.json`: deterministic checks (parses; every outcome has a canonical and a direction; the regex terms cover the frame's synonyms; a screen is present; the label table is complete; every extractor is registered) and an LLM checklist (ambiguous roles, missing comparator, metric direction, scope) | reads |
+| cards | `evidence propose cards DIR` | `cards.json`: the fixed choice points below, each with options, the model's default, its rationale and the vocabulary evidence; `decisions.yaml` prefilled with the defaults | **edits `decisions.yaml`**: per card `choice`, `reason`, `by` |
+| freeze | `evidence propose freeze DIR` | `protocol.yaml` (validated as `evidence protocol check` does) and `proposal.json`: frame, sources, critic, decisions, vocabulary `{name, sha256}`, model and prompt hashes, protocol sha256, created | — |
+| amend | `evidence propose amend DIR --reason R [--before-main-run]` | `protocol.yaml` with `version + 1`; a line in `amendments.jsonl`: `{version, amends_sha256, reason, impact: [changed keys], before_main_run, at}` | gives the reason |
+
+Choice points (fixed): 1 screening question and terms; 2 treatment and control role definitions;
+3 question metrics and direction; 4 `min_effect`; 5 pairing preference; 6 label table; 7 cascade per
+type and funnel strategy; 8 locate strategy. A decision without a reason is refused. Every model call
+goes through `gold/llm.structured` with the record cache; nothing runs a proposed protocol automatically.
+
+**Vocabulary snapshot** `evidence/vocab/<name>.json`: `{name, sha256, sources: [{name, version, url}],
+terms: [{id, label, synonyms, kind: metric | condition | method, source, higher_is_better?}]}`, built
+offline by `evidence vocab build` from local downloads (CS-KG 2.0 terms and synonyms, Papers with Code
+metric names, ML-Schema's measurement shape, EXPO's roles; DBLP only for metadata); a small hand-checked
+snapshot for the RAG question is committed. The flow runs without one (sources are then `protocol` or
+`invented`). The evidence graph does not use it (decided 16 Oct).
+
+# Part F. Second build (ev2): flags, benchmark knobs, counterfactual variants, intervals, benchmark records
+
+The contract of 15 Oct (bundle `../thesis-ev2-wip.bundle`, df60939 §7), adapted to version 2. Shared
+definitions are `rules.duplicates`, `rules.large_effects` and `rules.FLAGS`, parameters from
+`synthesis.flags`. The hard rule of Part A stands.
+
+## F1. Flags (engine, `answer.json`)
+
+The supervisor's synthesis step names three flags: an author claim that disagrees with its own computed
+label, duplicated studies, unusually large effects. The engine reports them; only duplicates change the
+counts.
+
+```json
+{
+  "counts": {"supporting": 3, "contradicting": 1, "neutral": 0, "undetermined": 1, "duplicates": 1},
+  "studies": [{"document": "S021", "direction": "supports", "flags": ["duplicate"], "duplicate_of": "S003"}],
+  "duplicates": ["S021"],
+  "flags": {"claim_disagrees": ["S007"], "duplicate": ["S021"], "large_effect": ["S012"]}
+}
+```
+
+- `flags` per study: sorted, from `rules.FLAGS`; `duplicate_of` is the earlier document (manifest order)
+  with the same `rules.duplicate_key` (canonical metric, treatment value, control value), else `null`.
+- A duplicate keeps its direction (direction accuracy still scores it) but is listed under `duplicates`,
+  not under `supporting`/`contradicting`/`neutral`, and the label table gets the counts without it.
+- `large_effect`: `rules.large_effects` over the determined, non-duplicate studies' deltas with
+  `synthesis.flags.large_effect`; `claim_disagrees`: `author_claim.agrees_with_data == false`. Neither
+  changes the counts. `flags.duplicates: false` turns duplicate detection off.
+- `graph.json` gains a `duplicate_of` edge; baselines report no flags.
+
+## F2. Benchmark knobs (generator)
+
+`synth build` gains `--duplicates N --missing N --outliers N --irrelevant N` (default 0; the plain build
+stays byte for byte what it was: the extra draws come from their own `random.Random` streams).
+
+| Knob | Papers it adds or changes | Ground truth |
+|---|---|---|
+| `--duplicates N` | N extra papers (`S021`, …), each a second report of an existing study: same conditions, metrics, datasets and values (fact ids under the new study id), a different title and filler, at the original's level | study `duplicate_of`, `flags: ["duplicate"]`; effect as the original's; left out of `answer` counts, listed in `answer.duplicates` |
+| `--missing N` | N studies lack the control (alternately the treatment) measurement on the question metric: the paper never states it (a dash in a complex table) | `missing: "control" | "treatment"`, `effect: {direction: "undetermined", delta: null, …, reason: "missing_control" | "missing_treatment"}`; in `answer.undetermined`, not counted |
+| `--outliers N` | N supporting studies get an effect of 0.30–0.45 | `flags: ["large_effect"]`; counted |
+| `--irrelevant N` | N papers with no treatment/control experiment (a survey or a paper on another topic, from the vocabulary) | study `relevant: false`, no conditions/metrics/measurements/claim, expected `screened_out`; in `answer.undetermined`, not counted |
+
+- Every study has `relevant` (default `true`), `flags` (sorted, possibly empty), `duplicate_of` and
+  `missing` (`null` by default); contradictory-level papers carry `flags: ["claim_disagrees"]`.
+- The generator asserts that `rules.duplicates` and `rules.large_effects` on its own studies give exactly
+  the planted ones, and keeps the (treatment, control) pairs of distinct studies apart on both datasets.
+- `answer` gains `undetermined`, `duplicates` and `flags`; `label` is the label table over the counted
+  studies. `corpus.json` gains `settings: {studies, mix, levels, duplicates, missing, outliers, irrelevant}`.
+
+## F3. Counterfactual variants (generator, `variant.json`)
+
+The supervisor's controlled variant: change one study's result and regenerate only that paper, so the
+expected answer shifts in a known way.
+
+```
+uv run synth variant --corpus corpora/rag-s1-mixed --study S003 --direction contradicts [--out DIR] [renderer options]
+```
+
+Writes `<corpus>-cf-<study>-<direction>` (or `--out`): every other paper byte for byte the base corpus's,
+the chosen paper re-rendered at its level from a counterfactual study with the new effect direction on
+both datasets (same ids, names, datasets, distractors; the pair redrawn from
+`random.Random(f"synth:{seed}:{study}:variant:{direction}")`; the claim follows the new effect except a
+contradictory-level paper keeps a false claim), fidelity-checked as in `build` (a failure is an error).
+Flags re-applied to the whole set. Files as in a build plus `variant.json`:
+`{base_corpus_id, corpus_id, study, paper, from, to, changed: [{measurement, from, to}], expected:
+{before: {label, counts}, after: {label, counts}, label_changes}}`; `corpus.json` gains
+`variant: {base_corpus_id, study, from, to}`.
+
+## F4. Evaluation additions
+
+- **Intervals**: `report.json` gains `intervals`, 95 % BCa bootstrap (scipy, 2,000 resamples, seed 0,
+  resampling papers) for extraction F1 per evidence type, direction accuracy per system, and the paired
+  difference in direction accuracy between the engine and each baseline; a degenerate sample gives the
+  point value with `null` bounds. `report.md` and `compare.md` show `0.812 [0.74, 0.88]`.
+- **Expected `undetermined`**: a study whose true effect is `undetermined` (missing information) or that
+  is `relevant: false` is right when the system says `undetermined`; `answered` and `accuracy_answered`
+  are over the studies with a determined expected direction.
+- **Flags (C)**: per flag, precision and recall against the ground truth's flags; `counts_correct`;
+  `duplicates_correct`. A system without `flags` gets `null`.
+- **`evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR`**: per system the
+  changed study's direction before and after against `from`/`to`, the label before and after against
+  `expected`, and `shifted_as_expected`; `shift.json`, `shift.md`.
+- **`evaluate benchmark REPORT [REPORT …] --out DIR`**: the record of B11 per extractor id: per evidence
+  type and level precision, recall, F1 of the items it found (`found_by`), span accuracy, cost per call,
+  re-execution stability where present; `DIR/<extractor_id>/benchmark.json` and one `benchmark.md`.
+
+The §7.5 LLM proposer of 15 Oct is dropped: Part E replaces it.
+
+# Part G. Changes to what Part A6 describes as built (decided 16 Oct, built in step 2 of the plan)
+
+1. **RAG baseline** = plain retrieve-then-answer: default `--retrieval global --k 8` (top passages over
+   the whole corpus; `per_paper` stays as the option "every paper seen"); the prompt asks for an answer
+   with citations only ("Answer the question using only the passages below. Say what the evidence shows
+   and cite the passages you rely on as [paper id, start-end]."), output `{answer_text, citations}`; a
+   separate mapping call (the agent baseline's `MAP_INSTRUCTIONS`, shared) turns the answer into a label
+   and per-paper stances for score C. Score C for baselines adds **completeness** (determined true studies
+   the answer gives a stance for) and **traceability** (cited passages that overlap a ground-truth
+   placement of the study they are cited for, over cited passages), the supervisor's three comparison
+   criteria (§7).
+2. **Fidelity** fails a paper that adds content: `added_numbers` (a number outside the value placements,
+   the decoys and an explicit allowlist: the plan's dataset sizes, `Table n`/`Section n`, list markers,
+   `A1`-style codes), `added_claims` (a sentence matching the question's claim patterns outside the claim
+   placement), `blind_extra` (with `--verify-model`, a measurement the blind reader returns that is not
+   planned). The writer prompt's rules 3 and 4 are thereby enforced.
+3. **One model**: `orch-model` for every extractor and both baselines (`AgentSettings.model`; `evidence run
+   --model` default `orch-model`; `llm` extractors' default `orch-model`; `evaluate … --model` reaches the
+   agent baseline's agent); the synthetic papers are written by `sub-model-1` so writer and reader are
+   different weights. The runbook's model table and rules follow.

@@ -1,9 +1,10 @@
-# Research protocol for the first question (supervisor's design, 14 Oct 2026).
+# Research protocol for the first question (supervisor's design, 14 Oct 2026); protocol version 2 (17 Oct):
+# the synthesis rules and the screening question are declared here (docs/evidence-system.md Part C).
 # Written by hand before any run; the engine runs it as it stands. Its sha256 is the digest of the parsed
 # content (evidence/protocol.py), so comments and layout do not change it.
 
 id: rag-factuality
-version: 1
+version: 2
 question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
 
 locate:
@@ -11,6 +12,16 @@ locate:
   params:
     chunk_chars: 1500         # bm25: size of the ranked passages
     top_k: 6                  # bm25: passages kept per document and evidence type
+
+screen:                       # per document, before any extraction (the funnel engine, Part D)
+  question: >-
+    Does the paper report an experiment that compares a retrieval-augmented system with the same model
+    answering without retrieval?
+  terms: [retrieval-augmented, retrieval augmented, RAG, retrieval, closed-book, without retrieval]
+  extractors:
+    - name: regex_screen      # no term in the paper: not relevant
+    - name: llm_screen        # otherwise the model answers the question
+  on_fail: skip               # skip | extract_anyway
 
 evidence_types:
   condition:
@@ -90,11 +101,22 @@ evidence_types:
       - name: regex_author_claim
       - name: llm_author_claim
 
-synthesis:
-  metrics: [factual_accuracy, hallucination_rate]   # the primary metric is the first one with a usable pair
-  min_effect: 0.01
-  label_rule: rules.label
-  # rag and baseline are paired on the same dataset (the first dataset in document order that has both);
-  # among several values of one condition, metric and dataset a table cell beats prose (abstracts may
-  # restate or misstate results), then the earlier value wins (evidence/synthesis.py)
-  pairing: same_dataset_table_first
+synthesis:                    # every rule parameter; the machinery is evidence/rules.py and evidence/synthesis.py
+  compare: {treatment: rag, control: baseline}   # condition roles a study's pair is made of
+  metrics:                    # question metrics in priority order; the first one with a usable pair decides
+    - {canonical: factual_accuracy, higher_is_better: true}
+    - {canonical: hallucination_rate, higher_is_better: false}
+  min_effect: 0.01            # |delta| below this (fractions) is neutral
+  pairing:                    # treatment and control on the same dataset (first dataset in document order
+    rule: same_dataset        # that has both); among several values of one condition, metric and dataset
+    prefer: [table_cell, document_order]   # a table cell beats prose, then the earlier value wins
+  claim_map: {improves: supports, worsens: contradicts, no_effect: neutral}   # author claim -> direction it asserts
+  label:                      # the answer from the counts: the first row whose conditions all hold
+    - {when: {supporting: ">0", contradicting: ">0"}, then: mixed}
+    - {when: {supporting: ">0"}, then: supported}
+    - {when: {contradicting: ">0"}, then: refuted}
+    - {when: {neutral: ">0"}, then: no_effect}
+    - {then: insufficient}
+  flags:                      # reported in answer.json (Part F); only duplicates change the counts
+    duplicates: true
+    large_effect: {factor: 3.0, min_studies: 3}

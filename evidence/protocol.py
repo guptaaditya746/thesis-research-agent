@@ -1,10 +1,15 @@
-"""The executable research protocol: a hand-written YAML file the engine runs (docs/evidence-system.md Part A).
+"""The executable research protocol: a hand-written YAML file the engine runs (docs/evidence-system.md Part A,
+protocol version 2 in Part C).
 
 A protocol names the question, the evidence types it needs (each with a JSON schema for its fields, the
 span roles its items carry, the earlier types it needs as context, and a cascade of registered
-extractors), how passages are located, and how the evidence becomes the answer. Its `sha256` is the
-digest of the parsed content (agent/canonical.py), so comments, key order and line ends in the file do
-not change it, and every run, task and record names the protocol by that hash.
+extractors), how passages are located, an optional screening question (Part D, the funnel), and how the
+evidence becomes the answer: the `synthesis` block holds every rule parameter (which condition roles are
+compared, the question metrics and their direction, the neutral band, the pairing rule, the claim
+vocabulary, the label decision table, the flag thresholds), so `evidence/rules.py` knows nothing of the
+question. Its `sha256` is the digest of the parsed content (agent/canonical.py), so comments, key order
+and line ends in the file do not change it, and every run, task and record names the protocol by that
+hash.
 """
 from __future__ import annotations
 
@@ -68,26 +73,107 @@ class EvidenceTypeSpec(Strict):
     def properties(self) -> dict[str, Any]:
         return dict(self.fields.get("properties", {}))
 
+    def enum_of(self, field: str) -> tuple[Any, ...] | None:
+        values = self.properties.get(field, {}).get("enum")
+        return tuple(values) if values else None
+
 
 class Locate(Strict):
     strategy: LocateStrategy = "exhaustive"
     params: dict[str, Any] = Field(default_factory=dict)
 
 
-class Synthesis(Strict):
-    metrics: tuple[str, ...]                # canonical question metrics, in priority order (rules.METRICS)
-    min_effect: float = rules.MIN_EFFECT
-    label_rule: Literal["rules.label"] = "rules.label"
-    # how a study's rag and baseline measurements are chosen (evidence/synthesis.py): same dataset, first
-    # dataset in document order, a table cell before prose, then document order of the value
-    pairing: Literal["same_dataset_table_first"] = "same_dataset_table_first"
+class Screen(Strict):
+    """Per-document screening before any extraction (Part D): is the paper one the protocol can use at
+    all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest."""
+    question: str
+    terms: tuple[str, ...] = ()
+    extractors: tuple[ExtractorRef, ...] = Field(min_length=1)
+    on_fail: Literal["skip", "extract_anyway"] = "skip"
+
+
+class Compare(Strict):
+    """The condition roles a study's pair is made of: the effect is treatment against control."""
+    treatment: str
+    control: str
 
     @model_validator(mode="after")
-    def _known_metrics(self) -> Synthesis:
-        unknown = [m for m in self.metrics if m not in rules.METRICS]
-        if unknown or not self.metrics:
-            raise ValueError(f"synthesis.metrics must name metrics of rules.METRICS {sorted(rules.METRICS)}; got {unknown}")
+    def _distinct(self) -> Compare:
+        if self.treatment == self.control:
+            raise ValueError("synthesis.compare: treatment and control must be different roles")
         return self
+
+
+class QuestionMetric(Strict):
+    canonical: str
+    higher_is_better: bool
+
+
+class Pairing(Strict):
+    """How a study's treatment and control measurements are chosen (evidence/synthesis.py): on the same
+    dataset (the first dataset in document order that has both), preferring, in order, a value in a table
+    cell over prose and the earlier value over the later one."""
+    rule: Literal["same_dataset"] = "same_dataset"
+    prefer: tuple[Literal["table_cell", "document_order"], ...] = ("table_cell", "document_order")
+
+
+class LabelRow(Strict):
+    """One row of the label decision table: every condition in `when` must hold on the counts."""
+    when: dict[str, str] = Field(default_factory=dict)   # count name -> "<op><int>"
+    then: rules.Label
+
+    def get(self, key: str, default: Any = None) -> Any:   # lets rules.label read rows like mappings
+        return getattr(self, key, default)
+
+
+class LargeEffect(Strict):
+    factor: float = Field(default=3.0, gt=0)
+    min_studies: int = Field(default=3, ge=1)
+
+
+class Flags(Strict):
+    duplicates: bool = True
+    large_effect: LargeEffect = LargeEffect()
+
+
+class Synthesis(Strict):
+    compare: Compare
+    metrics: tuple[QuestionMetric, ...] = Field(min_length=1)   # question metrics, priority order
+    min_effect: float = Field(gt=0)                             # |delta| below this is neutral
+    pairing: Pairing = Pairing()
+    claim_map: dict[str, rules.Direction]                       # author-claim value -> the direction it asserts
+    label: tuple[LabelRow, ...] = Field(min_length=1)
+    flags: Flags = Flags()
+
+    @model_validator(mode="after")
+    def _consistent(self) -> Synthesis:
+        names = [m.canonical for m in self.metrics]
+        if len(set(names)) != len(names):
+            raise ValueError(f"synthesis.metrics names a metric twice: {names}")
+        for n, row in enumerate(self.label):
+            unknown = [k for k in row.when if k not in rules.COUNTS]
+            if unknown:
+                raise ValueError(f"synthesis.label row {n}: unknown counts {unknown}; use {list(rules.COUNTS)}")
+            for condition in row.when.values():
+                rules.condition_holds(condition, 0)     # raises on a malformed condition
+            if not row.when and n != len(self.label) - 1:
+                raise ValueError(f"synthesis.label row {n} has no `when`, so the rows after it can never match")
+        if self.label[-1].when:
+            raise ValueError("synthesis.label: the last row must have no `when` (the default label)")
+        if not self.claim_map:
+            raise ValueError("synthesis.claim_map must map every author-claim value to a direction")
+        return self
+
+    @property
+    def metric_names(self) -> tuple[str, ...]:
+        return tuple(m.canonical for m in self.metrics)
+
+    def higher_is_better(self, canonical: str) -> bool:
+        return next(m.higher_is_better for m in self.metrics if m.canonical == canonical)
+
+    @property
+    def table(self) -> list[dict[str, Any]]:
+        return [{"when": dict(r.when), "then": r.then} for r in self.label]
 
 
 class Protocol(Strict):
@@ -96,6 +182,7 @@ class Protocol(Strict):
     question: str
     evidence_types: dict[EvidenceType, EvidenceTypeSpec]
     locate: Locate = Locate()
+    screen: Screen | None = None
     synthesis: Synthesis
 
     @model_validator(mode="after")
@@ -116,8 +203,27 @@ class Protocol(Strict):
             missing = [k for k in spec.merge_key or () if k not in spec.properties]
             if missing:
                 raise ValueError(f"{name}.merge_key names unknown fields {missing}")
+        self._synthesis_matches_types()
         self.phases()  # raises on a cycle
         return self
+
+    def _synthesis_matches_types(self) -> None:
+        """The synthesis parameters name values the evidence types can carry (when the types declare enums)."""
+        s = self.synthesis
+        roles = self.evidence_types["condition"].enum_of("role") if "condition" in self.evidence_types else None
+        if roles is not None:
+            bad = [r for r in (s.compare.treatment, s.compare.control) if r not in roles]
+            if bad:
+                raise ValueError(f"synthesis.compare names roles {bad} that condition.role does not allow {roles}")
+        canon = self.evidence_types["metric"].enum_of("canonical") if "metric" in self.evidence_types else None
+        if canon is not None:
+            bad = [m for m in s.metric_names if m not in canon]
+            if bad:
+                raise ValueError(f"synthesis.metrics names {bad}, which metric.canonical does not allow {canon}")
+        claims = (self.evidence_types["author_claim"].enum_of("direction")
+                  if "author_claim" in self.evidence_types else None)
+        if claims is not None and set(s.claim_map) != set(claims):
+            raise ValueError(f"synthesis.claim_map must map exactly author_claim.direction {claims}; got {sorted(s.claim_map)}")
 
     @property
     def sha256(self) -> str:

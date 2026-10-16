@@ -6,7 +6,6 @@ import re
 
 import pytest
 
-from evidence import rules
 from synth import fidelity, levelcheck, truth
 from synth.levels import LEVELS, make_plan, parse_value, plan_rng, write_value
 from synth.render_template import render, render_study
@@ -71,9 +70,9 @@ def test_complex_has_distractors_two_datasets_and_one_relative_value() -> None:
         assert len(r.plan.datasets) == 2 and len(r.plan.metrics) >= 2
         assert len(r.plan.measurements) == len(s.measurements)
         rel = [p for p in r.placements if p.fmt == "relative"]
-        assert [p.fact for p in rel] == [s.effect.rag] and "percentage points" in rel[0].exact
-        base = s.value_of(s.effect.baseline)
-        assert parse_value(rel[0].exact, "relative", base) == s.value_of(s.effect.rag)
+        assert [p.fact for p in rel] == [s.effect.treatment] and "percentage points" in rel[0].exact
+        base = s.value_of(s.effect.control)
+        assert parse_value(rel[0].exact, "relative", base) == s.value_of(s.effect.treatment)
         assert "see text" in r.text
 
 
@@ -81,7 +80,7 @@ def test_contradictory_claim_disagrees_with_the_data() -> None:
     decoys = 0
     for s, r in papers("contradictory"):
         assert r.plan.claim == s.false_claim
-        assert not rules.claim_agrees(r.plan.claim, s.effect.direction)
+        assert r.plan.claim != s.claim
         claims = [p.exact for p in r.placements if p.role == "claim"]
         assert claims == list(r.plan.claim_sentences)
         for d in r.decoys:
@@ -94,7 +93,7 @@ def test_contradictory_claim_disagrees_with_the_data() -> None:
 @pytest.mark.parametrize("level", [lv for lv in LEVELS if lv != "contradictory"])
 def test_other_levels_claim_agrees(level: str) -> None:
     for s, r in papers(level, range(1, 3)):
-        assert rules.claim_agrees(r.plan.claim, s.effect.direction) and not r.decoys
+        assert r.plan.claim == s.claim and not r.decoys
 
 
 @pytest.mark.parametrize(("fmt", "value", "text"), [

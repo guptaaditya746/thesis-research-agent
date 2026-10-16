@@ -117,8 +117,22 @@ def test_protocol_hash_ignores_layout_and_phases_follow_context() -> None:
     with pytest.raises(ValueError, match="does not list it as context"):
         protocol.Protocol.model_validate(data)
     data = yaml.safe_load(PROTOCOL.read_text(encoding="utf-8"))
-    data["synthesis"]["metrics"] = ["bleu"]
-    with pytest.raises(ValueError, match="rules.METRICS"):
+    data["synthesis"]["metrics"] = [{"canonical": "bleu", "higher_is_better": True}]
+    with pytest.raises(ValueError, match="metric.canonical does not allow"):
+        protocol.Protocol.model_validate(data)
+    data = yaml.safe_load(PROTOCOL.read_text(encoding="utf-8"))
+    data["synthesis"]["label"] = [{"when": {"supporting": ">0"}, "then": "supported"}]
+    with pytest.raises(ValueError, match="last row must have no"):
+        protocol.Protocol.model_validate(data)
+    data["synthesis"]["label"] = [{"when": {"wins": ">0"}, "then": "supported"}, {"then": "insufficient"}]
+    with pytest.raises(ValueError, match="unknown counts"):
+        protocol.Protocol.model_validate(data)
+    data["synthesis"]["label"] = [{"when": {"supporting": "lots"}, "then": "supported"}, {"then": "insufficient"}]
+    with pytest.raises(ValueError, match="<op><int>"):
+        protocol.Protocol.model_validate(data)
+    data = yaml.safe_load(PROTOCOL.read_text(encoding="utf-8"))
+    data["synthesis"]["compare"] = {"treatment": "rag", "control": "rag"}
+    with pytest.raises(ValueError, match="different roles"):
         protocol.Protocol.model_validate(data)
 
 
