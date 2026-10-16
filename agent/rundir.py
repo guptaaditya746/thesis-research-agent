@@ -1,4 +1,4 @@
-"""The run directory `runs/<run-id>/` and its `config.json` (milestones-1-2.md, row 1.2)."""
+"""The run directory `runs/<run-id>/` and its `config.json` (docs/earlier-work.md, build row 1.2)."""
 from __future__ import annotations
 
 import json
@@ -20,12 +20,12 @@ ANSWER_BEFORE = "answer.research.json"  # ... after keeping the run's own answer
 # answer (row 1.13): scratch/ stays writable (the attach step works there), this copy does not change.
 DRAFT_COPY = "answer.draft.json"
 
-# Fixed run settings (milestones-1-2.md). Budget is adjusted once after 1.13, then frozen.
+# Fixed run settings (docs/earlier-work.md, Fixed run settings). Budget is adjusted once after 1.13, then frozen.
 ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
                 "thinking": False, "max_tokens": 4096, "context_tokens": 65536}
 SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
               "revision": "5a5a776", "context_tokens": 32768} for i in (1, 2)]
-# Provisional (e2e-build-plan.md, 13 Oct; the user freezes it after the Slurm test). The token sum
+# Provisional (the e2e build of 13 Oct, docs/earlier-work.md; the user freezes it after the Slurm test). The token sum
 # counts the whole prompt again at every step, so the M1-real runs' 150 steps / 400k lasted only
 # ~26 steps: 2M tokens over 60 steps is ~33k per step, about what a masked context costs.
 BUDGET = {"steps": 60, "tokens": 2_000_000, "announced": True}

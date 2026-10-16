@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Thesis research agent",
-    "description": "Runs, provenance, gold standard and scores of the research agent (docs/e2e-build-plan.md, Backend API).",
+    "description": "Runs, provenance, gold standard and scores of the research agent (docs/earlier-work.md, Backend API and frontend pages).",
     "version": "0.2.0"
   },
   "paths": {

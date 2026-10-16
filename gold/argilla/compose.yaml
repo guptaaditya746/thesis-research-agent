@@ -1,4 +1,4 @@
-# Argilla v2 for the gold review (gold/README.md, Review), run on Omen (Docker / Dockge).
+# Argilla v2 for the gold review (docs/earlier-work.md, Gold: review), run on Omen (Docker / Dockge).
 # From the labelling repo's infra/argilla/compose.yaml, itself adapted from Argilla's
 # examples/deployments/docker/docker-compose.yaml: pinned versions (the server matches the
 # argilla==2.8.0 SDK in pyproject.toml), port bound to localhost (reach it via scripts/omen-tunnels),

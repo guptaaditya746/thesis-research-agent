@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "config.schema.json",
-  "title": "Run config (milestones-1-2.md, Fixed run settings)",
+  "title": "Run config (docs/earlier-work.md, Fixed run settings)",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "run_id", "created_at", "condition", "models", "budget", "sampling",

@@ -460,7 +460,7 @@ const STAGE_DETAILS = {
 
   // ---------------------------------------------------------------- Extractor library
   iface: {
-    what: "The contract every extractor implements, so that implementations are interchangeable. Written down in docs/extractor-contract.md (14 Oct): identity, task, result, spans, coverage, provenance event, cache, replay and re-execution, benchmark per version.",
+    what: "The contract every extractor implements, so that implementations are interchangeable. Written down in docs/evidence-system.md Part B (14 Oct): identity, task, result, spans, coverage, provenance event, cache, replay and re-execution, benchmark per version.",
     how: [
       "Input: a document (or a section of it) and the evidence type's field schema from the protocol.",
       "Implementations, simplest first: regex or lookup; a specialised model; a single-call LLM (one schema-constrained call per chunk); an agentic LLM (several steps through one paper: search, read, follow table references). All four return the same thing.",
@@ -473,7 +473,7 @@ const STAGE_DETAILS = {
     ],
     io: ["document + field schema", "typed evidence items with spans"],
     ours: "One interface for regex, model, single-call LLM and agentic LLM extractors, with the quote check built in.",
-    code: ["contract: docs/extractor-contract.md (identity, task, result, spans, coverage, provenance event, cache, replay and re-execution)", "reusable: agent/broker.py and agent/anchor.py (quote check), gold/chunks.py (section-aware chunking)"],
+    code: ["contract: docs/evidence-system.md Part B (identity, task, result, spans, coverage, provenance event, cache, replay and re-execution)", "reusable: agent/broker.py and agent/anchor.py (quote check), gold/chunks.py (section-aware chunking)"],
   },
   x_cond: {
     what: "Finds the experimental setup: which models were compared, under which conditions (with or without retrieval), on which dataset.",
@@ -531,7 +531,7 @@ const STAGE_DETAILS = {
     ],
     io: ["one evidence type, ordered extractors", "merged items, each with found_by"],
     ours: "Answers \"who found what\": a regex that finds 30 % is fine if the report says so and the next extractor covers the rest.",
-    code: ["contract: docs/extractor-contract.md §10"],
+    code: ["contract: docs/evidence-system.md B10"],
   },
 
   // ---------------------------------------------------------------- Provenance & replay
@@ -543,7 +543,7 @@ const STAGE_DETAILS = {
       "Written by the engine, never by the extractor: an extractor cannot alter its own record.",
     ],
     io: ["each extractor call", "events.jsonl (one line per call, chained)"],
-    code: ["reusable: agent/broker.py (hash chain), agent/canonical.py (canonical hashes)", "contract: docs/extractor-contract.md §7"],
+    code: ["reusable: agent/broker.py (hash chain), agent/canonical.py (canonical hashes)", "contract: docs/evidence-system.md B7"],
   },
   cache: {
     what: "The stored result of every extractor call, keyed by the extractor id and the task hash.",
@@ -925,7 +925,7 @@ const ROLES = {
 /* ---- STATUS: the supervisor's order of work, with what existing code each step can reuse ------------------
    state: "works" | "partial" | "open"   stage: the box its name opens   tests: what exists
    ---------------------------------------------------------------------------------------------- */
-const STATUS_NOTE = "The supervisor's order of work (14 Oct 2026), steps 1–7, and where each stands on branch main (built 14 Oct; packages evidence/, synth/, evaluation/; file formats in docs/evidence-interfaces.md). Built means tested offline with scripted models; no live model run yet. Click a step for its box in the diagram.";
+const STATUS_NOTE = "The supervisor's order of work (14 Oct 2026), steps 1–7, and where each stands on branch main (built 14 Oct; packages evidence/, synth/, evaluation/; file formats in docs/evidence-system.md Part A). Built means tested offline with scripted models; no live model run yet. Click a step for its box in the diagram.";
 const STATUS = [
   { area: "1 · Protocol by hand", stage: "write",    state: "built",   tests: "evidence/protocols/rag-factuality.yaml, evidence/protocol.py",
     evidence: "Hand-written protocol for the RAG question: four evidence types (condition, metric, measurement, author claim) with JSON field schemas, value bounds, an extractor cascade per type, the locate strategy and the synthesis rules; its hash is part of every run. A variant puts the agentic extractor last in every cascade.",
@@ -936,7 +936,7 @@ const STATUS = [
   { area: "3 · Extractor library", stage: "iface", state: "built", tests: "evidence/extractors/, evidence/agentic/",
     evidence: "One registry behind the contract: regex extractors and single-call LLM extractors for each evidence type, and the agentic extractor (our research agent, wrapped without changes). The engine checks every span against the paper, whatever the extractor.",
     next: "Live runs of the LLM and agentic extractors; benchmark record per version." },
-  { area: "Extractor contract", stage: "iface", state: "built", tests: "evidence/contract.py, docs/extractor-contract.md",
+  { area: "Extractor contract", stage: "iface", state: "built", tests: "evidence/contract.py, docs/evidence-system.md Part B",
     evidence: "Implemented as pydantic models: identity with code and config hashes, task, result with multi-span items, rejected items with reasons, coverage.",
     next: "—" },
   { area: "Provenance & replay", stage: "replay", state: "built", tests: "evidence/engine.py, evidence/replay.py, evidence/prov.py",

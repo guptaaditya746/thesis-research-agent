@@ -1,4 +1,4 @@
-"""Reply parser for the main loop (row 1.8; decisions-after-tests.md §2, B1-B3, B8).
+"""Reply parser for the main loop (row 1.8; docs/earlier-work.md, Decisions after tests §2, B1-B3, B8).
 
 Only the reply's `content` is parsed; the reasoning field is never looked at, so nothing in it
 can run. In order:

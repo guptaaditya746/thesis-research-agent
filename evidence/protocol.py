@@ -1,4 +1,4 @@
-"""The executable research protocol: a hand-written YAML file the engine runs (docs/evidence-interfaces.md).
+"""The executable research protocol: a hand-written YAML file the engine runs (docs/evidence-system.md Part A).
 
 A protocol names the question, the evidence types it needs (each with a JSON schema for its fields, the
 span roles its items carry, the earlier types it needs as context, and a cascade of registered

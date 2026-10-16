@@ -1,5 +1,5 @@
 /**
- * The one typed client for the backend API (docs/e2e-build-plan.md, "Backend API").
+ * The one typed client for the backend API (docs/earlier-work.md, "Backend API and frontend pages").
  *
  * All HTTP access of the app goes through `api` (JSON and text) or the URL helpers (streams,
  * links), so a change of base URL, auth or generated types happens here only. Errors become

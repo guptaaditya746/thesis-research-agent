@@ -1,4 +1,4 @@
-"""scripts/e2e-measure.py: the measurement table of the Slurm e2e session (docs/slurm-e2e-runbook.md, step 8).
+"""scripts/e2e-measure.py: the measurement table of the Slurm e2e session (docs/earlier-work.md, Runbooks: the e2e session, step 8).
 
 A real v2 run with a scripted model (a claim, then a conclude reply decoded under the reply schema), the
 claim_on and attach-style runs of agent/tests/runs.py, and a small gold directory written by hand: every

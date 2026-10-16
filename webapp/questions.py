@@ -1,4 +1,4 @@
-"""Questions, their concept sessions and picks (docs/e2e-build-plan.md, "Concepts"; rows 2.1, 2.2).
+"""Questions, their concept sessions and picks (docs/earlier-work.md, "Concepts and pick"; rows 2.1, 2.2).
 
 The question list is questions/questions.json (`{"schema_version": 1, "questions": [...]}`); while
 it does not exist, the questions are those with a concept session ($CONCEPTS/<qid>/session.json).

@@ -1,4 +1,4 @@
-"""Attach step of the baseline (milestones-1-2.md, row 2.5).
+"""Attach step of the baseline (docs/earlier-work.md, build row 2.5).
 
 Runs after a claim_off run has written answer.json. For each answer fact, in answer order,
 `orch-model` (same settings and seed as the run) gets a fresh conversation: the attach prompt

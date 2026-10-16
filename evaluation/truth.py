@@ -1,6 +1,6 @@
 """Readers for what evaluation compares: a corpus's ground truth, a run directory, answers.
 
-Only evaluation reads `ground_truth.json` (docs/evidence-interfaces.md, hard rule): the engine and
+Only evaluation reads `ground_truth.json` (docs/evidence-system.md, Part A, hard rule): the engine and
 both baselines see `manifest.json` and `papers/` alone. Every reader here is tolerant of optional
 files (a run without `locate.json` or `reexec.json` is scored without those sections), never of a
 malformed required one.

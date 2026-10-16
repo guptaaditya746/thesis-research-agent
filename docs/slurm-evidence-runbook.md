@@ -1,6 +1,6 @@
 # Runbook: the evidence-level system on Slurm, first live run
 
-The evidence-level system (`evidence/`, `synth/`, `evaluation/`; formats in `docs/evidence-interfaces.md`) is
+The evidence-level system (`evidence/`, `synth/`, `evaluation/`; formats in `docs/evidence-system.md`) is
 built and tested only offline, with scripted models (1052 passed, 1 skipped on `main`). This session runs it
 against the real models for the first time: an LLM-written synthetic corpus, the engine with the LLM
 extractors and the agentic extractor, replay and re-execution, both baselines, and the scores.
@@ -39,7 +39,7 @@ it. The point is that every part meets the real models once and the first number
 | `CORPORA` | `$EV/corpora` (synthetic corpora); `RUNS=$EV/runs`, `SCORES=$EV/scores`, `CACHE=$EV/cache` |
 | `JOB` | the stack's Slurm job id (step 0.2) |
 
-Commands run inside the stack job exactly as in `docs/slurm-e2e-runbook.md` ("Paths and how commands run"):
+Commands run inside the stack job:
 short ones in `srun --jobid "$JOB" --overlap --pty bash -l` after `source "$EV/in-job.env"`; steps marked
 **(long)** from the login node with `nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" <command> >
 "$EV/logs/<step>.log" 2>&1 &` and `echo $! > "$EV/logs/<step>.pid"`. Never start a long step from a `--pty`
@@ -90,8 +90,11 @@ differences.
 
 ### 0.2 Stack (login node)
 
-Start the stack exactly as `docs/slurm-e2e-runbook.md` step 0.2 (`profiles/agent-3x40.yaml`), wait until
-`orch`, `sub-1` and `sub-2` are ready, `export JOB=<id>`.
+```bash
+cd llm-setup && LLM_SETUP_PROFILE=profiles/agent-3x40.yaml sbatch slurm/llm-stack.sbatch; cd ..
+export JOB=<the job id sbatch printed>
+tail -n 20 llm-setup/runtime/slurm-$JOB.out      # repeat until orch, sub-1 and sub-2 say ready (~11 min)
+```
 
 ### 0.3 Session environment (login node)
 

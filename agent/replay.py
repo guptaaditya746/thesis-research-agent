@@ -1,4 +1,4 @@
-"""Replay (milestones-1-2.md row 2.13, test C6): rebuild a run's conversation and show that the log is complete.
+"""Replay (docs/earlier-work.md, build row 2.13, test C6): rebuild a run's conversation and show that the log is complete.
 
 `agent replay <run>` rebuilds the main agent's conversation from trajectory.json (mini-swe-agent's
 copy of the messages, rewritten after every step) and out/ (each command's full output), and holds

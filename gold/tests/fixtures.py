@@ -1,7 +1,7 @@
 """Test fixtures for the review (C2).
 
 - `build(tmp)`: a gold working directory for question q01 as C1 will write it (contract in
-  docs/e2e-build-plan.md, "Gold": candidates, pool, strata, triage, screening, doc.json), on the D1
+  docs/earlier-work.md, "Gold files, answer key, judge, scores": candidates, pool, strata, triage, screening, doc.json), on the D1
   papers (agent/tests/conftest.py write_corpus), with the graph concept of agent/tests/fixtures.
 - `FakeArgilla`: an in-memory stand-in for the Argilla v2 client. Datasets are created from the real
   `argilla_io.settings` (built with the fake as client), and every logged record is checked against the

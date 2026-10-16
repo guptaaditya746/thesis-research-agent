@@ -1,4 +1,4 @@
-"""Scoring a run against a corpus's ground truth (docs/evidence-interfaces.md section 5).
+"""Scoring a run against a corpus's ground truth (docs/evidence-system.md A5).
 
 Three parts are scored separately, so an error is counted where it happens:
 

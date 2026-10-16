@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The measurement table of the Slurm e2e session (docs/slurm-e2e-runbook.md, step 8), read from files.
+"""The measurement table of the Slurm e2e session (docs/earlier-work.md, Runbooks: the e2e session, step 8), read from files.
 
     uv run python scripts/e2e-measure.py runs <run dir> [<run dir> ...]   # one line per run
     uv run python scripts/e2e-measure.py gold <gold dir> <qid> [<qid> ...]  # one line per gold D

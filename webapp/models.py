@@ -1,4 +1,4 @@
-"""Request and response models of the backend API (docs/e2e-build-plan.md, "Backend API").
+"""Request and response models of the backend API (docs/earlier-work.md, "Backend API and frontend pages").
 
 The frontend's TypeScript types are generated from the OpenAPI schema (`webapp openapi`), so every
 endpoint returns one of these models and their names are the names the frontend sees. Files

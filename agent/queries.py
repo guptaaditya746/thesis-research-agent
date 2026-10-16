@@ -1,4 +1,4 @@
-"""The five provenance queries (milestones-1-2.md, row 2.8; provenance-model.md).
+"""The five provenance queries (docs/earlier-work.md, build row 2.8; Provenance model).
 
 All five run on a run's graph.ttl (agent/prov.py): 1, 2, 3 and 5 are SPARQL; 4 gets the anchors
 by SPARQL and re-finds each one in the current corpus with agent.anchor.resolve.

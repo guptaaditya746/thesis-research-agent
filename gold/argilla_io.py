@@ -28,7 +28,7 @@ responses stay; a candidate id that comes to name another fact gets a new record
 use a question's name as a key: Argilla would take it as a suggestion and show it to the reviewer.
 
 The client reads $ARGILLA_API_URL and $ARGILLA_API_KEY when it is made; the key is never logged or
-written. Argilla runs on Omen and is reached through `scripts/omen-tunnels` (gold/README.md, Review).
+written. Argilla runs on Omen and is reached through `scripts/omen-tunnels` (docs/earlier-work.md, Gold: review).
 """
 from __future__ import annotations
 
@@ -168,7 +168,7 @@ def client() -> Any:
             f"Argilla is not reachable at {url} ({exc}). It runs on Omen: check the stack there "
             "(`docker compose ps` in ~/stacks/argilla), then open the `argilla` tunnel, laptop side first "
             "(`omen-tunnels laptop start argilla`), then here (`omen-tunnels compute start argilla`). "
-            "See gold/README.md (Review).") from None
+            "See docs/earlier-work.md (Gold: review).") from None
 
 
 def _create_dataset(api: Any, name: str, workspace: str, settings: Any) -> Any:

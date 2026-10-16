@@ -262,7 +262,7 @@ def test_equal_context_stays_ambiguous() -> None:
     assert exc.value.reason == "ambiguous"
 
 
-# --- column breaks found in 1.4 (tests/D1/column-order.md) -----------------------------------------
+# --- column breaks found in 1.4 (tests/RESULTS.md, appendix D1) -----------------------------------------
 
 @pytest.mark.parametrize("name,quote", [
     ("2025-acl-long-625", "can outperform larger ones in improving LLM SFT performance. ALPAGASUS finds that smaller datasets"),

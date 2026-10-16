@@ -1,6 +1,6 @@
 """A run's answer against the answer key: rows and facts (milestone 4, Scores).
 
-Both sides have the agent's answer shape (docs/e2e-build-plan.md, Answer key): rows of a table (cells per
+Both sides have the agent's answer shape (docs/earlier-work.md, "Gold files, answer key, judge, scores"): rows of a table (cells per
 column) or a graph (one edge per row), each row backed by facts {s, p, o}. Gold facts also carry
 paper_id, quote, vital and candidate_id.
 

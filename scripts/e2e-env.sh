@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Environment of the end-to-end Slurm session (docs/e2e-build-plan.md, "Environment").
+# Environment of the end-to-end Slurm session (docs/earlier-work.md, "Environment").
 #
 #   source scripts/e2e-env.sh    check and export (scripts/e2e-*.sh source it themselves)
 #   bash scripts/e2e-env.sh      check only
 #
-# Run it in the stack job (docs/slurm-m1-runbook.md, "Stack"): srun --jobid <stack job> --overlap --pty bash -l,
+# Run it in the stack job (docs/earlier-work.md, "Runbooks"): srun --jobid <stack job> --overlap --pty bash -l,
 # after `set -a; source llm-setup/.env; set +a` for the key. It checks, prints and exports:
 #   CORPUS            the frozen Markdown corpus; its manifest.json must hash to the repo's corpus/manifest.json
 #                     (or to $E2E_CORPUS_MANIFEST_SHA256 when set)

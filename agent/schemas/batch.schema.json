@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "batch.schema.json",
-  "title": "Run manifest for `agent batch` (milestones-1-2.md, row 2.9)",
+  "title": "Run manifest for `agent batch` (docs/earlier-work.md, build row 2.9)",
   "description": "Runs = questions x conditions x repeats. Run key <question>-<condition>-r<repeat>; seed = seed_base + 100 * question number (1-based, manifest order) + repeat, the same in both conditions. Relative paths are relative to the directory `agent batch` runs in (the repo root on the cluster).",
   "type": "object",
   "additionalProperties": false,

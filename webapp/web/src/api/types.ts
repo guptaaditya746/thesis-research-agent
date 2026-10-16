@@ -1,5 +1,5 @@
 /**
- * Backend API types (docs/e2e-build-plan.md, "Backend API"). The response and request types are
+ * Backend API types (docs/earlier-work.md, "Backend API and frontend pages"). The response and request types are
  * aliases onto the types `npm run gen:api` generates with openapi-typescript (src/api/schema.d.ts)
  * from the backend's OpenAPI schema (webapp/web/openapi.json, made by `webapp openapi` from
  * webapp/models.py), so the type checker holds the frontend to the API the backend serves: after a
@@ -8,7 +8,7 @@
  * Field names are the backend's (snake_case), never renamed on the way in. Where the backend passes
  * another package's file through as an open object (score.json, report.json, the gold report,
  * graph.json, config.json), the second half of this module types that file from its writer's
- * documentation (scoring/README.md, gold/README.md, agent/rundir.py, agent/kg.py). Those "file
+ * documentation (docs/earlier-work.md (Scoring, Gold), agent/rundir.py, agent/kg.py). Those "file
  * contract" types are hand-written; src/lib reads them defensively, since a file of an older writer
  * may lack fields.
  */
@@ -173,7 +173,7 @@ export interface RunConfig {
   sandbox?: { mode?: string }
 }
 
-// --- score.json (scoring/README.md, schema_version 2) ----------------------------------------------
+// --- score.json (docs/earlier-work.md, Scoring, schema_version 2) ----------------------------------------------
 
 export interface FactScores {
   tp?: number | null
@@ -303,7 +303,7 @@ export type KeyRow = {
   facts: KeyFact[]
 }
 
-// --- gold files (gold/README.md doc.json; gold/README.md report.json) -----------------------------
+// --- gold files (docs/earlier-work.md, Gold: build and Gold: review) -----------------------------
 
 export interface GoldCoverage {
   papers?: number

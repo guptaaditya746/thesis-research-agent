@@ -1,4 +1,4 @@
-"""Does each answer fact's quote support it? The primary outcome's input (docs/e2e-build-plan.md).
+"""Does each answer fact's quote support it? The primary outcome's input (docs/earlier-work.md §5).
 
 Input: pairs.jsonl (agent/pairs.py, row 1.12), one line per (answer fact, claim id it cites), with the
 exact text the broker anchored in the corpus and its offsets; a run without the file gets it computed

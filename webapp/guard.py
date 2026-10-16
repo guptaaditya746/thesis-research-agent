@@ -1,7 +1,7 @@
 """Keep other web pages out of the API: a Host check and a same-origin rule for every write.
 
 The server has no authentication: it binds to 127.0.0.1 and the user reaches it through an SSH
-tunnel (webapp/README.md). That alone does not keep a web page the user has open elsewhere away:
+tunnel (docs/earlier-work.md, Web app). That alone does not keep a web page the user has open elsewhere away:
 - a plain HTML form can POST to http://127.0.0.1:8080/api/... from any site without a CORS
   preflight (a body-less POST such as `POST /api/gold/{qid}/build` starts a gold build, which also
   freezes the question's concept pick for good);

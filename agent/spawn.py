@@ -1,4 +1,4 @@
-"""Subagents (milestones-1-2.md, row 2.12): the harness side of the `spawn` command.
+"""Subagents (docs/earlier-work.md, build row 2.12): the harness side of the `spawn` command.
 
 Off unless `agent run --spawn on` (config.json `spawn`, SpawnSettings.config; the batch manifest
 field `spawn`). When on, every command of the agent gets a SPAWN_FD channel, as it gets CLAIM_FD:

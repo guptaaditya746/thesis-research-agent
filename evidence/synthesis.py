@@ -1,4 +1,4 @@
-"""Deterministic synthesis: from the evidence of each document to answer.json (docs/evidence-interfaces.md §4).
+"""Deterministic synthesis: from the evidence of each document to answer.json (docs/evidence-system.md A4).
 
 Per document: the question metrics are tried in the protocol's order, and within a metric the metric
 items in document order; the first metric item with a usable rag/baseline pair gives the study's effect

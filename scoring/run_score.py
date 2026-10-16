@@ -1,6 +1,6 @@
 """`score run <run> [--key <key.json>]`: one finished run against its answer key -> <run>/score.json.
 
-score.json (docs/e2e-build-plan.md, Scores; scoring/README.md lists every field):
+score.json (docs/earlier-work.md, "Gold files, answer key, judge, scores" and Scoring):
 {schema_version, run_id, qid, condition, seed, temperature, repeat, attempt, kind, exit_status, answer_from,
  verify_ok, key_version, key_reviewed, key_sha256, provisional, key_problems, rows: {tp, fp, fn, precision,
  recall, f1, asked, pending} (soft level), rows_by_level, facts: {strict, normalised, soft: {tp, fp, fn,

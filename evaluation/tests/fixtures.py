@@ -1,4 +1,4 @@
-"""A hand-written two-paper corpus in the documented formats (docs/evidence-interfaces.md 1-4).
+"""A hand-written two-paper corpus in the documented formats (docs/evidence-system.md A1-A4).
 
 S001 (explicit): accuracy, closed-book 0.62 vs retrieval-augmented 0.70, plus a distractor system
 (0.66) and a distractor metric (latency): supports, delta 0.08. The baseline value is stated twice

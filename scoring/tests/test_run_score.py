@@ -17,7 +17,7 @@ from scoring.run_score import (ScoreError, answer_from, cost, exit_status, key_p
 
 from .helpers import C2Judge, finish_attach, graph_key, judge, write_key
 
-# The plan's contract (docs/e2e-build-plan.md, Scores); score.json may add fields, never drop these.
+# The plan's contract (docs/earlier-work.md, "Gold files, answer key, judge, scores"); score.json may add fields, never drop these.
 CONTRACT = {"run_id", "qid", "condition", "seed", "exit_status", "verify_ok", "key_version", "rows", "facts",
             "vital_recall", "support", "cost"}
 PRF = {"tp", "fp", "fn", "precision", "recall", "f1"}

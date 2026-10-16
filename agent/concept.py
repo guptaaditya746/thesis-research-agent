@@ -1,4 +1,4 @@
-"""Concept brief and answer validation (milestones-1-2.md, row 1.3).
+"""Concept brief and answer validation (docs/earlier-work.md, build row 1.3).
 
 The concept schema and the concept-independent answer schema live in agent/schemas/. A concept's
 answer_shape narrows the answer: `answer_schema_for` derives the full JSON Schema of a valid answer

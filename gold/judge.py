@@ -1,6 +1,6 @@
 """LLM judge (plan "Judge": C2 for scoring, D, and the web app, E), calibrated against people.
 
-API (contract in docs/e2e-build-plan.md):
+API (contract in docs/earlier-work.md §5):
 - `support(fact, quote, *, context=None) -> Verdict`, Verdict = `{label: supports | partial | no,
   rationale, model, prompt_sha256, cached}`: does the quote support the fact?
 - `same_fact(run_fact, key_fact, concept) -> {match, rationale, model, prompt_sha256, cached}`: soft

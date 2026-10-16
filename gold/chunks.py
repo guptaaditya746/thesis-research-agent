@@ -1,7 +1,7 @@
 """Corpus papers split into chunks at Markdown headings (M3, plan "Gold": chunks.jsonl).
 
 The builder screens every chunk of every paper, so no ranker decides what a model reads (the
-labelling repo screened each paper's top passages by the harness ranker; gold/README.md). A chunk is
+labelling repo screened each paper's top passages by the harness ranker; docs/earlier-work.md, Gold: build). A chunk is
 a run of whole sections, from one heading line to the next, packed greedily up to `max_chars`
 (GOLD_CHUNK_CHARS, default 40,000 characters, about 10-16k tokens, so a chunk, the prompt and the
 reply fit the sub-model's 32,768-token context). A section longer than that is cut at paragraph

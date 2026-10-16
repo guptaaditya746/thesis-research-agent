@@ -3,7 +3,7 @@
 Structured ground truth → papers written from it → fidelity-checked corpora, so extraction, integration
 and synthesis can be scored separately against exact truth. Question: *Does retrieval-augmented
 generation improve the factual accuracy of LLM-generated answers?* The files written are exactly those of
-[docs/evidence-interfaces.md](../docs/evidence-interfaces.md) sections 1 and 2 (deviations at the end).
+[docs/evidence-system.md](../docs/evidence-system.md) A1 and A2 (deviations at the end).
 
 ```
 uv run synth build --name rag-s1 --seed 1 --studies 20 --renderer template \
@@ -91,7 +91,7 @@ contradicting, 1 neutral). A test rebuilds it and compares bytes; after changing
 `uv run synth build --name rag-demo --seed 1 --studies 6 --out synth/examples` (the generator's code hash
 is in `corpus.json`). `.gitattributes` keeps it LF on every checkout.
 
-## Deviations from docs/evidence-interfaces.md
+## Deviations from docs/evidence-system.md (Part A)
 
 - `corpus_id` is `<name>-<8 hex>`, the hex from the hash of the papers' ids and sha256s, not
   `<name>-<level>`: the manifest must not hint at the level (a hash of name and level could be guessed).

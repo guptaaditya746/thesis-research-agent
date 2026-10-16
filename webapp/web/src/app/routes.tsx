@@ -1,5 +1,5 @@
 /**
- * Routes of docs/e2e-build-plan.md "Frontend pages". Pages load lazily, so the graph (React
+ * Routes of docs/earlier-work.md "Backend API and frontend pages". Pages load lazily, so the graph (React
  * Flow), the charts (recharts) and the chat stay out of the first bundle until needed.
  */
 import { lazy } from "react"

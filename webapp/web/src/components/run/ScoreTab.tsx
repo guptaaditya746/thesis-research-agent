@@ -1,5 +1,5 @@
 /**
- * Score tab: score.json against the answer key (scoring/README.md): the support of the answer's
+ * Score tab: score.json against the answer key (docs/earlier-work.md, Scoring): the support of the answer's
  * facts (the primary outcome), the facts matched, missed and extra (with those reviewers
  * rejected as wrong) at the three matching levels, rows, vital recall, and the cost with and
  * without the attach step.

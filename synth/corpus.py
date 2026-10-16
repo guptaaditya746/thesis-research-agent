@@ -1,4 +1,4 @@
-"""Corpus writer and controlled variants (docs/evidence-interfaces.md sections 1 and 2).
+"""Corpus writer and controlled variants (docs/evidence-system.md A1 and A2).
 
 One study set is rendered once per difficulty level into `<name>-<level>` plus `<name>-mixed` (levels
 round robin over the studies), with the same paper ids everywhere; a mixed paper is byte for byte the

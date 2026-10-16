@@ -1,4 +1,4 @@
-"""Quote anchors on corpus Markdown (milestones-1-2.md, row 1.5; plan.md 5.5).
+"""Quote anchors on corpus Markdown (docs/earlier-work.md, build row 1.5; design §5.5).
 
 A selector is a Web Annotation TextQuoteSelector (exact, prefix, suffix) plus a TextPositionSelector
 (start, end) plus the sha256 of the whole file. Offsets count Unicode code points in the file's

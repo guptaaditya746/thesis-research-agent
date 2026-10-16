@@ -1,7 +1,7 @@
 """The gold working directory as the review reads and writes it (plan "Gold", work package C2), and the
 people's answers pulled out of Argilla into it (labelling README, workflow steps 5-7).
 
-Per question, `$GOLD/<qid>/` (contracts in docs/e2e-build-plan.md):
+Per question, `$GOLD/<qid>/` (contracts in docs/earlier-work.md §5):
 - from C1: candidates.jsonl, pool.jsonl, pool.strata.json, triage.jsonl, screening.jsonl, doc.json;
 - review/<dataset>.jsonl: the Argilla records with their responses as last pulled (`gold pull`), one line
   per record, `{id, dataset, metadata, responses: [{question, value, user, status}]}`, for the datasets

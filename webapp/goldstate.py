@@ -1,4 +1,4 @@
-"""Gold standard state per question, read from $GOLD/<qid>/ (docs/e2e-build-plan.md, "Gold").
+"""Gold standard state per question, read from $GOLD/<qid>/ (docs/earlier-work.md, "Gold files, answer key, judge, scores").
 
 The gold builder (C1) and the review (C2) write these files; this module only reads them, and any
 of them may be missing (a question whose gold is not built yet): status `none`, then `building`

@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-// Vite config for the web app (docs/e2e-build-plan.md, "Frontend pages").
+// Vite config for the web app (docs/earlier-work.md, "Backend API and frontend pages").
 //
 // - `npm run dev`: /api is proxied to the FastAPI backend (`webapp serve`, 127.0.0.1:8080 by
 //   default; override with WEBAPP_API). Streams (SSE) pass through the proxy unbuffered.

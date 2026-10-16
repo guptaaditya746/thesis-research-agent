@@ -1,4 +1,4 @@
-"""Main loop (milestones-1-2.md rows 1.8, 1.9, 1.13, 1.15): mini-swe-agent 2.4.6 with our parser, sandbox and broker.
+"""Main loop (docs/earlier-work.md, build rows 1.8, 1.9, 1.13, 1.15): mini-swe-agent 2.4.6 with our parser, sandbox and broker.
 
 One step is one model reply. Per step the harness
 1. masks old command outputs (row 1.15, below), calls `orch-model` through LiteLLM (thinking

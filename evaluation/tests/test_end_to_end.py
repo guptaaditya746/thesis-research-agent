@@ -1,5 +1,5 @@
 """The three packages together, offline: a committed synth corpus → the engine (regex only) → replay →
-scoring. Checks the files between the packages (docs/evidence-interfaces.md) fit, not how good regex is."""
+scoring. Checks the files between the packages (docs/evidence-system.md Part A) fit, not how good regex is."""
 from __future__ import annotations
 
 import json

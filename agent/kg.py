@@ -1,4 +1,4 @@
-"""Knowledge graph from a run's claims (milestones-1-2.md, row 2.6).
+"""Knowledge graph from a run's claims (docs/earlier-work.md, build row 2.6).
 
 Every accepted claim in claims.jsonl, from the research run (`origin` research) or from the
 baseline's attach step (`origin` attach), becomes one edge s -p-> o. The edge keeps the claim id,

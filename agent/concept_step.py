@@ -1,4 +1,4 @@
-"""Concept step and pick (milestones-1-2.md, rows 2.1 and 2.2).
+"""Concept step and pick (docs/earlier-work.md, build rows 2.1 and 2.2).
 
 `propose`: question -> 1 to 5 concept briefs in the 1.3 schema (agent/schemas/concept.schema.json).
 The model (`orch-model`, the loop's OrchestratorModel: same LiteLLM settings, thinking off, the
@@ -18,7 +18,7 @@ tends to repeat a failure, so retrying with another seed is the usual way out.
 `pick`: one brief is picked by number; it is written as concept.json (canonical JSON, the bytes
 RunDir.create writes, so its hash is the run's concept_sha256) and concept.sha256. Who picked is
 recorded (`picked_by`: user, claude, or provisional-first, the rule that takes brief 1 until the
-user has looked; e2e-build-plan.md, "Concept pick"), with a reason. A pick is frozen; only an
+user has looked; docs/earlier-work.md, "Concepts and pick"), with a reason. A pick is frozen; only an
 explicit `replace` changes it (the web app's "change the pick before gold is built"), and the new
 pick record names the concept it replaces. A replace is refused once anything of the question's
 gold build exists in $GOLD/<qid>/ (`gold_files`, the web app's rule too), unless forced; a forced
@@ -28,7 +28,7 @@ All 12 questions (row 2.3): `load_questions` reads questions/questions.json
 (agent/schemas/questions.schema.json); `propose_all` proposes for every question whose session has
 no proposal yet (one failure does not stop the rest), `pick_all` applies a rule to every proposed
 question not yet picked, and `status` gives one line per question. $CONCEPTS/picks.json indexes
-the current pick of every session (e2e-build-plan.md, "Concepts"); it is rebuilt from the sessions'
+the current pick of every session (docs/earlier-work.md, "Concepts and pick"); it is rebuilt from the sessions'
 chains after each pick, so it never disagrees with them.
 
 These functions are also the web app's (FastAPI runs sync handlers in a thread pool), so writers
@@ -79,7 +79,7 @@ CONCEPT_HASH_FILE = "concept.sha256"
 PICKS_FILE = "picks.json"  # in the concepts root: the current pick of every session
 LOCK_FILE = ".lock"  # in a session and in the concepts root: one writer at a time
 LOCK_WAIT_S = 30.0
-GOLD_ROOT = "gold-data"  # $GOLD's default (e2e-build-plan.md, Environment)
+GOLD_ROOT = "gold-data"  # $GOLD's default (docs/earlier-work.md, Environment)
 # What defines a session's proposal: a failed session is continued only with the same values. The
 # rest of the settings (sampling, git_commit, base_url) belong to each attempt.
 IDENTITY = ("schema_version", "question_id", "question", "question_sha256", "model", "prompt", "max_briefs",
@@ -90,7 +90,7 @@ QUESTION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 PICKED_BY = ("user", "claude", "provisional-first")
 PICK_RULES = ("first",)
 RULE_REASON = {"first": "provisional: rule 'first' takes brief 1 until the user has looked at the briefs "
-                        "(e2e-build-plan.md, Concept pick)"}
+                        "(docs/earlier-work.md, Concepts and pick)"}
 
 
 class Model(Protocol):
@@ -473,7 +473,7 @@ class Result:
 
 
 def _stale(session: Session, question: dict[str, Any]) -> bool:
-    """The session was started for another wording of the question (questions/README.md)."""
+    """The session was started for another wording of the question (docs/earlier-work.md, Questions)."""
     if not session.path(SESSION_FILE).is_file():
         return False
     return session.load(SESSION_FILE).get("question_sha256") != question_sha256(question["question"])

@@ -6,7 +6,7 @@ the state of their last attempt. The attempts are where `agent batch` wrote them
 runs_root (relative to the working directory, as agent batch reads it); scripts/e2e-batch.sh writes the
 effective manifest to $RUNS/<name>/manifest.json with runs_root $RUNS/<name> and prints that root
 (RUNS_ROOT=...), which is the runs root scoring and the web app take for the manifest
-(docs/e2e-build-plan.md, Environment), so on the cluster:
+(docs/earlier-work.md, Environment), so on the cluster:
 `score batch $RUNS/m4-72 --manifest $RUNS/m4-72/manifest.json`. A manifest whose runs_root does not
 exist is an error, not 72 runs "not started". The report goes to <runs_root>/report/, where the web
 app started with RUNS=$RUNS/m4-72 reads it. Without a manifest, every run directory below runs_root

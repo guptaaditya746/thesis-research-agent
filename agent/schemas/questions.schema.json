@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "questions.schema.json",
-  "title": "Evaluation questions (questions/questions.json; e2e-build-plan.md, The 12 questions; row 2.3)",
-  "description": "One entry per evaluation question. The id names the concept session ($CONCEPTS/<id>/), the gold directory ($GOLD/<id>/) and the run keys (<id>-<condition>-r<repeat>). Changing a question's text invalidates its concept, gold and runs (questions/README.md).",
+  "title": "Evaluation questions (questions/questions.json; docs/earlier-work.md, The 12 questions; row 2.3)",
+  "description": "One entry per evaluation question. The id names the concept session ($CONCEPTS/<id>/), the gold directory ($GOLD/<id>/) and the run keys (<id>-<condition>-r<repeat>). Changing a question's text invalidates its concept, gold and runs (docs/earlier-work.md, Questions).",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "questions"],

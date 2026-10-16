@@ -1,6 +1,6 @@
 """What both baselines share: the corpus as a system under test sees it, the reply schema, answer.json.
 
-Hard rule (docs/evidence-interfaces.md): a baseline reads `manifest.json` and the files it lists
+Hard rule (docs/evidence-system.md Part A): a baseline reads `manifest.json` and the files it lists
 under `papers/`, nothing else of the corpus directory. `SystemCorpus` is the only reader the baselines
 use; it opens exactly those files, checks each against its manifest sha256, and refuses (allow-list)
 any listed file that does not resolve to a file directly in `<corpus>/papers/`, so neither

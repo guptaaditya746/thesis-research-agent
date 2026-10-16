@@ -99,6 +99,6 @@ for run_id in $finished; do
 done
 echo "== done: $n finished runs in $root; batch exit $rc"
 # Each manifest has its own runs root, so the M4 report never mixes in smoke runs: scoring and the web app
-# take this directory as their RUNS (docs/e2e-build-plan.md, Environment).
+# take this directory as their RUNS (docs/earlier-work.md, Environment).
 echo "RUNS_ROOT=$root"
 exit "$rc"

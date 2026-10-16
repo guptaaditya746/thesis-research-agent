@@ -1,132 +1,152 @@
-# State of the system (14 Oct 2026)
+# State of the thesis (16 Oct 2026)
 
-The one page to plan the implementation from. Everything here is decided or measured; details live in
-the files named at the end, history in git.
+The one page to plan from: the design, what is ours, what was decided, the order of work, what exists and
+what is open. File formats and the extractor interface: [`evidence-system.md`](evidence-system.md). The
+system built before 14 Oct and its measured numbers: [`earlier-work.md`](earlier-work.md). Every test
+result: [`../tests/RESULTS.md`](../tests/RESULTS.md).
 
-> **Superseded framing (14 Oct).** The supervisor's second message of 14 Oct set the design: question →
-> hand-written executable protocol → Python engine with a library of interchangeable extractors → evidence
-> graph → deterministic synthesis, evaluated on a synthetic corpus with exact ground truth against an
-> answer-level baseline; first question: does RAG improve the factual accuracy of LLM answers? It is built
-> (packages `evidence/`, `synth/`, `evaluation/`; formats in [`evidence-interfaces.md`](evidence-interfaces.md),
-> interface in [`extractor-contract.md`](extractor-contract.md); status on `thesis_pipeline.html`), tested
-> offline, not yet run against live models. Our additions: the research agent as one extractor and as a
-> second baseline, the provenance and replay lane. [`plan-evidence-level.md`](plan-evidence-level.md) (after
-> the first message) and the rest of this page describe the earlier design.
+## 1. The design (the supervisor's, 14 Oct)
 
-## Framing (decided 10 Oct, grill doc)
+Tim's two messages of 14 Oct set the thesis. What he wrote, by his section numbers (second message unless
+noted):
 
-- One contribution: provenance recorded while the agent researches, not reconstructed afterwards. Not a claim
-  to beat DCI on answers; the claim is that answers are easier to check. User: a research supervisor.
-- RQ1: recording each fact with a quote as it is found vs attaching sources to the answer afterwards
-  (same agent, model and budget, `claim` off), scored against the answer key from D (correct and wrong facts),
-  the share of facts whose quote really supports them, unsourced facts, and tokens and time. Trace verifiability is reported as secondary measures, not as a second research question.
-- Concepts per question: as many as the question needs, up to 5; the user picks one. Evaluation on 12 questions (6 corpus-wide, 6 ambiguous), each with its own gold D.
-- No novelty claim on provenance: adopt the approaches of LEDGER and PROV-AGENT and implement them here
-  (`docs/provenance-model.md`).
-- Evaluation as the supervisor designed it (`docs/context.md` §2): gold document D per question, its facts
-  reviewed by the author in Argilla into an answer key, system output matched against the key.
-- Model for D (decided 13 Oct, e2e build plan): `sub-model-1`/`-2` (Qwen3-30B-A3B-Instruct), never the agent's orchestrator, so gold stays apart from the system it scores. Proposed but not confirmed: a frontier API model on 2–3 concepts as an upper bound.
-- Scoring of counts (decided 13 Oct, e2e build): a count cell is compared exactly after normalisation (number formats
-  only: separators, trailing zeros, exponents; no tolerance), so a row with a wrong count is a wrong row and its
-  facts carry the partial credit (`scoring/`).
-- Pre-registered test (decided 13 Oct, e2e build, before any scored run): primary outcome the support share, the
-  share of a run's answer facts whose quote the LLM judge says supports them, claim_on vs claim_off after the
-  attach step. The judge sees each quote with the context it was calibrated on (paper id and the text around
-  the quote); `partial` counts as supporting only if the judge's calibration against people picked that mapping
-  (`$GOLD/judge-report.json`, decided on the calibration half, κ reported on the other half), and unsourced facts
-  never count. A fact cites one or more claims and takes the best verdict over them (one supporting quote is
-  enough). Per question the mean over its repeats; a run without answer facts has no support share and is left
-  out of the mean, because the outcome is a property of the facts an answer gives (answering at all is a
-  different outcome); coverage (runs with answer facts / scored runs, and planned runs not scored) is reported
-  per condition beside it, and the empty-as-zero analysis below shows what counting them would change.
-  Questions with a mean in both conditions are paired. Wilcoxon signed-rank on the paired per-question means,
-  two-sided, α = 0.05, with the 95 % BCa bootstrap interval of the mean difference (2,000 resamples over
-  questions, fixed seed) and the rank-biserial correlation as effect size. With fewer than 6 paired questions
-  the test is reported as not computed (p ≤ 0.05 is then unattainable); while any scored run has a pending
-  judge verdict it is reported as not computed too, never run on a subset of the repeats. Sensitivity: runs
-  without facts counted as 0; `partial` under the other mapping; each fact judged by its first cited claim only
-  (claim_on facts can cite several claims, claim_off facts at most one; claims per fact is reported by
-  condition). Secondary outcomes (fact and row precision/recall/F1, vital recall, judged precision, unsourced
-  share, claims per fact, tokens and time with and without attach) get intervals, no tests; soft numbers with
-  judge decisions pending are left out, not averaged in. Scores against draft keys are provisional and never
-  reported. Exact settings: `scoring/README.md`.
+- **Evidence-level, not answer-level** (first message, §1). Answer-level: find statements in the literature
+  that already answer the question and aggregate them. Evidence-level: decide which evidence would answer the
+  question, extract it from the papers, and synthesise the answer from it, even when no paper states the
+  answer. Existing assessments in papers are one more kind of evidence. Questions are operationalised into
+  explicit evidence requirements.
+- **Executable research protocol** (§2) as the intermediate representation: which evidence, how it is
+  extracted, how it is represented and connected, how it is synthesised (supporting and contradicting);
+  YAML/JSON run by a Python engine. Generating the protocol with an LLM (with user dialogue) comes later.
+- **A library of reusable, interchangeable extractors** (§3) behind a common interface (regular
+  expressions, specialised models, LLMs or other methods), benchmarked; a small library is enough.
+- **First use case** (§4): "Does retrieval-augmented generation improve the factual accuracy of
+  LLM-generated answers?" Conditions, baseline, metrics, results; improves / no effect / worse;
+  deterministic synthesis at first.
+- **Synthetic corpus from structured ground truth** (§5): ground truth first, papers written from it;
+  evaluate separately **A extraction** (precision/recall/F1, condition association, provenance accuracy),
+  **B integration** and **C synthesis**, so extraction errors and synthesis errors are told apart.
+- **Difficulty levels and variants** (§6): explicit, paraphrased, distributed, complex, contradictory;
+  duplicates, missing information, limitations, unusually large effects; **controlled variants** (change one
+  study and the answer should shift predictably); a fidelity check of the final documents.
+- **Baseline** (§7): a conventional retrieve-then-answer system; compare correctness, completeness and
+  traceability, including over-optimistic author conclusions; "should not assume the evidence-level approach
+  will necessarily perform better".
+- **Order** (§8): manual protocol, synthetic generator, extractors, representation, rules, separate
+  evaluation, baseline. Optional: an LLM protocol generator, real papers.
+- **Contribution** (§9): feasibility and a controlled evaluation on synthetic literature with known ground
+  truth; diagnose why the system fails; a reusable benchmark; a vertical slice first.
 
-## Decided
+He did not mention agents, for or against.
 
-| Area | Decision | Evidence |
+## 2. Our additions
+
+Everything below is ours, not the supervisor's; the thesis must say so.
+
+Built (14–15 Oct):
+
+- **Agentic extractor**: the earlier research agent wrapped, unchanged, as one extractor behind the contract
+  (`evidence/agentic/`, protocol `rag-factuality-agentic.yaml` puts it last in every cascade).
+- **Agent baseline**: the research agent with the question only, no protocol (`evaluation/baselines/agent.py`).
+- **Locate step**: before extraction the engine narrows each document to the parts the extractors see
+  (`evidence/locate.py`, `locate.json`), and **locate recall** scores it.
+- **Cascade**: several extractors per evidence type in order, items merged with `found_by`, each
+  extractor's marginal contribution reported (B10).
+- **Provenance and replay lane**: one hash-chained event per locate step, extractor call, merge and
+  synthesis (B7); the **record cache** (B8); exact **replay** from records (a miss is an error, every output
+  hash must match); **re-execution** as a stability measurement; **PROV-O** export.
+- The details of the extractor contract (spans checked in the document, recorded coverage, extractor ids from
+  code and config hashes; Part B) and the hard rule that no system under test reads the ground truth.
+
+Planned (decided 16 Oct, §4): the funnel engine, the proposal flow, the optional vocabulary snapshot.
+
+## 3. Research questions (implicit in the supervisor's text)
+
+He wrote no numbered research questions. Read from his text:
+
+1. **Feasibility** (§9): can a question be answered evidence-level through an executable protocol, an
+   extractor library and deterministic synthesis?
+2. **Extraction** (first message; §3, §5): how reliably and how completely can the relevant evidence be
+   extracted from a scientific corpus, per extractor and per difficulty level?
+3. **Evidence-level vs answer-level** (§7): how does the approach compare with retrieve-then-answer on
+   correctness, completeness and traceability, and when is it better or worse?
+4. **Where failures come from** (§9, §5): extraction, integration or synthesis.
+5. Also: how the system responds to **controlled variants** (§6): does a changed study shift the answer as
+   predicted?
+
+## 4. Decisions of 16 Oct
+
+| Topic | Decision |
+|---|---|
+| The earlier agent | A component only: the agentic extractor and the agent baseline. The claim on/off study (old RQ1) is dropped. The old parts (12 questions, concept pick, claim on/off batch, its scoring, gold review) stay in the repository, out of the main flow, documented as earlier work. |
+| Web app | Rebuilt for the supervisor's flow: question → protocol → run → evidence graph → answer → scores A/B/C per level, the baseline beside it; agent traces as a drill-down. |
+| Protocol | Hand-written now; an LLM protocol generator later (optional, as the supervisor says). |
+| Evaluation | The synthetic benchmark is the main evaluation. A check on the RAG papers among the 337 real papers, with gold built by the `gold/` method (labelling repo) and reviewed by the user. |
+| Models | The same model for all extractors and both baselines, so a comparison isolates the method. |
+| Fixes for conflicts with the supervisor | (1) The RAG baseline becomes a plain retrieve-then-answer: top passages over the whole corpus, a neutral prompt (today: top 2 BM25 passages of every paper by default, A6). (2) The fidelity check fails a paper that adds numbers or claims the ground truth does not have. (3) README and this page keep his design and our additions apart. |
+| Second build (ev2) | To be finished: duplicates, missing information, large effects, the synthesis flags, his controlled variant (change one study, regenerate that paper, predictable shift). Its unreviewed work in progress and its contract are **not on main**; they are in the bundle `../thesis-ev2-wip.bundle` outside the repository (`git fetch ../thesis-ev2-wip.bundle 'refs/heads/*:refs/heads/*'`). |
+| Funnel engine (ours) | Per paper: screen (is there a RAG-vs-baseline experiment? else skip with a reason) → regex → completeness check against a rule the protocol declares (a RAG and a baseline condition, a shared metric, values for both on the same dataset) → escalate only the gaps (LLM, then the agent with a targeted task) → stop when complete or exhausted; gaps recorded. Modes `all` (every extractor on everything, for benchmarking) and `gaps` (answering, the 337-paper check). |
+| Proposal flow (ours) | PICO-style frame → draft (EDC-style definitions; each field's source: ontology, protocol or invented) → critic checklist → fixed choice-point cards with LLM defaults, the user decides with a reason (`decisions:` log) → freeze with a hash and a pinned vocabulary snapshot → PROSPERO/OSF-style amendments (version, amended hash, reason, impact, before the main run or not). |
+| Ontology | Optional offline vocabulary snapshot (CS-KG 2.0 terms and synonyms, Papers with Code metric names, ML-Schema measurement shape, EXPO roles; DBLP only for metadata), used **only in the proposal flow**. The evidence graph stays plain JSON with the PROV-O / Web Annotation export; no OWL. |
+| Synthesis | The rules move from Python (`evidence/rules.py`, `evidence/synthesis.py`) into the protocol YAML; incomplete studies are reported with their reason. |
+
+## 5. Order of work
+
+1. Contract: funnel engine, declarative synthesis, proposal flow (written before any code).
+2. The conflict fixes (RAG baseline, fidelity check, attribution).
+3. Finish ev2.
+4. Funnel engine.
+5. Proposal flow.
+6. Codex runbook and the live Slurm run.
+7. Web app rebuild.
+8. The 337-paper check.
+9. Documentation.
+
+## 6. What exists
+
+The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models only
+(1052 passed, 1 skipped in WSL), **not yet run against live models**. The runbook for the first live run is
+[`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (not run; written before the 16 Oct decisions,
+see §7).
+
+| Step (supervisor's order) | State | Where |
 |---|---|---|
-| Orchestrator | `Qwen/Qwen3.8-27B-FP8` @ `017b9c7`, GPU 0, 65,536 context, thinking off, `max_tokens` 4096 (a conclude reply up to 16,384 within the context, 1.13: a whole answer to a corpus-wide question needs more) | A2, A3, B3, L1, L2 |
-| Subagent model | `Qwen/Qwen3-30B-A3B-Instruct-2507-FP8` @ `5a5a776`, two replicas (GPUs 1, 2), 32,768 context, 3 active sequences each | A4, A5, L1, L3 |
-| Serving | `llm-setup` (GitHub `thesis-llm-setup`, `main`), profile `profiles/agent-3x40.yaml`, `sbatch slurm/llm-stack.sbatch`; models pinned by revision, offline loading, `uv sync --locked` | L1, R3 |
-| Model access | Harness talks only to LiteLLM `127.0.0.1:4000` (`orch-model`, `sub-model`); use pinned `sub-model-1` / `sub-model-2` for concurrent fan-out | L2, L7, CONSUMERS.md |
-| Subagent routing | LiteLLM shared alias remains available; fan-out uses pinned `sub-model-1` and `sub-model-2` because all tested shared-alias strategies skewed concurrent requests | L7 |
-| Context overflow | Proxy returns HTTP 400 `ContextWindowExceededError` with context and token counts; map to “context full” and stop retrying | L8 |
-| Reply format | Thinking off with the strict one-bash-block instruction: 50/50 blocks, 0.63 s mean (B8). Thinking on at low effort also gave 50/50 but 2.51 s; default effort loses 2–3/50 to length cuts. Keep thinking off; switch to low effort only if the blind usefulness rating (Later) favours it. Lenient parser fallback stays; never run anything from the reasoning field | B1–B3, B8, B9, L2 |
-| Loops | Identical command twice → notice; three times → notice with remaining budget | B4 |
-| Sandbox | Every agent command runs under Landlock ABI 8 plus x86_64 seccomp in its own process group (`tests/S5/run_sandbox.py`), with `ulimit -v 2G` and `timeout 120`. System dirs, corpus, agent toolchain, and the resolved uv Python runtime are read-only; one Ceph scratch dir is writable. Seccomp blocks IP, pathname Unix, netlink sockets, and `socketpair()`; a pre-opened claim descriptor remains usable. | S5a, S5b, S6, S7, S1b |
-| Toolchain | Pinned, hashed, mode-manifested read-only `agent-venv` (numpy, pandas, regex, rapidfuzz, pyyaml, scikit-learn) + ripgrep + jq, built with `scripts/build-agent-root.sh`; `scripts/verify-agent-root.sh` checks file hashes and modes. Extra packages install from local wheels into scratch. | S5c, B0, S7 |
-| Logs and claims | A broker outside the sandbox owns `events.jsonl` and `claims.jsonl` (single writer, hash chain, step id assigned by the harness); the sandbox submits claims over an inherited `CLAIM_FD`. | H1, R2, S7 |
-| Output cap | 8 KB of each command's output in context, full output in a file | C1 |
-| Corpus | Docling 2.110.0 (OCR off, tables on), 336/337 PDFs converted and hash-verified; omit scanned PDF `p38` per user decision; frozen with hashes in `manifest.json` | D1, D2, D5 |
-| Manifest hash | Take the `corpus/manifest.json` hash from an LF checkout (`22e9471b…`); `.gitattributes` now forces LF on the corpus, D1 papers, schemas, fixtures, `*.jsonl`, the prompt and scripts | D5, m1-core |
-| F1 acceptance | Whole path passed on Slurm job 7288: orchestrator, parser, Landlock/seccomp sandbox, `claim`, and broker. One exact quote was accepted at step id 1; event/claim chains verified; corpus stayed read-only and network access was blocked. | F1, `tests/F1/run-001/summary.json` |
-| `claim` under Landlock on Ceph | The repo path `agent/bin/claim` worked under Landlock + seccomp on Ceph with the inherited broker descriptor; one claim was accepted at step id 42 and its log hash verified. The `smoke-01` agent run did not call `claim`, so this result is from the direct sandbox check. | M1-claim-ceph, `$RUNS/claim-client-smoke.jsonl` |
-| First real M1 runs | All four runs verified and all graph/PROV/query commands exited successfully. All reached budget with empty answers; actual tokens were 470,077–498,229 against configured 400k. Largest prompt was 38,470 (<61,440), so C8 was not triggered. One accepted quote in c3-on-2 was checked against its cited paper and supports its dataset claim. | M1-real, `tests/M1-real/` |
-| Real attach | `attach` executed on c3-off-1 and completed cleanly, but had 0 facts to process. Per-fact 6-step/60k-token budget remains unmeasured. | M2-attach-real, `$RUNS/c3-off-1/attach.json` |
-| Column order | Docling keeps two-column reading order: 0/10 papers interleaved; a quote across one of the 4 footnote/caption splits at page breaks is rejected (`not_found`) | D1-col, `test_anchor` |
-| Anchors | Selector = file sha256 + raw offsets + exact/prefix/suffix; offsets are tried first, else the retyped quote is matched after normalising (NFKC, whitespace, dashes, quote marks, entities) and mapped back to raw offsets; minus signs are kept and a quote may not cut a number (`partial_number`); case-sensitive | `agent/anchor.py`, 1.5, `test_anchor` (82) |
-| Broker | One process per run; one hash chain over `events.jsonl`, `claims.jsonl` a checked copy of its claim records; claim ids `claim-NNNNNN`; rejection reason returned to the agent (`not_found`, `partial_number`, `ambiguous`, `unknown_file`, …) | `agent/broker.py`, 1.6, `test_broker` (30) |
-| Main loop | mini-swe-agent 2.4.6 subclass (`agent/loop.py`). A step is one model reply; the token budget sums `total_tokens` over all calls. Repeats counted consecutively after collapsing whitespace. After the budget or a context-full 400: 2 more replies, no commands; on context-full, old outputs become stubs (claim replies kept), then old replies are shortened, the third 400 ends the run; never the same request twice. The wrapper times commands out itself (120 s, process group, exit 124) because uutils `timeout` fails under Landlock+seccomp; `ulimit -v` set in the shell. `agent run` defaults to Landlock and refuses without it; `unsandboxed` is for tests only and recorded in `config.json`. API key only from `$LITELLM_MASTER_KEY`, never logged. After M1-real (prompt v2, `LoopSettings` in `config.json` `loop`; v1 keeps the old loop): conclude replies decoded under the reply schema (`extra_body.structured_outputs`, with `disable_any_whitespace`; parse `guided_answer`, `used.decoding`, `used.schema_sha256` and `used.max_tokens` in the call record) with up to 16,384 reply tokens, fitted to what the context leaves; the schema is built at each conclude call, cited claim ids limited to the run's accepted claims (none: no `claims` key), a row's `facts` last as the prompt teaches; a guided call the server refuses (a 4xx that is not context-full) is recorded (`guided_decoding_rejected`) and asked again decoded freely, as are later conclude replies; a conclude reply past the 600 s proxy timeout is not retried: recorded as a failed call (`timeout`, coverage `model_timeout`) and counted as a conclude reply (client retries off for all calls, mini's tenacity is the one retry policy); the agent keeps `scratch/answer-draft.json`, taken when a run ends without an answer; notices at 50/75/90 % of either budget; outputs older than the last 8 commands become stubs (last 4 after a prompt over 45k tokens), count in each call record, the text first shown kept in `trajectory.json` (`extra.original_content`) so every `prompt_sha256` can be rebuilt; six identical commands end research (`repeats`). Provisional budget 60 steps / 2M tokens (`agent run` defaults, `m4-72.json`); `--prompt-version v1` defaults to the M1-real budget (150 / 400k) and wording | 1.8, 1.13, 1.15, `test_loop`, `test_loop_v2`, M1-loop, M1-real |
-| Answer and records | The agent writes `{rows, notes}`; the harness adds concept hash, `claims: []`, `origin`, and rejects unaccepted claim ids; NaN/Infinity, non-list facts and deep nesting are answer problems, never crashes. No valid final answer → the draft if it passes the same check: `answer.json` notes start "harness: answer taken from the agent's draft file (exit status X)", `answer_from_draft` coverage record with the draft's sha256 and its copy `answer.draft.json` (run root; `agent verify` checks it); else empty `answer.json` + `no_final_answer` (with why the draft was not taken). `Outcome.answer_from` = final / draft / none. PROV: `ours:answerSource` (`final_answer`, `draft`, `none`, `unknown`) on the answer, which is `prov:wasGeneratedBy` the final-answer call or that coverage record (`prov:wasDerivedFrom` an `ours:AnswerDraft`); after an attach step the answer is generated by the attach activity and derived from `answer-research` (answer.research.json), which takes those links. `agent_tool` records list `used.files_read` (`p<N>.md` names and ACL Anthology ids in the command); the answer's model call has `custom_metadata.final_answer`; a claim step is a command that sent at least one claim | 1.9, 1.12, 1.13 |
-| Prompts | `agent/prompts/system-v2.txt` (default since 1.13: real file names, claim where found, draft answer, budget plan and notices) and `attach-v2.txt` (v2's corpus paragraph and claim rules, verbatim); `system-v1.txt` and `attach-v1.txt` kept byte for byte for the M1-real runs (test pins the hashes): `agent run --prompt-version v1` reproduces them (loop, wording and budget), and `agent attach` follows the run's version; baseline = the prompt minus the claim block (`system-<v>.diff`, tested); a test fails if the broker gains a rejection reason a research or attach prompt does not explain | 1.10, 1.13, `test_prompts`, `test_attach` |
-| Concepts, attach, batch | Concepts proposed corpus-blind (≤5, one repair) and picked into `concepts/<qid>/concept.json` with a `concept_pick` record. Attach step uses `claim` with `origin="attach"`, per-fact budget 6 steps / 60k tokens (freeze after 1.13); prompt version and conclude decoding default to the run's (config `attach.conclude_decoding`), its conclude reply is decoded under the result schema (refusal → free), and a fact left without a result gets the last of its own accepted claims with exactly its s/p/o (`attach_from_claim` coverage, `how` in attach.json). Batch runner never resumes a cut run in place: it marks it (`coverage`, `job_time_limit`) and reruns it fresh, up to 3 attempts; the manifest's `prompt_version` and `conclude_decoding` reach runs and attach steps | 2.1–2.5, 2.9, 1.13 |
-| Questions and picks | 12 questions in `questions/questions.json` (6 corpus-wide, 6 ambiguous; labelling repo ids, reworded for the Markdown corpus). `agent concepts propose-all`, `pick-all --rule first --picked-by provisional-first`, `status`; who picked and why are recorded, `$CONCEPTS/picks.json` indexes the picks; a changed question makes its session stale. A failed question is retried in its session, also under a new commit or seed (`session.json` `attempts`). `--replace` is refused once `$GOLD/<qid>/` holds anything (`--force` records the files). Writers lock the session (and the root for `picks.json`) | 2.3, `questions/README.md` |
-| Re-execution and replay | `agent reexec` reruns a run's commands in a fresh scratch with the run's sandbox, claims to a dry broker (`reexec.jsonl`, never the chain), and compares output hashes and claim verdicts (C5; exit 1 if either differs). The whole corpus is checked against its manifest; the toolchain (agent root hash, commit) is recorded, a different agent root is a WARN. `agent replay` rebuilds the conversation from `trajectory.json` and `out/` and checks every recorded prompt hash (C6), masked prompts from what the loop keeps (`extra.original_content`, per-call `masked_observations`); the attach step keeps each fact's conversation in `attach-trajectory.json`, so a claim_off run replays in full too (PASS; PARTIAL only for subagents' calls) | 2.13 |
-| Graph and PROV-O | `graph.json` one edge per accepted claim, free predicates mapped to CS-KG/DBLP or `ours:`; `graph.ttl` deterministic (rdflib 7.6.0); attach records marked `origin = "attach"` | 2.6–2.8, `docs/milestones-1-2.md` |
-| Subagents | `spawn` built (2.12, `agent/spawn.py`), off unless `agent run --spawn on` (manifest `spawn`; the 72 runs keep it off unless decided otherwise; recorded in `config.json` `spawn`). `spawn --task ... [--files a.md,b.md] [--steps N]` over an inherited SPAWN_FD (one reply pipe per request, so `spawn ... & spawn ... & wait` works); 2 at once on `sub-model-1`/`-2`, the rest queued; each a research loop on the sub model (32,768 context, 15 steps / 300k tokens, provisional: `--spawn-steps/--spawn-tokens`, manifest `spawn_budget`; `sub-v1.txt`, no nested spawn, claim iff claim_on, own scratch), at most 20 per run; its records and claims in the run's chain as `sub-NN` with `spawned_by_step`; result = its summary plus the claims it recorded, `ok` for every subagent that started (its status says how it ended); its failure is `subagent_error`, never the run's `run_error`. `spawn` is on the PATH (`agent/spawn-bin`) only when on, in both conditions; a masked spawn result keeps agent id, status and (claim_on) claim ids alike in both. A command that starts a subagent gets 1,800 s (known from its spawn channel); on SIGTERM subagents get at most 15 s in all. The parent's budget counts its own calls; `agent verify` gives the run total and per agent (attach apart). Not yet run on the real model (C4). Re-execution reruns each subagent's commands in a scratch of its own | 2.12, `test_spawn`, `test_reexec` |
-| Gold D (M3, C1) | Every chunk of every paper screened (no ranker), relevant chunks extracted into rows of the picked concept's answer shape under a schema-constrained reply, every quote through the broker's claim check with one retry; rows merged by one rule (`gold/build.py` `merge_rows`, also used by the reviewed key); triage, a seeded blind review pool and a draft key; cached, resumable, stable candidate ids. Built against scripted models only | `gold/README.md`, `gold/tests` |
-| Review and answer key (M3, C2) | Argilla v2.8.0 on Omen (five datasets, upsert by record id with a fact digest), the labelling repo's decision rule, kept quotes located again in the frozen file, missing facts anchored as claims are; κ on the overlap's independent round with a bootstrap over questions, triage miss and screening false negatives with Wilson intervals. No server or reviewer has used it yet | `gold/README.md` (Review), `gold/tests` |
-| Judge | `gold/judge.py` on `sub-model-1`/`-2`: `support`, `same_fact`, `same_row`, cached by exact input, model pin and settings; every call on one event loop; scoring and the web app's claim walk give a quote the calibrated context (`support_pair`, `context_for`); calibration on 240 pairs sampled from the scored runs (`report/batch.json`), people shown the judge's own 600-character window (`partial` mapping on one half, κ on the other; below 0.61 the report marks the primary test unvalidated and leaves soft outcomes out). Not yet calibrated | `gold/README.md`, `scoring/README.md` |
-| Scoring and report (M4) | `score run/batch/report` against `key.json` (else `key.draft.json`; both provisional until `review.complete`), the pre-registered test above, marked unvalidated until the judge passes its calibration; settings compared within each condition (prompt, attach) and across runs (loop, subagents, sandbox); duplicate run ids listed, never mixed; `score store` (pyoxigraph, one named graph per run, no SERVICE). Runs root: one batch root, the `RUNS_ROOT` `scripts/e2e-batch.sh` prints | `scoring/README.md`, `scoring/tests` |
-| Web app | `webapp serve` on 127.0.0.1 behind an SSH tunnel, no authentication, `RUNS` one batch root; loopback Host names only and same-origin JSON writes (`webapp/guard.py`); FastAPI over the run, concept, gold and report files, jobs as subprocesses; the React frontend built and committed in `webapp/web/dist`, its API types generated from the backend's OpenAPI schema | `webapp/README.md`, `webapp/web/README.md` |
+| Protocol by hand | built | `evidence/protocols/rag-factuality.yaml` (four evidence types: condition, metric, measurement, author claim; field schemas, value bounds, cascade per type, locate strategy, synthesis settings), `evidence/protocol.py` |
+| Synthetic corpus generator | built | `synth/`: seeded ground truth, five levels plus `mixed`, template and LLM renderers, fidelity checks with retries, one corpus per level from one study set, a review sheet, six example corpora ([`synth/README.md`](../synth/README.md)) |
+| Extractor library | built | `evidence/extractors/` (regex and single-call LLM per evidence type), `evidence/agentic/`; contract `evidence/contract.py` (Part B) |
+| Provenance and replay (ours) | built | `evidence/engine.py`, `replay.py`, `prov.py` |
+| Evidence representation | built | `evidence/merge.py`, `graph.py`: merged items with every span and `found_by`; `graph.json` |
+| Synthesis rules | built (in Python) | `evidence/rules.py`, `synthesis.py`: same-dataset pairing, table before prose; undetermined studies with a reason |
+| Evaluation A, B, C | built | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis, locate recall, cascade contribution, cost, stability |
+| Baselines | built | `evaluation/baselines/rag.py` (to be changed, §4), `agent.py` |
+| Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
+| Viewer | earlier design | `webapp/`, to be rebuilt |
 
-## Numbers the design must respect
+Not built: the supervisor's controlled variant and the §6 knobs (in the ev2 bundle), confidence intervals in
+the comparison, per-extractor benchmark records (B11), the funnel engine, the proposal flow, synthesis rules
+in the protocol, the 337-paper check.
 
-| Quantity | Value | Test |
-|---|---|---|
-| Orchestrator decode | 41.6 tok/s (one sequence) | A5 |
-| Orchestrator prefill | ~2,400 tok/s; 26 s to first token at 60k | A3 |
-| Orchestrator KV capacity | 79,371 tokens = 1.21 requests of 65k at once | A2 |
-| Worst-case orchestrator step | 112.5 s (54.6k in + 4,096 out); proxy timeout now 600 s | L6, L7 |
-| Prefix cache (Qwen3.8, vLLM 0.21) | 784-token blocks; at 30k a cold prompt takes 12.0 s to first token, a cached one 0.35 s (94% hits). Masking one output mid-history re-prefills everything after it at ~2,500 tok/s (up to ~12 s at 30k); C2b masked the whole history, so this is estimated, not measured | C2, C2b |
-| Subagent decode | 130 tok/s; 64,848 KV tokens per replica | A5, L1 |
-| Subagent concurrency | 6 × 16k without preemption (3 per replica) | L3 |
-| Full paper | 45–230 KB, ~35k tokens: larger than a subagent's 32k context | decisions §5 |
-| Stack startup | 11 min 14 s (orchestrator 5 min 20 s) | L1, L5 |
-| Agent memory limit | 2 GB `ulimit -v` loads numpy and pandas and stops a 100 GB allocation | S1b |
-| Ceph append | 80,000/80,000 lines intact with 8 writers; `fsync` p99 65–104 ms | R2 |
-| Job | 3×A100 40 GB, 16 CPUs, 48 h; node has 503 GiB RAM, the job's cgroup has no memory cap | A1, S1b |
-
-## Open
+## 7. Open
 
 | Item | State |
 |---|---|
-| Anchor library | Fixed in `agent/anchor.py` (row 1.5, m1-core); see Decided "Anchors". B5 remains open: one real claim passed, but there were no rejections to evaluate case sensitivity or a minimum quote length. |
-| Run budget | Provisional 60 steps / 2,000,000 tokens (`agent/rundir.py`, `agent run`, `m4-72.json`; e2e build plan, 13 Oct); the user freezes it after the Slurm e2e test. Attach stays 6 steps / 60k per fact. |
-| Concept picks | Provisional: brief 1 per question (`picked_by: provisional-first`) on Slurm; the user may change a pick in the web app until gold is built for that question. |
-| Gold and judge | Built, not yet run: the gold trial (`gold build qNN --max-papers 20 --out $GOLD-trial`: a file in `$GOLD/<qid>/` freezes that question's provisional pick) gives the real call rate and checks the extraction schemas on vLLM; then the 12 builds, the review in Argilla by people, and the judge calibration on the real batch. Until `key.json` of a finished review exists, scores are provisional. |
-| Structured outputs on the server | The agent loop asks for `disable_any_whitespace` per request; pydantic-ai's `response_format` calls (gold, judge, chat) cannot. Proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the orch and sub `extra_args` of `llm-setup` (a submodule, not changed here); on Slurm count `finish_reason` length on guided calls either way. |
+| Agentic extractor | Open question for the supervisor (B14): is an agentic extractor acceptable as one implementation, with its runs replayed from records and its re-execution stability reported? |
+| Model choice in the runbook | `slurm-evidence-runbook.md` uses `sub-model-1` for the LLM extractors and `orch-model` for the agentic extractor and both baselines, and `orch-model` writes the synthetic papers. The 16 Oct decision (one model for all extractors and baselines) needs the runbook changed, and the paper writer then on other weights than the extractors (step 6). |
+| RAG baseline, fidelity check | The conflict fixes of §4 are not built (step 2). |
+| Controlled variants | What is built is one study set rendered per level; the supervisor's variant (change one study, predictable shift) is in ev2. |
+| Synthesis rules | Still in Python; move to the protocol (step 1 contract, then the funnel engine). |
+| 337-paper check | Which of the 337 papers are RAG papers, and their gold (the `gold/` method; never run on the real model, [`earlier-work.md`](earlier-work.md) §6). |
+| Structured outputs on the server | pydantic-ai's `response_format` calls (LLM extractors, gold, judge) cannot ask for `disable_any_whitespace` per request; proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the `llm-setup` profile (a submodule, not changed here); count `finish_reason` length on guided calls on Slurm either way. |
+| Statistics | Intervals for the per-level comparison and the baseline comparison are not decided yet (ev2 has a bootstrap draft). |
 
-No further infrastructure session is planned: B0, S7, L7, L8, C2b and D5 closed on 10 Oct.
+## 8. Documents
 
-## Later (need the harness)
-
-Real run budget and answer completion (M1-real: all four trials ended at the configured 400k budget, with actual totals 470k–498k and no answer; both conclude replies of every run were commands). The fix is built but has not met the real model: check on Slurm that vLLM/LiteLLM honour `structured_outputs` with the reply and attach result schemas (count `guided_decoding_rejected` records; if the server refuses, set `conclude_decoding` in the manifest), how often a conclude reply is still cut (`finish_reason` length) per condition and how long the longest takes (16,384 tokens at 41.6 tok/s is ~400 s, inside the 600 s proxy timeout; count `model_timeout` records: a reply past it is not sent again), how often the draft is the answer and how often attach takes a fact from a claim (`attach_from_claim`) per condition, and how far 60 steps / 2M tokens go with masking; then freeze the budget. C8 was not triggered: largest prompt 38,470 and no context-full 400; masking (1.15) is on anyway for the larger budget. B5 remains open: one accepted quote supports its claim, but the sample has no rejected claims. Attach per-fact budget remains open because the real attach had no facts. Re-execution (C5) and replay (C6) are built (2.13) and get their first real runs in the Slurm session (`scripts/e2e-replay.sh --reexec`); the 12 concepts are proposed and picked there too (`scripts/e2e-concepts.sh`). `spawn` is built (2.12) and tried on Slurm (C4) only if single-agent runs overflow. Milestones 3 and 4
-are built (`docs/milestones-3-4.md`) and need the cluster and people: the gold trial and builds, Argilla
-on Omen (`gold/argilla/compose.yaml`, H2) and the review, the e2e smoke batch (2.10), the 72 runs,
-scoring and the judge calibration. Blind usefulness rating of the 50 B8 commands (B6 rubric). Closed: column order (D1-col, now in Decided). Optional: Omen tunnels and Langfuse copy (T2, T3); `save_tool` (C7).
-
-## Where the details are
-
-`docs/e2e-build-plan.md` (decisions and contracts of the e2e build) · `docs/milestones-1-2.md` (triaged build plan, milestones 1–2) · `docs/milestones-3-4.md` (what milestones 3–4 built, what needs the cluster or people) · `gold/README.md`, `scoring/README.md`, `webapp/README.md` · `tests/RESULTS.md` (every result) · `docs/decisions-after-tests.md` (why each decision) · `docs/plan.md` (the
-design, to be revised) · `docs/provenance-model.md` (log and graph schema) · `docs/research-open-test-findings.md` (follow-ups for partial tests) · `thesis_pipeline.html` (overview page) · `llm-setup/` (the serving stack).
+| Path | What |
+|---|---|
+| [`../README.md`](../README.md) | Entry point: packages, commands |
+| `docs/STATE.md` | This page |
+| [`evidence-system.md`](evidence-system.md) | Part A: packages and the files between them; Part B: the extractor contract |
+| [`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) | The first live run on Slurm (for Codex) |
+| [`../synth/README.md`](../synth/README.md) | The synthetic benchmark generator |
+| [`../tests/RESULTS.md`](../tests/RESULTS.md) | Every infrastructure and behaviour test, with the test notes as appendices |
+| [`earlier-work.md`](earlier-work.md) | The system before 14 Oct: what it was, decisions and numbers, package essentials, where the removed documents live in git |

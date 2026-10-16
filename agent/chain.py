@@ -4,7 +4,7 @@ Each record carries `prev_hash` (the previous record's hash, or 64 zeros) and `h
 the canonical JSON of the record without `hash`. Records are stored one per line in canonical
 form, so a checker can also demand that each stored line is canonical.
 
-events.jsonl holds every record in chain order (provenance-model.md: one record per activity,
+events.jsonl holds every record in chain order (docs/earlier-work.md, Provenance model: one record per activity,
 claims included). claims.jsonl holds the `claim` records again, byte-identical and in the same
 order, so claim readers need not scan the whole log; verification checks the two agree.
 """

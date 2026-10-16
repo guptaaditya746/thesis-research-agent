@@ -1,4 +1,4 @@
-"""The corpus the engine reads and the run directory it writes (docs/evidence-interfaces.md sections 1, 3).
+"""The corpus the engine reads and the run directory it writes (docs/evidence-system.md A1, A3).
 
 The engine reads only a corpus's `manifest.json` and the paper files it lists, each checked against its
 manifest sha256; never `ground_truth.json`, `corpus.json` or `fidelity.json` (a test enforces it).

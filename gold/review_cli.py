@@ -1,6 +1,6 @@
 """`gold` subcommands of the review and the judge (work package C2), added by `register(subparsers)`.
 
-Order of use (gold/README.md, Review; labelling README steps 4-11):
+Order of use (docs/earlier-work.md, Gold: review; labelling README steps 4-11):
   gold push all                    review, overlap and missing-facts records into Argilla
   gold screening-sample; gold screening-push
   (people review in Argilla)

@@ -1,4 +1,4 @@
-"""Re-execution (milestones-1-2.md row 2.13, test C5): run a run's recorded commands again and compare outputs.
+"""Re-execution (docs/earlier-work.md, build row 2.13, test C5): run a run's recorded commands again and compare outputs.
 
 `agent reexec <run> [--steps 1,2]` takes the run's `agent_tool` records in chain order (every agent
 and origin, or only the given step ids) and runs each recorded command again

@@ -1,4 +1,4 @@
-"""The extractor contract (docs/extractor-contract.md) as pydantic models.
+"""The extractor contract (docs/evidence-system.md Part B) as pydantic models.
 
 One interface for every kind of extractor (regex, model, single-call LLM, agentic LLM). The engine
 cannot tell which kind produced an item: every item carries checked source spans (`agent/anchor.py`

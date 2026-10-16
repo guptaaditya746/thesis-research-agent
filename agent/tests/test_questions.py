@@ -15,7 +15,7 @@ from .conftest import REPO
 
 QUESTIONS = REPO / QUESTIONS_FILE
 MANIFESTS = REPO / "agent" / "manifests"
-# The slots of docs/e2e-build-plan.md, "The 12 questions": a question may be replaced (questions/README.md),
+# The slots of docs/earlier-work.md, "The 12 questions": a question may be replaced,
 # its id and category stay.
 SLOTS = {f"q{n:02d}": "corpus_wide" if n <= 6 else "ambiguous" for n in range(1, 13)}
 
@@ -36,7 +36,7 @@ def test_questions_file_has_the_twelve_slots() -> None:
 
 def test_questions_are_the_ones_the_plan_lists() -> None:
     """Until a question is replaced: the 12 of the plan, with their labelling-repo ids."""
-    plan = (REPO / "docs" / "e2e-build-plan.md").read_text(encoding="utf-8")
+    plan = (REPO / "docs" / "earlier-work.md").read_text(encoding="utf-8")
     for q in load_questions(QUESTIONS):
         assert f"| {q['id']} | {q['category']} | {q['question']} | {q['source']} |" in plan, q["id"]
 

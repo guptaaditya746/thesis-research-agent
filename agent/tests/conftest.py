@@ -21,7 +21,7 @@ def papers() -> dict[str, str]:
     """The 10 D1 Docling papers with LF line ends, as in the frozen corpus.
 
     A Windows checkout with core.autocrlf=true has CRLF in the working copy; the corpus on the
-    Linux node has LF, and the column-break offsets in tests/D1/column-order.md are LF offsets.
+    Linux node has LF, and the column-break offsets in tests/RESULTS.md (appendix D1 column order) are LF offsets.
     """
     return {p.stem: p.read_bytes().replace(b"\r\n", b"\n").decode("utf-8")
             for p in sorted(DOCLING.glob("*.md"))}

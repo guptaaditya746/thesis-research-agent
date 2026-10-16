@@ -1,7 +1,7 @@
 /**
  * Gold `/gold` (plan "Frontend pages" 7): per question the screening coverage of D, the
  * candidate and key counts, review progress in Argilla, Cohen's kappa of the overlap, the triage
- * miss and screening false-negative estimates (gold/README.md, Review), the answer key itself, and the
+ * miss and screening false-negative estimates (docs/earlier-work.md, Gold: review), the answer key itself, and the
  * gold build job for a question whose concept is picked.
  */
 import { AwardIcon, ExternalLinkIcon, HammerIcon, KeyRoundIcon, TriangleAlertIcon } from "lucide-react"

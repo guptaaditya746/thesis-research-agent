@@ -1,4 +1,4 @@
-"""`score` command line (milestone 4; scoring/README.md).
+"""`score` command line (milestone 4; docs/earlier-work.md, Scoring).
 
   score run <run> [--key <key.json>]                      -> <run>/score.json
   score batch <runs_root> --gold $GOLD [--manifest m.json] -> <runs_root>/report/scores.jsonl, batch.json

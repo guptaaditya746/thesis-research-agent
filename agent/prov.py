@@ -1,4 +1,4 @@
-"""PROV-O export of one run (milestones-1-2.md, row 2.7; provenance-model.md, edge table).
+"""PROV-O export of one run (docs/earlier-work.md, build row 2.7; Provenance model, edge table).
 
 events.jsonl + claims.jsonl + graph.json (+ answer.json when present) -> runs/<id>/graph.ttl.
 The chain is verified first; a broken chain is not exported.

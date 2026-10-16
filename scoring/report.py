@@ -1,4 +1,4 @@
-"""`score report <runs_root>`: the milestone 4 results from report/scores.jsonl (docs/e2e-build-plan.md).
+"""`score report <runs_root>`: the milestone 4 results from report/scores.jsonl (docs/earlier-work.md §5).
 
 Aggregation (the labelling repo's docs/EVALUATION.md, section 5): repeats are averaged per question and
 condition first (they are not independent samples); summaries average the per-question means, so each

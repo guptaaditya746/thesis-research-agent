@@ -1,4 +1,4 @@
-"""Batch runner (milestones-1-2.md, row 2.9): `agent batch <manifest>`.
+"""Batch runner (docs/earlier-work.md, build row 2.9): `agent batch <manifest>`.
 
 A run manifest (agent/schemas/batch.schema.json; sample agent/manifests/m4-72.json) names
 questions (each with its frozen concept.json), conditions and repeats. Each (question, condition,

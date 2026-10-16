@@ -1,4 +1,4 @@
-"""Web app settings from the environment (docs/e2e-build-plan.md, "Environment").
+"""Web app settings from the environment (docs/earlier-work.md, "Environment").
 
 | Variable               | Setting            | Default                                  |
 |------------------------|--------------------|------------------------------------------|
@@ -23,11 +23,11 @@ API keys ($LITELLM_MASTER_KEY, $ARGILLA_API_KEY) are never settings: they are re
 environment at call time only.
 
 $RUNS is one batch root, the RUNS_ROOT scripts/e2e-batch.sh prints for a manifest ($RUNS/m4-72 on
-the cluster; docs/e2e-build-plan.md, Environment), which scoring takes too: its runs, its report/,
+the cluster; docs/earlier-work.md, Environment), which scoring takes too: its runs, its report/,
 and the web app's own runs in $RUNS/web/ (ids web~<name>), so they never count as a manifest's runs.
 A batch root one level down is listed as well (ids <batch>~<name>), but a root above several
 batches is not what the app is for: run ids are directory names, and two batches have runs of the
-same name (webapp/README.md).
+same name (docs/earlier-work.md, Web app).
 """
 from __future__ import annotations
 

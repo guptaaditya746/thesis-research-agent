@@ -1,4 +1,4 @@
-"""Provenance broker (milestones-1-2.md, row 1.6; provenance-model.md).
+"""Provenance broker (docs/earlier-work.md, build row 1.6; Provenance model).
 
 One broker process per run, outside the sandbox. It is the only writer of events.jsonl and
 claims.jsonl and keeps one hash chain over all records (agent/chain.py), fsync'ed per record.

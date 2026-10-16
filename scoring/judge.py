@@ -1,6 +1,6 @@
 """The LLM judge as scoring uses it: gold/judge.py (package C2), imported lazily and never required.
 
-Its questions (docs/e2e-build-plan.md, Judge):
+Its questions (docs/earlier-work.md, "Gold files, answer key, judge, scores"):
 - support(fact, quote, *, context=None) -> {label: supports | partial | no, rationale, model, prompt_sha256,
   cached}; support_pair(pair, corpus) asks the same for a line of pairs.jsonl with the context the judge
   was calibrated with (the paper id and the text around the quote, gold.judge.context_for);
