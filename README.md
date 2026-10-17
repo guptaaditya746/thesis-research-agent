@@ -17,7 +17,8 @@ is open.
 | `synth/` | `synth` | Synthetic benchmark (supervisor's design): seeded ground truth, difficulty levels, template and LLM renderers, fidelity checks ([`synth/README.md`](synth/README.md)) |
 | `evaluation/` | `evaluate` | Scores A (extraction), B (integration), C (synthesis) per level (supervisor's design); the retrieve-then-answer baseline; plus our additions below |
 | `agent/` | `agent` | Earlier work: the research agent (sandboxed loop, `claim` broker, graph, PROV-O, replay). Now used only as the agentic extractor and the agent baseline |
-| `gold/`, `scoring/`, `webapp/`, `questions/` | `gold`, `score`, `webapp` | Earlier work: gold document D and Argilla review, claim on/off scoring, the web app of the earlier flow, the 12 questions ([`docs/earlier-work.md`](docs/earlier-work.md)). `gold/` is the method planned for the 337-paper check; the web app is to be rebuilt |
+| `webapp/` | `webapp` | The viewer of the evidence-level flow (below); the earlier flow's pages under `/earlier` |
+| `gold/`, `scoring/`, `questions/` | `gold`, `score` | Earlier work: gold document D and Argilla review, claim on/off scoring, the 12 questions ([`docs/earlier-work.md`](docs/earlier-work.md)). `gold/` is the method planned for the 337-paper check |
 
 **Our additions** (not the supervisor's): the agentic extractor (`evidence/agentic/`), the agent baseline
 (`evaluation/baselines/agent.py`), the locate step and locate recall, the extractor cascade with
@@ -50,6 +51,31 @@ uv run evidence propose freeze proposals/rag        # protocol.yaml (revision 1)
 uv run evidence propose amend proposals/rag --reason "..." [--before-main-run]   # after editing protocol.yaml
 uv run evidence vocab build --name N --source DIR --out evidence/vocab/N.json    # snapshot from local files
 ```
+
+## Web app
+
+A read-only viewer of the files the commands above write (it starts no run and calls no model): question →
+protocol (and proposals) → corpus → run (per paper the funnel, the items with their spans, every call down
+to its model records or the agent's trace) → evidence graph → answer → scores A/B/C per level with 95 %
+intervals, the RAG and agent baselines beside the engine, all against gaps, shift and benchmark records. The
+earlier flow (questions, concept pick, claim on/off runs, gold, jobs, chat) is under `/earlier`.
+
+```bash
+EV=/path/to/ev uv run webapp serve --port 8080   # then http://127.0.0.1:8080 (through an SSH tunnel on the cluster)
+```
+
+It reads the layout of `docs/slurm-evidence-runbook.md` under `$EV`: `corpora/`, `runs/<group>/<name>/`
+(engine runs and baseline answers), `scores/`, `proposals/`, the engine's record cache `cache/engine/` and
+the agentic extractor's `agent-work/`; each can be set apart (`CORPORA`, `EV_RUNS`, `SCORES`, `EV_PROPOSALS`,
+`EV_CACHE`, `EV_AGENT_WORK`; protocols from `evidence/protocols/`, `EV_PROTOCOLS`). The earlier pages read
+`RUNS`, `CORPUS`, `GOLD`, `CONCEPTS` as before. A small world made by the real tools with scripted models, to
+look at offline: `uv run python -m webapp.tests.evidence_world /tmp/ev-world` and `EV=/tmp/ev-world`. The
+frontend (`webapp/web`, React, built into `webapp/web/dist`, which is committed): `uv run --group frontend npm ci`
+(Node from that dependency group), `npm run dev` (Vite, proxies `/api`),
+`npm run dev:mock` (no backend), `npm test`, `npm run build`; after a change to the backend's models
+`uv run webapp openapi -o webapp/web/openapi.json && npm run gen:api`.
+
+## Setup
 
 Everything runs through uv (Python 3.13 or later, dependencies pinned in `uv.lock`):
 

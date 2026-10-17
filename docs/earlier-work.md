@@ -322,8 +322,9 @@ names, so two batches with runs of the same name would mix. Settings in `webapp/
 Router 7, React Flow, recharts, assistant-ui; Node from the `frontend` dependency group. `uv run --group
 frontend npm ci`, then `npm run dev` (against `webapp serve`) or `npm run dev:mock` (MSW mocks, no backend);
 `npm run build` writes `dist/`, which is committed so the node needs no Node; `npm run typecheck`, `lint`,
-`test` (Vitest). API types: `npm run gen:api` (openapi-typescript → `src/api/schema.d.ts`). The app is to be
-rebuilt for the evidence-level flow (`STATE.md`). Full text: `git show 3edd23b:webapp/web/README.md`.
+`test` (Vitest). API types: `npm run gen:api` (openapi-typescript → `src/api/schema.d.ts`). Rebuilt 17 Oct for
+the evidence-level flow (README "Web app"): these pages now live under `/earlier` (`/earlier/runs`,
+`/earlier/questions/<qid>`, ...), unchanged otherwise. Full text: `git show 3edd23b:webapp/web/README.md`.
 
 ## 7. Runbooks
 

@@ -100,14 +100,15 @@ He wrote no numbered research questions. Read from his text:
 5. Proposal flow. **Done 17 Oct** (Part E).
 6. Codex runbook and the live Slurm run. Runbook written 17 Oct (`slurm-evidence-runbook.md`, dry-run
    offline); live run pending.
-7. Web app rebuild.
+7. Web app rebuild. **Done 17 Oct**: `webapp/` is a read-only viewer of the evidence-level files (`/api/ev`,
+   README "Web app"); the earlier flow's pages under `/earlier`.
 8. The 337-paper check.
 9. Documentation.
 
 ## 6. What exists
 
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models only
-(1220 passed, 1 skipped in WSL, 17 Oct, with the proposal flow and its review fixes), **not yet run against live models**. The runbook for the first live run is
+(1239 passed, 1 skipped in WSL, 17 Oct, with the proposal flow, its review fixes and the viewer), **not yet run against live models**. The runbook for the first live run is
 [`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (rewritten 17 Oct for Parts D–G; not run yet,
 see §7).
 
@@ -124,9 +125,9 @@ see §7).
 | Evaluation A, B, C | built; intervals, flags, shift and benchmark records added 17 Oct | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis (direction accuracy, completeness, traceability, expected-undetermined rule, flag precision/recall), locate recall, cascade contribution, cost, stability, 95 % BCa bootstrap intervals (`stats.py`); `evaluate shift` (`shift.py`), `evaluate benchmark` (`benchmark.py`, B11 records per extractor) |
 | Baselines | built; the RAG baseline rebuilt 17 Oct as the plain retrieve-then-answer system (§4, Part G.1) | `evaluation/baselines/rag.py` (global top 8, neutral prompt with citations, the mapping call shared with the agent baseline in `common.py`), `agent.py`; score C adds completeness and traceability |
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
-| Viewer | earlier design | `webapp/`, to be rebuilt |
+| Viewer | rebuilt 17 Oct for the supervisor's flow (§4); read-only, tested on a world made by the real tools with scripted models, not yet on a live run's files | `webapp/` (`evapi.py`, `evfiles.py`; frontend `webapp/web/src/pages/ev/`): corpora (levels, knobs, variants, ground truth, placements), protocol and proposals (cards, who decided and why, revisions, amendments), runs (per paper the funnel, items with their spans and `found_by`, every call with its model records or the agent's trace from `$EV/agent-work` or the record cache; evidence graph; answer with reasons and flags; baselines with citations), scores (A/B/C per level with intervals, baselines beside the engine, all vs gaps, shift, benchmark); directories from `$EV` (README "Web app"). The earlier flow's pages (questions, concept pick, claim on/off runs, results, gold, jobs, chat) under `/earlier` |
 
-Not built: the 337-paper check (§5 step 8, §7), the web app rebuild (§5 step 7).
+Not built: the 337-paper check (§5 step 8, §7).
 
 ## 7. Open
 
