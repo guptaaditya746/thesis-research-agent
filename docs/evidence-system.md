@@ -678,7 +678,13 @@ The §7.5 LLM proposer of 15 Oct is dropped: Part E replaces it.
    and per-paper stances for score C. Score C for baselines adds **completeness** (determined true studies
    the answer gives a stance for) and **traceability** (cited passages that overlap a ground-truth
    placement of the study they are cited for, over cited passages), the supervisor's three comparison
-   criteria (§7).
+   criteria (§7). *Built 17 Oct:* `evaluation/baselines/rag.py` (`CitedAnswer`; a citation must name a
+   retrieved passage exactly, else `dropped_citations`; the mapping call reads the answer text and the
+   cited passages), `common.map_answer` (the shared mapping, `MAP_INSTRUCTIONS` now naming both answer
+   forms), `score.score_synthesis` rows carry `completeness`, `citations`, `traceability` (null without a
+   `citations` list, so for the engine); `answer.json` of the RAG baseline: the A4 shape plus `answer_text`
+   (the model's own answer), `citations`, `dropped_citations`, `retrieved`, `settings`, `model_call`,
+   `mapping_call`, `mapped_answer_text`.
 2. **Fidelity** fails a paper that adds content: `added_numbers` (a number outside the value placements,
    the decoys and an explicit allowlist: the plan's dataset sizes, `Table n`/`Section n`, list markers,
    `A1`-style codes), `added_claims` (a sentence matching the question's claim patterns outside the claim
@@ -687,4 +693,8 @@ The §7.5 LLM proposer of 15 Oct is dropped: Part E replaces it.
 3. **One model**: `orch-model` for every extractor and both baselines (`AgentSettings.model`; `evidence run
    --model` default `orch-model`; `llm` extractors' default `orch-model`; `evaluate … --model` reaches the
    agent baseline's agent); the synthetic papers are written by `sub-model-1` so writer and reader are
-   different weights. The runbook's model table and rules follow.
+   different weights. The runbook's model table and rules follow. *Built 17 Oct:* `AgentSettings.model`
+   (default `orch-model`; the runner builds the agent's `OrchestratorModel` on it, `runner.default_model`),
+   recorded in the agentic extractor's config as `{alias, name, revision}` (the pinned weights of an alias
+   `agent/rundir` pins, else the alias alone); `evidence run --model` defaults to `orch-model` while
+   `engine.Settings.model` stays `None`; `gold/llm.model_identity` maps `orch-model` to its pin.

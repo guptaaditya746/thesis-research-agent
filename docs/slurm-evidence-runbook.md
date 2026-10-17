@@ -22,6 +22,11 @@ it. The point is that every part meets the real models once and the first number
   (`evaluation/score.py`), the agent's prompts and budgets (`agent/prompts/`, `agent/rundir.py`), the anchor
   rules (`agent/anchor.py`) or any threshold or tolerance. Record and continue. Do not change the `llm-setup`
   submodule.
+- **One model.** Every extractor (LLM and agentic) and both baselines run on `orch-model` (the default of
+  `evidence run --model`, of the `llm` extractors, of `AgentSettings.model` and of `evaluate … --model`), so a
+  comparison isolates the method, not the weights (16 Oct decision; `docs/evidence-system.md` Part G.3). Never
+  pass another `--model` to the engine or the baselines; the only other aliases in this runbook are the paper
+  writer (`sub-model-1`) and the blind check (`sub-model-2`), so the extractors never read their own writing.
 - **Secrets.** `LITELLM_MASTER_KEY` is only read from the environment. Never print, `echo`, log or commit it;
   no `set -x`; never pass it on a command line; record only "set" / "not set".
 - **Ceph, not git.** Corpora, runs, caches, scores and logs live under `$EV` on Ceph. Copy into the repo only
@@ -45,29 +50,28 @@ short ones in `srun --jobid "$JOB" --overlap --pty bash -l` after `source "$EV/i
 "$EV/logs/<step>.log" 2>&1 &` and `echo $! > "$EV/logs/<step>.pid"`. Never start a long step from a `--pty`
 shell.
 
-## Models (provisional choices, recorded so the user can change them)
+## Models (the 16 Oct decision: one model for every extractor and both baselines)
 
 | Role | Alias | Why |
 |---|---|---|
-| Paper writer (synth `--model`) | `orch-model` (Qwen3.8-27B) | not the weights that extract, so the extractors do not read their own writing |
-| Blind fidelity check (synth `--verify-model`) | `sub-model-2` | an independent re-reading |
-| LLM extractors | `sub-model-1` (the protocol's default) | as in the protocol; never override with `--model` here |
-| Agentic extractor, agent baseline, RAG baseline | `orch-model` (their defaults) | the agent's model; the RAG baseline uses the same model as the agent so the two baselines compare like with like |
+| LLM extractors, agentic extractor, agent baseline, RAG baseline (answer and mapping calls) | `orch-model` (Qwen3.8-27B, the default everywhere) | the same weights for every system under test, so a difference between the engine and the baselines, or between extractors, is the method's |
+| Paper writer (synth `--model`) | `sub-model-1` (Qwen3-30B-A3B) | other weights than the readers, so no extractor reads its own writing |
+| Blind fidelity check (synth `--verify-model`) | `sub-model-2` | an independent re-reading, on the writer's weights but a separate replica |
 
-GPU use: `orch-model` is GPU 0, the sub-models GPUs 1–2. Steps on different models may run in parallel (the
-dependency table says which); never two `orch-model` steps at once.
+GPU use: `orch-model` is GPU 0, the sub-models GPUs 1–2. Step 1 (sub-models) may run next to a CPU step;
+steps 3, 5 and 6 all use `orch-model`, so they run one after the other, never two at once.
 
 ## Order and dependencies
 
 | Step | Uses | Needs | Time (not measured) |
 |---|---|---|---|
 | 0 setup, stack, offline smoke | CPU | — | 1 h |
-| 1 LLM corpora (20 studies; 5-study set for the agent) | orch-model, sub-model-2 | 0 | hours |
+| 1 LLM corpora (20 studies; 5-study set for the agent) | sub-model-1, sub-model-2 | 0 | hours |
 | 2 template corpora, same seed | CPU | 0 | minutes |
-| 3 engine regex-only and cascade on every corpus | sub-model-1 | 1, 2 | hours |
-| 4 replay all, re-execution of two runs | CPU, sub-model-1 | 3 | 1 h |
-| 5 agentic protocol on the 5-study set | orch-model, sub-model-1 | 1 | hours |
-| 6 baselines (RAG, agent) on the LLM corpora | orch-model | 1, and not while 1 or 5 uses orch-model | hours |
+| 3 engine regex-only and cascade on every corpus | orch-model | 1, 2 | hours |
+| 4 replay all, re-execution of two runs | CPU, orch-model | 3, and not while 5 or 6 runs | 1 h |
+| 5 agentic protocol on the 5-study set | orch-model | 1, and not while 3 or 6 runs | hours |
+| 6 baselines (RAG, agent) on the LLM corpora | orch-model | 1, and not while 3, 4 or 5 runs | hours |
 | 7 scores and comparison | CPU | 3–6 | 30 min |
 | 8 fidelity hand check (**USER**) | — | 1 | the user's time |
 
@@ -144,18 +148,20 @@ The main set (20 studies, all five levels plus mixed) and a small set for the ag
 
 ```bash
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" uv run synth build --name rag-llm-s1 --seed 1 --studies 20 \
-  --renderer llm --levels all --model orch-model --verify-model sub-model-2 --out "$CORPORA" \
+  --renderer llm --levels all --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
   --cache "$EV/cache/synth-llm.jsonl" > "$EV/logs/1-synth-main.log" 2>&1 &
 echo $! > "$EV/logs/1-synth-main.pid"
 ```
 
-When it has finished (never both at once on `orch-model`):
+When it has finished (one build at a time on the sub-models):
 
 ```bash
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" uv run synth build --name rag-llm-small --seed 2 --studies 5 \
-  --renderer llm --levels paraphrased,distributed --model orch-model --verify-model sub-model-2 --out "$CORPORA" \
+  --renderer llm --levels paraphrased,distributed --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
   --cache "$EV/cache/synth-llm.jsonl" > "$EV/logs/1-synth-small.log" 2>&1 &
 ```
+
+The papers are written by `sub-model-1` and read by `orch-model` (steps 3, 5, 6), different weights.
 
 The command prints a JSON summary and a WARNING line if studies were excluded. Row `EV-synth`: per level the
 papers kept, studies excluded (with the failing checks from `fidelity.json`), attempts per paper (mean, max),
@@ -175,13 +181,13 @@ Same studies as step 1, written by the template: the difference between the two 
 ```bash
 cat > "$EV/engine.sh" <<'EOF'
 #!/usr/bin/env bash
-# regex-only and the cascade (regex, then the LLM extractor) on every 20-study corpus.
+# regex-only and the cascade (regex, then the LLM extractor on orch-model) on every 20-study corpus.
 set -u
 for C in "$CORPORA"/rag-llm-s1-* "$CORPORA"/rag-tpl-s1-*; do
   N=$(basename "$C")
   for S in regex-only cascade; do
     uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/$S" --cache "$CACHE/engine" \
-      --extractors "$S" --run-id "$N" || echo "FAIL engine $S $N"
+      --extractors "$S" --model orch-model --run-id "$N" || echo "FAIL engine $S $N"
   done
 done
 EOF
@@ -189,6 +195,7 @@ chmod +x "$EV/engine.sh"
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/engine.sh" > "$EV/logs/3-engine.log" 2>&1 &
 ```
 
+`--model orch-model` is the default, written out so the record (`run.json` `settings.model`) is explicit.
 Each run prints its label and counts. Row `EV-engine`: per corpus and selection the label, the counts
 (supporting / contradicting / neutral / undetermined), model calls, tokens and seconds (`run.json` `cost`),
 rejected items by reason (from `calls/*.json`), and every `FAIL` line.
@@ -206,7 +213,7 @@ uv run evidence reexec "$RUNS/cascade/rag-llm-s1-distributed" | tee "$EV/logs/4-
 ```
 
 Every replay must be `OK` and every chain verify clean; a `MISMATCH` is a defect (record, look at
-`mismatched`, never "fix" it by rerunning). The re-execution makes new LLM calls (sub-model-1): row
+`mismatched`, never "fix" it by rerunning). The re-execution makes new LLM calls (orch-model): row
 `EV-replay` gets the OK count, and per extractor the re-execution summary (identical / same items, different
 spans / items added / items missing / fields differ).
 
@@ -219,22 +226,23 @@ set -u
 for C in "$CORPORA"/rag-llm-small-paraphrased "$CORPORA"/rag-llm-small-distributed; do
   N=$(basename "$C")
   uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade" --cache "$CACHE/engine" \
-    --extractors cascade --run-id "$N" || echo "FAIL cascade $N"
+    --extractors cascade --model orch-model --run-id "$N" || echo "FAIL cascade $N"
   uv run evidence run --protocol "$PA" --corpus "$C" --out "$RUNS/agentic" --cache "$CACHE/engine" \
-    --extractors cascade --run-id "$N" || echo "FAIL agentic $N"
+    --extractors cascade --model orch-model --run-id "$N" || echo "FAIL agentic $N"
 done
 EOF
 chmod +x "$EV/agentic.sh"
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/agentic.sh" > "$EV/logs/5-agentic.log" 2>&1 &
 ```
 
+The LLM extractors and the agent inside the agentic extractor both run on `orch-model` (`AgentSettings.model`).
 Up to 5 papers × 4 evidence types = 20 agent runs per corpus (budget 30 steps / 600,000 tokens each); the
 agent's own run directories are kept under `$EV/agent-work`. Then replay both agentic runs (must be `OK`,
 with no model running: replay never calls one) and `evidence reexec` one of them. Row `EV-agentic`: per corpus
 the agentic calls (ok / partial / error, with reasons), the agent's steps and tokens per call, items it alone
 found (the score's cascade contribution, step 7), replay result, re-execution summary.
 
-## 6. Baselines on the LLM corpora **(long; orch-model, not while 1 or 5 runs)**
+## 6. Baselines on the LLM corpora **(long; orch-model, not while 3, 4 or 5 runs)**
 
 ```bash
 cat > "$EV/baselines.sh" <<'EOF'
@@ -243,18 +251,23 @@ set -u
 for C in "$CORPORA"/rag-llm-s1-* "$CORPORA"/rag-llm-small-*; do
   N=$(basename "$C")
   uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/rag-baseline/$N" --cache "$CACHE/rag-baseline.jsonl" \
-    || echo "FAIL rag $N"
+    --model orch-model || echo "FAIL rag $N"
   uv run evaluate agent-baseline --corpus "$C" --out "$RUNS/agent-baseline/$N" --cache "$CACHE/agent-baseline.jsonl" \
-    --agent-root "$AGENT_ROOT" --run-id "$N" || echo "FAIL agent $N"
+    --model orch-model --agent-root "$AGENT_ROOT" --run-id "$N" || echo "FAIL agent $N"
 done
 EOF
 chmod +x "$EV/baselines.sh"
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/baselines.sh" > "$EV/logs/6-baselines.log" 2>&1 &
 ```
 
-The RAG baseline runs with its defaults (top 2 BM25 passages per paper). If time allows, also once with
-`--retrieval global` on `rag-llm-s1-mixed` into `$RUNS/rag-baseline-global/` (the plain top-8 form). Row
-`EV-baselines`: per corpus the label, studies with a stance, the agent's exit status, steps, tokens, seconds.
+The RAG baseline is the plain retrieve-then-answer system (`docs/evidence-system.md` Part G.1): by default
+the top 8 BM25 passages of the whole corpus (`--retrieval global --k 8`), one answering call under the neutral
+prompt (answer text and citations), then the mapping call shared with the agent baseline (label and per-paper
+stances for score C); `--model orch-model` (the default, written out) is the model of both calls and of the
+agent baseline's agent. If time allows, also once with `--retrieval per_paper` ("every paper seen": the top 2
+passages of every paper) on `rag-llm-s1-mixed` into `$RUNS/rag-baseline-per-paper/`. Row `EV-baselines`: per
+corpus the label, studies with a stance, citations kept and dropped (`answer.json` `citations`,
+`dropped_citations`), the agent's exit status, steps, tokens, seconds.
 
 ## 7. Scores and comparison (CPU)
 
@@ -273,9 +286,9 @@ done
 
 Row
 `EV-scores`: the three `compare.md` tables, and per level for the cascade: extraction F1 per evidence type,
-association accuracy, true pair, direction accuracy, answered, label correct, for the engine and both
-baselines; the template-vs-LLM difference per level; the cascade contribution (items only the LLM, only the
-agent found).
+association accuracy, true pair, direction accuracy, answered, completeness, traceability (baselines only),
+label correct, for the engine and both baselines; the template-vs-LLM difference per level; the cascade
+contribution (items only the LLM, only the agent found).
 
 ## 8. Fidelity hand check (**USER**)
 
