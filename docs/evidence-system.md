@@ -638,12 +638,21 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   `protocol.yaml` with the last one). Every later step records the sha256 of the inputs it read
   (`draft.sources.json.frame_sha256`, `critic.json.draft_sha256`, `cards.json.draft_sha256`), and a step
   refuses an input that changed after it was read ("run draft again"); freeze refuses a directory that is
-  already frozen (changes then go through `amend`). Refusals are `ProposalError`, exit 2.
+  already frozen (changes then go through `amend`). The two files a person edits are never overwritten:
+  `written.json` holds the sha256 of what `frame` and `cards` last wrote to `frame.json` and
+  `decisions.yaml`, and a rerun refuses a file that differs from it, or that the step never wrote, unless
+  `--force`. Refusals are `ProposalError`, exit 2 with the message (also a malformed vocabulary, a broken
+  base revision, a non-string choice); a failed model call exits 1. The flow hashes raw bytes, so
+  `.gitattributes` keeps `proposals/**`, `evidence/propose/**` and `evidence/vocab/**` LF.
 - **Model calls.** frame, critic and cards make one call each through `gold.llm.structured` (temperature 0,
   seed 0, thinking off), cached in `DIR/cache.jsonl` under `gold.llm.cache_key({step, prompt_sha256 (the
   instructions and the output schema), model identity (gold.llm.model_identity: the pinned weights of
   orch-model), input_sha256 (the user prompt), settings})`; a rerun with the same inputs makes no call.
-  Each result file has `call: {step, model, prompt_sha256, cache_key, cached}`. Default model `orch-model`
+  Each result file has `call: {step, model, prompt_sha256, cache_key, cached}`. A cached reply the step
+  cannot use (a frame whose ids do not validate, a cached record that no longer fits the schema) would be
+  answered from the cache forever, so the error names the cache file and key and says to run the step again
+  with **`--refresh`** (frame, critic, cards): the model is asked again and the new reply is appended under
+  the same key, where it wins on the next load. Default model `orch-model`
   (`--model` on the three steps), as for the extractors. Prompts `prompts/{frame,critic,cards}-v1.md`
   (read with LF line ends, so their hash is the same on every checkout).
 - **The frame.** `{question, vocabulary: {name, sha256, path} | null, call, created, population:
@@ -669,7 +678,9 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   added as word-bounded patterns, and for a role or metric the built-ins do not know at all the config holds
   patterns from the frame's names only (built-in metric patterns of a canonical the frame does not name are
   dropped, since their items would fail the enum). The RAG frame therefore drafts the hand-written cascades
-  without any config. `draft.sources.json`: `{frame_sha256, template: {path, sha256}, vocabulary,
+  without any config. `draft.sync_regex` does this from a protocol's decided roles and metrics (the
+  treatment role takes the frame's treatment names, the control role the control's; a metric the frame
+  lacks is named by its id with spaces, `f1`), and freeze runs it again after the decisions. `draft.sources.json`: `{frame_sha256, template: {path, sha256}, vocabulary,
   fields: [{path, source, vocab_id}], terms: [{path, term, source, vocab_id}]}`; a metric direction is
   `ontology` only when the vocabulary term has the same direction. The question itself is the input and has
   no source entry. The author-claim regex's verbs stay the built-in ones (about accuracy and hallucination).
@@ -680,8 +691,10 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   `terms.find_all`, and every treatment name holds a screen term); `screen_present` (a screen with terms);
   `label_complete` (exactly one row without `when`, the last; read from the raw YAML so it reports even when
   the protocol does not parse); `extractors_registered` (`evidence.extractors.names()`, so modules loaded by
-  `evidence run --import` count as unregistered); plus **`vocabulary_direction`** (ours: no outcome's
-  direction contradicts its vocabulary term's). LLM checklist `ambiguous_roles`, `missing_comparator`,
+  `evidence run --import` count as unregistered); plus two of ours: **`regex_matches_enums`** (every
+  condition role and metric canonical the regex steps can emit, from their config or the built-ins, is in
+  the type's enum, and every enum value but `other` has a pattern; freeze refuses a protocol that fails it)
+  and **`vocabulary_direction`** (no outcome's direction contradicts its vocabulary term's). LLM checklist `ambiguous_roles`, `missing_comparator`,
   `metric_direction`, `scope`, each `{ok, message}`. `critic.json.ok` is the deterministic checks only; the
   checklist is advice and blocks nothing.
 - **Cards.** `cards.yaml` holds the eight cards (ids `screen`, `roles`, `metrics`, `min_effect`,
@@ -704,20 +717,26 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   ("a decision without a reason is refused") or `by`; a card decided twice or not at all; an unknown card;
   **a choice that is no option of the card: refused, unless it is `custom` with a `value` in the card's
   shape** (validated by the card's schema); a `value` beside a non-custom choice; a choice other than the
-  model's default still marked `by: model` (who changed it must say so). Decisions are applied in card
-  order; changing the roles renames the keys of explicit regex `conditions` configs; changing the metrics
-  sets the canonical enum and keeps the measurement bound on the metrics still named.
+  model's default still marked `by: model` (who changed it must say so); a `choice` that is not a string.
+  Decisions are applied in card order; changing the metrics sets the canonical enum and keeps the
+  measurement bound on the metrics still named; then **the regex patterns are made again from the decided
+  roles and metrics** (`draft.sync_regex`), so dropping a metric removes its built-in patterns, and an added
+  metric or a renamed role gets patterns from its names.
 - **Freeze** writes `protocol.yaml` (a header comment, the applied draft with `revision: 1`) only if it
   validates as `evidence protocol check` validates, plus `protocol.v1.yaml` and `proposal.json`: `{proposal,
   question, created, protocol: {file, id, version, revision, sha256}, vocabulary: {name, sha256} | null,
   models: {frame, critic, cards}, prompts: {frame, critic, cards} (prompt sha256), inputs: {frame, draft,
   critic, cards, decisions sha256, template}, run_settings, decided_by, decisions: [{card, choice, value,
   default, reason, by}], checks (the deterministic checks on the frozen protocol), frame, sources, critic}`.
-  The frozen checks are recorded, not enforced: only what `protocol check` refuses stops a freeze.
+  The frozen checks are recorded; only what `protocol check` refuses and a failed `regex_matches_enums`
+  stop a freeze.
 - **Amend** compares the parsed protocols without `revision`: dicts key by key, anything else whole (a
   list is one value), so the impact is a list of key paths such as `synthesis.min_effect` or
-  `evidence_types.author_claim.extractors`, in the protocol's key order. The `revision:` line is rewritten in
-  place (added after `version:` if the person removed it), so the person's layout and comments survive.
+  `evidence_types.author_claim.extractors`, in the protocol's key order. The `revision: <n>` line is
+  rewritten in place, a trailing comment kept (added after `version:` if the person removed it), so the
+  person's layout and comments survive. A value on the next line (`revision:` alone), a quoted or
+  flow-style `revision` key, or any edit after which the parsed revision is not the new one fall back to a
+  full YAML dump of the protocol (comments lost).
   Refused: an empty reason, no change, an edit that does not validate, a directory not frozen. The
   `--protocol P` form (amend a protocol outside a proposal directory) is not built: it has no frozen base to
   compare with.
@@ -725,7 +744,8 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   version, url, file}]`) and per source a `.json` list of terms or a `.csv` (`label,synonyms,kind,
   higher_is_better[,id]`, synonyms `;`-separated); ids default to `<source>:<label slug>`; duplicate ids are
   refused; terms are sorted by id, synonyms deduplicated in order (the label is not its own synonym), so the
-  same files give the same bytes. `sha256` = sha256 of the canonical JSON (`agent/canonical.py`: sorted
+  same files give the same bytes; files are read as `utf-8-sig` (a byte order mark is not content), and a
+  missing key or a malformed term is a `VocabError` naming the file. `sha256` = sha256 of the canonical JSON (`agent/canonical.py`: sorted
   keys, no whitespace, UTF-8) of the snapshot without its `sha256` key; `vocab.load` refuses a file whose
   content does not match. No network access anywhere. **The committed `evidence/vocab/rag-factuality.json`
   (15 terms: RAG, closed-book, open-book, dense and sparse retrieval, reranking, factual accuracy,
