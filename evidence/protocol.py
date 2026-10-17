@@ -10,6 +10,11 @@ vocabulary, the label decision table, the flag thresholds), so `evidence/rules.p
 question. Its `sha256` is the digest of the parsed content (agent/canonical.py), so comments, key order
 and line ends in the file do not change it, and every run, task and record names the protocol by that
 hash.
+
+`version` is the protocol *format* (2 since Part C); `revision` (optional, from 1) counts the frozen and
+amended revisions of one protocol made by the proposal flow (Part E, `evidence propose freeze/amend`). A
+protocol without `revision` hashes exactly as before the field existed, so the hand-written protocols and
+every corpus that records their sha256 are unchanged.
 """
 from __future__ import annotations
 
@@ -194,7 +199,8 @@ class Synthesis(Strict):
 
 class Protocol(Strict):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9_.-]*$")
-    version: int = Field(ge=1)
+    version: int = Field(ge=1)              # the protocol format (2: Part C)
+    revision: int | None = Field(default=None, ge=1)   # revision of a frozen proposal (Part E); None: hand-written
     question: str
     evidence_types: dict[EvidenceType, EvidenceTypeSpec]
     locate: Locate = Locate()
@@ -248,7 +254,7 @@ class Protocol(Strict):
 
     @property
     def sha256(self) -> str:
-        return digest(self.model_dump(mode="json"))
+        return digest(self.model_dump(mode="json", exclude={"revision"} if self.revision is None else None))
 
     def phases(self) -> list[EvidenceType]:
         """Evidence types in dependency order; among types that are ready, the order of the file."""
