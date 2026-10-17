@@ -179,6 +179,41 @@ def test_baseline_answers_are_scored_like_the_engine(tmp_path: Path, corpus: Pat
     assert only["extraction"] is None and only["synthesis"][0]["system"] == "rag-baseline"
 
 
+def test_completeness_and_traceability(tmp_path: Path, corpus: Path) -> None:
+    """Part G.1: completeness over the studies with a determined true direction; traceability over the cited
+    passages, each against the placements of the paper it cites; null without citations (the engine)."""
+    places = {(p["fact"], p["exact"]): p for p in fx.placements()}
+    sixty_two = places[("S001.m1", "62%")]
+    cited = [{"document": "S001", "start": sixty_two["start"] - 3, "end": sixty_two["start"] + 1},  # overlaps "62%"
+             {"document": "S001", "start": 0, "end": 10},                                          # the title: none
+             {"document": "S999", "start": 0, "end": 10}]                                          # no such paper
+    rag = fx.baseline_answer("rag-baseline", {"S001": "supports"}, "supported") | {"citations": cited}
+    fx.dump(tmp_path / "rag.json", rag)
+    truth = fx.ground_truth()
+    truth["studies"].append({"study_id": "S003", "paper": "S003", "level": "paraphrased", "conditions": [],
+                             "metrics": [], "measurements": [], "author_claim": None,
+                             "effect": {"direction": "undetermined", "delta": None}})  # not determined: not counted
+    fx.dump(corpus / "ground_truth.json", truth)
+    result = score(run_with(tmp_path, fx.perfect_items()), corpus, [tmp_path / "rag.json"])
+    r = {x["level"]: x for x in system(result, "rag-baseline")["rows"]}
+    assert (r["all"]["studies"], r["all"]["completeness"]) == (3, 0.5)              # S001 of S001, S002
+    assert (r["all"]["citations"], r["all"]["traceability"]) == (3, pytest.approx(1 / 3))
+    assert (r["explicit"]["completeness"], r["explicit"]["citations"], r["explicit"]["traceability"]) == (1.0, 2, 0.5)
+    assert (r["paraphrased"]["completeness"], r["paraphrased"]["citations"], r["paraphrased"]["traceability"]) == (
+        0.0, 0, None)
+    e = row(system(result, "evidence-engine")["rows"], level="all")
+    assert (e["completeness"], e["citations"], e["traceability"]) == (1.0, None, None)
+    empty = fx.baseline_answer("agent-baseline", {}, "insufficient") | {"citations": []}
+    fx.dump(tmp_path / "agent.json", empty)
+    a = row(score_answers(corpus, [tmp_path / "agent.json"])["synthesis"][0]["rows"], level="all")
+    assert (a["completeness"], a["citations"], a["traceability"]) == (0.0, 0, None)
+    rows = rep.compare([result])["rows"]
+    by = {x["system"]: x for x in rows}
+    assert (by["rag-baseline"]["completeness"], by["rag-baseline"]["traceability"]) == (0.5, pytest.approx(1 / 3))
+    assert (by["evidence-engine"]["completeness"], by["evidence-engine"]["traceability"]) == (1.0, None)
+    assert "traceability" in rep.render_compare(rep.compare([result])) and "completeness" in rep.render(result)
+
+
 def test_stability_from_a_reexec_report(tmp_path: Path, corpus: Path) -> None:
     """The engine's reexec.json shape (evidence/replay.compare): calls name the extractor, not its id."""
     def call(name: str, outcome: str, original: int, reproduced: int) -> dict:

@@ -41,7 +41,13 @@ study; the pair is true when A matched them to the facts `effect.treatment` and 
 
 C: for every ground-truth study, the system's `studies` entry with `document` = the study's paper
 gives a direction; it is correct when it equals `effect.direction`. A missing or `undetermined` entry
-is wrong (and counted as unanswered). The label is correct when equal to `answer.label`.
+is wrong (and counted as unanswered). The label is correct when equal to `answer.label`. The
+supervisor's three comparison criteria (STATE.md §1 §7; docs/evidence-system.md Part G.1) are
+direction accuracy (correctness), **completeness** = share of the studies with a determined true
+direction (not `undetermined`) the system gives a stance for, and **traceability** = share of the
+cited passages (`answer.citations`, a baseline's `[{document, start, end}]`) that overlap (share a
+character with) a ground-truth placement of the study of the paper they cite, over all cited
+passages; `null` for an answer without citations (the engine's spans are scored in A).
 
 Locate recall: a placement is inside the scope when one `locate.json` entry for its paper and its
 fact's evidence type has a scope that contains it (`evidence.contract.Scope.contains`).
@@ -250,8 +256,28 @@ def score_integration(m: Matching, answer: dict[str, Any] | None) -> dict[str, A
 
 # --- C: synthesis ----------------------------------------------------------------------------------
 
+def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None) -> dict[str, Counter[str]] | None:
+    """Traceability counts per level (and ALL): cited passages, and those overlapping a placement of the
+    cited paper's study. A cited paper outside the ground truth counts under ALL only. None without a
+    `citations` list (the engine)."""
+    if citations is None:
+        return None
+    places: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    for p in truth.placements:
+        places[p["paper"]].append((p["start"], p["end"]))
+    cited: dict[str, Counter[str]] = defaultdict(Counter)
+    for c in citations:
+        paper = c.get("document")
+        hit = any(overlaps((int(c["start"]), int(c["end"])), p) for p in places.get(paper, []))
+        level = truth.level_of(paper)
+        for key in ((level, ALL) if level != "unknown" else (ALL,)):
+            cited[key].update(citations=1, traced=hit)
+    return cited
+
+
 def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any]:
-    """Per-study direction accuracy and label correctness of one system's answer.json."""
+    """Per-study direction accuracy, completeness, traceability and label correctness of one system's
+    answer.json (the module docstring, C)."""
     given = {s.get("document"): s.get("direction", "undetermined") for s in answer.get("studies", [])}
     per_level: dict[str, Counter[str]] = defaultdict(Counter)
     confusion: Counter[tuple[str, str]] = Counter()
@@ -264,15 +290,23 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
         if got not in DIRECTIONS:
             got = "undetermined"
         confusion[(expected, got)] += 1
+        determined = expected != "undetermined"
         studies.append({"study": study["study_id"], "paper": study["paper"], "level": study["level"],
                         "expected": expected, "given": got, "correct": got == expected})
         for level in (study["level"], ALL):
             per_level[level].update(studies=1, correct=got == expected, answered=got != "undetermined",
-                                    correct_answered=got == expected and got != "undetermined")
-    rows = [{"level": level, "studies": c["studies"], "direction_accuracy": share(c["correct"], c["studies"]),
-             "answered": share(c["answered"], c["studies"]),
-             "accuracy_answered": share(c["correct_answered"], c["answered"])}
-            for level, c in sorted(per_level.items())]
+                                    correct_answered=got == expected and got != "undetermined",
+                                    determined=determined, complete=determined and got != "undetermined")
+    cited = score_citations(truth, answer.get("citations"))
+    rows = []
+    for level, c in sorted(per_level.items()):
+        n = cited.get(level, Counter()) if cited is not None else None
+        rows.append({"level": level, "studies": c["studies"], "direction_accuracy": share(c["correct"], c["studies"]),
+                     "answered": share(c["answered"], c["studies"]),
+                     "accuracy_answered": share(c["correct_answered"], c["answered"]),
+                     "completeness": share(c["complete"], c["determined"]),
+                     "citations": None if n is None else n["citations"],
+                     "traceability": None if n is None else share(n["traced"], n["citations"])})
     expected_label = truth.answer.get("label")
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,
             "label_correct": answer.get("label") == expected_label, "rows": rows, "studies": studies,

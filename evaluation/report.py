@@ -72,16 +72,21 @@ def render(report: dict[str, Any]) -> str:
                             "label_correct": system["label_correct"], "studies": overall.get("studies"),
                             "direction_accuracy": overall.get("direction_accuracy"),
                             "answered": overall.get("answered"),
-                            "accuracy_answered": overall.get("accuracy_answered")})
+                            "accuracy_answered": overall.get("accuracy_answered"),
+                            "completeness": overall.get("completeness"),
+                            "traceability": overall.get("traceability")})
         out += [table(summary, ["system", "label", "expected", "label_correct", "studies", "direction_accuracy",
-                                "answered", "accuracy_answered"]), "",
+                                "answered", "accuracy_answered", "completeness", "traceability"]), "",
                 "direction_accuracy counts a study the system did not answer as wrong; accuracy_answered is the "
-                "accuracy over the studies it answered (a baseline may cite only some papers).", ""]
+                "accuracy over the studies it answered (a baseline may cite only some papers); completeness is the "
+                "share of studies with a determined true direction the system gives a stance for; traceability is "
+                "the share of a baseline's cited passages that overlap a ground-truth placement of the paper they "
+                "cite (none for the engine: its spans are scored in A).", ""]
         levels = [{"system": s["system"], **r} for s in report["synthesis"] for r in s["rows"] if r["level"] != "all"]
         if levels:
             levels.sort(key=lambda r: (_level_key(r["level"]), r["system"]))
             out += ["Per level:", "", table(levels, ["level", "system", "studies", "direction_accuracy", "answered",
-                                                     "accuracy_answered"]), ""]
+                                                     "accuracy_answered", "completeness", "traceability"]), ""]
     if report.get("locate"):
         rows = sorted(report["locate"]["rows"], key=lambda r: (r["evidence_type"], _level_key(r["level"])))
         out += ["## Locate recall", "", table(rows, ["evidence_type", "level", "placements", "inside", "recall"]), ""]
@@ -142,13 +147,16 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "association_accuracy": b.get("association_accuracy") if engine else None,
                          "true_pair": b.get("true_pair") if engine else None,
                          "direction_accuracy": c.get("direction_accuracy"), "answered": c.get("answered"),
-                         "accuracy_answered": c.get("accuracy_answered"), "label_correct": system["label_correct"]})
+                         "accuracy_answered": c.get("accuracy_answered"), "completeness": c.get("completeness"),
+                         "traceability": None if engine else c.get("traceability"),  # the engine's spans: A
+                         "label_correct": system["label_correct"]})
     rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"]))
     return {"rows": rows}
 
 
 COMPARE_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "span_accuracy", "association_accuracy",
-                   "true_pair", "direction_accuracy", "answered", "accuracy_answered", "label_correct"]
+                   "true_pair", "direction_accuracy", "answered", "accuracy_answered", "completeness", "traceability",
+                   "label_correct"]
 
 
 def render_compare(comparison: dict[str, Any]) -> str:

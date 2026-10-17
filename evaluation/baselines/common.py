@@ -1,10 +1,15 @@
-"""What both baselines share: the corpus as a system under test sees it, the reply schema, answer.json.
+"""What both baselines share: the corpus as a system under test sees it, the mapping call, answer.json.
 
 Hard rule (docs/evidence-system.md Part A): a baseline reads `manifest.json` and the files it lists
 under `papers/`, nothing else of the corpus directory. `SystemCorpus` is the only reader the baselines
 use; it opens exactly those files, checks each against its manifest sha256, and refuses (allow-list)
 any listed file that does not resolve to a file directly in `<corpus>/papers/`, so neither
 ground_truth.json, corpus.json, fidelity.json, decoys.json nor any later evaluation file can be read.
+
+Neither baseline is asked for a label or per-paper stances: the retrieve-then-answer baseline writes
+an answer with citations, the agent an answer table. One separate **mapping call** (`map_answer`:
+MAP_INSTRUCTIONS + LABEL_RULES, AnswerReply, shared by both; docs/evidence-system.md Part G.1) turns
+that answer into the label and the stance of every paper it relies on, for the synthesis score (C).
 """
 from __future__ import annotations
 
@@ -12,7 +17,7 @@ import asyncio
 import json
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Literal
+from typing import Any, Literal, TypeVar
 
 from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
@@ -25,6 +30,7 @@ DEFAULT_PROTOCOL = Path(__file__).resolve().parents[2] / "evidence" / "protocols
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
 Stance = Literal["supports", "contradicts", "neutral"]
 GROUPS = {"supports": "supporting", "contradicts": "contradicting", "neutral": "neutral"}
+T = TypeVar("T", bound=BaseModel)
 
 
 @dataclass(frozen=True)
@@ -64,7 +70,7 @@ class StudyStance(BaseModel):
 
 
 class AnswerReply(BaseModel):
-    """The one schema both baselines' model calls are decoded under."""
+    """The schema of the mapping call: the label and per-paper stances a baseline's answer amounts to."""
     label: rules.Label = Field(description="supported, refuted, mixed, no_effect or insufficient")
     studies: list[StudyStance] = Field(description="one entry per paper the answer relies on")
     answer_text: str = Field(description="the answer in a few sentences")
@@ -78,14 +84,26 @@ LABEL_RULES = """Labels (the same rule for every system):
 - insufficient: the evidence does not answer the question.
 Stance per paper: supports (retrieval improved the result), contradicts (retrieval made it worse), neutral (no real difference)."""
 
+# The mapping call's instructions (was the agent baseline's; shared since Part G.1). It names the two forms an
+# answer takes: the agent's rows, facts and quotes; the retrieve-then-answer baseline's text and cited passages.
+MAP_INSTRUCTIONS = f"""You are given a research question, the ids of the papers in a corpus, and the answer a system wrote after
+reading the corpus: either a research agent's answer (its rows, the facts it recorded (subject | predicate | object)
+with the quotes behind them, and its notes) or a retrieve-then-answer system's answer (its text and the passages it
+cites). Do not add knowledge of your own: report what the answer says. Give the label the answer amounts to and, for
+every corpus paper the answer relies on, the stance it attributes to that paper. Use only the paper ids listed.
 
-def answer_json(system: str, question: str, reply: AnswerReply, known: list[str], **extra: Any) -> dict[str, Any]:
-    """answer.json (section 4) for a baseline: the model's label and per-paper stances, as stated.
+{LABEL_RULES}"""
+
+
+def answer_json(system: str, question: str, reply: AnswerReply, known: list[str], *, answer_text: str | None = None,
+                **extra: Any) -> dict[str, Any]:
+    """answer.json (section 4) for a baseline: the mapped label and per-paper stances, as stated.
 
     Entries for papers not in the corpus are dropped (listed in `dropped`); a paper named twice keeps
-    its first stance. `label_by_rule` is evidence.rules.label over the stated stances by the label table of
-    the default protocol (the baseline reads no corpus file for it), for reference; the score uses the
-    model's own `label`.
+    its first stance. `answer_text` is the system's own answer when given, else the mapping call's
+    summary. `label_by_rule` is evidence.rules.label over the stated stances by the label table of the
+    default protocol (the baseline reads no corpus file for it), for reference; the score uses the
+    mapped `label`.
     """
     studies, dropped, seen = [], [], set()
     for s in reply.studies:
@@ -98,27 +116,29 @@ def answer_json(system: str, question: str, reply: AnswerReply, known: list[str]
     groups = {g: [s["document"] for s in studies if s["direction"] == d] for d, g in GROUPS.items()}
     counts = {g: len(v) for g, v in groups.items()} | {"undetermined": 0}
     return {"system": system, "question": question, "label": reply.label, "counts": counts, "studies": studies,
-            **groups, "undetermined": [], "answer_text": reply.answer_text,
+            **groups, "undetermined": [], "answer_text": reply.answer_text if answer_text is None else answer_text,
             "label_by_rule": rules.label(counts, protocol_module.load(DEFAULT_PROTOCOL).synthesis.table),
             "dropped": dropped, **extra}
 
 
 def cached_reply(cache: JsonlCache | None, instructions: str, prompt: str, *, model: Model, model_id: str | None,
-                 seed: int = 0, max_tokens: int = 4096) -> tuple[AnswerReply, dict[str, Any]]:
+                 seed: int = 0, max_tokens: int = 4096, output_type: type[T] = AnswerReply  # type: ignore[assignment]
+                 ) -> tuple[T, dict[str, Any]]:
     """One schema-constrained call (temperature 0, fixed seed), cached by prompt hash, model and input.
 
-    Returns the reply and its record: model, served model, tokens, prompt hash, cache key, whether it
-    came from the cache. The key never contains the API key (gold.llm reads it from the environment).
+    Returns the reply (an `output_type`) and its record: model, served model, tokens, prompt hash, cache
+    key, whether it came from the cache. The key never contains the API key (gold.llm reads it from the
+    environment).
     """
-    record = {"prompt_sha256": prompt_sha256(instructions, AnswerReply), "model": model_id or model_name(model),
+    record = {"prompt_sha256": prompt_sha256(instructions, output_type), "model": model_id or model_name(model),
               "input_sha256": sha256_hex(prompt.encode("utf-8")),
               "settings": {"temperature": 0.0, "seed": seed, "max_tokens": max_tokens}}
     key = cache_key(record)
     hit = cache.get(key) if cache is not None else None
     if hit is not None:
-        return AnswerReply.model_validate(hit["output"]), record | {"key": key, "cached": True} | hit["usage"]
+        return output_type.model_validate(hit["output"]), record | {"key": key, "cached": True} | hit["usage"]
     try:
-        reply = asyncio.run(structured_reply(instructions, prompt, AnswerReply, model=model,
+        reply = asyncio.run(structured_reply(instructions, prompt, output_type, model=model,
                                              model_settings=settings(seed=seed, max_tokens=max_tokens)))
     except Exception as exc:  # provider errors can echo the key: never let it reach a log
         raise RuntimeError(redact(f"{type(exc).__name__}: {exc}")) from None
@@ -127,3 +147,16 @@ def cached_reply(cache: JsonlCache | None, instructions: str, prompt: str, *, mo
     if cache is not None:
         cache.put(key, {"output": reply.output.model_dump(mode="json"), "usage": usage})
     return reply.output, record | {"key": key, "cached": False} | usage
+
+
+def map_answer(cache: JsonlCache | None, question: str, known: list[str], text: str, *, model: Model,
+               model_id: str | None, seed: int = 0) -> tuple[AnswerReply, dict[str, Any]]:
+    """The mapping call: a baseline's answer (as text) to the label and per-paper stances, cached.
+
+    The record (`mapping_call` in answer.json) is without `cached`, so a cached rerun writes the same
+    bytes.
+    """
+    prompt = f"Question: {question}\n\nCorpus paper ids: {', '.join(known)}\n\nThe answer:\n{text}"
+    reply, call = cached_reply(cache, MAP_INSTRUCTIONS, prompt, model=model, model_id=model_id, seed=seed)
+    call.pop("cached")
+    return reply, call
