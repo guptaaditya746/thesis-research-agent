@@ -87,7 +87,7 @@ export function NewRunDialog({ defaultQid }: { defaultQid?: string }) {
     const [first] = jobs
     toast.success(jobs.length > 1 ? `Started ${jobs.length} runs (jobs ${jobs.map((j) => j.id).join(", ")})` : `Started a run: job ${first.id} ${first.state}`, {
       description: "The run appears in the list once its directory exists; follow its log on the Jobs page.",
-      action: first.run_id ? { label: "Open run", onClick: () => navigate(`/runs/${encodeURIComponent(first.run_id!)}`) } : { label: "Open log", onClick: () => navigate(`/jobs/${first.id}`) },
+      action: first.run_id ? { label: "Open run", onClick: () => navigate(`/earlier/runs/${encodeURIComponent(first.run_id!)}`) } : { label: "Open log", onClick: () => navigate(`/earlier/jobs/${first.id}`) },
     })
   }
 

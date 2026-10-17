@@ -1,5 +1,5 @@
 /**
- * Question `/questions/:qid` (plan "Frontend pages" 2): the concept briefs side by side, each
+ * Question `/earlier/questions/:qid` (plan "Frontend pages" 2): the concept briefs side by side, each
  * with its answer shape as a template, the pick (who picked, why) and the propose job; the gold
  * build of the question starts here too once a brief is picked.
  */
@@ -30,7 +30,7 @@ export default function QuestionPage() {
   if (question.isError) {
     return isNotFound(question.error) ? (
       <EmptyState icon={<SearchXIcon />} title={`No question ${qid}`} description="The question list (questions/questions.json) has no such id.">
-        <Button asChild variant="outline"><Link to="/">Back to the overview</Link></Button>
+        <Button asChild variant="outline"><Link to="/earlier">Back to the overview</Link></Button>
       </EmptyState>
     ) : (
       <ErrorState error={question.error} onRetry={() => void question.refetch()} />
@@ -67,13 +67,13 @@ export default function QuestionPage() {
         actions={
           <>
             <Button asChild variant="outline">
-              <Link to={`/runs?qid=${qid}`}>
+              <Link to={`/earlier/runs?qid=${qid}`}>
                 <ListChecksIcon data-icon="inline-start" />
                 Runs{q ? ` (${runsOnCurrent})` : ""}
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link to={`/compare/${qid}`}>
+              <Link to={`/earlier/compare/${qid}`}>
                 <GitCompareArrowsIcon data-icon="inline-start" />
                 Compare
               </Link>
@@ -100,7 +100,7 @@ export default function QuestionPage() {
         >
           {proposing ? (
             <Button variant="outline" asChild>
-              <Link to={`/jobs/${proposing.id}`}><Spinner data-icon="inline-start" /> Follow the job</Link>
+              <Link to={`/earlier/jobs/${proposing.id}`}><Spinner data-icon="inline-start" /> Follow the job</Link>
             </Button>
           ) : (
             <ProposeDialog qid={qid} />

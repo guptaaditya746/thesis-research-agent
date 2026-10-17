@@ -94,7 +94,7 @@ export default function OverviewPage() {
                     <TableRow key={q.id}>
                       <TableCell className="font-mono text-xs">{q.id}</TableCell>
                       <TableCell className="max-w-md min-w-56 whitespace-normal">
-                        <Link to={`/questions/${q.id}`} className="font-medium hover:underline">
+                        <Link to={`/earlier/questions/${q.id}`} className="font-medium hover:underline">
                           {q.question}
                         </Link>
                         {q.category && (
@@ -116,7 +116,7 @@ export default function OverviewPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
-                        <Link to={`/runs?qid=${q.id}`} className="hover:underline" aria-label={`Runs of ${q.id}`}>
+                        <Link to={`/earlier/runs?qid=${q.id}`} className="hover:underline" aria-label={`Runs of ${q.id}`}>
                           {q.runs.claim_on ?? 0} / {q.runs.claim_off ?? 0}
                         </Link>
                       </TableCell>
@@ -135,7 +135,7 @@ export default function OverviewPage() {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button asChild variant="ghost" size="icon-sm" aria-label={`Compare conditions for ${q.id}`}>
-                              <Link to={`/compare/${q.id}`}>
+                              <Link to={`/earlier/compare/${q.id}`}>
                                 <GitCompareArrowsIcon />
                               </Link>
                             </Button>
@@ -153,7 +153,7 @@ export default function OverviewPage() {
       )}
       {results.data && (
         <Button asChild variant="outline">
-          <Link to="/results">
+          <Link to="/earlier/results">
             The report is ready: primary test and charts
             <ArrowRightIcon data-icon="inline-end" />
           </Link>

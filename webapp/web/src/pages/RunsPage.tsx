@@ -1,5 +1,5 @@
 /**
- * Runs `/runs` (plan "Frontend pages" 3): every run with its cost, claims, verify state and
+ * Runs `/earlier/runs` (plan "Frontend pages" 3): every run with its cost, claims, verify state and
  * headline score; filters by question and condition live in the URL (?qid=&condition=&stale=1),
  * so a filtered list can be linked. The list polls while a run is live or still being scored.
  */
@@ -124,7 +124,7 @@ export default function RunsPage() {
               <TableBody>
                 {runs.data.map((r) => {
                   const { batch, name } = splitRunId(r.run_id)
-                  const href = `/runs/${encodeURIComponent(r.run_id)}`
+                  const href = `/earlier/runs/${encodeURIComponent(r.run_id)}`
                   return (
                     <TableRow key={r.run_id} className="cursor-pointer" onClick={() => navigate(href)}>
                       <TableCell className="pl-4">

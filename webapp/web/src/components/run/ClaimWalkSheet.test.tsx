@@ -15,7 +15,7 @@ import { WalkContext } from "./walk-context"
 beforeAll(() => import("@/pages/RunPage"), 180_000)
 afterEach(() => vi.restoreAllMocks())
 
-const runPath = (runId: string, tab?: string) => `/runs/${encodeURIComponent(runId)}${tab ? `?tab=${tab}` : ""}`
+const runPath = (runId: string, tab?: string) => `/earlier/runs/${encodeURIComponent(runId)}${tab ? `?tab=${tab}` : ""}`
 
 describe("claim walk", () => {
   it("walks a fact to its claim, the step and the passage with the quote highlighted and scrolled into view", async () => {

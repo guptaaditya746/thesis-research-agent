@@ -1,5 +1,5 @@
 /**
- * Compare `/compare/:qid` (plan "Frontend pages" 5): a claim_on run and a claim_off run of one
+ * Compare `/earlier/compare/:qid` (plan "Frontend pages" 5): a claim_on run and a claim_off run of one
  * question side by side: their answers with fact badges (each opens that run's claim walk), the
  * support of their facts and their cost, and the differences on top. The runs are picked per
  * condition (?on=&off=); by default the latest finished run of each, preferring the same seed.
@@ -65,7 +65,7 @@ export default function ComparePage() {
         <TableSkeleton rows={6} columns={4} />
       ) : all.length === 0 ? (
         <EmptyState title={`No runs of ${qid} yet`} description="Start a claim_on and a claim_off run with the same seed to compare them (New run, both conditions).">
-          <Link to={`/runs?qid=${qid}`} className="text-sm underline">Runs of {qid}</Link>
+          <Link to={`/earlier/runs?qid=${qid}`} className="text-sm underline">Runs of {qid}</Link>
         </EmptyState>
       ) : (
         <>
@@ -167,7 +167,7 @@ function RunColumn({ runId }: { runId: string }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-2">
-            <Link to={`/runs/${encodeURIComponent(runId)}`} className="font-mono break-all hover:underline">{splitRunId(runId).name}</Link>
+            <Link to={`/earlier/runs/${encodeURIComponent(runId)}`} className="font-mono break-all hover:underline">{splitRunId(runId).name}</Link>
             <ConditionBadge condition={s.condition} />
           </CardTitle>
           <CardDescription className="flex flex-wrap items-center gap-2">

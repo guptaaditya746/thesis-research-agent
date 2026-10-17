@@ -25,7 +25,7 @@ describe("chat", () => {
   it("is scoped to the run in view, sends its id and shows the streamed reply with the tool call", async () => {
     const bodies = recordChatBodies()
     const user = userEvent.setup()
-    renderRoutes(routes, `/runs/${encodeURIComponent(RUN.on)}`)
+    renderRoutes(routes, `/earlier/runs/${encodeURIComponent(RUN.on)}`)
 
     await user.click(await screen.findByRole("button", { name: "Ask about this run" }, T))
     // the panel is a lazy chunk: a loading sheet first, then the thread
@@ -52,7 +52,7 @@ describe("chat", () => {
 
   it("starts a new thread when another run is in view, so one run's answers never sit in another's thread", async () => {
     const user = userEvent.setup()
-    const { router } = renderRoutes(routes, `/runs/${encodeURIComponent(RUN.on)}`)
+    const { router } = renderRoutes(routes, `/earlier/runs/${encodeURIComponent(RUN.on)}`)
     await user.click(await screen.findByRole("button", { name: "Ask about this run" }, T))
     const input = await screen.findByRole("textbox", { name: "Message" }, T)
     await user.type(input, "Summarise this run.{Enter}")
@@ -60,7 +60,7 @@ describe("chat", () => {
     expect(await within(sheet).findByText(new RegExp(`\\(mock reply\\) Run ${RUN.on}`), {}, { timeout: 10_000 })).toBeInTheDocument()
     await user.click(within(sheet).getByRole("button", { name: "Close" }))
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
-    await router.navigate(`/runs/${encodeURIComponent(RUN.off)}`)
+    await router.navigate(`/earlier/runs/${encodeURIComponent(RUN.off)}`)
     await user.click(await screen.findByRole("button", { name: "Ask about this run" }, T))
     sheet = await screen.findByRole("dialog", { name: "Chat about runs" }, T)
     expect(within(sheet).getByText(RUN.off)).toBeInTheDocument()
@@ -71,7 +71,7 @@ describe("chat", () => {
   it("opens from any page with Ctrl+J and is not scoped there", async () => {
     const bodies = recordChatBodies()
     const user = userEvent.setup()
-    renderRoutes(routes, "/")
+    renderRoutes(routes, "/earlier")
     await screen.findByRole("heading", { name: "Overview" }, T)
     await user.keyboard("{Control>}j{/Control}")
     const input = await screen.findByRole("textbox", { name: "Message" }, T)

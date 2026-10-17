@@ -1,5 +1,5 @@
 /**
- * Run `/runs/:runId` (plan "Frontend pages" 4): the stats header and six tabs (answer, graph,
+ * Run `/earlier/runs/:runId` (plan "Frontend pages" 4): the stats header and six tabs (answer, graph,
  * timeline, claims, provenance, score). The tab is in the URL (?tab=), and every tab can open
  * the one claim walk sheet of the page through the walk context.
  */
@@ -55,7 +55,7 @@ export default function RunPage() {
   if (run.isError) {
     return isNotFound(run.error) ? (
       <EmptyState icon={<SearchXIcon />} title={`No run ${runId}`} description="There is no such run directory under the runs root.">
-        <Button asChild variant="outline"><Link to="/runs">All runs</Link></Button>
+        <Button asChild variant="outline"><Link to="/earlier/runs">All runs</Link></Button>
       </EmptyState>
     ) : (
       <ErrorState error={run.error} onRetry={() => void run.refetch()} />
@@ -131,7 +131,7 @@ function StartingRun({ runId, job }: { runId: string; job: Job }) {
             </li>
           ))}
         </ul>
-        <Button asChild variant="outline"><Link to={`/jobs/${encodeURIComponent(job.id)}`}>Job log</Link></Button>
+        <Button asChild variant="outline"><Link to={`/earlier/jobs/${encodeURIComponent(job.id)}`}>Job log</Link></Button>
       </div>
     </EmptyState>
   )

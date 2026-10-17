@@ -1,10 +1,11 @@
-/** Ctrl/Cmd+K: jump to a page, a question, its comparison or a run; open the chat; switch theme. */
+/** Ctrl/Cmd+K: jump to a page or a run (and, under earlier work, a question or an agent run); open the chat; switch theme. */
 import { useQueryClient } from "@tanstack/react-query"
 import { BarChart3Icon, FileQuestionIcon, ListChecksIcon, MessageSquareIcon, MoonIcon, PlayIcon, SearchIcon, SunIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
 
+import { evKeys, useEvRuns } from "@/api/ev"
 import { keys, useQuestions, useRuns } from "@/api/hooks"
 import { useChat } from "@/components/chat/context"
 import { Button } from "@/components/ui/button"
@@ -21,11 +22,16 @@ import {
 import { Kbd } from "@/components/ui/kbd"
 
 const PAGES = [
-  { to: "/", label: "Overview" },
+  { to: "/", label: "Evidence-level flow" },
+  { to: "/protocol", label: "Protocol" },
+  { to: "/corpora", label: "Corpora" },
   { to: "/runs", label: "Runs" },
-  { to: "/results", label: "Results" },
-  { to: "/gold", label: "Gold" },
-  { to: "/jobs", label: "Jobs" },
+  { to: "/scores", label: "Scores" },
+  { to: "/earlier", label: "Earlier work: questions" },
+  { to: "/earlier/runs", label: "Earlier work: runs" },
+  { to: "/earlier/results", label: "Earlier work: results" },
+  { to: "/earlier/gold", label: "Earlier work: gold" },
+  { to: "/earlier/jobs", label: "Earlier work: jobs" },
 ]
 
 export function CommandMenu() {
@@ -36,6 +42,7 @@ export function CommandMenu() {
   const { resolvedTheme, setTheme } = useTheme()
   const questions = useQuestions()
   const runs = useRuns()
+  const evRuns = useEvRuns()
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -75,18 +82,27 @@ export function CommandMenu() {
               </CommandItem>
             ))}
           </CommandGroup>
-          <CommandGroup heading="Questions">
+          <CommandGroup heading="Runs">
+            {evRuns.data?.slice(0, 80).map((r) => (
+              <CommandItem key={r.id} value={`${r.id} ${r.system}`} onSelect={() => go(`/runs/${encodeURIComponent(r.id)}`)}>
+                <ListChecksIcon />
+                <span className="font-mono">{r.id}</span>
+                <CommandShortcut>{r.system}</CommandShortcut>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+          <CommandGroup heading="Earlier work: questions">
             {questions.data?.map((q) => (
-              <CommandItem key={q.id} value={`${q.id} ${q.question}`} onSelect={() => go(`/questions/${q.id}`)}>
+              <CommandItem key={q.id} value={`${q.id} ${q.question}`} onSelect={() => go(`/earlier/questions/${q.id}`)}>
                 <FileQuestionIcon />
                 <span className="font-mono">{q.id}</span>
                 <span className="truncate text-muted-foreground">{q.question}</span>
               </CommandItem>
             ))}
           </CommandGroup>
-          <CommandGroup heading="Runs">
+          <CommandGroup heading="Earlier work: runs">
             {runs.data?.slice(0, 50).map((r) => (
-              <CommandItem key={r.run_id} value={`${r.run_id} ${r.qid} ${r.condition}`} onSelect={() => go(`/runs/${encodeURIComponent(r.run_id)}`)}>
+              <CommandItem key={r.run_id} value={`${r.run_id} ${r.qid} ${r.condition}`} onSelect={() => go(`/earlier/runs/${encodeURIComponent(r.run_id)}`)}>
                 <ListChecksIcon />
                 <span className="font-mono">{r.run_id}</span>
                 <CommandShortcut>{r.condition}</CommandShortcut>
@@ -119,10 +135,11 @@ export function CommandMenu() {
                 setOpen(false)
                 void client.invalidateQueries({ queryKey: keys.runs })
                 void client.invalidateQueries({ queryKey: keys.questions })
+                void client.invalidateQueries({ queryKey: evKeys.all })
               }}
             >
               <PlayIcon />
-              Refresh runs and questions
+              Refresh from disk
             </CommandItem>
           </CommandGroup>
         </CommandList>

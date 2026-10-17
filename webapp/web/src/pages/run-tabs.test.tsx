@@ -8,7 +8,7 @@ import { RUN } from "@/mocks/fixtures"
 import { renderRoutes } from "@/test/render"
 
 const T = { timeout: 15_000 }
-const runPath = (runId: string, tab?: string) => `/runs/${encodeURIComponent(runId)}${tab ? `?tab=${tab}` : ""}`
+const runPath = (runId: string, tab?: string) => `/earlier/runs/${encodeURIComponent(runId)}${tab ? `?tab=${tab}` : ""}`
 
 beforeAll(async () => {
   await Promise.all([import("@/pages/RunPage"), import("@/pages/JobsPage")])
@@ -157,11 +157,11 @@ describe("run page tabs", () => {
 describe("jobs page", () => {
   it("lists jobs and selects one for its steps and log", async () => {
     const user = userEvent.setup()
-    const { router } = renderRoutes(routes, "/jobs")
+    const { router } = renderRoutes(routes, "/earlier/jobs")
     expect(await screen.findByText("Select a job to follow its steps and log.", {}, T)).toBeInTheDocument()
     expect(screen.getAllByText("failed").length).toBeGreaterThan(0)
     await user.click(screen.getByRole("link", { name: "job-0006" }))
-    expect(router.state.location.pathname).toBe("/jobs/job-0006")
+    expect(router.state.location.pathname).toBe("/earlier/jobs/job-0006")
     expect(await screen.findByRole("log", { name: "Log of job-0006" })).toBeInTheDocument()
     const steps = await screen.findByRole("list", { name: "Steps of the job" })
     expect(within(steps).getAllByRole("listitem")).toHaveLength(7)
@@ -170,7 +170,7 @@ describe("jobs page", () => {
 
   it("cancels a running job", async () => {
     const user = userEvent.setup()
-    renderRoutes(routes, "/jobs/job-0007")
+    renderRoutes(routes, "/earlier/jobs/job-0007")
     await user.click(await screen.findByRole("button", { name: "Cancel" }, T))
     expect(await screen.findByText("cancelled", {}, T)).toBeInTheDocument()
   })

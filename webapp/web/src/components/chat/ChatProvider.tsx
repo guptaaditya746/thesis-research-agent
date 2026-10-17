@@ -10,7 +10,7 @@ import { ChatContext } from "./context"
 import { setChatRun } from "./scope"
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const runId = useMatch("/runs/:runId")?.params.runId ?? null
+  const runId = useMatch("/earlier/runs/:runId")?.params.runId ?? null
   useEffect(() => setChatRun(runId), [runId])
   const [open, setOpen] = useState(false)
   const value = useMemo(() => ({ open, setOpen, runId }), [open, runId])

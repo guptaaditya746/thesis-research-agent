@@ -1,5 +1,5 @@
 /**
- * Jobs `/jobs` and `/jobs/:jobId` (plan "Frontend pages" 8): the server's jobs (runs with their
+ * Jobs `/earlier/jobs` and `/earlier/jobs/:jobId` (plan "Frontend pages" 8): the server's jobs (runs with their
  * attach, verify, graph and score steps; concept proposals; gold builds) and, for the selected one,
  * its steps and its live log (SSE). The list polls while a job is queued or running; a queued or
  * running job can be cancelled.
@@ -68,10 +68,10 @@ export default function JobsPage() {
                       key={j.id}
                       data-state={selected === j.id ? "selected" : undefined}
                       className="cursor-pointer"
-                      onClick={() => navigate(`/jobs/${j.id}`)}
+                      onClick={() => navigate(`/earlier/jobs/${j.id}`)}
                     >
                       <TableCell className="pl-4">
-                        <Link to={`/jobs/${j.id}`} className="font-mono text-xs font-medium hover:underline" onClick={(e) => e.stopPropagation()} aria-current={selected === j.id ? "page" : undefined}>
+                        <Link to={`/earlier/jobs/${j.id}`} className="font-mono text-xs font-medium hover:underline" onClick={(e) => e.stopPropagation()} aria-current={selected === j.id ? "page" : undefined}>
                           {j.id}
                         </Link>
                         <div className="max-w-64 truncate text-xs text-muted-foreground" title={argsText(j.args)}>
@@ -87,7 +87,7 @@ export default function JobsPage() {
                       <TableCell className="text-right text-xs tabular-nums">{j.started_at ? duration(elapsed(j.started_at, j.ended_at)) : "—"}</TableCell>
                       <TableCell className="pr-4 text-xs">
                         {j.run_id ? (
-                          <Link to={`/runs/${encodeURIComponent(j.run_id)}`} className="font-mono break-all hover:underline" onClick={(e) => e.stopPropagation()}>
+                          <Link to={`/earlier/runs/${encodeURIComponent(j.run_id)}`} className="font-mono break-all hover:underline" onClick={(e) => e.stopPropagation()}>
                             {splitRunId(j.run_id).name}
                           </Link>
                         ) : "—"}

@@ -34,8 +34,8 @@ export function JobWatcher() {
       for (const key of REFRESH[job.kind] ?? [keys.runs]) void client.invalidateQueries({ queryKey: key })
       const what = `${job.kind} job ${job.id}${job.qid ? ` (${job.qid})` : ""}`
       const action = job.run_id
-        ? { label: "Open run", onClick: () => navigate(`/runs/${encodeURIComponent(job.run_id!)}`) }
-        : { label: "Open log", onClick: () => navigate(`/jobs/${job.id}`) }
+        ? { label: "Open run", onClick: () => navigate(`/earlier/runs/${encodeURIComponent(job.run_id!)}`) }
+        : { label: "Open log", onClick: () => navigate(`/earlier/jobs/${job.id}`) }
       if (job.state === "done") {
         toast.success(`${what} is done`, { description: job.warnings?.length ? job.warnings.join("; ") : undefined, action })
       } else {

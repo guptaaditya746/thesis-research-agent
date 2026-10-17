@@ -1,5 +1,5 @@
 /**
- * Gold `/gold` (plan "Frontend pages" 7): per question the screening coverage of D, the
+ * Gold `/earlier/gold` (plan "Frontend pages" 7): per question the screening coverage of D, the
  * candidate and key counts, review progress in Argilla, Cohen's kappa of the overlap, the triage
  * miss and screening false-negative estimates (docs/earlier-work.md, Gold: review), the answer key itself, and the
  * gold build job for a question whose concept is picked.
@@ -93,7 +93,7 @@ function GoldRow({ gold: g, onKey }: { gold: GoldEntry; onKey: () => void }) {
   return (
     <TableRow>
       <TableCell className="pl-4">
-        <Link to={`/questions/${g.qid}`} className="font-mono hover:underline">{g.qid}</Link>
+        <Link to={`/earlier/questions/${g.qid}`} className="font-mono hover:underline">{g.qid}</Link>
       </TableCell>
       <TableCell>
         <GoldBadge status={g.status} />

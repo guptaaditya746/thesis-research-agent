@@ -45,7 +45,7 @@ export function RunHeader({ detail, config }: { detail: RunDetail; config: RunCo
         description={
           <span className="flex flex-wrap items-center gap-2">
             {batch && <Badge variant="secondary" className="font-mono font-normal" title="batch">{batch}</Badge>}
-            {s.qid && <Link to={`/questions/${s.qid}`} className="font-mono hover:underline">{s.qid}</Link>}
+            {s.qid && <Link to={`/earlier/questions/${s.qid}`} className="font-mono hover:underline">{s.qid}</Link>}
             <ConditionBadge condition={s.condition} />
             <span>seed {s.seed ?? "—"} · T {s.temperature ?? "—"} · {dateTime(s.created_at)}</span>
             {detail.concept && <span>· concept “{detail.concept.title}”</span>}
@@ -64,7 +64,7 @@ export function RunHeader({ detail, config }: { detail: RunDetail; config: RunCo
           <>
             {s.qid && (
               <Button variant="outline" size="sm" asChild>
-                <Link to={`/compare/${s.qid}?${s.condition === "claim_off" ? "off" : "on"}=${encodeURIComponent(s.run_id)}`}>
+                <Link to={`/earlier/compare/${s.qid}?${s.condition === "claim_off" ? "off" : "on"}=${encodeURIComponent(s.run_id)}`}>
                   <GitCompareArrowsIcon data-icon="inline-start" />
                   Compare
                 </Link>
