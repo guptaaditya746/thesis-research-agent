@@ -609,6 +609,11 @@ counts.
   `synthesis.flags.large_effect`; `claim_disagrees`: `author_claim.agrees_with_data == false`. Neither
   changes the counts. `flags.duplicates: false` turns duplicate detection off.
 - `graph.json` gains a `duplicate_of` edge; baselines report no flags.
+- As built (17 Oct, ported from the ev2 bundle): the synthesis event's `custom_metadata` also carries
+  `flags` (flag name -> count) next to `label` and `counts`; the PROV export is unchanged (a duplicate's
+  items are among the items the answer `wasDerivedFrom`, as every study's are). `evidence protocol check P`
+  validates a protocol file and prints its id, version, sha256, phases and extractors per type (exit 2 when
+  it does not validate); the proposal subcommands of Part E hang beside it.
 
 ## F2. Benchmark knobs (generator)
 
