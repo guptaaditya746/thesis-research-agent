@@ -29,8 +29,8 @@ from pydantic_ai.models import Model
 from .. import rules
 from ..protocol import LocateStrategy
 from . import frame as frame_module
-from .common import (CARDS, CRITIC, DECISIONS, DRAFT, FRAME, ProposalError, ask, dump_yaml, fresh, model_for, need,
-                     now, prompt, read_json, read_yaml, sha, write_json, write_text)
+from .common import (CARDS, CRITIC, DECISIONS, DRAFT, FRAME, ProposalError, ask, dump_yaml, fresh, guard,
+                     mark_written, model_for, need, now, prompt, read_json, read_yaml, sha, write_json, write_text)
 from .frame import ID, Frame
 
 PROMPT = "cards-v1.md"
@@ -122,9 +122,7 @@ def _read_roles(p: dict[str, Any], f: Frame) -> dict[str, Any]:
 
 
 def _apply_roles(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
-    old = p["synthesis"]["compare"]
     t, c = v["treatment"], v["control"]
-    rename = {old["treatment"]: t["role"], old["control"]: c["role"]}
     p["synthesis"]["compare"] = {"treatment": t["role"], "control": c["role"]}
     cond = p["evidence_types"]["condition"]
     cond["fields"]["properties"]["role"]["enum"] = [t["role"], c["role"], "other"]
@@ -132,11 +130,7 @@ def _apply_roles(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> N
     cond["description"] = (f"An experimental condition the paper compares: a system variant whose results are reported. "
                            f"role is {t['role']} for {_clause(t['definition'])}, {c['role']} for "
                            f"{_clause(c['definition'])}, other for anything else.")
-    for spec in p["evidence_types"].values():   # explicit regex patterns follow the renamed roles
-        for step in spec.get("extractors", []):
-            conditions = (step.get("config") or {}).get("conditions")
-            if isinstance(conditions, dict):
-                step["config"]["conditions"] = {rename.get(k, k): pats for k, pats in conditions.items()}
+    # the regex steps' patterns follow in `apply` (draft.sync_regex), once every decision is in
 
 
 def _read_metrics(p: dict[str, Any], f: Frame) -> dict[str, Any]:
@@ -323,9 +317,11 @@ HEADER = """# Decisions on the proposal's choice points (docs/evidence-system.md
 """
 
 
-def run(directory: Path | str, *, model: Model | None = None, alias: str | None = None) -> Path:
-    """Write DIR/cards.json and DIR/decisions.yaml (one cached model call); refuses to overwrite decisions.yaml
-    once it differs from the prefilled one it wrote (a person's edits are never lost)."""
+def run(directory: Path | str, *, model: Model | None = None, alias: str | None = None, force: bool = False,
+        refresh: bool = False) -> Path:
+    """Write DIR/cards.json and DIR/decisions.yaml (one cached model call). An existing decisions.yaml that
+    differs from the one this step last wrote (written.json), or that it never wrote, is kept unless `force`
+    (a person's edits are never lost); `refresh` asks the model again instead of using its cached reply."""
     directory = Path(directory)
     f = frame_module.load(need(directory, FRAME, "frame"))
     draft_path = need(directory, DRAFT, "draft")
@@ -335,13 +331,12 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
     draft = yaml.safe_load(draft_text)
     cards = [{**c, "options": options(c, draft, f), "vocabulary": evidence(c["id"], draft, f)} for c in definitions()]
     decisions_path = directory / DECISIONS
-    previous = directory / CARDS
-    if decisions_path.exists() and previous.exists():
-        if read_json(previous).get("decisions_sha256") != sha(decisions_path):
-            raise ProposalError(f"{decisions_path} has been edited; move it away to make the cards again")
+    guard(directory, DECISIONS, force)
     try:
         reply, call = ask(directory, "cards", prompt(PROMPT), _user_prompt(f, draft_text, critic, cards), CardsReply,
-                          model=model_for(alias, model))
+                          model=model_for(alias, model), refresh=refresh)
+    except ProposalError:
+        raise
     except ValueError as exc:
         raise ProposalError(f"the cards reply does not validate: {exc}") from exc
     for c in cards:
@@ -361,6 +356,7 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
     write_json(directory / CARDS, {"draft_sha256": sha(draft_path), "critic_sha256": sha(directory / CRITIC),
                                    "decisions_sha256": sha(decisions_path), "call": call, "created": now(),
                                    "cards": cards})
+    mark_written(directory, DECISIONS)
     return directory / CARDS
 
 
@@ -391,6 +387,9 @@ def validate(cards: list[dict[str, Any]], data: Any) -> list[dict[str, Any]]:
         if not isinstance(who, str) or not who.strip():
             problems.append(f"{cid}: `by` must say who decided (model, or your name)")
         options_ = {o["id"]: o for o in card["options"]}
+        if not isinstance(choice, str):
+            problems.append(f"{cid}: choice must be an option id ({', '.join(options_)}) or `custom`, not {choice!r}")
+            continue
         if choice == CUSTOM:
             try:
                 value = HANDLERS[cid].value.model_validate(e.get("value")).model_dump(mode="json")
@@ -419,12 +418,18 @@ def validate(cards: list[dict[str, Any]], data: Any) -> list[dict[str, Any]]:
     return [seen[c] for c in by_card]
 
 
-def apply(draft: dict[str, Any], decisions: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(the protocol mapping with every decision applied, in card order; the run settings {strategy})."""
+def apply(draft: dict[str, Any], decisions: list[dict[str, Any]], f: Frame) -> tuple[dict[str, Any], dict[str, Any]]:
+    """(the protocol mapping with every decision applied, in card order; the run settings {strategy}).
+
+    The regex steps' patterns are then made again from the decided roles and metrics exactly as the draft
+    made them (draft.sync_regex): a dropped metric's built-in patterns go, an added metric or a renamed role
+    gets patterns from its names, so the regex extractors emit only values the enums allow."""
+    from . import draft as draft_module
     p = copy.deepcopy(draft)
     run_settings: dict[str, Any] = {}
     for d in decisions:
         HANDLERS[d["card"]].apply(p, d["value"], run_settings)
+    draft_module.sync_regex(p, f)
     return p, run_settings
 
 

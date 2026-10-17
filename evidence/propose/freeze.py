@@ -3,9 +3,12 @@
 Refused (ProposalError, exit 2, nothing written): a missing step; an input changed after a later step read
 it (frame after draft, draft after critic or cards); decisions.yaml failing `cards.validate` (a decision
 without a reason, an unknown choice, ...); a protocol that does not validate as `evidence protocol check`
-validates it; a directory already frozen (changes then go through `evidence propose amend`).
+validates it; regex steps that can emit a role or metric outside its enum, or have no pattern for an
+enum value (critic check `regex_matches_enums`); a directory already frozen (changes then go through
+`evidence propose amend`).
 
-protocol.yaml is the draft with every decision applied in card order and `revision: 1` (`version` stays
+protocol.yaml is the draft with every decision applied in card order, the regex patterns made again from
+the decided roles and metrics (draft.sync_regex), and `revision: 1` (`version` stays
 the protocol format, evidence/protocol.py). A copy `protocol.v1.yaml` is the base of the first amendment.
 proposal.json records what the protocol was made from: the frame, the draft's sources, the critic, every
 decision with who made it, the deterministic checks on the frozen protocol, the run settings the cascade
@@ -62,7 +65,7 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
     decisions = cards_module.validate(cards["cards"], cards_module.load_decisions(directory))
 
     draft = yaml.safe_load(draft_path.read_text(encoding="utf-8"))
-    applied, run_settings = cards_module.apply(draft, decisions)
+    applied, run_settings = cards_module.apply(draft, decisions, f)
     created = created or now()
     text = HEADER.format(name=directory.resolve().name, created=created) + dump_yaml(ordered(applied, 1))
     try:
@@ -70,6 +73,10 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
     except (ValueError, yaml.YAMLError) as exc:
         raise ProposalError(f"the decided protocol does not validate: {exc}") from exc
 
+    final = critic_module.checks(text, f)
+    broken = next(c for c in final if c["id"] == "regex_matches_enums")
+    if not broken["ok"]:
+        raise ProposalError(f"the decided protocol's regex steps do not match its enums: {broken['message']}")
     calls = {step: data.get("call") for step, data in
              (("frame", read_json(frame_path)), ("critic", critic), ("cards", cards))}
     people = sorted({d["by"] for d in decisions if d["by"] != cards_module.MODEL})
@@ -89,7 +96,7 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
         "decided_by": {"model": [d["card"] for d in decisions if d["by"] == cards_module.MODEL],
                        **{who: [d["card"] for d in decisions if d["by"] == who] for who in people}},
         "decisions": decisions,
-        "checks": critic_module.checks(text, f),
+        "checks": final,
         "frame": read_json(frame_path),
         "sources": sources,
         "critic": critic,

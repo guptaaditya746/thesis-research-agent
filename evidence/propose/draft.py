@@ -16,7 +16,8 @@ the flag thresholds. The frame decides the rest:
   frame name under its role or canonical: then the regex steps get a `conditions` / `metrics` / `subject`
   config with the missing names added as word-bounded patterns (a role or metric the built-ins do not know
   at all gets patterns from its names only). A frame whose names the built-ins find leaves the regex steps
-  without config, so the RAG frame drafts the hand-written cascades exactly.
+  without config, so the RAG frame drafts the hand-written cascades exactly. `sync_regex` does this from a
+  protocol mapping's roles and metrics; freeze runs it again after the decisions.
 
 draft.sources.json says where every decided value and every term comes from: `ontology` (a vocabulary term
 matched it in the frame), `protocol` (copied from the example protocol) or `invented` (the model's, not in
@@ -62,48 +63,90 @@ def _dedup(names: list[str]) -> list[str]:
     return out
 
 
-def condition_patterns(f: Frame) -> tuple[dict[str, list[str]] | None, list[tuple[str, FrameTerm | str]]]:
-    """(the regex `conditions` config, or None when the built-ins find every name; the names added)."""
-    roles = (f.treatment, f.control)
-    known = all(r.role in regex_terms.CONDITIONS for r in roles)
-    base = {r.role: list(regex_terms.CONDITIONS.get(r.role, [])) for r in roles}
-    added: list[tuple[str, FrameTerm | str]] = []
-    for r in roles:
-        for name, term in [(r.label, r.label), *((s.term, s) for s in r.synonyms)]:
+Names = list[tuple[str, FrameTerm | str]]   # (name, the frame entry it came from, or the name itself)
+
+
+def _names(entry: Any) -> Names:
+    return [(entry.label, entry.label), *((s.term, s) for s in entry.synonyms)]
+
+
+def condition_patterns(roles: list[tuple[str, Names]]) -> tuple[dict[str, list[str]] | None, list[tuple[str, Any]]]:
+    """(the regex `conditions` config, or None when the built-ins find every name under its role and know
+    exactly these roles; the names added). `roles`: (role id, its names) for the treatment and the control."""
+    known = all(r in regex_terms.CONDITIONS for r, _ in roles) and len(roles) == len(regex_terms.CONDITIONS)
+    base = {r: list(regex_terms.CONDITIONS.get(r, [])) for r, _ in roles}
+    added: list[tuple[str, Any]] = []
+    for role, names in roles:
+        for name, term in names:
             found = regex_terms.find_all(name, regex_terms.condition_patterns(base))
-            if not any(m.key == r.role for m in found):
-                base[r.role].append(term_pattern(name))
-                added.append((f"conditions.{r.role}", term))
+            if not any(m.key == role for m in found):
+                base[role].append(term_pattern(name))
+                added.append((f"conditions.{role}", term))
     return (base if added or not known else None), added
 
 
-def metric_patterns(f: Frame) -> tuple[list[list[Any]] | None, list[tuple[str, FrameTerm | str]]]:
-    """(the regex `metrics` config, or None when the built-ins find every name; the names added). Built-in
-    patterns of a canonical the frame does not name are dropped (their items would fail the enum)."""
-    names = {o.canonical for o in f.outcomes}
+def metric_patterns(outcomes: list[tuple[str, bool, Names]]) -> tuple[list[list[Any]] | None, list[tuple[str, Any]]]:
+    """(the regex `metrics` config, or None when the built-ins find every name and emit only these metrics;
+    the names added). `outcomes`: (canonical, higher_is_better, names). Built-in patterns of a canonical not
+    named here are dropped (their items would fail the enum)."""
+    names = {c for c, _, _ in outcomes}
     base = [list(m) for m in regex_terms.METRICS if m[1] in names | {"other"}]
     known = len(base) == len(regex_terms.METRICS)
-    added: list[tuple[str, FrameTerm | str]] = []
-    for o in f.outcomes:
-        for name, term in [(o.label, o.label), *((s.term, s) for s in o.synonyms)]:
-            if not any(m.key == o.canonical for m in regex_terms.find_all(name, [tuple(m) for m in base])):  # type: ignore[misc]
-                base.insert(0, [term_pattern(name), o.canonical, o.higher_is_better])
-                added.append((f"metrics.{o.canonical}", term))
+    added: list[tuple[str, Any]] = []
+    for canonical, hib, entries in outcomes:
+        for name, term in entries:
+            if not any(m.key == canonical for m in regex_terms.find_all(name, [tuple(m) for m in base])):  # type: ignore[misc]
+                base.insert(0, [term_pattern(name), canonical, hib])
+                added.append((f"metrics.{canonical}", term))
     return (base if added or not known else None), added
 
 
-def claim_subject(f: Frame) -> tuple[str | None, list[tuple[str, FrameTerm | str]]]:
+def claim_subject(role: str, names: Names) -> tuple[str | None, list[tuple[str, Any]]]:
     """(the regex author claim `subject`, or None when the built-in one finds every treatment name)."""
     builtin = re.compile(regex_terms.CLAIM_SUBJECT)
-    missing = [(n, t) for n, t in [(f.treatment.label, f.treatment.label), *((s.term, s) for s in f.treatment.synonyms)]
-               if not builtin.search(n)]
+    missing = [(n, t) for n, t in names if not builtin.search(n)]
     if not missing:
         return None, []
     bodies = [re.escape(" ".join(n.split())).replace(r"\ ", r"\s+") for n, _ in missing]
     new = r"(?<!\w)(?:" + "|".join(bodies) + r")(?!\w)"
-    keep = f.treatment.role in regex_terms.CONDITIONS   # the built-in subject is about the built-in treatment
+    keep = role in regex_terms.CONDITIONS   # the built-in subject is about the built-in treatment
     subject = regex_terms.CLAIM_SUBJECT + "|" + new if keep else "(?i)" + new
     return subject, [("subject", t) for _, t in missing]
+
+
+def decided_names(p: dict[str, Any], f: Frame) -> tuple[list[tuple[str, Names]], list[tuple[str, bool, Names]]]:
+    """The roles and metrics a protocol mapping decides, with the frame's names behind them: the treatment
+    role takes the frame's treatment names and the control role the control's, whatever their ids; a metric
+    the frame does not have is named by its id with spaces ("f1", "answer accuracy")."""
+    compare = p["synthesis"]["compare"]
+    roles = [(compare["treatment"], _names(f.treatment)), (compare["control"], _names(f.control))]
+    by = {o.canonical: o for o in f.outcomes}
+    outcomes = [(m["canonical"], m["higher_is_better"],
+                 _names(by[m["canonical"]]) if m["canonical"] in by else
+                 [(m["canonical"].replace("_", " "), m["canonical"].replace("_", " "))])
+                for m in p["synthesis"]["metrics"]]
+    return roles, outcomes
+
+
+def sync_regex(p: dict[str, Any], f: Frame) -> list[tuple[str, Any]]:
+    """Set (or remove) the regex steps' `conditions`, `metrics` and `subject` config from the roles and metrics
+    the protocol mapping decides (draft, and freeze after the decisions); returns the names added."""
+    roles, outcomes = decided_names(p, f)
+    out: list[tuple[str, Any]] = []
+    for key, (config, added) in (("conditions", condition_patterns(roles)), ("metrics", metric_patterns(outcomes)),
+                                 ("subject", claim_subject(*roles[0]))):
+        for spec in p["evidence_types"].values():
+            for step in spec.get("extractors", []):
+                if step["name"] not in REGEX[key]:
+                    continue
+                if config is None:
+                    (step.get("config") or {}).pop(key, None)
+                    if "config" in step and not step["config"]:
+                        del step["config"]
+                else:
+                    step.setdefault("config", {})[key] = copy.deepcopy(config)
+        out += added
+    return out
 
 
 def _source(term: FrameTerm | str, owner: Any) -> dict[str, Any]:
@@ -182,19 +225,6 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str) -> tuple[dict[st
         field(f"evidence_types.{name}.extractors", "protocol")
         field(f"evidence_types.{name}.fields", "protocol")
 
-    owners = {r.role: r for r in (t, c)} | {o.canonical: o for o in f.outcomes}
-    for key, (config, added) in (("conditions", condition_patterns(f)), ("metrics", metric_patterns(f)),
-                                 ("subject", claim_subject(f))):
-        if config is None:
-            continue
-        for spec in types.values():
-            for step in spec.get("extractors", []):
-                if step["name"] in REGEX[key]:
-                    step.setdefault("config", {})[key] = copy.deepcopy(config)
-        for path, x in added:
-            owner = owners.get(path.split(".", 1)[-1], t)
-            term(f"regex.{path}", x.term if isinstance(x, FrameTerm) else x, **_source(x, owner))
-
     p["evidence_types"] = types
     syn_t = template["synthesis"]
     p["synthesis"] = {
@@ -206,6 +236,10 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str) -> tuple[dict[st
         "label": copy.deepcopy(syn_t["label"]),
         "flags": copy.deepcopy(syn_t.get("flags", {})),
     }
+    owners = {r.role: r for r in (t, c)} | {o.canonical: o for o in f.outcomes}
+    for path, x in sync_regex(p, f):
+        owner = owners.get(path.split(".", 1)[-1], t)
+        term(f"regex.{path}", x.term if isinstance(x, FrameTerm) else x, **_source(x, owner))
     field("synthesis.compare.treatment", t.source, t.vocab_id)
     field("synthesis.compare.control", c.source, c.vocab_id)
     for n, o in enumerate(f.outcomes):

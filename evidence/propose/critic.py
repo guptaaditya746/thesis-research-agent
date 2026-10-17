@@ -12,6 +12,9 @@ Deterministic (`checks`, also run by freeze on the frozen protocol):
 - `screen_present`: the protocol has a screen with terms;
 - `label_complete`: the label table's last row has no `when` and every earlier row has one;
 - `extractors_registered`: every extractor a cascade or the screen names is registered (evidence/extractors);
+- `regex_matches_enums` (ours, beyond Part E): every condition role and metric canonical the regex steps
+  can emit (their config, else the built-ins) is in the type's enum, and every enum value but `other` has a
+  pattern; freeze refuses a protocol that fails it;
 - `vocabulary_direction` (ours, beyond Part E): no outcome's direction contradicts its vocabulary term's.
 
 LLM checklist (`ambiguous_roles`, `missing_comparator`, `metric_direction`, `scope`): pass or fail, each
@@ -90,6 +93,34 @@ def _coverage(p: Protocol, f: Frame) -> tuple[bool, str]:
     return True, "every frame name is found by the regex patterns and every treatment name holds a screen term"
 
 
+def _regex_enums(p: Protocol) -> tuple[bool, str]:
+    """Every role and canonical a regex step can emit is in its type's enum, and every enum value but
+    `other` has at least one pattern (else the regex step can never find it)."""
+    problems: list[str] = []
+    for type_name, field, key, default, steps in (
+            ("condition", "role", "conditions", regex_terms.CONDITIONS, ("regex_condition", "regex_measurement")),
+            ("metric", "canonical", "metrics", [list(m) for m in regex_terms.METRICS], ("regex_metric", "regex_measurement"))):
+        enum = p.evidence_types[type_name].enum_of(field) if type_name in p.evidence_types else None
+        if enum is None:
+            continue
+        for spec in p.evidence_types.values():
+            for step in spec.extractors:
+                if step.name not in steps:
+                    continue
+                patterns = step.config.get(key, default)
+                emitted = set(patterns) if key == "conditions" else {m[1] for m in patterns}
+                with_pattern = ({k for k, v in patterns.items() if v} if key == "conditions" else emitted)
+                extra = sorted(emitted - set(enum))
+                missing = [v for v in enum if v != "other" and v not in with_pattern]
+                if extra:
+                    problems.append(f"{step.name} can emit {type_name}.{field} {extra}, not in the enum {list(enum)}")
+                if missing:
+                    problems.append(f"{step.name} has no pattern for {type_name}.{field} {missing}")
+    if problems:
+        return False, "; ".join(dict.fromkeys(problems))
+    return True, "the regex steps emit only enum values and have a pattern for each"
+
+
 def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
     """The deterministic checks of a protocol text (and the frame it was made from, when there is one)."""
     out: list[dict[str, Any]] = []
@@ -115,6 +146,8 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
         out.append(_check("terms_cover_synonyms", False, skipped if p is None else "not checked: no frame"))
     else:
         out.append(_check("terms_cover_synonyms", *_coverage(p, f)))
+
+    out.append(_check("regex_matches_enums", *(_regex_enums(p) if p is not None else (False, skipped))))
 
     screen = (raw or {}).get("screen") if isinstance(raw, dict) else None
     out.append(_check("screen_present", bool(screen and screen.get("terms")),
@@ -152,7 +185,7 @@ def _safe(text: str) -> Any:
         return None
 
 
-def run(directory: Path | str, *, model: Model | None = None, alias: str | None = None) -> Path:
+def run(directory: Path | str, *, model: Model | None = None, alias: str | None = None, refresh: bool = False) -> Path:
     """Write DIR/critic.json for DIR/draft.yaml (deterministic checks and one cached model call)."""
     directory = Path(directory)
     frame_path = need(directory, FRAME, "frame")
@@ -165,7 +198,8 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
     user = (f"Question: {f.question}\n\nFrame (treatment, control, outcomes):\n"
             f"{f.model_dump_json(include={'population', 'treatment', 'control', 'outcomes', 'effect_labels'})}\n\n"
             f"Draft protocol:\n{text.strip()}\n")
-    reply, call = ask(directory, "critic", prompt(PROMPT), user, CriticReply, model=model_for(alias, model))
+    reply, call = ask(directory, "critic", prompt(PROMPT), user, CriticReply, model=model_for(alias, model),
+                       refresh=refresh)
     llm = [{"id": c, "kind": "llm", "ok": getattr(reply, c).ok, "message": getattr(reply, c).message} for c in LLM_CHECKS]
     return write_json(directory / CRITIC, {"draft_sha256": sha(draft_path), "frame_sha256": sha(frame_path),
                                            "ok": all(c["ok"] for c in found), "checks": found + llm,
