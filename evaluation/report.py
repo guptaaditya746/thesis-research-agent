@@ -172,7 +172,28 @@ def render(report: dict[str, Any]) -> str:
         out += ["## Re-execution stability", "", table(report["stability"]["rows"], ["extractor", "calls", "identical",
                                                                                   "identical_share", "item_stability"]),
                 ""]
+    if report.get("funnel"):
+        out += render_funnel(report["funnel"])
     return "\n".join(line.rstrip() for line in out)
+
+
+def render_funnel(funnel: dict[str, Any]) -> list[str]:
+    """The `## Funnel` section (Part D): cost per document, where the funnel stopped, the screen's scores."""
+    means = funnel.get("per_document") or {}
+    rows = [{"measure": k, "per_document": means.get(k)} for k in ("calls", "model_calls", "input_tokens", "output_tokens")]
+    stops = [{"stopped_after": k, "documents": v} for k, v in (funnel.get("stop_positions") or {}).items()]
+    out = ["## Funnel", "", f"Strategy `{funnel.get('strategy')}` over {funnel.get('documents')} documents "
+           "(docs/evidence-system.md Part D). Cost per document from the extractor_call events (tokens need the "
+           "record cache); `stopped_after` is the cascade position after which the study was complete, `exhausted` "
+           "when the funnel ran out of positions (every document in `all` mode), `skipped` a screened-out document.",
+           "", table(rows, ["measure", "per_document"]), "", table(stops, ["stopped_after", "documents"]), ""]
+    screen = funnel.get("screen")
+    if screen:
+        out += ["Screen (the decision `relevant` against the ground truth's `relevant`; recall is the share of the "
+                "relevant papers kept):", "",
+                table([screen], ["documents", "tp", "fp", "fn", "tn", "precision", "recall"]), "",
+                "Screened out wrongly: " + (", ".join(screen.get("screened_out_wrongly") or []) or "none"), ""]
+    return out
 
 
 def write_pair(obj: dict[str, Any], markdown: str, out: Path, name: str) -> tuple[Path, Path]:
@@ -208,10 +229,14 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
         level = corpus_level(report)
         a = _overall((report.get("extraction") or {}).get("rows"), evidence_type="all", level="all")
         b = _overall((report.get("integration") or {}).get("rows"), level="all")
+        funnel = report.get("funnel") or {}
+        per_doc, screen = funnel.get("per_document") or {}, funnel.get("screen") or {}
         for system in report.get("synthesis") or []:
             c = _overall(system["rows"], level="all")
             engine = system["system"] == ENGINE
             rows.append({"level": level, "corpus_id": report["corpus_id"], "system": system["system"],
+                         "run_id": report.get("run_id") if engine else None,
+                         "strategy": funnel.get("strategy") if engine else None,
                          "extraction_f1": a.get("f1") if engine else None,
                          "span_accuracy": a.get("span_accuracy") if engine else None,
                          "association_accuracy": b.get("association_accuracy") if engine else None,
@@ -219,8 +244,13 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "direction_accuracy": c.get("direction_accuracy"),
                          "accuracy_answered": c.get("accuracy_answered"), "completeness": c.get("completeness"),
                          "traceability": None if engine else c.get("traceability"),  # the engine's spans: A
-                         "label_correct": system["label_correct"]})
-    rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"]))
+                         "label_correct": system["label_correct"],
+                         # the funnel (Part D): an `all` and a `gaps` run of one protocol stand in two rows
+                         "calls_per_document": per_doc.get("calls") if engine else None,
+                         "tokens_per_document": per_doc.get("tokens") if engine else None,
+                         "screen_precision": screen.get("precision") if engine else None,
+                         "screen_recall": screen.get("recall") if engine else None})
+    rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"], r.get("strategy") or "", r.get("run_id") or ""))
     return {"rows": rows, "intervals": compare_intervals(reports)}
 
 
@@ -248,9 +278,9 @@ def _strip(row: dict[str, Any] | None) -> dict[str, Any] | None:
     return {k: row.get(k) for k in ("point", "low", "high", "method")} if row else None
 
 
-COMPARE_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "span_accuracy", "association_accuracy",
+COMPARE_COLUMNS = ["level", "corpus_id", "system", "strategy", "extraction_f1", "span_accuracy", "association_accuracy",
                    "true_pair", "direction_accuracy", "completeness", "accuracy_answered", "traceability",
-                   "label_correct"]
+                   "label_correct", "calls_per_document", "tokens_per_document", "screen_precision", "screen_recall"]
 COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "direction_accuracy", "engine_minus_system"]
 
 

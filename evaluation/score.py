@@ -92,6 +92,19 @@ correct minus baseline correct per study.
 
 Locate recall: a placement is inside the scope when one `locate.json` entry for its paper and its
 fact's evidence type has a scope that contains it (`evidence.contract.Scope.contains`).
+
+Funnel (`score_funnel`, Part D, our addition; None for a run without funnel.json): per document, from the
+extractor_call events, the calls, model calls and tokens (the record cache's usage, else null) it cost, and
+from funnel.json whether the screen rejected it, whether it was skipped and the position the funnel stopped
+after; the means per document; the stop-position histogram (`stopped_after` as a string, `exhausted` when
+the funnel ran out of positions without a direction, `skipped` for a screened-out document that got no
+extraction; in `all` mode every document is `exhausted`, since the funnel never stops a run there); and,
+when the run has `screen` events, screening precision and recall of the decision "relevant" against the
+ground truth's `relevant` (F2; a study without the key is relevant): a paper the screen keeps counts as
+positive, so recall is the share of the truly relevant papers kept (a screened-out relevant paper is a lost
+study) and precision the share of the kept papers that are relevant. `evaluate compare` puts
+`calls_per_document`, `tokens_per_document`, `screen_precision` and `screen_recall` beside the headline
+numbers, so an `all` run and a `gaps` run of the same protocol stand in two rows.
 """
 from __future__ import annotations
 
@@ -668,6 +681,66 @@ def score_stability(reexec: Any | None) -> dict[str, Any] | None:
     return out
 
 
+# --- funnel (Part D, our addition) -----------------------------------------------------------------
+
+def score_funnel(truth: GroundTruth, run: Run | None) -> dict[str, Any] | None:
+    """Cost per document, the stop-position histogram and the screen's precision and recall (docstring: Funnel)."""
+    if run is None or run.funnel is None:
+        return None
+    documents = run.funnel.get("documents") if isinstance(run.funnel, dict) else None
+    if not isinstance(documents, dict):
+        return None
+    per_doc: dict[str, Counter[str]] = defaultdict(Counter)
+    tokens_known = run.usage is not None
+    for event in run.events or []:
+        meta = event.get("custom_metadata") if isinstance(event.get("custom_metadata"), dict) else {}
+        document = meta.get("document")
+        if not document:
+            continue
+        ids = [str(i) for i in meta.get("model_calls") or []]
+        per_doc[document].update(calls=1, model_calls=len(ids))
+        for usage in (run.usage.get(i) for i in ids) if tokens_known else ():
+            if usage:
+                per_doc[document].update(input_tokens=usage["input_tokens"], output_tokens=usage["output_tokens"])
+    expected = {s["paper"]: s.get("relevant", True) is not False for s in truth.studies}
+    rows = []
+    stops: Counter[str] = Counter()
+    for document in sorted(documents):
+        entry = documents[document] if isinstance(documents[document], dict) else {}
+        screen = entry.get("screen") if isinstance(entry.get("screen"), dict) else None
+        relevant = None if screen is None else bool(screen.get("relevant"))
+        skipped = bool(entry.get("skipped"))
+        stopped = entry.get("stopped_after")
+        key = "skipped" if skipped else str(stopped) if isinstance(stopped, int) else "exhausted"
+        stops[key] += 1
+        c = per_doc.get(document, Counter())
+        rows.append({"document": document, "level": truth.level_of(document), "expected_relevant": expected.get(document),
+                     "relevant": relevant, "screened": relevant is False, "skipped": skipped, "stop": key,
+                     "calls": c["calls"], "model_calls": c["model_calls"],
+                     "input_tokens": c["input_tokens"] if tokens_known else None,
+                     "output_tokens": c["output_tokens"] if tokens_known else None,
+                     "tokens": c["input_tokens"] + c["output_tokens"] if tokens_known else None})
+    n = len(rows)
+    means = {k: (sum(r[k] for r in rows) / n if n and all(r[k] is not None for r in rows) else None)
+             for k in ("calls", "model_calls", "input_tokens", "output_tokens", "tokens")}
+    screen_score = None
+    if run.screens:
+        decided = {e["custom_metadata"]["document"]: bool(e["custom_metadata"].get("relevant"))
+                   for e in run.screens if isinstance(e.get("custom_metadata"), dict) and e["custom_metadata"].get("document")}
+        scored = [(decided[d], expected[d]) for d in sorted(decided) if d in expected]
+        tp = sum(1 for got, want in scored if got and want)
+        fp = sum(1 for got, want in scored if got and not want)
+        fn = sum(1 for got, want in scored if not got and want)
+        tn = sum(1 for got, want in scored if not got and not want)
+        screen_score = {"documents": len(scored), "tp": tp, "fp": fp, "fn": fn, "tn": tn,
+                        "precision": share(tp, tp + fp), "recall": share(tp, tp + fn),
+                        "screened_out": sorted(d for d, got in decided.items() if not got),
+                        "screened_out_wrongly": sorted(d for d, got in decided.items() if not got and expected.get(d, True))}
+    strategy = ((run.run or {}).get("settings") or {}).get("strategy") or run.funnel.get("strategy")
+    return {"strategy": strategy, "documents": n, "rows": rows, "per_document": means,
+            "stop_positions": dict(sorted(stops.items())), "screen": screen_score}
+
+
 # --- everything ------------------------------------------------------------------------------------
 
 def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: Path | None = None) -> dict[str, Any]:
@@ -690,6 +763,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "locate": score_locate(truth, run.locate), "cascade": score_cascade(m, run.run),
         "extractors": score_extractors(m, run),
         "cost": score_cost(run.run, len(truth.studies)), "stability": score_stability(run.reexec),
+        "funnel": score_funnel(truth, run),
     }
 
 
@@ -700,4 +774,4 @@ def score_answers(corpus: Path, answers: Iterable[Path]) -> dict[str, Any]:
     return {"corpus_id": truth.corpus_id, "levels": truth.levels, "run_id": None, "question": truth.question,
             "extraction": None, "integration": None, "synthesis": systems,
             "intervals": score_intervals(None, systems), "locate": None, "cascade": None, "extractors": None,
-            "cost": None, "stability": None}
+            "cost": None, "stability": None, "funnel": None}

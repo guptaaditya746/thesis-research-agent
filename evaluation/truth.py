@@ -106,7 +106,8 @@ class Run:
 
     `calls` are the ExtractionResults of calls/*.json (sorted by file name), `events` the extractor_call
     records of events.jsonl, `usage` model-call record id -> {input_tokens, output_tokens} from the cache
-    named in run.json (None when there is no cache file)."""
+    named in run.json (None when there is no cache file); `funnel` is funnel.json and `screens` the
+    `screen` events (the funnel, Part D; None without them)."""
     root: Path
     items: list[Item]
     answer: dict[str, Any] | None
@@ -116,6 +117,8 @@ class Run:
     calls: list[dict[str, Any]] | None = None
     events: list[dict[str, Any]] | None = None
     usage: dict[str, dict[str, int]] | None = None
+    funnel: dict[str, Any] | None = None
+    screens: list[dict[str, Any]] | None = None
 
     @classmethod
     def load(cls, root: Path, reexec: Path | None = None) -> Run:
@@ -132,10 +135,11 @@ class Run:
         calls_dir = root / "calls"
         calls = [read_json(p) for p in sorted(calls_dir.glob("*.json"))] if calls_dir.is_dir() else None
         events_file = root / "events.jsonl"
-        events = ([e for e in read_jsonl(events_file) if isinstance(e, dict) and e.get("subtype") == "extractor_call"]
-                  if events_file.is_file() else None)
+        records = [e for e in read_jsonl(events_file) if isinstance(e, dict)] if events_file.is_file() else None
+        events = [e for e in records if e.get("subtype") == "extractor_call"] if records is not None else None
+        screens = [e for e in records if e.get("subtype") == "screen"] if records is not None else None
         return cls(root, items, optional("answer.json"), run, optional("locate.json"), stability, calls, events,
-                   read_usage(run))
+                   read_usage(run), optional("funnel.json"), screens)
 
 
 CACHE_FILE = "extractor_calls.jsonl"   # evidence/rundir.CACHE_FILE: the record cache inside the cache directory
