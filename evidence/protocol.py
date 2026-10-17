@@ -84,13 +84,28 @@ class Locate(Strict):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
+SCREEN_TYPE: EvidenceType = "screen"
+# The one item a screening call returns (contract.Item on the pseudo type `screen`): the decision and why.
+SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False, "required": ["relevant", "reason"],
+                                 "properties": {"relevant": {"type": "boolean", "description": "the paper is one the protocol can use"},
+                                                "reason": {"type": "string", "minLength": 1, "description": "why, in one sentence"}}}
+SCREEN_ROLES = ("evidence",)   # the span: the first matching term (regex) or the model's quote (llm)
+
+
 class Screen(Strict):
-    """Per-document screening before any extraction (Part D): is the paper one the protocol can use at
-    all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest."""
+    """Per-document screening before any extraction (Part D, the funnel; ours): is the paper one the protocol
+    can use at all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest.
+    `spec` is the pseudo evidence type the engine runs the screen calls on, so they are checked, cached and
+    replayed exactly like extractor calls."""
     question: str
     terms: tuple[str, ...] = ()
     extractors: tuple[ExtractorRef, ...] = Field(min_length=1)
     on_fail: Literal["skip", "extract_anyway"] = "skip"
+
+    @property
+    def spec(self) -> EvidenceTypeSpec:
+        return EvidenceTypeSpec(description=self.question, fields=SCREEN_FIELDS, roles=SCREEN_ROLES,
+                                extractors=self.extractors)
 
 
 class Compare(Strict):
@@ -188,6 +203,8 @@ class Protocol(Strict):
 
     @model_validator(mode="after")
     def _consistent(self) -> Protocol:
+        if SCREEN_TYPE in self.evidence_types:
+            raise ValueError(f"evidence_types may not be named {SCREEN_TYPE!r}: it is the funnel's screening pseudo type")
         for name, spec in self.evidence_types.items():
             try:
                 Draft202012Validator.check_schema(spec.fields)

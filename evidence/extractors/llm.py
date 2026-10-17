@@ -88,7 +88,7 @@ class LLMExtractor:
         errors: list[str] = []
         retry_errors: list[str] = []
         for n, (a, b) in enumerate(chunks, 1):
-            prompt = llm_schema.user_prompt(task.document.id, n, len(chunks), a, b, text[a:b], context)
+            prompt = llm_schema.user_prompt(task.document.id, n, len(chunks), a, b, text[a:b], context, task.focus)
             try:
                 reply, call = self._ask(ctx, self.instructions, prompt, self.output_type, self.cfg["max_tokens"])
                 model_calls.append(call)

@@ -25,6 +25,7 @@ from .contract import DocumentRef
 RUN_FILE, PROTOCOL_FILE, EVENTS_FILE = "run.json", "protocol.yaml", "events.jsonl"
 LOCATE_FILE, EVIDENCE_FILE, GRAPH_FILE, ANSWER_FILE = "locate.json", "evidence.jsonl", "graph.json", "answer.json"
 CALLS_DIR, REEXEC_FILE, PROV_FILE = "calls", "reexec.json", "prov.ttl"
+FUNNEL_FILE = "funnel.json"   # the funnel's steps and decisions per document (Part D)
 CACHE_FILE = "extractor_calls.jsonl"
 
 

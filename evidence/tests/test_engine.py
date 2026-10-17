@@ -30,11 +30,13 @@ def test_run_directory_and_answer(protocol_file: Path, corpus: Path, tmp_path: P
     files = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()}
     record = json.loads((root / "run.json").read_text(encoding="utf-8"))
     assert {"run.json", "protocol.yaml", "events.jsonl", "locate.json", "evidence.jsonl", "graph.json",
-            "answer.json"} <= files
+            "answer.json", "funnel.json"} <= files
     assert set(record["outputs"]) == files - {"run.json", "events.jsonl"}
     assert record["mode"] == "run" and record["protocol"]["id"] == "rag-factuality"
-    assert all(e.startswith("regex_") for e in record["extractors"]) and len(record["extractors"]) == 4
-    assert record["cost"]["calls"] == 20 and record["cost"]["model_calls"] == 0
+    # the four regex extractors plus regex_screen (the protocol's screen block, Part D): 5 calls each
+    assert all(e.startswith("regex_") for e in record["extractors"]) and len(record["extractors"]) == 5
+    assert record["cost"]["calls"] == 25 and record["cost"]["model_calls"] == 0
+    assert record["settings"]["strategy"] == "all"
     answer = json.loads((root / "answer.json").read_text(encoding="utf-8"))
     directions = {s["document"]: s["direction"] for s in answer["studies"]}
     assert directions == {"S001": "supports", "S002": "supports", "S003": "contradicts", "S004": "neutral",
@@ -53,6 +55,7 @@ def test_run_directory_and_answer(protocol_file: Path, corpus: Path, tmp_path: P
     assert s5["flags"] == [] and s1["flags"] == []
     assert s4["author_claim"]["direction"] == "no_effect" and s4["author_claim"]["agrees_with_data"] is True
     assert s5["reason"] == {"code": "no_control_condition", "text": "no baseline condition found"} and s5["delta"] is None
+    assert all(s["funnel"] == {"screened": False, "stopped_after": None} for s in answer["studies"])   # `all` mode
     assert verify(root / "events.jsonl", head=record["chain_head"]).ok
     synthesis = next(e for e in lines(root / "events.jsonl") if e["subtype"] == "synthesis")
     assert synthesis["custom_metadata"]["flags"] == {"claim_disagrees": 1, "duplicate": 0, "large_effect": 0}
@@ -87,7 +90,7 @@ def test_replay_reproduces_every_output_hash(protocol_file: Path, corpus: Path, 
     new, report = replay(root)
     assert report == {"ok": True, "mismatched": [], "source_run": root.name, "replay_run": new.name}
     assert json.loads((new / "run.json").read_text())["mode"] == "replay"
-    assert json.loads((new / "run.json").read_text())["cost"]["cached_calls"] == 20
+    assert json.loads((new / "run.json").read_text())["cost"]["cached_calls"] == 25
 
 
 def test_replay_fails_on_a_cache_miss(protocol_file: Path, corpus: Path, tmp_path: Path) -> None:
@@ -109,9 +112,10 @@ def test_reexec_of_regex_is_identical(protocol_file: Path, corpus: Path, tmp_pat
     root = run_regex(protocol_file, corpus, tmp_path / "runs")
     new = reexec(root)
     report = json.loads((new / "reexec.json").read_text())
-    assert report["totals"] == {"identical": 20}
+    assert report["totals"] == {"identical": 25}
     assert all(c["output_identical"] for c in report["calls"])
-    assert set(report["summary"]) == {"regex_condition", "regex_metric", "regex_measurement", "regex_author_claim"}
+    assert set(report["summary"]) == {"regex_condition", "regex_metric", "regex_measurement", "regex_author_claim",
+                                      "regex_screen"}
     assert all(s["identical"] == s["calls"] == 5 for s in report["summary"].values())
     one = reexec(root, "regex_measurement")
     assert json.loads((one / "reexec.json").read_text())["extractor"] == "regex_measurement"

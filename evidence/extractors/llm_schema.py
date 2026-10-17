@@ -13,7 +13,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, create_model
 
-from ..contract import ITEM_PREFIX, Item
+from ..contract import ITEM_PREFIX, Focus, Item
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 SCALARS: dict[str, Any] = {"string": str, "number": float, "integer": int, "boolean": bool}
@@ -90,13 +90,22 @@ def local_ids(context: list[Item]) -> dict[str, Item]:
     return out
 
 
+def focus_paragraph(focus: Focus) -> str:
+    """The "Focus" paragraph of a targeted task (the funnel, Part D): what is still missing and what was
+    found; the instructions (the prompt file) stay as they are, so the extractor id does not change."""
+    have = "; ".join(f"{k} found: {', '.join(v) if v else 'none'}" for k, v in sorted(focus.have.items()))
+    return f"Focus (gap {focus.gap}): {focus.want} ({have})."
+
+
 def user_prompt(document: str, part: int, parts: int, start: int, end: int, chunk: str,
-                context: dict[str, Item]) -> str:
+                context: dict[str, Item], focus: Focus | None = None) -> str:
     lines = [f"Paper {document}, part {part} of {parts} (characters {start}-{end})."]
     if context:
         lines.append("Context (items found earlier in this paper; link to them by id):")
         for local, item in context.items():
             fields = json.dumps(item.fields, ensure_ascii=False, sort_keys=True)
             lines.append(f"- {local} ({item.evidence_type}): {fields}")
+    if focus is not None:
+        lines.append(focus_paragraph(focus))
     lines += ["Text:", "<<<", chunk, ">>>"]
     return "\n".join(lines)

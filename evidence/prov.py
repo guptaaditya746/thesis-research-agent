@@ -11,6 +11,12 @@
   generating activity per entity, so the calls are linked through the merge, not as generators.
 - The answer is a prov:Entity `wasGeneratedBy` the synthesis activity and `wasDerivedFrom` every item it
   counted, so a number in the answer walks back to the table cell it came from.
+- The funnel (Part D): a screening call is an `extractor_call` event like any other, so it is exported as a
+  prov:Activity that `used` the document and `wasAssociatedWith` its extractor with no special case; the
+  `screen` decision event is an activity that `used` the document, `wasAssociatedWith` the extractor that
+  decided, and carries `ev:relevant` and `ev:reason`. The `completeness` decision needs no triple of its
+  own: it is a pure function of the merged items the merge activities already generated, so its event is
+  exported as a plain activity (subtype, times) like every other record of the chain.
 
 The chain is verified first; a broken chain is not exported. IRIs depend on the run id and the record,
 item and document ids only, so the same run exports the same triples.
@@ -77,12 +83,19 @@ def build(run_dir: Path | str) -> Graph:
         g.add((node, DCTERMS.isPartOf, run))
         g.add((node, PROV.startedAtTime, Literal(event["started_at"], datatype=XSD.dateTime)))
         g.add((node, PROV.endedAtTime, Literal(event["ended_at"], datatype=XSD.dateTime)))
-        if event["subtype"] in ("locate", "extractor_call"):
+        if event["subtype"] in ("locate", "extractor_call", "screen"):
             doc = _iri("document", meta["document"], event["used"][0])
             documents[meta["document"]] = doc
             g.add((doc, RDF.type, PROV.Entity))
             g.add((doc, EV.sha256, Literal(event["used"][0])))
             g.add((node, PROV.used, doc))
+        if event["subtype"] == "screen":
+            g.add((node, EV.relevant, Literal(bool(meta["relevant"]))))
+            g.add((node, EV.reason, Literal(meta["reason"])))
+            if meta.get("extractor"):
+                g.add((node, PROV.wasAssociatedWith, _iri("extractor", meta["extractor"])))
+            for call in meta.get("calls") or []:
+                g.add((node, PROV.wasInformedBy, act(call)))
         if event["subtype"] == "extractor_call":
             g.add((node, PROV.used, protocol))
             g.add((node, PROV.wasAssociatedWith, _iri("extractor", event["agent_id"])))

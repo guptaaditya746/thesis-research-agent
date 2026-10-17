@@ -15,13 +15,15 @@ from agent.canonical import canonical_bytes, sha256_hex
 
 Kind = Literal["regex", "model", "llm", "agent"]
 Determinism = Literal["exact", "near_exact", "variable"]
-EvidenceType = Literal["condition", "metric", "measurement", "author_claim"]
+# `screen` is the pseudo evidence type of the funnel's screening calls (docs/evidence-system.md Part D, ours):
+# one item {relevant, reason} per call, checked, cached and replayed like any call; never an evidence item.
+EvidenceType = Literal["condition", "metric", "measurement", "author_claim", "screen"]
 Status = Literal["ok", "partial", "error"]
 RejectReason = Literal["empty_quote", "not_found", "ambiguous", "partial_number", "schema", "out_of_scope",
                        "dangling_link"]
 CoverageStatus = Literal["found", "none", "skipped", "error"]
 
-ITEM_PREFIX = {"condition": "c", "metric": "k", "measurement": "m", "author_claim": "a"}
+ITEM_PREFIX = {"condition": "c", "metric": "k", "measurement": "m", "author_claim": "a", "screen": "s"}
 
 
 def digest(obj: Any) -> str:
@@ -76,8 +78,22 @@ class Budget(Frozen):
     tokens: int | None = None
 
 
+class Focus(Frozen):
+    """What a targeted task of the funnel (Part D, `gaps`) still needs: the synthesis reason code of the gap,
+    what was found so far (`have`: condition roles and canonical metrics), and the request in words (`want`,
+    engine.focus_for), which the LLM extractor appends to its prompt and the agentic brief adds to its scope."""
+    gap: str
+    have: dict[str, list[str]]
+    want: str
+
+
 class ExtractionTask(Frozen):
-    """One request to an extractor (contract section 4). The extractor receives nothing else."""
+    """One request to an extractor (contract section 4). The extractor receives nothing else.
+
+    `focus` is part of `task_sha256` (it changes what the extractor is asked), so a targeted call and the
+    untargeted call on the same document are different cache entries. Adding the field changed the hash of
+    every task, targeted or not; no live record cache existed before the funnel was built (17 Oct), so no
+    record was invalidated by it."""
     protocol: ProtocolRef
     evidence_type: EvidenceType
     field_schema_sha256: str
@@ -85,6 +101,7 @@ class ExtractionTask(Frozen):
     scope: Scope = Scope()
     context: tuple[str, ...] = ()          # item ids from earlier phases the extractor may use
     budget: Budget | None = None           # agentic extractors only
+    focus: Focus | None = None             # the funnel's targeted tasks only (Part D)
 
     @property
     def task_sha256(self) -> str:

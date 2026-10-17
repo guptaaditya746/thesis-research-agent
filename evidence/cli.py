@@ -1,14 +1,16 @@
 """`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain.
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
-                 [--extractors regex-only|llm-only|cascade] [--import MODULE] [--run-id ID]
+                 [--extractors regex-only|llm-only|cascade] [--strategy all|gaps] [--import MODULE] [--run-id ID]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
 
-`--extractors regex-only` needs no model. LLM extractors reach LiteLLM through gold/llm.openai_model, which
+`--extractors regex-only` needs no model. `--strategy gaps` is the funnel (docs/evidence-system.md Part D):
+screen, then escalate only the gaps; `all` (default) runs every extractor on every document and records the
+screen decision. LLM extractors reach LiteLLM through gold/llm.openai_model, which
 reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
 and both baselines) is the alias of the LLM and agentic extractors. `protocol check` validates a protocol file
 and prints {id, version, sha256, phases, extractors per type}; the proposal flow (docs/evidence-system.md
@@ -43,6 +45,8 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--model", default=DEFAULT_MODEL,
                    help=f"model alias of the LLM and agentic extractors (default {DEFAULT_MODEL}; overrides the protocol)")
     r.add_argument("--extractors", default="cascade", choices=["cascade", "regex-only", "llm-only"])
+    r.add_argument("--strategy", default="all", choices=["all", "gaps"],
+                   help="all: every extractor on every document (default); gaps: the funnel, escalate only the gaps")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
     r.add_argument("--run-id")
     r.add_argument("--retry-errors", action="store_true", help="run cached error results again")
@@ -75,7 +79,8 @@ def _dispatch(args: argparse.Namespace) -> int:
     if args.command == "run":
         from .engine import run
         root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
-                   model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors)
+                   model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+                   strategy=args.strategy)
         record = read_json(root / RUN_FILE)
         answer = read_json(root / "answer.json")
         print(json.dumps({"run": str(root), "label": answer["label"], "counts": answer["counts"],

@@ -13,7 +13,7 @@ import pytest
 from evidence import engine, extractors
 from evidence.replay import reexec, replay
 
-from .conftest import context_id, provider_of, scripted
+from .conftest import context_id, provider_of, screen_yes, scripted
 
 EXTRA: dict[str, Any] = {"on": False}
 
@@ -22,6 +22,8 @@ def s001(evidence_type: str, doc: str, prompt: str) -> dict[str, Any]:
     """S001 as a careful reader would extract it, plus one fabricated quote; nothing for the others."""
     if evidence_type == "retry":
         return {"quotes": [{"id": "q1", "quote": "an accuracy of 99% that is not in the paper"}]}
+    if evidence_type == "screen":
+        return screen_yes(prompt)
     if doc != "S001":
         return {"items": []}
     if evidence_type == "condition":
@@ -86,7 +88,7 @@ def test_cache_hit_costs_no_model_call_and_replay_needs_no_model(protocol_file: 
     second = cascade(protocol_file, corpus, tmp_path, calls)
     assert len(calls) == made
     cost = json.loads((second / "run.json").read_text())["cost"]
-    assert cost["cached_calls"] == cost["calls"] == 40 and cost["made_model_calls"] == 0
+    assert cost["cached_calls"] == cost["calls"] == 50 and cost["made_model_calls"] == 0   # 40 extraction + 10 screen calls
     assert json.loads((first / "run.json").read_text())["outputs"] == json.loads((second / "run.json").read_text())["outputs"]
     _, report = replay(first)        # replay is given no model at all
     assert report["ok"]
@@ -100,7 +102,7 @@ def test_reexec_counts_differences(protocol_file: Path, corpus: Path, tmp_path: 
     calls: list[str] = []
     root = cascade(protocol_file, corpus, tmp_path, calls)
     same = json.loads((reexec(root, provider=provider_of(scripted(s001, calls))) / "reexec.json").read_text())
-    assert same["totals"] == {"identical": 40}
+    assert same["totals"] == {"identical": 50}   # the two screen calls per document re-execute identically too
     EXTRA["on"] = True
     try:
         changed = reexec(root, "llm_measurement", provider=provider_of(scripted(s001, calls)))

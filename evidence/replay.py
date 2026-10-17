@@ -30,7 +30,7 @@ OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_mis
 def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | str | None) -> Settings:
     s = record["settings"]
     return Settings(corpus=str(corpus or s["corpus"]), cache=str(cache or s["cache"]), selection=s["selection"],
-                    model=s.get("model"), imports=list(s.get("imports") or []))
+                    model=s.get("model"), imports=list(s.get("imports") or []), strategy=s.get("strategy") or "all")
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,

@@ -3,8 +3,9 @@
 The agent's prompts are fixed (agent/prompts/system-v2.txt, task-v2.txt) and show it the concept in
 full, so the task travels in the concept: a table with one column per field of the evidence type's
 schema, the paper (the only file in its corpus), the scope, the fields' meaning, the context items it
-may refer to by id, and how to claim. TEMPLATE_VERSION names this wording; it is part of the
-extractor's config, so a change of wording is a new extractor id.
+may refer to by id, how to claim, and (a targeted task of the funnel, Part D) `scope.focus`: what is
+still missing. TEMPLATE_VERSION names this wording; it is part of the extractor's config, so a change
+of wording is a new extractor id (v2: the focus line).
 """
 from __future__ import annotations
 
@@ -14,7 +15,7 @@ from typing import Any
 
 from evidence.contract import EvidenceType, ExtractionTask, Item
 
-TEMPLATE_VERSION = "agentic-task-v1"
+TEMPLATE_VERSION = "agentic-task-v2"
 NOUN = {"condition": "condition", "metric": "metric", "measurement": "measurement", "author_claim": "author claim"}
 WHAT = {
     "condition": "a system or setting the paper compares (for example a model without retrieval, a retrieval-augmented "
@@ -93,6 +94,9 @@ def concept_for(task: ExtractionTask, field_schema: dict[str, Any], links: dict[
     }
     if context:
         scope["earlier_items"] = "items found earlier in this paper, referred to by id: " + describe_context(context)
+    if task.focus is not None:   # the funnel's targeted task: what the earlier extractors left missing
+        have = "; ".join(f"{k} found: {', '.join(v) if v else 'none'}" for k, v in sorted(task.focus.have.items()))
+        scope["focus"] = f"gap {task.focus.gap}: {task.focus.want} ({have})"
     title = f"Every {noun} stated in {file}"
     return {
         "title": title,

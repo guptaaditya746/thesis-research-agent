@@ -100,8 +100,12 @@ def _pair(treatment: list[Item], control: list[Item], spec: Synthesis) -> tuple[
     return None
 
 
-def study(protocol: Protocol, document: str, items: list[Item]) -> tuple[dict[str, Any], list[str]]:
-    """One document's entry and the item ids it rests on."""
+def study(protocol: Protocol, document: str, items: list[Item],
+          preset: dict[str, str] | None = None) -> tuple[dict[str, Any], list[str]]:
+    """One document's entry and the item ids it rests on.
+
+    `preset` is a pre-set reason `{code, text}` for a document the funnel did not extract from (screened out,
+    Part D): the entry is undetermined with that reason, whatever `items` holds (the engine passes none)."""
     spec = protocol.synthesis
     by_id = {i.item_id: i for i in items}
     of = {t: [i for i in items if i.evidence_type == t] for t in ("condition", "metric", "measurement", "author_claim")}
@@ -110,6 +114,9 @@ def study(protocol: Protocol, document: str, items: list[Item]) -> tuple[dict[st
                              "treatment": None, "control": None, "author_claim": None, "reason": None,
                              "flags": [], "duplicate_of": None}
     used: list[str] = []
+    if preset is not None:
+        entry["reason"] = dict(preset)
+        return entry, used
     roles = {c.fields.get("role") for c in of["condition"]}
     question = [m for name in spec.metric_names for m in of["metric"] if m.fields.get("canonical") == name]
     pair = None
@@ -177,12 +184,24 @@ def flag(protocol: Protocol, studies: list[dict[str, Any]]) -> dict[str, list[st
     return found                      # documents in manifest order, like `duplicates` and the groups
 
 
-def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]]) -> tuple[dict[str, Any], list[str]]:
+NO_FUNNEL = {"screened": False, "stopped_after": None}   # a study's `funnel` when the funnel made no decision
+
+
+def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],
+           reasons: dict[str, dict[str, str]] | None = None,
+           funnel: dict[str, dict[str, Any]] | None = None) -> tuple[dict[str, Any], list[str]]:
     """answer.json and the ids of every item it rests on (a duplicate's items included: they are evidence
-    the answer reports, even though the duplicate is not counted)."""
+    the answer reports, even though the duplicate is not counted).
+
+    `reasons`: document -> a pre-set reason (`study`); `funnel`: document -> `{screened, stopped_after}`
+    (Part D): `screened` is true when the screen decided the paper is not relevant, `stopped_after` the
+    cascade position after which the funnel stopped because the study was complete (null in `all` mode,
+    for a screened-out document, and when the gap types' cascades were exhausted). Every study carries
+    the key (`NO_FUNNEL` when the engine gives nothing), so the shape does not depend on the strategy."""
     studies, used = [], []
     for doc in documents:
-        entry, ids = study(protocol, doc, items.get(doc, []))
+        entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc))
+        entry["funnel"] = dict((funnel or {}).get(doc) or NO_FUNNEL)
         studies.append(entry)
         used += ids
     flags = flag(protocol, studies)

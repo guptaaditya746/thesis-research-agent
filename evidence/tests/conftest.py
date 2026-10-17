@@ -92,7 +92,8 @@ Script = Callable[[str, str, str], dict[str, Any]]   # (evidence type, document,
 
 
 def scripted(script: Script, calls: list[str], name: str = "scripted") -> FunctionModel:
-    """A model whose reply is `script(evidence type, document, prompt)`; every prompt is appended to `calls`."""
+    """A model whose reply is `script(evidence type, document, prompt)`; every prompt is appended to `calls`.
+    The funnel's screening call (prompts/screen-v1.md) is passed as evidence type "screen"."""
     def reply(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
         prompt = prompt_of(messages)
         calls.append(prompt)
@@ -100,8 +101,20 @@ def scripted(script: Script, calls: list[str], name: str = "scripted") -> Functi
         doc = re.search(r"Paper (\S+), part", prompt)
         if "Rejected quotes:" in prompt:
             return respond(info, script("retry", doc.group(1) if doc else "", prompt))
-        return respond(info, script(found.group(1) if found else "", doc.group(1) if doc else "", prompt))
+        kind = "screen" if "Screening question:" in (info.instructions or "") else found.group(1) if found else ""
+        return respond(info, script(kind, doc.group(1) if doc else "", prompt))
     return FunctionModel(reply, model_name=name)
+
+
+def paper_text(prompt: str) -> str:
+    """The document text inside a user prompt (between <<< and >>>)."""
+    return prompt.split("<<<\n", 1)[1].rsplit("\n>>>", 1)[0]
+
+
+def screen_yes(prompt: str, reason: str = "the paper compares retrieval with no retrieval") -> dict[str, Any]:
+    """A relevant decision whose quote is the paper's title line (so it anchors)."""
+    title = next(line for line in paper_text(prompt).splitlines() if line.strip()).lstrip("# ").strip()
+    return {"relevant": True, "reason": reason, "quote": title}
 
 
 def provider_of(model: FunctionModel) -> Callable[[str], FunctionModel]:
@@ -118,4 +131,6 @@ def context_id(prompt: str, fragment: str) -> str:
 
 
 def empty(evidence_type: str, doc: str, prompt: str) -> dict[str, Any]:
+    if evidence_type == "screen":
+        return screen_yes(prompt)
     return {"items": []} if evidence_type != "retry" else {"quotes": []}
