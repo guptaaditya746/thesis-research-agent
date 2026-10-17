@@ -1,11 +1,13 @@
 /** The evidence-level pages against the mock backend, whose responses are the real backend's on a world made by the real tools. */
 import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { http, HttpResponse } from "msw"
 import { beforeAll, describe, expect, it } from "vitest"
 
-import type { CorpusDetail, EvRunDetail, ProposalDetail } from "@/api/ev"
+import type { CallDetail, CorpusDetail, EvRunDetail, ProposalDetail } from "@/api/ev"
 import { routes } from "@/app/routes"
 import { evFixture } from "@/mocks/ev"
+import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
 
 const T = { timeout: 15_000 }
@@ -108,6 +110,21 @@ describe("protocol and proposals", () => {
     expect(screen.getByText("changed from the default")).toBeInTheDocument()
   })
 
+  it("a hand-edited decisions.yaml freeze would refuse: the problems and the raw entry, not an error", async () => {
+    const p = evFixture<ProposalDetail>("/api/ev/proposals/rag-factuality")
+    const problem = "min_effect: choice must be an option id (draft, strict) or `custom`, not 5"
+    const edited: ProposalDetail = {
+      ...p, frozen: false, proposal: null, protocol: null, decision_problems: [problem],
+      cards: p.cards.map((c) => (c.id === "min_effect" ? { ...c, decision: null, raw_decision: { card: "min_effect", choice: 5 }, problems: [problem] } : c)),
+    }
+    server.use(http.get("/api/ev/proposals/rag-factuality", () => HttpResponse.json(edited)))
+    renderRoutes(routes, "/proposals/rag-factuality")
+    expect(await screen.findByText("decisions.yaml: freeze would refuse it", {}, T)).toBeInTheDocument()
+    expect(screen.getByRole("list", { name: "Problems of min_effect" })).toHaveTextContent(problem)
+    expect(screen.getByLabelText("raw decision of min_effect")).toHaveTextContent('"choice": 5')
+    expect(screen.getByText("freeze would refuse")).toBeInTheDocument()
+  })
+
   it("a proposal's amendments", async () => {
     const user = userEvent.setup()
     renderRoutes(routes, "/proposals/rag-factuality")
@@ -173,6 +190,28 @@ describe("runs", () => {
     renderRoutes(routes, `${run(`agent-baseline~${MIXED}`)}?tab=trace`)
     expect(await screen.findByRole("list", { name: "Steps" }, T)).toBeInTheDocument()
     await user.click(screen.getAllByText("The agent's answer")[0])
+  })
+
+  it("a fresh re-executed call says it has no record, and an incomplete run says so", async () => {
+    const user = userEvent.setup()
+    const path = `/api/ev/runs/cascade~${EXPLICIT}/calls/t000002`
+    const call = evFixture<CallDetail>(path)
+    server.use(http.get(path, () => HttpResponse.json({ ...call, cached: false, model_calls: [],
+      record_note: "no record of this call: re-executed fresh, and a re-execution stores nothing in the cache" })))
+    renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}/papers/S001`)
+    await user.click(within(await screen.findByRole("table", { name: "Calls" }, T)).getByRole("button", { name: "t000002" }))
+    const sheet = await screen.findByRole("dialog", {}, T)
+    expect(await within(sheet).findByText(/No record of this call: re-executed fresh/, {}, T)).toBeInTheDocument()
+    expect(within(sheet).queryByText(/Model calls/)).not.toBeInTheDocument()
+  })
+
+  it("an incomplete run is marked", async () => {
+    const id = `cascade-gaps~${MIXED}`
+    const detail = evFixture<EvRunDetail>(`/api/ev/runs/${id}`)
+    server.use(http.get(`/api/ev/runs/${id}`, () => HttpResponse.json({ ...detail, complete: false, answer: null, label: null, counts: null })))
+    renderRoutes(routes, run(id))
+    expect(await screen.findByText(/incomplete: no run.json/, {}, T)).toBeInTheDocument()
+    expect(screen.getByText("No answer.json.")).toBeInTheDocument()
   })
 
   it("an unknown run says so", async () => {

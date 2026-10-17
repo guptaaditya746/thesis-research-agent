@@ -97,6 +97,7 @@ function RunView({ run }: { run: EvRunDetail }) {
           {run.selection && <Badge variant="outline">{run.selection}</Badge>}
           {run.strategy && <Badge variant="outline">strategy {run.strategy}</Badge>}
           {run.mode && run.mode !== "run" && <Badge variant="secondary">{run.mode}</Badge>}
+          {!run.complete && <Badge variant="destructive">incomplete: no run.json (crashed or still running); events and calls only</Badge>}
         </div>
       </PageHeader>
       <div className="grid gap-4 lg:grid-cols-2">

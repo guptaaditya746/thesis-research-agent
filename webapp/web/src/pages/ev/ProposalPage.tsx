@@ -85,10 +85,22 @@ function CardView({ card }: { card: CardT }) {
             <Badge variant={d.by === "model" ? "outline" : "secondary"}>decided by {d.by}</Badge>
           ) : <Badge variant="outline">undecided</Badge>}
           {changed && <Badge>changed from the default</Badge>}
+          {card.problems.length > 0 && <Badge variant="destructive">freeze would refuse</Badge>}
         </CardTitle>
         <CardDescription>{card.ask}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
+        {card.problems.length > 0 && (
+          <ul className="space-y-0.5 text-xs text-destructive" aria-label={`Problems of ${card.id}`}>
+            {card.problems.map((p) => <li key={p}>{p}</li>)}
+          </ul>
+        )}
+        {card.raw_decision !== null && card.raw_decision !== undefined && (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">decisions.yaml has, not in a decision's shape:</p>
+            <JsonBlock value={card.raw_decision} className="max-h-32" label={`raw decision of ${card.id}`} />
+          </div>
+        )}
         <KeyValues items={[
           ["sets", <span key="s" className="font-mono text-xs">{(card.sets ?? []).join(", ")}</span>],
           ["model's default", <span key="d"><span className="font-mono">{card.default}</span>{card.rationale ? `: ${card.rationale}` : ""}</span>],
@@ -156,6 +168,12 @@ export default function ProposalPage() {
               <p className="text-xs text-muted-foreground">Only the deterministic checks decide whether the draft is ok; the model's checklist is advice.</p>
             </TabsContent>
             <TabsContent value="cards">
+              {p.decision_problems.length > 0 && (
+                <div role="status" className="mb-3 rounded-md border border-destructive/50 p-3 text-sm">
+                  <p className="font-medium">decisions.yaml: freeze would refuse it</p>
+                  <ul className="mt-1 list-disc pl-5 text-xs">{p.decision_problems.map((x) => <li key={x}>{x}</li>)}</ul>
+                </div>
+              )}
               {p.decided_by && Object.keys(p.decided_by).length > 0 && (
                 <p className="mb-3 text-sm text-muted-foreground">
                   Decided by {Object.entries(p.decided_by).map(([who, cards]) => `${who} (${cards.length})`).join(", ")}.

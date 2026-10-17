@@ -67,8 +67,10 @@ EV=/path/to/ev uv run webapp serve --port 8080   # then http://127.0.0.1:8080 (t
 It reads the layout of `docs/slurm-evidence-runbook.md` under `$EV`: `corpora/`, `runs/<group>/<name>/`
 (engine runs and baseline answers), `scores/`, `proposals/`, the engine's record cache `cache/engine/` and
 the agentic extractor's `agent-work/`; each can be set apart (`CORPORA`, `EV_RUNS`, `SCORES`, `EV_PROPOSALS`,
-`EV_CACHE`, `EV_AGENT_WORK`; protocols from `evidence/protocols/`, `EV_PROTOCOLS`). The earlier pages read
-`RUNS`, `CORPUS`, `GOLD`, `CONCEPTS` as before. A small world made by the real tools with scripted models, to
+`EV_CACHE`, `EV_AGENT_WORK`, which defaults to the agentic extractor's own `EVIDENCE_AGENT_WORK_DIR` when that
+is set; protocols from `evidence/protocols/`, `EV_PROTOCOLS`). The earlier pages read `RUNS`, `CORPUS`, `GOLD`,
+`CONCEPTS` as before: the runbook's `in-job.env` exports `RUNS=$EV/runs`, which the viewer ignores (it reads
+`EV_RUNS`) but the earlier pages take as their batch root, so start the app without it (or unset it). A small world made by the real tools with scripted models, to
 look at offline: `uv run python -m webapp.tests.evidence_world /tmp/ev-world` and `EV=/tmp/ev-world`. The
 frontend (`webapp/web`, React, built into `webapp/web/dist`, which is committed): `uv run --group frontend npm ci`
 (Node from that dependency group), `npm run dev` (Vite, proxies `/api`),

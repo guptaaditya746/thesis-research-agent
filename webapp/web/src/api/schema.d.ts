@@ -1059,6 +1059,11 @@ export interface components {
              */
             cached: boolean;
             /**
+             * Record Note
+             * @description why the cache cannot hold this call (a fresh call of a re-execution)
+             */
+            record_note: string | null;
+            /**
              * Model Calls
              * @default []
              */
@@ -1156,6 +1161,17 @@ export interface components {
             rationale: string | null;
             /** @description the decision of decisions.yaml (or, once frozen, of proposal.json, which records the default beside it) */
             decision: components["schemas"]["Decision"] | null;
+            /**
+             * Raw Decision
+             * @description the card's entry in decisions.yaml as written, when it is not a decision's shape (a hand edit gone wrong)
+             */
+            raw_decision: unknown;
+            /**
+             * Problems
+             * @description what freeze would refuse about this card's decision
+             * @default []
+             */
+            problems: string[];
         } & {
             [key: string]: unknown;
         };
@@ -1718,6 +1734,12 @@ export interface components {
              * @enum {string}
              */
             kind: "engine" | "baseline";
+            /**
+             * Complete
+             * @description engine: run.json is written (else the run crashed or is still running; its events and calls are shown, its answer is not there yet)
+             * @default true
+             */
+            complete: boolean;
             /** System */
             system: string;
             /**
@@ -1816,6 +1838,12 @@ export interface components {
              * @enum {string}
              */
             kind: "engine" | "baseline";
+            /**
+             * Complete
+             * @description engine: run.json is written (else the run crashed or is still running; its events and calls are shown, its answer is not there yet)
+             * @default true
+             */
+            complete: boolean;
             /** System */
             system: string;
             /**
@@ -2678,6 +2706,12 @@ export interface components {
              * @default []
              */
             amendment_log: components["schemas"]["Amendment"][];
+            /**
+             * Decision Problems
+             * @description before freeze: everything freeze would refuse in decisions.yaml (evidence/propose/cards.validate)
+             * @default []
+             */
+            decision_problems: string[];
         };
         /** ProposalSummary */
         ProposalSummary: {

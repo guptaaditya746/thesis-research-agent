@@ -44,7 +44,7 @@ export default function RunsPage() {
                   const c = r.counts
                   return (
                     <TableRow key={r.id}>
-                      <TableCell className="font-mono text-xs"><Link to={`/runs/${encodeURIComponent(r.id)}`} className="hover:underline">{r.group}</Link>{r.mode && r.mode !== "run" && <Badge variant="outline" className="ml-1">{r.mode}</Badge>}</TableCell>
+                      <TableCell className="font-mono text-xs"><Link to={`/runs/${encodeURIComponent(r.id)}`} className="hover:underline">{r.group}</Link>{r.mode && r.mode !== "run" && <Badge variant="outline" className="ml-1">{r.mode}</Badge>}{!r.complete && <Badge variant="destructive" className="ml-1" title="no run.json: crashed or still running">incomplete</Badge>}</TableCell>
                       <TableCell><SystemBadge system={r.system} /></TableCell>
                       <TableCell className="text-xs">{r.selection ?? "—"}</TableCell>
                       <TableCell className="text-xs">{r.strategy ?? "—"}</TableCell>

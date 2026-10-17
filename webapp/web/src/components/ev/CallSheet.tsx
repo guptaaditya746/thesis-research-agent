@@ -81,7 +81,9 @@ function CallBody({ runId, callId }: { runId: string; callId: string }) {
           <JsonBlock value={task} className="mt-1" />
         </details>
       )}
-      {!call.data.cached && c.kind !== "regex" && (
+      {call.data.record_note ? (
+        <p className="text-xs text-muted-foreground">{call.data.record_note[0].toUpperCase() + call.data.record_note.slice(1)}.</p>
+      ) : !call.data.cached && c.kind !== "regex" && (
         <p className="text-xs text-muted-foreground">The record cache ($EV_CACHE) does not hold this call: its model calls cannot be shown.</p>
       )}
       {records.length > 0 && !agentRuns.length && (
