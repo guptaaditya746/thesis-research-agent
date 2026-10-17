@@ -22,8 +22,9 @@ is open.
 **Our additions** (not the supervisor's): the agentic extractor (`evidence/agentic/`), the agent baseline
 (`evaluation/baselines/agent.py`), the locate step and locate recall, the extractor cascade with
 `found_by` and marginal contribution, the provenance and replay lane (hash-chained events, record cache,
-exact replay, re-execution as a stability measurement), the PROV-O export. Planned, also ours: the funnel
-engine and the proposal flow (`docs/STATE.md`).
+exact replay, re-execution as a stability measurement), the PROV-O export, the funnel engine
+(`evidence run --strategy gaps`) and the proposal flow (`evidence propose`, below) with its optional
+vocabulary snapshot (`docs/STATE.md`).
 
 Files and formats: [`docs/evidence-system.md`](docs/evidence-system.md) (Part A the files between the
 packages, Part B the extractor contract). One synthetic corpus end to end, offline (regex extractors, no
@@ -34,6 +35,20 @@ uv run evidence run --protocol evidence/protocols/rag-factuality.yaml --corpus s
     --out runs/evidence --extractors regex-only --run-id demo
 uv run evidence replay runs/evidence/demo                  # rebuilds from the record cache; every output hash must match
 uv run evaluate score --run runs/evidence/demo --corpus synth/examples/rag-demo-explicit --out runs/eval/demo
+```
+
+A protocol proposed from a question (Part E of `docs/evidence-system.md`; frame, critic and cards call the
+model, `orch-model` by default, cached in the proposal directory; nothing runs the result):
+
+```bash
+uv run evidence propose frame --question "Does retrieval-augmented generation improve ...?" \
+    --vocab rag-factuality --out proposals/rag      # frame.json: population, roles, outcomes, sources
+uv run evidence propose draft proposals/rag         # draft.yaml + draft.sources.json, from the example protocol
+uv run evidence propose critic proposals/rag        # critic.json: deterministic checks + LLM checklist
+uv run evidence propose cards proposals/rag         # cards.json + decisions.yaml (edit: choice, reason, by)
+uv run evidence propose freeze proposals/rag        # protocol.yaml (revision 1) + proposal.json
+uv run evidence propose amend proposals/rag --reason "..." [--before-main-run]   # after editing protocol.yaml
+uv run evidence vocab build --name N --source DIR --out evidence/vocab/N.json    # snapshot from local files
 ```
 
 Everything runs through uv (Python 3.13 or later, dependencies pinned in `uv.lock`):

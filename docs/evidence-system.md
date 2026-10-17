@@ -7,8 +7,8 @@ The file formats and the extractor interface of the evidence-level system (`evid
 prefix, so "interfaces section 3" is now **A3** and "contract §10" is **B10**; only cross-references and
 heading prefixes were changed. **Parts C–G** (17 Oct 2026) are the contracts of the realigned plan
 ([`STATE.md`](STATE.md) §5): C protocol version 2 (the synthesis rules in the protocol, built), D the funnel
-engine, E the proposal flow, F the second build (flags, knobs, variants, intervals), G the changes to the
-RAG baseline, the fidelity check and the model choice. Where C changes a shape of Part A, C3 says so;
+engine, E the proposal flow (built 17 Oct; see its "As built"), F the second build (flags, knobs, variants,
+intervals), G the changes to the RAG baseline, the fidelity check and the model choice. Where C changes a shape of Part A, C3 says so;
 Part A itself is left as written.
 
 Attribution: the pipeline (question → hand-written protocol → engine with interchangeable extractors →
@@ -621,6 +621,124 @@ offline by `evidence vocab build` from local downloads (CS-KG 2.0 terms and syno
 metric names, ML-Schema's measurement shape, EXPO's roles; DBLP only for metadata); a small hand-checked
 snapshot for the RAG question is committed. The flow runs without one (sources are then `protocol` or
 `invented`). The evidence graph does not use it (decided 16 Oct).
+
+**As built (17 Oct), where the code deviates from the above:** (`evidence/propose/`, tests
+`evidence/tests/test_propose_*.py`)
+
+- **`version` stays the format; a new `revision` counts amendments.** `version` is the protocol *format*
+  (2 since Part C; a test asserts the shipped protocol is version 2), so `amend` does not bump it. The
+  protocol gains an optional `revision` (`evidence/protocol.py`, from 1): freeze writes `revision: 1` right
+  after `version`, each amendment `+ 1`. A protocol without `revision` hashes exactly as before (the field is
+  left out of the sha256 when absent), so no recorded protocol hash changed. `amendments.jsonl` lines are
+  `{revision, sha256, amends_sha256, reason, impact, before_main_run, at}`: `revision` where the table says
+  `version`, plus `sha256` of the new revision. `evidence protocol check` prints `revision`.
+- **Directory and files.** One directory per proposal (`--out DIR`; the protocol id is DIR's name as a
+  slug). Beside the files of the table: `cache.jsonl` (the record cache of the model steps),
+  `protocol.v<N>.yaml` (a copy of every frozen and amended revision; `amend` compares the edited
+  `protocol.yaml` with the last one). Every later step records the sha256 of the inputs it read
+  (`draft.sources.json.frame_sha256`, `critic.json.draft_sha256`, `cards.json.draft_sha256`), and a step
+  refuses an input that changed after it was read ("run draft again"); freeze refuses a directory that is
+  already frozen (changes then go through `amend`). Refusals are `ProposalError`, exit 2.
+- **Model calls.** frame, critic and cards make one call each through `gold.llm.structured` (temperature 0,
+  seed 0, thinking off), cached in `DIR/cache.jsonl` under `gold.llm.cache_key({step, prompt_sha256 (the
+  instructions and the output schema), model identity (gold.llm.model_identity: the pinned weights of
+  orch-model), input_sha256 (the user prompt), settings})`; a rerun with the same inputs makes no call.
+  Each result file has `call: {step, model, prompt_sha256, cache_key, cached}`. Default model `orch-model`
+  (`--model` on the three steps), as for the extractors. Prompts `prompts/{frame,critic,cards}-v1.md`
+  (read with LF line ends, so their hash is the same on every checkout).
+- **The frame.** `{question, vocabulary: {name, sha256, path} | null, call, created, population:
+  {description, screening_question, terms}, treatment, control: {role, label, definition, synonyms},
+  outcomes: [{canonical, label, higher_is_better, fraction, synonyms}], effect_labels: [{value,
+  direction}]}`. The population carries the screening question and the screen terms (the frame decides the
+  screen; a separate list because a screen term like "retrieval" would be a wrong condition synonym), and
+  each outcome says whether it is a fraction (the draft puts the [0, 1] bound on those). **The source of
+  every entry is the code's lookup, not the model's claim**: a name that is a label or synonym of a
+  vocabulary term (case, hyphens and spacing ignored; outcomes against `metric` terms, roles against
+  `condition` and `method` terms) is `ontology` with the term's id, else `invented`. A matched term's other
+  synonyms (`vocab_synonyms`) and direction (`vocab_higher_is_better`) are recorded as evidence beside the
+  entry, *not* added to it, because a synonym the regex extractors do not know changes the draft's patterns.
+  The person may edit frame.json; `draft` validates it (`Frame`, unknown keys refused).
+- **The draft** (deterministic, `--template`, default the example protocol). From the template: the
+  evidence types' schemas, span roles, links, context, merge keys and cascades, locate, the screen's
+  extractors and `on_fail`, `min_effect`, pairing, label table and flags. From the frame: screen question
+  and terms, the role enum and `compare`, the canonical enum and `metrics` (frame order is priority), the
+  measurement bound on fraction outcomes, the author-claim enum and `claim_map`, the descriptions, and the
+  bm25 `query` terms (the frame's names plus fixed type words per evidence type, `draft.TYPE_WORDS`). The
+  regex steps get a `conditions` / `metrics` / `subject` config **only where the built-in patterns
+  (`evidence/extractors/terms.py`) miss a frame name** under its role or canonical: the missing names are
+  added as word-bounded patterns, and for a role or metric the built-ins do not know at all the config holds
+  patterns from the frame's names only (built-in metric patterns of a canonical the frame does not name are
+  dropped, since their items would fail the enum). The RAG frame therefore drafts the hand-written cascades
+  without any config. `draft.sources.json`: `{frame_sha256, template: {path, sha256}, vocabulary,
+  fields: [{path, source, vocab_id}], terms: [{path, term, source, vocab_id}]}`; a metric direction is
+  `ontology` only when the vocabulary term has the same direction. The question itself is the input and has
+  no source entry. The author-claim regex's verbs stay the built-in ones (about accuracy and hallucination).
+- **The critic.** Deterministic checks as listed, defined as: `parses` (`protocol.parse`);
+  `outcomes_complete` (every frame outcome is a question metric with the same direction); `terms_cover_synonyms`
+  (the effective regex patterns, config else built-in, find every treatment and control name under the
+  protocol's compare role and every outcome name under its canonical, using the extractors' own
+  `terms.find_all`, and every treatment name holds a screen term); `screen_present` (a screen with terms);
+  `label_complete` (exactly one row without `when`, the last; read from the raw YAML so it reports even when
+  the protocol does not parse); `extractors_registered` (`evidence.extractors.names()`, so modules loaded by
+  `evidence run --import` count as unregistered); plus **`vocabulary_direction`** (ours: no outcome's
+  direction contradicts its vocabulary term's). LLM checklist `ambiguous_roles`, `missing_comparator`,
+  `metric_direction`, `scope`, each `{ok, message}`. `critic.json.ok` is the deterministic checks only; the
+  checklist is advice and blocks nothing.
+- **Cards.** `cards.yaml` holds the eight cards (ids `screen`, `roles`, `metrics`, `min_effect`,
+  `pairing`, `label`, `cascade`, `locate`) with what each sets and the fixed options of the enumerable ones
+  (`min_effect` 0.005/0.01/0.02, pairing table-first or order-only, label table "any evidence" or "two
+  studies", locate exhaustive or bm25); `cards.py` holds per card the value's schema and how it is read from
+  and written to a protocol. Options of a card: `draft` (the draft's value), the fixed options that differ
+  from it (an equal one is named in the draft option's summary), for `cascade` two made from the draft
+  (`gaps`: same cascades, strategy gaps; `with_agentic`: `agentic` last in every type), and `model` when the
+  model proposes its own value (typed by the card's schema). The model's reply names a default per card
+  with a rationale; a default naming no option falls back to `draft` and the rationale says so. A card's
+  vocabulary evidence is the frame's matches behind its values. **The funnel strategy is not a protocol key**
+  (Part D adds none): the cascade card's `strategy` goes to `proposal.json.run_settings` as the recommended
+  `evidence run --strategy`; the draft's own value is `all`, the engine's default. Rerunning `cards` refuses
+  to overwrite a `decisions.yaml` a person has edited.
+- **Decisions.** `decisions.yaml` is `{decisions: [{card, choice, reason, by}]}`, prefilled with the model's
+  default per card, `reason: "default: <rationale>"`, `by: model`. **Freeze accepts untouched defaults** and
+  records `by` per decision and `decided_by: {model: [cards], <person>: [cards]}`, so model and human
+  decisions stay apart. Refused (all problems listed at once, nothing written): a missing or blank `reason`
+  ("a decision without a reason is refused") or `by`; a card decided twice or not at all; an unknown card;
+  **a choice that is no option of the card: refused, unless it is `custom` with a `value` in the card's
+  shape** (validated by the card's schema); a `value` beside a non-custom choice; a choice other than the
+  model's default still marked `by: model` (who changed it must say so). Decisions are applied in card
+  order; changing the roles renames the keys of explicit regex `conditions` configs; changing the metrics
+  sets the canonical enum and keeps the measurement bound on the metrics still named.
+- **Freeze** writes `protocol.yaml` (a header comment, the applied draft with `revision: 1`) only if it
+  validates as `evidence protocol check` validates, plus `protocol.v1.yaml` and `proposal.json`: `{proposal,
+  question, created, protocol: {file, id, version, revision, sha256}, vocabulary: {name, sha256} | null,
+  models: {frame, critic, cards}, prompts: {frame, critic, cards} (prompt sha256), inputs: {frame, draft,
+  critic, cards, decisions sha256, template}, run_settings, decided_by, decisions: [{card, choice, value,
+  default, reason, by}], checks (the deterministic checks on the frozen protocol), frame, sources, critic}`.
+  The frozen checks are recorded, not enforced: only what `protocol check` refuses stops a freeze.
+- **Amend** compares the parsed protocols without `revision`: dicts key by key, anything else whole (a
+  list is one value), so the impact is a list of key paths such as `synthesis.min_effect` or
+  `evidence_types.author_claim.extractors`, in the protocol's key order. The `revision:` line is rewritten in
+  place (added after `version:` if the person removed it), so the person's layout and comments survive.
+  Refused: an empty reason, no change, an edit that does not validate, a directory not frozen. The
+  `--protocol P` form (amend a protocol outside a proposal directory) is not built: it has no frozen base to
+  compare with.
+- **Vocabulary.** `evidence vocab build --name N --source DIR --out FILE` reads `DIR/sources.json` (`[{name,
+  version, url, file}]`) and per source a `.json` list of terms or a `.csv` (`label,synonyms,kind,
+  higher_is_better[,id]`, synonyms `;`-separated); ids default to `<source>:<label slug>`; duplicate ids are
+  refused; terms are sorted by id, synonyms deduplicated in order (the label is not its own synonym), so the
+  same files give the same bytes. `sha256` = sha256 of the canonical JSON (`agent/canonical.py`: sorted
+  keys, no whitespace, UTF-8) of the snapshot without its `sha256` key; `vocab.load` refuses a file whose
+  content does not match. No network access anywhere. **The committed `evidence/vocab/rag-factuality.json`
+  (15 terms: RAG, closed-book, open-book, dense and sparse retrieval, reranking, factual accuracy,
+  hallucination rate, exact match, F1, accuracy, FActScore, latency, BLEU, ROUGE-L) is hand-written** from
+  `evidence/vocab/sources/rag-factuality/` (one source `hand`, version 2026-10-17, no url) and built with the
+  command; it was *not* built from CS-KG, Papers with Code, ML-Schema or EXPO downloads, none of which were
+  fetched. A build from those downloads needs them converted to the input format above.
+- **What test (1) compares**: the frozen protocol of the RAG question (scripted frame, critic and cards
+  replies; every card's default `draft`) and `evidence/protocols/rag-factuality.yaml`, both parsed, without
+  `id` and `revision`, without free text (every `description`, inside field schemas too, and the screening
+  question), with the screen terms as a set and the bm25 `query` lists left out; the query tokens of the
+  hand-written protocol must be a subset of the frozen one's per type. Everything else (field schemas and
+  enums, bounds, cascades, locate, screen extractors, the whole synthesis block) is equal.
 
 # Part F. Second build (ev2): flags, benchmark knobs, counterfactual variants, intervals, benchmark records
 

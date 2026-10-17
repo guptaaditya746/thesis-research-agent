@@ -58,7 +58,8 @@ Built (14–15 Oct):
 - The details of the extractor contract (spans checked in the document, recorded coverage, extractor ids from
   code and config hashes; Part B) and the hard rule that no system under test reads the ground truth.
 
-Planned (decided 16 Oct, §4): the funnel engine, the proposal flow, the optional vocabulary snapshot.
+Built 17 Oct (decided 16 Oct, §4): the funnel engine (Part D), the proposal flow with the optional
+vocabulary snapshot (Part E). Planned: none beyond the order of work (§5).
 
 ## 3. Research questions (implicit in the supervisor's text)
 
@@ -96,7 +97,7 @@ He wrote no numbered research questions. Read from his text:
 2. The conflict fixes (RAG baseline, fidelity check, attribution). **Done 17 Oct** (Part G).
 3. Finish ev2. **Done 17 Oct** (Part F).
 4. Funnel engine. **Done 17 Oct** (Part D).
-5. Proposal flow.
+5. Proposal flow. **Done 17 Oct** (Part E).
 6. Codex runbook and the live Slurm run.
 7. Web app rebuild.
 8. The 337-paper check.
@@ -105,7 +106,7 @@ He wrote no numbered research questions. Read from his text:
 ## 6. What exists
 
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models only
-(1156 passed, 1 skipped in WSL, 17 Oct), **not yet run against live models**. The runbook for the first live run is
+(1207 passed, 1 skipped in WSL, 17 Oct, with the proposal flow), **not yet run against live models**. The runbook for the first live run is
 [`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (not run; written before the 16 Oct decisions,
 see §7).
 
@@ -116,6 +117,7 @@ see §7).
 | Extractor library | built | `evidence/extractors/` (regex and single-call LLM per evidence type), `evidence/agentic/`; contract `evidence/contract.py` (Part B) |
 | Provenance and replay (ours) | built | `evidence/engine.py`, `replay.py`, `prov.py` |
 | Funnel engine (ours) | built 17 Oct (Part D) | `evidence run --strategy all\|gaps`: the protocol's `screen` cascade (`extractors/screen.py`: `regex_screen` on the terms, `llm_screen` on the first 12k characters) decides per paper; in `gaps` the cheap position of every type runs first, the completeness check is `synthesis.study()`, and only the gap's types escalate per round to the next position with a targeted `focus` on the task; `funnel.json`, `screen`/`completeness` events, `answer.json` `funnel` per study; `evaluate` reports calls per document, stop positions and screen precision/recall |
+| Proposal flow (ours) | built 17 Oct (Part E); tested with scripted models only | `evidence propose frame/draft/critic/cards/freeze/amend` (`evidence/propose/`): question → `frame.json` (one model call; each entry's source looked up in the vocabulary: ontology or invented) → `draft.yaml` from the example protocol with `draft.sources.json` (ontology, protocol, invented) → `critic.json` (deterministic checks and an LLM checklist) → `cards.json` with the eight fixed choice points and `decisions.yaml` prefilled with the model's defaults (`by: model`), which the person edits (choice, reason, by; no reason is refused) → `protocol.yaml` (`revision: 1`) and `proposal.json` → `amend` (revision + 1, `amendments.jsonl` with the amended sha256, reason and changed keys). Every model call cached in the proposal directory; nothing runs a proposed protocol. The scripted RAG flow freezes to the hand-written protocol up to free text. `evidence vocab build` and a hand-written 15-term snapshot `evidence/vocab/rag-factuality.json` (not built from CS-KG/PwC downloads) |
 | Evidence representation | built | `evidence/merge.py`, `graph.py`: merged items with every span and `found_by`; `graph.json` |
 | Synthesis rules | built, in the protocol (17 Oct) | parameters in the protocol's `synthesis` block (Part C); machinery `evidence/rules.py`, `synthesis.py`: same-dataset pairing, table before prose; undetermined studies with a reason code |
 | Evaluation A, B, C | built; intervals, flags, shift and benchmark records added 17 Oct | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis (direction accuracy, completeness, traceability, expected-undetermined rule, flag precision/recall), locate recall, cascade contribution, cost, stability, 95 % BCa bootstrap intervals (`stats.py`); `evaluate shift` (`shift.py`), `evaluate benchmark` (`benchmark.py`, B11 records per extractor) |
@@ -123,8 +125,7 @@ see §7).
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
 | Viewer | earlier design | `webapp/`, to be rebuilt |
 
-Not built: the proposal flow (Part E), the 337-paper check. Their contracts are written in
-[`evidence-system.md`](evidence-system.md).
+Not built: the 337-paper check (§5 step 8, §7), the web app rebuild (§5 step 7).
 
 ## 7. Open
 
