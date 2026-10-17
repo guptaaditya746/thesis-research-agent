@@ -10,24 +10,36 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.protocol import Protocol
 
-from .models import Claim, Open, Step
+from .models import Claim, Step
 
 Direction = Literal["supports", "contradicts", "neutral", "undetermined"]
 
 
+class Base(BaseModel):
+    """A response: a field with a default is always sent, so the schema (and the generated type) says required."""
+
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
+
+class Open(Base):
+    """A file another package writes: the fields the pages use are typed, anything else is kept."""
+
+    model_config = ConfigDict(extra="allow", json_schema_serialization_defaults_required=True)
+
+
 # --- configuration ---------------------------------------------------------------------------------
 
-class Root(BaseModel):
+class Root(Base):
     path: str | None = Field(None, description="absolute path, or null when not configured")
     exists: bool = False
 
 
-class EvConfig(BaseModel):
+class EvConfig(Base):
     ev: str | None = Field(None, description="$EV, the root the others default to (docs/slurm-evidence-runbook.md)")
     corpora: Root
     runs: Root
@@ -70,7 +82,7 @@ class VariantInfo(Open):
     expected: dict[str, Any] = {}
 
 
-class CorpusSummary(BaseModel):
+class CorpusSummary(Base):
     name: str = Field(description="the directory name under the corpora root")
     corpus_id: str
     level: str | None = None
@@ -89,7 +101,7 @@ class CorpusSummary(BaseModel):
     manifest_sha256: str
 
 
-class CorpusPaper(BaseModel):
+class CorpusPaper(Base):
     id: str
     file: str
     sha256: str
@@ -118,7 +130,7 @@ class Placement(Open):
     exact: str
 
 
-class Segment(BaseModel):
+class Segment(Base):
     """A piece of a paper's text: `marks` are the ids (items, facts) whose spans cover it, `roles` their roles.
     Cut on the server, in code points, so the page never converts offsets."""
     text: str
@@ -128,7 +140,7 @@ class Segment(BaseModel):
     roles: list[str] = []
 
 
-class CorpusPaperDetail(BaseModel):
+class CorpusPaperDetail(Base):
     corpus: str
     paper: CorpusPaper
     text: str
@@ -142,7 +154,7 @@ class CorpusPaperDetail(BaseModel):
 
 # --- protocols and proposals -----------------------------------------------------------------------
 
-class ProtocolView(BaseModel):
+class ProtocolView(Base):
     source: str = Field(description="repo, proposal, run")
     name: str
     path: str
@@ -153,7 +165,7 @@ class ProtocolView(BaseModel):
     error: str | None = None
 
 
-class ProtocolEntry(BaseModel):
+class ProtocolEntry(Base):
     name: str
     id: str | None = None
     version: int | None = None
@@ -163,7 +175,7 @@ class ProtocolEntry(BaseModel):
     error: str | None = None
 
 
-class ProposalSummary(BaseModel):
+class ProposalSummary(Base):
     name: str
     question: str | None = None
     steps: list[str] = Field(description="the steps whose files exist: frame, draft, critic, cards, freeze")
@@ -220,7 +232,8 @@ class ProposalDetail(ProposalSummary):
     critic: dict[str, Any] | None = None
     checks: list[Check] = Field([], description="critic.json checks (deterministic and the LLM checklist)")
     cards: list[Card] = []
-    proposal: dict[str, Any] | None = Field(None, description="proposal.json, written by freeze")
+    proposal: dict[str, Any] | None = Field(None, description="proposal.json, written by freeze, without the frame, "
+                                                              "sources and critic it repeats")
     protocol: ProtocolView | None = None
     revisions: list[int] = Field([], description="the frozen and amended revisions kept as protocol.v<N>.yaml")
     amendment_log: list[Amendment] = []
@@ -280,7 +293,7 @@ class EvAnswer(Open):
     agent: dict[str, Any] | None = None
 
 
-class EvRunSummary(BaseModel):
+class EvRunSummary(Base):
     id: str = Field(description="`<group>~<name>`: the run directory $EV_RUNS/<group>/<name>")
     group: str = Field(description="the output directory the run was written to (regex-only, cascade, rag-baseline, ...)")
     name: str
@@ -322,7 +335,7 @@ class FunnelDoc(Open):
     stopped_after: int | None = None
 
 
-class CallSummary(BaseModel):
+class CallSummary(Base):
     """One extractor call of the run, from its extractor_call event (Part D: screen calls too)."""
     call_id: str
     document: str
@@ -352,7 +365,7 @@ class EvRunDetail(EvRunSummary):
     has_trace: bool = Field(False, description="baseline: the agent baseline's run directory is there")
 
 
-class RunPaper(BaseModel):
+class RunPaper(Base):
     run: str
     document: str
     text: str | None = Field(None, description="null when the run's corpus is not under the corpora root")
@@ -373,7 +386,7 @@ class ModelCallRecord(Open):
     agent_run: str | None = Field(None, description="an agentic call: the agent run's id (its trace)")
 
 
-class CallDetail(BaseModel):
+class CallDetail(Base):
     run: str
     call: CallSummary
     result: ExtractionResult
@@ -384,7 +397,7 @@ class CallDetail(BaseModel):
     agent_runs: list[str] = Field([], description="agent run ids behind an agentic call")
 
 
-class AgentTrace(BaseModel):
+class AgentTrace(Base):
     run_id: str
     source: Literal["run_dir", "cache"] = Field(description="the agent's own run directory, or the record the "
                                                             "engine's cache keeps of it")
@@ -409,14 +422,14 @@ class EvGraphEdge(Open):
     rel: str
 
 
-class EvGraph(BaseModel):
+class EvGraph(Base):
     nodes: list[EvGraphNode]
     edges: list[EvGraphEdge]
 
 
 # --- scores ----------------------------------------------------------------------------------------
 
-class ScoreRef(BaseModel):
+class ScoreRef(Base):
     id: str = Field(description="the directory under the scores root, parts joined by `~`")
     group: str
     name: str | None = None
@@ -427,7 +440,7 @@ class ScoreRef(BaseModel):
     systems: list[str] = []
 
 
-class ScoresIndex(BaseModel):
+class ScoresIndex(Base):
     reports: list[ScoreRef] = []
     compares: list[ScoreRef] = []
     shifts: list[ScoreRef] = []
@@ -471,26 +484,26 @@ class Report(Open):
     funnel: dict[str, Any] | None = None
 
 
-class ReportView(BaseModel):
+class ReportView(Base):
     ref: ScoreRef
     report: Report
     markdown: str | None = None
 
 
-class CompareTable(BaseModel):
+class CompareTable(Base):
     ref: ScoreRef
     rows: list[dict[str, Any]]
     intervals: list[dict[str, Any]] = []
     markdown: str | None = None
 
 
-class ShiftView(BaseModel):
+class ShiftView(Base):
     ref: ScoreRef
     shift: dict[str, Any]
     markdown: str | None = None
 
 
-class BenchmarkView(BaseModel):
+class BenchmarkView(Base):
     ref: ScoreRef
     records: list[dict[str, Any]]
     markdown: str | None = None

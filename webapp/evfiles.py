@@ -362,7 +362,9 @@ class EvidenceFiles:
                               critic=critic if isinstance(critic, dict) else None,
                               checks=[Check.model_validate(c) for c in (critic or {}).get("checks") or []]
                               if isinstance(critic, dict) else [],
-                              cards=out_cards, proposal=proposal if isinstance(proposal, dict) else None,
+                              # proposal.json repeats frame, sources and critic, which are given on their own
+                              cards=out_cards, proposal={k: v for k, v in proposal.items() if k not in ("frame", "sources", "critic")}
+                              if isinstance(proposal, dict) else None,
                               protocol=protocol, revisions=revisions,
                               amendment_log=[Amendment.model_validate(a) for a in read_jsonl(path / "amendments.jsonl")])
 
@@ -538,7 +540,8 @@ class EvidenceFiles:
             agent_id = agent.get("run_id") if isinstance(agent, dict) else None
             if agent_id and agent_id not in agent_runs:
                 agent_runs.append(agent_id)
-            model_calls.append(ModelCallRecord.model_validate({**{k: v for k, v in m.items() if k != "agent_run"},
+            # `messages` (pydantic-ai's exchange, with timestamps) repeats request and response at length: left out
+            model_calls.append(ModelCallRecord.model_validate({**{k: v for k, v in m.items() if k not in ("agent_run", "messages")},
                                                                "agent_run": agent_id}))
         if not agent_runs and call.kind == "agent":
             agent_runs = sorted({c.split("/", 1)[0] for c in result.model_calls if "/" in c})
@@ -704,5 +707,3 @@ def trace_of_record(record: dict[str, Any]) -> AgentTrace:
     return AgentTrace(run_id=str(record.get("run_id", "")), source="cache", outcome=record.get("outcome"),
                       concept=record.get("concept"), answer=record.get("answer"),
                       steps=[Step(**steps[k]) for k in sorted(steps)], claims=claims)
-
-

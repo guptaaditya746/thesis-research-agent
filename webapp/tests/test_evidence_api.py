@@ -117,6 +117,7 @@ def test_proposal_cards_decisions_amendments(ev: TestClient) -> None:
     assert detail["frame"]["treatment"]["source"] == "ontology" and detail["sources"]["fields"]
     assert any(c["kind"] == "deterministic" for c in detail["checks"])
     assert detail["revisions"] == [1, 2] and detail["protocol"]["protocol"]["revision"] == 2
+    assert detail["proposal"]["decided_by"] and not {"frame", "sources", "critic"} & set(detail["proposal"])
     (amendment,) = detail["amendment_log"]
     assert amendment["impact"] == ["synthesis.flags.large_effect.factor"] and amendment["before_main_run"] is True
     assert detail["protocol"]["sha256"] == amendment["sha256"] == summary["protocol_sha256"]
@@ -183,7 +184,7 @@ def test_llm_call_with_its_model_records(ev: TestClient) -> None:
     assert detail["result"]["extractor_id"] == llm["extractor_id"] and detail["spec"]["kind"] == "llm"
     (record,) = detail["model_calls"]
     assert record["request"]["user_prompt"] and record["response"]["output"] == {"items": []}
-    assert record["agent_run"] is None and detail["agent_runs"] == []
+    assert record["agent_run"] is None and detail["agent_runs"] == [] and "messages" not in record
     regex = next(c for c in paper["calls"] if c["kind"] == "regex")
     assert ev.get(f"/api/ev/runs/cascade~{EXPLICIT}/calls/{regex['call_id']}").json()["model_calls"] == []
     assert ev.get(f"/api/ev/runs/cascade~{EXPLICIT}/calls/t999999").status_code == 404

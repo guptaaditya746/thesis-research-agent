@@ -16,6 +16,8 @@ nothing reaches a network. The LLM extractors find nothing beyond the regex (an 
 funnel's gaps stay visible. Without bash (Windows) the agentic run and the agent baseline are left out.
 
     uv run python -m webapp.tests.evidence_world OUT     # write the world to OUT (e.g. for `webapp serve`)
+    uv run python -m webapp.tests.evidence_world OUT --mocks webapp/web/src/mocks/ev-fixtures.json
+                                                         # and the frontend's mock responses from it
 """
 from __future__ import annotations
 
@@ -300,8 +302,73 @@ def proposal(directory: Path) -> Path:
     return directory
 
 
+MOCK_ROOT = "/srv/ev"   # what the world's own path becomes in the frontend's mock responses
+BASE = "http://127.0.0.1"   # a Host the app answers (webapp/guard.py)
+
+
+def mock_paths(world: EvidenceWorld) -> list[str]:
+    """The /api/ev responses the frontend's mocks hold (webapp/web/src/mocks/ev-fixtures.json): every list,
+    and the details of a few runs, papers, calls and scores, enough for every page and its tests."""
+    from fastapi.testclient import TestClient
+
+    from webapp.app import create_app
+    from webapp.settings import Settings
+
+    mixed, explicit = f"{NAME}-mixed", f"{NAME}-explicit"
+    variant = next(p.name for p in sorted(world.corpora.iterdir()) if "-cf-" in p.name)
+    paths = ["/api/ev/config", "/api/ev/corpora", f"/api/ev/corpora/{mixed}", f"/api/ev/corpora/{variant}",
+             f"/api/ev/corpora/{mixed}/papers/S001", "/api/ev/protocols", "/api/ev/protocols/rag-factuality",
+             "/api/ev/proposals", "/api/ev/proposals/rag-factuality", "/api/ev/runs", "/api/ev/scores",
+             f"/api/ev/scores/reports/cascade-gaps~{mixed}", f"/api/ev/scores/reports/cascade~{explicit}",
+             "/api/ev/scores/compares/compare-cascade", f"/api/ev/scores/compares/compare-funnel~{mixed}",
+             f"/api/ev/scores/shifts/shift-cascade~{variant}", "/api/ev/scores/benchmarks/benchmark-tpl"]
+    runs = [f"cascade~{explicit}", f"cascade-gaps~{mixed}", f"rag-baseline~{mixed}"]
+    runs += [f"agentic-gaps~{mixed}", f"agent-baseline~{mixed}"] if world.agent else []
+    with TestClient(create_app(Settings(EV=world.root, runs=world.root / "earlier-runs")), base_url=BASE) as client:  # type: ignore[arg-type]
+        for run in runs:
+            detail = client.get(f"/api/ev/runs/{run}").json()
+            paths.append(f"/api/ev/runs/{run}")
+            if detail["kind"] == "engine":
+                paths += [f"/api/ev/runs/{run}/graph"] + ([f"/api/ev/runs/{run}/protocol"] if run == runs[0] else [])
+            elif detail["has_trace"]:
+                paths.append(f"/api/ev/runs/{run}/trace")
+            for doc in detail["documents"][:2 if run == runs[0] else 1]:
+                paths.append(f"/api/ev/runs/{run}/papers/{doc}")
+                calls = client.get(f"/api/ev/runs/{run}/papers/{doc}").json()["calls"]
+                picked = {c["kind"]: c for c in reversed(calls)}          # one call of each kind
+                for call in picked.values():
+                    paths.append(f"/api/ev/runs/{run}/calls/{call['call_id']}")
+                    for agent_run in client.get(paths[-1]).json()["agent_runs"]:
+                        paths.append(f"/api/ev/runs/{run}/calls/{call['call_id']}/trace/{agent_run}")
+    return list(dict.fromkeys(paths))
+
+
+def dump_mocks(world: EvidenceWorld, out: Path) -> Path:
+    """{path: response JSON} for `mock_paths`, with the world's directory written as MOCK_ROOT."""
+    from fastapi.testclient import TestClient
+
+    from webapp.app import create_app
+    from webapp.settings import Settings
+
+    responses = {}
+    with TestClient(create_app(Settings(EV=world.root, runs=world.root / "earlier-runs")), base_url=BASE) as client:  # type: ignore[arg-type]
+        for path in mock_paths(world):
+            response = client.get(path)
+            assert response.status_code == 200, (path, response.text)
+            responses[path] = response.json()
+    text = json.dumps(responses, ensure_ascii=False, separators=(",", ":"))   # key order as served
+    text = text.replace(str(world.root), MOCK_ROOT).replace(str(REPO), "/srv/repo")
+    out.write_text(text + "\n", encoding="utf-8", newline="\n")
+    return out
+
+
 if __name__ == "__main__":
-    target = Path(sys.argv[1] if len(sys.argv) > 1 else "ev-world")
+    args = sys.argv[1:]
+    mocks = Path(args[args.index("--mocks") + 1]) if "--mocks" in args else None
+    target = Path(next((a for a in args if not a.startswith("--") and Path(a) != mocks), "ev-world"))
     if target.exists():
         raise SystemExit(f"{target} exists; give a new directory")
-    print(build(target).root)
+    built = build(target)
+    if mocks:
+        dump_mocks(built, mocks)
+    print(built.root)

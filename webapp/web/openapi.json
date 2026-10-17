@@ -2245,7 +2245,12 @@
         "type": "object",
         "required": [
           "run_id",
-          "source"
+          "source",
+          "outcome",
+          "concept",
+          "answer",
+          "steps",
+          "claims"
         ],
         "title": "AgentTrace"
       },
@@ -2316,7 +2321,12 @@
         "type": "object",
         "required": [
           "revision",
-          "reason"
+          "sha256",
+          "amends_sha256",
+          "reason",
+          "impact",
+          "before_main_run",
+          "at"
         ],
         "title": "Amendment"
       },
@@ -2700,7 +2710,8 @@
         "type": "object",
         "required": [
           "ref",
-          "records"
+          "records",
+          "markdown"
         ],
         "title": "BenchmarkView"
       },
@@ -2868,7 +2879,11 @@
           "run",
           "call",
           "result",
-          "cached"
+          "spec",
+          "task",
+          "cached",
+          "model_calls",
+          "agent_runs"
         ],
         "title": "CallDetail"
       },
@@ -2968,7 +2983,15 @@
           "document",
           "evidence_type",
           "extractor_id",
-          "status"
+          "kind",
+          "position",
+          "status",
+          "source",
+          "attempt",
+          "focus",
+          "items",
+          "rejected",
+          "model_calls"
         ],
         "title": "CallSummary",
         "description": "One extractor call of the run, from its extractor_call event (Part D: screen calls too)."
@@ -3064,7 +3087,15 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "id"
+          "id",
+          "title",
+          "ask",
+          "sets",
+          "options",
+          "vocabulary",
+          "default",
+          "rationale",
+          "decision"
         ],
         "title": "Card"
       },
@@ -3105,7 +3136,9 @@
         "type": "object",
         "required": [
           "id",
-          "ok"
+          "kind",
+          "ok",
+          "message"
         ],
         "title": "Check"
       },
@@ -3140,7 +3173,8 @@
         "required": [
           "document",
           "start",
-          "end"
+          "end",
+          "score"
         ],
         "title": "Citation"
       },
@@ -3392,7 +3426,9 @@
         "type": "object",
         "required": [
           "ref",
-          "rows"
+          "rows",
+          "intervals",
+          "markdown"
         ],
         "title": "CompareTable"
       },
@@ -3682,9 +3718,22 @@
         "required": [
           "name",
           "corpus_id",
+          "level",
+          "renderer",
+          "seed",
+          "question",
+          "protocol",
+          "settings",
           "papers",
+          "fidelity_ok",
+          "excluded",
+          "answer",
+          "variant",
+          "base",
           "manifest_sha256",
-          "papers_list"
+          "papers_list",
+          "models",
+          "generator"
         ],
         "title": "CorpusDetail"
       },
@@ -3793,7 +3842,15 @@
         "required": [
           "id",
           "file",
-          "sha256"
+          "sha256",
+          "level",
+          "relevant",
+          "direction",
+          "delta",
+          "flags",
+          "duplicate_of",
+          "missing",
+          "fidelity_ok"
         ],
         "title": "CorpusPaper"
       },
@@ -3865,7 +3922,11 @@
           "corpus",
           "paper",
           "text",
-          "segments"
+          "segments",
+          "study",
+          "placements",
+          "fidelity",
+          "decoys"
         ],
         "title": "CorpusPaperDetail"
       },
@@ -4014,7 +4075,18 @@
         "required": [
           "name",
           "corpus_id",
+          "level",
+          "renderer",
+          "seed",
+          "question",
+          "protocol",
+          "settings",
           "papers",
+          "fidelity_ok",
+          "excluded",
+          "answer",
+          "variant",
+          "base",
           "manifest_sha256"
         ],
         "title": "CorpusSummary"
@@ -4049,6 +4121,13 @@
         },
         "additionalProperties": true,
         "type": "object",
+        "required": [
+          "supporting",
+          "contradicting",
+          "neutral",
+          "undetermined",
+          "duplicates"
+        ],
         "title": "Counts"
       },
       "Coverage": {
@@ -4176,7 +4255,12 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "card"
+          "card",
+          "choice",
+          "reason",
+          "by",
+          "value",
+          "default"
         ],
         "title": "Decision"
       },
@@ -4371,7 +4455,21 @@
         "type": "object",
         "required": [
           "system",
-          "label"
+          "question",
+          "label",
+          "counts",
+          "studies",
+          "supporting",
+          "contradicting",
+          "neutral",
+          "undetermined",
+          "duplicates",
+          "flags",
+          "answer_text",
+          "citations",
+          "dropped_citations",
+          "retrieved",
+          "agent"
         ],
         "title": "EvAnswer"
       },
@@ -4415,6 +4513,7 @@
         },
         "type": "object",
         "required": [
+          "ev",
           "corpora",
           "runs",
           "scores",
@@ -4519,7 +4618,10 @@
         "type": "object",
         "required": [
           "id",
-          "type"
+          "type",
+          "document",
+          "fields",
+          "found_by"
         ],
         "title": "EvGraphNode"
       },
@@ -4782,7 +4884,28 @@
           "group",
           "name",
           "kind",
-          "system"
+          "system",
+          "mode",
+          "strategy",
+          "selection",
+          "model",
+          "protocol",
+          "corpus_id",
+          "corpus",
+          "label",
+          "counts",
+          "papers",
+          "cost",
+          "extractors",
+          "settings",
+          "chain_head",
+          "source_run",
+          "answer",
+          "funnel",
+          "documents",
+          "baselines",
+          "reports",
+          "has_trace"
         ],
         "title": "EvRunDetail"
       },
@@ -4945,7 +5068,18 @@
           "group",
           "name",
           "kind",
-          "system"
+          "system",
+          "mode",
+          "strategy",
+          "selection",
+          "model",
+          "protocol",
+          "corpus_id",
+          "corpus",
+          "label",
+          "counts",
+          "papers",
+          "cost"
         ],
         "title": "EvRunSummary"
       },
@@ -5547,7 +5681,11 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "complete"
+          "after_round",
+          "after_position",
+          "complete",
+          "gap",
+          "gap_types"
         ],
         "title": "FunnelDecision"
       },
@@ -5600,6 +5738,13 @@
         },
         "additionalProperties": true,
         "type": "object",
+        "required": [
+          "screen",
+          "skipped",
+          "steps",
+          "decisions",
+          "stopped_after"
+        ],
         "title": "FunnelDoc"
       },
       "FunnelStep": {
@@ -6581,7 +6726,12 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "id"
+          "id",
+          "request",
+          "response",
+          "usage",
+          "error",
+          "agent_run"
         ],
         "title": "ModelCallRecord",
         "description": "One record of the engine's record cache (evidence/recording.py): request, response, usage, error."
@@ -7007,7 +7157,7 @@
               }
             ],
             "title": "Proposal",
-            "description": "proposal.json, written by freeze"
+            "description": "proposal.json, written by freeze, without the frame, sources and critic it repeats"
           },
           "protocol": {
             "anyOf": [
@@ -7040,8 +7190,23 @@
         "type": "object",
         "required": [
           "name",
+          "question",
           "steps",
-          "frozen"
+          "frozen",
+          "revision",
+          "protocol_sha256",
+          "decided_by",
+          "amendments",
+          "frame",
+          "sources",
+          "draft_yaml",
+          "critic",
+          "checks",
+          "cards",
+          "proposal",
+          "protocol",
+          "revisions",
+          "amendment_log"
         ],
         "title": "ProposalDetail"
       },
@@ -7116,8 +7281,13 @@
         "type": "object",
         "required": [
           "name",
+          "question",
           "steps",
-          "frozen"
+          "frozen",
+          "revision",
+          "protocol_sha256",
+          "decided_by",
+          "amendments"
         ],
         "title": "ProposalSummary"
       },
@@ -7290,7 +7460,13 @@
         },
         "type": "object",
         "required": [
-          "name"
+          "name",
+          "id",
+          "version",
+          "revision",
+          "question",
+          "sha256",
+          "error"
         ],
         "title": "ProtocolEntry"
       },
@@ -7354,7 +7530,9 @@
           "path",
           "sha256",
           "yaml",
-          "phases"
+          "phases",
+          "protocol",
+          "error"
         ],
         "title": "ProtocolView"
       },
@@ -7774,7 +7952,20 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "corpus_id"
+          "corpus_id",
+          "run_id",
+          "question",
+          "levels",
+          "extraction",
+          "integration",
+          "synthesis",
+          "intervals",
+          "locate",
+          "cascade",
+          "extractors",
+          "cost",
+          "stability",
+          "funnel"
         ],
         "title": "Report",
         "description": "report.json of `evaluate score` (evaluation/report.py): A extraction, B integration, C synthesis per\nlevel, intervals, locate, cascade, extractors, cost, stability, funnel."
@@ -7802,7 +7993,8 @@
         "type": "object",
         "required": [
           "ref",
-          "report"
+          "report",
+          "markdown"
         ],
         "title": "ReportView"
       },
@@ -7834,6 +8026,10 @@
           }
         },
         "type": "object",
+        "required": [
+          "path",
+          "exists"
+        ],
         "title": "Root"
       },
       "RunCounts": {
@@ -7973,7 +8169,13 @@
         "type": "object",
         "required": [
           "run",
-          "document"
+          "document",
+          "text",
+          "segments",
+          "items",
+          "study",
+          "funnel",
+          "calls"
         ],
         "title": "RunPaper"
       },
@@ -8543,7 +8745,13 @@
         "type": "object",
         "required": [
           "id",
-          "group"
+          "group",
+          "name",
+          "corpus_id",
+          "run_id",
+          "levels",
+          "strategy",
+          "systems"
         ],
         "title": "ScoreRef"
       },
@@ -8646,6 +8854,12 @@
           }
         },
         "type": "object",
+        "required": [
+          "reports",
+          "compares",
+          "shifts",
+          "benchmarks"
+        ],
         "title": "ScoresIndex"
       },
       "Screen": {
@@ -8724,7 +8938,9 @@
         "required": [
           "text",
           "start",
-          "end"
+          "end",
+          "marks",
+          "roles"
         ],
         "title": "Segment",
         "description": "A piece of a paper's text: `marks` are the ids (items, facts) whose spans cover it, `roles` their roles.\nCut on the server, in code points, so the page never converts offsets."
@@ -8754,7 +8970,8 @@
         "type": "object",
         "required": [
           "ref",
-          "shift"
+          "shift",
+          "markdown"
         ],
         "title": "ShiftView"
       },
@@ -9133,7 +9350,16 @@
         "type": "object",
         "required": [
           "document",
-          "direction"
+          "direction",
+          "delta",
+          "metric",
+          "treatment",
+          "control",
+          "author_claim",
+          "reason",
+          "flags",
+          "duplicate_of",
+          "funnel"
         ],
         "title": "Study",
         "description": "One study of answer.json (A4 with C3 and F1); the baselines give only document and direction."
@@ -9176,6 +9402,11 @@
         },
         "additionalProperties": true,
         "type": "object",
+        "required": [
+          "condition",
+          "measurement",
+          "value"
+        ],
         "title": "StudyPair"
       },
       "StudyReason": {
@@ -9199,7 +9430,8 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "code"
+          "code",
+          "text"
         ],
         "title": "StudyReason"
       },
@@ -9355,7 +9587,14 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "system"
+          "system",
+          "label",
+          "expected_label",
+          "label_correct",
+          "rows",
+          "studies",
+          "confusion",
+          "flags"
         ],
         "title": "SynthesisScore"
       },
@@ -9420,7 +9659,13 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
-          "label"
+          "label",
+          "supporting",
+          "contradicting",
+          "neutral",
+          "undetermined",
+          "duplicates",
+          "flags"
         ],
         "title": "TruthAnswer",
         "description": "ground_truth.json `answer`: the label the corpus is built to have."
@@ -9528,7 +9773,12 @@
         "type": "object",
         "required": [
           "base_corpus_id",
-          "study"
+          "corpus_id",
+          "study",
+          "paper",
+          "to",
+          "changed",
+          "expected"
         ],
         "title": "VariantInfo",
         "description": "variant.json of a counterfactual corpus (`synth variant`, F3)."
