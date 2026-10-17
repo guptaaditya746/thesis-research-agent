@@ -28,6 +28,7 @@ import type {
   SparqlRequest,
 } from "@/api/types"
 
+import { evHandlers } from "./ev"
 import {
   BRIEFS,
   CLAIMS,
@@ -252,6 +253,7 @@ function chatChunks(runId: string | undefined, question: string): unknown[] {
 }
 
 export const handlers = [
+  ...evHandlers,
   http.get("/api/health", () => HttpResponse.json({ ok: true, version: "0.2.0-mock" })),
   http.get("/api/config", () => HttpResponse.json(config)),
 

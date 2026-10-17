@@ -471,10 +471,425 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Config */
+        get: operations["ev_config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/corpora": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Corpora */
+        get: operations["ev_corpora"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/corpora/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Corpus */
+        get: operations["ev_corpus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/corpora/{name}/papers/{paper}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Corpus Paper */
+        get: operations["ev_corpus_paper"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/protocols": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Protocols */
+        get: operations["ev_protocols"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/protocols/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Protocol */
+        get: operations["ev_protocol"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Proposals */
+        get: operations["ev_proposals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/proposals/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Proposal */
+        get: operations["ev_proposal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Runs */
+        get: operations["ev_runs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Run */
+        get: operations["ev_run"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}/papers/{document}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Run Paper */
+        get: operations["ev_run_paper"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}/graph": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Run Graph */
+        get: operations["ev_run_graph"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}/protocol": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Run Protocol */
+        get: operations["ev_run_protocol"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}/calls/{call_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Run Call */
+        get: operations["ev_run_call"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}/calls/{call_id}/trace/{agent_run}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Call Trace */
+        get: operations["ev_call_trace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}/trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ev Baseline Trace
+         * @description The agent baseline's own run (its agent-runs/ directory).
+         */
+        get: operations["ev_baseline_trace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/scores": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Scores */
+        get: operations["ev_scores"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/scores/reports/{score_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Report */
+        get: operations["ev_report"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/scores/compares/{score_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Compare */
+        get: operations["ev_compare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/scores/shifts/{score_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Shift */
+        get: operations["ev_shift"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/scores/benchmarks/{score_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Benchmark */
+        get: operations["ev_benchmark"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AgentTrace */
+        AgentTrace: {
+            /** Run Id */
+            run_id: string;
+            /**
+             * Source
+             * @description the agent's own run directory, or the record the engine's cache keeps of it
+             * @enum {string}
+             */
+            source: "run_dir" | "cache";
+            /** Outcome */
+            outcome: {
+                [key: string]: unknown;
+            } | null;
+            /** Concept */
+            concept: {
+                [key: string]: unknown;
+            } | null;
+            /** Answer */
+            answer: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Steps
+             * @default []
+             */
+            steps: components["schemas"]["Step"][];
+            /**
+             * Claims
+             * @default []
+             */
+            claims: components["schemas"]["Claim"][];
+        };
+        /** Amendment */
+        Amendment: {
+            /** Revision */
+            revision: number;
+            /** Sha256 */
+            sha256: string | null;
+            /** Amends Sha256 */
+            amends_sha256: string | null;
+            /** Reason */
+            reason: string;
+            /**
+             * Impact
+             * @default []
+             */
+            impact: string[];
+            /** Before Main Run */
+            before_main_run: boolean | null;
+            /** At */
+            at: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** Anchor */
         Anchor: {
             /** Start */
@@ -584,6 +999,192 @@ export interface components {
             /** Argilla Url */
             argilla_url: string | null;
         };
+        /** BenchmarkView */
+        BenchmarkView: {
+            ref: components["schemas"]["ScoreRef"];
+            /** Records */
+            records: {
+                [key: string]: unknown;
+            }[];
+            /** Markdown */
+            markdown: string | null;
+        };
+        /**
+         * Bound
+         * @description A range a numeric field must lie in, checked by the engine (rejected with reason schema otherwise);
+         *     e.g. a measurement of an accuracy or a rate is a fraction in [0, 1].
+         */
+        Bound: {
+            /** Field */
+            field: string;
+            /** Min */
+            min?: number | null;
+            /** Max */
+            max?: number | null;
+            when?: components["schemas"]["BoundWhen"] | null;
+        };
+        /** BoundWhen */
+        BoundWhen: {
+            /** Link */
+            link: string;
+            /** Field */
+            field: string;
+            /** Values */
+            values: unknown[];
+        };
+        /** Budget */
+        Budget: {
+            /** Steps */
+            steps?: number | null;
+            /** Tokens */
+            tokens?: number | null;
+        };
+        /** CallDetail */
+        CallDetail: {
+            /** Run */
+            run: string;
+            call: components["schemas"]["CallSummary"];
+            result: components["schemas"]["ExtractionResult"];
+            spec: components["schemas"]["ExtractorSpec"] | null;
+            /**
+             * Task
+             * @description the ExtractionTask, from the record cache
+             */
+            task: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Cached
+             * @description the record cache holds this call
+             */
+            cached: boolean;
+            /**
+             * Model Calls
+             * @default []
+             */
+            model_calls: components["schemas"]["ModelCallRecord"][];
+            /**
+             * Agent Runs
+             * @description agent run ids behind an agentic call
+             * @default []
+             */
+            agent_runs: string[];
+        };
+        /**
+         * CallSummary
+         * @description One extractor call of the run, from its extractor_call event (Part D: screen calls too).
+         */
+        CallSummary: {
+            /** Call Id */
+            call_id: string;
+            /** Document */
+            document: string;
+            /** Evidence Type */
+            evidence_type: string;
+            /** Extractor Id */
+            extractor_id: string;
+            /**
+             * Kind
+             * @description regex, llm, model or agent (the extractor spec's kind)
+             */
+            kind: string | null;
+            /** Position */
+            position: number | null;
+            /** Status */
+            status: string;
+            /**
+             * Source
+             * @description cache or fresh
+             */
+            source: string | null;
+            /**
+             * Attempt
+             * @default 0
+             */
+            attempt: number;
+            /**
+             * Focus
+             * @description the gap a targeted task was made for (Part D)
+             */
+            focus: string | null;
+            /**
+             * Items
+             * @default 0
+             */
+            items: number;
+            /**
+             * Rejected
+             * @default 0
+             */
+            rejected: number;
+            /**
+             * Model Calls
+             * @default 0
+             */
+            model_calls: number;
+        };
+        /** Card */
+        Card: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string | null;
+            /** Ask */
+            ask: string | null;
+            /**
+             * Sets
+             * @default []
+             */
+            sets: string[];
+            /**
+             * Options
+             * @default []
+             */
+            options: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Vocabulary
+             * @default []
+             */
+            vocabulary: {
+                [key: string]: unknown;
+            }[];
+            /** Default */
+            default: string | null;
+            /** Rationale */
+            rationale: string | null;
+            /** @description the decision of decisions.yaml (or, once frozen, of proposal.json, which records the default beside it) */
+            decision: components["schemas"]["Decision"] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** Check */
+        Check: {
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string | null;
+            /** Ok */
+            ok: boolean;
+            /** Message */
+            message: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** Citation */
+        Citation: {
+            /** Document */
+            document: string;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Score */
+            score: number | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** Claim */
         Claim: {
             /** Claim Id */
@@ -648,6 +1249,33 @@ export interface components {
             type: string;
         };
         /**
+         * Compare
+         * @description The condition roles a study's pair is made of: the effect is treatment against control.
+         */
+        Compare: {
+            /** Treatment */
+            treatment: string;
+            /** Control */
+            control: string;
+        };
+        /** CompareTable */
+        CompareTable: {
+            ref: components["schemas"]["ScoreRef"];
+            /** Rows */
+            rows: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Intervals
+             * @default []
+             */
+            intervals: {
+                [key: string]: unknown;
+            }[];
+            /** Markdown */
+            markdown: string | null;
+        };
+        /**
          * ConceptBrief
          * @description One reading of a question (agent/schemas/concept.schema.json).
          */
@@ -686,6 +1314,252 @@ export interface components {
              */
             picked_by?: string | null;
         };
+        /** CorpusDetail */
+        CorpusDetail: {
+            /**
+             * Name
+             * @description the directory name under the corpora root
+             */
+            name: string;
+            /** Corpus Id */
+            corpus_id: string;
+            /** Level */
+            level: string | null;
+            /** Renderer */
+            renderer: string | null;
+            /** Seed */
+            seed: number | null;
+            /** Question */
+            question: string | null;
+            /** Protocol */
+            protocol: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Settings
+             * @description corpus.json settings: name, studies, mix, levels and the knobs (duplicates, missing, outliers, irrelevant)
+             */
+            settings: {
+                [key: string]: unknown;
+            } | null;
+            /** Papers */
+            papers: number;
+            /**
+             * Fidelity Ok
+             * @description papers whose fidelity checks all pass
+             */
+            fidelity_ok: number | null;
+            /**
+             * Excluded
+             * @default []
+             */
+            excluded: string[];
+            answer: components["schemas"]["TruthAnswer"] | null;
+            variant: components["schemas"]["VariantInfo"] | null;
+            /**
+             * Base
+             * @description the base corpus of a variant, by directory name, when it is here
+             */
+            base: string | null;
+            /** Manifest Sha256 */
+            manifest_sha256: string;
+            /** Papers List */
+            papers_list: components["schemas"]["CorpusPaper"][];
+            /** Models */
+            models: {
+                [key: string]: unknown;
+            } | null;
+            /** Generator */
+            generator: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** CorpusPaper */
+        CorpusPaper: {
+            /** Id */
+            id: string;
+            /** File */
+            file: string;
+            /** Sha256 */
+            sha256: string;
+            /** Level */
+            level: string | null;
+            /**
+             * Relevant
+             * @default true
+             */
+            relevant: boolean;
+            /**
+             * Direction
+             * @description the study's true effect direction
+             */
+            direction: ("supports" | "contradicts" | "neutral" | "undetermined") | null;
+            /** Delta */
+            delta: number | null;
+            /**
+             * Flags
+             * @default []
+             */
+            flags: string[];
+            /** Duplicate Of */
+            duplicate_of: string | null;
+            /** Missing */
+            missing: string | null;
+            /** Fidelity Ok */
+            fidelity_ok: boolean | null;
+        };
+        /** CorpusPaperDetail */
+        CorpusPaperDetail: {
+            /** Corpus */
+            corpus: string;
+            paper: components["schemas"]["CorpusPaper"];
+            /** Text */
+            text: string;
+            /** Segments */
+            segments: components["schemas"]["Segment"][];
+            /**
+             * Study
+             * @description the study's ground truth (conditions, metrics, measurements, author claim, effect)
+             */
+            study: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Placements
+             * @default []
+             */
+            placements: components["schemas"]["Placement"][];
+            /** Fidelity */
+            fidelity: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Decoys
+             * @default []
+             */
+            decoys: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** CorpusSummary */
+        CorpusSummary: {
+            /**
+             * Name
+             * @description the directory name under the corpora root
+             */
+            name: string;
+            /** Corpus Id */
+            corpus_id: string;
+            /** Level */
+            level: string | null;
+            /** Renderer */
+            renderer: string | null;
+            /** Seed */
+            seed: number | null;
+            /** Question */
+            question: string | null;
+            /** Protocol */
+            protocol: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Settings
+             * @description corpus.json settings: name, studies, mix, levels and the knobs (duplicates, missing, outliers, irrelevant)
+             */
+            settings: {
+                [key: string]: unknown;
+            } | null;
+            /** Papers */
+            papers: number;
+            /**
+             * Fidelity Ok
+             * @description papers whose fidelity checks all pass
+             */
+            fidelity_ok: number | null;
+            /**
+             * Excluded
+             * @default []
+             */
+            excluded: string[];
+            answer: components["schemas"]["TruthAnswer"] | null;
+            variant: components["schemas"]["VariantInfo"] | null;
+            /**
+             * Base
+             * @description the base corpus of a variant, by directory name, when it is here
+             */
+            base: string | null;
+            /** Manifest Sha256 */
+            manifest_sha256: string;
+        };
+        /** Counts */
+        Counts: {
+            /**
+             * Supporting
+             * @default 0
+             */
+            supporting: number;
+            /**
+             * Contradicting
+             * @default 0
+             */
+            contradicting: number;
+            /**
+             * Neutral
+             * @default 0
+             */
+            neutral: number;
+            /**
+             * Undetermined
+             * @default 0
+             */
+            undetermined: number;
+            /**
+             * Duplicates
+             * @default 0
+             */
+            duplicates: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** Coverage */
+        Coverage: {
+            /** Range */
+            range?: [
+                number,
+                number
+            ] | null;
+            /** Section */
+            section?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "found" | "none" | "skipped" | "error";
+            /**
+             * Found
+             * @default 0
+             */
+            found?: number;
+            /** Reason */
+            reason?: string | null;
+        };
+        /** Decision */
+        Decision: {
+            /** Card */
+            card: string;
+            /** Choice */
+            choice: string | null;
+            /** Reason */
+            reason: string | null;
+            /** By */
+            by: string | null;
+            /** Value */
+            value: unknown;
+            /** Default */
+            default: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** EdgeType */
         EdgeType: {
             /** Source */
@@ -700,6 +1574,282 @@ export interface components {
              */
             attributes?: components["schemas"]["Column"][];
         };
+        /** EvAnswer */
+        EvAnswer: {
+            /** System */
+            system: string;
+            /** Question */
+            question: string | null;
+            /** Label */
+            label: string;
+            /**
+             * @default {
+             *       "supporting": 0,
+             *       "contradicting": 0,
+             *       "neutral": 0,
+             *       "undetermined": 0,
+             *       "duplicates": 0
+             *     }
+             */
+            counts: components["schemas"]["Counts"];
+            /**
+             * Studies
+             * @default []
+             */
+            studies: components["schemas"]["Study"][];
+            /**
+             * Supporting
+             * @default []
+             */
+            supporting: string[];
+            /**
+             * Contradicting
+             * @default []
+             */
+            contradicting: string[];
+            /**
+             * Neutral
+             * @default []
+             */
+            neutral: string[];
+            /**
+             * Undetermined
+             * @default []
+             */
+            undetermined: string[];
+            /**
+             * Duplicates
+             * @default []
+             */
+            duplicates: string[];
+            /**
+             * Flags
+             * @default {}
+             */
+            flags: {
+                [key: string]: string[];
+            };
+            /** Answer Text */
+            answer_text: string | null;
+            /** Citations */
+            citations: components["schemas"]["Citation"][] | null;
+            /** Dropped Citations */
+            dropped_citations: components["schemas"]["Citation"][] | null;
+            /** Retrieved */
+            retrieved: components["schemas"]["Citation"][] | null;
+            /** Agent */
+            agent: {
+                [key: string]: unknown;
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** EvConfig */
+        EvConfig: {
+            /**
+             * Ev
+             * @description $EV, the root the others default to (docs/slurm-evidence-runbook.md)
+             */
+            ev: string | null;
+            corpora: components["schemas"]["Root"];
+            runs: components["schemas"]["Root"];
+            scores: components["schemas"]["Root"];
+            proposals: components["schemas"]["Root"];
+            /** @description the engine's record cache directory (extractor_calls.jsonl) */
+            cache: components["schemas"]["Root"];
+            /** @description the agentic extractor's agent run directories */
+            agent_work: components["schemas"]["Root"];
+            protocols: components["schemas"]["Root"];
+        };
+        /** EvGraph */
+        EvGraph: {
+            /** Nodes */
+            nodes: components["schemas"]["EvGraphNode"][];
+            /** Edges */
+            edges: components["schemas"]["EvGraphEdge"][];
+        };
+        /** EvGraphEdge */
+        EvGraphEdge: {
+            /** Src */
+            src: string;
+            /** Dst */
+            dst: string;
+            /** Rel */
+            rel: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** EvGraphNode */
+        EvGraphNode: {
+            /** Id */
+            id: string;
+            /** Type */
+            type: string;
+            /** Document */
+            document: string | null;
+            /** Fields */
+            fields: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Found By
+             * @default []
+             */
+            found_by: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /** EvRunDetail */
+        EvRunDetail: {
+            /**
+             * Id
+             * @description `<group>~<name>`: the run directory $EV_RUNS/<group>/<name>
+             */
+            id: string;
+            /**
+             * Group
+             * @description the output directory the run was written to (regex-only, cascade, rag-baseline, ...)
+             */
+            group: string;
+            /** Name */
+            name: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "engine" | "baseline";
+            /** System */
+            system: string;
+            /**
+             * Mode
+             * @description engine: run, replay or reexec
+             */
+            mode: string | null;
+            /** Strategy */
+            strategy: string | null;
+            /** Selection */
+            selection: string | null;
+            /** Model */
+            model: string | null;
+            /** Protocol */
+            protocol: {
+                [key: string]: unknown;
+            } | null;
+            /** Corpus Id */
+            corpus_id: string | null;
+            /**
+             * Corpus
+             * @description the corpus directory under the corpora root, when it is there
+             */
+            corpus: string | null;
+            /** Label */
+            label: string | null;
+            counts: components["schemas"]["Counts"] | null;
+            /** Papers */
+            papers: number | null;
+            /** Cost */
+            cost: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Extractors
+             * @default []
+             */
+            extractors: components["schemas"]["ExtractorSpec"][];
+            /** Settings */
+            settings: {
+                [key: string]: unknown;
+            } | null;
+            /** Chain Head */
+            chain_head: string | null;
+            /** Source Run */
+            source_run: string | null;
+            answer: components["schemas"]["EvAnswer"] | null;
+            /**
+             * Funnel
+             * @description funnel.json documents
+             */
+            funnel: {
+                [key: string]: components["schemas"]["FunnelDoc"];
+            } | null;
+            /**
+             * Documents
+             * @description the manifest's paper ids, in order
+             * @default []
+             */
+            documents: string[];
+            /**
+             * Baselines
+             * @description baseline runs (ids) of the same corpus
+             * @default []
+             */
+            baselines: string[];
+            /**
+             * Reports
+             * @description score reports (ids) of this run
+             * @default []
+             */
+            reports: string[];
+            /**
+             * Has Trace
+             * @description baseline: the agent baseline's run directory is there
+             * @default false
+             */
+            has_trace: boolean;
+        };
+        /** EvRunSummary */
+        EvRunSummary: {
+            /**
+             * Id
+             * @description `<group>~<name>`: the run directory $EV_RUNS/<group>/<name>
+             */
+            id: string;
+            /**
+             * Group
+             * @description the output directory the run was written to (regex-only, cascade, rag-baseline, ...)
+             */
+            group: string;
+            /** Name */
+            name: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "engine" | "baseline";
+            /** System */
+            system: string;
+            /**
+             * Mode
+             * @description engine: run, replay or reexec
+             */
+            mode: string | null;
+            /** Strategy */
+            strategy: string | null;
+            /** Selection */
+            selection: string | null;
+            /** Model */
+            model: string | null;
+            /** Protocol */
+            protocol: {
+                [key: string]: unknown;
+            } | null;
+            /** Corpus Id */
+            corpus_id: string | null;
+            /**
+             * Corpus
+             * @description the corpus directory under the corpora root, when it is there
+             */
+            corpus: string | null;
+            /** Label */
+            label: string | null;
+            counts: components["schemas"]["Counts"] | null;
+            /** Papers */
+            papers: number | null;
+            /** Cost */
+            cost: {
+                [key: string]: unknown;
+            } | null;
+        };
         /** Evidence */
         Evidence: {
             /** File */
@@ -712,6 +1862,141 @@ export interface components {
             end: number;
         } & {
             [key: string]: unknown;
+        };
+        /** EvidenceTypeSpec */
+        EvidenceTypeSpec: {
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /** Fields */
+            fields: {
+                [key: string]: unknown;
+            };
+            /** Links */
+            links?: {
+                [key: string]: "condition" | "metric" | "measurement" | "author_claim" | "screen";
+            };
+            /**
+             * Context
+             * @default []
+             */
+            context?: ("condition" | "metric" | "measurement" | "author_claim" | "screen")[];
+            /** Roles */
+            roles: string[];
+            /** Merge Key */
+            merge_key?: string[] | null;
+            /**
+             * Query
+             * @default []
+             */
+            query?: string[];
+            /**
+             * Cascade
+             * @default all
+             * @enum {string}
+             */
+            cascade?: "all" | "until_found";
+            /**
+             * Bounds
+             * @default []
+             */
+            bounds?: components["schemas"]["Bound"][];
+            /** Extractors */
+            extractors: components["schemas"]["ExtractorRef"][];
+        };
+        /** ExtractionError */
+        ExtractionError: {
+            /** Reason */
+            reason: string;
+            /**
+             * Detail
+             * @default
+             */
+            detail?: string;
+        };
+        /**
+         * ExtractionResult
+         * @description What every extractor returns (contract section 5); canonical order so it hashes the same.
+         */
+        ExtractionResult: {
+            /**
+             * Call Id
+             * @default
+             */
+            call_id?: string;
+            /** Extractor Id */
+            extractor_id: string;
+            /** Task Sha256 */
+            task_sha256: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "ok" | "partial" | "error";
+            error?: components["schemas"]["ExtractionError"] | null;
+            /**
+             * Items
+             * @default []
+             */
+            items?: components["schemas"]["Item"][];
+            /**
+             * Rejected
+             * @default []
+             */
+            rejected?: components["schemas"]["Rejected"][];
+            /**
+             * Coverage
+             * @default []
+             */
+            coverage?: components["schemas"]["Coverage"][];
+            /**
+             * Model Calls
+             * @default []
+             */
+            model_calls?: string[];
+        };
+        /**
+         * ExtractorRef
+         * @description One step of a cascade: a registered extractor name and its configuration.
+         */
+        ExtractorRef: {
+            /** Name */
+            name: string;
+            /** Config */
+            config?: {
+                [key: string]: unknown;
+            };
+            budget?: components["schemas"]["Budget"] | null;
+        };
+        /**
+         * ExtractorSpec
+         * @description Identity of one extractor version (contract section 3).
+         */
+        ExtractorSpec: {
+            /** Name */
+            name: string;
+            /** Version */
+            version: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "regex" | "model" | "llm" | "agent";
+            /** Evidence Types */
+            evidence_types: ("condition" | "metric" | "measurement" | "author_claim" | "screen")[];
+            /** Code Sha256 */
+            code_sha256: string;
+            /** Config */
+            config?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Determinism
+             * @enum {string}
+             */
+            determinism: "exact" | "near_exact" | "variable";
         };
         /** Fact */
         Fact: {
@@ -762,6 +2047,78 @@ export interface components {
              * @description the fact's support label as scoring defines it (best verdict over its claims; unsourced: no accepted claim; pending: a verdict is missing); null: nothing judged
              */
             label?: ("supports" | "partial" | "no" | "unsourced" | "pending") | null;
+        };
+        /** Flags */
+        Flags: {
+            /**
+             * Duplicates
+             * @default true
+             */
+            duplicates?: boolean;
+            /**
+             * @default {
+             *       "factor": 3,
+             *       "min_studies": 3
+             *     }
+             */
+            large_effect?: components["schemas"]["LargeEffect"];
+        };
+        /** FunnelDecision */
+        FunnelDecision: {
+            /** After Round */
+            after_round: number | null;
+            /** After Position */
+            after_position: number | null;
+            /** Complete */
+            complete: boolean;
+            /** Gap */
+            gap: string | null;
+            /**
+             * Gap Types
+             * @default []
+             */
+            gap_types: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /** FunnelDoc */
+        FunnelDoc: {
+            /** Screen */
+            screen: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Skipped
+             * @default false
+             */
+            skipped: boolean;
+            /**
+             * Steps
+             * @default []
+             */
+            steps: components["schemas"]["FunnelStep"][];
+            /**
+             * Decisions
+             * @default []
+             */
+            decisions: components["schemas"]["FunnelDecision"][];
+            /** Stopped After */
+            stopped_after: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** FunnelStep */
+        FunnelStep: {
+            /** Round */
+            round: number;
+            /** Position */
+            position: number;
+            /** Types */
+            types: string[];
+            /** Calls */
+            calls: string[];
+        } & {
+            [key: string]: unknown;
         };
         /** GoldEntry */
         GoldEntry: {
@@ -871,6 +2228,36 @@ export interface components {
             /** End */
             end: number;
         };
+        /**
+         * Item
+         * @description One piece of evidence: typed fields plus checked spans (contract section 5).
+         */
+        Item: {
+            /** Item Id */
+            item_id: string;
+            /**
+             * Evidence Type
+             * @enum {string}
+             */
+            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "screen";
+            /** Fields */
+            fields: {
+                [key: string]: unknown;
+            };
+            /** Spans */
+            spans: components["schemas"]["Span"][];
+            /** Links */
+            links?: {
+                [key: string]: string;
+            };
+            /** Confidence */
+            confidence?: number | null;
+            /**
+             * Found By
+             * @default []
+             */
+            found_by?: string[];
+        };
         /** Job */
         Job: {
             /** Id */
@@ -969,6 +2356,47 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /**
+         * LabelRow
+         * @description One row of the label decision table: every condition in `when` must hold on the counts.
+         */
+        LabelRow: {
+            /** When */
+            when?: {
+                [key: string]: string;
+            };
+            /**
+             * Then
+             * @enum {string}
+             */
+            then: "supported" | "refuted" | "mixed" | "no_effect" | "insufficient";
+        };
+        /** LargeEffect */
+        LargeEffect: {
+            /**
+             * Factor
+             * @default 3
+             */
+            factor?: number;
+            /**
+             * Min Studies
+             * @default 3
+             */
+            min_studies?: number;
+        };
+        /** Locate */
+        Locate: {
+            /**
+             * Strategy
+             * @default exhaustive
+             * @enum {string}
+             */
+            strategy?: "exhaustive" | "bm25" | "agent";
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            };
+        };
         /** Measure */
         Measure: {
             /** Operation */
@@ -1014,10 +2442,61 @@ export interface components {
             /** Error */
             error?: string | null;
         };
+        /**
+         * ModelCallRecord
+         * @description One record of the engine's record cache (evidence/recording.py): request, response, usage, error.
+         */
+        ModelCallRecord: {
+            /** Id */
+            id: string;
+            /** Request */
+            request: {
+                [key: string]: unknown;
+            } | null;
+            /** Response */
+            response: {
+                [key: string]: unknown;
+            } | null;
+            /** Usage */
+            usage: {
+                [key: string]: unknown;
+            } | null;
+            /** Error */
+            error: string | null;
+            /**
+             * Agent Run
+             * @description an agentic call: the agent run's id (its trace)
+             */
+            agent_run: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** NodeType */
         NodeType: {
             /** Type */
             type: string;
+        };
+        /**
+         * Pairing
+         * @description How a study's treatment and control measurements are chosen (evidence/synthesis.py): on the same
+         *     dataset (the first dataset in document order that has both), preferring, in order, a value in a table
+         *     cell over prose and the earlier value over the later one.
+         */
+        Pairing: {
+            /**
+             * Rule
+             * @default same_dataset
+             * @constant
+             */
+            rule?: "same_dataset";
+            /**
+             * Prefer
+             * @default [
+             *       "table_cell",
+             *       "document_order"
+             *     ]
+             */
+            prefer?: ("table_cell" | "document_order")[];
         };
         /**
          * Passage
@@ -1093,6 +2572,23 @@ export interface components {
              */
             force?: boolean;
         };
+        /** Placement */
+        Placement: {
+            /** Fact */
+            fact: string;
+            /** Role */
+            role: string;
+            /** Paper */
+            paper: string;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /** Exact */
+            exact: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** Predicate */
         Predicate: {
             /** Text */
@@ -1106,6 +2602,113 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** ProposalDetail */
+        ProposalDetail: {
+            /** Name */
+            name: string;
+            /** Question */
+            question: string | null;
+            /**
+             * Steps
+             * @description the steps whose files exist: frame, draft, critic, cards, freeze
+             */
+            steps: string[];
+            /** Frozen */
+            frozen: boolean;
+            /** Revision */
+            revision: number | null;
+            /** Protocol Sha256 */
+            protocol_sha256: string | null;
+            /**
+             * Decided By
+             * @default {}
+             */
+            decided_by: {
+                [key: string]: string[];
+            };
+            /**
+             * Amendments
+             * @default 0
+             */
+            amendments: number;
+            /** Frame */
+            frame: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Sources
+             * @description draft.sources.json
+             */
+            sources: {
+                [key: string]: unknown;
+            } | null;
+            /** Draft Yaml */
+            draft_yaml: string | null;
+            /** Critic */
+            critic: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Checks
+             * @description critic.json checks (deterministic and the LLM checklist)
+             * @default []
+             */
+            checks: components["schemas"]["Check"][];
+            /**
+             * Cards
+             * @default []
+             */
+            cards: components["schemas"]["Card"][];
+            /**
+             * Proposal
+             * @description proposal.json, written by freeze, without the frame, sources and critic it repeats
+             */
+            proposal: {
+                [key: string]: unknown;
+            } | null;
+            protocol: components["schemas"]["ProtocolView"] | null;
+            /**
+             * Revisions
+             * @description the frozen and amended revisions kept as protocol.v<N>.yaml
+             * @default []
+             */
+            revisions: number[];
+            /**
+             * Amendment Log
+             * @default []
+             */
+            amendment_log: components["schemas"]["Amendment"][];
+        };
+        /** ProposalSummary */
+        ProposalSummary: {
+            /** Name */
+            name: string;
+            /** Question */
+            question: string | null;
+            /**
+             * Steps
+             * @description the steps whose files exist: frame, draft, critic, cards, freeze
+             */
+            steps: string[];
+            /** Frozen */
+            frozen: boolean;
+            /** Revision */
+            revision: number | null;
+            /** Protocol Sha256 */
+            protocol_sha256: string | null;
+            /**
+             * Decided By
+             * @default {}
+             */
+            decided_by: {
+                [key: string]: string[];
+            };
+            /**
+             * Amendments
+             * @default 0
+             */
+            amendments: number;
+        };
         /** ProposeRequest */
         ProposeRequest: {
             /**
@@ -1118,6 +2721,69 @@ export interface components {
              * @default 1
              */
             seed?: number;
+        };
+        /** Protocol */
+        Protocol: {
+            /** Id */
+            id: string;
+            /** Version */
+            version: number;
+            /** Revision */
+            revision?: number | null;
+            /** Question */
+            question: string;
+            /** Evidence Types */
+            evidence_types: {
+                [key: string]: components["schemas"]["EvidenceTypeSpec"];
+            };
+            /**
+             * @default {
+             *       "strategy": "exhaustive",
+             *       "params": {}
+             *     }
+             */
+            locate?: components["schemas"]["Locate"];
+            screen?: components["schemas"]["Screen"] | null;
+            synthesis: components["schemas"]["Synthesis"];
+        };
+        /** ProtocolEntry */
+        ProtocolEntry: {
+            /** Name */
+            name: string;
+            /** Id */
+            id: string | null;
+            /** Version */
+            version: number | null;
+            /** Revision */
+            revision: number | null;
+            /** Question */
+            question: string | null;
+            /** Sha256 */
+            sha256: string | null;
+            /** Error */
+            error: string | null;
+        };
+        /** ProtocolView */
+        ProtocolView: {
+            /**
+             * Source
+             * @description repo, proposal, run
+             */
+            source: string;
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /** Sha256 */
+            sha256: string;
+            /** Yaml */
+            yaml: string;
+            /** Phases */
+            phases: string[];
+            /** @description the parsed protocol; null when it does not validate */
+            protocol: components["schemas"]["Protocol"] | null;
+            /** Error */
+            error: string | null;
         };
         /** QueryResult */
         QueryResult: {
@@ -1172,6 +2838,108 @@ export interface components {
             /** @description the frozen concept.json, once picked */
             concept_brief?: components["schemas"]["ConceptBrief"] | null;
         };
+        /** QuestionMetric */
+        QuestionMetric: {
+            /** Canonical */
+            canonical: string;
+            /** Higher Is Better */
+            higher_is_better: boolean;
+        };
+        /** Rejected */
+        Rejected: {
+            /**
+             * Evidence Type
+             * @enum {string}
+             */
+            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "screen";
+            /** Fields */
+            fields: {
+                [key: string]: unknown;
+            };
+            /**
+             * Quotes
+             * @default []
+             */
+            quotes?: string[];
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "empty_quote" | "not_found" | "ambiguous" | "partial_number" | "schema" | "out_of_scope" | "dangling_link";
+            /**
+             * Detail
+             * @default
+             */
+            detail?: string;
+        };
+        /**
+         * Report
+         * @description report.json of `evaluate score` (evaluation/report.py): A extraction, B integration, C synthesis per
+         *     level, intervals, locate, cascade, extractors, cost, stability, funnel.
+         */
+        Report: {
+            /** Corpus Id */
+            corpus_id: string;
+            /** Run Id */
+            run_id: string | null;
+            /** Question */
+            question: string | null;
+            /**
+             * Levels
+             * @default []
+             */
+            levels: string[];
+            /** Extraction */
+            extraction: {
+                [key: string]: unknown;
+            } | null;
+            /** Integration */
+            integration: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Synthesis
+             * @default []
+             */
+            synthesis: components["schemas"]["SynthesisScore"][];
+            /** Intervals */
+            intervals: {
+                [key: string]: unknown;
+            } | null;
+            /** Locate */
+            locate: {
+                [key: string]: unknown;
+            } | null;
+            /** Cascade */
+            cascade: {
+                [key: string]: unknown;
+            } | null;
+            /** Extractors */
+            extractors: {
+                [key: string]: unknown;
+            } | null;
+            /** Cost */
+            cost: {
+                [key: string]: unknown;
+            } | null;
+            /** Stability */
+            stability: {
+                [key: string]: unknown;
+            } | null;
+            /** Funnel */
+            funnel: {
+                [key: string]: unknown;
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** ReportView */
+        ReportView: {
+            ref: components["schemas"]["ScoreRef"];
+            report: components["schemas"]["Report"];
+            /** Markdown */
+            markdown: string | null;
+        };
         /**
          * Results
          * @description $RUNS/report/report.json (scoring, M4) as written: per question x condition means, paired
@@ -1179,6 +2947,19 @@ export interface components {
          */
         Results: {
             [key: string]: unknown;
+        };
+        /** Root */
+        Root: {
+            /**
+             * Path
+             * @description absolute path, or null when not configured
+             */
+            path: string | null;
+            /**
+             * Exists
+             * @default false
+             */
+            exists: boolean;
         };
         /** RunCounts */
         RunCounts: {
@@ -1203,6 +2984,35 @@ export interface components {
             concept: components["schemas"]["ConceptBrief"] | null;
             answer: components["schemas"]["Answer"] | null;
             verify: components["schemas"]["Verification"] | null;
+        };
+        /** RunPaper */
+        RunPaper: {
+            /** Run */
+            run: string;
+            /** Document */
+            document: string;
+            /**
+             * Text
+             * @description null when the run's corpus is not under the corpora root
+             */
+            text: string | null;
+            /**
+             * Segments
+             * @default []
+             */
+            segments: components["schemas"]["Segment"][];
+            /**
+             * Items
+             * @default []
+             */
+            items: components["schemas"]["Item"][];
+            study: components["schemas"]["Study"] | null;
+            funnel: components["schemas"]["FunnelDoc"] | null;
+            /**
+             * Calls
+             * @default []
+             */
+            calls: components["schemas"]["CallSummary"][];
         };
         /** RunRequest */
         RunRequest: {
@@ -1380,6 +3190,34 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** ScoreRef */
+        ScoreRef: {
+            /**
+             * Id
+             * @description the directory under the scores root, parts joined by `~`
+             */
+            id: string;
+            /** Group */
+            group: string;
+            /** Name */
+            name: string | null;
+            /** Corpus Id */
+            corpus_id: string | null;
+            /** Run Id */
+            run_id: string | null;
+            /**
+             * Levels
+             * @default []
+             */
+            levels: string[];
+            /** Strategy */
+            strategy: string | null;
+            /**
+             * Systems
+             * @default []
+             */
+            systems: string[];
+        };
         /** ScoreSummary */
         ScoreSummary: {
             /** Support Share */
@@ -1398,6 +3236,95 @@ export interface components {
              * @description scored against the draft key: tests the pipeline, never a result
              */
             provisional?: boolean | null;
+        };
+        /** ScoresIndex */
+        ScoresIndex: {
+            /**
+             * Reports
+             * @default []
+             */
+            reports: components["schemas"]["ScoreRef"][];
+            /**
+             * Compares
+             * @default []
+             */
+            compares: components["schemas"]["ScoreRef"][];
+            /**
+             * Shifts
+             * @default []
+             */
+            shifts: components["schemas"]["ScoreRef"][];
+            /**
+             * Benchmarks
+             * @default []
+             */
+            benchmarks: components["schemas"]["ScoreRef"][];
+        };
+        /**
+         * Screen
+         * @description Per-document screening before any extraction (Part D, the funnel; ours): is the paper one the protocol
+         *     can use at all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest.
+         *     `spec` is the pseudo evidence type the engine runs the screen calls on, so they are checked, cached and
+         *     replayed exactly like extractor calls.
+         */
+        Screen: {
+            /** Question */
+            question: string;
+            /**
+             * Terms
+             * @default []
+             */
+            terms?: string[];
+            /** Extractors */
+            extractors: components["schemas"]["ExtractorRef"][];
+            /**
+             * On Fail
+             * @default skip
+             * @enum {string}
+             */
+            on_fail?: "skip" | "extract_anyway";
+        };
+        /**
+         * Segment
+         * @description A piece of a paper's text: `marks` are the ids (items, facts) whose spans cover it, `roles` their roles.
+         *     Cut on the server, in code points, so the page never converts offsets.
+         */
+        Segment: {
+            /** Text */
+            text: string;
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /**
+             * Marks
+             * @default []
+             */
+            marks: string[];
+            /**
+             * Roles
+             * @default []
+             */
+            roles: string[];
+        };
+        /** ShiftView */
+        ShiftView: {
+            ref: components["schemas"]["ScoreRef"];
+            /** Shift */
+            shift: {
+                [key: string]: unknown;
+            };
+            /** Markdown */
+            markdown: string | null;
+        };
+        /** Span */
+        Span: {
+            /** Role */
+            role: string;
+            /** Selector */
+            selector: {
+                [key: string]: unknown;
+            };
         };
         /** SparqlRequest */
         SparqlRequest: {
@@ -1480,6 +3407,177 @@ export interface components {
              */
             fact_id?: string | null;
         };
+        /**
+         * Study
+         * @description One study of answer.json (A4 with C3 and F1); the baselines give only document and direction.
+         */
+        Study: {
+            /** Document */
+            document: string;
+            /**
+             * Direction
+             * @enum {string}
+             */
+            direction: "supports" | "contradicts" | "neutral" | "undetermined";
+            /** Delta */
+            delta: number | null;
+            /** Metric */
+            metric: string | null;
+            treatment: components["schemas"]["StudyPair"] | null;
+            control: components["schemas"]["StudyPair"] | null;
+            /** Author Claim */
+            author_claim: {
+                [key: string]: unknown;
+            } | null;
+            reason: components["schemas"]["StudyReason"] | null;
+            /**
+             * Flags
+             * @default []
+             */
+            flags: string[];
+            /** Duplicate Of */
+            duplicate_of: string | null;
+            /** Funnel */
+            funnel: {
+                [key: string]: unknown;
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** StudyPair */
+        StudyPair: {
+            /** Condition */
+            condition: string | null;
+            /** Measurement */
+            measurement: string | null;
+            /** Value */
+            value: number | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** StudyReason */
+        StudyReason: {
+            /** Code */
+            code: string;
+            /** Text */
+            text: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** Synthesis */
+        Synthesis: {
+            compare: components["schemas"]["Compare"];
+            /** Metrics */
+            metrics: components["schemas"]["QuestionMetric"][];
+            /** Min Effect */
+            min_effect: number;
+            /**
+             * @default {
+             *       "rule": "same_dataset",
+             *       "prefer": [
+             *         "table_cell",
+             *         "document_order"
+             *       ]
+             *     }
+             */
+            pairing?: components["schemas"]["Pairing"];
+            /** Claim Map */
+            claim_map: {
+                [key: string]: "supports" | "contradicts" | "neutral";
+            };
+            /** Label */
+            label: components["schemas"]["LabelRow"][];
+            /**
+             * @default {
+             *       "duplicates": true,
+             *       "large_effect": {
+             *         "factor": 3,
+             *         "min_studies": 3
+             *       }
+             *     }
+             */
+            flags?: components["schemas"]["Flags"];
+        };
+        /** SynthesisScore */
+        SynthesisScore: {
+            /** System */
+            system: string;
+            /** Label */
+            label: string | null;
+            /** Expected Label */
+            expected_label: string | null;
+            /** Label Correct */
+            label_correct: boolean | null;
+            /**
+             * Rows
+             * @default []
+             */
+            rows: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Studies
+             * @default []
+             */
+            studies: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Confusion
+             * @default []
+             */
+            confusion: {
+                [key: string]: unknown;
+            }[];
+            /** Flags */
+            flags: {
+                [key: string]: unknown;
+            } | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * TruthAnswer
+         * @description ground_truth.json `answer`: the label the corpus is built to have.
+         */
+        TruthAnswer: {
+            /** Label */
+            label: string;
+            /**
+             * Supporting
+             * @default []
+             */
+            supporting: string[];
+            /**
+             * Contradicting
+             * @default []
+             */
+            contradicting: string[];
+            /**
+             * Neutral
+             * @default []
+             */
+            neutral: string[];
+            /**
+             * Undetermined
+             * @default []
+             */
+            undetermined: string[];
+            /**
+             * Duplicates
+             * @default []
+             */
+            duplicates: string[];
+            /**
+             * Flags
+             * @default {}
+             */
+            flags: {
+                [key: string]: string[];
+            };
+        } & {
+            [key: string]: unknown;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -1492,6 +3590,38 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /**
+         * VariantInfo
+         * @description variant.json of a counterfactual corpus (`synth variant`, F3).
+         */
+        VariantInfo: {
+            /** Base Corpus Id */
+            base_corpus_id: string;
+            /** Corpus Id */
+            corpus_id: string | null;
+            /** Study */
+            study: string;
+            /** Paper */
+            paper: string | null;
+            /** To */
+            to: string | null;
+            /**
+             * Changed
+             * @default []
+             */
+            changed: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Expected
+             * @default {}
+             */
+            expected: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
         };
         /** Verdict */
         Verdict: {
@@ -2388,6 +4518,596 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvConfig"];
+                };
+            };
+        };
+    };
+    ev_corpora: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorpusSummary"][];
+                };
+            };
+        };
+    };
+    ev_corpus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorpusDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_corpus_paper: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+                paper: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CorpusPaperDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_protocols: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtocolEntry"][];
+                };
+            };
+        };
+    };
+    ev_protocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtocolView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_proposals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalSummary"][];
+                };
+            };
+        };
+    };
+    ev_proposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_runs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvRunSummary"][];
+                };
+            };
+        };
+    };
+    ev_run: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvRunDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_run_paper: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                document: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPaper"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_run_graph: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvGraph"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_run_protocol: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProtocolView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_run_call: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                call_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CallDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_call_trace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+                call_id: string;
+                agent_run: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentTrace"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_baseline_trace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentTrace"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_scores: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScoresIndex"];
+                };
+            };
+        };
+    };
+    ev_report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                score_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_compare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                score_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompareTable"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_shift: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                score_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShiftView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_benchmark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                score_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchmarkView"];
                 };
             };
             /** @description Validation Error */

@@ -118,6 +118,8 @@ async function orNull<T>(promise: Promise<T>): Promise<T | null> {
 }
 
 const get = <T>(path: string, params?: Params, signal?: AbortSignal) => json<T>("GET", path, { params, signal })
+/** GET a JSON path: what other API modules (src/api/ev.ts) build on, so every request still goes through here. */
+export const getJson = get
 const post = <T>(path: string, body: unknown, signal?: AbortSignal) => json<T>("POST", path, { body, signal })
 
 /** A step's output file: the main agent's by default, a subagent's with its id. */
