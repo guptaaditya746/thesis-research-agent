@@ -134,6 +134,7 @@ def test_engine_never_opens_ground_truth(protocol_file: Path, corpus: Path, tmp_
         root = run_regex(protocol_file, corpus, tmp_path / "runs")
         replay(root)
         reexec(root)
+        run_regex(protocol_file, corpus, tmp_path / "runs-gaps", strategy="gaps")   # the funnel (Part D) too
     finally:
         active[0] = False
     assert any(p.endswith("manifest.json") for p in opened)
