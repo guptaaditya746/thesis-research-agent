@@ -95,7 +95,7 @@ He wrote no numbered research questions. Read from his text:
 1. Contract: funnel engine, declarative synthesis, proposal flow (written before any code). **Done 17 Oct**: Parts C–G of `evidence-system.md`; the declarative synthesis is built (protocol version 2).
 2. The conflict fixes (RAG baseline, fidelity check, attribution). **Done 17 Oct** (Part G).
 3. Finish ev2. **Done 17 Oct** (Part F).
-4. Funnel engine.
+4. Funnel engine. **Done 17 Oct** (Part D).
 5. Proposal flow.
 6. Codex runbook and the live Slurm run.
 7. Web app rebuild.
@@ -115,6 +115,7 @@ see §7).
 | Synthetic corpus generator | built; knobs, variants and the stricter fidelity checks added 17 Oct | `synth/`: seeded ground truth from the protocol's synthesis block, five levels plus `mixed`, template and LLM renderers, fidelity checks with retries (including added numbers, added claims, blind extras), one corpus per level from one study set, the knobs of Part F2, `synth variant` (Part F3), a review sheet, six example corpora ([`synth/README.md`](../synth/README.md)) |
 | Extractor library | built | `evidence/extractors/` (regex and single-call LLM per evidence type), `evidence/agentic/`; contract `evidence/contract.py` (Part B) |
 | Provenance and replay (ours) | built | `evidence/engine.py`, `replay.py`, `prov.py` |
+| Funnel engine (ours) | built 17 Oct (Part D) | `evidence run --strategy all\|gaps`: the protocol's `screen` cascade (`extractors/screen.py`: `regex_screen` on the terms, `llm_screen` on the first 12k characters) decides per paper; in `gaps` the cheap position of every type runs first, the completeness check is `synthesis.study()`, and only the gap's types escalate per round to the next position with a targeted `focus` on the task; `funnel.json`, `screen`/`completeness` events, `answer.json` `funnel` per study; `evaluate` reports calls per document, stop positions and screen precision/recall |
 | Evidence representation | built | `evidence/merge.py`, `graph.py`: merged items with every span and `found_by`; `graph.json` |
 | Synthesis rules | built, in the protocol (17 Oct) | parameters in the protocol's `synthesis` block (Part C); machinery `evidence/rules.py`, `synthesis.py`: same-dataset pairing, table before prose; undetermined studies with a reason code |
 | Evaluation A, B, C | built; intervals, flags, shift and benchmark records added 17 Oct | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis (direction accuracy, completeness, traceability, expected-undetermined rule, flag precision/recall), locate recall, cascade contribution, cost, stability, 95 % BCa bootstrap intervals (`stats.py`); `evaluate shift` (`shift.py`), `evaluate benchmark` (`benchmark.py`, B11 records per extractor) |
@@ -122,8 +123,8 @@ see §7).
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
 | Viewer | earlier design | `webapp/`, to be rebuilt |
 
-Not built: the funnel engine (Part D; the protocol's `screen` block is parsed but not run), the proposal flow
-(Part E), the 337-paper check. Their contracts are written in [`evidence-system.md`](evidence-system.md).
+Not built: the proposal flow (Part E), the 337-paper check. Their contracts are written in
+[`evidence-system.md`](evidence-system.md).
 
 ## 7. Open
 
@@ -134,7 +135,8 @@ Not built: the funnel engine (Part D; the protocol's `screen` block is parsed bu
 | 337-paper check | Which of the 337 papers are RAG papers, and their gold (the `gold/` method; never run on the real model, [`earlier-work.md`](earlier-work.md) §6). |
 | Structured outputs on the server | pydantic-ai's `response_format` calls (LLM extractors, gold, judge) cannot ask for `disable_any_whitespace` per request; proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the `llm-setup` profile (a submodule, not changed here); count `finish_reason` length on guided calls on Slurm either way. |
 | Statistics | 95 % BCa bootstrap intervals (2,000 resamples, papers resampled; paired engine-minus-baseline difference) are built (Part F4); whether to report a test besides the intervals is open. |
-| Runbook | `slurm-evidence-runbook.md` predates Parts F and G in its step list: the knob corpora, `synth variant`, `evaluate shift`/`benchmark` and the new baseline outputs are not in it yet (plan step 6). |
+| Runbook | `slurm-evidence-runbook.md` predates Parts F and G in its step list: the knob corpora, `synth variant`, `evaluate shift`/`benchmark` and the new baseline outputs are not in it yet (plan step 6); step 3 already runs `all` and `gaps`. |
+| Funnel knobs | After an escalation adds context the funnel does not re-run the dependent type's cheap position with it; `llm_screen` reads the first 12k characters (`head_chars`). Both to be judged on the first live numbers (Part D as built). |
 
 ## 8. Documents
 
