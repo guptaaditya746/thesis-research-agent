@@ -192,7 +192,7 @@ def engine_answer(items: dict[str, Item]) -> dict[str, Any]:
 
 
 def write_run(root: Path, items: list[Item], answer: dict[str, Any] | None, *, locate: Any = "document",
-              reexec: Any = None, run_id: str = "run-1") -> Path:
+              reexec: Any = None, run_id: str = "run-1", settings: dict[str, Any] | None = None) -> Path:
     run = Path(root) / run_id
     run.mkdir(parents=True)
     ordered = sorted(items, key=lambda i: (i.first_start(), i.evidence_type, i.item_id))
@@ -210,7 +210,7 @@ def write_run(root: Path, items: list[Item], answer: dict[str, Any] | None, *, l
     dump(run / "run.json", {"run_id": run_id, "mode": "run", "protocol": {"id": "rag-factuality", "sha256": "0" * 64},
                             "manifest_sha256": "1" * 64, "extractors": [REGEX, LLM], "outputs": {},
                             "cost": {"calls": 16, "model_calls": 8, "input_tokens": 4000, "output_tokens": 600,
-                                     "seconds": 12.5}})
+                                     "seconds": 12.5}, **({"settings": settings} if settings else {})})
     return run
 
 
@@ -222,3 +222,91 @@ def baseline_answer(system: str, directions: dict[str, str], label: str) -> dict
             "studies": [{"document": p, "direction": d} for p, d in sorted(directions.items())],
             "supporting": groups["supports"], "contradicting": groups["contradicts"], "neutral": groups["neutral"],
             "undetermined": [], "answer_text": "..."}
+
+
+# --- Part F shapes (docs/evidence-system.md F1, F2): flags, duplicates, missing information, irrelevant papers
+
+def f_studies() -> list[dict[str, Any]]:
+    """The two studies above plus: S003 a duplicate of S001; S004 missing its control value (effect
+    undetermined); S005 an irrelevant paper; S006 a supporting study with an unusually large effect. S002's
+    claim (no effect) disagrees with its data (contradicts). No papers or placements exist for S003-S006:
+    C and the flag scores need only the studies and the answer."""
+    s1, s2 = studies()
+    s2["flags"], s2["duplicate_of"], s2["missing"], s2["relevant"] = ["claim_disagrees"], None, None, True
+    s1["flags"], s1["duplicate_of"], s1["missing"], s1["relevant"] = [], None, None, True
+    s3 = {"study_id": "S003", "paper": "S003", "level": "explicit", "relevant": True, "flags": ["duplicate"],
+          "duplicate_of": "S001", "missing": None,
+          "conditions": [{"id": "S003.c1", "role": "baseline", "label": "closed-book model", "aliases": []},
+                         {"id": "S003.c2", "role": "rag", "label": "retrieval-augmented variant", "aliases": []}],
+          "metrics": [{"id": "S003.k1", "canonical": "factual_accuracy", "name": "answer accuracy",
+                       "higher_is_better": True}],
+          "measurements": [{"id": "S003.m1", "condition": "S003.c1", "metric": "S003.k1", "value": 0.62, "dataset": "NQ"},
+                           {"id": "S003.m2", "condition": "S003.c2", "metric": "S003.k1", "value": 0.70, "dataset": "NQ"}],
+          "author_claim": {"id": "S003.a1", "direction": "improves"},
+          "effect": {"direction": "supports", "delta": 0.08, "metric": "S003.k1", "treatment": "S003.m2",
+                     "control": "S003.m1"}}
+    s4 = {"study_id": "S004", "paper": "S004", "level": "complex", "relevant": True, "flags": [], "duplicate_of": None,
+          "missing": "control",
+          "conditions": [{"id": "S004.c1", "role": "baseline", "label": "vanilla model", "aliases": []},
+                         {"id": "S004.c2", "role": "rag", "label": "retrieval model", "aliases": []}],
+          "metrics": [{"id": "S004.k1", "canonical": "factual_accuracy", "name": "accuracy", "higher_is_better": True}],
+          "measurements": [{"id": "S004.m2", "condition": "S004.c2", "metric": "S004.k1", "value": 0.55, "dataset": "NQ"}],
+          "author_claim": {"id": "S004.a1", "direction": "improves"},
+          "effect": {"direction": "undetermined", "delta": None, "metric": "S004.k1", "treatment": "S004.m2",
+                     "control": None, "reason": "missing_control"}}
+    s5 = {"study_id": "S005", "paper": "S005", "level": "explicit", "relevant": False, "flags": [], "duplicate_of": None,
+          "missing": None, "conditions": [], "metrics": [], "measurements": [], "author_claim": None, "effect": None}
+    s6 = {"study_id": "S006", "paper": "S006", "level": "distributed", "relevant": True, "flags": ["large_effect"],
+          "duplicate_of": None, "missing": None,
+          "conditions": [{"id": "S006.c1", "role": "baseline", "label": "no retrieval", "aliases": []},
+                         {"id": "S006.c2", "role": "rag", "label": "with retrieval", "aliases": []}],
+          "metrics": [{"id": "S006.k1", "canonical": "factual_accuracy", "name": "accuracy", "higher_is_better": True}],
+          "measurements": [{"id": "S006.m1", "condition": "S006.c1", "metric": "S006.k1", "value": 0.40, "dataset": "NQ"},
+                           {"id": "S006.m2", "condition": "S006.c2", "metric": "S006.k1", "value": 0.80, "dataset": "NQ"}],
+          "author_claim": {"id": "S006.a1", "direction": "improves"},
+          "effect": {"direction": "supports", "delta": 0.40, "metric": "S006.k1", "treatment": "S006.m2",
+                     "control": "S006.m1"}}
+    return [s1, s2, s3, s4, s5, s6]
+
+
+F_FLAGS = {"claim_disagrees": ["S002"], "duplicate": ["S003"], "large_effect": ["S006"]}
+F_DIRECTIONS = {"S001": "supports", "S002": "contradicts", "S003": "supports", "S004": "undetermined",
+                "S005": "undetermined", "S006": "supports"}
+
+
+def f_ground_truth(corpus_id: str = "test-f") -> dict[str, Any]:
+    return {"corpus_id": corpus_id, "seed": 1, "question": QUESTION, "protocol": {"id": "rag-factuality", "sha256": "0" * 64},
+            "studies": f_studies(), "placements": placements(),
+            "answer": {"label": "mixed", "supporting": ["S001", "S006"], "contradicting": ["S002"], "neutral": [],
+                       "undetermined": ["S004", "S005"], "duplicates": ["S003"], "flags": F_FLAGS}}
+
+
+def write_f_corpus(root: Path, corpus_id: str = "test-f") -> Path:
+    """The two-paper corpus with the Part F ground truth (four more studies without papers)."""
+    corpus = write_corpus(root, corpus_id)
+    dump(corpus / "ground_truth.json", f_ground_truth(corpus_id))
+    return corpus
+
+
+def f_answer(system: str = "evidence-engine", directions: dict[str, str] | None = None,
+             flags: dict[str, list[str]] | None = None, duplicate_of: dict[str, str] | None = None,
+             label: str = "mixed") -> dict[str, Any]:
+    """An answer.json with the F1 keys: per-study `flags` and `duplicate_of`, `counts.duplicates`, top-level
+    `duplicates` and `flags`. Defaults: the perfect answer on `f_ground_truth`."""
+    directions = dict(F_DIRECTIONS if directions is None else directions)
+    flags = {k: list(v) for k, v in (F_FLAGS if flags is None else flags).items()}
+    duplicate_of = dict({"S003": "S001"} if duplicate_of is None else duplicate_of)
+    dups = sorted(flags.get("duplicate", []))
+    groups = {g: sorted(p for p, x in directions.items() if x == d and p not in dups)
+              for g, d in (("supporting", "supports"), ("contradicting", "contradicts"), ("neutral", "neutral"),
+                           ("undetermined", "undetermined"))}
+    studies = []
+    for doc, direction in sorted(directions.items()):
+        entry = {"document": doc, "direction": direction, "flags": sorted(f for f, docs in flags.items() if doc in docs),
+                 "duplicate_of": duplicate_of.get(doc), "reason": None}
+        if direction == "undetermined":
+            entry["reason"] = {"code": "no_pair", "text": "no rag and baseline measurement on a question metric"}
+        studies.append(entry)
+    return {"system": system, "question": QUESTION, "label": label,
+            "counts": {**{g: len(v) for g, v in groups.items()}, "duplicates": len(dups)}, "studies": studies,
+            **groups, "duplicates": dups, "flags": {f: sorted(flags.get(f, [])) for f in F_FLAGS}}
