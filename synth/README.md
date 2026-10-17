@@ -7,14 +7,59 @@ generation improve the factual accuracy of LLM-generated answers?* The files wri
 
 ```
 uv run synth build --name rag-s1 --seed 1 --studies 20 --renderer template \
-    [--levels explicit,paraphrased|all] [--effects supports=0.6,contradicts=0.2,neutral=0.2] --out corpora/
+    [--levels explicit,paraphrased|all] [--effects supports=0.6,contradicts=0.2,neutral=0.2] --out corpora/ \
+    [--duplicates N] [--missing N] [--outliers N] [--irrelevant N]
 uv run synth build ... --renderer llm --model sub-model-1 [--verify-model sub-model-2] [--attempts 3]
+uv run synth variant --corpus corpora/rag-s1-mixed --study S003 --direction contradicts [--out DIR] [--protocol P]
 uv run synth sample --corpus corpora/rag-s1-mixed --n 5 --seed 0     # human review sheet (.md + .csv)
 ```
 
 `build` writes `<name>-<level>` for each level plus `<name>-mixed` (levels round robin over the studies).
 All corpora of one build share the study set and the paper ids, and a mixed paper is byte for byte the
 paper of its level's corpus, so a change in score between corpora comes from the rendering alone.
+
+## Knobs (`--duplicates`, `--missing`, `--outliers`, `--irrelevant`; `truth.with_knobs`)
+
+The supervisor's variants of section 6 (duplicates, missing information, unusually large effects); the
+mechanics and the irrelevant papers are ours (docs/evidence-system.md F2). Each knob draws from its own
+`random.Random(f"synth:{seed}:{knob}")`, so the plain build (every knob 0) is byte for byte what it was and
+adding one knob does not reshuffle another. Outliers are applied first, duplicates copy the (possibly
+redrawn) study, missing never touches an outlier or a duplicated original, irrelevant papers come last.
+
+| Knob | Papers | Ground truth |
+|---|---|---|
+| `--duplicates N` | N extra papers (ids after the set) that report an existing study again: same conditions, metrics, datasets and values (fact ids under the new study id), a different title and filler, in the mixed corpus at the original's level | `duplicate_of`, `flags: ["duplicate"]`, effect as the original's; in `answer.duplicates`, not counted |
+| `--missing N` | N studies lack the control (alternately the treatment) measurement on the question metric on both datasets: no sentence states it, a table cell holds an en dash (`levels.MISSING_CELL`), no relative value, no decoy | `missing: "control" \| "treatment"`, `effect: {direction: "undetermined", delta: null, metric, treatment: id \| null, control: id \| null, reason: "missing_control" \| "missing_treatment"}`; in `answer.undetermined` |
+| `--outliers N` | N supporting studies get their pair redrawn with an improvement of 0.30-0.45 (`truth.LARGE_DELTA`) | `flags: ["large_effect"]`; counted |
+| `--irrelevant N` | N extra papers with no experiment, from `vocab.IRRELEVANT`: a survey of retrieval-augmented generation (the term screen lets it through; the screening question must say no) alternating with a paper on another topic (no screen term at all); no digits; the same text at every level and in both renderers (the LLM renderer makes no call for them) | `relevant: false`, no conditions, metrics, measurements or claim, `effect.reason: "screened_out"`; in `answer.undetermined` |
+
+Every study record has `relevant`, `flags` (sorted), `duplicate_of` and `missing`; the flags are what
+`evidence.rules.duplicates` and `rules.large_effects` find on the study set with the protocol's
+`synthesis.flags` (so a natural large effect is flagged in a plain build too), plus `claim_disagrees` for a
+contradictory-level paper whose effect is determined. The generator asserts the rules find exactly the
+planted duplicates and outliers (otherwise `SystemExit` naming the knob: too few supporting studies, a
+natural large effect next to a planted one, a protocol with `flags.duplicates: false`), and keeps the
+treatment/control pairs of distinct studies apart on both datasets (a colliding study is drawn again).
+`answer` gains `undetermined`, `duplicates` and `flags: {claim_disagrees, duplicate, large_effect}`; the
+label is the label table over the counted studies. `corpus.json` gains `settings: {name, studies, mix,
+levels, duplicates, missing, outliers, irrelevant}`.
+
+## Counterfactual variant (`synth variant`, `variant.py`)
+
+The supervisor's controlled variant: change one study's result and the answer should shift predictably
+(docs/evidence-system.md F3). `synth variant --corpus DIR --study S --direction D` draws the base corpus's
+study set again from its `settings`, redraws S's treatment/control pair on both datasets with direction D
+from `random.Random(f"synth:{seed}:{S}:variant:{D}")` (same ids, names, datasets and distractor values;
+the claim follows the new effect, a contradictory-level paper keeps a false claim), re-renders only S's
+paper at its level (default: the base corpus's renderer; the usual renderer options) with the same
+fidelity checks (a failure is an error), re-applies the flags to the whole set, and writes
+`<corpus>-cf-<S>-<D>` (or `--out`): every other paper copied byte for byte (sha256 verified against the
+base manifest), `corpus.json` with `variant: {base_corpus_id, study, from, to}`, and `variant.json`
+`{base_corpus_id, corpus_id, study, paper, from, to, changed: [{measurement, from, to}], expected:
+{before: {label, counts}, after: {label, counts}, label_changes}}`. S must be a counted study (not a
+duplicate, not missing, not irrelevant) and D must differ from its effect. The base corpus does not hold
+the protocol file, so `--protocol` (default the RAG protocol) must hash to the base's `protocol.sha256`;
+otherwise the command refuses.
 
 ## Ground truth (`truth.py`)
 
@@ -79,9 +124,18 @@ placement holds its exact text and `anchor.find` with its context lands on it); 
 string reads as the true value; relative ones against the baseline); `values_unique` (a value string occurs
 only where placed); `values_associated` (a value's table row names its condition and no other, its column header its metric, its Dataset cell its dataset; in prose its sentence names its condition and metric and no other, a relative value its own condition before and the baseline after; `assoc.py`); `labels_covered` (every occurrence of a name is a recorded placement of that fact);
 `stray_numbers` (no other number reads as one of the study's values as is, as percent or per 1,000);
-`level_<level>` (the level's property); LLM only: `required_strings`, `model_call`, and with
-`--verify-model` `blind_reextraction` (a model that never saw the plan must recover every (condition, value) pair:
-the value within 0.005, reported under one of the condition's names or its code). A study failing at any level is left out of every corpus of the set and reported with
+`added_numbers` (no number outside the value placements, the decoys and the allowlist
+`fidelity.ALLOWED_NUMBERS`: `1,000 questions`, `Table n`, `Section n`, `Figure n`, `Appendix n`,
+`Equation n`, list markers, plus the `A1`-style codes of `vocab.py`; fails with the number, its offset and
+context); `added_claims` (no sentence outside the claim placements names retrieval and states an effect in
+the words of `evidence/extractors/terms.CLAIM_SUBJECT` and `CLAIMS`, over the regex extractor's own sentence
+split); `level_<level>` (the level's property; `irrelevant` for a paper with no experiment: nothing placed,
+no table); LLM only: `required_strings`, `model_call`, and with `--verify-model` `blind_reextraction` (a
+model that never saw the plan must recover every (condition, value) pair: the value within 0.005, reported
+under one of the condition's names or its code) and `blind_extra` (it must return nothing else; the decoy
+and the complex level's relative difference, which the paper does state, are allowed). The two added-content
+checks enforce the writer prompt's rules 3 and 4 (docs/evidence-system.md G.2); the template renderer's own
+papers pass them. A study failing at any level is left out of every corpus of the set and reported with
 `excluded_reason` and its attempt `history`.
 
 `synth sample` writes `review/review-s<seed>.md` and `.csv`: per sampled paper, every placement with its

@@ -3,8 +3,8 @@
   "seed": 1,
   "generator": {
     "name": "synth",
-    "version": "1",
-    "code_sha256": "6a8485f3f1d212475e2f618815ce3893a9f1cbd1a64b54488117cd7bb520bc9a"
+    "version": "2",
+    "code_sha256": "5e5c937780dc4492a6319ad0f894c39ebcbf51fe5377138667d82d43a67570e9"
   },
   "renderer": "template",
   "level": "explicit",
@@ -45,5 +45,25 @@
       "level": "explicit"
     }
   ],
-  "models": null
+  "models": null,
+  "settings": {
+    "name": "rag-demo",
+    "studies": 6,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  }
 }

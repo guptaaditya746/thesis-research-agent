@@ -11,6 +11,10 @@
       "study_id": "S001",
       "paper": "S001",
       "level": "explicit",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
       "conditions": [
         {
           "id": "S001.c1",
@@ -78,6 +82,10 @@
       "study_id": "S002",
       "paper": "S002",
       "level": "paraphrased",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
       "conditions": [
         {
           "id": "S002.c1",
@@ -132,6 +140,10 @@
       "study_id": "S003",
       "paper": "S003",
       "level": "distributed",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
       "conditions": [
         {
           "id": "S003.c1",
@@ -205,6 +217,10 @@
       "study_id": "S004",
       "paper": "S004",
       "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
       "conditions": [
         {
           "id": "S004.c1",
@@ -375,6 +391,12 @@
       "study_id": "S005",
       "paper": "S005",
       "level": "contradictory",
+      "relevant": true,
+      "flags": [
+        "claim_disagrees"
+      ],
+      "duplicate_of": null,
+      "missing": null,
       "conditions": [
         {
           "id": "S005.c1",
@@ -455,6 +477,10 @@
       "study_id": "S006",
       "paper": "S006",
       "level": "explicit",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
       "conditions": [
         {
           "id": "S006.c1",
@@ -1550,6 +1576,15 @@
     ],
     "neutral": [
       "S003"
-    ]
+    ],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [
+        "S005"
+      ],
+      "duplicate": [],
+      "large_effect": []
+    }
   }
 }
