@@ -98,7 +98,8 @@ He wrote no numbered research questions. Read from his text:
 3. Finish ev2. **Done 17 Oct** (Part F).
 4. Funnel engine. **Done 17 Oct** (Part D).
 5. Proposal flow. **Done 17 Oct** (Part E).
-6. Codex runbook and the live Slurm run.
+6. Codex runbook and the live Slurm run. Runbook written 17 Oct (`slurm-evidence-runbook.md`, dry-run
+   offline); live run pending.
 7. Web app rebuild.
 8. The 337-paper check.
 9. Documentation.
@@ -107,7 +108,7 @@ He wrote no numbered research questions. Read from his text:
 
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models only
 (1220 passed, 1 skipped in WSL, 17 Oct, with the proposal flow and its review fixes), **not yet run against live models**. The runbook for the first live run is
-[`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (not run; written before the 16 Oct decisions,
+[`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (rewritten 17 Oct for Parts D–G; not run yet,
 see §7).
 
 | Step (supervisor's order) | State | Where |
@@ -136,7 +137,7 @@ Not built: the 337-paper check (§5 step 8, §7), the web app rebuild (§5 step 
 | 337-paper check | Which of the 337 papers are RAG papers, and their gold (the `gold/` method; never run on the real model, [`earlier-work.md`](earlier-work.md) §6). |
 | Structured outputs on the server | pydantic-ai's `response_format` calls (LLM extractors, gold, judge) cannot ask for `disable_any_whitespace` per request; proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the `llm-setup` profile (a submodule, not changed here); count `finish_reason` length on guided calls on Slurm either way. |
 | Statistics | 95 % BCa bootstrap intervals (2,000 resamples, papers resampled; paired engine-minus-baseline difference) are built (Part F4); whether to report a test besides the intervals is open. |
-| Runbook | `slurm-evidence-runbook.md` predates Parts F and G in its step list: the knob corpora, `synth variant`, `evaluate shift`/`benchmark` and the new baseline outputs are not in it yet (plan step 6); step 3 already runs `all` and `gaps`. |
+| Runbook | Written 17 Oct, live run pending (plan step 6). `slurm-evidence-runbook.md` covers Parts D–G: one model (`orch-model`) for extractors, baselines and the proposal flow; knob corpora (`rag-*-k1`, 2 of each knob) beside the level corpora; a `synth variant` of the mixed corpus (LLM and template); the engine `all` and `gaps` (also the agentic protocol in both); the RAG baseline's global top 8 with citations; scores with intervals, `evaluate compare` all vs gaps, `evaluate shift`, `evaluate benchmark`; a proposal-flow dry run on `orch-model` with the committed vocabulary, defaults frozen, `protocol check` and a diff against the hand-written protocol (nothing runs it), then a **USER** review of the cards. Dry-run offline in WSL with a scripted model (tiny template corpora; the LLM-renderer builds and the agent steps parse-checked only). |
 | Funnel knobs | After an escalation adds context the funnel does not re-run the dependent type's cheap position with it; `llm_screen` reads the first 12k characters (`head_chars`). Both to be judged on the first live numbers (Part D as built). |
 
 ## 8. Documents
