@@ -173,6 +173,76 @@ def test_a_stray_code_is_not_a_placement() -> None:
     assert failing(plan, text, ps, decoys) == set()
 
 
+@pytest.mark.parametrize(("level", "added"), [
+    ("explicit", "\nAn earlier system reached 71.2% on the same split.\n"),
+    ("complex", "\nThe gap of 3 points is consistent across seeds.\n"),
+    ("distributed", "\nWe used 8 GPUs for every run.\n"),
+    ("paraphrased", "\nThe index holds 2,500,000 passages.\n"),
+])
+def test_added_number_fails(level: str, added: str) -> None:
+    """G.2: a number outside the value placements, the decoys and the allowlist is added content."""
+    text, plan, ps, decoys = _llm_read(level, lambda t, p: t + added)
+    assert failing(plan, text, ps, decoys) & {"added_numbers"} == {"added_numbers"}
+    detail = next(c.detail for c in fidelity.check_paper(text, plan, ps, decoys) if c.name == "added_numbers")
+    number = re.search(r"\d[\d,.]*", added).group()
+    assert repr(number) in detail and f"at {text.index(added) + added.index(number)}" in detail
+
+
+@pytest.mark.parametrize("allowed", [
+    "\nSee Table 1 and Section 3 for details; Figure 2 shows the setup.\n",
+    "\n1. First point.\n2. Second point.\n",
+    "\nEach benchmark has 1,000 questions.\n",
+])
+def test_allowlisted_numbers_pass(allowed: str) -> None:
+    text, plan, ps, decoys = _llm_read("explicit", lambda t, p: t + allowed)
+    assert "added_numbers" not in failing(plan, text, ps, decoys)
+
+
+def test_distributed_codes_are_allowed_numbers() -> None:
+    """The A1-style codes of vocab.py hold a digit; they are allowed by name, a bare digit is not."""
+    s = next(s for seed in range(1, 20) for s in truth.generate(seed, 6) if len(s.conditions) > 2)
+    r = render_study(s, "distributed", 1)
+    assert "A1" in r.text and r.fidelity.ok
+    text = r.text + "\nSee Appendix A1 for details, and part 1 of the supplement.\n"
+    assert "added_numbers" in failing(r.plan, text, r.placements, r.decoys)
+    detail = next(c.detail for c in fidelity.check_paper(text, r.plan, r.placements, r.decoys) if c.name == "added_numbers")
+    assert detail.count(" at ") == 1 and "'1' at" in detail and "part 1" in detail
+
+
+@pytest.mark.parametrize("sentence", [
+    "Retrieval augmentation clearly improves the answers in every setting we tried.",
+    "The RAG pipeline reduces hallucinated content.",
+    "We find that retrieval does not help on this benchmark.",
+    "Our retrieval-augmented variant outperforms the plain generator.",
+])
+def test_added_claim_fails(sentence: str) -> None:
+    """G.2: a second sentence that names retrieval and states an effect (terms.CLAIMS) is an added claim."""
+    text, plan, ps, decoys = _llm_read("explicit", lambda t, p: t + "\n" + sentence + "\n")
+    assert "added_claims" in failing(plan, text, ps, decoys)
+    detail = next(c.detail for c in fidelity.check_paper(text, plan, ps, decoys) if c.name == "added_claims")
+    assert repr(sentence) in detail and f"at {text.index(sentence)}" in detail
+
+
+def test_sentences_without_the_subject_or_without_an_effect_are_not_claims() -> None:
+    text, plan, ps, decoys = _llm_read("explicit", lambda t, p: t + "\nThe annotation improved after the second round. "
+                                                                   "Retrieval latency is reported separately.\n")
+    assert "added_claims" not in failing(plan, text, ps, decoys)
+
+
+def test_irrelevant_papers_pass_every_check_and_place_nothing() -> None:
+    from synth.levels import irrelevant_plan
+    for topic in truth.IRRELEVANT_TOPICS:
+        for seed in range(1, 6):
+            s = truth.irrelevant_study(3, topic)
+            r = render_study(s, "explicit", seed)
+            assert r.fidelity.ok, [(c.name, c.detail) for c in r.fidelity.checks if not c.ok]
+            assert r.placements == [] and r.decoys == [] and r.plan == irrelevant_plan(s, "explicit")
+            assert [c.name for c in r.fidelity.checks][-1] == "irrelevant"
+            assert r.text == render_study(s, "complex", seed).text     # the same at every level
+    with pytest.raises(ValueError):
+        irrelevant_plan(truth.generate(1, 1)[0], "explicit")
+
+
 def test_paraphrased_forbids_the_abbreviation() -> None:
     text, plan, ps, decoys = _llm_read("paraphrased", lambda t, p: t + f"\nWe write {p.metrics[0].abbr} for short.\n")
     assert "level_paraphrased" in failing(plan, text, ps, decoys)

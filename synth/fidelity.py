@@ -13,13 +13,19 @@ from dataclasses import asdict, dataclass, field
 from pydantic import BaseModel
 
 from agent import anchor
-from synth import assoc, levelcheck
+from evidence.extractors import base as extractor_base
+from evidence.extractors import terms
+from synth import assoc, levelcheck, vocab
 from synth.levels import Plan, parse_value
 from synth.text import Decoy, Placement
 from synth.truth import DECOY_GAP
 
 NUMBER = re.compile(r"\d+(?:,\d{3})*(?:\.\d+)?")
 TOLERANCE = 0.005      # evaluation's value tolerance; a blind re-extraction must land within it
+# Numbers a paper may hold outside its value placements and decoys (`added_numbers`, docs/evidence-system.md
+# G.2): the plan's dataset size, numbered tables, sections and figures, Markdown list markers. The relative
+# "N.N percentage points" string is a value placement itself; A1-style condition codes are allowed by name.
+ALLOWED_NUMBERS = re.compile(r"\b1,000 questions\b|\b(?:Table|Section|Figure|Appendix|Equation)\s+\d+\b|(?m:^\s*\d+[.)]\s)")
 
 
 @dataclass(frozen=True)
@@ -55,7 +61,9 @@ def facts_rendered(plan: Plan, ps: list[Placement]) -> list[str]:
     """Every fact of the plan has at least one rendering of its role."""
     have = {(p.fact, p.role) for p in ps}
     want = [(m.id, "value") for m in plan.measurements] + [(c.id, "condition_label") for c in plan.conditions]
-    want += [(k.id, "metric_label") for k in plan.metrics] + [(f"{plan.paper}.a1", "claim")]
+    want += [(k.id, "metric_label") for k in plan.metrics]
+    if plan.study.relevant:
+        want.append((f"{plan.paper}.a1", "claim"))
     return [f"{fact} has no {role} rendering" for fact, role in want if (fact, role) not in have]
 
 
@@ -79,9 +87,9 @@ def anchored(text: str, ps: list[Placement]) -> list[str]:
 
 
 def values_match(plan: Plan, ps: list[Placement]) -> list[str]:
-    """Each value rendering states its fact's value (a relative one, relative to the baseline)."""
+    """Each value rendering states its fact's value (a relative one, relative to the control value)."""
     study, bad = plan.study, []
-    base = study.value_of(study.effect.control)
+    base = study.value_of(study.effect.control) if study.effect.control else None   # None: --missing, irrelevant
     for p in ps:
         if p.role != "value":
             continue
@@ -138,6 +146,40 @@ def values_apart(plan: Plan) -> list[str]:
             for a, b in zip(ms, ms[1:]) if b.value - a.value <= DECOY_GAP]
 
 
+def _around(text: str, start: int, end: int, width: int = 30) -> str:
+    return text[max(0, start - width):end + width].replace("\n", " / ")
+
+
+def added_numbers(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[str]:
+    """No number outside the value placements, the decoys and ALLOWED_NUMBERS (plus the A1-style condition
+    codes of vocab.py): a paper that adds a number adds a result the ground truth does not have (the
+    writer prompt's rule 3). Each offending number is reported with its offset and context."""
+    covered = [(p.start, p.end) for p in ps if p.role == "value"] + [(d.start, d.end) for d in decoys]
+    covered += [(m.start(), m.end()) for m in ALLOWED_NUMBERS.finditer(text)]
+    codes = set(vocab.OTHER_CODES) | {a for aliases in plan.cond_aliases.values() for a in aliases}
+    for code in sorted(codes):
+        if any(ch.isdigit() for ch in code):
+            covered += levelcheck.occurs(text, code)
+    return [f"{m.group()!r} at {m.start()}: {_around(text, m.start(), m.end())!r}" for m in NUMBER.finditer(text)
+            if not any(a <= m.start() and m.end() <= b for a, b in covered)]
+
+
+def added_claims(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
+    """No sentence outside the claim placements names the question's subject and states an effect in the
+    words the regex claim extractor reads (evidence/extractors/terms.CLAIM_SUBJECT and CLAIMS, over the
+    extractor's own sentence split): a second statement on whether the method helps would be a second
+    author claim (the writer prompt's rule 4)."""
+    claims = [(p.start, p.end) for p in ps if p.role == "claim"]
+    bad = []
+    for a, b in extractor_base.sentences(text):
+        if any(a < e and s < b for s, e in claims):
+            continue
+        sentence = text[a:b]
+        if re.search(terms.CLAIM_SUBJECT, sentence) and any(re.search(p, sentence) for p, _ in terms.CLAIMS):
+            bad.append(f"{sentence!r} at {a}")
+    return bad
+
+
 def check_paper(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy]) -> list[Check]:
     return [
         _check("values_apart", values_apart(plan)),
@@ -149,7 +191,10 @@ def check_paper(text: str, plan: Plan, ps: list[Placement], decoys: list[Decoy])
         _check("values_associated", assoc.associations(text, plan, ps)),
         _check("labels_covered", labels_covered(text, plan, ps)),
         _check("stray_numbers", stray_numbers(text, plan, ps, decoys)),
-        _check(f"level_{plan.level}", levelcheck.check_level(text, plan, ps, decoys)),
+        _check("added_numbers", added_numbers(text, plan, ps, decoys)),
+        _check("added_claims", added_claims(text, plan, ps)),
+        _check(f"level_{plan.level}" if plan.study.relevant else "irrelevant",
+               levelcheck.check_level(text, plan, ps, decoys)),
     ]
 
 
@@ -183,19 +228,35 @@ def names_condition(reported: str, plan: Plan, cid: str) -> bool:
     return False
 
 
-async def blind_check(text: str, plan: Plan, extract: BlindExtractor) -> Check:
+def planned_extras(plan: Plan) -> list[tuple[str, float]]:
+    """(condition id, value) pairs a blind reader may report besides the measurements: the decoy (a stated
+    wrong treatment value) and the relative difference the complex level writes, read as a value."""
+    out = []
+    if plan.decoy is not None:
+        out.append((next(m.condition for m in plan.measurements if m.id == plan.decoy.measurement), plan.decoy.stated_value))
+    e = plan.study.effect
+    if e.treatment and e.control and any(v.fmt == "relative" for v in plan.values.values()):
+        out.append((next(m.condition for m in plan.measurements if m.id == e.treatment),
+                    abs(round(plan.study.value_of(e.treatment) - plan.study.value_of(e.control), 6))))
+    return out
+
+
+async def blind_check(text: str, plan: Plan, extract: BlindExtractor) -> list[Check]:
     """A model that never saw the plan reads the paper; every planned (condition, value) must come back,
     the value within the evaluation tolerance and attached to the same condition, so a value written next
-    to the wrong condition fails. Extra results (a decoy, a computed relative value) are reported only."""
+    to the wrong condition fails (`blind_reextraction`); and nothing else may come back, except the decoy
+    and the relative difference, which the paper does state (`blind_extra`): an extra measurement is a
+    result the ground truth does not have (docs/evidence-system.md G.2)."""
     got = (await extract(text)).measurements
 
     def near(v: float, truth: float) -> bool:      # a percent the model did not convert still counts
         return abs(v - truth) <= TOLERANCE or abs(v / 100 - truth) <= TOLERANCE
 
-    missing = [m.id for m in plan.measurements
-               if not any(near(g.value, m.value) and names_condition(g.condition, plan, m.condition) for g in got)]
-    extra = [(g.condition, g.value) for g in got
-             if not any(near(g.value, m.value) and names_condition(g.condition, plan, m.condition)
-                        for m in plan.measurements)]
-    detail = (f"missing {missing}" if missing else "all values recovered") + (f"; extra {extra}" if extra else "")
-    return Check("blind_reextraction", not missing, detail)
+    def matches(g: BlindMeasurement, condition: str, value: float) -> bool:
+        return near(g.value, value) and names_condition(g.condition, plan, condition)
+
+    missing = [m.id for m in plan.measurements if not any(matches(g, m.condition, m.value) for g in got)]
+    allowed = [(m.condition, m.value) for m in plan.measurements] + planned_extras(plan)
+    extra = [(g.condition, g.value) for g in got if not any(matches(g, c, v) for c, v in allowed)]
+    return [Check("blind_reextraction", not missing, f"missing {missing}" if missing else "all values recovered"),
+            Check("blind_extra", not extra, f"extra {extra}" if extra else "nothing beyond the plan")]

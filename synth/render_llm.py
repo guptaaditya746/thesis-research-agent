@@ -24,7 +24,8 @@ from gold import llm
 from synth import levelcheck
 from synth.corpus import Rendered
 from synth.fidelity import BlindExtraction, Check, PaperFidelity, blind_check, check_paper
-from synth.levels import Plan, make_plan, plan_rng
+from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
+from synth.render_template import render_study as render_with_template
 from synth.text import Decoy, Placement
 from synth.truth import Study
 
@@ -62,11 +63,20 @@ class PaperReply(BaseModel):
 def plan_json(plan: Plan) -> dict[str, Any]:
     """What the model is told: facts, names and the exact strings, never the effect or the answer."""
     units = {"fraction": "%", "seconds": "s"}
-    rag = plan.study.condition("rag").id
+    rag = plan.study.conditions[1].id
     decoy = None
     if plan.decoy is not None:
         decoy = (f"On {plan.datasets[0]}, the {plan.cond_name[rag]} reaches {plan.decoy.exact} "
                  f"{plan.metric_name[plan.metrics[0].id]}.")
+    not_reported = None
+    if plan.study.missing is not None:          # a --missing study: the key is present only then
+        role = plan.study.control_role if plan.study.missing == "control" else plan.study.treatment_role
+        gone = plan.study.condition(role).id
+        not_reported = {
+            "cells": [{"condition": plan.cond_name[gone], "metric": plan.metric_name[plan.metrics[0].id],
+                       "dataset": d} for d in plan.datasets],
+            "instruction": f"This value was not measured: never state it in any form; in a table write "
+                           f"exactly '{MISSING_CELL}' in its cell."}
     return {
         "paper": plan.paper, "level_instructions": LEVEL_INSTRUCTIONS[plan.level],
         "datasets": [{"name": d, "main": i == 0, "size": "1,000 questions"} for i, d in enumerate(plan.datasets)],
@@ -84,6 +94,7 @@ def plan_json(plan: Plan) -> dict[str, Any]:
                                 if v.fmt == "relative"), None),
         "claim_sentences": {"abstract": plan.claim_sentences[0], "conclusion": plan.claim_sentences[1]},
         "decoy_sentence": decoy,
+        **({"not_reported": not_reported} if not_reported else {}),
     }
 
 
@@ -152,6 +163,8 @@ class LlmRenderer:
         return BlindExtraction.model_validate(out)
 
     async def render_one(self, study: Study, level: str, seed: int) -> Rendered:
+        if not study.relevant:          # nothing to place: the fixed template writes it, no model call
+            return render_with_template(study, level, seed)
         plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
         base = json.dumps(plan_json(plan), indent=2, ensure_ascii=False)
         history: list[dict] = []
@@ -169,7 +182,7 @@ class LlmRenderer:
                 checks = [Check("required_strings", not problems, "; ".join(problems))]
                 checks += check_paper(text, plan, ps, decoys) if not problems else []
                 if self.verify_model is not None and all(c.ok for c in checks):
-                    checks.append(await blind_check(text, plan, lambda t: self._blind(t, seed)))
+                    checks += await blind_check(text, plan, lambda t: self._blind(t, seed))
             except Exception as exc:  # a dead server or a malformed reply is one failed attempt
                 checks = [Check("model_call", False, llm.redact(f"{type(exc).__name__}: {exc}"))]
             failed = [c for c in checks if not c.ok]
