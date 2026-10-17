@@ -149,7 +149,8 @@ CONCLUSION = (
 # question must say no) and a paper on another topic (none of the protocol's screen terms). Rules on top of
 # the ones above: no digits at all, and no sentence that names retrieval and states an effect in the words of
 # evidence/extractors/terms.CLAIMS (the fidelity check `added_claims` fails such a sentence); the other-topic
-# paper never says retrieval, RAG, closed-book, accuracy or hallucination.
+# paper never says retrieval, RAG, closed-book, accuracy or hallucination, not even as a substring of a word
+# ("average" holds "rag"), so a screen that matches without word boundaries finds nothing either.
 IRRELEVANT = {
     "survey": {
         "titles": (
@@ -222,7 +223,7 @@ IRRELEVANT = {
             "are merged into single tokens.",
             "A larger vocabulary shortens the token sequences but enlarges the embedding table and the output "
             "layer of the model.",
-            "We record the average number of tokens per line and the share of identifiers that are split into "
+            "We record the mean number of tokens per line and the share of identifiers that are split into "
             "more than one token.",
             "Serving cost grows with the sequence length, so a vocabulary that shortens sequences also shortens "
             "the time per completion.",

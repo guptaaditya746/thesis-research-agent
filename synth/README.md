@@ -23,19 +23,21 @@ paper of its level's corpus, so a change in score between corpora comes from the
 The supervisor's variants of section 6 (duplicates, missing information, unusually large effects); the
 mechanics and the irrelevant papers are ours (docs/evidence-system.md F2). Each knob draws from its own
 `random.Random(f"synth:{seed}:{knob}")`, so the plain build (every knob 0) is byte for byte what it was and
-adding one knob does not reshuffle another. Outliers are applied first, duplicates copy the (possibly
-redrawn) study, missing never touches an outlier or a duplicated original, irrelevant papers come last.
+adding one knob does not reshuffle another. The plain build is byte-identical for every seed unless two
+drawn studies share a treatment/control pair, which forces the later one to be drawn again (it never
+happens for the seeds in use). Outliers are applied first, duplicates copy the (possibly redrawn) study,
+missing never touches an outlier or a duplicated original, irrelevant papers come last.
 
 | Knob | Papers | Ground truth |
 |---|---|---|
-| `--duplicates N` | N extra papers (ids after the set) that report an existing study again: same conditions, metrics, datasets and values (fact ids under the new study id), a different title and filler, in the mixed corpus at the original's level | `duplicate_of`, `flags: ["duplicate"]`, effect as the original's; in `answer.duplicates`, not counted |
+| `--duplicates N` | N extra papers (ids after the set) that report an existing study again: same conditions, metrics, datasets and values (fact ids under the new study id), a different title (the template takes the next title template; the LLM renderer is told the original's title and a `title_differs` check enforces it) and filler, in the mixed corpus at the original's level | `duplicate_of`, `flags: ["duplicate"]`, effect as the original's; in `answer.duplicates`, not counted |
 | `--missing N` | N studies lack the control (alternately the treatment) measurement on the question metric on both datasets: no sentence states it, a table cell holds an en dash (`levels.MISSING_CELL`), no relative value, no decoy | `missing: "control" \| "treatment"`, `effect: {direction: "undetermined", delta: null, metric, treatment: id \| null, control: id \| null, reason: "missing_control" \| "missing_treatment"}`; in `answer.undetermined` |
 | `--outliers N` | N supporting studies get their pair redrawn with an improvement of 0.30-0.45 (`truth.LARGE_DELTA`) | `flags: ["large_effect"]`; counted |
-| `--irrelevant N` | N extra papers with no experiment, from `vocab.IRRELEVANT`: a survey of retrieval-augmented generation (the term screen lets it through; the screening question must say no) alternating with a paper on another topic (no screen term at all); no digits; the same text at every level and in both renderers (the LLM renderer makes no call for them) | `relevant: false`, no conditions, metrics, measurements or claim, `effect.reason: "screened_out"`; in `answer.undetermined` |
+| `--irrelevant N` | N extra papers with no experiment, from `vocab.IRRELEVANT`: a survey of retrieval-augmented generation (the term screen lets it through; the screening question must say no) alternating with a paper on another topic (no screen term at all, not even as a substring of a word, so a screen without word boundaries finds nothing either); no digits; the same text at every level and in both renderers (the LLM renderer makes no call for them) | `relevant: false`, no conditions, metrics, measurements or claim, `effect.reason: "screened_out"`; in `answer.undetermined` |
 
 Every study record has `relevant`, `flags` (sorted), `duplicate_of` and `missing`; the flags are what
-`evidence.rules.duplicates` and `rules.large_effects` find on the study set with the protocol's
-`synthesis.flags` (so a natural large effect is flagged in a plain build too), plus `claim_disagrees` for a
+`evidence.rules.duplicates` and `rules.large_effects` find on the studies actually written (after fidelity
+exclusions) with the protocol's `synthesis.flags` (so a natural large effect is flagged in a plain build too), plus `claim_disagrees` for a
 contradictory-level paper whose effect is determined. The generator asserts the rules find exactly the
 planted duplicates and outliers (otherwise `SystemExit` naming the knob: too few supporting studies, a
 natural large effect next to a planted one, a protocol with `flags.duplicates: false`), and keeps the
@@ -135,8 +137,11 @@ model that never saw the plan must recover every (condition, value) pair: the va
 under one of the condition's names or its code) and `blind_extra` (it must return nothing else; the decoy
 and the complex level's relative difference, which the paper does state, are allowed). The two added-content
 checks enforce the writer prompt's rules 3 and 4 (docs/evidence-system.md G.2); the template renderer's own
-papers pass them. A study failing at any level is left out of every corpus of the set and reported with
-`excluded_reason` and its attempt `history`.
+papers pass them. What they cannot catch: a number spelled out in words ("seventy percent"), a claim that
+names the condition by a synonym without `retriev`/`RAG` ("the grounded variant is more accurate"), and
+anything in a heading or a table line, which the sentence split leaves out; `blind_extra` with a verify
+model is the check for those. A study failing at any level is left out of every corpus of the set and
+reported with `excluded_reason` and its attempt `history`.
 
 `synth sample` writes `review/review-s<seed>.md` and `.csv`: per sampled paper, every placement with its
 truth in words, line, offsets, exact text, context, and tick columns `present`, `states_truth`,

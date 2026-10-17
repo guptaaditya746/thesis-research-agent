@@ -9,10 +9,11 @@ treatment/control pair of the question metric, so the generator and the engine u
 protocol (`spec`, its `synthesis` block; the default is `evidence/protocols/rag-factuality.yaml`).
 Randomness comes only from one `random.Random(seed)`; there is no clock.
 
-The benchmark knobs (the supervisor's variants of 14 Oct, section 6: duplicates, missing information,
-unusually large effects, irrelevant papers; contract docs/evidence-system.md F2) change the set after
-it is drawn, each from its own `random.Random(f"synth:{seed}:{knob}")` stream, so the plain set (every
-knob 0) stays byte for byte what it was:
+The benchmark knobs (the supervisor's variants of 14 Oct, section 6: duplicated studies, missing
+information, methodological limitations, unusually large effects; the irrelevant papers and the
+mechanics are ours; contract docs/evidence-system.md F2) change the set after it is drawn, each from its
+own `random.Random(f"synth:{seed}:{knob}")` stream, so the plain set (every knob 0) stays byte for byte
+what it was:
 
 - outliers: supporting studies whose treatment/control pair is drawn again with an improvement of
   0.30 to 0.45 (the usual one is 0.03 to 0.15);
