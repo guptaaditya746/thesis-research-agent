@@ -207,6 +207,18 @@ def test_completeness_and_traceability(tmp_path: Path, corpus: Path) -> None:
     fx.dump(tmp_path / "agent.json", empty)
     a = row(score_answers(corpus, [tmp_path / "agent.json"])["synthesis"][0]["rows"], level="all")
     assert (a["completeness"], a["citations"], a["traceability"]) == (0.0, 0, None)
+    # a dropped citation (naming no retrieved passage) is a cited passage that is never traced
+    dropped = rag | {"citations": cited[:1], "dropped_citations": [
+        {"document": "S001", "start": sixty_two["start"], "end": sixty_two["end"]},  # fabricated: untraced even here
+        {"document": "S999", "start": 0, "end": 10}]}
+    fx.dump(tmp_path / "dropped.json", dropped)
+    d = {x["level"]: x for x in score_answers(corpus, [tmp_path / "dropped.json"])["synthesis"][0]["rows"]}
+    assert (d["all"]["citations"], d["all"]["traceability"]) == (3, pytest.approx(1 / 3))
+    assert (d["explicit"]["citations"], d["explicit"]["traceability"]) == (2, 0.5)
+    only_dropped = rag | {"citations": [], "dropped_citations": [{"document": "S999", "start": 0, "end": 10}]}
+    fx.dump(tmp_path / "only.json", only_dropped)
+    o = row(score_answers(corpus, [tmp_path / "only.json"])["synthesis"][0]["rows"], level="all")
+    assert (o["citations"], o["traceability"]) == (1, 0.0)
     rows = rep.compare([result])["rows"]
     by = {x["system"]: x for x in rows}
     assert (by["rag-baseline"]["completeness"], by["rag-baseline"]["traceability"]) == (0.5, pytest.approx(1 / 3))

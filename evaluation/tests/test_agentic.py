@@ -125,7 +125,7 @@ def test_model_reaches_the_spec_config_and_the_runner() -> None:
     assert sub.spec.config["model"] == {"alias": "sub-model-1", "name": SUBAGENTS[0]["name"],
                                         "revision": SUBAGENTS[0]["revision"]}
     other = factory({"evidence_type": "measurement", "sandbox_mode": "unsandboxed", "model": "other-model"})
-    assert other.spec.config["model"] == {"alias": "other-model", "name": None, "revision": None}
+    assert other.spec.config["model"] == {"alias": "other-model", "name": "other-model", "revision": "unpinned"}
     # through the engine, as `evidence run --model X` builds the cascade of the agentic protocol
     agentic = protocol.load(Path(engine.__file__).resolve().parent / "protocols" / "rag-factuality-agentic.yaml")
     cascades = engine.build_extractors(agentic, "cascade", model="sub-model-2")

@@ -41,13 +41,16 @@ study; the pair is true when A matched them to the facts `effect.treatment` and 
 
 C: for every ground-truth study, the system's `studies` entry with `document` = the study's paper
 gives a direction; it is correct when it equals `effect.direction`. A missing or `undetermined` entry
-is wrong (and counted as unanswered). The label is correct when equal to `answer.label`. The
-supervisor's three comparison criteria (STATE.md §1 §7; docs/evidence-system.md Part G.1) are
-direction accuracy (correctness), **completeness** = share of the studies with a determined true
-direction (not `undetermined`) the system gives a stance for, and **traceability** = share of the
-cited passages (`answer.citations`, a baseline's `[{document, start, end}]`) that overlap (share a
-character with) a ground-truth placement of the study of the paper they cite, over all cited
-passages; `null` for an answer without citations (the engine's spans are scored in A).
+is wrong (and counted as unanswered). The label is correct when equal to `answer.label`. Correctness,
+completeness and traceability are the supervisor's three comparison criteria (STATE.md §1 §7;
+docs/evidence-system.md Part G.1); the definitions that follow are ours: direction accuracy is
+correctness; **completeness** = share of the studies with a determined true direction (not
+`undetermined`) the system gives a stance for; **traceability** = share of the cited passages
+(`answer.citations`, a baseline's `[{document, start, end}]`) that overlap (share a character with) a
+ground-truth placement of any role of the study of the paper they cite (lenient by design), over all
+cited passages, where the citations the baseline dropped (`answer.dropped_citations`: ones naming no
+retrieved passage, the clearest untraceable case) count as untraced; `null` for an answer without
+citations (the engine's spans are scored in A).
 
 Locate recall: a placement is inside the scope when one `locate.json` entry for its paper and its
 fact's evidence type has a scope that contains it (`evidence.contract.Scope.contains`).
@@ -256,19 +259,21 @@ def score_integration(m: Matching, answer: dict[str, Any] | None) -> dict[str, A
 
 # --- C: synthesis ----------------------------------------------------------------------------------
 
-def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None) -> dict[str, Counter[str]] | None:
-    """Traceability counts per level (and ALL): cited passages, and those overlapping a placement of the
-    cited paper's study. A cited paper outside the ground truth counts under ALL only. None without a
-    `citations` list (the engine)."""
+def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None,
+                    dropped: list[dict[str, Any]] | None = None) -> dict[str, Counter[str]] | None:
+    """Traceability counts per level (and ALL): cited passages, and those overlapping a placement (of any
+    role) of the cited paper's study. The baseline's dropped citations (naming no retrieved passage) are
+    cited passages that are never traced. A cited paper outside the ground truth counts under ALL only.
+    None without a `citations` list (the engine)."""
     if citations is None:
         return None
     places: dict[str, list[tuple[int, int]]] = defaultdict(list)
     for p in truth.placements:
         places[p["paper"]].append((p["start"], p["end"]))
     cited: dict[str, Counter[str]] = defaultdict(Counter)
-    for c in citations:
+    for c, kept in [(c, True) for c in citations] + [(c, False) for c in dropped or []]:
         paper = c.get("document")
-        hit = any(overlaps((int(c["start"]), int(c["end"])), p) for p in places.get(paper, []))
+        hit = kept and any(overlaps((int(c["start"]), int(c["end"])), p) for p in places.get(paper, []))
         level = truth.level_of(paper)
         for key in ((level, ALL) if level != "unknown" else (ALL,)):
             cited[key].update(citations=1, traced=hit)
@@ -297,7 +302,7 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
             per_level[level].update(studies=1, correct=got == expected, answered=got != "undetermined",
                                     correct_answered=got == expected and got != "undetermined",
                                     determined=determined, complete=determined and got != "undetermined")
-    cited = score_citations(truth, answer.get("citations"))
+    cited = score_citations(truth, answer.get("citations"), answer.get("dropped_citations"))
     rows = []
     for level, c in sorted(per_level.items()):
         n = cited.get(level, Counter()) if cited is not None else None

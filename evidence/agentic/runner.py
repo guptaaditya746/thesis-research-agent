@@ -16,7 +16,8 @@ altogether with a fake `AgentRunner`.
 The agent's model is `AgentSettings.model`, a LiteLLM alias (default `orch-model`: one model for every
 extractor and both baselines, docs/evidence-system.md Part G.3). The runner builds the agent's
 `OrchestratorModel` on that alias (`default_model`); for an alias agent/rundir pins (`orch-model`,
-`sub-model-*`) the config records the pinned name and revision, for any other alias the alias alone.
+`sub-model-*`) the config and the model record the pinned name and revision, for any other alias the
+alias as the name and the revision "unpinned" (the same in both places).
 """
 from __future__ import annotations
 
@@ -35,12 +36,16 @@ REPO = Path(__file__).resolve().parents[2]
 PINNED: dict[str, dict[str, Any]] = {m["alias"]: dict(m) for m in (ORCHESTRATOR, *SUBAGENTS)}
 
 
+UNPINNED = "unpinned"  # the revision recorded, and given to the model, for an alias agent/rundir does not pin
+
+
 def model_record(alias: str) -> dict[str, Any]:
-    """{alias, name, revision} for the config: the pinned weights of an alias agent/rundir pins, else the
-    alias alone (name and revision null: the served weights are then not recorded, only their alias)."""
+    """{alias, name, revision} for the config: the pinned weights of an alias agent/rundir pins (for
+    orch-model byte for byte what the config held before `model` existed), else the alias as the name with
+    revision "unpinned", the same the model itself records (`default_model`)."""
     pinned = PINNED.get(alias)
-    return {"alias": alias, "name": pinned["name"] if pinned else None,
-            "revision": pinned.get("revision") if pinned else None}
+    return {"alias": alias, "name": pinned["name"] if pinned else alias,
+            "revision": pinned.get("revision") if pinned else UNPINNED}
 
 
 @dataclass(frozen=True)
@@ -70,7 +75,7 @@ def default_model(settings: AgentSettings) -> Any:
 
     pinned = PINNED.get(settings.model)
     extra = ({"name": pinned["name"], "revision": pinned["revision"], "context_tokens": pinned["context_tokens"]}
-             if pinned else {"name": settings.model, "revision": "unpinned"})
+             if pinned else {"name": settings.model, "revision": UNPINNED})
     return OrchestratorModel(base_url=settings.base_url, temperature=settings.temperature, seed=settings.seed,
                              alias=settings.model, **extra)
 

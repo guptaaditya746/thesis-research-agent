@@ -55,7 +55,8 @@ def test_rag_baseline_answers_with_citations_then_maps(tmp_path: Path, monkeypat
     texts = {"S001": fx.S001, "S002": fx.S002}
     for hit in answer["retrieved"]:  # offsets are raw offsets into the paper, and the prompt quotes them
         passage = texts[hit["document"]][hit["start"]:hit["end"]].strip()
-        assert passage and passage in answering and passage in mapping
+        assert passage and passage in answering
+        assert passage not in mapping and f"[{hit['document']}, {hit['start']}-{hit['end']}]" in mapping  # headers only
     assert answering.startswith("Question: " + fx.QUESTION) and "Labels" not in answering and "stance" not in answering
     assert "Corpus paper ids: S001, S002" in mapping and "Cited passages:" in mapping and ANSWER_TEXT in mapping
     assert "Labels (the same rule" in MAP_INSTRUCTIONS and "cite" in rag.INSTRUCTIONS

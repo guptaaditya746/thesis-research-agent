@@ -16,8 +16,8 @@
    `dropped_citations`. The call is cached (gold.llm.JsonlCache) by prompt hash, model and the exact
    user prompt, so a rerun costs nothing and gives the same answer.json.
 4. The mapping call shared with the agent baseline (common.map_answer) turns the answer (its text and
-   the cited passages) into the label and per-paper stances the synthesis score (C) compares; an empty
-   answer is `insufficient` without a call.
+   the headers of its kept citations, not the passages' text) into the label and per-paper stances the
+   synthesis score (C) compares; an empty answer is `insufficient` without a call.
 
 answer.json has `system: rag-baseline`, the A4 shape from the mapping (`label`, `counts`, `studies`,
 groups, `label_by_rule`), `answer_text` (the model's own answer), `citations` and `retrieved`
@@ -124,14 +124,13 @@ def keep_citations(citations: list[Citation], hits: list[tuple[Passage, float]]
     return kept, dropped
 
 
-def mapping_text(answer: CitedAnswer, kept: list[dict[str, Any]], hits: list[tuple[Passage, float]]) -> str:
-    """What the mapping call reads: the answer text and the kept citations with their passage text."""
-    text = {(p.document, p.start, p.end): p.text.strip() for p, _ in hits}
+def mapping_text(answer: CitedAnswer, kept: list[dict[str, Any]]) -> str:
+    """What the mapping call reads: the answer text and the kept citations' headers ([paper id, start-end])
+    only, never the passages' text, so the mapper cannot read the evidence a second time and assign a
+    stance from numbers the answer never stated (the agent mapping likewise reads the agent's answer)."""
     lines = [answer.answer_text.strip()]
     if kept:
-        lines.append("\nCited passages:")
-        lines += [f"[{c['document']}, {c['start']}-{c['end']}]\n{text[(c['document'], c['start'], c['end'])]}"
-                  for c in kept]
+        lines.append("\nCited passages: " + ", ".join(f"[{c['document']}, {c['start']}-{c['end']}]" for c in kept))
     return "\n".join(lines)
 
 
@@ -149,7 +148,7 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str = DEFAULT_QUES
     if not answer.answer_text.strip():
         reply, mapping = AnswerReply(label="insufficient", studies=[], answer_text="(no answer)"), None
     else:
-        reply, mapping = map_answer(cache, question, corpus.ids, mapping_text(answer, citations, hits), model=model,
+        reply, mapping = map_answer(cache, question, corpus.ids, mapping_text(answer, citations), model=model,
                                     model_id=model_id, seed=seed)
     retrieved = [{"document": p.document, "start": p.start, "end": p.end, "score": round(s, 6)} for p, s in hits]
     return answer_json(SYSTEM, question, reply, corpus.ids, answer_text=answer.answer_text, citations=citations,
