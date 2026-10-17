@@ -6,10 +6,13 @@
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
     evidence prov RUN
     evidence verify RUN
+    evidence protocol check P
 
 `--extractors regex-only` needs no model. LLM extractors reach LiteLLM through gold/llm.openai_model, which
-reads the key from $LITELLM_MASTER_KEY only. Exit status: 0 ok, 1 a replay mismatch, a cache miss or a
-broken chain, 2 usage errors.
+reads the key from $LITELLM_MASTER_KEY only. `protocol check` validates a protocol file and prints {id,
+version, sha256, phases, extractors per type}; the proposal flow (docs/evidence-system.md Part E) will
+hang its subcommands beside it. Exit status: 0 ok, 1 a replay mismatch, a cache miss or a broken chain,
+2 usage errors and a protocol that does not validate.
 """
 from __future__ import annotations
 
@@ -17,6 +20,8 @@ import argparse
 import json
 import sys
 from pathlib import Path
+
+import yaml
 
 from agent.chain import verify
 
@@ -48,6 +53,8 @@ def _parser() -> argparse.ArgumentParser:
             s.add_argument("--extractor", help="extractor name or id (default: every extractor)")
     sub.add_parser("prov", help="export the run's PROV-O graph (prov.ttl)").add_argument("run", type=Path)
     sub.add_parser("verify", help="check the run's hash chain").add_argument("run", type=Path)
+    proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
+    proto.add_parser("check", help="validate a protocol and print its sha256 and phases").add_argument("protocol", type=Path)
     return p
 
 
@@ -86,9 +93,25 @@ def _dispatch(args: argparse.Namespace) -> int:
         path = export(args.run)
         print(path)
         return 0
+    if args.command == "protocol":
+        return _protocol_check(args.protocol)
     report = verify(args.run / EVENTS_FILE, head=read_json(args.run / RUN_FILE).get("chain_head"))
     print(json.dumps({"ok": report.ok, "records": report.records, "head": report.head, "errors": report.errors}, indent=1))
     return 0 if report.ok else 1
+
+
+def _protocol_check(path: Path) -> int:
+    from .protocol import load
+    try:
+        protocol = load(path)
+    except (OSError, ValueError, yaml.YAMLError) as exc:   # pydantic's ValidationError is a ValueError
+        print(f"error: {path}: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps({"id": protocol.id, "version": protocol.version, "sha256": protocol.sha256,
+                      "phases": protocol.phases(),
+                      "extractors": {t: [r.name for r in s.extractors] for t, s in protocol.evidence_types.items()}},
+                     indent=1))
+    return 0
 
 
 if __name__ == "__main__":

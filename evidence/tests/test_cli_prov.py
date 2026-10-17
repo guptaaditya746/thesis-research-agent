@@ -37,6 +37,23 @@ def test_cli_end_to_end_regex_only(protocol_file: Path, corpus: Path, tmp_path: 
     assert cli.main(["verify", str(run)]) == 1
 
 
+def test_protocol_check_prints_the_hash_and_rejects_an_invalid_file(protocol_file: Path, tmp_path: Path,
+                                                                     capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["protocol", "check", str(protocol_file)]) == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["id"] == "rag-factuality" and printed["version"] == 2
+    assert printed["sha256"] == protocol.load(protocol_file).sha256
+    assert printed["phases"] == ["condition", "metric", "measurement", "author_claim"]
+    assert printed["extractors"]["measurement"][0] == "regex_measurement"
+    broken = tmp_path / "broken.yaml"
+    broken.write_text(protocol_file.read_text(encoding="utf-8").replace("min_effect: 0.01", "min_effect: -1"),
+                      encoding="utf-8")
+    assert cli.main(["protocol", "check", str(broken)]) == 2
+    assert "min_effect" in capsys.readouterr().err
+    assert cli.main(["protocol", "check", str(tmp_path / "missing.yaml")]) == 2
+    assert "error" in capsys.readouterr().err
+
+
 def test_prov_walks_from_the_answer_to_the_table_cell(protocol_file: Path, corpus: Path, tmp_path: Path) -> None:
     out = tmp_path / "runs"
     cli.main(["run", "--protocol", str(protocol_file), "--corpus", str(corpus), "--out", str(out),
