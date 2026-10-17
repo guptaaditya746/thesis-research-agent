@@ -12,8 +12,11 @@ Our addition (the supervisor's design names no statistics; STATE.md §7 "Statist
    bootstrap distribution with no spread (every resample gives the same statistic, e.g. F1 = 1 on every
    paper).
 5. When BCa cannot be computed (scipy warns and returns nan, e.g. a constant jackknife), the percentile
-   method is used instead; when that gives no finite bounds either, the bounds are null. A bootstrap never
-   raises and never lets a scipy warning through to the caller.
+   method is used instead; when that gives no finite bounds either, the bounds are null. The interval
+   says which `method` gave its bounds (`BCa`, `percentile`, or null with null bounds). A bootstrap never
+   raises and never lets a scipy warning through to the caller: scipy's warnings are silenced inside, and
+   the failures seen (a ValueError from scipy on a degenerate sample, a warning escalated to an error)
+   give null bounds.
 """
 from __future__ import annotations
 
@@ -27,7 +30,7 @@ RESAMPLES = 2000
 CONFIDENCE = 0.95
 METHODS = ("BCa", "percentile")
 
-Interval = dict[str, float | None]
+Interval = dict[str, Any]   # {point, low, high: float | None, method: str | None}
 Statistic = Callable[..., float]
 
 
@@ -37,32 +40,37 @@ def _bounds(stat: Statistic, columns: list[np.ndarray], method: str, seed: int, 
         warnings.simplefilter("ignore")
         try:
             result = stats.bootstrap(columns, stat, paired=True, vectorized=False, n_resamples=n,
-                                     confidence_level=CONFIDENCE, method=method, random_state=rng)
-        except Exception:  # noqa: BLE001 - an interval is never worth failing a report
+                                     confidence_level=CONFIDENCE, method=method, rng=rng)
+            dist = np.asarray(result.bootstrap_distribution, dtype=float)
+            if dist.size and np.nanmax(dist) == np.nanmin(dist):
+                return None  # rule 4: no spread
+            low, high = float(result.confidence_interval.low), float(result.confidence_interval.high)
+        except (ValueError, Warning):  # rule 5: scipy on a degenerate sample, or a warning made an error
             return None
-    dist = np.asarray(result.bootstrap_distribution, dtype=float)
-    if dist.size and np.nanmax(dist) == np.nanmin(dist):
-        return None  # rule 4: no spread
-    low, high = float(result.confidence_interval.low), float(result.confidence_interval.high)
     if not (np.isfinite(low) and np.isfinite(high)):
         return None
     return low, high
 
 
+def _interval(point: float | None, bounds: tuple[float, float] | None = None, method: str | None = None) -> Interval:
+    low, high = bounds if bounds else (None, None)
+    return {"point": point, "low": low, "high": high, "method": method if bounds else None}
+
+
 def bootstrap(stat: Statistic, rows: Iterable[Sequence[float]], *, seed: int = 0, n: int = RESAMPLES) -> Interval:
-    """{point, low, high} of `stat(*columns)` over the rows, resampling rows (rules 1-5)."""
+    """{point, low, high, method} of `stat(*columns)` over the rows, resampling rows (rules 1-5)."""
     rows = [tuple(float(v) for v in r) for r in rows]
     if not rows:
-        return {"point": None, "low": None, "high": None}
+        return _interval(None)
     columns = [np.asarray(c, dtype=float) for c in zip(*rows)]
     point = float(stat(*columns))
     if len(rows) < 2 or all(r == rows[0] for r in rows):
-        return {"point": point, "low": None, "high": None}
+        return _interval(point)
     for method in METHODS:
         bounds = _bounds(stat, columns, method, seed, n)
         if bounds is not None:
-            return {"point": point, "low": bounds[0], "high": bounds[1]}
-    return {"point": point, "low": None, "high": None}
+            return _interval(point, bounds, method)
+    return _interval(point)
 
 
 def mean(values: np.ndarray) -> float:
@@ -96,7 +104,8 @@ def bootstrap_f1(rows: Iterable[tuple[int, int, int]], *, seed: int = 0, n: int 
 
 
 def interval_row(interval: Interval, **keys: Any) -> dict[str, Any]:
-    return {**keys, "point": interval["point"], "low": interval["low"], "high": interval["high"]}
+    return {**keys, "point": interval["point"], "low": interval["low"], "high": interval["high"],
+            "method": interval.get("method")}
 
 
 def interval_text(point: float | None, low: float | None, high: float | None) -> str:

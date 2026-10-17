@@ -19,6 +19,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from evidence.contract import EvidenceType, Item
+from evidence.synthesis import SYSTEM as ENGINE  # the engine's `system` name in answer.json; baselines differ
 
 # Ground-truth fact lists per evidence type, and the role of the placement that locates each kind of
 # fact's main rendering (span accuracy compares the item's span of that role with it).

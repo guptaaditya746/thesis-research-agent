@@ -20,7 +20,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .report import _write, table
+from .report import table, write_pair
 
 DIRECTION_COLUMNS = ["system", "from", "before", "before_correct", "to", "after", "after_correct"]
 LABEL_COLUMNS = ["system", "expected_before", "before", "before_correct", "expected_after", "after", "after_correct",
@@ -91,4 +91,4 @@ def render(result: dict[str, Any]) -> str:
 
 def write_shift(result: dict[str, Any], out: Path) -> tuple[Path, Path]:
     """shift.json and shift.md in `out`."""
-    return _write(result, render(result), out, "shift")
+    return write_pair(result, render(result), out, "shift")
