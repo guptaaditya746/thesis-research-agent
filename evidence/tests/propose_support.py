@@ -10,9 +10,9 @@ from typing import Any
 from pydantic_ai.messages import ModelMessage, ModelResponse
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from evidence.locate import tokens
 from evidence.protocol import Protocol, load
 from evidence.propose import cards, critic, draft, frame, freeze
+from evidence.propose.compare import comparable, query_tokens  # noqa: F401  (the tests import them from here)
 
 from .conftest import PROTOCOL, prompt_of, respond
 
@@ -91,32 +91,6 @@ def flow(directory: Path, model: Scripted, *, vocab: str | None = "rag-factualit
         return directory
     freeze.run(directory, created="2026-10-17T12:00:00+00:00")
     return directory
-
-
-def _strip_descriptions(schema: Any) -> Any:
-    if isinstance(schema, dict):
-        return {k: _strip_descriptions(v) for k, v in schema.items() if k != "description"}
-    if isinstance(schema, list):
-        return [_strip_descriptions(v) for v in schema]
-    return schema
-
-
-def comparable(p: Protocol) -> dict[str, Any]:
-    """What test (1) compares: the parsed protocol without its id and revision, free text (descriptions, the
-    screening question) and bm25 query lists (checked separately, as a superset); screen terms as a set."""
-    d = p.model_dump(mode="json", exclude={"id", "revision"})
-    if d.get("screen"):
-        d["screen"]["question"] = None
-        d["screen"]["terms"] = sorted(d["screen"]["terms"])
-    for spec in d["evidence_types"].values():
-        spec["description"] = None
-        spec["query"] = None
-        spec["fields"] = _strip_descriptions(spec["fields"])
-    return d
-
-
-def query_tokens(p: Protocol) -> dict[str, set[str]]:
-    return {t: {x for q in spec.query for x in tokens(q)} for t, spec in p.evidence_types.items()}
 
 
 def hand_written() -> Protocol:

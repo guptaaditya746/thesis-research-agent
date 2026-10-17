@@ -367,10 +367,20 @@ agent calls against `all`, replay result, re-execution summary.
 cat > "$EV/baselines.sh" <<'EOF'
 #!/usr/bin/env bash
 set -u
-for C in "$CORPORA"/rag-llm-s1-* "$CORPORA"/rag-llm-small-{paraphrased,distributed} "$CORPORA"/rag-llm-k1-mixed; do
+shopt -s nullglob
+# The RAG baseline (one retrieval, one call) on every corpus first; then the agent baseline, the costly one,
+# mixed corpora first, so a stopped job still leaves both baselines on the corpora the comparison leans on.
+CS=("$CORPORA"/rag-llm-s1-mixed "$CORPORA"/rag-llm-k1-mixed "$CORPORA"/rag-llm-s1-mixed-cf-*)
+for C in "$CORPORA"/rag-llm-s1-* "$CORPORA"/rag-llm-small-{paraphrased,distributed}; do
+  [[ " ${CS[*]} " == *" $C "* ]] || CS+=("$C")
+done
+for C in "${CS[@]}"; do
   N=$(basename "$C")
   uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/rag-baseline/$N" --cache "$CACHE/rag-baseline.jsonl" \
     --model orch-model --retrieval global --k 8 || echo "FAIL rag $N"
+done
+for C in "${CS[@]}"; do
+  N=$(basename "$C")
   uv run evaluate agent-baseline --corpus "$C" --out "$RUNS/agent-baseline/$N" --cache "$CACHE/agent-baseline.jsonl" \
     --model orch-model --agent-root "$AGENT_ROOT" --run-id "$N" || echo "FAIL agent $N"
 done
@@ -504,25 +514,9 @@ uv run evidence propose cards "$PR" --model orch-model 2>&1 | tee -a "$EV/logs/9
 uv run evidence propose freeze "$PR" 2>&1 | tee -a "$EV/logs/9-propose.log"
 uv run evidence protocol check "$PR/protocol.yaml" > "$PR/protocol-check.json"; echo "check exit $?"
 diff -u "$P" "$PR/protocol.yaml" > "$PR/protocol.diff"; echo "diff exit $?"     # 1 = they differ (expected)
-uv run python - "$P" "$PR/protocol.yaml" > "$PR/protocol-compare.json" <<'EOF'
-# What the scripted test compares (evidence/tests/propose_support.comparable): both protocols parsed, without
-# id, revision, descriptions, the screening question and the bm25 query lists; screen terms as a set.
-import json, sys
-from evidence.protocol import load
-from evidence.tests.propose_support import comparable, query_tokens
-
-def flat(x, path=""):
-    if isinstance(x, dict):
-        return {k: v for key, val in x.items() for k, v in flat(val, f"{path}.{key}" if path else key).items()}
-    return {path: x}
-
-hand, frozen = load(sys.argv[1]), load(sys.argv[2])
-a, b = flat(comparable(hand)), flat(comparable(frozen))
-differs = [{"path": k, "hand": a.get(k), "frozen": b.get(k)} for k in sorted(a.keys() | b.keys()) if a.get(k) != b.get(k)]
-qh, qf = query_tokens(hand), query_tokens(frozen)
-print(json.dumps({"equal": not differs, "differs": differs,
-                  "query_tokens_superset": {t: qh[t] <= qf.get(t, set()) for t in qh}}, indent=1, default=str))
-EOF
+# What the scripted test compares (evidence/propose/compare.py): both protocols parsed, without id, revision,
+# descriptions, the screening question and the bm25 query lists; screen terms as a set.
+uv run python -m evidence.propose.compare "$P" "$PR/protocol.yaml" > "$PR/protocol-compare.json"
 ```
 
 `frame`, `critic` and `cards` make one model call each (cached in `$PR/cache.jsonl`); `draft` and `freeze` are
