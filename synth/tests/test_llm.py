@@ -18,8 +18,8 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from agent.anchor import read_text
 from synth import corpus, truth
 from synth.levels import make_plan, plan_rng
-from synth.render_llm import LEVEL_INSTRUCTIONS, LlmRenderer, locate, plan_json
-from synth.render_template import render
+from synth.render_llm import LEVEL_INSTRUCTIONS, LlmRenderer, locate, plan_json, title_of
+from synth.render_template import render, render_study
 
 SEED, N = 3, 4
 
@@ -36,17 +36,19 @@ def respond(info: AgentInfo, args: dict[str, Any]) -> ModelResponse:
 
 
 class Writer:
-    def __init__(self, studies: list[truth.Study], *, fail_first: bool = True, error: str | None = None) -> None:
+    def __init__(self, studies: list[truth.Study], *, fail_first: bool = True, error: str | None = None,
+                 copy_title: bool = False) -> None:
         self.studies = {s.study_id: s for s in studies}
-        self.fail_first, self.error = fail_first, error
+        self.fail_first, self.error, self.copy_title = fail_first, error, copy_title
         self.calls: list[str] = []
 
     def paper(self, prompt: str) -> str:
         plan = json.loads(prompt.split("Rendering plan:\n", 1)[1].split("\n\nYour previous", 1)[0])
         level = next(lv for lv, text in LEVEL_INSTRUCTIONS.items() if text == plan["level_instructions"])
         s = self.studies[plan["paper"]]
-        p = make_plan(s, level, plan_rng(SEED, s.study_id, level))
-        text, _, _ = render(p, plan_rng(SEED, s.study_id, level + ":text"))
+        text = render_study(s, level, SEED).text
+        if self.copy_title and "title" in plan:      # a duplicate that ignores the plan and keeps the title
+            text = "# " + plan["title"]["must_differ_from"] + "\n" + text.split("\n", 1)[1]
         if self.fail_first and "previous paper was rejected" not in prompt:
             value = next(v for v in plan["results"] if v["write_exactly"] != "see text")["write_exactly"]
             text = text.replace(value, "[value missing]")
@@ -60,9 +62,10 @@ class Writer:
         return respond(info, {"markdown": self.paper(prompt)})
 
 
-def blind(studies: list[truth.Study], blind_to: str):
+def blind(studies: list[truth.Study], blind_to: str, extra_in: str | None = None):
     """A verifier for explicit papers that reports each condition with its value, read from the plan of
-    the study whose value strings the paper holds; in study `blind_to` it finds nothing."""
+    the study whose value strings the paper holds; in study `blind_to` it finds nothing, and in
+    `extra_in` it also reports a value the plan does not have."""
     plans = [make_plan(s, "explicit", plan_rng(SEED, s.study_id, "explicit")) for s in studies]
 
     def reply(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
@@ -71,6 +74,9 @@ def blind(studies: list[truth.Study], blind_to: str):
         found = [] if plan.paper == blind_to else [
             {"condition": plan.cond_name[m.condition], "metric": plan.metric_name[m.metric], "dataset": m.dataset,
              "value": m.value} for m in plan.measurements]
+        if plan.paper == extra_in:
+            found.append({"condition": plan.cond_name[plan.conditions[0].id], "metric": "BLEU",
+                          "dataset": plan.datasets[0], "value": 0.123})
         return respond(info, {"measurements": found})
     return FunctionModel(reply, model_name="fake-verifier")
 
@@ -148,11 +154,84 @@ def test_paper_that_never_passes_is_reported_and_excluded_everywhere(tmp_path: P
         fid = json.loads((d / "fidelity.json").read_text(encoding="utf-8"))
         rec = next(r for r in fid["papers"] if r["id"] == bad)
         assert not rec["ok"] and rec["attempts"] == 2 and "excluded_reason" in rec and fid["excluded"] == [bad]
-        assert rec["checks"][-1]["name"] == "blind_reextraction" and "missing" in rec["checks"][-1]["detail"]
+        checks = {c["name"]: c for c in rec["checks"]}
+        assert not checks["blind_reextraction"]["ok"] and "missing" in checks["blind_reextraction"]["detail"]
+        assert checks["blind_extra"]["ok"]
         good = next(r for r in fid["papers"] if r["id"] != bad)
-        assert good["ok"] and good["checks"][-1]["name"] == "blind_reextraction"
+        assert good["ok"] and [c["name"] for c in good["checks"]][-2:] == ["blind_reextraction", "blind_extra"]
         gt = json.loads((d / "ground_truth.json").read_text(encoding="utf-8"))
         assert bad not in [s["paper"] for s in gt["studies"]] + [p["paper"] for p in gt["placements"]]
+
+
+def test_duplicate_is_told_the_original_title_and_must_differ(tmp_path: Path) -> None:
+    """F2: a duplicate paper carries another title; the LLM renderer learns the original's title from the
+    original's rendering (originals first) and `title_differs` enforces it."""
+    studies = truth.generate(SEED, N, duplicates=1)
+    dup = studies[-1]
+    writer = Writer(studies, fail_first=False)
+    renderer = LlmRenderer(FunctionModel(writer, model_name="fake-writer"), tmp_path / "cache.jsonl", attempts=2)
+    out = corpus.build(name="d", seed=SEED, studies=N, renderer=renderer, out=tmp_path / "c", levels=["explicit"], duplicates=1)
+    assert out["excluded"] == {}
+    d = tmp_path / "c" / "d-explicit"
+    original = title_of((d / "papers" / f"{dup.duplicate_of}.md").read_text(encoding="utf-8"))
+    assert title_of((d / "papers" / f"{dup.study_id}.md").read_text(encoding="utf-8")) != original
+    prompts = [c for c in writer.calls if f'"paper": "{dup.study_id}"' in c]
+    assert len(prompts) == 1 and json.loads(prompts[0].split("Rendering plan:\n", 1)[1])["title"]["must_differ_from"] == original
+    assert all('"title"' not in c for c in writer.calls if f'"paper": "{dup.study_id}"' not in c)
+    fid = json.loads((d / "fidelity.json").read_text(encoding="utf-8"))
+    rec = next(r for r in fid["papers"] if r["id"] == dup.study_id)
+    assert rec["ok"] and "title_differs" in [c["name"] for c in rec["checks"]]
+    # a writer that keeps the original's title fails the check and the duplicate is excluded
+    stubborn = LlmRenderer(FunctionModel(Writer(studies, fail_first=False, copy_title=True), model_name="fake-writer"),
+                           tmp_path / "cache2.jsonl", attempts=2)
+    out = corpus.build(name="d", seed=SEED, studies=N, renderer=stubborn, out=tmp_path / "c2", levels=["explicit"], duplicates=1)
+    assert out["excluded"] == {dup.study_id: ["explicit"]}
+    fid = json.loads((tmp_path / "c2" / "d-explicit" / "fidelity.json").read_text(encoding="utf-8"))
+    rec = next(r for r in fid["papers"] if r["id"] == dup.study_id)
+    assert not rec["ok"] and next(c for c in rec["checks"] if c["name"] == "title_differs")["detail"]
+
+
+def test_blind_extra_measurement_fails_the_paper(tmp_path: Path, studies: list[truth.Study]) -> None:
+    """G.2: a value the blind reader returns that the plan does not have is added content (`blind_extra`)."""
+    bad = studies[1].study_id
+    verifier = blind(studies, blind_to="none", extra_in=bad)
+    renderer = LlmRenderer(FunctionModel(Writer(studies, fail_first=False), model_name="fake-writer"),
+                           tmp_path / "cache.jsonl", attempts=2, verify_model=verifier)
+    out = corpus.build(name="x", seed=SEED, studies=N, renderer=renderer, out=tmp_path / "c", levels=["explicit"])
+    assert out["excluded"] == {bad: ["explicit"]}
+    fid = json.loads((tmp_path / "c" / "x-explicit" / "fidelity.json").read_text(encoding="utf-8"))
+    rec = next(r for r in fid["papers"] if r["id"] == bad)
+    checks = {c["name"]: c for c in rec["checks"]}
+    assert checks["blind_reextraction"]["ok"] and not checks["blind_extra"]["ok"]
+    assert "0.123" in checks["blind_extra"]["detail"] and "blind_extra" in json.dumps(rec["history"])
+    assert all(r["ok"] for r in fid["papers"] if r["id"] != bad)
+
+
+def test_blind_check_allows_the_decoy_and_the_relative_difference(studies: list[truth.Study]) -> None:
+    import asyncio
+    from synth.fidelity import BlindExtraction, BlindMeasurement, blind_check
+
+    async def const(value):
+        return value
+
+    def read(plan, text, extra: list[BlindMeasurement]):
+        planned = [BlindMeasurement(condition=plan.cond_name[m.condition], metric="m", dataset=m.dataset, value=m.value)
+                   for m in plan.measurements]
+        return asyncio.run(blind_check(text, plan, lambda _t: const(BlindExtraction(measurements=planned + extra))))
+
+    s = next(s for s in studies if s.decoy is not None)
+    plan = make_plan(s, "contradictory", plan_rng(SEED, s.study_id, "contradictory"))
+    text, _, _ = render(plan, plan_rng(SEED, s.study_id, "contradictory:text"))
+    rag = plan.cond_name[s.conditions[1].id]
+    ok = read(plan, text, [BlindMeasurement(condition=rag, metric="m", dataset=s.datasets[0], value=s.decoy)])
+    assert all(c.ok for c in ok) and [c.name for c in ok] == ["blind_reextraction", "blind_extra"]
+    extra = read(plan, text, [BlindMeasurement(condition=rag, metric="m", dataset=s.datasets[0], value=0.999)])
+    assert extra[0].ok and not extra[1].ok and "0.999" in extra[1].detail
+    # the complex level's relative difference, read as a value of the treatment condition, is planned content
+    plan = make_plan(s, "complex", plan_rng(SEED, s.study_id, "complex"))
+    text, _, _ = render(plan, plan_rng(SEED, s.study_id, "complex:text"))
+    diff = abs(s.value_of(s.effect.treatment) - s.value_of(s.effect.control))
+    assert all(c.ok for c in read(plan, text, [BlindMeasurement(condition=rag, metric="m", dataset=s.datasets[0], value=diff)]))
 
 
 def test_model_errors_are_failed_attempts_with_the_key_redacted(tmp_path: Path, studies: list[truth.Study],

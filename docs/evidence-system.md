@@ -636,7 +636,8 @@ stays byte for byte what it was: the extra draws come from their own `random.Ran
 - The generator asserts that `rules.duplicates` and `rules.large_effects` on its own studies give exactly
   the planted ones, and keeps the (treatment, control) pairs of distinct studies apart on both datasets.
 - `answer` gains `undetermined`, `duplicates` and `flags`; `label` is the label table over the counted
-  studies. `corpus.json` gains `settings: {studies, mix, levels, duplicates, missing, outliers, irrelevant}`.
+  studies. `corpus.json` gains `settings: {name, studies, mix, levels, duplicates, missing, outliers,
+  irrelevant}` (`name` because the variant's corpus id is built from it).
 
 ## F3. Counterfactual variants (generator, `variant.json`)
 

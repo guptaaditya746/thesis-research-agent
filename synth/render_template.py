@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from synth import vocab
 from synth.corpus import Rendered
 from synth.fidelity import PaperFidelity, check_paper
-from synth.levels import Plan, make_plan, plan_rng
+from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
 from synth.text import Decoy, Doc, Placement, Seg
 from synth.truth import Study
 
@@ -44,7 +44,7 @@ def sentences(doc: Doc, rng: random.Random, pool: tuple[str, ...], k: int) -> No
 def abstract(doc: Doc, plan: Plan, rng: random.Random) -> None:
     doc.heading("Abstract")
     doc.add(rng.choice(vocab.INTRO[:3]) + " ")
-    base, rag = plan.study.condition("baseline").id, plan.study.condition("rag").id
+    base, rag = plan.study.conditions[0].id, plan.study.conditions[1].id
     main = plan.datasets[0]
     if plan.level == "distributed":
         doc.add(f"We study whether access to retrieved documents changes the correctness of generated answers "
@@ -116,7 +116,11 @@ def table(doc: Doc, plan: Plan, use_codes: bool) -> None:
             doc.fill("| {c} |", c=plan.code(c.id) if use_codes else plan.cond(c.id))
             doc.add(f" {dataset} |" if several else "")
             for k in plan.metrics:
-                v = plan.values[plan.study.measurement(c.id, k.id, dataset).id]
+                m = plan.study.find(c.id, k.id, dataset)
+                if m is None:                   # a --missing measurement: the paper never states it
+                    doc.add(f" {MISSING_CELL} |")
+                    continue
+                v = plan.values[m.id]
                 doc.fill(" {v} |", v="see text" if v.fmt == "relative" else v)
             doc.add("\n")
 
@@ -131,19 +135,52 @@ def results(doc: Doc, plan: Plan, rng: random.Random) -> None:
         table(doc, plan, use_codes=False)
         doc.add("\n")
         base, rag = plan.study.conditions[0].id, plan.study.conditions[1].id
-        rel = plan.values[plan.study.effect.treatment]
-        doc.fill("On {d}, the {r} scores {v} than the {b} in {k}.\n", d=plan.datasets[0], r=plan.cond(rag),
-                 k=plan.metric(plan.metrics[0].id), v=rel, b=plan.cond(base))
+        rel = next((v for v in plan.values.values() if v.fmt == "relative"), None)
+        if rel is not None:                     # absent when the control or the treatment value is missing
+            doc.fill("On {d}, the {r} scores {v} than the {b} in {k}.\n", d=plan.datasets[0], r=plan.cond(rag),
+                     k=plan.metric(plan.metrics[0].id), v=rel, b=plan.cond(base))
         return
     doc.add(f"The table below lists the results of all systems on {plan.datasets[0]}.\n\n")
     table(doc, plan, use_codes=plan.level == "distributed")
     doc.add("\nAll systems were evaluated under the same conditions.\n")
 
 
-def render(plan: Plan, rng: random.Random) -> tuple[str, list[Placement], list[Decoy]]:
-    """The paper's text, its placements and decoys (offsets into the text)."""
+def title(rng: random.Random, avoid: str | None = None) -> str:
+    """The title template a paper draws (the renderer's first draw); a duplicate paper (`avoid`: its
+    original's) takes the next one, so a second report never carries the same title."""
+    pick = rng.choice(vocab.TITLES)
+    if pick == avoid:
+        pick = vocab.TITLES[(vocab.TITLES.index(pick) + 1) % len(vocab.TITLES)]
+    return pick
+
+
+def render_irrelevant(plan: Plan, rng: random.Random) -> str:
+    """A paper with no experiment (--irrelevant): title, abstract, introduction, two topic sections,
+    discussion and conclusion from vocab.IRRELEVANT[topic]; nothing is placed."""
+    words = vocab.IRRELEVANT[plan.study.topic]
     doc = Doc(plan.paper)
-    doc.add("# " + rng.choice(vocab.TITLES).format(dataset=plan.datasets[0]) + "\n")
+    doc.add("# " + rng.choice(words["titles"]) + "\n")
+    doc.heading("Abstract")
+    doc.add(" ".join(words["abstract"]) + "\n")
+    body = rng.sample(words["body"], 11)
+    doc.heading("Introduction")
+    doc.add(" ".join(body[:3]) + "\n")
+    for i, section in enumerate(rng.sample(words["sections"], 2)):
+        doc.heading(section)
+        doc.add(" ".join(body[3 + 3 * i:6 + 3 * i]) + "\n")
+    doc.heading("Discussion")
+    doc.add(" ".join(body[9:11]) + "\n")
+    doc.heading("Conclusion")
+    doc.add(" ".join(words["conclusion"]) + "\n")
+    return doc.text
+
+
+def render(plan: Plan, rng: random.Random, avoid_title: str | None = None) -> tuple[str, list[Placement], list[Decoy]]:
+    """The paper's text, its placements and decoys (offsets into the text)."""
+    if not plan.study.relevant:
+        return render_irrelevant(plan, rng), [], []
+    doc = Doc(plan.paper)
+    doc.add("# " + title(rng, avoid_title).format(dataset=plan.datasets[0]) + "\n")
     abstract(doc, plan, rng)
     doc.heading("Introduction")
     sentences(doc, rng, vocab.INTRO, 5)
@@ -161,9 +198,16 @@ def render(plan: Plan, rng: random.Random) -> tuple[str, list[Placement], list[D
     return doc.text, doc.placements, doc.decoys
 
 
+def text_rng(seed: int, study: Study, level: str) -> random.Random:
+    """The generator the paper's prose is drawn from: per (seed, study, level); an irrelevant paper's text
+    does not depend on the level it is filed under."""
+    return plan_rng(seed, study.study_id, level + ":text" if study.relevant else "irrelevant")
+
+
 def render_study(study: Study, level: str, seed: int) -> Rendered:
     plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
-    text, placements, decoys = render(plan, plan_rng(seed, study.study_id, level + ":text"))
+    avoid = title(plan_rng(seed, study.duplicate_of, level + ":text")) if study.duplicate_of else None
+    text, placements, decoys = render(plan, text_rng(seed, study, level), avoid)
     checks = check_paper(text, plan, placements, decoys)
     return Rendered(study, plan, text, placements, decoys,
                     PaperFidelity(study.study_id, all(c.ok for c in checks), checks))

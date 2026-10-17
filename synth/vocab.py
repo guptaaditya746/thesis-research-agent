@@ -143,3 +143,100 @@ CONCLUSION = (
     "Our prompts, judgements and analysis scripts are available for replication.",
     "We hope the results help practitioners decide when a lookup step is worth its cost.",
 )
+
+# Papers with no treatment/control experiment (`synth build --irrelevant N`, our addition; docs/evidence-system.md
+# F2): a survey of the question's topic (names retrieval, so a term screen lets it through and the screening
+# question must say no) and a paper on another topic (none of the protocol's screen terms). Rules on top of
+# the ones above: no digits at all, and no sentence that names retrieval and states an effect in the words of
+# evidence/extractors/terms.CLAIMS (the fidelity check `added_claims` fails such a sentence); the other-topic
+# paper never says retrieval, RAG, closed-book, accuracy or hallucination, not even as a substring of a word
+# ("average" holds "rag"), so a screen that matches without word boundaries finds nothing either.
+IRRELEVANT = {
+    "survey": {
+        "titles": (
+            "Retrieval-Augmented Generation: A Survey of Architectures and Open Problems",
+            "A Taxonomy of Retrieval-Augmented Language Models",
+            "Where Do the Passages Go? A Survey of Retrieval in Text Generation",
+        ),
+        "abstract": (
+            "We survey the literature on retrieval-augmented generation and organise it by where the retrieved "
+            "passages enter the generation process.",
+            "This survey reports no experiments of its own; it summarises the design space and lists the "
+            "questions the surveyed papers leave open.",
+            "We close with a list of evaluation practices that would make future comparisons easier to interpret.",
+        ),
+        "sections": ("Scope and method", "Taxonomy", "Evaluation practices", "Open problems"),
+        "body": (
+            "We collected papers that describe a retrieval component feeding a text generator and read each one "
+            "for its architecture, its training recipe and its evaluation setup.",
+            "Papers that only mention retrieval in passing, or that evaluate a retriever alone, were left out of "
+            "the survey.",
+            "The first family passes retrieved passages to the generator as part of the prompt and leaves the "
+            "generator weights untouched.",
+            "The second family trains the retriever and the generator jointly, so the retriever learns which "
+            "passages the generator can use.",
+            "A third family retrieves at the token level during decoding, which ties the retrieval frequency to "
+            "the length of the output.",
+            "Most surveyed papers index an encyclopedic corpus split into short passages, and a few use the web "
+            "through a search interface.",
+            "Evaluation setups vary widely in the datasets, the judging procedure and the reported measures, "
+            "which makes a direct comparison across papers hard.",
+            "Several papers judge answers with a single annotator, and only a minority report agreement between "
+            "annotators.",
+            "We refrain from aggregating the reported numbers, because the setups differ too much for an "
+            "aggregate to mean anything.",
+            "Open problems include the treatment of conflicting passages, the cost of retrieval at inference time "
+            "and the evaluation of long-form answers.",
+            "How a generator should behave when the retrieved passages contradict each other is rarely addressed.",
+            "We hope the taxonomy helps readers place new work and choose comparable evaluation settings.",
+            "The survey is limited to papers written in English and to work published before our cut-off date.",
+            "Retrieval latency is reported in only a handful of papers, and never together with the generation cost.",
+        ),
+        "conclusion": (
+            "We presented a taxonomy of retrieval-augmented generation and a list of open problems; the empirical "
+            "questions remain for controlled studies to settle.",
+        ),
+    },
+    "other": {
+        "titles": (
+            "Subword Tokenisation for Source Code: A Comparison of Vocabulary Construction Methods",
+            "Byte-Level versus Subword Vocabularies for Code Completion Models",
+            "How Vocabulary Size Shapes Code Completion Quality",
+        ),
+        "abstract": (
+            "We study how the vocabulary of a code language model is built and how that choice shows up in "
+            "completion quality and inference cost.",
+            "This paper describes the construction methods and the properties of the token sequences they "
+            "produce, and discusses what the choice means for training and serving.",
+        ),
+        "sections": ("Vocabulary construction", "Properties of the token sequences", "Cost of training and serving"),
+        "body": (
+            "Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and "
+            "the merges are learned on a sample of the training corpus.",
+            "A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that "
+            "explain the corpus best.",
+            "Source code has long identifiers, repeated operators and strict whitespace, so the choices made for "
+            "natural language transfer poorly.",
+            "Identifiers written in camel case or snake case are split differently by the two methods, which "
+            "changes the number of tokens per line.",
+            "Whitespace tokens dominate the sequences of indentation-sensitive languages unless runs of spaces "
+            "are merged into single tokens.",
+            "A larger vocabulary shortens the token sequences but enlarges the embedding table and the output "
+            "layer of the model.",
+            "We record the mean number of tokens per line and the share of identifiers that are split into "
+            "more than one token.",
+            "Serving cost grows with the sequence length, so a vocabulary that shortens sequences also shortens "
+            "the time per completion.",
+            "The training corpus is a deduplicated snapshot of permissively licensed repositories in several "
+            "programming languages.",
+            "We leave the interaction between the vocabulary and the positional encoding to future work.",
+            "Our scripts for building each vocabulary are released with the paper.",
+            "Rare tokens that occur in a single repository are pruned before training to keep the embedding "
+            "table compact.",
+        ),
+        "conclusion": (
+            "We described the trade-offs between vocabulary construction methods for code models and the "
+            "properties of the sequences they produce.",
+        ),
+    },
+}

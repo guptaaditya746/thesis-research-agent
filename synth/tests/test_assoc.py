@@ -72,15 +72,17 @@ def test_blind_check_matches_condition_and_value(level: str) -> None:
     plan, text = paper(s, level)
     a, b = swap_pair(s, plan)
     swapped_values = {a: s.value_of(b), b: s.value_of(a)}
-    assert not asyncio.run(blind_check(text, plan, blind_reader(plan, swapped_values))).ok
-    assert asyncio.run(blind_check(text, plan, blind_reader(plan, {}))).ok
+    def ok(reader) -> bool:          # both checks: every value recovered, and nothing beyond the plan
+        return all(c.ok for c in asyncio.run(blind_check(text, plan, reader)))
+    assert not ok(blind_reader(plan, swapped_values))
+    assert ok(blind_reader(plan, {}))
     codes = BlindExtraction(measurements=[
         BlindMeasurement(condition=(plan.cond_aliases[m.condition] or ("the " + plan.cond_name[m.condition],))[0],
                          metric="m", dataset=m.dataset, value=m.value) for m in plan.measurements])
 
     async def by_code(_: str) -> BlindExtraction:
         return codes
-    assert asyncio.run(blind_check(text, plan, by_code)).ok
+    assert ok(by_code)
 
 
 def test_relative_value_must_name_rag_before_and_baseline_after() -> None:

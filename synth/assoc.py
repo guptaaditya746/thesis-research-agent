@@ -79,7 +79,7 @@ def _prose(text: str, plan: Plan, ps: list[Placement], p: Placement) -> list[str
     conds = facts_in(ps, "condition_label", a, b, skip=p)
     bad = []
     if p.fmt == "relative":
-        base = plan.study.condition("baseline").id
+        base = plan.study.condition(plan.study.control_role).id
         before = [q.fact for q in conds if q.end <= p.start]
         after = [q.fact for q in conds if q.start >= p.end]
         if not before or before[-1] != m.condition or not after or after[0] != base \

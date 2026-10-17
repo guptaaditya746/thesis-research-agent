@@ -24,7 +24,8 @@ from gold import llm
 from synth import levelcheck
 from synth.corpus import Rendered
 from synth.fidelity import BlindExtraction, Check, PaperFidelity, blind_check, check_paper
-from synth.levels import Plan, make_plan, plan_rng
+from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
+from synth.render_template import render_study as render_with_template
 from synth.text import Decoy, Placement
 from synth.truth import Study
 
@@ -59,14 +60,29 @@ class PaperReply(BaseModel):
     markdown: str
 
 
-def plan_json(plan: Plan) -> dict[str, Any]:
-    """What the model is told: facts, names and the exact strings, never the effect or the answer."""
+def title_of(text: str) -> str:
+    """The paper's title: its first line without the heading mark."""
+    return text.split("\n", 1)[0].lstrip("#").strip()
+
+
+def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
+    """What the model is told: facts, names and the exact strings, never the effect or the answer. A
+    duplicate paper (--duplicates) is told its original's title (`avoid_title`) so it takes another."""
     units = {"fraction": "%", "seconds": "s"}
-    rag = plan.study.condition("rag").id
+    rag = plan.study.conditions[1].id
     decoy = None
     if plan.decoy is not None:
         decoy = (f"On {plan.datasets[0]}, the {plan.cond_name[rag]} reaches {plan.decoy.exact} "
                  f"{plan.metric_name[plan.metrics[0].id]}.")
+    not_reported = None
+    if plan.study.missing is not None:          # a --missing study: the key is present only then
+        role = plan.study.control_role if plan.study.missing == "control" else plan.study.treatment_role
+        gone = plan.study.condition(role).id
+        not_reported = {
+            "cells": [{"condition": plan.cond_name[gone], "metric": plan.metric_name[plan.metrics[0].id],
+                       "dataset": d} for d in plan.datasets],
+            "instruction": f"This value was not measured: never state it in any form; in a table write "
+                           f"exactly '{MISSING_CELL}' in its cell."}
     return {
         "paper": plan.paper, "level_instructions": LEVEL_INSTRUCTIONS[plan.level],
         "datasets": [{"name": d, "main": i == 0, "size": "1,000 questions"} for i, d in enumerate(plan.datasets)],
@@ -84,6 +100,10 @@ def plan_json(plan: Plan) -> dict[str, Any]:
                                 if v.fmt == "relative"), None),
         "claim_sentences": {"abstract": plan.claim_sentences[0], "conclusion": plan.claim_sentences[1]},
         "decoy_sentence": decoy,
+        **({"not_reported": not_reported} if not_reported else {}),
+        **({"title": {"must_differ_from": avoid_title,
+                      "instruction": "Another paper already carries this title; give this one a different title."}}
+           if avoid_title is not None else {}),
     }
 
 
@@ -151,9 +171,12 @@ class LlmRenderer:
         out = await self._call(BLIND_INSTRUCTIONS, "Paper:\n\n" + text, BlindExtraction, self.verify_model, seed)
         return BlindExtraction.model_validate(out)
 
-    async def render_one(self, study: Study, level: str, seed: int) -> Rendered:
+    async def render_one(self, study: Study, level: str, seed: int, avoid_title: str | None = None) -> Rendered:
+        """`avoid_title`: for a duplicate, the title its original got at this level (`title_differs` check)."""
+        if not study.relevant:          # nothing to place: the fixed template writes it, no model call
+            return render_with_template(study, level, seed)
         plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
-        base = json.dumps(plan_json(plan), indent=2, ensure_ascii=False)
+        base = json.dumps(plan_json(plan, avoid_title), indent=2, ensure_ascii=False)
         history: list[dict] = []
         feedback: list[str] = []
         text, ps, decoys, checks = "", [], [], []
@@ -167,9 +190,12 @@ class LlmRenderer:
                 text = text if text.endswith("\n") else text + "\n"
                 ps, decoys, problems = locate(text, plan)
                 checks = [Check("required_strings", not problems, "; ".join(problems))]
+                if avoid_title is not None:
+                    same = title_of(text) == avoid_title
+                    checks.append(Check("title_differs", not same, f"the title {avoid_title!r} is the original's" if same else ""))
                 checks += check_paper(text, plan, ps, decoys) if not problems else []
                 if self.verify_model is not None and all(c.ok for c in checks):
-                    checks.append(await blind_check(text, plan, lambda t: self._blind(t, seed)))
+                    checks += await blind_check(text, plan, lambda t: self._blind(t, seed))
             except Exception as exc:  # a dead server or a malformed reply is one failed attempt
                 checks = [Check("model_call", False, llm.redact(f"{type(exc).__name__}: {exc}"))]
             failed = [c for c in checks if not c.ok]
@@ -182,11 +208,16 @@ class LlmRenderer:
                         PaperFidelity(study.study_id, False, checks, self.attempts, history))
 
     def render_all(self, jobs: Sequence[tuple[Study, str]], seed: int) -> dict[tuple[str, str], Rendered]:
+        """Originals first, then the duplicates, each told the title its original got at that level."""
         async def run() -> list[Rendered]:
             gate = asyncio.Semaphore(self.concurrency)
 
-            async def one(study: Study, level: str) -> Rendered:
+            async def one(study: Study, level: str, avoid_title: str | None = None) -> Rendered:
                 async with gate:
-                    return await self.render_one(study, level, seed)
-            return await asyncio.gather(*(one(s, lv) for s, lv in jobs))
+                    return await self.render_one(study, level, seed, avoid_title)
+            originals = await asyncio.gather(*(one(s, lv) for s, lv in jobs if not s.duplicate_of))
+            titles = {(r.study.study_id, r.plan.level): title_of(r.text) for r in originals}
+            duplicates = await asyncio.gather(*(one(s, lv, titles.get((s.duplicate_of, lv)))
+                                                for s, lv in jobs if s.duplicate_of))
+            return [*originals, *duplicates]
         return {(r.study.study_id, r.plan.level): r for r in asyncio.run(run())}
