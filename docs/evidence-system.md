@@ -557,6 +557,35 @@ screen ─► position 0 of every type (regex) ─► complete? ─► stop
   `all`; the stop-position histogram; screen precision and recall against the ground truth's `relevant`.
 - **Protocol**: no new keys beyond `screen`; `cascade: until_found` stays for `all`.
 
+**As built (17 Oct), where the code deviates from the above:**
+
+- **Escalation is per type, not per global position.** The picture above runs "position 1 for the gap
+  types, then position 2". Built: after position 0 of every type, each round runs, for every gap type, the
+  *next position of that type's own cascade* (`engine.Execution.funnel_loop`), until the study is complete or
+  no gap type has a position left. Reason: with the shipped two-step cascades (regex, LLM), a paper whose
+  baseline condition the regex misses has `condition` as the gap in round 1 and `measurement` only in round 2,
+  where a global position 2 does not exist, so the LLM measurement extractor would never run and every such
+  paper would end `undetermined` in `gaps` while `all` finds it. The funnel.json steps therefore carry
+  `round` and `position`; a round may hold two steps when its types are at different positions.
+- **`stopped_after`** is the highest cascade position run when the funnel stopped *because the study was
+  complete*; `null` otherwise (`all` mode, a screened-out document, or the gap types' cascades exhausted,
+  the last decision then holding the gap). A study complete after the last possible round gets a number,
+  not `null`. `funnel.screened` is the screen's decision (not relevant), whatever the strategy did with it;
+  funnel.json's `skipped` says whether extraction was skipped.
+- **Regex screen without a hit** has no term to point at, so its negative item is anchored on the
+  document's first non-empty line (the title): every item carries a checked span (R1). A term written in
+  capitals only (RAG) is matched in capitals, any other term in any case. The LLM screen's fallback item
+  ("unanchored") reuses the regex item's span; a screening call that returns no item leaves the earlier
+  decision standing, and a cascade without any decision counts as relevant, so a failed check never skips
+  a paper.
+- **Events**: `screen` also carries the call ids and the deciding call's status; `completeness` carries
+  `after_round` next to `after_position`; `extractor_call` gains `focus` (the gap code or null).
+  funnel.json is `{strategy, documents: {id: {screen, skipped, steps, decisions, stopped_after}}}`.
+- **Evaluation**: `report.json.funnel` holds per-document rows, the per-document means, the stop-position
+  histogram (`0`, `1`, …, `exhausted`, `skipped`) and the screen's precision and recall of the decision
+  "relevant" (recall = the share of the truly relevant papers kept); the `all` run is compared with the
+  `gaps` run through `evaluate compare` over both reports (one row per run), not by `evaluate score` alone.
+
 # Part E. Proposal flow (contract, 17 Oct 2026; our design)
 
 The supervisor marked LLM protocol generation "with user dialogue" optional (§8). This is that dialogue

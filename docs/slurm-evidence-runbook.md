@@ -181,29 +181,40 @@ Same studies as step 1, written by the template: the difference between the two 
 ```bash
 cat > "$EV/engine.sh" <<'EOF'
 #!/usr/bin/env bash
-# regex-only and the cascade (regex, then the LLM extractor on orch-model) on every 20-study corpus.
+# regex-only and the cascade (regex, then the LLM extractor on orch-model) on every 20-study corpus, the
+# cascade in both strategies: `all` (every extractor on every paper, the screen recorded) and `gaps` (the
+# funnel: screen, then escalate only the gaps; docs/evidence-system.md Part D).
 set -u
 for C in "$CORPORA"/rag-llm-s1-* "$CORPORA"/rag-tpl-s1-*; do
   N=$(basename "$C")
-  for S in regex-only cascade; do
-    uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/$S" --cache "$CACHE/engine" \
-      --extractors "$S" --model orch-model --run-id "$N" || echo "FAIL engine $S $N"
-  done
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/regex-only" --cache "$CACHE/engine" \
+    --extractors regex-only --model orch-model --run-id "$N" || echo "FAIL engine regex-only $N"
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade" --cache "$CACHE/engine" \
+    --extractors cascade --strategy all --model orch-model --run-id "$N" || echo "FAIL engine cascade $N"
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade-gaps" --cache "$CACHE/engine" \
+    --extractors cascade --strategy gaps --model orch-model --run-id "$N" || echo "FAIL engine cascade-gaps $N"
 done
 EOF
 chmod +x "$EV/engine.sh"
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/engine.sh" > "$EV/logs/3-engine.log" 2>&1 &
 ```
 
-`--model orch-model` is the default, written out so the record (`run.json` `settings.model`) is explicit.
-Each run prints its label and counts. Row `EV-engine`: per corpus and selection the label, the counts
-(supporting / contradicting / neutral / undetermined), model calls, tokens and seconds (`run.json` `cost`),
-rejected items by reason (from `calls/*.json`), and every `FAIL` line.
+`--model orch-model` is the default, written out so the record (`run.json` `settings.model`) is explicit;
+`--strategy all` is the default too. The `gaps` run shares the record cache with the `all` run: a call the
+`all` run already made (the screen, position 0, and an untargeted call) is a cache hit, a targeted call
+(its task carries a `focus`) is new. Each run prints its label and counts. Row `EV-engine`: per corpus and
+selection (regex-only, cascade, cascade-gaps) the label, the counts (supporting / contradicting / neutral /
+undetermined), model calls, tokens and seconds (`run.json` `cost`), rejected items by reason (from
+`calls/*.json`), for `gaps` the stop positions and screened-out papers (`funnel.json`), and every `FAIL`
+line. Steps 4 and 7 take `$RUNS/cascade-gaps` beside `$RUNS/cascade`; `evaluate compare` over the `all` and
+`gaps` reports of one corpus then shows calls and tokens per document and the screen's precision and recall
+next to the accuracies (`compare.md` columns `strategy`, `calls_per_document`, `tokens_per_document`,
+`screen_precision`, `screen_recall`).
 
 ## 4. Replay and re-execution
 
 ```bash
-for R in "$RUNS"/regex-only/rag-* "$RUNS"/cascade/rag-*; do
+for R in "$RUNS"/regex-only/rag-* "$RUNS"/cascade/rag-* "$RUNS"/cascade-gaps/rag-*; do
   case "$R" in *-replay-*|*-reexec-*) continue;; esac
   uv run evidence replay "$R" | grep -q '"ok": true' && echo "OK $R" || echo "MISMATCH $R"
   uv run evidence verify "$R" | grep -q '"ok": true' || echo "CHAIN $R"
@@ -272,15 +283,18 @@ corpus the label, studies with a stance, citations kept and dropped (`answer.jso
 ## 7. Scores and comparison (CPU)
 
 ```bash
-for R in "$RUNS"/cascade/rag-* "$RUNS"/regex-only/rag-* "$RUNS"/agentic/rag-*; do
+for R in "$RUNS"/cascade/rag-* "$RUNS"/cascade-gaps/rag-* "$RUNS"/regex-only/rag-* "$RUNS"/agentic/rag-*; do
   case "$R" in *-replay-*|*-reexec-*) continue;; esac
   N=$(basename "$R"); S=$(basename "$(dirname "$R")")
   B=(); for b in "$RUNS"/rag-baseline/$N/answer.json "$RUNS"/agent-baseline/$N/answer.json; do
     [ -f "$b" ] && B+=(--baseline "$b"); done
   uv run evaluate score --run "$R" --corpus "$CORPORA/$N" "${B[@]}" --out "$SCORES/$S/$N" || echo "FAIL score $S $N"
 done
-for S in cascade regex-only agentic; do
+for S in cascade cascade-gaps regex-only agentic; do
   uv run evaluate compare --out "$SCORES/compare-$S" "$SCORES/$S"/*
+done
+for N in $(ls "$SCORES/cascade-gaps"); do   # all against gaps, one corpus per table (Part D)
+  uv run evaluate compare --out "$SCORES/compare-funnel/$N" "$SCORES/cascade/$N" "$SCORES/cascade-gaps/$N"
 done
 ```
 

@@ -21,7 +21,10 @@ Pairing rule (`synthesis.pairing`, rule `same_dataset`):
 The author claim is the document's first author_claim item; it agrees with the data per
 `rules.claim_agrees` through `synthesis.claim_map`. A document without a usable pair is `undetermined`
 with a reason code and text and does not count; the label is `rules.label` of the counts by the
-protocol's decision table.
+protocol's decision table. The reason codes double as the funnel's gaps (Part D, ours): `GAP_TYPES` names
+the evidence types the engine escalates for each code, `study()` is the funnel's completeness check, and a
+document the funnel screened out comes in with a pre-set `screened_out` reason and no items. Every study
+also carries `funnel: {screened, stopped_after}` (`answer`).
 
 Flags (the supervisor's synthesis step names them; shape ours, docs/evidence-system.md F1; protocol
 `synthesis.flags`, definitions in evidence/rules.py), computed after every document's entry, over the
