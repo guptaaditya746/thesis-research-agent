@@ -110,3 +110,12 @@ def test_an_engine_run_on_a_synth_corpus_is_scored_with_its_funnel(tmp_path: Pat
     assert all(r["calls"] >= 1 for r in funnel["rows"])
     if strategy == "all":
         assert set(funnel["stop_positions"]) == {"exhausted"}
+    # the screening extractor has no facts: no cascade or per-extractor rows, but its cost is kept
+    result = score(run, corpus)
+    assert not any(r["extractor"].startswith("regex_screen") for r in result["cascade"]["rows"])
+    assert not any(r["extractor"].startswith("regex_screen") for r in result["extractors"]["rows"])
+    assert any(r["extractor"].startswith("regex_screen") and r["calls"] == funnel["documents"]
+               for r in result["extractors"]["cost"])
+    intervals = rep.compare([result])["intervals"]
+    assert intervals[0]["strategy"] == strategy and intervals[0]["run_id"] == strategy
+    assert "| strategy" in rep.render_compare(rep.compare([result]))

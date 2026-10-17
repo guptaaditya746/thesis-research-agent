@@ -11,9 +11,12 @@ like an extractor call:
   title), because every item carries a checked span (R1) and there is no term to point at. A term written in
   capitals only (an acronym such as RAG) is matched in capitals; any other term in any case; a space in a
   term matches any run of white space. An empty document gives no item.
-- `llm_screen` (kind llm, near_exact): one schema-constrained call over the task's scope with the protocol's
+- `llm_screen` (kind llm, near_exact): one schema-constrained call over the HEAD of the task's scope (the
+  first `head_chars` characters, default 12000, the LLM extractors' chunk size) with the protocol's
   `screen.question` (prompts/screen-v1.md, temperature 0, seed 0), output `{relevant, reason, quote}`. The
-  quote is anchored like the LLM extractors' quotes (agent/anchor.find over the whole document). A quote
+  head is enough because the screening question asks what kind of paper this is, which the title, abstract
+  and introduction state; the result's coverage names the range actually sent, so a decision on a cut
+  document is visible. The quote is anchored like the LLM extractors' quotes (agent/anchor.find over the whole document). A quote
   that cannot be anchored is rejected with the anchor's reason, and the item falls back to the regex decision
   the engine gives as context (the earlier screen item): its `relevant`, the reason "unanchored: <the model's
   reason>", and the regex item's span. Without a context item there is no fallback item. A failed model call
@@ -48,7 +51,7 @@ REGEX_SOURCES = (base.HERE / "screen.py", *base.SHARED_SOURCES)
 LLM_SOURCES = (base.HERE / "screen.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "screen-v1.md",
                base.ROOT / "gold" / "llm.py", base.ROOT / "evidence" / "recording.py", *base.SHARED_SOURCES)
 LLM_DEFAULTS: dict[str, Any] = {"model": "orch-model", "prompt": "screen-v1.md", "temperature": 0.0, "seed": 0,
-                                "max_tokens": 1024}
+                                "max_tokens": 1024, "head_chars": 12000}
 
 
 def term_pattern(term: str) -> str:
@@ -127,7 +130,9 @@ class LLMScreen:
         self.question = " ".join(str(cfg.get("question") or config.get("description") or "").split())
         template = cfg.get("instructions") or llm_schema.read_prompt(cfg["prompt"])
         self.instructions = template.format(question=self.question)
-        config_out = {k: cfg[k] for k in ("model", "prompt", "temperature", "seed", "max_tokens")}
+        if int(cfg["head_chars"]) < 1:
+            raise ValueError("llm_screen: head_chars must be positive")
+        config_out = {k: cfg[k] for k in ("model", "prompt", "temperature", "seed", "max_tokens", "head_chars")}
         config_out |= {"evidence_type": SCREEN_TYPE, "question": self.question,
                        "prompt_sha256": gold_llm.prompt_sha256(self.instructions, ScreenReply),
                        "model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
@@ -139,8 +144,8 @@ class LLMScreen:
     def extract(self, task: ExtractionTask, ctx: RunContext) -> ExtractionResult:
         text, index = ctx.text(), ctx.index()
         parts = base.ranges(task, text)
-        a, b = (parts[0][0], parts[-1][1]) if parts else (0, 0)
-        prompt = llm_schema.user_prompt(task.document.id, 1, 1, a, b, text[a:b], {})
+        a, b = (parts[0][0], min(parts[-1][1], parts[0][0] + int(self.cfg["head_chars"]))) if parts else (0, 0)
+        prompt = llm_schema.user_prompt(task.document.id, 1, 1, a, b, text[a:b], {})   # the head only; coverage says so
         base_result = {"extractor_id": self.spec.extractor_id, "task_sha256": task.task_sha256}
         try:
             reply, call = ctx.llm().structured(self.cfg["model"], self.instructions, prompt, ScreenReply,

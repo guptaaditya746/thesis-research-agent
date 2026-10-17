@@ -130,9 +130,10 @@ def test_a_screened_out_paper_gets_no_extraction_and_is_undetermined_screened_ou
     assert study["funnel"] == {"screened": True, "stopped_after": None}
     assert answer["counts"]["undetermined"] == 1 and answer["label"] == "supported"
     screen = next(e for e in events(root, "screen") if e["custom_metadata"]["document"] == "P3")
-    assert set(screen["custom_metadata"]) == {"document", "relevant", "reason", "extractor", "status", "calls"}
+    assert set(screen["custom_metadata"]) == {"document", "relevant", "reason", "extractor", "status", "calls", "statuses"}
     assert screen["agent_id"] == screen["custom_metadata"]["extractor"] and screen["custom_metadata"]["status"] == "ok"
     assert len(screen["custom_metadata"]["calls"]) == 1          # regex said no: the LLM screen never ran
+    assert screen["custom_metadata"]["statuses"] == ["ok"]
     # the regex screen's negative decision is anchored on the title line
     call = read(root, f"calls/{screen['custom_metadata']['calls'][0]}.json")
     assert call["items"][0]["fields"]["relevant"] is False
@@ -172,6 +173,44 @@ def test_the_llm_screen_decides_after_the_regex_and_falls_back_when_unanchored(t
     regex_call = read(root, f"calls/{p2['screen']['calls'][0]}.json")
     assert llm_call["items"][0]["spans"] == regex_call["items"][0]["spans"]     # the regex hit's span
     assert regex_call["items"][0]["spans"][0]["selector"]["exact"] == "retrieval"   # the earliest term: the title's
+
+
+def test_a_failed_llm_screen_call_leaves_the_regex_decision_standing(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LITELLM_MASTER_KEY", "sk-secret-1234")
+
+    def screen(doc: str, prompt: str) -> dict[str, Any]:
+        raise RuntimeError("gateway down for key sk-secret-1234")
+
+    root = gaps_run(tmp_path, {"P1": COMPLETE}, make_script([], screen=screen))
+    p1 = read(root, "funnel.json")["documents"]["P1"]
+    assert p1["screen"]["relevant"] is True and p1["screen"]["extractor"].startswith("regex_screen")
+    assert p1["screen"]["statuses"] == ["ok", "error"] and p1["screen"]["status"] == "ok" and not p1["skipped"]
+    event = next(e for e in events(root, "screen"))
+    assert event["custom_metadata"]["statuses"] == ["ok", "error"] and event["agent_id"].startswith("regex_screen")
+    failed = read(root, f"calls/{p1['screen']['calls'][1]}.json")
+    assert failed["status"] == "error" and failed["items"] == [] and "sk-secret" not in json.dumps(failed)
+    assert read(root, "answer.json")["studies"][0]["direction"] == "supports"   # extraction ran as usual
+
+
+def test_the_llm_screen_reads_the_head_only(tmp_path: Path) -> None:
+    long_paper = COMPLETE + "\n## Appendix\n\n" + "Filler sentence. " * 400
+    calls: list[str] = []
+    protocol_text = PROTOCOL.read_bytes().decode("utf-8")
+    assert protocol_text.count("    - name: llm_screen        # otherwise the model answers the question\n") == 1
+    variant = tmp_path / "head.yaml"
+    variant.write_text(protocol_text.replace("    - name: llm_screen        # otherwise the model answers the question\n",
+                                             "    - name: llm_screen\n      config: {head_chars: 100}\n"),
+                       encoding="utf-8", newline="\n")
+    root = gaps_run(tmp_path, {"P1": long_paper}, make_script([], screen=lambda d, p: screen_yes(p)), variant, calls=calls)
+    prompt = next(c for c in calls if "characters 0-100" in c)
+    assert "Appendix" not in prompt and len(prompt.split("<<<\n", 1)[1].rsplit("\n>>>", 1)[0]) == 100
+    p1 = read(root, "funnel.json")["documents"]["P1"]
+    llm_call = read(root, f"calls/{p1['screen']['calls'][1]}.json")
+    assert llm_call["coverage"] == [{"range": [0, 100], "section": None, "status": "found", "found": 1, "reason": None}]
+    assert llm_call["extractor_id"] != extractors.get("llm_screen", {"question": "q"}).spec.extractor_id
+    assert extractors.get("llm_screen", {}).spec.config["head_chars"] == 12000
+    with pytest.raises(ValueError, match="head_chars"):
+        extractors.get("llm_screen", {"head_chars": 0})
 
 
 def test_the_agentic_brief_carries_the_focus_and_only_the_gap_type_reaches_the_agent(tmp_path: Path,
@@ -283,7 +322,7 @@ def test_gaps_run_never_opens_ground_truth_and_funnel_json_has_the_documented_sh
     assert set(funnel) == {"strategy", "documents"} and set(funnel["documents"]) == {"S001", "S002", "S003", "S004", "S005"}
     for entry in funnel["documents"].values():
         assert set(entry) == {"screen", "skipped", "steps", "decisions", "stopped_after"}
-        assert set(entry["screen"]) == {"relevant", "reason", "extractor", "status", "calls"}
+        assert set(entry["screen"]) == {"relevant", "reason", "extractor", "status", "calls", "statuses"}
         assert all(set(s) == {"round", "position", "types", "calls"} for s in entry["steps"])
         assert all(set(d) == {"after_round", "after_position", "complete", "gap", "gap_types"} for d in entry["decisions"])
     assert read(root, "run.json")["outputs"]["funnel.json"]

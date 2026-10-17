@@ -504,11 +504,19 @@ def score_locate(truth: GroundTruth, locate: Any | None) -> dict[str, Any] | Non
     return {"rows": rows, "outside": outside}
 
 
+def screen_extractors(run: dict[str, Any] | None) -> set[str]:
+    """Extractor ids of the funnel's screening pseudo type (Part D): no facts, so no extraction rows."""
+    specs = (run or {}).get("extractor_specs") or {}
+    return {ext for ext, spec in specs.items() if isinstance(spec, dict) and list(spec.get("evidence_types") or []) == ["screen"]}
+
+
 def score_cascade(m: Matching, run: dict[str, Any] | None) -> dict[str, Any]:
-    """Per extractor: items it found, items only it found, and of those how many matched a fact."""
+    """Per extractor: items it found, items only it found, and of those how many matched a fact. The
+    screening extractors are left out (they have no facts; their cost is in `extractors.cost`)."""
     rows: dict[str, Counter[str]] = defaultdict(Counter)
     for extractor in (run or {}).get("extractors", []):
-        rows[extractor].update(found=0)
+        if extractor not in screen_extractors(run):
+            rows[extractor].update(found=0)
     for item in m.items.values():
         by = item.found_by or ("unknown",)
         matched = item.item_id in m.fact_of
@@ -606,11 +614,15 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
     truth = m.truth
     all_facts = fact_counts(truth)
     called = called_on(run)
+    screens = screen_extractors(run.run if run else None)   # no facts: rows for them would only say 0 (cost kept)
     # cell: items, matched, span hits, only, only matched, associated (measurements)
     sums: dict[str, dict[tuple[str, str], list[int]]] = defaultdict(lambda: defaultdict(lambda: [0] * 6))
     for extractor in ((run.run or {}) if run else {}).get("extractors", []):
-        sums[extractor]
+        if extractor not in screens:
+            sums[extractor]
     for extractor, pairs in (called or {}).items():   # a call that found nothing is a row with 0 items
+        if extractor in screens:
+            continue
         for document, kind in pairs:
             if kind in TYPES:
                 level = truth.level_of(document)

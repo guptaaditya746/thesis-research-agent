@@ -544,9 +544,11 @@ screen ─► position 0 of every type (regex) ─► complete? ─► stop
   with the merged items of their context types as context.
 - **Targeted task**: `ExtractionTask.focus: {gap: code, have: {roles: [...], metrics: [...]}, want: text}`
   (`null` on untargeted tasks; part of `task_sha256`). The LLM extractor appends a "Focus" paragraph to
-  the user prompt (the prompt file and so the extractor id are unchanged); the agentic brief adds
-  `scope.focus` (`TEMPLATE_VERSION` `agentic-task-v2`). No live cache exists before this change, so the
-  task-hash change costs nothing.
+  the user prompt (a targeted and an untargeted call use the same extractor id; only the task differs, so
+  they are two cache entries under one id); the agentic brief adds `scope.focus` (`TEMPLATE_VERSION`
+  `agentic-task-v2`). No live cache existed at the time of this change (17 Oct), so the task-hash change
+  invalidated nothing. (The extractor ids themselves do change with this build, as with any change to
+  `llm.py`, `llm_schema.py` or `contract.py`, which every `code_sha256` covers.)
 - **Events**: `screen` (document, relevant, reason, extractor id) and `completeness` (document,
   after_position, complete, gap code, gap types); `extractor_call` unchanged. **`funnel.json`**: per
   document the ordered steps run (position, types, calls) and each decision; in `run.json.outputs`.
@@ -575,12 +577,20 @@ screen ─► position 0 of every type (regex) ─► complete? ─► stop
 - **Regex screen without a hit** has no term to point at, so its negative item is anchored on the
   document's first non-empty line (the title): every item carries a checked span (R1). A term written in
   capitals only (RAG) is matched in capitals, any other term in any case. The LLM screen's fallback item
-  ("unanchored") reuses the regex item's span; a screening call that returns no item leaves the earlier
-  decision standing, and a cascade without any decision counts as relevant, so a failed check never skips
-  a paper.
-- **Events**: `screen` also carries the call ids and the deciding call's status; `completeness` carries
-  `after_round` next to `after_position`; `extractor_call` gains `focus` (the gap code or null).
-  funnel.json is `{strategy, documents: {id: {screen, skipped, steps, decisions, stopped_after}}}`.
+  ("unanchored") reuses the regex item's span; a screening call that returns no item (a failed model call,
+  an empty document) leaves the earlier decision standing, and a cascade without any decision counts as
+  relevant, so a failed check never skips a paper. The regex screen reads the whole document; the LLM
+  screen reads its head only (`head_chars`, default 12000, the LLM extractors' chunk size; part of its
+  config and so of its id): the screening question asks what kind of paper this is, which the title,
+  abstract and introduction state, and the call's coverage names the range actually sent.
+- **No re-run of a cheap position with richer context.** When an escalation adds context (the LLM finds
+  the baseline condition), the funnel does not run the dependent type's position 0 again with it (the
+  regex measurement extractor already ran without that condition); the next position of the dependent type
+  gets the richer context instead. A re-run of position 0 is a possible later knob.
+- **Events**: `screen` also carries the call ids, one status per call (`statuses`) and the deciding
+  call's status; `completeness` carries `after_round` next to `after_position`; `extractor_call` gains
+  `focus` (the gap code or null). funnel.json is `{strategy, documents: {id: {screen, skipped, steps,
+  decisions, stopped_after}}}`.
 - **Evaluation**: `report.json.funnel` holds per-document rows, the per-document means, the stop-position
   histogram (`0`, `1`, …, `exhausted`, `skipped`) and the screen's precision and recall of the decision
   "relevant" (recall = the share of the truly relevant papers kept); the `all` run is compared with the

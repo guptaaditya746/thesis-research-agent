@@ -205,22 +205,24 @@ class Execution:
                                     "extractor": None, "status": None}
         context: list[Item] = []
         call_ids: list[str] = []
+        statuses: list[str] = []      # one per call, so a failed call after the decision is on record too
         for position, (ref, extractor) in enumerate(self.cascades.get(SCREEN_TYPE, [])):
             task = ExtractionTask(protocol=self.ref, evidence_type=SCREEN_TYPE, field_schema_sha256=spec.schema_sha256,
                                   document=doc, scope=Scope(), context=tuple(i.item_id for i in context))
             call_id, result = self._call(extractor, task, state.text, state.index, spec, context, position)
             call_ids.append(call_id)
+            statuses.append(result.status)
             if not result.items:
-                continue
+                continue   # no item (an error, an empty document): the earlier decision stands
             item = result.items[0]
             decision = {"relevant": bool(item.fields["relevant"]), "reason": str(item.fields["reason"]),
                         "extractor": extractor.spec.extractor_id, "status": result.status}
             context = [item]
             if not decision["relevant"]:
                 break
-        state.screen = {**decision, "calls": call_ids}
+        state.screen = {**decision, "calls": call_ids, "statuses": statuses}
         self.events.add("screen", used=[doc.sha256], generated=[], agent_id=decision["extractor"] or ENGINE,
-                        group_id=doc.id, custom={"document": doc.id, **decision, "calls": call_ids})
+                        group_id=doc.id, custom={"document": doc.id, **decision, "calls": call_ids, "statuses": statuses})
 
     def funnel_loop(self, state: DocState) -> None:
         """`gaps`: position 0 of every type, then the next position of each gap type until complete or exhausted."""

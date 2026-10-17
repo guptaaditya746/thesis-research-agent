@@ -200,9 +200,11 @@ nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/engine.sh" > "$EV/logs/
 ```
 
 `--model orch-model` is the default, written out so the record (`run.json` `settings.model`) is explicit;
-`--strategy all` is the default too. The `gaps` run shares the record cache with the `all` run: a call the
-`all` run already made (the screen, position 0, and an untargeted call) is a cache hit, a targeted call
-(its task carries a `focus`) is new. Each run prints its label and counts. Row `EV-engine`: per corpus and
+`--strategy all` is the default too. The `gaps` run shares the record cache with the `all` run: a call whose
+task is byte for byte one the `all` run made is a cache hit, which holds for the screen calls and for the
+position-0 calls of the types without context (condition, metric); a position-0 call with context
+(measurement, author_claim) hits only when the merged context items are the same, which in `all` they are
+not when a later position added items; a targeted call (its task carries a `focus`) is always new. Each run prints its label and counts. Row `EV-engine`: per corpus and
 selection (regex-only, cascade, cascade-gaps) the label, the counts (supporting / contradicting / neutral /
 undetermined), model calls, tokens and seconds (`run.json` `cost`), rejected items by reason (from
 `calls/*.json`), for `gaps` the stop positions and screened-out papers (`funnel.json`), and every `FAIL`

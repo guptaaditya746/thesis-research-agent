@@ -264,13 +264,16 @@ def compare_intervals(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
         level = corpus_level(report)
         f1 = _overall(intervals.get("extraction"), evidence_type="all") or None
         paired = {r["system"]: r for r in intervals.get("paired") or []}
+        strategy = (report.get("funnel") or {}).get("strategy")
         for system in intervals.get("synthesis") or []:
             name = system["system"]
             rows.append({"level": level, "corpus_id": report["corpus_id"], "system": name,
+                         "run_id": report.get("run_id") if name == ENGINE else None,
+                         "strategy": strategy if name == ENGINE else None,   # Part D: all vs gaps rows
                          "extraction_f1": _strip(f1) if name == ENGINE else None,
                          "direction_accuracy": _strip(system),
                          "engine_minus_system": _strip(paired.get(name)) if name != ENGINE else None})
-    rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"]))
+    rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"], r.get("strategy") or "", r.get("run_id") or ""))
     return rows
 
 
@@ -281,7 +284,8 @@ def _strip(row: dict[str, Any] | None) -> dict[str, Any] | None:
 COMPARE_COLUMNS = ["level", "corpus_id", "system", "strategy", "extraction_f1", "span_accuracy", "association_accuracy",
                    "true_pair", "direction_accuracy", "completeness", "accuracy_answered", "traceability",
                    "label_correct", "calls_per_document", "tokens_per_document", "screen_precision", "screen_recall"]
-COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "direction_accuracy", "engine_minus_system"]
+COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "extraction_f1", "direction_accuracy",
+                            "engine_minus_system"]
 
 
 def render_compare(comparison: dict[str, Any]) -> str:

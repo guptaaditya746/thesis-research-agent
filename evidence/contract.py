@@ -91,9 +91,9 @@ class ExtractionTask(Frozen):
     """One request to an extractor (contract section 4). The extractor receives nothing else.
 
     `focus` is part of `task_sha256` (it changes what the extractor is asked), so a targeted call and the
-    untargeted call on the same document are different cache entries. Adding the field changed the hash of
-    every task, targeted or not; no live record cache existed before the funnel was built (17 Oct), so no
-    record was invalidated by it."""
+    untargeted call on the same document are different cache entries under the same extractor id. Adding
+    the field changed the hash of every task, targeted or not; no live record cache existed at the time of
+    this change (17 Oct), so nothing was invalidated by it."""
     protocol: ProtocolRef
     evidence_type: EvidenceType
     field_schema_sha256: str
