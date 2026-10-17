@@ -1,0 +1,210 @@
+"""Review fixes of the proposal flow: regex patterns follow the decided roles and metrics, edited files are
+not overwritten, malformed inputs are clean refusals, the revision line keeps its comment, a cached reply the
+step cannot use says how to ask again."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+import pytest
+import yaml
+
+from evidence import cli
+from evidence.propose import amend, cards, critic, frame, freeze, vocab
+from evidence.propose.common import ProposalError
+from evidence.protocol import load
+
+from .conftest import PROTOCOL
+from .propose_support import QUESTION, RAG_FRAME, Scripted, flow
+
+
+def decide(d: Path, card: str, value: dict[str, Any]) -> None:
+    data = yaml.safe_load((d / "decisions.yaml").read_text(encoding="utf-8"))
+    for x in data["decisions"]:
+        if x["card"] == card:
+            x.update(choice="custom", value=value, reason="a person's choice", by="AG")
+    (d / "decisions.yaml").write_text(yaml.safe_dump(data), encoding="utf-8")
+
+
+def regex_steps(p: Any) -> dict[str, dict[str, Any]]:
+    return {s.name: s.config for spec in p.evidence_types.values() for s in spec.extractors if s.name.startswith("regex_")}
+
+
+def checks_of(d: Path) -> dict[str, dict[str, Any]]:
+    return {c["id"]: c for c in json.loads((d / "proposal.json").read_text(encoding="utf-8"))["checks"]}
+
+
+# 1. regex patterns follow the decisions ------------------------------------------------------------------------
+
+def test_a_dropped_metric_leaves_the_regex_steps(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    decide(d, "metrics", {"metrics": [{"canonical": "factual_accuracy", "higher_is_better": True}]})
+    freeze.run(d)
+    p = load(d / "protocol.yaml")
+    steps = regex_steps(p)
+    for name in ("regex_metric", "regex_measurement"):
+        emitted = {m[1] for m in steps[name]["metrics"]}
+        assert emitted <= {"factual_accuracy", "other"} and "factual_accuracy" in emitted, name
+    assert checks_of(d)["regex_matches_enums"]["ok"]
+
+
+def test_an_added_metric_gets_patterns(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    decide(d, "metrics", {"metrics": [{"canonical": "factual_accuracy", "higher_is_better": True},
+                                      {"canonical": "f1", "higher_is_better": True}]})
+    freeze.run(d)
+    p = load(d / "protocol.yaml")
+    assert p.evidence_types["metric"].enum_of("canonical") == ("factual_accuracy", "f1", "other")
+    for name in ("regex_metric", "regex_measurement"):
+        patterns = regex_steps(p)[name]["metrics"]
+        assert any(m[1] == "f1" for m in patterns) and not any(m[1] == "hallucination_rate" for m in patterns)
+    assert checks_of(d)["regex_matches_enums"]["ok"]
+
+
+def test_renamed_roles_get_patterns(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    decide(d, "roles", {"treatment": {"role": "retrieval", "definition": "with retrieval"},
+                        "control": {"role": "closed_book", "definition": "without retrieval"}})
+    freeze.run(d)
+    p = load(d / "protocol.yaml")
+    assert p.synthesis.compare.treatment == "retrieval"
+    for name in ("regex_condition", "regex_measurement"):
+        assert list(regex_steps(p)[name]["conditions"]) == ["retrieval", "closed_book"], name
+    assert checks_of(d)["regex_matches_enums"]["ok"]
+
+
+def test_freeze_refuses_regex_steps_outside_the_enums(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from evidence.propose import draft
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    decide(d, "metrics", {"metrics": [{"canonical": "factual_accuracy", "higher_is_better": True}]})
+    monkeypatch.setattr(draft, "sync_regex", lambda p, f: [])     # as before the fix
+    with pytest.raises(ProposalError, match="can emit metric.canonical \\['hallucination_rate'\\]"):
+        freeze.run(d)
+    assert not (d / "protocol.yaml").exists()
+
+
+def test_critic_check_both_directions() -> None:
+    text = PROTOCOL.read_text(encoding="utf-8")
+    assert {c["id"]: c for c in critic.checks(text, None)}["regex_matches_enums"]["ok"]
+    roles = text.replace("enum: [rag, baseline, other]", "enum: [rag, closed, other]").replace(
+        "control: baseline}", "control: closed}")
+    check = {c["id"]: c for c in critic.checks(roles, None)}["regex_matches_enums"]
+    assert not check["ok"]
+    assert "regex_condition can emit condition.role ['baseline']" in check["message"]
+    assert "regex_condition has no pattern for condition.role ['closed']" in check["message"]
+
+
+# 2. edited files are kept ------------------------------------------------------------------------------------
+
+def test_frame_rerun_keeps_an_edited_frame(tmp_path: Path) -> None:
+    model = Scripted()
+    d = flow(tmp_path / "p", model, until="frame")
+    frame.run(QUESTION, d, vocab="rag-factuality", model=model.model)        # untouched: written again
+    data = json.loads((d / "frame.json").read_text(encoding="utf-8"))
+    data["treatment"]["definition"] = "edited by a person"
+    (d / "frame.json").write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(ProposalError, match="has been edited"):
+        frame.run(QUESTION, d, vocab="rag-factuality", model=model.model)
+    assert "edited by a person" in (d / "frame.json").read_text(encoding="utf-8")
+    frame.run(QUESTION, d, vocab="rag-factuality", model=model.model, force=True)
+    assert "edited by a person" not in (d / "frame.json").read_text(encoding="utf-8")
+
+
+def test_cards_keep_decisions_they_did_not_write(tmp_path: Path) -> None:
+    model = Scripted()
+    d = flow(tmp_path / "p", model, until="critic")
+    (d / "decisions.yaml").write_text("decisions: []  # written by a person before any cards\n", encoding="utf-8")
+    with pytest.raises(ProposalError, match="has been edited"):
+        cards.run(d, model=model.model)
+    cards.run(d, model=model.model, force=True)
+    (d / "cards.json").unlink()                  # the hole: no cards.json, an edited decisions.yaml
+    decide(d, "min_effect", {"min_effect": 0.02})
+    with pytest.raises(ProposalError, match="has been edited"):
+        cards.run(d, model=model.model)
+
+
+# 4. clean refusals -------------------------------------------------------------------------------------------
+
+def test_a_malformed_vocabulary_is_a_clean_refusal(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"name": "bad", "terms": []}), encoding="utf-8")
+    with pytest.raises(vocab.VocabError, match="not a vocabulary snapshot"):
+        vocab.load(bad)
+    assert cli.main(["propose", "frame", "--question", "Q?", "--vocab", str(bad), "--out", str(tmp_path / "p")]) == 2
+    assert "not a vocabulary snapshot" in capsys.readouterr().err
+
+
+def test_a_csv_with_a_byte_order_mark(tmp_path: Path) -> None:
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "sources.json").write_text('﻿[{"name": "pwc", "version": "1", "url": null, "file": "m.csv"}]',
+                                      encoding="utf-8")
+    (src / "m.csv").write_text("﻿label,synonyms,kind,higher_is_better\nExact Match,EM,metric,true\n",
+                               encoding="utf-8")
+    data = vocab.build("bom", src)
+    assert data["terms"][0]["label"] == "Exact Match"
+    (src / "m.csv").write_text("name,kind\nx,metric\n", encoding="utf-8")
+    with pytest.raises(vocab.VocabError, match="m.csv: missing key 'label'"):
+        vocab.build("bom", src)
+
+
+def test_a_choice_that_is_not_a_name(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    data = yaml.safe_load((d / "decisions.yaml").read_text(encoding="utf-8"))
+    data["decisions"][0]["choice"] = ["draft"]
+    (d / "decisions.yaml").write_text(yaml.safe_dump(data), encoding="utf-8")
+    with pytest.raises(ProposalError, match="screen: choice must be an option id"):
+        freeze.run(d)
+
+
+def test_a_broken_base_revision_is_a_clean_refusal(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted())
+    (d / "protocol.v1.yaml").write_text("id: [unclosed\n", encoding="utf-8")
+    text = (d / "protocol.yaml").read_text(encoding="utf-8")
+    (d / "protocol.yaml").write_text(text.replace("min_effect: 0.01", "min_effect: 0.02"), encoding="utf-8")
+    with pytest.raises(ProposalError, match="the base\\) does not validate"):
+        amend.run(d, "smaller")
+    assert cli.main(["propose", "amend", str(d), "--reason", "smaller"]) == 2
+
+
+# 5. the revision line ----------------------------------------------------------------------------------------
+
+def test_revision_line_keeps_its_comment_and_falls_back_to_a_dump() -> None:
+    base = PROTOCOL.read_text(encoding="utf-8").replace("\r\n", "\n")
+    commented = base.replace("version: 2\n", "version: 2\nrevision: 1   # first frozen\n")
+    out = amend.with_revision(commented, 2)
+    assert "revision: 2  # first frozen\n" in out and "# Research protocol" in out     # comments stay
+    next_line = base.replace("version: 2\n", "version: 2\nrevision:\n  1\n")
+    out = amend.with_revision(next_line, 2)
+    assert yaml.safe_load(out)["revision"] == 2 and "# Research protocol" not in out  # full dump
+    quoted = base.replace("version: 2\n", 'version: 2\n"revision": 1\n')
+    out = amend.with_revision(quoted, 2)
+    assert yaml.safe_load(out)["revision"] == 2
+    assert load_text(out).revision == 2
+
+
+def load_text(text: str) -> Any:
+    from evidence.protocol import parse
+    return parse(text)
+
+
+# 6. a cached reply the step cannot use --------------------------------------------------------------------------
+
+def test_a_cached_bad_frame_says_how_to_ask_again(tmp_path: Path) -> None:
+    bad = json.loads(json.dumps(RAG_FRAME))
+    bad["control"]["role"] = "rag"                       # treatment and control the same role
+    model = Scripted(frame_reply=bad)
+    d = tmp_path / "p"
+    with pytest.raises(ProposalError, match="run the step again with --refresh") as err:
+        frame.run(QUESTION, d, model=model.model)
+    assert "cache.jsonl" in str(err.value)
+    with pytest.raises(ProposalError, match="--refresh"):
+        frame.run(QUESTION, d, model=model.model)
+    assert model.calls == ["frame"]                      # the second run answered from the cache
+    model.frame = json.loads(json.dumps(RAG_FRAME))
+    frame.run(QUESTION, d, model=model.model, refresh=True)
+    assert model.calls == ["frame", "frame"]
+    frame.run(QUESTION, d, model=model.model)            # the refreshed reply is the cached one now
+    assert model.calls == ["frame", "frame"]
+    assert json.loads((d / "frame.json").read_text(encoding="utf-8"))["control"]["role"] == "baseline"

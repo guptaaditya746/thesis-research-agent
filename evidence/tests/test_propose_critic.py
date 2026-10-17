@@ -25,7 +25,7 @@ def test_critic_passes_the_rag_draft_and_records_the_checklist(tmp_path: Path) -
     checks = by_id(data["checks"])
     assert data["ok"] is True
     assert [c["id"] for c in data["checks"] if c["kind"] == "deterministic"] == [
-        "parses", "outcomes_complete", "terms_cover_synonyms", "screen_present", "label_complete",
+        "parses", "outcomes_complete", "terms_cover_synonyms", "regex_matches_enums", "screen_present", "label_complete",
         "extractors_registered", "vocabulary_direction"]
     assert checks["scope"] == {"id": "scope", "kind": "llm", "ok": False,
                                "message": "the term retrieval admits retrieval-only papers"}
