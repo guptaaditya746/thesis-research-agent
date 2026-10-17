@@ -100,10 +100,10 @@ def resolve(name_or_path: str | Path) -> Path:
 def load(name_or_path: str | Path) -> Vocabulary:
     path = resolve(name_or_path)
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+        vocab = Vocabulary.model_validate(data)   # pydantic's ValidationError is a ValueError
     except (OSError, ValueError) as exc:
-        raise VocabError(f"{path}: {exc}") from exc
-    vocab = Vocabulary.model_validate(data)
+        raise VocabError(f"{path}: not a vocabulary snapshot: {exc}") from exc
     actual = content_sha256(data)   # over the file's content as written (absent keys stay absent)
     if actual != vocab.sha256:
         raise VocabError(f"{path}: sha256 {vocab.sha256} does not match its content ({actual})")
@@ -124,13 +124,13 @@ def _dedup(names: list[str]) -> list[str]:
 
 def _rows(path: Path) -> list[dict[str, Any]]:
     if path.suffix == ".json":
-        rows = json.loads(path.read_text(encoding="utf-8"))
+        rows = json.loads(path.read_text(encoding="utf-8-sig"))   # -sig: a byte order mark is not content
         if not isinstance(rows, list):
             raise VocabError(f"{path}: a JSON term file is a list of terms")
         return rows
     if path.suffix == ".csv":
         out = []
-        with path.open(encoding="utf-8", newline="") as fh:
+        with path.open(encoding="utf-8-sig", newline="") as fh:
             for row in csv.DictReader(fh):
                 hib = (row.get("higher_is_better") or "").strip().lower()
                 if hib not in ("", "true", "false"):
@@ -145,26 +145,32 @@ def _rows(path: Path) -> list[dict[str, Any]]:
 def build(name: str, source_dir: Path | str) -> dict[str, Any]:
     """A snapshot (as a dict, sha256 filled in) from `source_dir/sources.json` and the term files it lists."""
     root = Path(source_dir)
-    try:
-        listed = json.loads((root / "sources.json").read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        raise VocabError(f"{root / 'sources.json'}: {exc}") from exc
     sources, terms = [], {}
-    for entry in listed:
-        source = Source(name=entry["name"], version=str(entry["version"]), url=entry.get("url"))
-        sources.append(source)
-        for row in _rows(root / entry["file"]):
-            label = " ".join(str(row["label"]).split())
-            term = Term(id=row.get("id") or f"{source.name}:{slug(label)}", label=label,
-                        synonyms=tuple(s for s in _dedup(row.get("synonyms") or []) if s != label),
-                        kind=row["kind"], source=source.name, higher_is_better=row.get("higher_is_better"))
-            if term.id in terms:
-                raise VocabError(f"two terms with the id {term.id!r}")
-            terms[term.id] = term
-    data = {"name": name, "sha256": "", "sources": [s.model_dump(mode="json") for s in sources],
-            "terms": [terms[k].model_dump(mode="json", exclude_none=True) for k in sorted(terms)]}
-    data["sha256"] = content_sha256(data)
-    Vocabulary.model_validate(data)
+    where = root / "sources.json"
+    try:
+        listed = json.loads(where.read_text(encoding="utf-8-sig"))
+        for entry in listed:
+            where = root / "sources.json"
+            source = Source(name=entry["name"], version=str(entry["version"]), url=entry.get("url"))
+            sources.append(source)
+            where = root / entry["file"]
+            for row in _rows(where):
+                label = " ".join(str(row["label"]).split())
+                term = Term(id=row.get("id") or f"{source.name}:{slug(label)}", label=label,
+                            synonyms=tuple(s for s in _dedup(row.get("synonyms") or []) if s != label),
+                            kind=row["kind"], source=source.name, higher_is_better=row.get("higher_is_better"))
+                if term.id in terms:
+                    raise VocabError(f"two terms with the id {term.id!r}")
+                terms[term.id] = term
+        data = {"name": name, "sha256": "", "sources": [s.model_dump(mode="json") for s in sources],
+                "terms": [terms[k].model_dump(mode="json", exclude_none=True) for k in sorted(terms)]}
+        data["sha256"] = content_sha256(data)
+        Vocabulary.model_validate(data)
+    except VocabError:
+        raise
+    except (OSError, ValueError, KeyError, TypeError) as exc:   # ValidationError is a ValueError
+        missing = f"missing key {exc}" if isinstance(exc, KeyError) else str(exc)
+        raise VocabError(f"{where}: {missing}") from exc
     return data
 
 

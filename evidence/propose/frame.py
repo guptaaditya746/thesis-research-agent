@@ -20,7 +20,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_ai.models import Model
 
 from . import vocab as vocab_module
-from .common import FRAME, ProposalError, ask, model_for, now, prompt, write_json
+from .common import (CACHE, FRAME, REDO, ProposalError, ask, guard, mark_written, model_for, now, prompt,
+                     write_json)
 
 PROMPT = "frame-v1.md"
 Source = Literal["ontology", "invented"]
@@ -219,18 +220,23 @@ def annotate(question: str, reply: FrameReply, vocab: vocab_module.Vocabulary | 
 
 
 def run(question: str, out: Path | str, *, vocab: str | Path | None = None, model: Model | None = None,
-        alias: str | None = None) -> Path:
-    """Write OUT/frame.json for `question` (one cached model call)."""
+        alias: str | None = None, force: bool = False, refresh: bool = False) -> Path:
+    """Write OUT/frame.json for `question` (one cached model call). An existing frame.json the person edited
+    is kept unless `force`; `refresh` asks the model again instead of using its cached reply."""
     directory = Path(out)
     directory.mkdir(parents=True, exist_ok=True)
+    guard(directory, FRAME, force)
     snapshot = vocab_module.load(vocab) if vocab else None
     instructions = prompt(PROMPT)
     user = f"Question: {question.strip()}\n\n{vocabulary_listing(snapshot)}\n"
+    reply, call = ask(directory, "frame", instructions, user, FrameReply, model=model_for(alias, model), refresh=refresh)
     try:
-        reply, call = ask(directory, "frame", instructions, user, FrameReply, model=model_for(alias, model))
         frame = annotate(question.strip(), reply, snapshot)
     except ValueError as exc:   # an id the model made that the frame cannot take
-        raise ProposalError(f"the frame the model returned does not validate: {exc}") from exc
+        raise ProposalError(f"the frame the model returned does not validate: {exc}; "
+                            + REDO.format(cache=directory / CACHE, key=call["cache_key"])) from exc
     ref = {**snapshot.ref(), "path": Path(vocab).as_posix()} if snapshot else None   # as given: a name or a path
     data = frame.model_copy(update={"vocabulary": ref, "call": call, "created": now()}).model_dump(mode="json")
-    return write_json(directory / FRAME, data)
+    write_json(directory / FRAME, data)
+    mark_written(directory, FRAME)
+    return directory / FRAME

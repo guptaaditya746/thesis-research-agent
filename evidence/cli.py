@@ -7,10 +7,10 @@
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
-    evidence propose frame --question Q [--vocab V] --out DIR [--model ALIAS]
+    evidence propose frame --question Q [--vocab V] --out DIR [--model ALIAS] [--force] [--refresh]
     evidence propose draft DIR [--template P]
-    evidence propose critic DIR [--model ALIAS]
-    evidence propose cards DIR [--model ALIAS]
+    evidence propose critic DIR [--model ALIAS] [--refresh]
+    evidence propose cards DIR [--model ALIAS] [--force] [--refresh]
     evidence propose freeze DIR
     evidence propose amend DIR --reason R [--before-main-run]
     evidence vocab build --name N --source DIR --out FILE
@@ -87,6 +87,8 @@ def _propose_parser(sub: argparse._SubParsersAction) -> None:
     f.add_argument("--vocab", help="vocabulary snapshot: a path or a name under evidence/vocab/")
     f.add_argument("--out", required=True, type=Path, help="the proposal directory, e.g. proposals/<slug>")
     f.add_argument("--model", default=DEFAULT_MODEL, help=model_help)
+    f.add_argument("--force", action="store_true", help="overwrite a frame.json that was edited")
+    f.add_argument("--refresh", action="store_true", help="ask the model again instead of using its cached reply")
     d = pro.add_parser("draft", help="frame.json + the example protocol -> draft.yaml, draft.sources.json")
     d.add_argument("dir", type=Path)
     d.add_argument("--template", type=Path, help="example protocol (default evidence/protocols/rag-factuality.yaml)")
@@ -95,6 +97,9 @@ def _propose_parser(sub: argparse._SubParsersAction) -> None:
         s = pro.add_parser(name, help=text)
         s.add_argument("dir", type=Path)
         s.add_argument("--model", default=DEFAULT_MODEL, help=model_help)
+        s.add_argument("--refresh", action="store_true", help="ask the model again instead of using its cached reply")
+        if name == "cards":
+            s.add_argument("--force", action="store_true", help="overwrite a decisions.yaml that was edited")
     pro.add_parser("freeze", help="decisions applied -> protocol.yaml, proposal.json").add_argument("dir", type=Path)
     a = pro.add_parser("amend", help="the edited protocol.yaml -> the next revision, a line in amendments.jsonl")
     a.add_argument("dir", type=Path)
@@ -113,13 +118,14 @@ def _propose(args: argparse.Namespace) -> int:
     from .propose.vocab import VocabError
     try:
         if args.propose_command == "frame":
-            out = frame.run(args.question, args.out, vocab=args.vocab, alias=args.model)
+            out = frame.run(args.question, args.out, vocab=args.vocab, alias=args.model, force=args.force,
+                            refresh=args.refresh)
         elif args.propose_command == "draft":
             out = draft.run(args.dir, template=args.template)
         elif args.propose_command == "critic":
-            out = critic.run(args.dir, alias=args.model)
+            out = critic.run(args.dir, alias=args.model, refresh=args.refresh)
         elif args.propose_command == "cards":
-            out = cards.run(args.dir, alias=args.model)
+            out = cards.run(args.dir, alias=args.model, force=args.force, refresh=args.refresh)
         elif args.propose_command == "freeze":
             out = freeze.run(args.dir)
         else:

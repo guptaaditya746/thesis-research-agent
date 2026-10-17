@@ -6,7 +6,7 @@ The edited file is compared with the last frozen or amended revision, kept as `p
 parsed protocols (without `revision`) are walked key by key, and every changed, added or removed key path
 (`synthesis.min_effect`, `evidence_types.condition.extractors`; a list counts as one value) is the impact.
 `revision` becomes N + 1 in protocol.yaml (the line is rewritten in place, so the person's layout and
-comments stay), the file is copied to `protocol.v<N+1>.yaml`, and one line is appended to amendments.jsonl:
+comments stay; `with_revision` says when it falls back to a full dump), the file is copied to `protocol.v<N+1>.yaml`, and one line is appended to amendments.jsonl:
 
     {revision, sha256, amends_sha256, reason, impact, before_main_run, at}
 
@@ -54,17 +54,35 @@ def current_revision(directory: Path) -> int:
     return int(read_json(directory / PROPOSAL)["protocol"]["revision"])
 
 
+def _dumped(text: str, revision: int) -> str:
+    """The full-dump fallback: the parsed mapping with `revision` after `version` (comments are lost)."""
+    from .freeze import ordered
+    return yaml.safe_dump(ordered(yaml.safe_load(text), revision), sort_keys=False, allow_unicode=True, width=110)
+
+
 def with_revision(text: str, revision: int) -> str:
-    """The protocol text with its top-level `revision:` line set (added after `version:` when missing)."""
-    line = re.compile(r"^revision:[^\n]*$", re.M)
-    if line.search(text):
-        return line.sub(f"revision: {revision}", text, count=1)
-    version = re.compile(r"^(version:[^\n]*)$", re.M)
-    if version.search(text):
-        return version.sub(lambda m: f"{m.group(1)}\nrevision: {revision}", text, count=1)
-    data = yaml.safe_load(text)
-    data["revision"] = revision
-    return yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
+    """The protocol text with its top-level `revision` set, editing one line so layout and comments stay:
+    `revision: <n>` (a trailing comment kept) is rewritten, or a line is added after `version:` when there is
+    none. Anything else falls back to a full dump of the parsed protocol (comments lost): a value on the next
+    line (`revision:` alone), a quoted or flow-style key, or any edit after which the parsed revision is not
+    `revision` (e.g. a second, quoted `"revision"` key further down)."""
+    line = re.compile(r"^revision:[ \t]*(?P<value>[^#\n]*?)[ \t]*(?P<comment>#[^\n]*)?$", re.M)
+    found = line.search(text)
+    if found and found.group("value"):
+        comment = f"  {found.group('comment')}" if found.group("comment") else ""
+        edited = text[:found.start()] + f"revision: {revision}{comment}" + text[found.end():]
+    elif found:   # `revision:` with its value on the next line
+        return _dumped(text, revision)
+    else:
+        version = re.compile(r"^(version:[^\n]*)$", re.M)
+        if not version.search(text):
+            return _dumped(text, revision)
+        edited = version.sub(lambda m: f"{m.group(1)}\nrevision: {revision}", text, count=1)
+    try:
+        data = yaml.safe_load(edited)
+    except yaml.YAMLError:
+        return _dumped(text, revision)
+    return edited if isinstance(data, dict) and data.get("revision") == revision else _dumped(text, revision)
 
 
 def run(directory: Path | str, reason: str, *, before_main_run: bool = False, at: str | None = None) -> dict[str, Any]:
@@ -78,7 +96,10 @@ def run(directory: Path | str, reason: str, *, before_main_run: bool = False, at
     base_path = versioned(directory, n)
     if not base_path.exists():
         raise ProposalError(f"{base_path} is missing: it is the revision {n} the amendment is compared with")
-    old = parse(base_path.read_text(encoding="utf-8"))
+    try:
+        old = parse(base_path.read_text(encoding="utf-8"))
+    except (ValueError, yaml.YAMLError) as exc:
+        raise ProposalError(f"{base_path} (revision {n}, the base) does not validate: {exc}") from exc
     text = path.read_text(encoding="utf-8")
     try:
         new = parse(text)
@@ -87,8 +108,11 @@ def run(directory: Path | str, reason: str, *, before_main_run: bool = False, at
     impact = changes(_dump(old), _dump(new))
     if not impact:
         raise ProposalError(f"{path} is the same protocol as revision {n}: nothing to amend")
-    text = with_revision(text, n + 1)
-    amended = parse(text)
+    try:
+        text = with_revision(text, n + 1)
+        amended = parse(text)
+    except (ValueError, yaml.YAMLError) as exc:
+        raise ProposalError(f"could not set revision {n + 1} in {path}: {exc}") from exc
     if amended.revision != n + 1:
         raise ProposalError(f"could not set revision {n + 1} in {path}")
     write_text(path, text)

@@ -22,7 +22,7 @@ DEFAULT_MODEL = "orch-model"   # the one model of every extractor and both basel
 
 FRAME, DRAFT, SOURCES, CRITIC = "frame.json", "draft.yaml", "draft.sources.json", "critic.json"
 CARDS, DECISIONS, PROTOCOL, PROPOSAL = "cards.json", "decisions.yaml", "protocol.yaml", "proposal.json"
-AMENDMENTS, CACHE = "amendments.jsonl", "cache.jsonl"
+AMENDMENTS, CACHE, WRITTEN = "amendments.jsonl", "cache.jsonl", "written.json"
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -83,6 +83,26 @@ def fresh(directory: Path, name: str, recorded: str | None, step: str) -> None:
         raise ProposalError(f"{path} changed after `evidence propose {step}` read it: run {step} again")
 
 
+def guard(directory: Path, name: str, force: bool) -> None:
+    """Refuse to overwrite a file the person may have edited: DIR/written.json holds the sha256 of what the
+    flow last wrote to each human-edited file (frame.json, decisions.yaml); an existing file whose bytes
+    differ from it, or that the flow never recorded, is kept unless `force`."""
+    path = Path(directory) / name
+    if force or not path.exists():
+        return
+    written = read_json(Path(directory) / WRITTEN) if (Path(directory) / WRITTEN).exists() else {}
+    if written.get(name) != sha(path):
+        raise ProposalError(f"{path} has been edited (or was not written by this step); move it away, or pass "
+                            "--force to overwrite it")
+
+
+def mark_written(directory: Path, name: str) -> None:
+    path = Path(directory) / WRITTEN
+    written = read_json(path) if path.exists() else {}
+    written[name] = sha(Path(directory) / name)
+    write_json(path, written)
+
+
 def now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -98,23 +118,33 @@ def model_for(alias: str | None, model: Model | None) -> Model:
     return model if model is not None else llm.openai_model(alias or DEFAULT_MODEL)
 
 
+REDO = "the reply is cached in {cache} (key {key}); run the step again with --refresh to ask the model again"
+
+
 def ask(directory: Path, step: str, instructions: str, user_prompt: str, output_type: type[T], *,
-        model: Model) -> tuple[T, dict[str, Any]]:
+        model: Model, refresh: bool = False) -> tuple[T, dict[str, Any]]:
     """One schema-constrained call through gold.llm.structured, cached in DIR/cache.jsonl.
 
     The key is gold.llm.cache_key over the step, the prompt hash (instructions and output schema), the model
     identity (the pinned weights of an alias, gold.llm.model_identity) and the user prompt's sha256, so a
-    rerun with the same inputs answers from the cache and makes no model call. Returns the output and the
-    call's record {step, model, prompt_sha256, cache_key, cached}.
+    rerun with the same inputs answers from the cache and makes no model call. `refresh` skips the cached
+    reply and asks again (the new reply is appended under the same key and wins on the next load; a step
+    whose cached reply it cannot use says so, `REDO`). Returns the output and the call's record {step,
+    model, prompt_sha256, cache_key, cached}.
     """
     cache = llm.JsonlCache(Path(directory) / CACHE)
     record = {"step": step, "prompt_sha256": llm.prompt_sha256(instructions, output_type),
               "model": llm.model_identity([model]), "input_sha256": sha256_hex(user_prompt.encode("utf-8")),
               "settings": {"temperature": 0.0, "seed": 0, "max_tokens": 4096}}
     key = llm.cache_key(record)
-    hit = cache.get(key)
+    hit = None if refresh else cache.get(key)
     if hit is not None:
-        return output_type.model_validate(hit), {**_public(record), "cache_key": key, "cached": True}
+        try:
+            output = output_type.model_validate(hit)
+        except ValueError as exc:
+            raise ProposalError(f"{step}: the cached reply does not validate ({exc}); "
+                                + REDO.format(cache=Path(directory) / CACHE, key=key)) from exc
+        return output, {**_public(record), "cache_key": key, "cached": True}
     try:
         output = asyncio.run(llm.structured(instructions, user_prompt, output_type, model=model,
                                             model_settings=llm.settings(seed=0, max_tokens=4096)))
