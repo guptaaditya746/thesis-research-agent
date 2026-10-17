@@ -161,6 +161,7 @@ class Execution:
         self.outputs[GRAPH_FILE] = write_canonical(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
         self.events.add("synthesis", used=sorted(set(used)), generated=["answer"], agent_id="evidence-engine",
                         custom={"label": answer["label"], "counts": answer["counts"],
+                                "flags": {name: len(docs) for name, docs in answer["flags"].items()},   # Part F1
                                 "answer_sha256": self.outputs[ANSWER_FILE], "rule": "label_table"})
         return answer
 

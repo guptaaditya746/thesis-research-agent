@@ -22,6 +22,22 @@ The author claim is the document's first author_claim item; it agrees with the d
 `rules.claim_agrees` through `synthesis.claim_map`. A document without a usable pair is `undetermined`
 with a reason code and text and does not count; the label is `rules.label` of the counts by the
 protocol's decision table.
+
+Flags (the supervisor's synthesis step names them; shape ours, docs/evidence-system.md F1; protocol
+`synthesis.flags`, definitions in evidence/rules.py), computed after every document's entry, over the
+entries in manifest order:
+- `duplicate`: `rules.duplicates` over the determined studies as (document, canonical metric, treatment
+  value, control value); a later document with the key of an earlier one is a duplicate of that first
+  document (`duplicate_of`). It keeps its direction and delta, but is listed under `duplicates` and counted
+  in `counts.duplicates`, not under supporting/contradicting/neutral, and `rules.label` gets the counts
+  without it. `flags.duplicates: false` switches this off (every study counts, no duplicate flags).
+- `large_effect`: `rules.large_effects` over the deltas of the determined, non-duplicate studies with the
+  protocol's `flags.large_effect.factor` and `min_studies` (and its `min_effect`, so a study the protocol
+  calls neutral is left out of the median as it is left out of the direction). Reported only.
+- `claim_disagrees`: `author_claim.agrees_with_data` is false (so never on an undetermined study, whose
+  agreement is null). Reported only.
+Every study carries `flags` (sorted, from rules.FLAGS) and `duplicate_of`; the answer carries
+`duplicates` (the documents, manifest order) and `flags` (every flag name -> sorted documents).
 """
 from __future__ import annotations
 
@@ -91,7 +107,8 @@ def study(protocol: Protocol, document: str, items: list[Item]) -> tuple[dict[st
     of = {t: [i for i in items if i.evidence_type == t] for t in ("condition", "metric", "measurement", "author_claim")}
     claim = of["author_claim"][0] if of["author_claim"] else None
     entry: dict[str, Any] = {"document": document, "direction": "undetermined", "delta": None, "metric": None,
-                             "treatment": None, "control": None, "author_claim": None, "reason": None}
+                             "treatment": None, "control": None, "author_claim": None, "reason": None,
+                             "flags": [], "duplicate_of": None}
     used: list[str] = []
     roles = {c.fields.get("role") for c in of["condition"]}
     question = [m for name in spec.metric_names for m in of["metric"] if m.fields.get("canonical") == name]
@@ -134,18 +151,47 @@ def study(protocol: Protocol, document: str, items: list[Item]) -> tuple[dict[st
     return entry, used
 
 
+def flag(protocol: Protocol, studies: list[dict[str, Any]]) -> dict[str, list[str]]:
+    """Fills `flags` and `duplicate_of` of the entries (manifest order) in place; returns flag -> documents."""
+    spec = protocol.synthesis
+    settings = spec.flags
+    determined = [s for s in studies if s["direction"] != "undetermined"]
+    duplicate_of = (rules.duplicates((s["document"], s["metric"], s["treatment"]["value"], s["control"]["value"])
+                                     for s in determined) if settings.duplicates else {})
+    large = rules.large_effects({s["document"]: s["delta"] for s in determined if s["document"] not in duplicate_of},
+                                settings.large_effect.factor, settings.large_effect.min_studies, spec.min_effect)
+    found: dict[str, list[str]] = {name: [] for name in rules.FLAGS}
+    for s in studies:
+        doc = s["document"]
+        s["duplicate_of"] = duplicate_of.get(doc)
+        flags = set()
+        if doc in duplicate_of:
+            flags.add("duplicate")
+        if doc in large:
+            flags.add("large_effect")
+        if s["author_claim"] is not None and s["author_claim"]["agrees_with_data"] is False:
+            flags.add("claim_disagrees")
+        s["flags"] = sorted(flags)
+        for name in s["flags"]:
+            found[name].append(doc)
+    return {name: sorted(docs) for name, docs in found.items()}
+
+
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]]) -> tuple[dict[str, Any], list[str]]:
-    """answer.json and the ids of every item it counted."""
+    """answer.json and the ids of every item it rests on (a duplicate's items included: they are evidence
+    the answer reports, even though the duplicate is not counted)."""
     studies, used = [], []
     for doc in documents:
         entry, ids = study(protocol, doc, items.get(doc, []))
         studies.append(entry)
         used += ids
-    groups = {k: [s["document"] for s in studies if s["direction"] == d]
+    flags = flag(protocol, studies)
+    groups = {k: [s["document"] for s in studies if s["direction"] == d and s["duplicate_of"] is None]
               for k, d in (("supporting", "supports"), ("contradicting", "contradicts"), ("neutral", "neutral"),
                            ("undetermined", "undetermined"))}
+    groups["duplicates"] = [s["document"] for s in studies if s["duplicate_of"] is not None]
     counts = {k: len(v) for k, v in groups.items()}
-    label = rules.label(counts, protocol.synthesis.table)
+    label = rules.label(counts, protocol.synthesis.table)   # the table reads supporting/contradicting/neutral only
     out = {"system": SYSTEM, "question": protocol.question, "label": label, "counts": counts, "studies": studies,
-           **groups}
+           **groups, "flags": flags}
     return out, used

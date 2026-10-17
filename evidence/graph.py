@@ -2,8 +2,11 @@
 
 Edges: `in_document` (item -> its document), `condition` and `metric` (measurement -> the items its links
 name), and `supports` / `contradicts` (the treatment measurement a study's effect rests on -> the control
-measurement it was compared with, as synthesis decided; a neutral study has no such edge). Nodes and
-edges are sorted, so the same evidence gives the same file.
+measurement it was compared with, as synthesis decided; a neutral study has no such edge), and
+`duplicate_of` (a document the synthesis flagged as a duplicate -> the earlier document it repeats;
+docs/evidence-system.md F1). Nodes and edges are sorted, so the same evidence gives the same file. The
+PROV export (evidence/prov.py) needs nothing more: a duplicate's items are among the items the synthesis
+`used`, as every study's are.
 """
 from __future__ import annotations
 
@@ -28,6 +31,8 @@ def build(papers: list[Paper], items: dict[str, list[Item]], answer: dict[str, A
         if entry["direction"] in ("supports", "contradicts"):
             edges.append({"src": entry["treatment"]["measurement"], "dst": entry["control"]["measurement"],
                           "rel": entry["direction"]})
+        if entry.get("duplicate_of"):
+            edges.append({"src": entry["document"], "dst": entry["duplicate_of"], "rel": "duplicate_of"})
     order = {p.id: n for n, p in enumerate(papers)}
     nodes.sort(key=lambda n: (order[n["id"] if n["type"] == "document" else n["document"]], n["type"] != "document",
                               n["id"]))

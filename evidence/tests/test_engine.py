@@ -40,16 +40,22 @@ def test_run_directory_and_answer(protocol_file: Path, corpus: Path, tmp_path: P
     assert directions == {"S001": "supports", "S002": "supports", "S003": "contradicts", "S004": "neutral",
                           "S005": "undetermined"}
     assert answer["label"] == "mixed" and answer["counts"] == {"supporting": 2, "contradicting": 1, "neutral": 1,
-                                                                "undetermined": 1}
+                                                                "undetermined": 1, "duplicates": 0}
+    assert answer["duplicates"] == [] and answer["flags"] == {"claim_disagrees": ["S003"], "duplicate": [],
+                                                              "large_effect": []}
     s1, s2, s3, s4, s5 = answer["studies"]
     assert s1["delta"] == pytest.approx(0.09) and s1["metric"] == "factual_accuracy"
     assert s1["treatment"]["value"] == 0.71 and s1["control"]["value"] == 0.62
     assert s2["treatment"]["value"] == 0.665 and s2["control"]["value"] == 0.58      # table codes R and B
     assert s3["metric"] == "hallucination_rate" and s3["delta"] == pytest.approx(-0.03)
     assert s3["author_claim"]["direction"] == "improves" and s3["author_claim"]["agrees_with_data"] is False
+    assert s3["flags"] == ["claim_disagrees"] and all(s["duplicate_of"] is None for s in answer["studies"])
+    assert s5["flags"] == [] and s1["flags"] == []
     assert s4["author_claim"]["direction"] == "no_effect" and s4["author_claim"]["agrees_with_data"] is True
     assert s5["reason"] == {"code": "no_control_condition", "text": "no baseline condition found"} and s5["delta"] is None
     assert verify(root / "events.jsonl", head=record["chain_head"]).ok
+    synthesis = next(e for e in lines(root / "events.jsonl") if e["subtype"] == "synthesis")
+    assert synthesis["custom_metadata"]["flags"] == {"claim_disagrees": 1, "duplicate": 0, "large_effect": 0}
 
 
 def test_same_value_twice_is_one_item_with_two_value_spans(protocol_file: Path, corpus: Path, tmp_path: Path) -> None:
