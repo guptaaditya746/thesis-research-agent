@@ -60,8 +60,9 @@ def test_perfect_run_scores_one_everywhere(tmp_path: Path, corpus: Path) -> None
     assert result["stability"] is None
     # F4: intervals of a perfect run are the point value with null bounds (no spread); extractor rows exist
     assert row(result["intervals"]["extraction"], evidence_type="all") == {"evidence_type": "all", "point": 1.0,
-                                                                            "low": None, "high": None}
-    assert result["intervals"]["synthesis"] == [{"system": "evidence-engine", "point": 1.0, "low": None, "high": None}]
+                                                                            "low": None, "high": None, "method": None}
+    assert result["intervals"]["synthesis"] == [{"system": "evidence-engine", "point": 1.0, "low": None, "high": None,
+                                                 "method": None}]
     assert result["intervals"]["paired"] == [] and engine["flags"] is None
     assert {r["extractor"] for r in result["extractors"]["rows"]} == {fx.REGEX, fx.LLM}
     assert result["extractors"]["cost"] is None   # no calls/ in the hand-written run
@@ -235,7 +236,8 @@ def test_compare_orders_corpora_by_level(tmp_path: Path) -> None:
     assert rows[0]["accuracy_answered"] == 1.0 and "accuracy_answered" in rep.render_compare(rep.compare(reports))
     intervals = rep.compare(reports)["intervals"]
     assert [(r["level"], r["system"]) for r in intervals] == [("explicit", "evidence-engine"), ("paraphrased", "evidence-engine")]
-    assert intervals[0]["extraction_f1"] == {"point": 1.0, "low": None, "high": None} and intervals[0]["engine_minus_system"] is None
+    assert intervals[0]["extraction_f1"] == {"point": 1.0, "low": None, "high": None, "method": None}
+    assert intervals[0]["engine_minus_system"] is None
     text = rep.render_compare(rep.compare(reports))
     assert "## Intervals" in text and "1.000 [n/a]" in text
 
@@ -249,6 +251,9 @@ def test_compare_shows_direction_intervals_with_bounds(tmp_path: Path) -> None:
     report = score_answers(corpus, [tmp_path / "engine.json", tmp_path / "rag.json"])
     rag = row(report["intervals"]["synthesis"], system="rag-baseline")
     assert rag["point"] == pytest.approx(4 / 6) and rag["low"] is not None and rag["low"] < rag["point"] < rag["high"]
+    assert rag["method"] in ("BCa", "percentile")
+    text = rep.render(report)
+    assert "| method" in text and f"| {rag['method']}" in text and "| determined" in text
     paired = row(report["intervals"]["paired"], system="rag-baseline")
     assert paired["point"] == pytest.approx(2 / 6) and paired["low"] is not None
     line = next(l for l in rep.render_compare(rep.compare([report])).splitlines() if "rag-baseline" in l and "[" in l)
@@ -261,3 +266,6 @@ def test_report_shows_accuracy_on_answered_studies(tmp_path: Path, corpus: Path)
     text = rep.render(score_answers(corpus, [tmp_path / "agent.json"]))
     header = next(line for line in text.splitlines() if line.startswith("| system"))
     assert "direction_accuracy" in header and "accuracy_answered" in header and "label_correct" in header
+    assert "determined" in header and "over the `determined` studies only" in text
+    per_level = next(line for line in text.splitlines() if line.startswith("| level"))
+    assert "determined" in per_level

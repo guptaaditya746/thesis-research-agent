@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from evaluation import benchmark as bm
 from evaluation.score import score
 from evaluation.truth import Run
@@ -16,27 +18,30 @@ from .test_score import row
 TYPES = ("condition", "metric", "measurement", "author_claim")
 
 
+# (extractor, document, evidence type) of the calls a cascade `until_found` makes on the hand corpus: the regex
+# extractor sees every type of S001 (found everything there, so the LLM is not called on S001 except for
+# measurements, where the cascade went on), the LLM every type of S002.
+TASKS = [(fx.REGEX, "S001", t) for t in TYPES] + [(fx.LLM, "S002", t) for t in TYPES] + [(fx.LLM, "S001", "measurement")]
+
+
 def add_calls(run: Path, cache_dir: Path | None = None) -> None:
-    """calls/*.json (one per extractor and paper), extractor_call events with durations, and a record cache
-    with the token usage of the LLM's model calls."""
+    """calls/*.json (one per TASKS entry), extractor_call events of one second each, and a record cache with
+    the token usage of the LLM's model calls (1000 in, 10 out per call)."""
     calls, events, cache = [], [], []
-    n = 0
-    for extractor in (fx.REGEX, fx.LLM):
-        for paper in fx.PAPERS:
-            n += 1
-            call_id = f"t{n:06d}"
-            model_calls = [f"mc-{n}"] if extractor == fx.LLM else []
-            calls.append({"call_id": call_id, "extractor_id": extractor, "task_sha256": "0" * 64, "status": "ok",
-                          "error": None, "items": [], "rejected": [], "coverage": [], "model_calls": model_calls})
-            events.append({"task_id": call_id, "subtype": "extractor_call", "agent_id": extractor, "status": "ok",
-                           "started_at": "2026-10-17T10:00:00.000000Z",
-                           "ended_at": f"2026-10-17T10:00:0{n}.500000Z",
-                           "custom_metadata": {"model_calls": model_calls, "document": paper}})
-            if model_calls:
-                cache.append({"key": f"k{n}", "value": {"extractor_id": extractor, "result": {},
-                                                        "model_calls": [{"id": model_calls[0], "request": {},
-                                                                         "usage": {"input_tokens": 1000 * n,
-                                                                                   "output_tokens": 10 * n}}]}})
+    for n, (extractor, paper, kind) in enumerate(TASKS, start=1):
+        call_id = f"t{n:06d}"
+        model_calls = [f"mc-{n}"] if extractor == fx.LLM else []
+        calls.append({"call_id": call_id, "extractor_id": extractor, "task_sha256": "0" * 64, "status": "ok",
+                      "error": None, "items": [], "rejected": [], "coverage": [], "model_calls": model_calls})
+        events.append({"task_id": call_id, "subtype": "extractor_call", "agent_id": extractor, "status": "ok",
+                       "started_at": "2026-10-17T10:00:00.000000Z", "ended_at": "2026-10-17T10:00:01.000000Z",
+                       "custom_metadata": {"model_calls": model_calls, "document": paper, "evidence_type": kind,
+                                           "position": 0 if extractor == fx.REGEX else 1}})
+        if model_calls:
+            cache.append({"key": f"k{n}", "value": {"extractor_id": extractor, "result": {},
+                                                    "model_calls": [{"id": model_calls[0], "request": {},
+                                                                     "usage": {"input_tokens": 1000,
+                                                                               "output_tokens": 10}}]}})
     (run / "calls").mkdir()
     for call in calls:
         fx.dump(run / "calls" / f"{call['call_id']}.json", call)
@@ -71,36 +76,59 @@ def ext_row(report: dict[str, Any], extractor: str, kind: str = "all", level: st
 def test_run_reads_calls_events_and_usage(tmp_path: Path) -> None:
     report = scored(tmp_path)
     run = Run.load(tmp_path / "a" / "runs" / "run-1")
-    assert len(run.calls) == 4 and len(run.events) == 4
-    assert run.usage == {"mc-3": {"input_tokens": 3000, "output_tokens": 30}, "mc-4": {"input_tokens": 4000, "output_tokens": 40}}
+    assert len(run.calls) == 9 and len(run.events) == 9
+    assert run.usage == {f"mc-{n}": {"input_tokens": 1000, "output_tokens": 10} for n in range(5, 10)}
     cost = {r["extractor"]: r for r in report["extractors"]["cost"]}
-    assert cost[fx.REGEX] == {"extractor": fx.REGEX, "calls": 2, "model_calls": 0, "input_tokens": 0, "output_tokens": 0,
-                              "seconds": 4.0}   # 1.5 s + 2.5 s
-    assert cost[fx.LLM] == {"extractor": fx.LLM, "calls": 2, "model_calls": 2, "input_tokens": 7000, "output_tokens": 70,
-                            "seconds": 8.0}     # 3.5 s + 4.5 s
+    assert cost[fx.REGEX] == {"extractor": fx.REGEX, "calls": 4, "model_calls": 0, "input_tokens": 0, "output_tokens": 0,
+                              "seconds": 4.0}
+    assert cost[fx.LLM] == {"extractor": fx.LLM, "calls": 5, "model_calls": 5, "input_tokens": 5000, "output_tokens": 50,
+                            "seconds": 5.0}
 
 
 def test_without_a_cache_tokens_are_null_and_without_calls_cost_is_null(tmp_path: Path) -> None:
     report = scored(tmp_path, with_cache=False)
     cost = {r["extractor"]: r for r in report["extractors"]["cost"]}
-    assert cost[fx.LLM]["input_tokens"] is None and cost[fx.LLM]["model_calls"] == 2 and cost[fx.LLM]["seconds"] == 8.0
+    assert cost[fx.LLM]["input_tokens"] is None and cost[fx.LLM]["model_calls"] == 5 and cost[fx.LLM]["seconds"] == 5.0
     corpus = fx.write_corpus(tmp_path / "plain")
     run = fx.write_run(tmp_path / "plain" / "runs", list(fx.perfect_items().values()), fx.engine_answer(fx.perfect_items()))
     plain = score(run, corpus)
-    assert plain["extractors"]["cost"] is None and plain["extractors"]["rows"]
+    assert plain["extractors"]["cost"] is None and plain["extractors"]["recall_scope"] == "all_facts"
+    regex = ext_row(plain, fx.REGEX)
+    assert (regex["items"], regex["facts"], regex["recall"]) == (9, 15, 0.6)   # no events: every fact counts
 
 
 def test_per_extractor_rows_count_an_item_for_every_finder(tmp_path: Path) -> None:
     report = scored(tmp_path)
+    assert report["extractors"]["recall_scope"] == "called"
     regex, llm = ext_row(report, fx.REGEX), ext_row(report, fx.LLM)
-    assert (regex["items"], regex["matched"], regex["facts"], regex["precision"], regex["recall"]) == (9, 9, 15, 1.0, 0.6)
-    assert (llm["items"], llm["only"], llm["only_matched"]) == (7, 6, 6)
+    assert (regex["items"], regex["matched"], regex["facts"], regex["precision"], regex["recall"]) == (9, 9, 9, 1.0, 1.0)
+    assert (llm["items"], llm["only"], llm["only_matched"], llm["facts"]) == (7, 6, 6, 9)   # S002's 6 + S001's 3 measurements
+    assert llm["recall"] == pytest.approx(7 / 9)
     m = ext_row(report, fx.REGEX, "measurement")
-    assert (m["items"], m["facts"], m["span_accuracy"], m["association_accuracy"], m["associated"]) == (3, 5, 1.0, 1.0, 3)
+    assert (m["items"], m["facts"], m["span_accuracy"], m["association_accuracy"], m["associated"]) == (3, 3, 1.0, 1.0, 3)
     assert ext_row(report, fx.REGEX, "condition")["association_accuracy"] is None
     assert ext_row(report, fx.LLM, "measurement", "paraphrased")["recall"] == 1.0
     assert not [r for r in report["extractors"]["rows"] if r["extractor"] == fx.REGEX and r["level"] == "paraphrased"]
-    assert ext_row(report, fx.LLM, "measurement", "explicit")["items"] == 1   # S001.m3, found by both
+    explicit = ext_row(report, fx.LLM, "measurement", "explicit")
+    assert (explicit["items"], explicit["facts"]) == (1, 3) and explicit["recall"] == pytest.approx(1 / 3)   # S001.m3
+
+
+def test_recall_denominator_follows_the_calls_not_the_items(tmp_path: Path) -> None:
+    """An extractor never called on a document is not charged with its facts; one called and finding nothing is."""
+    corpus = fx.write_corpus(tmp_path)
+    items = fx.perfect_items()
+    run = fx.write_run(tmp_path / "runs", list(items.values()), fx.engine_answer(items))
+    add_calls(run)
+    events = [json.loads(x) for x in (run / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    events.append({"subtype": "extractor_call", "agent_id": fx.REGEX, "status": "ok",
+                   "started_at": "2026-10-17T10:00:00.000000Z", "ended_at": "2026-10-17T10:00:01.000000Z",
+                   "custom_metadata": {"document": "S002", "evidence_type": "author_claim", "model_calls": []}})
+    (run / "events.jsonl").write_text("".join(json.dumps(e) + "\n" for e in events), encoding="utf-8", newline="\n")
+    report = score(run, corpus)
+    regex = ext_row(report, fx.REGEX)
+    assert (regex["items"], regex["facts"], regex["recall"]) == (9, 10, 0.9)             # + S002's claim, not found
+    claim = ext_row(report, fx.REGEX, "author_claim", "paraphrased")
+    assert (claim["items"], claim["facts"], claim["recall"]) == (0, 1, 0.0)
 
 
 def test_benchmark_pools_rows_per_level_and_cost_per_call(tmp_path: Path) -> None:
@@ -112,16 +140,17 @@ def test_benchmark_pools_rows_per_level_and_cost_per_call(tmp_path: Path) -> Non
     assert (r["name"], r["version"], r["levels"]) == ("regex_result", "1", ["explicit", "paraphrased"])
     assert [c["corpus_id"] for c in r["corpora"]] == ["c-a", "c-b"]
     overall = row(r["rows"], evidence_type="all", level="all")
-    assert (overall["items"], overall["facts"], overall["recall"]) == (18, 30, 0.6)
+    assert (overall["items"], overall["facts"], overall["recall"]) == (18, 18, 1.0)
     explicit = row(r["rows"], evidence_type="measurement", level="explicit")
-    assert (explicit["items"], explicit["facts"], explicit["association_accuracy"]) == (3, 5, 1.0)
+    assert (explicit["items"], explicit["facts"], explicit["association_accuracy"]) == (3, 3, 1.0)
+    assert r["recall_scope"] == ["called", "called"]
     llm = records[fx.LLM]
     assert row(llm["rows"], evidence_type="measurement", level="paraphrased")["items"] == 3
     cost = llm["cost"]
-    assert (cost["runs"], cost["calls"], cost["model_calls"], cost["input_tokens"]) == (2, 4, 4, 7000)
-    assert cost["per_call"]["input_tokens"] == 3500.0 and cost["calls_recorded"]["input_tokens"] == 2   # b has no cache
-    assert cost["per_call"]["seconds"] == 4.0 and cost["per_call"]["model_calls"] == 1.0   # 16 s over 4 calls
-    assert llm["stability"] is None
+    assert (cost["runs"], cost["calls"], cost["model_calls"], cost["input_tokens"]) == (2, 10, 10, 5000)
+    assert cost["per_call"]["input_tokens"] == 1000.0 and cost["calls_recorded"]["input_tokens"] == 5   # b has no cache
+    assert cost["per_call"]["seconds"] == 1.0 and cost["per_call"]["model_calls"] == 1.0
+    assert llm["stability"] is None and llm["stability_ambiguous"] == []
 
 
 def test_stability_rows_match_by_id_name_or_summary_listing(tmp_path: Path) -> None:
@@ -141,6 +170,22 @@ def test_stability_rows_match_by_id_name_or_summary_listing(tmp_path: Path) -> N
     assert (llm["calls"], llm["identical_share"], llm["item_stability"], llm["outcomes"]) == (2, 0.0, 0.5, {"items_missing": 2})
 
 
+def test_a_bare_name_shared_by_two_ids_leaves_stability_null(tmp_path: Path) -> None:
+    reexec = {"calls": [{"document": "S001", "evidence_type": "measurement", "extractor": "regex_result",
+                         "outcome": "identical", "items_original": 3, "items_reproduced": 3}]}
+    report = scored(tmp_path, reexec=reexec)
+    second = "regex_result@2#cccccccccccc"                     # another version of the same name in this report
+    report["extractors"]["cost"].append({"extractor": second, "calls": 1, "model_calls": 0, "input_tokens": 0,
+                                         "output_tokens": 0, "seconds": 1.0})
+    records = bm.benchmark([report])
+    assert records[fx.REGEX]["stability"] is None and records[fx.REGEX]["stability_ambiguous"] == ["c-a"]
+    assert records[second]["stability"] is None and records[second]["stability_ambiguous"] == ["c-a"]
+    text = bm.render(records)
+    assert "Stability rows keyed by the bare name `regex_result` were left out for c-a" in text
+    alone = bm.benchmark([scored(tmp_path, "b", reexec=reexec)])
+    assert alone[fx.REGEX]["stability"]["calls"] == 1 and alone[fx.REGEX]["stability_ambiguous"] == []
+
+
 def test_benchmark_writes_a_record_per_extractor_and_one_markdown(tmp_path: Path) -> None:
     records = bm.benchmark([scored(tmp_path, "a", "explicit")])
     paths = bm.write_benchmark(records, tmp_path / "bench")
@@ -150,7 +195,7 @@ def test_benchmark_writes_a_record_per_extractor_and_one_markdown(tmp_path: Path
         assert path in paths and json.loads(path.read_text(encoding="utf-8"))["extractor_id"] == extractor
     text = paths[-1].read_text(encoding="utf-8")
     assert f"## {fx.REGEX}" in text and f"## {fx.LLM}" in text and "Re-execution stability: not measured." in text
-    assert "| measurement" in text and "7000 [3500.000]" in text
+    assert "| measurement" in text and "5000 [1000.000]" in text and "recall scope called" in text
     assert bm.benchmark([{"corpus_id": "x", "synthesis": []}]) == {}
     assert bm.split_id("plain") == ("plain", None) and bm.split_id("a@2#ff") == ("a", "2")
 

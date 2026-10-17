@@ -68,7 +68,7 @@ def test_benchmark_command(tmp_path: Path) -> None:
     assert cli.main(["benchmark", str(tmp_path / "out"), str(tmp_path / "out" / "report.json"),
                      "--out", str(tmp_path / "bench")]) == 0
     record = json.loads((tmp_path / "bench" / fx.REGEX / "benchmark.json").read_text(encoding="utf-8"))
-    assert record["cost"]["calls"] == 4 and len(record["corpora"]) == 2   # the same report twice: pooled twice
+    assert record["cost"]["calls"] == 8 and len(record["corpora"]) == 2   # the same report twice: pooled twice
     assert (tmp_path / "bench" / "benchmark.md").is_file()
     fx.dump(tmp_path / "rag.json", fx.baseline_answer("rag-baseline", {"S001": "supports"}, "supported"))
     assert cli.main(["score", "--corpus", str(corpus), "--baseline", str(tmp_path / "rag.json"), "--out", str(tmp_path / "only")]) == 0
