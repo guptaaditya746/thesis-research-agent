@@ -52,6 +52,11 @@ def test_protocol_check_prints_the_hash_and_rejects_an_invalid_file(protocol_fil
     assert "min_effect" in capsys.readouterr().err
     assert cli.main(["protocol", "check", str(tmp_path / "missing.yaml")]) == 2
     assert "error" in capsys.readouterr().err
+    bad_schema = tmp_path / "bad-schema.yaml"
+    bad_schema.write_text(protocol_file.read_text(encoding="utf-8").replace("type: object", "type: 5", 1),
+                          encoding="utf-8")
+    assert cli.main(["protocol", "check", str(bad_schema)]) == 2      # jsonschema's SchemaError, not a crash
+    assert "not a valid JSON schema" in capsys.readouterr().err
 
 
 def test_prov_walks_from_the_answer_to_the_table_cell(protocol_file: Path, corpus: Path, tmp_path: Path) -> None:

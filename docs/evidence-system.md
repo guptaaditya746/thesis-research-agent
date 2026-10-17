@@ -139,7 +139,9 @@ The record cache is `<cache_dir>/extractor_calls.jsonl` (`gold/llm.JsonlCache`),
 ```
 
 `undetermined`: the document lacks a usable rag/baseline pair on a question metric; `reason` says why. It
-does not count towards the label.
+does not count towards the label. (Changed 17 Oct: the pair keys are `treatment`/`control` and `reason` is
+`{code, text}`, Part C3; every study also carries `flags` and `duplicate_of`, and the answer `counts.duplicates`,
+`duplicates` and `flags`, Part F1.)
 
 The baselines write the same shape with `system: rag-baseline` or `system: agent-baseline`; their
 `studies` entries carry only `document` and `direction` (as stated by the model), plus `answer_text` and,
@@ -602,7 +604,8 @@ counts.
 ```
 
 - `flags` per study: sorted, from `rules.FLAGS`; `duplicate_of` is the earlier document (manifest order)
-  with the same `rules.duplicate_key` (canonical metric, treatment value, control value), else `null`.
+  with the same `rules.duplicate_key` (canonical metric, treatment value, control value), else `null`. The
+  top-level `flags` lists and `duplicates` hold documents in manifest order, like the three groups.
 - A duplicate keeps its direction (direction accuracy still scores it) but is listed under `duplicates`,
   not under `supporting`/`contradicting`/`neutral`, and the label table gets the counts without it.
 - `large_effect`: `rules.large_effects` over the determined, non-duplicate studies' deltas with

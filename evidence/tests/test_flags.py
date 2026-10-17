@@ -42,6 +42,25 @@ def test_a_duplicate_keeps_its_direction_but_is_not_counted(tmp_path: Path) -> N
     assert answer["label"] == "mixed"
 
 
+def test_a_chain_of_duplicates_points_to_the_first_and_order_is_the_manifest_order(tmp_path: Path) -> None:
+    docs = {"P3": paper(60, 70), "P2": paper(60, 70), "P2b": paper(60, 70), "P1": paper(60, 50)}
+    answer, _ = regex_run(docs, tmp_path)
+    by_doc = {s["document"]: s for s in answer["studies"]}
+    assert by_doc["P2"]["duplicate_of"] == "P3" and by_doc["P2b"]["duplicate_of"] == "P3"
+    assert answer["duplicates"] == ["P2", "P2b"] == answer["flags"]["duplicate"]
+    assert answer["counts"] == {"supporting": 1, "contradicting": 1, "neutral": 0, "undetermined": 0, "duplicates": 2}
+
+
+def test_large_effect_median_leaves_out_duplicates_and_neutral_studies(tmp_path: Path) -> None:
+    """P5 repeats P4's big effect: without dedup the median would rise and P4 would not stand out; P6 is
+    neutral and must not pull the median down either."""
+    docs = {"P1": paper(60, 65), "P2": paper(60, 66), "P3": paper(60, 67), "P4": paper(50, 90), "P5": paper(50, 90),
+            "P6": paper(60, 60.5)}
+    answer, _ = regex_run(docs, tmp_path)
+    assert answer["flags"]["large_effect"] == ["P4"] and answer["flags"]["duplicate"] == ["P5"]
+    assert {s["document"]: s["direction"] for s in answer["studies"]}["P6"] == "neutral"
+
+
 def test_manifest_order_decides_the_original(tmp_path: Path) -> None:
     answer, _ = regex_run({"P3": paper(60, 50), "P2": paper(60, 50)}, tmp_path)
     by_doc = {s["document"]: s for s in answer["studies"]}

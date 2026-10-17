@@ -174,7 +174,7 @@ def flag(protocol: Protocol, studies: list[dict[str, Any]]) -> dict[str, list[st
         s["flags"] = sorted(flags)
         for name in s["flags"]:
             found[name].append(doc)
-    return {name: sorted(docs) for name, docs in found.items()}
+    return found                      # documents in manifest order, like `duplicates` and the groups
 
 
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]]) -> tuple[dict[str, Any], list[str]]:

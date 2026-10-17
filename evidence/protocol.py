@@ -18,6 +18,7 @@ from typing import Any, Literal
 
 import yaml
 from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from . import rules
@@ -188,7 +189,10 @@ class Protocol(Strict):
     @model_validator(mode="after")
     def _consistent(self) -> Protocol:
         for name, spec in self.evidence_types.items():
-            Draft202012Validator.check_schema(spec.fields)
+            try:
+                Draft202012Validator.check_schema(spec.fields)
+            except SchemaError as exc:
+                raise ValueError(f"{name}.fields is not a valid JSON schema: {exc.message}") from exc
             if spec.fields.get("type") != "object":
                 raise ValueError(f"{name}.fields must be an object schema")
             for target in (*spec.context, *spec.links.values()):
