@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Thesis research agent",
-    "description": "Runs, provenance, gold standard and scores of the research agent (docs/earlier-work.md, Backend API and frontend pages).",
+    "description": "The evidence-level viewer (/api/ev) and the earlier work: runs, provenance, gold standard and scores of the research agent (docs/earlier-work.md).",
     "version": "0.2.0"
   },
   "paths": {
@@ -1352,10 +1352,974 @@
           }
         }
       }
+    },
+    "/api/ev/config": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Config",
+        "operationId": "ev_config",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/corpora": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Corpora",
+        "operationId": "ev_corpora",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CorpusSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Ev Corpora"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/corpora/{name}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Corpus",
+        "operationId": "ev_corpus",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorpusDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/corpora/{name}/papers/{paper}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Corpus Paper",
+        "operationId": "ev_corpus_paper",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "paper",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Paper"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorpusPaperDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/protocols": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Protocols",
+        "operationId": "ev_protocols",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProtocolEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Ev Protocols"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/protocols/{name}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Protocol",
+        "operationId": "ev_protocol",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtocolView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/proposals": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Proposals",
+        "operationId": "ev_proposals",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProposalSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Ev Proposals"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/proposals/{name}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Proposal",
+        "operationId": "ev_proposal",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Runs",
+        "operationId": "ev_runs",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EvRunSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Ev Runs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Run",
+        "operationId": "ev_run",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvRunDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs/{run_id}/papers/{document}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Run Paper",
+        "operationId": "ev_run_paper",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "document",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunPaper"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs/{run_id}/graph": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Run Graph",
+        "operationId": "ev_run_graph",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvGraph"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs/{run_id}/protocol": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Run Protocol",
+        "operationId": "ev_run_protocol",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProtocolView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs/{run_id}/calls/{call_id}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Run Call",
+        "operationId": "ev_run_call",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "call_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Call Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs/{run_id}/calls/{call_id}/trace/{agent_run}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Call Trace",
+        "operationId": "ev_call_trace",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "call_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Call Id"
+            }
+          },
+          {
+            "name": "agent_run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Agent Run"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTrace"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/runs/{run_id}/trace": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Baseline Trace",
+        "description": "The agent baseline's own run (its agent-runs/ directory).",
+        "operationId": "ev_baseline_trace",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentTrace"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/scores": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Scores",
+        "operationId": "ev_scores",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoresIndex"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/scores/reports/{score_id}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Report",
+        "operationId": "ev_report",
+        "parameters": [
+          {
+            "name": "score_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Score Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/scores/compares/{score_id}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Compare",
+        "operationId": "ev_compare",
+        "parameters": [
+          {
+            "name": "score_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Score Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompareTable"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/scores/shifts/{score_id}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Shift",
+        "operationId": "ev_shift",
+        "parameters": [
+          {
+            "name": "score_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Score Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/scores/benchmarks/{score_id}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Benchmark",
+        "operationId": "ev_benchmark",
+        "parameters": [
+          {
+            "name": "score_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Score Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AgentTrace": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "run_dir",
+              "cache"
+            ],
+            "title": "Source",
+            "description": "the agent's own run directory, or the record the engine's cache keeps of it"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "concept": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Concept"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/Step"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/Claim"
+            },
+            "type": "array",
+            "title": "Claims",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "source"
+        ],
+        "title": "AgentTrace"
+      },
+      "Amendment": {
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "amends_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amends Sha256"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "impact": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Impact",
+            "default": []
+          },
+          "before_main_run": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before Main Run"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "revision",
+          "reason"
+        ],
+        "title": "Amendment"
+      },
       "Anchor": {
         "properties": {
           "start": {
@@ -1708,6 +2672,478 @@
         ],
         "title": "AppConfig"
       },
+      "BenchmarkView": {
+        "properties": {
+          "ref": {
+            "$ref": "#/components/schemas/ScoreRef"
+          },
+          "records": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Records"
+          },
+          "markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "records"
+        ],
+        "title": "BenchmarkView"
+      },
+      "Bound": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "when": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoundWhen"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field"
+        ],
+        "title": "Bound",
+        "description": "A range a numeric field must lie in, checked by the engine (rejected with reason schema otherwise);\ne.g. a measurement of an accuracy or a rate is a fraction in [0, 1]."
+      },
+      "BoundWhen": {
+        "properties": {
+          "link": {
+            "type": "string",
+            "title": "Link"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "values": {
+            "items": {},
+            "type": "array",
+            "title": "Values"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "link",
+          "field",
+          "values"
+        ],
+        "title": "BoundWhen"
+      },
+      "Budget": {
+        "properties": {
+          "steps": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steps"
+          },
+          "tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tokens"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Budget"
+      },
+      "CallDetail": {
+        "properties": {
+          "run": {
+            "type": "string",
+            "title": "Run"
+          },
+          "call": {
+            "$ref": "#/components/schemas/CallSummary"
+          },
+          "result": {
+            "$ref": "#/components/schemas/ExtractionResult"
+          },
+          "spec": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtractorSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task",
+            "description": "the ExtractionTask, from the record cache"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "description": "the record cache holds this call"
+          },
+          "model_calls": {
+            "items": {
+              "$ref": "#/components/schemas/ModelCallRecord"
+            },
+            "type": "array",
+            "title": "Model Calls",
+            "default": []
+          },
+          "agent_runs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Agent Runs",
+            "description": "agent run ids behind an agentic call",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "run",
+          "call",
+          "result",
+          "cached"
+        ],
+        "title": "CallDetail"
+      },
+      "CallSummary": {
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "title": "Call Id"
+          },
+          "document": {
+            "type": "string",
+            "title": "Document"
+          },
+          "evidence_type": {
+            "type": "string",
+            "title": "Evidence Type"
+          },
+          "extractor_id": {
+            "type": "string",
+            "title": "Extractor Id"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind",
+            "description": "regex, llm, model or agent (the extractor spec's kind)"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source",
+            "description": "cache or fresh"
+          },
+          "attempt": {
+            "type": "integer",
+            "title": "Attempt",
+            "default": 0
+          },
+          "focus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Focus",
+            "description": "the gap a targeted task was made for (Part D)"
+          },
+          "items": {
+            "type": "integer",
+            "title": "Items",
+            "default": 0
+          },
+          "rejected": {
+            "type": "integer",
+            "title": "Rejected",
+            "default": 0
+          },
+          "model_calls": {
+            "type": "integer",
+            "title": "Model Calls",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "call_id",
+          "document",
+          "evidence_type",
+          "extractor_id",
+          "status"
+        ],
+        "title": "CallSummary",
+        "description": "One extractor call of the run, from its extractor_call event (Part D: screen calls too)."
+      },
+      "Card": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "ask": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ask"
+          },
+          "sets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sets",
+            "default": []
+          },
+          "options": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Options",
+            "default": []
+          },
+          "vocabulary": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Vocabulary",
+            "default": []
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Decision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "the decision of decisions.yaml (or, once frozen, of proposal.json, which records the default beside it)"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "Card"
+      },
+      "Check": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "ok"
+        ],
+        "title": "Check"
+      },
+      "Citation": {
+        "properties": {
+          "document": {
+            "type": "string",
+            "title": "Document"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "document",
+          "start",
+          "end"
+        ],
+        "title": "Citation"
+      },
       "Claim": {
         "properties": {
           "claim_id": {
@@ -1899,6 +3335,67 @@
         ],
         "title": "Column"
       },
+      "Compare": {
+        "properties": {
+          "treatment": {
+            "type": "string",
+            "title": "Treatment"
+          },
+          "control": {
+            "type": "string",
+            "title": "Control"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "treatment",
+          "control"
+        ],
+        "title": "Compare",
+        "description": "The condition roles a study's pair is made of: the effect is treatment against control."
+      },
+      "CompareTable": {
+        "properties": {
+          "ref": {
+            "$ref": "#/components/schemas/ScoreRef"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows"
+          },
+          "intervals": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Intervals",
+            "default": []
+          },
+          "markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "rows"
+        ],
+        "title": "CompareTable"
+      },
       "ConceptBrief": {
         "properties": {
           "id": {
@@ -2009,6 +3506,680 @@
         ],
         "title": "ConceptStatus"
       },
+      "CorpusDetail": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "the directory name under the corpora root"
+          },
+          "corpus_id": {
+            "type": "string",
+            "title": "Corpus Id"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "renderer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renderer"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings",
+            "description": "corpus.json settings: name, studies, mix, levels and the knobs (duplicates, missing, outliers, irrelevant)"
+          },
+          "papers": {
+            "type": "integer",
+            "title": "Papers"
+          },
+          "fidelity_ok": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fidelity Ok",
+            "description": "papers whose fidelity checks all pass"
+          },
+          "excluded": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded",
+            "default": []
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TruthAnswer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VariantInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "base": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base",
+            "description": "the base corpus of a variant, by directory name, when it is here"
+          },
+          "manifest_sha256": {
+            "type": "string",
+            "title": "Manifest Sha256"
+          },
+          "papers_list": {
+            "items": {
+              "$ref": "#/components/schemas/CorpusPaper"
+            },
+            "type": "array",
+            "title": "Papers List"
+          },
+          "models": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Models"
+          },
+          "generator": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generator"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "corpus_id",
+          "papers",
+          "manifest_sha256",
+          "papers_list"
+        ],
+        "title": "CorpusDetail"
+      },
+      "CorpusPaper": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "relevant": {
+            "type": "boolean",
+            "title": "Relevant",
+            "default": true
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "supports",
+                  "contradicts",
+                  "neutral",
+                  "undetermined"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction",
+            "description": "the study's true effect direction"
+          },
+          "delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta"
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flags",
+            "default": []
+          },
+          "duplicate_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing"
+          },
+          "fidelity_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fidelity Ok"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "file",
+          "sha256"
+        ],
+        "title": "CorpusPaper"
+      },
+      "CorpusPaperDetail": {
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "title": "Corpus"
+          },
+          "paper": {
+            "$ref": "#/components/schemas/CorpusPaper"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/Segment"
+            },
+            "type": "array",
+            "title": "Segments"
+          },
+          "study": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study",
+            "description": "the study's ground truth (conditions, metrics, measurements, author claim, effect)"
+          },
+          "placements": {
+            "items": {
+              "$ref": "#/components/schemas/Placement"
+            },
+            "type": "array",
+            "title": "Placements",
+            "default": []
+          },
+          "fidelity": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fidelity"
+          },
+          "decoys": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Decoys",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "corpus",
+          "paper",
+          "text",
+          "segments"
+        ],
+        "title": "CorpusPaperDetail"
+      },
+      "CorpusSummary": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "the directory name under the corpora root"
+          },
+          "corpus_id": {
+            "type": "string",
+            "title": "Corpus Id"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "renderer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Renderer"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings",
+            "description": "corpus.json settings: name, studies, mix, levels and the knobs (duplicates, missing, outliers, irrelevant)"
+          },
+          "papers": {
+            "type": "integer",
+            "title": "Papers"
+          },
+          "fidelity_ok": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fidelity Ok",
+            "description": "papers whose fidelity checks all pass"
+          },
+          "excluded": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Excluded",
+            "default": []
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TruthAnswer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VariantInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "base": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base",
+            "description": "the base corpus of a variant, by directory name, when it is here"
+          },
+          "manifest_sha256": {
+            "type": "string",
+            "title": "Manifest Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "corpus_id",
+          "papers",
+          "manifest_sha256"
+        ],
+        "title": "CorpusSummary"
+      },
+      "Counts": {
+        "properties": {
+          "supporting": {
+            "type": "integer",
+            "title": "Supporting",
+            "default": 0
+          },
+          "contradicting": {
+            "type": "integer",
+            "title": "Contradicting",
+            "default": 0
+          },
+          "neutral": {
+            "type": "integer",
+            "title": "Neutral",
+            "default": 0
+          },
+          "undetermined": {
+            "type": "integer",
+            "title": "Undetermined",
+            "default": 0
+          },
+          "duplicates": {
+            "type": "integer",
+            "title": "Duplicates",
+            "default": 0
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "Counts"
+      },
+      "Coverage": {
+        "properties": {
+          "range": {
+            "anyOf": [
+              {
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Range"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "found",
+              "none",
+              "skipped",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "found": {
+            "type": "integer",
+            "title": "Found",
+            "default": 0
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "Coverage"
+      },
+      "Decision": {
+        "properties": {
+          "card": {
+            "type": "string",
+            "title": "Card"
+          },
+          "choice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Choice"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "card"
+        ],
+        "title": "Decision"
+      },
       "EdgeType": {
         "properties": {
           "source": {
@@ -2039,6 +4210,744 @@
           "target"
         ],
         "title": "EdgeType"
+      },
+      "EvAnswer": {
+        "properties": {
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/Counts",
+            "default": {
+              "supporting": 0,
+              "contradicting": 0,
+              "neutral": 0,
+              "undetermined": 0,
+              "duplicates": 0
+            }
+          },
+          "studies": {
+            "items": {
+              "$ref": "#/components/schemas/Study"
+            },
+            "type": "array",
+            "title": "Studies",
+            "default": []
+          },
+          "supporting": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supporting",
+            "default": []
+          },
+          "contradicting": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contradicting",
+            "default": []
+          },
+          "neutral": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Neutral",
+            "default": []
+          },
+          "undetermined": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Undetermined",
+            "default": []
+          },
+          "duplicates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Duplicates",
+            "default": []
+          },
+          "flags": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Flags",
+            "default": {}
+          },
+          "answer_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Text"
+          },
+          "citations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Citation"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citations"
+          },
+          "dropped_citations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Citation"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dropped Citations"
+          },
+          "retrieved": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Citation"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retrieved"
+          },
+          "agent": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "system",
+          "label"
+        ],
+        "title": "EvAnswer"
+      },
+      "EvConfig": {
+        "properties": {
+          "ev": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev",
+            "description": "$EV, the root the others default to (docs/slurm-evidence-runbook.md)"
+          },
+          "corpora": {
+            "$ref": "#/components/schemas/Root"
+          },
+          "runs": {
+            "$ref": "#/components/schemas/Root"
+          },
+          "scores": {
+            "$ref": "#/components/schemas/Root"
+          },
+          "proposals": {
+            "$ref": "#/components/schemas/Root"
+          },
+          "cache": {
+            "$ref": "#/components/schemas/Root",
+            "description": "the engine's record cache directory (extractor_calls.jsonl)"
+          },
+          "agent_work": {
+            "$ref": "#/components/schemas/Root",
+            "description": "the agentic extractor's agent run directories"
+          },
+          "protocols": {
+            "$ref": "#/components/schemas/Root"
+          }
+        },
+        "type": "object",
+        "required": [
+          "corpora",
+          "runs",
+          "scores",
+          "proposals",
+          "cache",
+          "agent_work",
+          "protocols"
+        ],
+        "title": "EvConfig"
+      },
+      "EvGraph": {
+        "properties": {
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/EvGraphNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/EvGraphEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodes",
+          "edges"
+        ],
+        "title": "EvGraph"
+      },
+      "EvGraphEdge": {
+        "properties": {
+          "src": {
+            "type": "string",
+            "title": "Src"
+          },
+          "dst": {
+            "type": "string",
+            "title": "Dst"
+          },
+          "rel": {
+            "type": "string",
+            "title": "Rel"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "src",
+          "dst",
+          "rel"
+        ],
+        "title": "EvGraphEdge"
+      },
+      "EvGraphNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document"
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fields"
+          },
+          "found_by": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Found By",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "title": "EvGraphNode"
+      },
+      "EvRunDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "`<group>~<name>`: the run directory $EV_RUNS/<group>/<name>"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group",
+            "description": "the output directory the run was written to (regex-only, cascade, rag-baseline, ...)"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "engine",
+              "baseline"
+            ],
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode",
+            "description": "engine: run, replay or reexec"
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          },
+          "corpus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corpus Id"
+          },
+          "corpus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corpus",
+            "description": "the corpus directory under the corpora root, when it is there"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "counts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Counts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "papers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Papers"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "extractors": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractorSpec"
+            },
+            "type": "array",
+            "title": "Extractors",
+            "default": []
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings"
+          },
+          "chain_head": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chain Head"
+          },
+          "source_run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Run"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvAnswer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "funnel": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/FunnelDoc"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funnel",
+            "description": "funnel.json documents"
+          },
+          "documents": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Documents",
+            "description": "the manifest's paper ids, in order",
+            "default": []
+          },
+          "baselines": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Baselines",
+            "description": "baseline runs (ids) of the same corpus",
+            "default": []
+          },
+          "reports": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reports",
+            "description": "score reports (ids) of this run",
+            "default": []
+          },
+          "has_trace": {
+            "type": "boolean",
+            "title": "Has Trace",
+            "description": "baseline: the agent baseline's run directory is there",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group",
+          "name",
+          "kind",
+          "system"
+        ],
+        "title": "EvRunDetail"
+      },
+      "EvRunSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "`<group>~<name>`: the run directory $EV_RUNS/<group>/<name>"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group",
+            "description": "the output directory the run was written to (regex-only, cascade, rag-baseline, ...)"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "engine",
+              "baseline"
+            ],
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode",
+            "description": "engine: run, replay or reexec"
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol"
+          },
+          "corpus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corpus Id"
+          },
+          "corpus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corpus",
+            "description": "the corpus directory under the corpora root, when it is there"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "counts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Counts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "papers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Papers"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group",
+          "name",
+          "kind",
+          "system"
+        ],
+        "title": "EvRunSummary"
       },
       "Evidence": {
         "properties": {
@@ -2075,6 +4984,306 @@
           "end"
         ],
         "title": "Evidence"
+      },
+      "EvidenceTypeSpec": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          },
+          "fields": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Fields"
+          },
+          "links": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "condition",
+                "metric",
+                "measurement",
+                "author_claim",
+                "screen"
+              ]
+            },
+            "type": "object",
+            "title": "Links"
+          },
+          "context": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "condition",
+                "metric",
+                "measurement",
+                "author_claim",
+                "screen"
+              ]
+            },
+            "type": "array",
+            "title": "Context",
+            "default": []
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Roles"
+          },
+          "merge_key": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merge Key"
+          },
+          "query": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Query",
+            "default": []
+          },
+          "cascade": {
+            "type": "string",
+            "enum": [
+              "all",
+              "until_found"
+            ],
+            "title": "Cascade",
+            "default": "all"
+          },
+          "bounds": {
+            "items": {
+              "$ref": "#/components/schemas/Bound"
+            },
+            "type": "array",
+            "title": "Bounds",
+            "default": []
+          },
+          "extractors": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractorRef"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Extractors"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fields",
+          "roles",
+          "extractors"
+        ],
+        "title": "EvidenceTypeSpec"
+      },
+      "ExtractionError": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "ExtractionError"
+      },
+      "ExtractionResult": {
+        "properties": {
+          "call_id": {
+            "type": "string",
+            "title": "Call Id",
+            "default": ""
+          },
+          "extractor_id": {
+            "type": "string",
+            "title": "Extractor Id"
+          },
+          "task_sha256": {
+            "type": "string",
+            "title": "Task Sha256"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "partial",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtractionError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "rejected": {
+            "items": {
+              "$ref": "#/components/schemas/Rejected"
+            },
+            "type": "array",
+            "title": "Rejected",
+            "default": []
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/Coverage"
+            },
+            "type": "array",
+            "title": "Coverage",
+            "default": []
+          },
+          "model_calls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Model Calls",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "extractor_id",
+          "task_sha256",
+          "status"
+        ],
+        "title": "ExtractionResult",
+        "description": "What every extractor returns (contract section 5); canonical order so it hashes the same."
+      },
+      "ExtractorRef": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config"
+          },
+          "budget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Budget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ExtractorRef",
+        "description": "One step of a cascade: a registered extractor name and its configuration."
+      },
+      "ExtractorSpec": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "title": "Name"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "regex",
+              "model",
+              "llm",
+              "agent"
+            ],
+            "title": "Kind"
+          },
+          "evidence_types": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "condition",
+                "metric",
+                "measurement",
+                "author_claim",
+                "screen"
+              ]
+            },
+            "type": "array",
+            "title": "Evidence Types"
+          },
+          "code_sha256": {
+            "type": "string",
+            "title": "Code Sha256"
+          },
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config"
+          },
+          "determinism": {
+            "type": "string",
+            "enum": [
+              "exact",
+              "near_exact",
+              "variable"
+            ],
+            "title": "Determinism"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "kind",
+          "evidence_types",
+          "code_sha256",
+          "determinism"
+        ],
+        "title": "ExtractorSpec",
+        "description": "Identity of one extractor version (contract section 3)."
       },
       "Fact": {
         "properties": {
@@ -2267,6 +5476,166 @@
           "support"
         ],
         "title": "FactWalk"
+      },
+      "Flags": {
+        "properties": {
+          "duplicates": {
+            "type": "boolean",
+            "title": "Duplicates",
+            "default": true
+          },
+          "large_effect": {
+            "$ref": "#/components/schemas/LargeEffect",
+            "default": {
+              "factor": 3.0,
+              "min_studies": 3
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Flags"
+      },
+      "FunnelDecision": {
+        "properties": {
+          "after_round": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Round"
+          },
+          "after_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After Position"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete"
+          },
+          "gap": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gap"
+          },
+          "gap_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Gap Types",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "complete"
+        ],
+        "title": "FunnelDecision"
+      },
+      "FunnelDoc": {
+        "properties": {
+          "screen": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screen"
+          },
+          "skipped": {
+            "type": "boolean",
+            "title": "Skipped",
+            "default": false
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStep"
+            },
+            "type": "array",
+            "title": "Steps",
+            "default": []
+          },
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelDecision"
+            },
+            "type": "array",
+            "title": "Decisions",
+            "default": []
+          },
+          "stopped_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stopped After"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "FunnelDoc"
+      },
+      "FunnelStep": {
+        "properties": {
+          "round": {
+            "type": "integer",
+            "title": "Round"
+          },
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Types"
+          },
+          "calls": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Calls"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "round",
+          "position",
+          "types",
+          "calls"
+        ],
+        "title": "FunnelStep"
       },
       "GoldEntry": {
         "properties": {
@@ -2578,6 +5947,74 @@
         ],
         "title": "Highlight"
       },
+      "Item": {
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "title": "Item Id"
+          },
+          "evidence_type": {
+            "type": "string",
+            "enum": [
+              "condition",
+              "metric",
+              "measurement",
+              "author_claim",
+              "screen"
+            ],
+            "title": "Evidence Type"
+          },
+          "fields": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Fields"
+          },
+          "spans": {
+            "items": {
+              "$ref": "#/components/schemas/Span"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Spans"
+          },
+          "links": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Links"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "found_by": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Found By",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "item_id",
+          "evidence_type",
+          "fields",
+          "spans"
+        ],
+        "title": "Item",
+        "description": "One piece of evidence: typed fields plus checked spans (contract section 5)."
+      },
       "Job": {
         "properties": {
           "id": {
@@ -2827,6 +6264,76 @@
         ],
         "title": "KnowledgeGraph"
       },
+      "LabelRow": {
+        "properties": {
+          "when": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "When"
+          },
+          "then": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "refuted",
+              "mixed",
+              "no_effect",
+              "insufficient"
+            ],
+            "title": "Then"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "then"
+        ],
+        "title": "LabelRow",
+        "description": "One row of the label decision table: every condition in `when` must hold on the counts."
+      },
+      "LargeEffect": {
+        "properties": {
+          "factor": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Factor",
+            "default": 3.0
+          },
+          "min_studies": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Min Studies",
+            "default": 3
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LargeEffect"
+      },
+      "Locate": {
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "exhaustive",
+              "bm25",
+              "agent"
+            ],
+            "title": "Strategy",
+            "default": "exhaustive"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Locate"
+      },
       "Measure": {
         "properties": {
           "operation": {
@@ -3005,6 +6512,80 @@
         ],
         "title": "ModelCall"
       },
+      "ModelCallRecord": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "request": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Request"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Response"
+          },
+          "usage": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "agent_run": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Run",
+            "description": "an agentic call: the agent run's id (its trace)"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "ModelCallRecord",
+        "description": "One record of the engine's record cache (evidence/recording.py): request, response, usage, error."
+      },
       "NodeType": {
         "properties": {
           "type": {
@@ -3017,6 +6598,35 @@
           "type"
         ],
         "title": "NodeType"
+      },
+      "Pairing": {
+        "properties": {
+          "rule": {
+            "type": "string",
+            "const": "same_dataset",
+            "title": "Rule",
+            "default": "same_dataset"
+          },
+          "prefer": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "table_cell",
+                "document_order"
+              ]
+            },
+            "type": "array",
+            "title": "Prefer",
+            "default": [
+              "table_cell",
+              "document_order"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Pairing",
+        "description": "How a study's treatment and control measurements are chosen (evidence/synthesis.py): on the same\ndataset (the first dataset in document order that has both), preferring, in order, a value in a table\ncell over prose and the earlier value over the later one."
       },
       "Passage": {
         "properties": {
@@ -3186,6 +6796,45 @@
         ],
         "title": "PickRequest"
       },
+      "Placement": {
+        "properties": {
+          "fact": {
+            "type": "string",
+            "title": "Fact"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "paper": {
+            "type": "string",
+            "title": "Paper"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "exact": {
+            "type": "string",
+            "title": "Exact"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "fact",
+          "role",
+          "paper",
+          "start",
+          "end",
+          "exact"
+        ],
+        "title": "Placement"
+      },
       "Predicate": {
         "properties": {
           "text": {
@@ -3215,6 +6864,263 @@
         ],
         "title": "Predicate"
       },
+      "ProposalDetail": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Steps",
+            "description": "the steps whose files exist: frame, draft, critic, cards, freeze"
+          },
+          "frozen": {
+            "type": "boolean",
+            "title": "Frozen"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "protocol_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol Sha256"
+          },
+          "decided_by": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Decided By",
+            "default": {}
+          },
+          "amendments": {
+            "type": "integer",
+            "title": "Amendments",
+            "default": 0
+          },
+          "frame": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame"
+          },
+          "sources": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sources",
+            "description": "draft.sources.json"
+          },
+          "draft_yaml": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Yaml"
+          },
+          "critic": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Critic"
+          },
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/Check"
+            },
+            "type": "array",
+            "title": "Checks",
+            "description": "critic.json checks (deterministic and the LLM checklist)",
+            "default": []
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/Card"
+            },
+            "type": "array",
+            "title": "Cards",
+            "default": []
+          },
+          "proposal": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposal",
+            "description": "proposal.json, written by freeze"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProtocolView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revisions": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Revisions",
+            "description": "the frozen and amended revisions kept as protocol.v<N>.yaml",
+            "default": []
+          },
+          "amendment_log": {
+            "items": {
+              "$ref": "#/components/schemas/Amendment"
+            },
+            "type": "array",
+            "title": "Amendment Log",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "steps",
+          "frozen"
+        ],
+        "title": "ProposalDetail"
+      },
+      "ProposalSummary": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "steps": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Steps",
+            "description": "the steps whose files exist: frame, draft, critic, cards, freeze"
+          },
+          "frozen": {
+            "type": "boolean",
+            "title": "Frozen"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "protocol_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Protocol Sha256"
+          },
+          "decided_by": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Decided By",
+            "default": {}
+          },
+          "amendments": {
+            "type": "integer",
+            "title": "Amendments",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "steps",
+          "frozen"
+        ],
+        "title": "ProposalSummary"
+      },
       "ProposeRequest": {
         "properties": {
           "temperature": {
@@ -3232,6 +7138,225 @@
         },
         "type": "object",
         "title": "ProposeRequest"
+      },
+      "Protocol": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_.-]*$",
+            "title": "Id"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "evidence_types": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/EvidenceTypeSpec"
+            },
+            "propertyNames": {
+              "enum": [
+                "condition",
+                "metric",
+                "measurement",
+                "author_claim",
+                "screen"
+              ]
+            },
+            "type": "object",
+            "title": "Evidence Types"
+          },
+          "locate": {
+            "$ref": "#/components/schemas/Locate",
+            "default": {
+              "strategy": "exhaustive",
+              "params": {}
+            }
+          },
+          "screen": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Screen"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "synthesis": {
+            "$ref": "#/components/schemas/Synthesis"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "question",
+          "evidence_types",
+          "synthesis"
+        ],
+        "title": "Protocol"
+      },
+      "ProtocolEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revision"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ProtocolEntry"
+      },
+      "ProtocolView": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "repo, proposal, run"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "yaml": {
+            "type": "string",
+            "title": "Yaml"
+          },
+          "phases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Phases"
+          },
+          "protocol": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Protocol"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "the parsed protocol; null when it does not validate"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "name",
+          "path",
+          "sha256",
+          "yaml",
+          "phases"
+        ],
+        "title": "ProtocolView"
       },
       "QueryResult": {
         "properties": {
@@ -3420,12 +7545,296 @@
         ],
         "title": "QuestionDetail"
       },
+      "QuestionMetric": {
+        "properties": {
+          "canonical": {
+            "type": "string",
+            "title": "Canonical"
+          },
+          "higher_is_better": {
+            "type": "boolean",
+            "title": "Higher Is Better"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "canonical",
+          "higher_is_better"
+        ],
+        "title": "QuestionMetric"
+      },
+      "Rejected": {
+        "properties": {
+          "evidence_type": {
+            "type": "string",
+            "enum": [
+              "condition",
+              "metric",
+              "measurement",
+              "author_claim",
+              "screen"
+            ],
+            "title": "Evidence Type"
+          },
+          "fields": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Fields"
+          },
+          "quotes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Quotes",
+            "default": []
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "empty_quote",
+              "not_found",
+              "ambiguous",
+              "partial_number",
+              "schema",
+              "out_of_scope",
+              "dangling_link"
+            ],
+            "title": "Reason"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "evidence_type",
+          "fields",
+          "reason"
+        ],
+        "title": "Rejected"
+      },
+      "Report": {
+        "properties": {
+          "corpus_id": {
+            "type": "string",
+            "title": "Corpus Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Levels",
+            "default": []
+          },
+          "extraction": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction"
+          },
+          "integration": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Integration"
+          },
+          "synthesis": {
+            "items": {
+              "$ref": "#/components/schemas/SynthesisScore"
+            },
+            "type": "array",
+            "title": "Synthesis",
+            "default": []
+          },
+          "intervals": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intervals"
+          },
+          "locate": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locate"
+          },
+          "cascade": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cascade"
+          },
+          "extractors": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extractors"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "stability": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stability"
+          },
+          "funnel": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funnel"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "corpus_id"
+        ],
+        "title": "Report",
+        "description": "report.json of `evaluate score` (evaluation/report.py): A extraction, B integration, C synthesis per\nlevel, intervals, locate, cascade, extractors, cost, stability, funnel."
+      },
+      "ReportView": {
+        "properties": {
+          "ref": {
+            "$ref": "#/components/schemas/ScoreRef"
+          },
+          "report": {
+            "$ref": "#/components/schemas/Report"
+          },
+          "markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "report"
+        ],
+        "title": "ReportView"
+      },
       "Results": {
         "properties": {},
         "additionalProperties": true,
         "type": "object",
         "title": "Results",
         "description": "$RUNS/report/report.json (scoring, M4) as written: per question x condition means, paired\ndifferences, intervals, Wilcoxon results and the pre-registered primary test."
+      },
+      "Root": {
+        "properties": {
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path",
+            "description": "absolute path, or null when not configured"
+          },
+          "exists": {
+            "type": "boolean",
+            "title": "Exists",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "Root"
       },
       "RunCounts": {
         "properties": {
@@ -3493,6 +7902,80 @@
           "verify"
         ],
         "title": "RunDetail"
+      },
+      "RunPaper": {
+        "properties": {
+          "run": {
+            "type": "string",
+            "title": "Run"
+          },
+          "document": {
+            "type": "string",
+            "title": "Document"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "null when the run's corpus is not under the corpora root"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/Segment"
+            },
+            "type": "array",
+            "title": "Segments",
+            "default": []
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Item"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "study": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Study"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "funnel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FunnelDoc"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "calls": {
+            "items": {
+              "$ref": "#/components/schemas/CallSummary"
+            },
+            "type": "array",
+            "title": "Calls",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "run",
+          "document"
+        ],
+        "title": "RunPaper"
       },
       "RunRequest": {
         "properties": {
@@ -3985,6 +8468,85 @@
         "title": "Score",
         "description": "`<run>/score.json` (scoring, M4); only the plan's top-level fields are typed."
       },
+      "ScoreRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "the directory under the scores root, parts joined by `~`"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "corpus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corpus Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Levels",
+            "default": []
+          },
+          "strategy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strategy"
+          },
+          "systems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Systems",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "group"
+        ],
+        "title": "ScoreRef"
+      },
       "ScoreSummary": {
         "properties": {
           "support_share": {
@@ -4047,6 +8609,174 @@
         },
         "type": "object",
         "title": "ScoreSummary"
+      },
+      "ScoresIndex": {
+        "properties": {
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreRef"
+            },
+            "type": "array",
+            "title": "Reports",
+            "default": []
+          },
+          "compares": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreRef"
+            },
+            "type": "array",
+            "title": "Compares",
+            "default": []
+          },
+          "shifts": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreRef"
+            },
+            "type": "array",
+            "title": "Shifts",
+            "default": []
+          },
+          "benchmarks": {
+            "items": {
+              "$ref": "#/components/schemas/ScoreRef"
+            },
+            "type": "array",
+            "title": "Benchmarks",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ScoresIndex"
+      },
+      "Screen": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          },
+          "terms": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Terms",
+            "default": []
+          },
+          "extractors": {
+            "items": {
+              "$ref": "#/components/schemas/ExtractorRef"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Extractors"
+          },
+          "on_fail": {
+            "type": "string",
+            "enum": [
+              "skip",
+              "extract_anyway"
+            ],
+            "title": "On Fail",
+            "default": "skip"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "question",
+          "extractors"
+        ],
+        "title": "Screen",
+        "description": "Per-document screening before any extraction (Part D, the funnel; ours): is the paper one the protocol\ncan use at all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest.\n`spec` is the pseudo evidence type the engine runs the screen calls on, so they are checked, cached and\nreplayed exactly like extractor calls."
+      },
+      "Segment": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "marks": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Marks",
+            "default": []
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Roles",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "start",
+          "end"
+        ],
+        "title": "Segment",
+        "description": "A piece of a paper's text: `marks` are the ids (items, facts) whose spans cover it, `roles` their roles.\nCut on the server, in code points, so the page never converts offsets."
+      },
+      "ShiftView": {
+        "properties": {
+          "ref": {
+            "$ref": "#/components/schemas/ScoreRef"
+          },
+          "shift": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Shift"
+          },
+          "markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markdown"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ref",
+          "shift"
+        ],
+        "title": "ShiftView"
+      },
+      "Span": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "selector": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Selector"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "selector"
+        ],
+        "title": "Span"
       },
       "SparqlRequest": {
         "properties": {
@@ -4287,6 +9017,414 @@
         ],
         "title": "Step"
       },
+      "Study": {
+        "properties": {
+          "document": {
+            "type": "string",
+            "title": "Document"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "supports",
+              "contradicts",
+              "neutral",
+              "undetermined"
+            ],
+            "title": "Direction"
+          },
+          "delta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delta"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "treatment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StudyPair"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "control": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StudyPair"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "author_claim": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Claim"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StudyReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "flags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flags",
+            "default": []
+          },
+          "duplicate_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of"
+          },
+          "funnel": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funnel"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "document",
+          "direction"
+        ],
+        "title": "Study",
+        "description": "One study of answer.json (A4 with C3 and F1); the baselines give only document and direction."
+      },
+      "StudyPair": {
+        "properties": {
+          "condition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "measurement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Measurement"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "StudyPair"
+      },
+      "StudyReason": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "title": "StudyReason"
+      },
+      "Synthesis": {
+        "properties": {
+          "compare": {
+            "$ref": "#/components/schemas/Compare"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/QuestionMetric"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Metrics"
+          },
+          "min_effect": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Min Effect"
+          },
+          "pairing": {
+            "$ref": "#/components/schemas/Pairing",
+            "default": {
+              "rule": "same_dataset",
+              "prefer": [
+                "table_cell",
+                "document_order"
+              ]
+            }
+          },
+          "claim_map": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "supports",
+                "contradicts",
+                "neutral"
+              ]
+            },
+            "type": "object",
+            "title": "Claim Map"
+          },
+          "label": {
+            "items": {
+              "$ref": "#/components/schemas/LabelRow"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Label"
+          },
+          "flags": {
+            "$ref": "#/components/schemas/Flags",
+            "default": {
+              "duplicates": true,
+              "large_effect": {
+                "factor": 3.0,
+                "min_studies": 3
+              }
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "compare",
+          "metrics",
+          "min_effect",
+          "claim_map",
+          "label"
+        ],
+        "title": "Synthesis"
+      },
+      "SynthesisScore": {
+        "properties": {
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "expected_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Label"
+          },
+          "label_correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label Correct"
+          },
+          "rows": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Rows",
+            "default": []
+          },
+          "studies": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Studies",
+            "default": []
+          },
+          "confusion": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Confusion",
+            "default": []
+          },
+          "flags": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flags"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "system"
+        ],
+        "title": "SynthesisScore"
+      },
+      "TruthAnswer": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "supporting": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Supporting",
+            "default": []
+          },
+          "contradicting": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Contradicting",
+            "default": []
+          },
+          "neutral": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Neutral",
+            "default": []
+          },
+          "undetermined": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Undetermined",
+            "default": []
+          },
+          "duplicates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Duplicates",
+            "default": []
+          },
+          "flags": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Flags",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "TruthAnswer",
+        "description": "ground_truth.json `answer`: the label the corpus is built to have."
+      },
       "ValidationError": {
         "properties": {
           "loc": {
@@ -4326,6 +9464,74 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "VariantInfo": {
+        "properties": {
+          "base_corpus_id": {
+            "type": "string",
+            "title": "Base Corpus Id"
+          },
+          "corpus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corpus Id"
+          },
+          "study": {
+            "type": "string",
+            "title": "Study"
+          },
+          "paper": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paper"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To"
+          },
+          "changed": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Changed",
+            "default": []
+          },
+          "expected": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Expected",
+            "default": {}
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "base_corpus_id",
+          "study"
+        ],
+        "title": "VariantInfo",
+        "description": "variant.json of a counterfactual corpus (`synth variant`, F3)."
       },
       "Verdict": {
         "properties": {

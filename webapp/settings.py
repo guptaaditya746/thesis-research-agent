@@ -17,6 +17,20 @@
 | `WEBAPP_POLL_S`        | `poll_s`           | 0.5                                      |
 | `WEBAPP_ALLOWED_HOSTS` | `allowed_hosts`    | `127.0.0.1,localhost,::1`                |
 
+The evidence-level viewer (`/api/ev`, webapp/evapi.py) reads the directories a live run writes
+(docs/slurm-evidence-runbook.md); `$EV` alone is enough, each may be set apart:
+
+| Variable         | Setting       | Default                              |
+|------------------|---------------|--------------------------------------|
+| `EV`             | `ev`          | none                                 |
+| `CORPORA`        | `corpora`     | `$EV/corpora`                        |
+| `EV_RUNS`        | `ev_runs`     | `$EV/runs` (not `$RUNS`, the earlier app's batch root) |
+| `SCORES`         | `scores`      | `$EV/scores`                         |
+| `EV_PROPOSALS`   | `proposals`   | `$EV/proposals`                      |
+| `EV_CACHE`       | `ev_cache`    | `$EV/cache/engine` (the engine's record cache) |
+| `EV_AGENT_WORK`  | `agent_work`  | `$EV/agent-work`                     |
+| `EV_PROTOCOLS`   | `protocols`   | `<repo>/evidence/protocols`          |
+
 Relative paths are resolved against the working directory when the settings are made, so the job
 subprocesses (which run in the repo) get absolute paths; an empty variable counts as unset. The
 API keys ($LITELLM_MASTER_KEY, $ARGILLA_API_KEY) are never settings: they are read from the
@@ -72,14 +86,52 @@ class Settings(BaseSettings):
                                description="comma-separated Host names the app answers (webapp/guard.py: "
                                            "a DNS-rebinding page sends its own name)")
 
+    # The evidence-level viewer's directories (module docstring); None: under $EV, or not configured.
+    ev: Path | None = Field(None, validation_alias="EV")
+    corpora: Path | None = Field(None, validation_alias="CORPORA")
+    ev_runs: Path | None = Field(None, validation_alias="EV_RUNS")
+    scores: Path | None = Field(None, validation_alias="SCORES")
+    proposals: Path | None = Field(None, validation_alias="EV_PROPOSALS")
+    ev_cache: Path | None = Field(None, validation_alias="EV_CACHE")
+    agent_work: Path | None = Field(None, validation_alias="EV_AGENT_WORK")
+    protocols: Path = Field(REPO / "evidence" / "protocols", validation_alias="EV_PROTOCOLS")
+
     @property
     def hosts(self) -> list[str]:
         return [h.strip() for h in self.allowed_hosts.split(",") if h.strip()]
 
-    @field_validator("corpus", "runs", "gold", "concepts", "questions", "agent_root", "web_dist")
+    @field_validator("corpus", "runs", "gold", "concepts", "questions", "agent_root", "web_dist", "ev", "corpora",
+                     "ev_runs", "scores", "proposals", "ev_cache", "agent_work", "protocols")
     @classmethod
     def _absolute(cls, value: Path | None) -> Path | None:
         return None if value is None else Path(value).expanduser().resolve()
+
+    def _under_ev(self, value: Path | None, *parts: str) -> Path | None:
+        return value if value is not None else (self.ev.joinpath(*parts) if self.ev else None)
+
+    @property
+    def corpora_dir(self) -> Path | None:
+        return self._under_ev(self.corpora, "corpora")
+
+    @property
+    def ev_runs_dir(self) -> Path | None:
+        return self._under_ev(self.ev_runs, "runs")
+
+    @property
+    def scores_dir(self) -> Path | None:
+        return self._under_ev(self.scores, "scores")
+
+    @property
+    def proposals_dir(self) -> Path | None:
+        return self._under_ev(self.proposals, "proposals")
+
+    @property
+    def ev_cache_dir(self) -> Path | None:
+        return self._under_ev(self.ev_cache, "cache", "engine")
+
+    @property
+    def agent_work_dir(self) -> Path | None:
+        return self._under_ev(self.agent_work, "agent-work")
 
     @property
     def corpus_manifest(self) -> Path | None:

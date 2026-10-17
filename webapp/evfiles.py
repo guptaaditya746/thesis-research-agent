@@ -1,0 +1,708 @@
+"""The evidence-level files as the viewer shows them (webapp/evapi.py; docs/evidence-system.md Parts A-G).
+
+Read-only: nothing here writes, starts a run or calls a model. Launching runs stays on the command line and
+Slurm (docs/slurm-evidence-runbook.md); the viewer reads what they leave, in the layout the runbook makes:
+
+- corpora: `$CORPORA/<name>/` (`synth build`, `synth variant`): manifest.json, papers/, corpus.json,
+  ground_truth.json, fidelity.json, decoys.json, variant.json;
+- runs: `$EV_RUNS/<group>/<name>/`, an engine run (run.json, answer.json, funnel.json, evidence.jsonl,
+  graph.json, events.jsonl, calls/) or a baseline's answer.json (`evaluate rag-baseline|agent-baseline
+  --out`, the agent baseline's own run directories in its agent-runs/); a run's id is `<group>~<name>`;
+- the engine's record cache `$EV_CACHE/extractor_calls.jsonl`, which holds every call's task, its model
+  calls (request, response, usage) and, for an agentic call, the agent run's record; the agent's run
+  directories under `$EV_AGENT_WORK` (`<agent run id>-<random>/runs/<agent run id>/`);
+- scores: `$SCORES/<group>/[<name>/]` with report.json, compare.json, shift.json or a benchmark directory
+  (benchmark.md and `<extractor id>/benchmark.json`); an id joins the directory names with `~`;
+- proposals: `$EV_PROPOSALS/<name>/` (`evidence propose`); protocols: `evidence/protocols/*.yaml`.
+
+Ids from URLs are plain names (webapp/files.py `ID`) and every path is checked to stay inside its root
+(`inside`); a path written inside a file (run.json `settings.corpus`, `settings.cache`) is never opened: the
+run's corpus is found under the corpora root by its manifest's sha256 (else its corpus id), its cache is
+`$EV_CACHE`. Files are re-read when their size or mtime change (`signature`).
+
+Paper texts are cut into segments on the server (`segments`): selectors count code points, JavaScript
+strings UTF-16 units, so the page never converts an offset.
+"""
+from __future__ import annotations
+
+import json
+import re
+import threading
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from agent.anchor import read_text
+from agent.canonical import file_sha256, sha256_hex
+from agent.rundir import RunDir
+from evidence.calls import cache_key
+from evidence.contract import ExtractionResult, ExtractorSpec, Item
+from evidence.protocol import parse
+
+from .evmodels import (AgentTrace, Amendment, BenchmarkView, CallDetail, CallSummary, Card, Check, CompareTable,
+                       CorpusDetail, CorpusPaper, CorpusPaperDetail, CorpusSummary, Decision, EvAnswer, EvConfig,
+                       EvGraph, EvRunDetail, EvRunSummary, FunnelDoc, ModelCallRecord, Placement, ProposalDetail,
+                       ProposalSummary, ProtocolEntry, ProtocolView, Report, ReportView, Root, RunPaper, ScoreRef,
+                       ScoresIndex, Segment, ShiftView, Study, TruthAnswer, VariantInfo)
+from .files import ID, RUN_SEP, NotFound, check_id, inside, read_json, read_jsonl, signature
+from .models import Claim, ClaimRef, ModelCall, Step
+from .runs import claim_of, steps_of
+from .settings import Settings
+
+CACHE_FILE = "extractor_calls.jsonl"
+STEPS = ("frame", "draft", "critic", "cards", "freeze")
+STEP_FILES = {"frame": "frame.json", "draft": "draft.yaml", "critic": "critic.json", "cards": "cards.json",
+              "freeze": "proposal.json"}
+KEY_LINE = re.compile(rb'^\s*\{"key":\s*"([^"]+)"')   # gold.llm.JsonlCache lines: sort_keys puts "key" first
+REVISION_FILE = re.compile(r"^protocol\.v(\d+)\.yaml$")
+OUTPUT_HEAD = 4096
+
+
+def parts(value: str, what: str, most: int = 3) -> list[str]:
+    """`a~b~c` -> its plain names; NotFound for anything else."""
+    names = (value or "").split(RUN_SEP)
+    if not 1 <= len(names) <= most:
+        raise NotFound(f"no such {what}: {value!r}")
+    return [check_id(n, what) for n in names]
+
+
+def subdirs(root: Path | None) -> list[Path]:
+    if root is None or not root.is_dir():
+        return []
+    return sorted(p for p in root.iterdir() if p.is_dir() and ID.fullmatch(p.name))
+
+
+def segments(text: str, spans: Iterable[tuple[int, int, str, str]]) -> list[Segment]:
+    """The text cut at every span boundary; each segment lists the marks (ids) and roles of the spans over it.
+    Spans outside the text are clipped, empty ones dropped."""
+    spans = [(max(0, a), min(len(text), b), mark, role) for a, b, mark, role in spans]
+    spans = [s for s in spans if s[0] < s[1]]
+    cuts = sorted({0, len(text), *(s[0] for s in spans), *(s[1] for s in spans)})
+    out = []
+    for a, b in zip(cuts, cuts[1:]):
+        over = [s for s in spans if s[0] < b and s[1] > a]
+        out.append(Segment(text=text[a:b], start=a, end=b, marks=sorted({s[2] for s in over}),
+                           roles=sorted({s[3] for s in over})))
+    return out
+
+
+class RecordCache:
+    """Random access to a gold.llm.JsonlCache file without loading every value: one scan for the byte offset of
+    each key's last line (a later line wins, as JsonlCache.load does), redone when the file changes. The engine's
+    cache holds every model call's messages and every agent record, so loading it whole per request (what
+    JsonlCache does) would not do; no library indexes JSON lines by key, hence this small scanner."""
+
+    def __init__(self) -> None:
+        self._index: dict[Path, tuple[tuple[Any, ...], dict[str, tuple[int, int]]]] = {}
+        self._lock = threading.Lock()
+
+    def offsets(self, path: Path) -> dict[str, tuple[int, int]]:
+        key = signature(path)
+        with self._lock:
+            hit = self._index.get(path)
+            if hit and hit[0] == key:
+                return hit[1]
+        found: dict[str, tuple[int, int]] = {}
+        try:
+            with open(path, "rb") as fh:
+                pos = 0
+                for line in fh:
+                    match = KEY_LINE.match(line)
+                    if match:
+                        found[match.group(1).decode()] = (pos, len(line))
+                    pos += len(line)
+        except OSError:
+            return {}
+        with self._lock:
+            self._index[path] = (key, found)
+        return found
+
+    def get(self, path: Path, key: str) -> Any | None:
+        where = self.offsets(path).get(key)
+        if where is None:
+            return None
+        try:
+            with open(path, "rb") as fh:
+                fh.seek(where[0])
+                return json.loads(fh.read(where[1])).get("value")
+        except (OSError, ValueError):
+            return None
+
+
+class EvidenceFiles:
+    """Every read of the viewer; one per app."""
+
+    def __init__(self, settings: Settings) -> None:
+        self.s = settings
+        self.cache = RecordCache()
+        self._lock = threading.Lock()
+        self._memo: dict[Any, tuple[tuple[Any, ...], Any]] = {}
+
+    def _cached(self, key: Any, files: tuple[Path, ...], make: Any) -> Any:
+        """make() again only when one of `files` changed (size or mtime)."""
+        sig = signature(*files)
+        with self._lock:
+            hit = self._memo.get(key)
+            if hit and hit[0] == sig:
+                return hit[1]
+        value = make()
+        with self._lock:
+            self._memo[key] = (sig, value)
+        return value
+
+    @staticmethod
+    def _need(root: Path | None, what: str, variable: str) -> Path:
+        if root is None:
+            raise NotFound(f"no {what} directory configured (set ${variable} or $EV)")
+        if not root.is_dir():
+            raise NotFound(f"the {what} directory {root} does not exist")
+        return root
+
+    def config(self) -> EvConfig:
+        def root(path: Path | None) -> Root:
+            return Root(path=str(path) if path else None, exists=bool(path and path.is_dir()))
+        s = self.s
+        return EvConfig(ev=str(s.ev) if s.ev else None, corpora=root(s.corpora_dir), runs=root(s.ev_runs_dir),
+                        scores=root(s.scores_dir), proposals=root(s.proposals_dir), cache=root(s.ev_cache_dir),
+                        agent_work=root(s.agent_work_dir), protocols=root(s.protocols))
+
+    # --- corpora -------------------------------------------------------------------------------------
+
+    def corpus_dir(self, name: str) -> Path:
+        root = self._need(self.s.corpora_dir, "corpora", "CORPORA")
+        path = inside(root, check_id(name, "corpus"))
+        if not (path / "manifest.json").is_file():
+            raise NotFound(f"no such corpus: {name!r}")
+        return path
+
+    def _corpus_summary(self, path: Path) -> CorpusSummary | None:
+        manifest = read_json(path / "manifest.json")
+        if not isinstance(manifest, dict):
+            return None
+        meta = read_json(path / "corpus.json") or {}
+        truth = read_json(path / "ground_truth.json") or {}
+        fidelity = read_json(path / "fidelity.json") or {}
+        variant = read_json(path / "variant.json")
+        papers = manifest.get("papers") or []
+        listed = {p.get("id") for p in papers}
+        records = [r for r in fidelity.get("papers") or [] if r.get("id") in listed]
+        base = None
+        if isinstance(variant, dict):
+            base = next((c.name for c in subdirs(path.parent) if c != path
+                         and (read_json(c / "manifest.json") or {}).get("corpus_id") == variant.get("base_corpus_id")
+                         and not (c / "variant.json").exists()), None)
+        return CorpusSummary(
+            name=path.name, corpus_id=str(manifest.get("corpus_id", "")), level=meta.get("level"),
+            renderer=meta.get("renderer"), seed=meta.get("seed"), question=meta.get("question") or truth.get("question"),
+            protocol=meta.get("protocol"), settings=meta.get("settings"), papers=len(papers),
+            fidelity_ok=sum(bool(r.get("ok")) for r in records) if records else None,
+            excluded=list(fidelity.get("excluded") or []),
+            answer=TruthAnswer.model_validate(truth["answer"]) if isinstance(truth.get("answer"), dict) else None,
+            variant=VariantInfo.model_validate(variant) if isinstance(variant, dict) else None, base=base,
+            manifest_sha256=file_sha256(path / "manifest.json"))
+
+    def corpora(self) -> list[CorpusSummary]:
+        root = self.s.corpora_dir
+        out = []
+        for path in subdirs(root):
+            summary = self._cached(("corpus", path), (path / "manifest.json", path / "corpus.json",
+                                                      path / "ground_truth.json", path / "variant.json"),
+                                   lambda p=path: self._corpus_summary(p))
+            if summary is not None:
+                out.append(summary)
+        return out
+
+    def corpus_by(self, *, manifest_sha256: str | None = None, corpus_id: str | None = None) -> str | None:
+        """The corpus directory a run or an answer was made from: by manifest hash first, else by corpus id."""
+        corpora = self.corpora()
+        for c in corpora:
+            if manifest_sha256 and c.manifest_sha256 == manifest_sha256:
+                return c.name
+        return next((c.name for c in corpora if corpus_id and c.corpus_id == corpus_id), None)
+
+    def corpus(self, name: str) -> CorpusDetail:
+        path = self.corpus_dir(name)
+        summary = self._corpus_summary(path)
+        if summary is None:
+            raise NotFound(f"corpus {name!r} has no readable manifest.json")
+        meta = read_json(path / "corpus.json") or {}
+        truth = read_json(path / "ground_truth.json") or {}
+        fidelity = {r.get("id"): r for r in (read_json(path / "fidelity.json") or {}).get("papers") or []}
+        return CorpusDetail(**summary.model_dump(), models=meta.get("models"), generator=meta.get("generator"),
+                            papers_list=self._papers(path, meta, truth, fidelity))
+
+    @staticmethod
+    def _papers(path: Path, meta: dict[str, Any], truth: dict[str, Any], fidelity: dict[str, Any]) -> list[CorpusPaper]:
+        manifest = read_json(path / "manifest.json") or {}
+        levels = {p.get("id"): p.get("level") for p in meta.get("papers") or []}
+        studies = {s.get("paper", s.get("study_id")): s for s in truth.get("studies") or []}
+        out = []
+        for p in manifest.get("papers") or []:
+            study = studies.get(p["id"]) or {}
+            effect = study.get("effect") or {}
+            record = fidelity.get(p["id"])
+            out.append(CorpusPaper(id=p["id"], file=p["file"], sha256=p["sha256"], level=levels.get(p["id"]) or study.get("level"),
+                                   relevant=study.get("relevant", True) is not False,
+                                   direction=effect.get("direction") if study.get("relevant", True) is not False else None,
+                                   delta=effect.get("delta"), flags=list(study.get("flags") or []),
+                                   duplicate_of=study.get("duplicate_of"), missing=study.get("missing"),
+                                   fidelity_ok=record.get("ok") if record else None))
+        return out
+
+    def _paper_text(self, corpus: Path, paper: str) -> tuple[dict[str, Any], str]:
+        manifest = read_json(corpus / "manifest.json") or {}
+        entry = next((p for p in manifest.get("papers") or [] if p.get("id") == paper), None)
+        if entry is None:
+            raise NotFound(f"no paper {paper!r} in {corpus.name}")
+        file = inside(corpus, *Path(str(entry["file"])).parts)
+        if not file.is_file():
+            file = inside(corpus, "papers", Path(str(entry["file"])).name)
+        try:
+            return entry, read_text(file)
+        except OSError as exc:
+            raise NotFound(f"{entry['file']} of {corpus.name} cannot be read") from exc
+
+    def corpus_paper(self, name: str, paper: str) -> CorpusPaperDetail:
+        path = self.corpus_dir(name)
+        entry, text = self._paper_text(path, check_id(paper, "paper"))
+        meta = read_json(path / "corpus.json") or {}
+        truth = read_json(path / "ground_truth.json") or {}
+        fidelity = {r.get("id"): r for r in (read_json(path / "fidelity.json") or {}).get("papers") or []}
+        listed = next(p for p in self._papers(path, meta, truth, fidelity) if p.id == paper)
+        placements = [Placement.model_validate(p) for p in truth.get("placements") or [] if p.get("paper") == paper]
+        study = next((s for s in truth.get("studies") or [] if s.get("paper", s.get("study_id")) == paper), None)
+        decoys = [d for d in read_json(path / "decoys.json") or [] if isinstance(d, dict) and d.get("paper") == paper]
+        marks = [(p.start, p.end, p.fact, p.role) for p in placements]
+        marks += [(int(d["start"]), int(d["end"]), f"decoy:{d.get('measurement')}", "decoy") for d in decoys
+                  if isinstance(d.get("start"), int) and isinstance(d.get("end"), int)]
+        return CorpusPaperDetail(corpus=name, paper=listed, text=text, segments=segments(text, marks), study=study,
+                                 placements=placements, fidelity=fidelity.get(paper), decoys=decoys)
+
+    # --- protocols and proposals ------------------------------------------------------------------------
+
+    @staticmethod
+    def protocol_view(path: Path, source: str, name: str) -> ProtocolView:
+        try:
+            data = path.read_bytes()
+        except OSError as exc:
+            raise NotFound(f"{name}: no protocol file") from exc
+        text = data.decode("utf-8")
+        try:
+            protocol = parse(text)
+        except (ValueError, yaml.YAMLError) as exc:   # pydantic's ValidationError is a ValueError
+            return ProtocolView(source=source, name=name, path=str(path), sha256=sha256_hex(data), yaml=text, phases=[],
+                                error=str(exc)[:2000])
+        return ProtocolView(source=source, name=name, path=str(path), sha256=protocol.sha256, yaml=text,
+                            phases=protocol.phases(), protocol=protocol)
+
+    def protocols(self) -> list[ProtocolEntry]:
+        root = self.s.protocols
+        out = []
+        for path in sorted(root.glob("*.yaml")) if root.is_dir() else []:
+            view = self._cached(("protocol", path), (path,), lambda p=path: self.protocol_view(p, "repo", p.stem))
+            p = view.protocol
+            out.append(ProtocolEntry(name=path.stem, id=p.id if p else None, version=p.version if p else None,
+                                     revision=p.revision if p else None, question=p.question if p else None,
+                                     sha256=view.sha256, error=view.error))
+        return out
+
+    def protocol(self, name: str) -> ProtocolView:
+        root = self.s.protocols
+        path = inside(root, check_id(name, "protocol") + ".yaml")
+        if not path.is_file():
+            raise NotFound(f"no such protocol: {name!r}")
+        return self.protocol_view(path, "repo", name)
+
+    def _proposal_summary(self, path: Path) -> ProposalSummary:
+        frame = read_json(path / "frame.json") or {}
+        proposal = read_json(path / "proposal.json")
+        amendments = read_jsonl(path / "amendments.jsonl")
+        revision, sha = None, None
+        if isinstance(proposal, dict):
+            revision = (proposal.get("protocol") or {}).get("revision")
+            sha = (proposal.get("protocol") or {}).get("sha256")
+        if amendments:
+            revision, sha = amendments[-1].get("revision", revision), amendments[-1].get("sha256", sha)
+        return ProposalSummary(name=path.name, question=frame.get("question") or (proposal or {}).get("question"),
+                               steps=[s for s in STEPS if (path / STEP_FILES[s]).is_file()],
+                               frozen=isinstance(proposal, dict), revision=revision, protocol_sha256=sha,
+                               decided_by=(proposal or {}).get("decided_by") or {}, amendments=len(amendments))
+
+    def proposals(self) -> list[ProposalSummary]:
+        return [self._proposal_summary(p) for p in subdirs(self.s.proposals_dir) if (p / "frame.json").is_file()]
+
+    def proposal(self, name: str) -> ProposalDetail:
+        root = self._need(self.s.proposals_dir, "proposals", "EV_PROPOSALS")
+        path = inside(root, check_id(name, "proposal"))
+        if not (path / "frame.json").is_file():
+            raise NotFound(f"no such proposal: {name!r}")
+        summary = self._proposal_summary(path)
+        proposal = read_json(path / "proposal.json")
+        critic = read_json(path / "critic.json")
+        cards = read_json(path / "cards.json") or {}
+        frozen = {d.get("card"): d for d in (proposal or {}).get("decisions") or []} if isinstance(proposal, dict) else {}
+        try:
+            edited = yaml.safe_load((path / "decisions.yaml").read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            edited = {}
+        pending = {d.get("card"): d for d in (edited.get("decisions") or []) if isinstance(d, dict)}
+        out_cards = []
+        for card in cards.get("cards") or []:
+            decision = frozen.get(card.get("id")) or pending.get(card.get("id"))
+            out_cards.append(Card.model_validate({**card, "decision": Decision.model_validate(decision)
+                                                  if isinstance(decision, dict) else None}))
+        protocol = self.protocol_view(path / "protocol.yaml", "proposal", name) if (path / "protocol.yaml").is_file() else None
+        draft = path / "draft.yaml"
+        revisions = sorted(int(m.group(1)) for p in path.iterdir() if (m := REVISION_FILE.match(p.name)))
+        return ProposalDetail(**summary.model_dump(), frame=read_json(path / "frame.json"),
+                              sources=read_json(path / "draft.sources.json"),
+                              draft_yaml=draft.read_text(encoding="utf-8") if draft.is_file() else None,
+                              critic=critic if isinstance(critic, dict) else None,
+                              checks=[Check.model_validate(c) for c in (critic or {}).get("checks") or []]
+                              if isinstance(critic, dict) else [],
+                              cards=out_cards, proposal=proposal if isinstance(proposal, dict) else None,
+                              protocol=protocol, revisions=revisions,
+                              amendment_log=[Amendment.model_validate(a) for a in read_jsonl(path / "amendments.jsonl")])
+
+    # --- runs ----------------------------------------------------------------------------------------
+
+    def run_dir(self, run_id: str) -> Path:
+        root = self._need(self.s.ev_runs_dir, "runs", "EV_RUNS")
+        names = parts(run_id, "run", most=2)
+        if len(names) != 2:
+            raise NotFound(f"no such run: {run_id!r} (ids are <group>~<name>)")
+        path = inside(root, *names)
+        if not ((path / "run.json").is_file() or (path / "answer.json").is_file()):
+            raise NotFound(f"no such run: {run_id!r}")
+        return path
+
+    def _run_summary(self, path: Path) -> EvRunSummary | None:
+        run = read_json(path / "run.json")
+        answer = read_json(path / "answer.json")
+        answer = answer if isinstance(answer, dict) else None
+        run_id = f"{path.parent.name}{RUN_SEP}{path.name}"
+        counts = answer.get("counts") if answer else None
+        if isinstance(run, dict):
+            settings = run.get("settings") or {}
+            return EvRunSummary(id=run_id, group=path.parent.name, name=path.name, kind="engine",
+                                system=(answer or {}).get("system", "evidence-engine"), mode=run.get("mode"),
+                                strategy=settings.get("strategy"), selection=settings.get("selection"),
+                                model=settings.get("model"), protocol=run.get("protocol"), corpus_id=run.get("corpus_id"),
+                                corpus=self.corpus_by(manifest_sha256=run.get("manifest_sha256"),
+                                                      corpus_id=run.get("corpus_id")),
+                                label=(answer or {}).get("label"), counts=counts,
+                                papers=len((answer or {}).get("studies") or []) or None, cost=run.get("cost"))
+        if answer is None or "system" not in answer:
+            return None
+        settings = answer.get("settings") or {}
+        return EvRunSummary(id=run_id, group=path.parent.name, name=path.name, kind="baseline", system=answer["system"],
+                            strategy=settings.get("retrieval"), model=(answer.get("model_call") or answer.get("mapping_call")
+                                                                       or {}).get("model"),
+                            corpus_id=answer.get("corpus_id"), corpus=self.corpus_by(corpus_id=answer.get("corpus_id")),
+                            label=answer.get("label"), counts=counts, papers=len(answer.get("studies") or []) or None)
+
+    def runs(self) -> list[EvRunSummary]:
+        out = []
+        for group in subdirs(self.s.ev_runs_dir):
+            for path in subdirs(group):
+                summary = self._cached(("run", path), (path / "run.json", path / "answer.json"),
+                                       lambda p=path: self._run_summary(p))
+                if summary is not None:
+                    out.append(summary)
+        return out
+
+    def _calls(self, path: Path, run: dict[str, Any]) -> list[CallSummary]:
+        """The extractor_call events of a run, as call summaries (events.jsonl, cached until it changes)."""
+        kinds = {k: (v or {}).get("kind") for k, v in (run.get("extractor_specs") or {}).items()}
+
+        def make() -> list[CallSummary]:
+            out = []
+            for r in read_jsonl(path / "events.jsonl"):
+                if r.get("subtype") != "extractor_call":
+                    continue
+                meta = r.get("custom_metadata") or {}
+                out.append(CallSummary(call_id=r["task_id"], document=str(meta.get("document", r.get("group_id", ""))),
+                                       evidence_type=str(meta.get("evidence_type", "")), extractor_id=r.get("agent_id", ""),
+                                       kind=kinds.get(r.get("agent_id")), position=meta.get("position"),
+                                       status=r.get("status", ""), source=meta.get("source"),
+                                       attempt=int(meta.get("attempt") or 0), focus=meta.get("focus"),
+                                       items=len(r.get("generated") or []), rejected=int(meta.get("rejected") or 0),
+                                       model_calls=len(meta.get("model_calls") or [])))
+            return out
+        return self._cached(("calls", path), (path / "events.jsonl",), make)
+
+    def run(self, run_id: str) -> EvRunDetail:
+        path = self.run_dir(run_id)
+        summary = self._run_summary(path)
+        if summary is None:
+            raise NotFound(f"run {run_id!r} has neither a run.json nor a baseline's answer.json")
+        run = read_json(path / "run.json") or {}
+        answer = read_json(path / "answer.json")
+        funnel = read_json(path / "funnel.json")
+        documents: list[str] = []
+        if summary.corpus:
+            manifest = read_json(self.corpus_dir(summary.corpus) / "manifest.json") or {}
+            documents = [p["id"] for p in manifest.get("papers") or []]
+        elif isinstance(answer, dict):
+            documents = [s["document"] for s in answer.get("studies") or []]
+        runs = self.runs()
+        same = [r.id for r in runs if r.kind == "baseline" and r.id != summary.id
+                and ((r.corpus and r.corpus == summary.corpus) or (r.corpus_id and r.corpus_id == summary.corpus_id))]
+        reports = [r.id for r in self.scores().reports if r.run_id == summary.name and r.corpus_id == summary.corpus_id
+                   and r.group == summary.group] if summary.kind == "engine" else []
+        specs = [ExtractorSpec.model_validate({k: v for k, v in spec.items() if k in ExtractorSpec.model_fields})
+                 for spec in (run.get("extractor_specs") or {}).values()]
+        return EvRunDetail(**summary.model_dump(), extractors=specs, settings=run.get("settings"),
+                           chain_head=run.get("chain_head"), source_run=run.get("source_run"),
+                           answer=EvAnswer.model_validate(answer) if isinstance(answer, dict) else None,
+                           funnel={d: FunnelDoc.model_validate(v) for d, v in (funnel.get("documents") or {}).items()}
+                           if isinstance(funnel, dict) else None,
+                           documents=documents, baselines=same, reports=reports,
+                           has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None)
+
+    def _items(self, path: Path) -> list[Item]:
+        def make() -> list[Item]:
+            return [Item.model_validate(r) for r in read_jsonl(path / "evidence.jsonl")]
+        return self._cached(("items", path), (path / "evidence.jsonl",), make)
+
+    def run_paper(self, run_id: str, document: str) -> RunPaper:
+        path = self.run_dir(run_id)
+        document = check_id(document, "paper")
+        summary = self._run_summary(path)
+        run = read_json(path / "run.json") or {}
+        answer = read_json(path / "answer.json") or {}
+        funnel = (read_json(path / "funnel.json") or {}).get("documents") or {}
+        text, file = None, f"papers/{document}.md"
+        if summary and summary.corpus:
+            entry, text = self._paper_text(self.corpus_dir(summary.corpus), document)
+            file = str(entry["file"])
+        items = [i for i in self._items(path) if any(s.selector.get("file") == file for s in i.spans)]
+        study = next((s for s in answer.get("studies") or [] if s.get("document") == document), None)
+        calls = [c for c in self._calls(path, run) if c.document == document] if run else []
+        if text is None and study is None and not items and not calls:
+            raise NotFound(f"run {run_id!r} has no document {document!r}")
+        marks = [(int(sp.selector["start"]), int(sp.selector["end"]), i.item_id, sp.role)
+                 for i in items for sp in i.spans if sp.selector.get("file") == file]
+        if text is not None and answer.get("citations"):   # a baseline's cited passages
+            marks += [(c["start"], c["end"], f"cited:{c['start']}-{c['end']}", "citation")
+                      for c in answer["citations"] if c.get("document") == document]
+        return RunPaper(run=run_id, document=document, text=text, segments=segments(text, marks) if text else [],
+                        items=items, study=Study.model_validate(study) if study else None,
+                        funnel=FunnelDoc.model_validate(funnel[document]) if document in funnel else None, calls=calls)
+
+    def run_graph(self, run_id: str) -> EvGraph:
+        path = self.run_dir(run_id)
+        graph = read_json(path / "graph.json")
+        if not isinstance(graph, dict):
+            raise NotFound(f"run {run_id!r} has no graph.json")
+        return EvGraph.model_validate(graph)
+
+    def run_protocol(self, run_id: str) -> ProtocolView:
+        path = self.run_dir(run_id)
+        if not (path / "protocol.yaml").is_file():
+            raise NotFound(f"run {run_id!r} has no protocol.yaml (a baseline runs without one)")
+        return self.protocol_view(path / "protocol.yaml", "run", run_id)
+
+    def _cache_file(self) -> Path | None:
+        root = self.s.ev_cache_dir
+        return root / CACHE_FILE if root and (root / CACHE_FILE).is_file() else None
+
+    def _record(self, path: Path, call: CallSummary, result: ExtractionResult) -> dict[str, Any] | None:
+        cache = self._cache_file()
+        if cache is None:
+            return None
+        hit = self.cache.get(cache, cache_key(result.extractor_id, result.task_sha256, call.attempt))
+        return hit if isinstance(hit, dict) else None
+
+    def _call(self, run_id: str, call_id: str) -> tuple[Path, dict[str, Any], CallSummary, ExtractionResult]:
+        path = self.run_dir(run_id)
+        call_id = check_id(call_id, "call")
+        run = read_json(path / "run.json")
+        if not isinstance(run, dict):
+            raise NotFound(f"run {run_id!r} is a baseline: it has no extractor calls")
+        call = next((c for c in self._calls(path, run) if c.call_id == call_id), None)
+        data = read_json(inside(path, "calls", f"{call_id}.json"))
+        if call is None or not isinstance(data, dict):
+            raise NotFound(f"run {run_id!r} has no call {call_id!r}")
+        return path, run, call, ExtractionResult.model_validate(data)
+
+    def run_call(self, run_id: str, call_id: str) -> CallDetail:
+        path, run, call, result = self._call(run_id, call_id)
+        record = self._record(path, call, result)
+        spec = (run.get("extractor_specs") or {}).get(result.extractor_id)
+        model_calls, agent_runs = [], []
+        for m in (record or {}).get("model_calls") or []:
+            agent = m.get("agent_run")
+            agent_id = agent.get("run_id") if isinstance(agent, dict) else None
+            if agent_id and agent_id not in agent_runs:
+                agent_runs.append(agent_id)
+            model_calls.append(ModelCallRecord.model_validate({**{k: v for k, v in m.items() if k != "agent_run"},
+                                                               "agent_run": agent_id}))
+        if not agent_runs and call.kind == "agent":
+            agent_runs = sorted({c.split("/", 1)[0] for c in result.model_calls if "/" in c})
+        return CallDetail(run=run_id, call=call, result=result,
+                          spec=ExtractorSpec.model_validate({k: v for k, v in spec.items() if k in ExtractorSpec.model_fields})
+                          if isinstance(spec, dict) else None,
+                          task=(record or {}).get("task"), cached=record is not None, model_calls=model_calls,
+                          agent_runs=agent_runs)
+
+    def call_trace(self, run_id: str, call_id: str, agent_run: str) -> AgentTrace:
+        """The trace of one agent run behind an agentic call: its own run directory under $EV_AGENT_WORK (the
+        attempt whose chain head is the record's), else the record the engine's cache keeps."""
+        path, _, call, result = self._call(run_id, call_id)
+        agent_run = check_id(agent_run, "agent run")
+        if not any(c.split("/", 1)[0] == agent_run for c in result.model_calls):
+            raise NotFound(f"call {call_id} of {run_id} made no agent run {agent_run!r}")
+        record = self._record(path, call, result) or {}
+        kept = next((m["agent_run"] for m in record.get("model_calls") or []
+                     if isinstance(m.get("agent_run"), dict) and m["agent_run"].get("run_id") == agent_run), None)
+        root = self.s.agent_work_dir
+        candidates = [d / "runs" / agent_run for d in subdirs(root) if d.name.startswith(f"{agent_run}-")]
+        candidates = [inside(root, *c.relative_to(root).parts) for c in candidates if (c / "events.jsonl").is_file()]
+        if kept and kept.get("head"):
+            candidates = [c for c in candidates if (read_jsonl(c / "events.jsonl") or [{}])[-1].get("hash") == kept["head"]]
+        if candidates:
+            return self._trace_of_dir(max(candidates, key=lambda c: (c / "events.jsonl").stat().st_mtime), agent_run)
+        if kept:
+            return trace_of_record(kept)
+        raise NotFound(f"no trace of {agent_run}: no run directory under the agent work root and no cache record")
+
+    @staticmethod
+    def _trace_of_dir(run_root: Path, run_id: str) -> AgentTrace:
+        records = read_jsonl(run_root / "events.jsonl")
+        claims = [claim_of(r) for r in read_jsonl(run_root / "claims.jsonl")]
+        answer = read_json(run_root / "answer.json")
+        concept = read_json(run_root / "concept.json")
+        outcome = None
+        trajectory = read_json(run_root / "trajectory.json")
+        if isinstance(trajectory, dict):
+            outcome = (trajectory.get("info") or {}).get("outcome") or {"exit_status": (trajectory.get("info") or {}).get("exit_status")}
+        return AgentTrace(run_id=run_id, source="run_dir", outcome=outcome, concept=concept if isinstance(concept, dict) else None,
+                          answer=answer if isinstance(answer, dict) else None, steps=steps_of(RunDir(run_root), records),
+                          claims=claims)
+
+    def _baseline_run_dir(self, path: Path) -> Path | None:
+        """The agent baseline's run directory: <out>/agent-runs/<run id>-<random>/runs/<run id>/ (newest)."""
+        answer = read_json(path / "answer.json") or {}
+        run_id = (answer.get("agent") or {}).get("run_id") if isinstance(answer, dict) else None
+        if not run_id or not ID.fullmatch(str(run_id)):
+            return None
+        found = [d / "runs" / run_id for d in subdirs(path / "agent-runs") if d.name.startswith(f"{run_id}-")]
+        found = [inside(path, *f.relative_to(path).parts) for f in found if (f / "events.jsonl").is_file()]
+        return max(found, key=lambda f: (f / "events.jsonl").stat().st_mtime) if found else None
+
+    def baseline_trace(self, run_id: str) -> AgentTrace:
+        path = self.run_dir(run_id)
+        found = self._baseline_run_dir(path)
+        if found is None:
+            raise NotFound(f"run {run_id!r} has no agent run directory (agent-runs/)")
+        return self._trace_of_dir(found, found.name)
+
+    # --- scores --------------------------------------------------------------------------------------
+
+    def _score_dirs(self) -> list[tuple[Path, list[str]]]:
+        """Every directory up to two levels under the scores root, with its id parts."""
+        out = []
+        for group in subdirs(self.s.scores_dir):
+            out.append((group, [group.name]))
+            out += [(d, [group.name, d.name]) for d in subdirs(group)]
+        return out
+
+    def scores(self) -> ScoresIndex:
+        index = ScoresIndex()
+        for path, names in self._score_dirs():
+            ref = ScoreRef(id=RUN_SEP.join(names), group=names[0], name=names[1] if len(names) > 1 else None)
+            if (path / "report.json").is_file():
+                report = self._cached(("report", path), (path / "report.json",), lambda p=path: read_json(p / "report.json"))
+                if isinstance(report, dict):
+                    index.reports.append(ref.model_copy(update={
+                        "corpus_id": report.get("corpus_id"), "run_id": report.get("run_id"),
+                        "levels": list(report.get("levels") or []),
+                        "strategy": (report.get("funnel") or {}).get("strategy"),
+                        "systems": [s.get("system") for s in report.get("synthesis") or [] if s.get("system")]}))
+            if (path / "compare.json").is_file():
+                index.compares.append(ref)
+            if (path / "shift.json").is_file():
+                shift = read_json(path / "shift.json") or {}
+                index.shifts.append(ref.model_copy(update={"corpus_id": shift.get("corpus_id"),
+                                                           "systems": [s.get("system") for s in shift.get("systems") or []]}))
+            if (path / "benchmark.md").is_file():
+                index.benchmarks.append(ref.model_copy(update={"systems": [d.name for d in path.iterdir() if d.is_dir()
+                                                                           and (d / "benchmark.json").is_file()]}))
+        return index
+
+    def _score_dir(self, score_id: str, file: str) -> tuple[Path, ScoreRef]:
+        root = self._need(self.s.scores_dir, "scores", "SCORES")
+        names = parts(score_id, "score", most=2)
+        path = inside(root, *names)
+        if not (path / file).is_file():
+            raise NotFound(f"no {file} in {'/'.join(names)}")
+        return path, ScoreRef(id=score_id, group=names[0], name=names[1] if len(names) > 1 else None)
+
+    @staticmethod
+    def _markdown(path: Path) -> str | None:
+        try:
+            return path.read_text(encoding="utf-8")
+        except OSError:
+            return None
+
+    def report(self, score_id: str) -> ReportView:
+        path, ref = self._score_dir(score_id, "report.json")
+        report = Report.model_validate(read_json(path / "report.json"))
+        ref = ref.model_copy(update={"corpus_id": report.corpus_id, "run_id": report.run_id, "levels": report.levels,
+                                     "strategy": (report.funnel or {}).get("strategy"),
+                                     "systems": [s.system for s in report.synthesis]})
+        return ReportView(ref=ref, report=report, markdown=self._markdown(path / "report.md"))
+
+    def compare(self, score_id: str) -> CompareTable:
+        path, ref = self._score_dir(score_id, "compare.json")
+        data = read_json(path / "compare.json") or {}
+        return CompareTable(ref=ref, rows=list(data.get("rows") or []), intervals=list(data.get("intervals") or []),
+                            markdown=self._markdown(path / "compare.md"))
+
+    def shift(self, score_id: str) -> ShiftView:
+        path, ref = self._score_dir(score_id, "shift.json")
+        return ShiftView(ref=ref, shift=read_json(path / "shift.json") or {}, markdown=self._markdown(path / "shift.md"))
+
+    def benchmark(self, score_id: str) -> BenchmarkView:
+        path, ref = self._score_dir(score_id, "benchmark.md")
+        records = [r for d in sorted(path.iterdir()) if d.is_dir()
+                   for r in [read_json(d / "benchmark.json")] if isinstance(r, dict)]
+        return BenchmarkView(ref=ref, records=records, markdown=self._markdown(path / "benchmark.md"))
+
+
+def trace_of_record(record: dict[str, Any]) -> AgentTrace:
+    """An agent run as the engine's cache keeps it (evidence/agentic/runner.collect): commands with the output the
+    agent saw (capped), model calls, claims, the answer; the replies themselves are in `trajectory` only."""
+    steps: dict[int, dict[str, Any]] = {}
+
+    def step(n: Any) -> dict[str, Any]:
+        return steps.setdefault(int(n or 0), {"step": int(n or 0), "agent_id": "main", "origin": "research", "claims": []})
+    for c in record.get("model_calls") or []:
+        usage = c.get("usage") or {}
+        step(c.get("step_id"))["model_call"] = ModelCall(task_id=str(c.get("task_id", "")), status=str(c.get("status") or "finished"),
+                                                         tokens=usage.get("total_tokens"), prompt_tokens=usage.get("prompt_tokens"),
+                                                         completion_tokens=usage.get("completion_tokens"))
+    for c in record.get("commands") or []:
+        output = str(c.get("output") or "")
+        step(c.get("step_id")).update(command=c.get("command"), exit_code=c.get("exit_code"),
+                                      output_head=output[:OUTPUT_HEAD], output_bytes=len(output.encode("utf-8")))
+    claims = []
+    for c in record.get("claims") or []:
+        accepted = c.get("status") == "accepted"
+        step(c.get("step_id"))["claims"].append(ClaimRef(claim_id=c.get("claim_id"), status="accepted" if accepted else "rejected",
+                                                         reason=c.get("reason"), s=c.get("s"), p=c.get("p"), o=c.get("o")))
+        anchor = c.get("anchor") or {}
+        claims.append(Claim(claim_id=c.get("claim_id"), task_id="", status="accepted" if accepted else "rejected",
+                            reason=c.get("reason"), s=c.get("s"), p=c.get("p"), o=c.get("o"), file=c.get("file"),
+                            paper_id=Path(str(c.get("file") or "")).stem or None, quote=c.get("quote"),
+                            quote_submitted=c.get("quote"), step=int(c.get("step_id") or 0), agent_id="main",
+                            origin="research",
+                            anchor={"start": anchor["start"], "end": anchor["end"]} if "start" in anchor else None))
+    return AgentTrace(run_id=str(record.get("run_id", "")), source="cache", outcome=record.get("outcome"),
+                      concept=record.get("concept"), answer=record.get("answer"),
+                      steps=[Step(**steps[k]) for k in sorted(steps)], claims=claims)
+
+

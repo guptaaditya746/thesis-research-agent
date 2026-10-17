@@ -1,8 +1,12 @@
-"""The FastAPI backend (docs/earlier-work.md, "Backend API and frontend pages"): `webapp.app:create_app()`.
+"""The FastAPI backend: `webapp.app:create_app()`.
 
-JSON under /api, server-sent events for the live run stream and the job logs, the chat as an AI
-SDK UI-message stream, and the built frontend (webapp/web/dist) at / with every other path
-falling back to index.html (client-side routes), when that directory exists.
+Two APIs. Under /api/ev the evidence-level viewer (webapp/evapi.py, the supervisor's flow: corpora,
+protocol and proposals, runs with the funnel, evidence graph and answer, scores A/B/C with the baselines
+beside the engine), read-only over the files the command line and Slurm runs write. Under the rest of /api
+the earlier work (docs/earlier-work.md, "Backend API and frontend pages"): JSON, server-sent events for the
+live run stream and the job logs, the chat as an AI SDK UI-message stream. The built frontend
+(webapp/web/dist) is served at / with every other path falling back to index.html (client-side routes),
+when that directory exists.
 
 The server reads run directories, the corpus, concept sessions, gold files and reports; it writes
 only job state and logs ($RUNS/.jobs/) and concept picks ($CONCEPTS, through agent/concept_step.py),
@@ -33,6 +37,8 @@ from agent.canonical import file_sha256
 
 from . import chat, commands, goldstate, judge
 from .corpus import Corpus
+from .evapi import evidence_router
+from .evfiles import EvidenceFiles
 from .files import ID, BadRequest, Conflict, NotFound, check_id, inside, read_json
 from .guard import Guard
 from .jobs import JobManager
@@ -67,6 +73,7 @@ class Services:
     questions: Questions = field(init=False)
     provenance: Provenance = field(init=False)
     agent: Any = field(init=False)  # the chat agent (webapp/chat.py)
+    evidence: EvidenceFiles = field(init=False)  # the evidence-level viewer (webapp/evfiles.py)
 
     def __post_init__(self) -> None:
         self.corpus = Corpus(self.settings.corpus)
@@ -76,6 +83,7 @@ class Services:
                                    gold_building=lambda qid: bool(self.jobs.active("gold", qid=qid)))
         self.provenance = Provenance(self.runs)
         self.agent = chat.build_agent()
+        self.evidence = EvidenceFiles(self.settings)
 
     def judge_support(self) -> Callable[..., Any] | None:
         return self.judge if self.judge is not None else judge.default_support()
@@ -112,13 +120,14 @@ def create_app(settings: Settings | None = None, *, chat_model: Any = None,
         await services.jobs.shutdown()
 
     app = FastAPI(title="Thesis research agent", version=app_version(), lifespan=lifespan,
-                  description="Runs, provenance, gold standard and scores of the research agent "
-                              "(docs/earlier-work.md, Backend API and frontend pages).")
+                  description="The evidence-level viewer (/api/ev) and the earlier work: runs, provenance, gold "
+                              "standard and scores of the research agent (docs/earlier-work.md).")
     app.state.services = services
     app.add_middleware(Guard, allowed_hosts=services.settings.hosts)  # webapp/guard.py: Host and same-origin writes
     for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400)):
         app.add_exception_handler(exc_type, _handler(status))
     app.include_router(api_router(services), prefix="/api")
+    app.include_router(evidence_router(services.evidence), prefix="/api/ev")
     if services.settings.web_dist.is_dir():
         add_frontend(app, services.settings)
     return app
