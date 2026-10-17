@@ -1,1 +1,0 @@
-import{v as s}from"./index-B0jNQRGE.js";function a(o,n,t){s.success(`${t}: job ${o.id} ${o.state}`,{description:"Follow its log on the Jobs page.",action:{label:"Open log",onClick:()=>n(`/jobs/${o.id}`)}})}function e(o,n){s.error(o,{description:n instanceof Error?n.message:String(n)})}export{e as a,a as b};
