@@ -69,8 +69,10 @@ def test_variant_changes_one_paper_and_the_expected_answer(base: Path) -> None:
     for p in (p for p in new_gt["placements"] if p["paper"] == study):
         assert text[p["start"]:p["end"]] == p["exact"]
     # expected answer before and after
-    assert vj["expected"]["before"] == {"label": "supported", "counts": truth.answer_counts(gt["answer"])}
-    assert vj["expected"]["after"] == {"label": "mixed", "counts": truth.answer_counts(new_gt["answer"])}
+    assert vj["expected"]["before"] == {"label": "supported", "counts": truth.answer_counts(gt["answer"])} == {
+        "label": "supported", "counts": {"supporting": 5, "contradicting": 0, "neutral": 0, "undetermined": 2, "duplicates": 1}}
+    assert vj["expected"]["after"] == {"label": "mixed", "counts": truth.answer_counts(new_gt["answer"])} == {
+        "label": "mixed", "counts": {"supporting": 4, "contradicting": 1, "neutral": 0, "undetermined": 2, "duplicates": 1}}
     assert vj["expected"]["label_changes"] is True
     assert new_gt["answer"]["contradicting"] == [study] and study not in new_gt["answer"]["supporting"]
     assert new_gt["answer"]["undetermined"] == gt["answer"]["undetermined"] and new_gt["answer"]["duplicates"] == gt["answer"]["duplicates"]

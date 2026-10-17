@@ -146,6 +146,9 @@ def test_template_papers_with_knobs_pass_every_check(level: str) -> None:
                             and next(m.metric for m in s.measurements if m.id == p.fact) == s.primary.id]
                 if level in ("distributed", "complex", "contradictory"):
                     assert " – |" in r.text                     # the missing cell is a dash, never a number
+                if level == "complex":                          # no relative sentence without the pair
+                    assert "than the" not in r.text and "see text" not in r.text
+                    assert not [p for p in r.placements if p.fmt == "relative"]
                 assert not r.decoys
             if not s.relevant:
                 assert r.placements == [] and r.decoys == [] and "|" not in r.text and not any(ch.isdigit() for ch in r.text)
@@ -226,6 +229,28 @@ def test_plain_build_is_unchanged_by_the_knobs(tmp_path: Path) -> None:
         first = [f"S{i:03d}" for i in range(1, 9)]
         assert [p for p in more["placements"] if p["paper"] in first] == plain["placements"]
         assert {p["paper"] for p in more["placements"] if p["paper"] not in first} == {"S009", "S010"}
+
+
+def test_set_level_flags_are_found_over_the_written_studies(tmp_path: Path) -> None:
+    """When a renderer excludes a study (here: told to write_corpus as failed), the flags in
+    ground_truth.json are what the rules give on the papers written, not on the drawn set."""
+    studies = truth.generate(5, 10, outliers=1, duplicates=1)
+    outlier = next(s for s in studies if "large_effect" in s.flags)
+    dup = next(s for s in studies if s.duplicate_of)
+    rendered = TemplateRenderer().render_all([(s, "explicit") for s in studies], 5)
+    papers = {s.study_id: rendered[(s.study_id, "explicit")] for s in studies}
+    settings = corpus.settings_of(name="k", studies=10, mix=None, levels=["explicit"], outliers=1, duplicates=1)
+    for failed in ({outlier.study_id: ["explicit"]}, {dup.duplicate_of: ["explicit"], dup.study_id: ["(its original failed)"]}):
+        corpus.write_corpus(tmp_path / "w", name="k", level="explicit", seed=5, renderer=TemplateRenderer(), protocol=PROTO,
+                            studies=studies, papers=papers, failed=failed, settings=settings)
+        gt = load(tmp_path / "w", "ground_truth.json")
+        kept = truth.flagged([s for s in studies if s.study_id not in failed], SPEC)
+        assert [s["study_id"] for s in gt["studies"]] == [s.study_id for s in kept]
+        for record, s in zip(gt["studies"], kept):
+            assert (record["flags"], record["duplicate_of"]) == (sorted(s.flags), s.duplicate_of)
+        assert gt["answer"]["flags"]["large_effect"] == [s.study_id for s in kept if "large_effect" in s.flags]
+        assert gt["answer"]["flags"]["duplicate"] == [s.study_id for s in kept if s.duplicate_of] == gt["answer"]["duplicates"]
+    assert not any("large_effect" in s.flags for s in truth.flagged([s for s in studies if s is not outlier], SPEC))
 
 
 def test_generator_self_check_refuses_a_mismatch(monkeypatch: pytest.MonkeyPatch) -> None:

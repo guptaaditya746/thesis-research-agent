@@ -47,7 +47,8 @@ def base_studies(meta: dict[str, Any], protocol: Protocol) -> list[Study]:
 
 def counterfactual(seed: int, studies: list[Study], study_id: str, direction: str, spec: protocol_module.Synthesis,
                    ) -> tuple[list[Study], Study, Study]:
-    """The set with `study_id` redrawn to `direction` and the flags re-applied; plus (before, after)."""
+    """The set with `study_id` redrawn to `direction` (flags not yet re-applied: `make` does that over the
+    studies the corpus holds); plus (before, after)."""
     if direction not in truth.DIRECTIONS:
         raise SystemExit(f"--direction {direction!r}: choose from {', '.join(truth.DIRECTIONS)}")
     before = next((s for s in studies if s.study_id == study_id), None)
@@ -63,9 +64,7 @@ def counterfactual(seed: int, studies: list[Study], study_id: str, direction: st
     after = truth.redrawn(rng, before, direction, spec)
     while truth.collides(after, studies):
         after = truth.redrawn(rng, before, direction, spec)
-    changed = [after if s.study_id == study_id else s for s in studies]
-    changed = truth.flagged(changed, spec)
-    return changed, before, next(s for s in changed if s.study_id == study_id)
+    return [after if s.study_id == study_id else s for s in studies], before, after
 
 
 def make(*, corpus_dir: Path, study_id: str, direction: str, renderer: Renderer, out: Path | None = None,
@@ -110,21 +109,22 @@ def make(*, corpus_dir: Path, study_id: str, direction: str, renderer: Renderer,
         "renderer": renderer.name, "models": renderer.models(), "variant": variant,
     }))
 
-    by_id = {s.study_id: s for s in changed}
+    # flags re-applied over the studies the corpus holds (the manifest's), as write_corpus does
+    kept = truth.flagged([s for s in changed if s.study_id in ids], spec)
+    by_id = {s.study_id: s for s in kept}
     base_flags = {s["study_id"]: s["flags"] for s in gt["studies"]}
     flags: dict[str, list[str]] = {}
     records = []
     for record in gt["studies"]:
         sid = record["study_id"]
         if sid == study_id:
-            record = study_truth(rendered, spec)
+            record = study_truth(rendered, spec, by_id[sid])
             flags[sid] = record["flags"]
         else:   # the set-level flags are re-applied; claim_disagrees depends on the paper, which is unchanged
             s = by_id[sid]
             flags[sid] = sorted(set(s.flags) | ({"claim_disagrees"} & set(base_flags[sid])))
             record = {**record, "flags": flags[sid], "duplicate_of": s.duplicate_of}
         records.append(record)
-    kept = [by_id[sid] for sid in ids]
     answer_after = truth.answer(kept, spec, flags)
     placements = [p for p in gt["placements"] if p["paper"] != study_id] + [p.json() for p in rendered.placements]
     placements.sort(key=lambda p: (p["paper"], p["start"], p["end"], p["role"], p["fact"]))

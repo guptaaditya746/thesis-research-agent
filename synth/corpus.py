@@ -75,22 +75,26 @@ def corpus_id(name: str, papers: list[dict[str, str]]) -> str:
     return f"{name}-{sha256_hex(canonical_bytes([[p['id'], p['sha256']] for p in papers]))[:8]}"
 
 
-def study_flags(r: Rendered, spec: protocol_module.Synthesis) -> list[str]:
-    """The study's flags in this corpus: the set-level ones (duplicate, large_effect, from truth.flagged)
-    plus claim_disagrees where the claim as stated disagrees with the computed direction (contradictory
+def study_flags(r: Rendered, spec: protocol_module.Synthesis, study: Study | None = None) -> list[str]:
+    """The study's flags in this corpus: the set-level ones (duplicate, large_effect; from `study`, the
+    study as truth.flagged re-flags it over the studies actually written, default the rendering's) plus
+    claim_disagrees where the claim as stated disagrees with the computed direction (contradictory
     papers; never an undetermined study, which has no direction to disagree with)."""
-    s, flags = r.study, set(r.study.flags)
+    s = study or r.study
+    flags = set(s.flags)
     if s.effect.determined and not rules.claim_agrees(r.plan.claim, s.effect.direction, spec.claim_map):
         flags.add("claim_disagrees")
     return sorted(flags)
 
 
-def study_truth(r: Rendered, spec: protocol_module.Synthesis) -> dict[str, Any]:
-    p, s = r.plan, r.study
+def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | None = None) -> dict[str, Any]:
+    """The ground-truth record of a rendering; `study` (default the rendering's) carries the set-level
+    flags and `duplicate_of` as found over the written set."""
+    p, s = r.plan, study or r.study
     e = s.effect
     return {
         "study_id": s.study_id, "paper": s.study_id, "level": p.level,
-        "relevant": s.relevant, "flags": study_flags(r, spec), "duplicate_of": s.duplicate_of, "missing": s.missing,
+        "relevant": s.relevant, "flags": study_flags(r, spec, s), "duplicate_of": s.duplicate_of, "missing": s.missing,
         "conditions": [{"id": c.id, "role": c.role, "label": p.cond_name[c.id], "aliases": list(p.cond_aliases[c.id])}
                        for c in p.conditions],
         "metrics": [{"id": k.id, "canonical": k.canonical, "name": p.metric_name[k.id],
@@ -125,10 +129,11 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
                  settings: dict[str, Any], extra: dict[str, Any] | None = None) -> str:
     """Write one corpus; `papers` maps every study id to its rendering for this corpus. The protocol whose
     synthesis block made the ground truth is recorded (id and sha256), never its file. `extra` goes into
-    corpus.json as it is (`variant`, F3)."""
+    corpus.json as it is (`variant`, F3). The set-level flags are found over the studies actually written
+    (after the fidelity exclusions), as the engine finds them over the papers it reads."""
     prepare(directory)
     spec = protocol.synthesis
-    kept = [s for s in studies if s.study_id not in failed]
+    kept = truth.flagged([s for s in studies if s.study_id not in failed], spec)
     manifest = []
     for s in kept:
         data = papers[s.study_id].text.encode("utf-8")
@@ -151,9 +156,9 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
     (directory / "ground_truth.json").write_bytes(dump({
         "corpus_id": cid, "seed": seed, "question": protocol.question,
         "protocol": {"id": protocol.id, "sha256": protocol.sha256},
-        "studies": [study_truth(papers[s.study_id], spec) for s in kept],
+        "studies": [study_truth(papers[s.study_id], spec, s) for s in kept],
         "placements": [p.json() for p in placements],
-        "answer": truth.answer(kept, spec, {s.study_id: study_flags(papers[s.study_id], spec) for s in kept}),
+        "answer": truth.answer(kept, spec, {s.study_id: study_flags(papers[s.study_id], spec, s) for s in kept}),
     }))
     records = []
     for s in studies:
@@ -218,7 +223,7 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
         written[str(directory)] = write_corpus(directory, name=name, level=lv, seed=seed, renderer=renderer,
                                                protocol=protocol, studies=study_set, papers=papers, failed=failed,
                                                settings=settings)
-    kept = [s for s in study_set if s.study_id not in failed]
-    flags = {s.study_id: study_flags(papers[s.study_id], protocol.synthesis) for s in kept}   # the mixed corpus's
+    kept = truth.flagged([s for s in study_set if s.study_id not in failed], protocol.synthesis)
+    flags = {s.study_id: study_flags(papers[s.study_id], protocol.synthesis, s) for s in kept}   # the mixed corpus's
     return {"corpora": written, "excluded": failed, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
             "settings": settings, "answer": truth.answer(kept, protocol.synthesis, flags)}
