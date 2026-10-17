@@ -29,7 +29,7 @@ def test_perfect_answer_is_right_on_every_study_and_answered_over_determined_one
     result = score_synthesis(_truth(), fx.f_answer())
     overall = row(result["rows"], level="all")
     assert (overall["studies"], overall["determined"]) == (6, 4)
-    assert (overall["direction_accuracy"], overall["answered"], overall["accuracy_answered"]) == (1.0, 1.0, 1.0)
+    assert (overall["direction_accuracy"], overall["completeness"], overall["accuracy_answered"]) == (1.0, 1.0, 1.0)
     assert {"expected": "undetermined", "given": "undetermined", "n": 2} in result["confusion"]
     assert [s["determined"] for s in result["studies"]] == [True, True, True, False, False, True]
     assert result["label_correct"]
@@ -40,7 +40,7 @@ def test_guessing_on_an_undetermined_study_is_wrong_but_not_counted_as_answered(
     result = score_synthesis(_truth(), answer)
     overall = row(result["rows"], level="all")
     assert overall["direction_accuracy"] == pytest.approx(4 / 6)
-    assert (overall["answered"], overall["accuracy_answered"]) == (1.0, 1.0)   # over the 4 determined studies only
+    assert (overall["completeness"], overall["accuracy_answered"]) == (1.0, 1.0)   # over the 4 determined studies only
     assert row(result["rows"], level="complex")["direction_accuracy"] == 0.0
     assert {"expected": "undetermined", "given": "supports", "n": 2} in result["confusion"]
 
@@ -50,19 +50,19 @@ def test_a_baseline_that_leaves_the_undetermined_studies_out_is_right_on_them() 
                                                  "S006": "supports"}, "mixed")
     result = score_synthesis(_truth(), answer)
     overall = row(result["rows"], level="all")
-    assert (overall["direction_accuracy"], overall["answered"], overall["accuracy_answered"]) == (1.0, 1.0, 1.0)
+    assert (overall["direction_accuracy"], overall["completeness"], overall["accuracy_answered"]) == (1.0, 1.0, 1.0)
     assert result["flags"] is None
     partial = fx.baseline_answer("agent-baseline", {"S001": "supports"}, "supported")
     overall = row(score_synthesis(_truth(), partial)["rows"], level="all")
     assert overall["direction_accuracy"] == pytest.approx(3 / 6)   # S001 right, S004 and S005 right by silence
-    assert overall["answered"] == 0.25 and overall["accuracy_answered"] == 1.0
+    assert overall["completeness"] == 0.25 and overall["accuracy_answered"] == 1.0
 
 
 def test_an_undetermined_answer_on_a_determined_study_is_unanswered_and_wrong() -> None:
     answer = fx.f_answer(directions={**fx.F_DIRECTIONS, "S006": "undetermined"})
     overall = row(score_synthesis(_truth(), answer)["rows"], level="all")
     assert overall["direction_accuracy"] == pytest.approx(5 / 6)
-    assert overall["answered"] == 0.75 and overall["accuracy_answered"] == 1.0
+    assert overall["completeness"] == 0.75 and overall["accuracy_answered"] == 1.0
 
 
 def test_a_study_without_effect_or_relevance_is_not_scored() -> None:

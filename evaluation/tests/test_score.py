@@ -182,7 +182,7 @@ def test_baseline_answers_are_scored_like_the_engine(tmp_path: Path, corpus: Pat
     r, a = system(result, "rag-baseline"), system(result, "agent-baseline")
     assert not r["label_correct"] and row(r["rows"], level="all")["direction_accuracy"] == 0.5
     overall = row(a["rows"], level="all")
-    assert (overall["direction_accuracy"], overall["answered"], overall["accuracy_answered"]) == (0.5, 0.5, 1.0)
+    assert (overall["direction_accuracy"], overall["completeness"], overall["accuracy_answered"]) == (0.5, 0.5, 1.0)
     only = score_answers(corpus, [tmp_path / "rag.json"])
     assert only["extraction"] is None and only["synthesis"][0]["system"] == "rag-baseline"
     paired = {p["system"]: p for p in result["intervals"]["paired"]}
@@ -313,6 +313,6 @@ def test_report_shows_accuracy_on_answered_studies(tmp_path: Path, corpus: Path)
     text = rep.render(score_answers(corpus, [tmp_path / "agent.json"]))
     header = next(line for line in text.splitlines() if line.startswith("| system"))
     assert "direction_accuracy" in header and "accuracy_answered" in header and "label_correct" in header
-    assert "determined" in header and "over the `determined` studies only" in text
+    assert "determined" in header and "over the determined studies only" in text
     per_level = next(line for line in text.splitlines() if line.startswith("| level"))
     assert "determined" in per_level
