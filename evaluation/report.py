@@ -12,7 +12,10 @@ from typing import Any
 
 from tabulate import tabulate
 
+from .stats import interval_text
+
 LEVEL_ORDER = ("explicit", "paraphrased", "distributed", "complex", "contradictory", "mixed", "all")
+ENGINE = "evidence-engine"
 
 
 def rounded(obj: Any, places: int = 4) -> Any:
@@ -46,6 +49,48 @@ def _fmt(value: Any) -> Any:
 def table(rows: list[dict[str, Any]], columns: list[str], headers: list[str] | None = None) -> str:
     return tabulate([[_fmt(r.get(c)) for c in columns] for r in rows], headers=headers or columns,
                     tablefmt="github", disable_numparse=True)
+
+
+def _ci(row: dict[str, Any] | None) -> str:
+    """`0.812 [0.74, 0.88]` from an interval row ({point, low, high}; stats.interval_row)."""
+    if not row:
+        return "-"
+    return interval_text(row.get("point"), row.get("low"), row.get("high"))
+
+
+def render_intervals(intervals: dict[str, Any]) -> list[str]:
+    """The `## Intervals` section (F4): extraction F1 per type, direction accuracy per system, paired difference."""
+    out = ["## Intervals", "", "95 % BCa bootstrap over papers (2,000 resamples, seed 0; evaluation/stats.py); "
+           "`[n/a]`: a degenerate sample (fewer than two papers, or no spread), the point value only.", ""]
+    if intervals.get("extraction"):
+        rows = [{"evidence_type": r["evidence_type"], "f1": _ci(r)} for r in intervals["extraction"]]
+        out += ["Extraction F1 (all levels):", "", table(rows, ["evidence_type", "f1"]), ""]
+    if intervals.get("synthesis"):
+        paired = {r["system"]: r for r in intervals.get("paired") or []}
+        rows = [{"system": r["system"], "direction_accuracy": _ci(r),
+                 "engine_minus_system": _ci(paired.get(r["system"])) if r["system"] != ENGINE else "-"}
+                for r in intervals["synthesis"]]
+        out += ["Direction accuracy, and the paired difference engine minus system (per study):", "",
+                table(rows, ["system", "direction_accuracy", "engine_minus_system"]), ""]
+    return out
+
+
+EXTRACTOR_COLUMNS = ["extractor", "evidence_type", "level", "items", "facts", "matched", "precision", "recall", "f1",
+                     "span_accuracy", "association_accuracy", "only", "only_matched"]
+EXTRACTOR_COST_COLUMNS = ["extractor", "calls", "model_calls", "input_tokens", "output_tokens", "seconds"]
+
+
+def render_extractors(extractors: dict[str, Any]) -> list[str]:
+    """The `## Per extractor` section (F4 / B11): every extractor's rows over all levels, and its cost."""
+    rows = sorted((r for r in extractors.get("rows", []) if r["level"] == "all"),
+                  key=lambda r: (r["extractor"], r["evidence_type"] == "all", r["evidence_type"]))
+    out = ["## Per extractor", "", "An item counts for every extractor in its `found_by`; recall is against every "
+           "fact of the type. `evaluate benchmark` pools these rows per level over corpora.", "",
+           table(rows, EXTRACTOR_COLUMNS), ""]
+    if extractors.get("cost"):
+        out += ["Cost per extractor (tokens need the record cache, seconds the events):", "",
+                table(extractors["cost"], EXTRACTOR_COST_COLUMNS), ""]
+    return out
 
 
 def render(report: dict[str, Any]) -> str:
@@ -82,6 +127,16 @@ def render(report: dict[str, Any]) -> str:
             levels.sort(key=lambda r: (_level_key(r["level"]), r["system"]))
             out += ["Per level:", "", table(levels, ["level", "system", "studies", "direction_accuracy", "answered",
                                                      "accuracy_answered"]), ""]
+        flagged = [s for s in report["synthesis"] if s.get("flags")]
+        if flagged:
+            rows = [{"system": s["system"], **r} for s in flagged for r in s["flags"]["rows"]]
+            verdicts = [{"system": s["system"], "counts_correct": s["flags"]["counts_correct"],
+                         "duplicates_correct": s["flags"]["duplicates_correct"]} for s in flagged]
+            out += ["Flags (F1; a system without `flags` is not listed):", "",
+                    table(rows, ["system", "flag", "tp", "fp", "fn", "precision", "recall"]), "",
+                    table(verdicts, ["system", "counts_correct", "duplicates_correct"]), ""]
+    if report.get("intervals"):
+        out += render_intervals(report["intervals"])
     if report.get("locate"):
         rows = sorted(report["locate"]["rows"], key=lambda r: (r["evidence_type"], _level_key(r["level"])))
         out += ["## Locate recall", "", table(rows, ["evidence_type", "level", "placements", "inside", "recall"]), ""]
@@ -90,6 +145,8 @@ def render(report: dict[str, Any]) -> str:
                                                                                "only", "only_matched"]), "",
                 "Facts no extractor found: " + (", ".join(f"{k} {v}" for k, v in
                                                        report["cascade"]["missed_by_all"].items()) or "none"), ""]
+    if report.get("extractors"):
+        out += render_extractors(report["extractors"])
     if report.get("cost"):
         cost = report["cost"]
         rows = [{"measure": k, "total": v, "per_paper": cost["per_paper"].get(k)} for k, v in cost["total"].items()]
@@ -144,15 +201,46 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "direction_accuracy": c.get("direction_accuracy"), "answered": c.get("answered"),
                          "accuracy_answered": c.get("accuracy_answered"), "label_correct": system["label_correct"]})
     rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"]))
-    return {"rows": rows}
+    return {"rows": rows, "intervals": compare_intervals(reports)}
+
+
+def compare_intervals(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One row per corpus and system with the interval rows of report.json `intervals` (F4): the engine's
+    extraction F1 over all types, the system's direction accuracy and the paired difference engine minus
+    system; each `{point, low, high}` or null."""
+    rows = []
+    for report in reports:
+        intervals = report.get("intervals") or {}
+        level = corpus_level(report)
+        f1 = _overall(intervals.get("extraction"), evidence_type="all") or None
+        paired = {r["system"]: r for r in intervals.get("paired") or []}
+        for system in intervals.get("synthesis") or []:
+            name = system["system"]
+            rows.append({"level": level, "corpus_id": report["corpus_id"], "system": name,
+                         "extraction_f1": _strip(f1) if name == ENGINE else None,
+                         "direction_accuracy": _strip(system),
+                         "engine_minus_system": _strip(paired.get(name)) if name != ENGINE else None})
+    rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"]))
+    return rows
+
+
+def _strip(row: dict[str, Any] | None) -> dict[str, Any] | None:
+    return {k: row.get(k) for k in ("point", "low", "high")} if row else None
 
 
 COMPARE_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "span_accuracy", "association_accuracy",
                    "true_pair", "direction_accuracy", "answered", "accuracy_answered", "label_correct"]
+COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "direction_accuracy", "engine_minus_system"]
 
 
 def render_compare(comparison: dict[str, Any]) -> str:
-    return "\n".join(["# Comparison over corpora", "", table(comparison["rows"], COMPARE_COLUMNS), ""])
+    out = ["# Comparison over corpora", "", table(comparison["rows"], COMPARE_COLUMNS), ""]
+    if comparison.get("intervals"):
+        rows = [{**r, **{k: _ci(r.get(k)) for k in ("extraction_f1", "direction_accuracy", "engine_minus_system")}}
+                for r in comparison["intervals"]]
+        out += ["## Intervals", "", "95 % BCa bootstrap over papers, `point [low, high]`; `[n/a]`: degenerate sample.",
+                "", table(rows, COMPARE_INTERVAL_COLUMNS), ""]
+    return "\n".join(out)
 
 
 def write_compare(comparison: dict[str, Any], out: Path) -> tuple[Path, Path]:
