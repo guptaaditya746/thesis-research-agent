@@ -52,3 +52,10 @@ evidence/tests/fixtures/** text eol=lf
 # and the renderer prompts (hashed into corpus.json).
 synth/examples/** text eol=lf
 synth/prompts/** text eol=lf
+
+# Proposal flow (Part E): the steps record the sha256 of the raw bytes of the files they read (frame.json,
+# draft.yaml, decisions.yaml, protocol.v<N>.yaml), the prompts are hashed into every proposal, and the
+# vocabulary snapshots and their sources are hashed into frame.json and proposal.json.
+proposals/** text eol=lf
+evidence/propose/** text eol=lf
+evidence/vocab/** text eol=lf
