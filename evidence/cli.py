@@ -8,8 +8,9 @@
     evidence verify RUN
 
 `--extractors regex-only` needs no model. LLM extractors reach LiteLLM through gold/llm.openai_model, which
-reads the key from $LITELLM_MASTER_KEY only. Exit status: 0 ok, 1 a replay mismatch, a cache miss or a
-broken chain, 2 usage errors.
+reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
+and both baselines) is the alias of the LLM and agentic extractors. Exit status: 0 ok, 1 a replay mismatch,
+a cache miss or a broken chain, 2 usage errors.
 """
 from __future__ import annotations
 
@@ -23,6 +24,8 @@ from agent.chain import verify
 from .calls import NotRecorded
 from .rundir import EVENTS_FILE, RUN_FILE, read_json
 
+DEFAULT_MODEL = "orch-model"  # agent/rundir.ORCHESTRATOR's alias; evidence.engine.Settings.model stays None by default
+
 
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evidence", description=__doc__.split("\n", 1)[0])
@@ -32,7 +35,8 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--corpus", required=True, type=Path)
     r.add_argument("--out", default=Path("runs/evidence"), type=Path)
     r.add_argument("--cache", type=Path, help="record cache directory (default OUT/cache)")
-    r.add_argument("--model", help="model alias for the LLM extractors (overrides the protocol)")
+    r.add_argument("--model", default=DEFAULT_MODEL,
+                   help=f"model alias of the LLM and agentic extractors (default {DEFAULT_MODEL}; overrides the protocol)")
     r.add_argument("--extractors", default="cascade", choices=["cascade", "regex-only", "llm-only"])
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
     r.add_argument("--run-id")

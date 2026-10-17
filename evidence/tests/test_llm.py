@@ -143,6 +143,7 @@ def test_extractor_id_changes_with_prompt_config_and_model() -> None:
     assert ident("llm_condition", field_schema={"type": "object", "properties": {"label": {"type": "string"}}}) != base
     spec = extractors.get("llm_condition").spec
     assert spec.kind == "llm" and spec.config["temperature"] == 0.0 and len(spec.config["prompt_sha256"]) == 64
+    assert spec.config["model"] == "orch-model"  # Part G.3: one model for every extractor and both baselines
     assert ident("regex_metric") != ident("regex_metric", metrics=[[r"\bBLEU\b", "other", True]])
     assert extractors.get("regex_metric").spec.determinism == "exact"
 

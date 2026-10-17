@@ -12,6 +12,11 @@ the agent was shown, model calls, the answer, the trajectory). Real runs need Li
 gateway (key from $LITELLM_MASTER_KEY, read by the agent's model, never recorded); tests inject a
 scripted model (`model_factory`) and run unsandboxed with the in-process broker, or skip the agent
 altogether with a fake `AgentRunner`.
+
+The agent's model is `AgentSettings.model`, a LiteLLM alias (default `orch-model`: one model for every
+extractor and both baselines, docs/evidence-system.md Part G.3). The runner builds the agent's
+`OrchestratorModel` on that alias (`default_model`); for an alias agent/rundir pins (`orch-model`,
+`sub-model-*`) the config records the pinned name and revision, for any other alias the alias alone.
 """
 from __future__ import annotations
 
@@ -24,15 +29,25 @@ from pathlib import Path
 from typing import Any, Callable, Protocol
 
 from agent.canonical import file_sha256, sha256_hex
-from agent.rundir import BUDGET, COMMAND_LIMITS, ORCHESTRATOR
+from agent.rundir import BUDGET, COMMAND_LIMITS, ORCHESTRATOR, SUBAGENTS
 
 REPO = Path(__file__).resolve().parents[2]
+PINNED: dict[str, dict[str, Any]] = {m["alias"]: dict(m) for m in (ORCHESTRATOR, *SUBAGENTS)}
+
+
+def model_record(alias: str) -> dict[str, Any]:
+    """{alias, name, revision} for the config: the pinned weights of an alias agent/rundir pins, else the
+    alias alone (name and revision null: the served weights are then not recorded, only their alias)."""
+    pinned = PINNED.get(alias)
+    return {"alias": alias, "name": pinned["name"] if pinned else None,
+            "revision": pinned.get("revision") if pinned else None}
 
 
 @dataclass(frozen=True)
 class AgentSettings:
     """How the agent runs; everything here but `agent_root`'s path goes into the extractor's config."""
     prompt_version: str = "v2"
+    model: str = ORCHESTRATOR["alias"]   # LiteLLM alias of the agent's model (orch-model)
     temperature: float = 0.7
     seed: int = 1234
     sandbox_mode: str = "landlock"
@@ -42,8 +57,22 @@ class AgentSettings:
 
     def config(self) -> dict[str, Any]:
         return {"prompt_version": self.prompt_version, "temperature": self.temperature, "seed": self.seed,
-                "sandbox_mode": self.sandbox_mode, "model": {k: ORCHESTRATOR[k] for k in ("alias", "name", "revision")},
+                "sandbox_mode": self.sandbox_mode, "model": model_record(self.model),
                 "condition": "claim_on", "commands": "bash in the sandbox (python3, rg, jq, grep, sed, awk) + claim"}
+
+
+def default_model(settings: AgentSettings) -> Any:
+    """The agent's model for `settings.model`: agent.loop.OrchestratorModel on that alias through LiteLLM at
+    `base_url`, with the pinned name, revision and context window of an alias agent/rundir pins (for
+    `orch-model` exactly what agent.loop.research_run builds by itself); an unpinned alias is served and
+    recorded under its own name with revision "unpinned"."""
+    from agent.loop import OrchestratorModel  # LiteLLM and mini-swe-agent: imported only when an agent runs
+
+    pinned = PINNED.get(settings.model)
+    extra = ({"name": pinned["name"], "revision": pinned["revision"], "context_tokens": pinned["context_tokens"]}
+             if pinned else {"name": settings.model, "revision": "unpinned"})
+    return OrchestratorModel(base_url=settings.base_url, temperature=settings.temperature, seed=settings.seed,
+                             alias=settings.model, **extra)
 
 
 @dataclass(frozen=True)
@@ -122,8 +151,8 @@ class ResearchAgentRunner:
     """AgentRunner that runs the real research agent (agent.loop.research_run) in a temporary directory.
 
     `model_factory(settings)` builds the orchestrator model (tests: a scripted OrchestratorModel);
-    by default research_run builds the LiteLLM one. `work_dir` keeps the run directories (for
-    inspection) instead of deleting them.
+    by default `default_model` builds the LiteLLM one on `settings.model`. `work_dir` keeps the run
+    directories (for inspection) instead of deleting them.
     """
 
     def __init__(self, settings: AgentSettings | None = None, *, model_factory: Callable[[AgentSettings], Any] | None = None,
@@ -154,6 +183,6 @@ class ResearchAgentRunner:
             condition="claim_on", temperature=s.temperature, seed=s.seed, git_commit=git_commit(),
             agent_root_manifest_sha256=root_sha, sandbox_mode=s.sandbox_mode, agent_root=agent_root,
             base_url=s.base_url, budget={**BUDGET, **job.budget}, prompt_version=s.prompt_version, broker=s.broker,
-            model=self.model_factory(s) if self.model_factory else None)
+            model=(self.model_factory or default_model)(s))
         record = collect(run.root, dataclasses.asdict(outcome))
         return {**record, "run_id": job.run_id}

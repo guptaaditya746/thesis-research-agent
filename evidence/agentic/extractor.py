@@ -89,8 +89,9 @@ class AgenticExtractor:
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> AgenticExtractor:
-        """The registry's factory: AgentSettings fields, `budget`, `work_dir` (keep the agent's run
-        directories), and the engine's `evidence_type`, `links`, `description`; other keys are ignored."""
+        """The registry's factory: AgentSettings fields (`model`, the alias the engine's `--model` sets, among
+        them; it is recorded in the spec's config), `budget`, `work_dir` (keep the agent's run directories),
+        and the engine's `evidence_type`, `links`, `description`; other keys are ignored."""
         fields = {k: v for k, v in config.items() if k in AgentSettings.__dataclass_fields__}
         # Paths are the node's, not the protocol's (they are not hashed): as `agent batch` does, the pinned
         # toolchain falls back to $AGENT_ROOT, and the agent's run directories are kept under

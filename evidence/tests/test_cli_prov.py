@@ -24,6 +24,8 @@ def test_cli_end_to_end_regex_only(protocol_file: Path, corpus: Path, tmp_path: 
     printed = json.loads(capsys.readouterr().out)
     assert printed["label"] == "mixed" and printed["cost"]["model_calls"] == 0
     run = out / "r1"
+    assert json.loads((run / "run.json").read_text())["settings"]["model"] == "orch-model"  # the CLI default (G.3)
+    assert cli._parser().parse_args(["run", "--protocol", "p", "--corpus", "c"]).model == "orch-model"
     assert cli.main(["verify", str(run)]) == 0 and json.loads(capsys.readouterr().out)["ok"]
     assert cli.main(["replay", str(run)]) == 0 and json.loads(capsys.readouterr().out)["ok"]
     assert cli.main(["reexec", str(run), "--extractor", "regex_condition"]) == 0
