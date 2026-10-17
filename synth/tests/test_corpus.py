@@ -94,13 +94,20 @@ def test_effects_and_answer_follow_rules(built: Path) -> None:
             assert (s["effect"]["direction"], s["effect"]["delta"]) == (direction, delta)
             counts[direction].append(s["paper"])
         assert gt["protocol"] == {"id": "rag-factuality", "sha256": PROTO.sha256}
+        contra = [s["paper"] for s in gt["studies"] if s["level"] == "contradictory"]
         assert gt["answer"] == {"label": rules.label({rules.GROUP_OF[d]: len(v) for d, v in counts.items()}, SPEC.table),
                                 "supporting": counts["supports"], "contradicting": counts["contradicts"],
-                                "neutral": counts["neutral"]}
+                                "neutral": counts["neutral"], "undetermined": [], "duplicates": [],
+                                "flags": {"claim_disagrees": contra, "duplicate": [], "large_effect": []}}
+        for s in gt["studies"]:
+            assert s["relevant"] is True and s["duplicate_of"] is None and s["missing"] is None
+            assert s["flags"] == (["claim_disagrees"] if s["level"] == "contradictory" else [])
 
 
 def test_answer_is_the_same_in_every_variant(built: Path) -> None:
-    answers = {json.dumps(load(built / f"t-{lv}", "ground_truth.json")["answer"]) for lv in ALL}
+    """The label and the counted lists; only the level-dependent claim_disagrees flag differs."""
+    answers = {json.dumps({k: v for k, v in load(built / f"t-{lv}", "ground_truth.json")["answer"].items() if k != "flags"})
+               for lv in ALL}
     assert len(answers) == 1
 
 
@@ -119,6 +126,8 @@ def test_corpus_json_and_fidelity_json(built: Path) -> None:
         assert c["level"] == lv and c["renderer"] == "template" and c["models"] is None and c["seed"] == 5
         assert c["generator"] == {"name": "synth", "version": corpus.GENERATOR_VERSION,
                                   "code_sha256": corpus.code_sha256()}
+        assert c["settings"] == {"name": "t", "studies": 10, "mix": truth.DEFAULT_MIX, "levels": list(LEVELS),
+                                 "duplicates": 0, "missing": 0, "outliers": 0, "irrelevant": 0}
         f = load(d, "fidelity.json")
         assert f["excluded"] == [] and all(p["ok"] and p["attempts"] == 1 for p in f["papers"])
         assert {c["name"] for c in f["papers"][0]["checks"]} >= {"anchored", "values_match", "stray_numbers"}

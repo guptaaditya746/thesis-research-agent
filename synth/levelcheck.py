@@ -86,8 +86,9 @@ def _paraphrased(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     bad = [f"label {c.label!r} used verbatim" for c in plan.conditions if occurs(text, c.label)]
     bad += [f"metric name {m.name!r} used verbatim" for m in plan.metrics if occurs(text, m.name)]
     bad += [f"metric abbreviation {m.abbr!r} used" for m in plan.metrics if occurs(text, m.abbr)]
-    fmts = {p.fmt for p in ps if p.role == "value"}
-    if len(fmts) < 2:
+    values = [p for p in ps if p.role == "value"]
+    fmts = {p.fmt for p in values}
+    if len(fmts) < min(2, len(values)):     # a --missing study may leave a single value to write
         bad.append(f"values in only one format: {sorted(f or '' for f in fmts)}")
     return bad + [f"table line at {a}" for a, _ in table_lines(text)]
 
@@ -128,8 +129,9 @@ def _complex(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     if not any(m.canonical == "other" for m in plan.metrics):
         bad.append("no distractor metric")
     rel = [p for p in ps if p.role == "value" and p.fmt == "relative"]
-    if [p.fact for p in rel] != [plan.study.effect.treatment]:
-        bad.append(f"expected one relative value for {plan.study.effect.treatment}, got {[p.fact for p in rel]}")
+    want = [plan.study.effect.treatment] if plan.study.missing is None else []   # no relative value without the pair
+    if [p.fact for p in rel] != want:
+        bad.append(f"expected relative values for {want}, got {[p.fact for p in rel]}")
     rows = [text[a:b] for a, b in table_lines(text)]
     for dataset in plan.datasets:
         if sum(f"| {dataset} |" in r for r in rows) != len(plan.conditions):
@@ -151,7 +153,16 @@ def _contradictory(text: str, plan: Plan, ps: list[Placement], decoys: list[Deco
     return bad
 
 
+def check_irrelevant(text: str, plan: Plan, placements: list[Placement], decoys: list[Decoy]) -> list[str]:
+    """A paper with no experiment (--irrelevant) places nothing: no fact, no decoy, no table."""
+    bad = [f"{p.fact}/{p.role}: a placement in a paper with no experiment" for p in placements]
+    bad += [f"decoy {d.exact!r} in a paper with no experiment" for d in decoys]
+    return bad + [f"table line at {a}" for a, _ in table_lines(text)]
+
+
 def check_level(text: str, plan: Plan, placements: list[Placement], decoys: list[Decoy]) -> list[str]:
+    if not plan.study.relevant:
+        return check_irrelevant(text, plan, placements, decoys)
     if plan.level == "contradictory":
         return _contradictory(text, plan, placements, decoys)
     fn = {"explicit": _explicit, "paraphrased": _paraphrased, "distributed": _distributed,

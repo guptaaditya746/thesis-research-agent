@@ -31,7 +31,8 @@ def describe(study: dict[str, Any]) -> dict[str, str]:
         c, k = conds[m["condition"]], mets[m["metric"]]
         out[m["id"]] = f"{c['role']} {c['label']!r} / {k['name']!r} / {m['dataset']} = {m['value']}"
     claim = study["author_claim"]
-    out[claim["id"]] = f"author claim: {claim['direction']} (data: {study['effect']['direction']})"
+    if claim is not None:            # an irrelevant paper (--irrelevant) has no claim and no facts
+        out[claim["id"]] = f"author claim: {claim['direction']} (data: {study['effect']['direction']})"
     return out
 
 

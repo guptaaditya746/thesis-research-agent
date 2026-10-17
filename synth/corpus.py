@@ -1,4 +1,4 @@
-"""Corpus writer and controlled variants (docs/evidence-system.md A1 and A2).
+"""Corpus writer and controlled variants (docs/evidence-system.md A1 and A2; knobs F2).
 
 One study set is rendered once per difficulty level into `<name>-<level>` plus `<name>-mixed` (levels
 round robin over the studies), with the same paper ids everywhere; a mixed paper is byte for byte the
@@ -8,6 +8,10 @@ set (so the variants stay comparable) and reported in each fidelity.json.
 The manifest holds only {corpus_id, papers: [{id, file, sha256}]}; the corpus id is the set's name plus a
 hash of the papers' hashes, so it does not reveal the level (the directory name does, for people; systems
 read the manifest).
+
+Our additions (not the supervisor's design): the benchmark knobs `duplicates`, `missing`, `outliers`,
+`irrelevant` (truth.with_knobs), recorded in corpus.json `settings`; per-study `relevant`, `flags`,
+`duplicate_of`, `missing`; the answer's `undetermined`, `duplicates` and `flags` lists.
 """
 from __future__ import annotations
 
@@ -21,15 +25,16 @@ from typing import Any, Protocol
 
 from agent.canonical import canonical_bytes, sha256_hex
 from evidence import protocol as protocol_module
+from evidence import rules
 from evidence.protocol import Protocol
-from synth import truth, vocab
+from synth import truth
 from synth.fidelity import PaperFidelity
 from synth.levels import LEVELS, Plan
 from synth.text import Decoy, Placement
 from synth.truth import Study
 
 GENERATOR = "synth"
-GENERATOR_VERSION = "1"
+GENERATOR_VERSION = "2"      # 2: knobs, flags, relevant/missing/duplicate_of, settings, variants
 PACKAGE = Path(__file__).resolve().parent
 
 
@@ -70,20 +75,31 @@ def corpus_id(name: str, papers: list[dict[str, str]]) -> str:
     return f"{name}-{sha256_hex(canonical_bytes([[p['id'], p['sha256']] for p in papers]))[:8]}"
 
 
-def study_truth(r: Rendered) -> dict[str, Any]:
+def study_flags(r: Rendered, spec: protocol_module.Synthesis) -> list[str]:
+    """The study's flags in this corpus: the set-level ones (duplicate, large_effect, from truth.flagged)
+    plus claim_disagrees where the claim as stated disagrees with the computed direction (contradictory
+    papers; never an undetermined study, which has no direction to disagree with)."""
+    s, flags = r.study, set(r.study.flags)
+    if s.effect.determined and not rules.claim_agrees(r.plan.claim, s.effect.direction, spec.claim_map):
+        flags.add("claim_disagrees")
+    return sorted(flags)
+
+
+def study_truth(r: Rendered, spec: protocol_module.Synthesis) -> dict[str, Any]:
     p, s = r.plan, r.study
     e = s.effect
     return {
         "study_id": s.study_id, "paper": s.study_id, "level": p.level,
+        "relevant": s.relevant, "flags": study_flags(r, spec), "duplicate_of": s.duplicate_of, "missing": s.missing,
         "conditions": [{"id": c.id, "role": c.role, "label": p.cond_name[c.id], "aliases": list(p.cond_aliases[c.id])}
                        for c in p.conditions],
         "metrics": [{"id": k.id, "canonical": k.canonical, "name": p.metric_name[k.id],
                      "higher_is_better": k.higher_is_better} for k in p.metrics],
         "measurements": [{"id": m.id, "condition": m.condition, "metric": m.metric, "value": m.value,
                           "dataset": m.dataset} for m in p.measurements],
-        "author_claim": {"id": f"{s.study_id}.a1", "direction": p.claim},
+        "author_claim": {"id": f"{s.study_id}.a1", "direction": p.claim} if s.relevant else None,
         "effect": {"direction": e.direction, "delta": e.delta, "metric": e.metric, "treatment": e.treatment,
-                   "control": e.control},
+                   "control": e.control, **({"reason": e.reason} if e.reason else {})},
     }
 
 
@@ -96,11 +112,22 @@ def prepare(directory: Path) -> None:
     (directory / "papers").mkdir(parents=True)
 
 
+def settings_of(*, name: str, studies: int, mix: dict[str, float] | None, levels: Sequence[str],
+                duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0) -> dict[str, Any]:
+    """corpus.json `settings`: what `build` was asked, enough to draw the same study set again (`synth
+    variant` does)."""
+    return {"name": name, "studies": studies, "mix": dict(mix or truth.DEFAULT_MIX), "levels": list(levels),
+            "duplicates": duplicates, "missing": missing, "outliers": outliers, "irrelevant": irrelevant}
+
+
 def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer, protocol: Protocol,
-                 studies: list[Study], papers: dict[str, Rendered], failed: dict[str, list[str]]) -> str:
+                 studies: list[Study], papers: dict[str, Rendered], failed: dict[str, list[str]],
+                 settings: dict[str, Any], extra: dict[str, Any] | None = None) -> str:
     """Write one corpus; `papers` maps every study id to its rendering for this corpus. The protocol whose
-    synthesis block made the ground truth is recorded (id and sha256), never its file."""
+    synthesis block made the ground truth is recorded (id and sha256), never its file. `extra` goes into
+    corpus.json as it is (`variant`, F3)."""
     prepare(directory)
+    spec = protocol.synthesis
     kept = [s for s in studies if s.study_id not in failed]
     manifest = []
     for s in kept:
@@ -116,15 +143,17 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
         "protocol": {"id": protocol.id, "sha256": protocol.sha256},
         "papers": [{"id": s.study_id, "study_id": s.study_id, "level": papers[s.study_id].plan.level} for s in kept],
         "models": renderer.models(),
+        "settings": settings,
+        **(extra or {}),
     }))
     placements = sorted((p for s in kept for p in papers[s.study_id].placements),
                         key=lambda p: (p.paper, p.start, p.end, p.role, p.fact))
     (directory / "ground_truth.json").write_bytes(dump({
         "corpus_id": cid, "seed": seed, "question": protocol.question,
         "protocol": {"id": protocol.id, "sha256": protocol.sha256},
-        "studies": [study_truth(papers[s.study_id]) for s in kept],
+        "studies": [study_truth(papers[s.study_id], spec) for s in kept],
         "placements": [p.json() for p in placements],
-        "answer": truth.answer(kept, protocol.synthesis),
+        "answer": truth.answer(kept, spec, {s.study_id: study_flags(papers[s.study_id], spec) for s in kept}),
     }))
     records = []
     for s in studies:
@@ -141,29 +170,55 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
     return cid
 
 
+def level_of(study: Study, studies: list[Study], levels: Sequence[str]) -> str:
+    """The level a study takes in the mixed corpus: round robin over the levels by its index; a duplicate
+    takes its original's level (F2: a second report at the original's level)."""
+    if study.duplicate_of:
+        original = next(s for s in studies if s.study_id == study.duplicate_of)
+        return level_of(original, studies, levels)
+    return levels[study.index % len(levels)]
+
+
+def exclusions(rendered: dict[tuple[str, str], Rendered], studies: list[Study]) -> dict[str, list[str]]:
+    """Study id -> the levels it failed fidelity at; a duplicate of an excluded study is excluded too (its
+    `duplicate_of` would point at a paper that is not there)."""
+    failed: dict[str, list[str]] = {}
+    for (sid, lv), r in sorted(rendered.items()):
+        if not r.fidelity.ok:
+            failed.setdefault(sid, []).append(lv)
+    for s in studies:
+        if s.duplicate_of in failed and s.study_id not in failed:
+            failed[s.study_id] = [f"(its original {s.duplicate_of} failed)"]
+    return failed
+
+
 def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
           levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None,
-          protocol: Protocol | Path | str | None = None) -> dict[str, Any]:
+          protocol: Protocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
+          outliers: int = 0, irrelevant: int = 0) -> dict[str, Any]:
     """Generate the study set for the protocol's question (its synthesis block gives the roles, metrics,
-    neutral band, claim vocabulary and label table; default evidence/protocols/rag-factuality.yaml), render
-    it at every level, write the level corpora and the mixed one."""
+    neutral band, claim vocabulary and label table; default evidence/protocols/rag-factuality.yaml), apply
+    the knobs, render it at every level, write the level corpora and the mixed one."""
     unknown = [lv for lv in levels if lv not in LEVELS]
     if unknown or not levels:
         raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(LEVELS)}")
     if not isinstance(protocol, Protocol):
         protocol = protocol_module.load(protocol or truth.DEFAULT_PROTOCOL)
-    study_set = truth.generate(seed, studies, mix, protocol.synthesis)
+    settings = settings_of(name=name, studies=studies, mix=mix, levels=levels, duplicates=duplicates,
+                           missing=missing, outliers=outliers, irrelevant=irrelevant)
+    study_set = truth.generate(seed, studies, mix, protocol.synthesis, duplicates=duplicates, missing=missing,
+                               outliers=outliers, irrelevant=irrelevant)
     rendered = renderer.render_all([(s, lv) for lv in levels for s in study_set], seed)
-    failed: dict[str, list[str]] = {}
-    for (sid, lv), r in sorted(rendered.items()):
-        if not r.fidelity.ok:
-            failed.setdefault(sid, []).append(lv)
+    failed = exclusions(rendered, study_set)
     written = {}
     for lv in [*levels, "mixed"]:
-        assign = {s.study_id: lv if lv != "mixed" else levels[s.index % len(levels)] for s in study_set}
+        assign = {s.study_id: lv if lv != "mixed" else level_of(s, study_set, levels) for s in study_set}
         papers = {sid: rendered[(sid, a)] for sid, a in assign.items()}
         directory = out / f"{name}-{lv}"
         written[str(directory)] = write_corpus(directory, name=name, level=lv, seed=seed, renderer=renderer,
-                                               protocol=protocol, studies=study_set, papers=papers, failed=failed)
+                                               protocol=protocol, studies=study_set, papers=papers, failed=failed,
+                                               settings=settings)
+    kept = [s for s in study_set if s.study_id not in failed]
+    flags = {s.study_id: study_flags(papers[s.study_id], protocol.synthesis) for s in kept}   # the mixed corpus's
     return {"corpora": written, "excluded": failed, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
-            "answer": truth.answer([s for s in study_set if s.study_id not in failed], protocol.synthesis)}
+            "settings": settings, "answer": truth.answer(kept, protocol.synthesis, flags)}

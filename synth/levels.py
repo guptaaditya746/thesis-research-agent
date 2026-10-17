@@ -15,6 +15,9 @@ from synth.text import Decoy, Seg
 from synth.truth import Condition, Measurement, Metric, Study
 
 LEVELS = ("explicit", "paraphrased", "distributed", "complex", "contradictory")
+# What a table cell shows for a measurement the paper never states (--missing, our addition): an en dash,
+# U+2013, which no number regex reads and which is not a Markdown separator.
+MISSING_CELL = "–"
 
 DEFINITIONS = {
     "explicit": "Every value is stated once, in one Results sentence that names the condition and the metric "
@@ -56,8 +59,8 @@ class Plan:
     metric_name: dict[str, str]               # the name prose uses (name, or description when paraphrased)
     metric_aliases: dict[str, tuple[str, ...]]  # abbreviation, description
     values: dict[str, Seg]                    # measurement id -> its rendering
-    claim: str                                # claim direction as stated
-    claim_sentences: tuple[str, str]          # abstract, conclusion
+    claim: str                                # claim direction as stated ("" for an irrelevant paper)
+    claim_sentences: tuple[str, ...]          # abstract, conclusion (none for an irrelevant paper)
     decoy: Decoy | None
 
     @property
@@ -120,9 +123,21 @@ def parse_value(text: str, fmt: str, base: float | None = None) -> float:
     return round(number, 6)
 
 
+def irrelevant_plan(study: Study, level: str) -> Plan:
+    """The (empty) plan of a paper with no experiment: nothing to place, no claim; `level` is the corpus
+    level the paper is filed under (its text is the same at every level)."""
+    if level not in LEVELS:
+        raise ValueError(f"unknown level {level!r}")
+    if study.relevant:
+        raise ValueError(f"{study.study_id} is a relevant study; use make_plan")
+    return Plan(study, level, (), (), (), (), {}, {}, {}, {}, {}, "", (), None)
+
+
 def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
     if level not in LEVELS:
         raise ValueError(f"unknown level {level!r}")
+    if not study.relevant:
+        return irrelevant_plan(study, level)
     q, main = study.primary, study.datasets[0]
     if level == "complex":
         metrics, datasets, ms = study.metrics, study.datasets, study.measurements
@@ -135,8 +150,11 @@ def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
     metric_name = {m.id: m.description if para else m.name for m in metrics}
     metric_aliases = {m.id: () if para else ((m.abbr,) if level == "distributed" else ()) + (m.description,)
                       for m in metrics}
-    base = study.measurement(study.condition("baseline").id, q.id, main)
-    rag = study.measurement(study.condition("rag").id, q.id, main)
+    # A --missing study lacks its control or treatment measurement (None here): the complex level then has
+    # no relative value (the treatment value, if present, is a plain cell) and the contradictory level no decoy.
+    base = study.find(study.condition(study.control_role).id, q.id, main)
+    treat = study.find(study.condition(study.treatment_role).id, q.id, main)
+    base_value = base.value if base is not None else None
     fmts = ["pct", "frac", "count"]
     rng.shuffle(fmts)
     values: dict[str, Seg] = {}
@@ -146,15 +164,15 @@ def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
             fmt = "pct"
         elif para:
             fmt = fmts[i % len(fmts)]
-        elif level == "complex" and m.id == rag.id:
+        elif level == "complex" and treat is not None and base is not None and m.id == treat.id:
             fmt = "relative"
         else:
             fmt = "cell_raw" if unit == "seconds" else "cell_pct"
-        values[m.id] = Seg(m.id, "value", write_value(m.value, fmt, base.value), fmt)
+        values[m.id] = Seg(m.id, "value", write_value(m.value, fmt, base_value), fmt)
     claim = study.false_claim if level == "contradictory" else study.claim
     decoy = None
-    if level == "contradictory" and study.decoy is not None:
-        decoy = Decoy(rag.id, study.decoy, write_value(study.decoy, "pct"))
+    if level == "contradictory" and study.decoy is not None and treat is not None and base is not None:
+        decoy = Decoy(treat.id, study.decoy, write_value(study.decoy, "pct"))
     return Plan(study, level, study.conditions, metrics, datasets, ms, cond_name, cond_aliases, metric_name,
                 metric_aliases, values, claim, vocab.CLAIMS[(claim, q.canonical)], decoy)
 

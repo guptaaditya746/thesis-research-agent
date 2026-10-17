@@ -8,11 +8,28 @@ data. The effect is always `evidence.rules.effect` with the protocol's parameter
 treatment/control pair of the question metric, so the generator and the engine use one definition: the
 protocol (`spec`, its `synthesis` block; the default is `evidence/protocols/rag-factuality.yaml`).
 Randomness comes only from one `random.Random(seed)`; there is no clock.
+
+The benchmark knobs (the supervisor's variants of 14 Oct, section 6: duplicates, missing information,
+unusually large effects, irrelevant papers; contract docs/evidence-system.md F2) change the set after
+it is drawn, each from its own `random.Random(f"synth:{seed}:{knob}")` stream, so the plain set (every
+knob 0) stays byte for byte what it was:
+
+- outliers: supporting studies whose treatment/control pair is drawn again with an improvement of
+  0.30 to 0.45 (the usual one is 0.03 to 0.15);
+- duplicates: extra studies, ids continuing the sequence, that report an existing study's values again;
+- missing: studies whose control (or, alternately, treatment) measurement on the question metric is
+  dropped from both datasets, so the paper never states it and the effect is undetermined;
+- irrelevant: extra studies with no experiment at all (a survey, or a paper on another topic), which a
+  screening step should leave out (`relevant: false`, expected reason `screened_out`).
+
+The flags of every study come from `evidence.rules` applied to the set (`flagged`), as the engine applies
+them to what it extracts; the generator then asserts the rules find exactly what it planted. The
+counterfactual variant (F3, `redrawn`) draws one study's pair again with another direction.
 """
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from evidence import protocol, rules
@@ -26,6 +43,11 @@ DEFAULT_PROTOCOL = Path(__file__).resolve().parents[1] / "evidence" / "protocols
 FALSE_CLAIM = {"supports": "no_effect", "contradicts": "improves", "neutral": "improves"}
 # A decoy lies more than this from every true value: the evaluation tolerance (0.005) plus a margin.
 DECOY_GAP = 0.0075
+DEFAULT_MIX = {"supports": 0.6, "contradicts": 0.2, "neutral": 0.2}
+LARGE_DELTA = (0.30, 0.45)             # an outlier's improvement (--outliers), far above the usual 0.03-0.15
+MISSING_SIDES = ("control", "treatment")   # --missing drops these in turn (the protocol's compare roles)
+IRRELEVANT_TOPICS = ("survey", "other")    # --irrelevant alternates these templates (vocab.IRRELEVANT)
+KNOBS = ("duplicates", "missing", "outliers", "irrelevant")
 
 
 def default_spec() -> Synthesis:
@@ -69,11 +91,16 @@ class Measurement:
 
 @dataclass(frozen=True)
 class Effect:
-    direction: str
-    delta: float
-    metric: str
-    treatment: str                 # measurement id of the treatment condition on the main dataset
-    control: str                   # measurement id of the control condition on the main dataset
+    direction: str                 # supports | contradicts | neutral | undetermined
+    delta: float | None            # None when undetermined
+    metric: str | None             # question metric id; None for an irrelevant study
+    treatment: str | None          # measurement id of the treatment condition on the main dataset
+    control: str | None            # measurement id of the control condition; one is None when missing
+    reason: str | None = None      # undetermined only: missing_control | missing_treatment | screened_out
+
+    @property
+    def determined(self) -> bool:
+        return self.direction in DIRECTIONS
 
 
 @dataclass(frozen=True)
@@ -85,9 +112,14 @@ class Study:
     datasets: tuple[str, ...]
     measurements: tuple[Measurement, ...]
     effect: Effect
-    claim: str                     # agrees with the effect
+    claim: str                     # agrees with the effect (with the data's direction when undetermined)
     false_claim: str               # what a contradictory paper states
     decoy: float | None = None     # a wrong treatment value a contradictory abstract states (odd studies)
+    relevant: bool = True          # False: no experiment at all (--irrelevant); nothing below applies
+    topic: str | None = None       # irrelevant only: the template, one of IRRELEVANT_TOPICS
+    flags: tuple[str, ...] = ()    # from rules.FLAGS as the rules find them over the set (`flagged`)
+    duplicate_of: str | None = None   # the study this one reports again (--duplicates)
+    missing: str | None = None     # control | treatment: the measurement the paper never states (--missing)
 
     def condition(self, role: str) -> Condition:
         return next(c for c in self.conditions if c.role == role)
@@ -104,12 +136,33 @@ class Study:
     def control_role(self) -> str:
         return self.conditions[0].role
 
+    def find(self, condition: str, metric: str, dataset: str) -> Measurement | None:
+        return next((m for m in self.measurements
+                     if (m.condition, m.metric, m.dataset) == (condition, metric, dataset)), None)
+
     def measurement(self, condition: str, metric: str, dataset: str) -> Measurement:
-        return next(m for m in self.measurements
-                    if (m.condition, m.metric, m.dataset) == (condition, metric, dataset))
+        found = self.find(condition, metric, dataset)
+        if found is None:
+            raise KeyError((self.study_id, condition, metric, dataset))
+        return found
 
     def value_of(self, measurement_id: str) -> float:
         return next(m.value for m in self.measurements if m.id == measurement_id)
+
+    def pair(self, dataset: str) -> tuple[Measurement, Measurement] | None:
+        """(control, treatment) measurements on the question metric and `dataset`; None when one is
+        missing or the study has no experiment."""
+        if not self.relevant:
+            return None
+        q = self.primary
+        c = self.find(self.condition(self.control_role).id, q.id, dataset)
+        t = self.find(self.condition(self.treatment_role).id, q.id, dataset)
+        return None if c is None or t is None else (c, t)
+
+    @property
+    def counted(self) -> bool:
+        """Whether the answer counts this study: relevant, determined and not a duplicate."""
+        return self.relevant and self.effect.determined and not self.duplicate_of
 
 
 def effect_counts(n: int, mix: dict[str, float]) -> dict[str, int]:
@@ -143,9 +196,9 @@ def _neutral_band(min_effect: float) -> tuple[int, ...]:
     return band
 
 
-def _improvement(rng: random.Random, direction: str, min_effect: float) -> float:
+def _improvement(rng: random.Random, direction: str, min_effect: float, large: bool = False) -> float:
     if direction == "supports":
-        return _thousandths(rng, 0.03, 0.15)
+        return _thousandths(rng, *LARGE_DELTA) if large else _thousandths(rng, 0.03, 0.15)
     if direction == "contradicts":
         return -_thousandths(rng, 0.03, 0.10)
     return rng.choice((1, -1)) * rng.choice(_neutral_band(min_effect)) / 1000
@@ -157,12 +210,14 @@ def _far(v: float, taken: set[float]) -> bool:
     return all(abs(v - x) > DECOY_GAP for x in taken)
 
 
-def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float], spec: Synthesis) -> tuple[float, float]:
-    """(control, treatment) on a question metric with the given effect direction under rules.effect."""
+def _pair(rng: random.Random, metric: Metric, direction: str, taken: set[float], spec: Synthesis,
+          large: bool = False) -> tuple[float, float]:
+    """(control, treatment) on a question metric with the given effect direction under rules.effect
+    (`large`: an outlier-sized improvement, supports only)."""
     low, high = (0.35, 0.80) if metric.higher_is_better else (0.10, 0.45)
     while True:
         base = _thousandths(rng, low, high)
-        delta = _improvement(rng, direction, spec.min_effect)
+        delta = _improvement(rng, direction, spec.min_effect, large)
         treat = round(base + delta if metric.higher_is_better else base - delta, 3)
         if (round(treat * 1000) % 10 and 0.05 <= treat <= 0.95 and _far(base, taken) and _far(treat, taken)
                 and rules.effect(treat, base, metric.higher_is_better, spec.min_effect)[0] == direction):
@@ -262,21 +317,222 @@ def _decoy(rng: random.Random, metric: Metric, base: float, claim: str, values: 
     return None
 
 
-def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synthesis | None = None) -> list[Study]:
+# --- the knobs and the counterfactual (our additions; docs/evidence-system.md F2, F3) ------------------
+
+def redrawn(rng: random.Random, study: Study, direction: str, spec: Synthesis, *, large: bool = False) -> Study:
+    """`study` with the treatment/control pair of the question metric drawn again on both datasets with
+    the given direction (`large`: an outlier's improvement), from `rng`. Every other value is kept; as in
+    make_study, the new values lie more than DECOY_GAP from them and from each other, and the main
+    dataset's difference from every value. The effect, the claims and the decoy (odd studies) follow."""
+    if not study.relevant or study.missing is not None:
+        raise ValueError(f"{study.study_id} has no complete treatment/control pair to draw again")
+    q, main = study.primary, study.datasets[0]
+    control, treatment = study.conditions[0], study.conditions[1]
+    pair_ids = {study.measurement(c.id, q.id, d).id for c in (control, treatment) for d in study.datasets}
+    others = {m.value for m in study.measurements if m.id not in pair_ids}
+    while True:
+        taken, new = set(others), {}
+        for dataset in study.datasets:
+            b, t = _pair(rng, q, direction, taken, spec, large)
+            new[(control.id, dataset)], new[(treatment.id, dataset)] = b, t
+            taken |= {b, t}
+            if dataset == main:
+                taken.add(abs(round(t - b, 3)))
+        if _far(abs(round(new[(treatment.id, main)] - new[(control.id, main)], 3)), others):
+            break
+    measurements = tuple(replace(m, value=new[(m.condition, m.dataset)]) if m.id in pair_ids else m
+                         for m in study.measurements)
+    m_control = next(m for m in measurements if (m.condition, m.metric, m.dataset) == (control.id, q.id, main))
+    m_treat = next(m for m in measurements if (m.condition, m.metric, m.dataset) == (treatment.id, q.id, main))
+    got, delta = rules.effect(m_treat.value, m_control.value, q.higher_is_better, spec.min_effect)
+    assert got == direction, (study.study_id, got, direction)
+    false_claim = FALSE_CLAIM[direction]
+    decoy = (_decoy(rng, q, m_control.value, false_claim, [m.value for m in measurements], spec)
+             if study.index % 2 else None)
+    return replace(study, measurements=measurements, effect=Effect(got, delta, q.id, m_treat.id, m_control.id),
+                   claim=true_claim(spec, direction), false_claim=false_claim, decoy=decoy)
+
+
+def duplicate(original: Study, index: int) -> Study:
+    """A second report of `original` as study number `index`: the same conditions, metrics, datasets and
+    values, every fact id under the new study id, the same claims and decoy."""
+    sid = f"S{index + 1:03d}"
+
+    def renamed(fact_id: str | None) -> str | None:
+        return None if fact_id is None else sid + fact_id[len(original.study_id):]
+
+    e = original.effect
+    return replace(
+        original, study_id=sid, index=index,
+        conditions=tuple(replace(c, id=renamed(c.id)) for c in original.conditions),
+        metrics=tuple(replace(k, id=renamed(k.id)) for k in original.metrics),
+        measurements=tuple(replace(m, id=renamed(m.id), condition=renamed(m.condition), metric=renamed(m.metric))
+                           for m in original.measurements),
+        effect=replace(e, metric=renamed(e.metric), treatment=renamed(e.treatment), control=renamed(e.control)),
+        flags=(), duplicate_of=original.study_id)
+
+
+def without(study: Study, side: str) -> Study:
+    """`study` without its `side` (control | treatment) measurement on the question metric on both
+    datasets: the paper never states it, so the effect is undetermined (`reason` missing_<side>) and the
+    contradictory level states no decoy (a decoy is a treatment value, and a stated one would be a stray
+    fact or, without a control, mean nothing)."""
+    if side not in MISSING_SIDES:
+        raise ValueError(f"missing side must be one of {MISSING_SIDES}, not {side!r}")
+    q, e = study.primary, study.effect
+    role = study.control_role if side == "control" else study.treatment_role
+    dropped = {study.measurement(study.condition(role).id, q.id, d).id for d in study.datasets}
+    effect = Effect("undetermined", None, q.id, treatment=e.treatment if side == "control" else None,
+                    control=e.control if side == "treatment" else None, reason=f"missing_{side}")
+    return replace(study, measurements=tuple(m for m in study.measurements if m.id not in dropped),
+                   effect=effect, missing=side, decoy=None)
+
+
+def irrelevant_study(index: int, topic: str) -> Study:
+    """A paper with no treatment/control experiment (a survey, or a paper on another topic): nothing to
+    extract, expected to be screened out."""
+    if topic not in IRRELEVANT_TOPICS:
+        raise ValueError(f"irrelevant topic must be one of {IRRELEVANT_TOPICS}, not {topic!r}")
+    return Study(f"S{index + 1:03d}", index, (), (), (), (), Effect("undetermined", None, None, None, None,
+                                                                   "screened_out"), "", "", relevant=False, topic=topic)
+
+
+def pair_keys(study: Study) -> set[tuple[str, float, float]]:
+    """rules.duplicate_key of the study's treatment/control pair on each dataset (none when undetermined)."""
+    keys = set()
+    for dataset in study.datasets:
+        pair = study.pair(dataset)
+        if pair is not None:
+            keys.add(rules.duplicate_key(study.primary.canonical, pair[1].value, pair[0].value))
+    return keys
+
+
+def collides(study: Study, others: list[Study]) -> bool:
+    """One of the study's pairs equals a pair of another study (on either dataset): the engine would take
+    the two for one study, so the generator never lets it happen between distinct studies."""
+    taken = set().union(*(pair_keys(o) for o in others if o.study_id != study.study_id))
+    return bool(pair_keys(study) & taken)
+
+
+def flagged(studies: list[Study], spec: Synthesis) -> list[Study]:
+    """`flags` and `duplicate_of` of every study as evidence.rules finds them over the set with the
+    protocol's `synthesis.flags`, in document order: `duplicate` (a later study with the same canonical
+    metric, treatment and control value on the main dataset; off when the protocol says so),
+    `large_effect` over the determined, non-duplicate studies' deltas. `claim_disagrees` depends on the
+    level a paper is rendered at and is added by the corpus writer."""
+    determined = [s for s in studies if s.effect.determined]
+    dups = rules.duplicates([(s.study_id, s.primary.canonical, s.value_of(s.effect.treatment), s.value_of(s.effect.control))
+                             for s in determined]) if spec.flags.duplicates else {}
+    le = spec.flags.large_effect
+    large = set(rules.large_effects({s.study_id: s.effect.delta for s in determined if s.study_id not in dups},
+                                    le.factor, le.min_studies, spec.min_effect))
+    out = []
+    for s in studies:
+        flags = (("duplicate",) if s.study_id in dups else ()) + (("large_effect",) if s.study_id in large else ())
+        out.append(replace(s, flags=flags, duplicate_of=dups.get(s.study_id)))
+    return out
+
+
+def with_knobs(seed: int, base: list[Study], spec: Synthesis, *, duplicates: int = 0, missing: int = 0,
+               outliers: int = 0, irrelevant: int = 0) -> list[Study]:
+    """The benchmark knobs applied to a plain study set, each from its own stream (`synth:<seed>:<knob>`):
+    outliers among the supporting studies, duplicates of any study (ids after the set), missing among the
+    studies that are neither outliers nor duplicated (control, treatment, control, ... in turn), then
+    irrelevant papers (ids after the duplicates; survey, other, survey, ...). The result is `flagged`,
+    and the planted outliers and duplicates must be exactly what the rules find; otherwise (too few
+    studies, a natural large effect next to a planted one, a protocol with duplicate detection off) the
+    build stops with the knob named."""
+    for knob, value in (("duplicates", duplicates), ("missing", missing), ("outliers", outliers), ("irrelevant", irrelevant)):
+        if value < 0:
+            raise SystemExit(f"--{knob} {value}: a knob is a count, not negative")
+    n, studies = len(base), list(base)
+    o_rng = random.Random(f"synth:{seed}:outliers")
+    supporting = [s.study_id for s in studies if s.effect.direction == "supports"]
+    if outliers > len(supporting):
+        raise SystemExit(f"--outliers {outliers}: only {len(supporting)} supporting studies to choose from")
+    planted_outliers = sorted(o_rng.sample(supporting, outliers))
+    for sid in planted_outliers:
+        i = next(i for i, s in enumerate(studies) if s.study_id == sid)
+        studies[i] = redrawn(o_rng, studies[i], "supports", spec, large=True)
+        while collides(studies[i], studies):
+            studies[i] = redrawn(o_rng, studies[i], "supports", spec, large=True)
+    d_rng = random.Random(f"synth:{seed}:duplicates")
+    if duplicates > n:
+        raise SystemExit(f"--duplicates {duplicates}: only {n} studies to duplicate")
+    if duplicates and not spec.flags.duplicates:
+        raise SystemExit(f"--duplicates {duplicates}: the protocol turns duplicate detection off "
+                         "(synthesis.flags.duplicates: false), so the planted duplicates would be counted")
+    originals = [studies[i] for i in sorted(d_rng.sample(range(n), duplicates))]
+    planted_duplicates = {}
+    for k, original in enumerate(originals):
+        studies.append(duplicate(original, n + k))
+        planted_duplicates[studies[-1].study_id] = original.study_id
+    m_rng = random.Random(f"synth:{seed}:missing")
+    protected = set(planted_outliers) | set(planted_duplicates.values())
+    eligible = [s.study_id for s in studies[:n] if s.study_id not in protected]
+    if missing > len(eligible):
+        raise SystemExit(f"--missing {missing}: only {len(eligible)} studies are neither outliers nor duplicated")
+    for k, sid in enumerate(sorted(m_rng.sample(eligible, missing))):
+        i = next(i for i, s in enumerate(studies) if s.study_id == sid)
+        studies[i] = without(studies[i], MISSING_SIDES[k % len(MISSING_SIDES)])
+    for k in range(irrelevant):
+        studies.append(irrelevant_study(n + duplicates + k, IRRELEVANT_TOPICS[k % len(IRRELEVANT_TOPICS)]))
+    studies = flagged(studies, spec)
+    found_duplicates = {s.study_id: s.duplicate_of for s in studies if s.duplicate_of}
+    if found_duplicates != planted_duplicates:
+        raise SystemExit(f"--duplicates {duplicates}: rules.duplicates finds {found_duplicates}, "
+                         f"planted {planted_duplicates}")
+    found_large = [s.study_id for s in studies if "large_effect" in s.flags]
+    if outliers and found_large != planted_outliers:
+        raise SystemExit(f"--outliers {outliers}: rules.large_effects flags {found_large}, planted "
+                         f"{planted_outliers} (fewer than {spec.flags.large_effect.min_studies} non-neutral studies, "
+                         "the median effect too close to them, or a study of the set is a large effect on its own); "
+                         "choose another seed or count")
+    return studies
+
+
+def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synthesis | None = None, *,
+             duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0) -> list[Study]:
     """`n` studies for the protocol's synthesis block `spec` (default: the RAG protocol); the share of each
-    true effect direction follows `mix` (default 0.6/0.2/0.2)."""
+    true effect direction follows `mix` (default 0.6/0.2/0.2); then the knobs. A study whose
+    treatment/control pair equals an earlier study's (on either dataset) is drawn again, so equal pairs
+    always mean one study; this never happens for the seeds in use, and the plain set is byte for byte
+    what it was."""
     spec = spec or default_spec()
     rng = random.Random(seed)
-    counts = effect_counts(n, mix or {"supports": 0.6, "contradicts": 0.2, "neutral": 0.2})
+    counts = effect_counts(n, mix or DEFAULT_MIX)
     directions = [d for d in DIRECTIONS for _ in range(counts[d])]
     rng.shuffle(directions)
-    return [make_study(rng, i, d, spec) for i, d in enumerate(directions)]
+    studies: list[Study] = []
+    for i, d in enumerate(directions):
+        study = make_study(rng, i, d, spec)
+        while collides(study, studies):
+            study = make_study(rng, i, d, spec)
+        studies.append(study)
+    return with_knobs(seed, studies, spec, duplicates=duplicates, missing=missing, outliers=outliers,
+                      irrelevant=irrelevant)
 
 
-def answer(studies: list[Study], spec: Synthesis | None = None) -> dict:
-    """The answer to the question from the studies' true effects, via the protocol's label table."""
+def counted(studies: list[Study]) -> list[Study]:
+    """The studies the answer counts: relevant, determined, not duplicates."""
+    return [s for s in studies if s.counted]
+
+
+def answer(studies: list[Study], spec: Synthesis | None = None, flags: dict[str, list[str]] | None = None) -> dict:
+    """The answer to the question from the studies' true effects, via the protocol's label table over the
+    counted studies; `flags` per study id (default: the studies' own, which lack the level-dependent
+    claim_disagrees)."""
     spec = spec or default_spec()
-    by = {d: [s.study_id for s in studies if s.effect.direction == d] for d in DIRECTIONS}
+    flags = flags if flags is not None else {s.study_id: list(s.flags) for s in studies}
+    by = {d: [s.study_id for s in counted(studies) if s.effect.direction == d] for d in DIRECTIONS}
     counts = {rules.GROUP_OF[d]: len(v) for d, v in by.items()}
     return {"label": rules.label(counts, spec.table),
-            "supporting": by["supports"], "contradicting": by["contradicts"], "neutral": by["neutral"]}
+            "supporting": by["supports"], "contradicting": by["contradicts"], "neutral": by["neutral"],
+            "undetermined": [s.study_id for s in studies if not s.duplicate_of and not s.effect.determined],
+            "duplicates": [s.study_id for s in studies if s.duplicate_of],
+            "flags": {f: [s.study_id for s in studies if f in flags.get(s.study_id, [])] for f in rules.FLAGS}}
+
+
+def answer_counts(ans: dict) -> dict[str, int]:
+    """The counts behind an answer (as the engine's answer.json reports them)."""
+    return {k: len(ans[k]) for k in ("supporting", "contradicting", "neutral", "undetermined", "duplicates")}
