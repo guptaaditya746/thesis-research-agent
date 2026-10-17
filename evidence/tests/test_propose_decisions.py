@@ -88,6 +88,21 @@ def test_every_card_needs_one_decision(proposal: Path) -> None:
     assert "pairing: no decision" in str(err.value) and "screen: decided twice" in str(err.value)
 
 
+def test_a_failed_model_call_exits_1(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                     capsys: pytest.CaptureFixture[str]) -> None:
+    from pydantic_ai.models.function import FunctionModel
+
+    from evidence.propose import common
+
+    def broken(messages, info):   # noqa: ANN001, ANN202
+        raise ConnectionError("server down, key sk-secret1234")
+    monkeypatch.setattr(common.llm, "openai_model", lambda alias: FunctionModel(broken, model_name=alias))
+    assert cli.main(["propose", "frame", "--question", "Q?", "--out", str(tmp_path / "p")]) == 1
+    err = capsys.readouterr().err
+    assert "model call failed" in err and "sk-secret1234" not in err
+    assert not (tmp_path / "p" / "frame.json").exists()
+
+
 def test_cards_do_not_overwrite_edited_decisions(tmp_path: Path) -> None:
     model = Scripted()
     d = flow(tmp_path / "p", model, until="cards")

@@ -25,7 +25,7 @@ and prints {id, version, revision, sha256, phases, extractors per type}. `propos
 edits decisions.yaml) -> freeze -> amend, all files in one directory; frame, critic and cards make one cached
 model call each (`--model`, default orch-model), the rest is deterministic, and nothing runs the protocol.
 `vocab build` makes a vocabulary snapshot from local files (evidence/propose/vocab.py). Exit status: 0 ok,
-1 a replay mismatch, a cache miss or a broken chain, 2 usage errors, a protocol that does not validate and a
+1 a replay mismatch, a cache miss, a broken chain or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
 refused proposal step (a decision without a reason, an amendment without a reason or a change, a stale input).
 """
 from __future__ import annotations
@@ -128,6 +128,9 @@ def _propose(args: argparse.Namespace) -> int:
     except (ProposalError, VocabError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    except RuntimeError as exc:   # a failed model call (common.ask redacts the key); nothing was written
+        print(f"error: model call failed: {exc}", file=sys.stderr)
+        return 1
     print(out)
     return 0
 
