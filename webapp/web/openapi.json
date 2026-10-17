@@ -2856,6 +2856,18 @@
             "title": "Cached",
             "description": "the record cache holds this call"
           },
+          "record_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Note",
+            "description": "why the cache cannot hold this call (a fresh call of a re-execution)"
+          },
           "model_calls": {
             "items": {
               "$ref": "#/components/schemas/ModelCallRecord"
@@ -2882,6 +2894,7 @@
           "spec",
           "task",
           "cached",
+          "record_note",
           "model_calls",
           "agent_runs"
         ],
@@ -3082,6 +3095,19 @@
               }
             ],
             "description": "the decision of decisions.yaml (or, once frozen, of proposal.json, which records the default beside it)"
+          },
+          "raw_decision": {
+            "title": "Raw Decision",
+            "description": "the card's entry in decisions.yaml as written, when it is not a decision's shape (a hand edit gone wrong)"
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Problems",
+            "description": "what freeze would refuse about this card's decision",
+            "default": []
           }
         },
         "additionalProperties": true,
@@ -3095,7 +3121,9 @@
           "vocabulary",
           "default",
           "rationale",
-          "decision"
+          "decision",
+          "raw_decision",
+          "problems"
         ],
         "title": "Card"
       },
@@ -4649,6 +4677,12 @@
             ],
             "title": "Kind"
           },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete",
+            "description": "engine: run.json is written (else the run crashed or is still running; its events and calls are shown, its answer is not there yet)",
+            "default": true
+          },
           "system": {
             "type": "string",
             "title": "System"
@@ -4884,6 +4918,7 @@
           "group",
           "name",
           "kind",
+          "complete",
           "system",
           "mode",
           "strategy",
@@ -4932,6 +4967,12 @@
               "baseline"
             ],
             "title": "Kind"
+          },
+          "complete": {
+            "type": "boolean",
+            "title": "Complete",
+            "description": "engine: run.json is written (else the run crashed or is still running; its events and calls are shown, its answer is not there yet)",
+            "default": true
           },
           "system": {
             "type": "string",
@@ -5068,6 +5109,7 @@
           "group",
           "name",
           "kind",
+          "complete",
           "system",
           "mode",
           "strategy",
@@ -7185,6 +7227,15 @@
             "type": "array",
             "title": "Amendment Log",
             "default": []
+          },
+          "decision_problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Decision Problems",
+            "description": "before freeze: everything freeze would refuse in decisions.yaml (evidence/propose/cards.validate)",
+            "default": []
           }
         },
         "type": "object",
@@ -7206,7 +7257,8 @@
           "proposal",
           "protocol",
           "revisions",
-          "amendment_log"
+          "amendment_log",
+          "decision_problems"
         ],
         "title": "ProposalDetail"
       },

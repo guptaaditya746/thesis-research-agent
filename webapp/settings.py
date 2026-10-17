@@ -28,7 +28,7 @@ The evidence-level viewer (`/api/ev`, webapp/evapi.py) reads the directories a l
 | `SCORES`         | `scores`      | `$EV/scores`                         |
 | `EV_PROPOSALS`   | `proposals`   | `$EV/proposals`                      |
 | `EV_CACHE`       | `ev_cache`    | `$EV/cache/engine` (the engine's record cache) |
-| `EV_AGENT_WORK`  | `agent_work`  | `$EV/agent-work`                     |
+| `EV_AGENT_WORK`  | `agent_work`  | `$EVIDENCE_AGENT_WORK_DIR` (the agentic extractor's own), else `$EV/agent-work` |
 | `EV_PROTOCOLS`   | `protocols`   | `<repo>/evidence/protocols`          |
 
 Relative paths are resolved against the working directory when the settings are made, so the job
@@ -94,6 +94,8 @@ class Settings(BaseSettings):
     proposals: Path | None = Field(None, validation_alias="EV_PROPOSALS")
     ev_cache: Path | None = Field(None, validation_alias="EV_CACHE")
     agent_work: Path | None = Field(None, validation_alias="EV_AGENT_WORK")
+    # where the agentic extractor itself keeps its agent runs (evidence/agentic/extractor.py; the runbook sets it)
+    extractor_agent_work: Path | None = Field(None, validation_alias="EVIDENCE_AGENT_WORK_DIR")
     protocols: Path = Field(REPO / "evidence" / "protocols", validation_alias="EV_PROTOCOLS")
 
     @property
@@ -101,7 +103,7 @@ class Settings(BaseSettings):
         return [h.strip() for h in self.allowed_hosts.split(",") if h.strip()]
 
     @field_validator("corpus", "runs", "gold", "concepts", "questions", "agent_root", "web_dist", "ev", "corpora",
-                     "ev_runs", "scores", "proposals", "ev_cache", "agent_work", "protocols")
+                     "ev_runs", "scores", "proposals", "ev_cache", "agent_work", "extractor_agent_work", "protocols")
     @classmethod
     def _absolute(cls, value: Path | None) -> Path | None:
         return None if value is None else Path(value).expanduser().resolve()
@@ -131,7 +133,8 @@ class Settings(BaseSettings):
 
     @property
     def agent_work_dir(self) -> Path | None:
-        return self._under_ev(self.agent_work, "agent-work")
+        """$EV_AGENT_WORK, else the agentic extractor's own $EVIDENCE_AGENT_WORK_DIR, else $EV/agent-work."""
+        return self._under_ev(self.agent_work or self.extractor_agent_work, "agent-work")
 
     @property
     def corpus_manifest(self) -> Path | None:

@@ -206,6 +206,9 @@ class Card(Open):
     rationale: str | None = None
     decision: Decision | None = Field(None, description="the decision of decisions.yaml (or, once frozen, of "
                                                         "proposal.json, which records the default beside it)")
+    raw_decision: Any = Field(None, description="the card's entry in decisions.yaml as written, when it is not a "
+                                                "decision's shape (a hand edit gone wrong)")
+    problems: list[str] = Field([], description="what freeze would refuse about this card's decision")
 
 
 class Amendment(Open):
@@ -237,6 +240,8 @@ class ProposalDetail(ProposalSummary):
     protocol: ProtocolView | None = None
     revisions: list[int] = Field([], description="the frozen and amended revisions kept as protocol.v<N>.yaml")
     amendment_log: list[Amendment] = []
+    decision_problems: list[str] = Field([], description="before freeze: everything freeze would refuse in "
+                                                         "decisions.yaml (evidence/propose/cards.validate)")
 
 
 # --- runs ------------------------------------------------------------------------------------------
@@ -298,6 +303,8 @@ class EvRunSummary(Base):
     group: str = Field(description="the output directory the run was written to (regex-only, cascade, rag-baseline, ...)")
     name: str
     kind: Literal["engine", "baseline"]
+    complete: bool = Field(True, description="engine: run.json is written (else the run crashed or is still running; "
+                                             "its events and calls are shown, its answer is not there yet)")
     system: str
     mode: str | None = Field(None, description="engine: run, replay or reexec")
     strategy: str | None = None
@@ -393,6 +400,7 @@ class CallDetail(Base):
     spec: ExtractorSpec | None = None
     task: dict[str, Any] | None = Field(None, description="the ExtractionTask, from the record cache")
     cached: bool = Field(description="the record cache holds this call")
+    record_note: str | None = Field(None, description="why the cache cannot hold this call (a fresh call of a re-execution)")
     model_calls: list[ModelCallRecord] = []
     agent_runs: list[str] = Field([], description="agent run ids behind an agentic call")
 

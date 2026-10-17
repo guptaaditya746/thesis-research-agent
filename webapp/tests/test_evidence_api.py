@@ -281,3 +281,179 @@ def test_record_cache_reads_the_last_line_of_a_key(tmp_path: Path) -> None:
     with path.open("a", encoding="utf-8") as fh:   # a changed file is scanned again
         fh.write('\n{"key": "d", "value": 4}\n')
     assert cache.get(path, "d") == 4
+
+
+# --- review fixes (17 Oct) ---------------------------------------------------------------------------
+
+def line(key: str, value: object) -> str:
+    return json.dumps({"key": key, "value": value}, sort_keys=True) + "\n"
+
+
+def test_record_cache_scans_only_what_was_appended(tmp_path: Path) -> None:
+    path = tmp_path / "c.jsonl"
+    path.write_text(line("a", 1) + line("b", 2), encoding="utf-8")
+    cache = RecordCache()
+    assert cache.get(path, "a") == 1
+    scanned = cache._index[path][2]
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(line("c", 3) + '{"key": "d", "va')                  # a torn last line waits for its end
+    assert (cache.get(path, "c"), cache.get(path, "d")) == (3, None)
+    assert cache._index[path][2] == scanned + len(line("c", 3).encode())
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write('lue": 4}\n')
+    assert cache.get(path, "d") == 4 and cache.get(path, "a") == 1
+    path.write_text(line("x", 9) + line("a", 7) + line("y", 8) * 3, encoding="utf-8")   # rewritten, and longer
+    assert (cache.get(path, "a"), cache.get(path, "b"), cache.get(path, "x")) == (7, None, 9)
+    path.write_text(line("a", 5), encoding="utf-8")                  # shrank
+    assert (cache.get(path, "a"), cache.get(path, "y")) == (5, None)
+
+
+def test_record_cache_checks_the_key_of_the_line_it_reads(tmp_path: Path) -> None:
+    path = tmp_path / "c.jsonl"
+    path.write_text(line("a", 1) + line("b", 2), encoding="utf-8")
+    cache = RecordCache()
+    cache.get(path, "a")
+    sig, index, end, tail = cache._index[path]
+    cache._index[path] = (sig, {**index, "a": index["b"]}, end, tail)   # an index pointing at another key's line
+    assert cache.get(path, "a") is None
+
+
+@pytest.fixture
+def ev_fresh(ev_world: EvidenceWorld, tmp_path: Path) -> EvidenceWorld:
+    """A world of its own, for tests that change files."""
+    return ev_world.copy(tmp_path / "world")
+
+
+def unfreeze(proposal: Path) -> None:
+    for f in ("proposal.json", "protocol.yaml", "amendments.jsonl", "protocol.v1.yaml", "protocol.v2.yaml"):
+        (proposal / f).unlink(missing_ok=True)
+
+
+@pytest.mark.parametrize("text", ["just a string\n", "- one\n- two\n", "decisions: {card: screen}\n", "decisions: [\n"])
+def test_a_malformed_decisions_file_is_shown_not_a_500(ev_fresh: EvidenceWorld, text: str) -> None:
+    proposal = ev_fresh.proposals / "rag-factuality"
+    unfreeze(proposal)
+    (proposal / "decisions.yaml").write_text(text, encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        response = c.get("/api/ev/proposals/rag-factuality")
+    assert response.status_code == 200, response.text
+    detail = response.json()
+    assert not detail["frozen"] and detail["decision_problems"]
+    assert all(card["decision"] is None for card in detail["cards"])
+
+
+def test_a_decision_that_does_not_validate_is_shown_raw_with_freezes_reason(ev_fresh: EvidenceWorld) -> None:
+    import yaml
+    proposal = ev_fresh.proposals / "rag-factuality"
+    unfreeze(proposal)
+    data = yaml.safe_load((proposal / "decisions.yaml").read_text(encoding="utf-8"))
+    for d in data["decisions"]:
+        if d["card"] == "min_effect":
+            d["choice"] = 5
+        if d["card"] == "pairing":
+            d["reason"] = ""
+    (proposal / "decisions.yaml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        detail = c.get("/api/ev/proposals/rag-factuality").json()
+    cards = {card["id"]: card for card in detail["cards"]}
+    assert cards["min_effect"]["decision"] is None and cards["min_effect"]["raw_decision"]["choice"] == 5
+    assert any("choice must be an option id" in p for p in cards["min_effect"]["problems"])
+    assert cards["pairing"]["decision"]["reason"] == "" and any("without a reason" in p for p in cards["pairing"]["problems"])
+    assert cards["screen"]["problems"] == [] and cards["screen"]["decision"]["by"] == "model"
+    assert set(detail["decision_problems"]) == set(cards["min_effect"]["problems"] + cards["pairing"]["problems"])
+
+
+def as_reexec(src: Path, dst: Path, fresh: str) -> Path:
+    """A copy of a run marked as a re-execution whose call `fresh` ran fresh (what `evidence reexec` writes)."""
+    import shutil
+    shutil.copytree(src, dst)
+    (dst / "protocol.yaml").touch()   # written when the re-execution starts, as the engine does
+    record =json.loads((dst / "run.json").read_text(encoding="utf-8"))
+    (dst / "run.json").write_text(json.dumps({**record, "mode": "reexec"}), encoding="utf-8")
+    rows = [json.loads(x) for x in (dst / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    for r in rows:
+        if r["task_id"] == fresh:
+            r["custom_metadata"]["source"] = "fresh"
+    (dst / "events.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    return dst
+
+
+def test_a_fresh_reexecuted_call_never_shows_the_original_record(ev_fresh: EvidenceWorld) -> None:
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        calls = c.get(f"/api/ev/runs/cascade~{EXPLICIT}/papers/S001").json()["calls"]
+        llm = next(x for x in calls if x["kind"] == "llm")
+        as_reexec(ev_fresh.runs / "cascade" / EXPLICIT, ev_fresh.runs / "cascade" / f"{EXPLICIT}-reexec-x", llm["call_id"])
+        detail = c.get(f"/api/ev/runs/cascade~{EXPLICIT}-reexec-x/calls/{llm['call_id']}").json()
+        original = c.get(f"/api/ev/runs/cascade~{EXPLICIT}/calls/{llm['call_id']}").json()
+    assert detail["cached"] is False and detail["model_calls"] == [] and "re-executed fresh" in detail["record_note"]
+    assert original["cached"] is True and original["record_note"] is None
+
+
+@pytest.mark.skipif(not POSIX, reason="the agentic run needs bash (evidence_world.py)")
+def test_a_fresh_reexecuted_agentic_call_does_not_take_the_original_agent_run(ev_fresh: EvidenceWorld) -> None:
+    import time
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        calls = c.get(f"/api/ev/runs/agentic-gaps~{MIXED}/papers/S001").json()["calls"]
+        agentic = next(x for x in calls if x["kind"] == "agent")
+        agent_run = c.get(f"/api/ev/runs/agentic-gaps~{MIXED}/calls/{agentic['call_id']}").json()["agent_runs"][0]
+        time.sleep(0.05)
+        as_reexec(ev_fresh.runs / "agentic-gaps" / MIXED, ev_fresh.runs / "agentic-gaps" / f"{MIXED}-reexec-x", agentic["call_id"])
+        trace = c.get(f"/api/ev/runs/agentic-gaps~{MIXED}-reexec-x/calls/{agentic['call_id']}/trace/{agent_run}")
+    assert trace.status_code == 404   # its own agent run is not kept here; the original's is not it
+
+
+def test_an_incomplete_engine_run_is_listed_and_reachable(ev_fresh: EvidenceWorld) -> None:
+    run = ev_fresh.runs / "cascade-gaps" / MIXED
+    (run / "run.json").unlink()
+    (run / "answer.json").unlink()
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        listed = {r["id"]: r for r in c.get("/api/ev/runs").json()}[f"cascade-gaps~{MIXED}"]
+        detail = c.get(f"/api/ev/runs/cascade-gaps~{MIXED}").json()
+        doc = detail["documents"][0]
+        paper = c.get(f"/api/ev/runs/cascade-gaps~{MIXED}/papers/{doc}").json()
+        call = c.get(f"/api/ev/runs/cascade-gaps~{MIXED}/calls/{paper['calls'][0]['call_id']}")
+    assert (listed["kind"], listed["complete"], listed["label"]) == ("engine", False, None)
+    assert detail["answer"] is None and detail["documents"] and paper["calls"] and call.status_code == 200
+
+
+def test_an_engine_run_with_an_answer_but_no_run_json_is_not_a_baseline(ev_fresh: EvidenceWorld) -> None:
+    (ev_fresh.runs / "cascade" / EXPLICIT / "run.json").unlink()
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        listed = {r["id"]: r for r in c.get("/api/ev/runs").json()}[f"cascade~{EXPLICIT}"]
+    assert (listed["kind"], listed["complete"]) == ("engine", False)
+
+
+def test_a_runs_corpus_follows_the_corpora_root(ev_fresh: EvidenceWorld) -> None:
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        before = {r["id"]: r["corpus"] for r in c.get("/api/ev/runs").json()}
+        (ev_fresh.corpora / EXPLICIT).rename(ev_fresh.corpora / "renamed")
+        after = {r["id"]: r["corpus"] for r in c.get("/api/ev/runs").json()}
+    assert before[f"cascade~{EXPLICIT}"] == EXPLICIT and after[f"cascade~{EXPLICIT}"] == "renamed"
+
+
+@pytest.mark.skipif(not POSIX, reason="symlinks and the agent runs need POSIX")
+def test_a_symlinked_child_is_skipped_not_a_404(ev_fresh: EvidenceWorld, tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    (outside / "runs").mkdir(parents=True)
+    baseline = ev_fresh.runs / "agent-baseline" / MIXED
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        calls = c.get(f"/api/ev/runs/agentic-gaps~{MIXED}/papers/S001").json()["calls"]
+        agentic = next(x for x in calls if x["kind"] == "agent")
+        agent_run = c.get(f"/api/ev/runs/agentic-gaps~{MIXED}/calls/{agentic['call_id']}").json()["agent_runs"][0]
+        (ev_fresh.agent_work / f"{agent_run}-zzzz").symlink_to(outside, target_is_directory=True)
+        (baseline / "agent-runs" / f"{MIXED}-zzzz").symlink_to(outside, target_is_directory=True)
+        trace = c.get(f"/api/ev/runs/agentic-gaps~{MIXED}/calls/{agentic['call_id']}/trace/{agent_run}")
+        base = c.get(f"/api/ev/runs/agent-baseline~{MIXED}/trace")
+    assert trace.status_code == 200 and trace.json()["source"] == "run_dir"
+    assert base.status_code == 200
+
+
+def test_agent_work_falls_back_to_the_extractors_own_variable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("EV_AGENT_WORK", raising=False)
+    monkeypatch.setenv("EVIDENCE_AGENT_WORK_DIR", str(tmp_path / "agents"))
+    assert Settings(EV=tmp_path / "ev").agent_work_dir == tmp_path / "agents"   # type: ignore[call-arg]
+    monkeypatch.setenv("EV_AGENT_WORK", str(tmp_path / "mine"))
+    assert Settings(EV=tmp_path / "ev").agent_work_dir == tmp_path / "mine"   # type: ignore[call-arg]
+    monkeypatch.delenv("EV_AGENT_WORK")
+    monkeypatch.delenv("EVIDENCE_AGENT_WORK_DIR")
+    assert Settings(EV=tmp_path / "ev").agent_work_dir == tmp_path / "ev" / "agent-work"   # type: ignore[call-arg]

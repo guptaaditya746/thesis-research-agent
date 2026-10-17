@@ -28,7 +28,8 @@ def test_settings_from_the_environment(tmp_path: Path, monkeypatch: pytest.Monke
 
 def test_evidence_dirs_default_under_ev(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
-    for name in ("EV", "CORPORA", "EV_RUNS", "SCORES", "EV_PROPOSALS", "EV_CACHE", "EV_AGENT_WORK", "EV_PROTOCOLS", "RUNS"):
+    for name in ("EV", "CORPORA", "EV_RUNS", "SCORES", "EV_PROPOSALS", "EV_CACHE", "EV_AGENT_WORK", "EV_PROTOCOLS", "RUNS",
+                 "EVIDENCE_AGENT_WORK_DIR"):
         monkeypatch.delenv(name, raising=False)
     assert Settings().corpora_dir is None and Settings().ev_runs_dir is None
     monkeypatch.setenv("EV", "ev")
