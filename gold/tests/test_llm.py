@@ -78,6 +78,15 @@ def test_model_identity_is_the_pin_for_the_replicas():
     assert llm.model_identity([TestModel(), llm.openai_model("sub-model-1")]) == "sub-model-1+test"
 
 
+def test_model_identity_is_the_pin_for_orch_model():
+    """Part G.3: orch-model, the one model of every extractor and both baselines, maps to its pinned weights."""
+    from agent.rundir import ORCHESTRATOR
+
+    assert llm.model_identity([llm.openai_model("orch-model")]) == f"{ORCHESTRATOR['name']}@{ORCHESTRATOR['revision']}"
+    assert llm.model_identity([llm.openai_model("orch-model")]) != llm.model_identity([llm.openai_model("sub-model-1")])
+    assert llm.model_identity([llm.openai_model("orch-model"), llm.openai_model("sub-model-1")]) == "orch-model+sub-model-1"
+
+
 def test_redact_removes_the_key_its_hash_and_key_shaped_tokens(monkeypatch):
     monkeypatch.setenv("LITELLM_MASTER_KEY", "my-secret-key")
     from agent.canonical import sha256_hex

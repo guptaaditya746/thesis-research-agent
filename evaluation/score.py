@@ -48,11 +48,18 @@ contradicts / neutral / undetermined, counts as `undetermined`); it is correct w
 expected direction. The expected direction is `effect.direction`, or `undetermined` for a study that is
 `relevant: false` (F2; `expected_direction`); a study without either is not scored. So a study whose
 true effect is `undetermined` (missing information) or that is irrelevant is right when the system says
-`undetermined` or does not answer it (F4). `direction_accuracy` is over all scored studies; `answered`
-(share with a determined given direction) and `accuracy_answered` (accuracy over those) are over the
-studies with a *determined* expected direction only, so a system that answers everything is not
-rewarded for guessing on a study nobody can determine. The confusion counts include expected
-`undetermined`. The label is correct when equal to `answer.label`.
+`undetermined` or does not answer it (F4). The label is correct when equal to `answer.label`.
+Correctness, completeness and traceability are the supervisor's three comparison criteria (STATE.md §1
+§7; docs/evidence-system.md Part G.1); the definitions that follow are ours. `direction_accuracy`
+(correctness) is over all scored studies. **completeness** = share of the studies with a *determined*
+expected direction (not `undetermined`) the system gives a direction for, and `accuracy_answered` =
+accuracy over those, so a system that answers everything is not rewarded for guessing on a study nobody
+can determine. **traceability** = share of the cited passages (`answer.citations`, a baseline's
+`[{document, start, end}]`) that overlap (share a character with) a ground-truth placement of any role of
+the study of the paper they cite (lenient by design), over all cited passages, where the citations the
+baseline dropped (`answer.dropped_citations`: ones naming no retrieved passage, the clearest untraceable
+case) count as untraced; `null` for an answer without citations (the engine's spans are scored in A).
+The confusion counts include expected `undetermined`.
 
 Flags (C, F4; `score_flags`): null for an answer without a `flags` key (the baselines, and engine
 answers from before Part F). Otherwise per flag in `rules.FLAGS`: the expected set is the papers whose
@@ -302,8 +309,30 @@ def expected_direction(study: dict[str, Any]) -> str | None:
     return (study.get("effect") or {}).get("direction")
 
 
+def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None,
+                    dropped: list[dict[str, Any]] | None = None) -> dict[str, Counter[str]] | None:
+    """Traceability counts per level (and ALL): cited passages, and those overlapping a placement (of any
+    role) of the cited paper's study. The baseline's dropped citations (naming no retrieved passage) are
+    cited passages that are never traced. A cited paper outside the ground truth counts under ALL only.
+    None without a `citations` list (the engine)."""
+    if citations is None:
+        return None
+    places: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    for p in truth.placements:
+        places[p["paper"]].append((p["start"], p["end"]))
+    cited: dict[str, Counter[str]] = defaultdict(Counter)
+    for c, kept in [(c, True) for c in citations] + [(c, False) for c in dropped or []]:
+        paper = c.get("document")
+        hit = kept and any(overlaps((int(c["start"]), int(c["end"])), p) for p in places.get(paper, []))
+        level = truth.level_of(paper)
+        for key in ((level, ALL) if level != "unknown" else (ALL,)):
+            cited[key].update(citations=1, traced=hit)
+    return cited
+
+
 def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any]:
-    """Per-study direction accuracy, label correctness and flags of one system's answer.json."""
+    """Per-study direction accuracy, completeness, traceability, label correctness and flags of one
+    system's answer.json (the module docstring, C)."""
     given = {s.get("document"): s.get("direction", "undetermined") for s in answer.get("studies", [])}
     per_level: dict[str, Counter[str]] = defaultdict(Counter)
     confusion: Counter[tuple[str, str]] = Counter()
@@ -321,13 +350,18 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
                         "expected": expected, "given": got, "correct": got == expected, "determined": determined})
         for level in (study.get("level", "unknown"), ALL):
             per_level[level].update(studies=1, correct=got == expected, determined=determined,
-                                    answered=determined and got != "undetermined",
+                                    complete=determined and got != "undetermined",
                                     correct_answered=determined and got == expected and got != "undetermined")
-    rows = [{"level": level, "studies": c["studies"], "determined": c["determined"],
-             "direction_accuracy": share(c["correct"], c["studies"]),
-             "answered": share(c["answered"], c["determined"]),
-             "accuracy_answered": share(c["correct_answered"], c["answered"])}
-            for level, c in sorted(per_level.items())]
+    cited = score_citations(truth, answer.get("citations"), answer.get("dropped_citations"))
+    rows = []
+    for level, c in sorted(per_level.items()):
+        n = cited.get(level, Counter()) if cited is not None else None
+        rows.append({"level": level, "studies": c["studies"], "determined": c["determined"],
+                     "direction_accuracy": share(c["correct"], c["studies"]),
+                     "completeness": share(c["complete"], c["determined"]),
+                     "accuracy_answered": share(c["correct_answered"], c["complete"]),
+                     "citations": None if n is None else n["citations"],
+                     "traceability": None if n is None else share(n["traced"], n["citations"])})
     expected_label = truth.answer.get("label")
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,
             "label_correct": answer.get("label") == expected_label, "rows": rows, "studies": studies,

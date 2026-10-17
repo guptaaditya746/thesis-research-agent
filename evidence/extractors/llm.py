@@ -24,7 +24,8 @@ from . import base, llm_schema
 
 VERSION = 1
 QUOTE_REASONS = ("not_found", "ambiguous", "partial_number", "empty_quote")
-DEFAULTS: dict[str, Any] = {"model": "sub-model-1", "prompt": "extract-v1.md", "retry_prompt": "retry-v1.md",
+# `model`: orch-model, the one model of every extractor and both baselines (docs/evidence-system.md Part G.3).
+DEFAULTS: dict[str, Any] = {"model": "orch-model", "prompt": "extract-v1.md", "retry_prompt": "retry-v1.md",
                             "temperature": 0.0, "seed": 0, "max_tokens": 4096, "retry_max_tokens": 2048,
                             "chunk_chars": 12000, "quote_retry": 1}
 SOURCES = (base.HERE / "llm.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "extract-v1.md",

@@ -108,6 +108,38 @@ def test_engine_config_and_recorder() -> None:
     assert "One reported result." in extractor.runner.jobs[0].concept["scope"]["item"]
 
 
+def test_model_reaches_the_spec_config_and_the_runner() -> None:
+    """Part G.3: the engine's --model becomes AgentSettings.model, the runner's alias and the recorded model;
+    orch-model (the default) and the sub aliases are recorded with their pinned weights, another alias alone."""
+    from pathlib import Path
+
+    from agent.rundir import ORCHESTRATOR, SUBAGENTS
+    from evidence import engine, protocol
+    from evidence.agentic import factory
+
+    base = factory({"evidence_type": "measurement", "sandbox_mode": "unsandboxed"})
+    assert base.settings.model == "orch-model" and base.runner.settings.model == "orch-model"
+    assert base.spec.config["model"] == {k: ORCHESTRATOR[k] for k in ("alias", "name", "revision")}
+    sub = factory({"evidence_type": "measurement", "sandbox_mode": "unsandboxed", "model": "sub-model-1"})
+    assert sub.runner.settings.model == "sub-model-1" and sub.spec.extractor_id != base.spec.extractor_id
+    assert sub.spec.config["model"] == {"alias": "sub-model-1", "name": SUBAGENTS[0]["name"],
+                                        "revision": SUBAGENTS[0]["revision"]}
+    other = factory({"evidence_type": "measurement", "sandbox_mode": "unsandboxed", "model": "other-model"})
+    assert other.spec.config["model"] == {"alias": "other-model", "name": "other-model", "revision": "unpinned"}
+    # through the engine, as `evidence run --model X` builds the cascade of the agentic protocol
+    agentic = protocol.load(Path(engine.__file__).resolve().parent / "protocols" / "rag-factuality-agentic.yaml")
+    cascades = engine.build_extractors(agentic, "cascade", model="sub-model-2")
+    agents = [e for c in cascades.values() for _, e in c if e.spec.kind == "agent"]
+    llms = [e for c in cascades.values() for _, e in c if e.spec.kind == "llm"]
+    assert agents and all(e.spec.config["model"]["alias"] == "sub-model-2" for e in agents)
+    assert all(e.runner.settings.model == "sub-model-2" for e in agents)
+    assert llms and all(e.spec.config["model"] == "sub-model-2" for e in llms)
+    default = engine.build_extractors(agentic, "cascade", model=None)
+    assert {e.spec.config["model"] for c in default.values() for _, e in c if e.spec.kind == "llm"} == {"orch-model"}
+    assert {e.spec.config["model"]["alias"] for c in default.values() for _, e in c if e.spec.kind == "agent"} == {
+        "orch-model"}
+
+
 def test_bad_quotes_and_bad_rows_are_rejected_with_reasons() -> None:
     result, _ = extract()
     reasons = sorted((r.reason, r.quotes) for r in result.rejected)

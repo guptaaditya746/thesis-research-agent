@@ -125,20 +125,25 @@ def render(report: dict[str, Any]) -> str:
                             "label_correct": system["label_correct"], "studies": overall.get("studies"),
                             "determined": overall.get("determined"),
                             "direction_accuracy": overall.get("direction_accuracy"),
-                            "answered": overall.get("answered"),
-                            "accuracy_answered": overall.get("accuracy_answered")})
+
+                            "accuracy_answered": overall.get("accuracy_answered"),
+                            "completeness": overall.get("completeness"),
+                            "traceability": overall.get("traceability")})
         out += [table(summary, ["system", "label", "expected", "label_correct", "studies", "determined",
-                                "direction_accuracy", "answered", "accuracy_answered"]), "",
+                                "direction_accuracy", "completeness", "accuracy_answered", "traceability"]), "",
                 "direction_accuracy is over all scored studies: a study whose expected direction is undetermined "
                 "(missing information, an irrelevant paper) is right when the system says undetermined or leaves it "
-                "out, a determined study is wrong then. answered (share with a direction given) and accuracy_answered "
-                "(accuracy over those) are over the `determined` studies only, so a baseline that cites only some "
-                "papers, or guesses on undeterminable ones, is seen in both.", ""]
+                "out, a determined study is wrong then. completeness (the supervisor's word: the share of the "
+                "`determined` studies the system gives a direction for) and accuracy_answered (accuracy over those) "
+                "are over the determined studies only, so a baseline that cites only some papers, or guesses on "
+                "undeterminable ones, is seen in both. traceability is the share of a baseline's cited passages that "
+                "overlap a ground-truth placement of the paper they cite, dropped citations counted as untraced "
+                "(none for the engine: its spans are scored in A).", ""]
         levels = [{"system": s["system"], **r} for s in report["synthesis"] for r in s["rows"] if r["level"] != "all"]
         if levels:
             levels.sort(key=lambda r: (_level_key(r["level"]), r["system"]))
             out += ["Per level:", "", table(levels, ["level", "system", "studies", "determined", "direction_accuracy",
-                                                     "answered", "accuracy_answered"]), ""]
+                                                     "completeness", "accuracy_answered", "traceability"]), ""]
         flagged = [s for s in report["synthesis"] if s.get("flags")]
         if flagged:
             rows = [{"system": s["system"], **r} for s in flagged for r in s["flags"]["rows"]]
@@ -211,8 +216,10 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "span_accuracy": a.get("span_accuracy") if engine else None,
                          "association_accuracy": b.get("association_accuracy") if engine else None,
                          "true_pair": b.get("true_pair") if engine else None,
-                         "direction_accuracy": c.get("direction_accuracy"), "answered": c.get("answered"),
-                         "accuracy_answered": c.get("accuracy_answered"), "label_correct": system["label_correct"]})
+                         "direction_accuracy": c.get("direction_accuracy"),
+                         "accuracy_answered": c.get("accuracy_answered"), "completeness": c.get("completeness"),
+                         "traceability": None if engine else c.get("traceability"),  # the engine's spans: A
+                         "label_correct": system["label_correct"]})
     rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"]))
     return {"rows": rows, "intervals": compare_intervals(reports)}
 
@@ -242,7 +249,8 @@ def _strip(row: dict[str, Any] | None) -> dict[str, Any] | None:
 
 
 COMPARE_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "span_accuracy", "association_accuracy",
-                   "true_pair", "direction_accuracy", "answered", "accuracy_answered", "label_correct"]
+                   "true_pair", "direction_accuracy", "completeness", "accuracy_answered", "traceability",
+                   "label_correct"]
 COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "extraction_f1", "direction_accuracy", "engine_minus_system"]
 
 

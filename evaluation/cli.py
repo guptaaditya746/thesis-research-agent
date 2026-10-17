@@ -1,7 +1,7 @@
 """`evaluate` command line: score a run, run the two baselines, compare corpora.
 
     evaluate score --run RUN --corpus CORPUS [--baseline ANSWER.json ...] [--reexec R.json] --out DIR
-    evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval per_paper|global] [--k N]
+    evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval global|per_paper] [--k N]
     evaluate agent-baseline --corpus CORPUS --out DIR [--model ALIAS] [--sandbox ...] [--steps N] [--tokens N]
     evaluate compare REPORT [REPORT ...] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
@@ -11,7 +11,9 @@
 files written by `score` (a directory holding one is accepted too).
 
 Model calls go to the LiteLLM gateway ($LITELLM_BASE_URL, default http://127.0.0.1:4000/v1); the
-key is read from $LITELLM_MASTER_KEY when a model is made and is never printed or written.
+key is read from $LITELLM_MASTER_KEY when a model is made and is never printed or written. `--model`
+(default orch-model, the one model of every extractor and both baselines) is the model of the RAG
+baseline's answering call, of the mapping call of both baselines and of the agent baseline's agent.
 """
 from __future__ import annotations
 
@@ -87,8 +89,9 @@ def cmd_agent(args: argparse.Namespace) -> int:
     from .baselines.agent import BUDGET, agent_baseline
 
     stop_on_sigterm()
-    settings = AgentSettings(temperature=args.temperature, seed=args.agent_seed, sandbox_mode=args.sandbox,
-                             base_url=args.base_url, agent_root=str(args.agent_root) if args.agent_root else None)
+    settings = AgentSettings(model=args.model, temperature=args.temperature, seed=args.agent_seed,
+                             sandbox_mode=args.sandbox, base_url=args.base_url,
+                             agent_root=str(args.agent_root) if args.agent_root else None)
     runner = ResearchAgentRunner(settings, work_dir=args.out / "agent-runs")
     budget = {"steps": args.steps or BUDGET["steps"], "tokens": args.tokens or BUDGET["tokens"]}
     concept = json.loads(args.concept.read_text(encoding="utf-8")) if args.concept else None
@@ -160,17 +163,19 @@ def parser() -> argparse.ArgumentParser:
     def common(q: argparse.ArgumentParser) -> None:
         q.add_argument("--corpus", type=Path, required=True, help="reads manifest.json and papers/ only")
         q.add_argument("--out", type=Path, required=True)
-        q.add_argument("--model", default=DEFAULT_ALIAS, help=f"LiteLLM alias (default {DEFAULT_ALIAS})")
+        q.add_argument("--model", default=DEFAULT_ALIAS,
+                       help=f"LiteLLM alias of the answer and mapping calls and of the agent (default {DEFAULT_ALIAS})")
         q.add_argument("--question", help="default: the RAG factuality question")
         q.add_argument("--question-file", type=Path)
         q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<system>-calls.jsonl)")
         q.add_argument("--seed", type=int, default=0, help="seed of the answer/mapping call")
 
-    r = sub.add_parser("rag-baseline", help="BM25 passages + one schema-constrained call -> answer.json")
+    r = sub.add_parser("rag-baseline", help="BM25 passages + an answer with citations + the mapping call -> answer.json")
     common(r)
-    r.add_argument("--retrieval", choices=("per_paper", "global"), default="per_paper",
-                   help="per_paper: top k passages of every paper (default); global: top k of the corpus")
-    r.add_argument("--k", type=int, help="passages per paper (per_paper, default 2) or in all (global, default 8)")
+    r.add_argument("--retrieval", choices=("global", "per_paper"), default="global",
+                   help="global: top k passages of the whole corpus (default); per_paper: top k of every paper "
+                        "(every paper seen)")
+    r.add_argument("--k", type=int, help="passages in all (global, default 8) or per paper (per_paper, default 2)")
     r.add_argument("--max-chars", type=int, default=1500, help="passage size limit")
     r.set_defaults(func=cmd_rag)
 

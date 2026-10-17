@@ -25,11 +25,13 @@ from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.settings import ModelSettings
 
 from agent.canonical import canonical_bytes, sha256_hex
-from agent.rundir import SUBAGENTS
+from agent.rundir import ORCHESTRATOR, SUBAGENTS
 
 DEFAULT_BASE_URL = "http://127.0.0.1:4000/v1"
 SUB_ALIASES = tuple(s["alias"] for s in SUBAGENTS)  # sub-model-1, sub-model-2
 SUB_MODEL = {"name": SUBAGENTS[0]["name"], "revision": SUBAGENTS[0].get("revision")}
+ORCH_ALIAS = ORCHESTRATOR["alias"]  # orch-model: the one model of every extractor and both baselines
+ORCH_MODEL = {"name": ORCHESTRATOR["name"], "revision": ORCHESTRATOR.get("revision")}
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -133,14 +135,17 @@ class JsonlCache:
 
 def model_identity(models: list[Model]) -> str:
     """The model identity for cache keys: the pinned sub-model (name@revision, agent/rundir.SUBAGENTS)
-    for its replicas, so it does not matter which replica answered; else the sorted model names.
+    for its replicas, so it does not matter which replica answered; the pinned orchestrator model
+    (agent/rundir.ORCHESTRATOR) for `orch-model`; else the sorted model names.
 
     The identity is the pin, not observed from the server: the serving profile pins the same revision
     and serves it as `sub-model` (vLLM's served name), which names no weights. Serving other weights
-    behind the aliases needs a new pin in agent/rundir.SUBAGENTS, which changes every key."""
+    behind the aliases needs a new pin in agent/rundir, which changes every key."""
     names = sorted({model_name(m) for m in models})
     if set(names) <= set(SUB_ALIASES):
         return f"{SUB_MODEL['name']}@{SUB_MODEL['revision']}"
+    if set(names) == {ORCH_ALIAS}:
+        return f"{ORCH_MODEL['name']}@{ORCH_MODEL['revision']}"
     return "+".join(names)
 
 

@@ -83,7 +83,7 @@ He wrote no numbered research questions. Read from his text:
 | Protocol | Hand-written now; an LLM protocol generator later (optional, as the supervisor says). |
 | Evaluation | The synthetic benchmark is the main evaluation. A check on the RAG papers among the 337 real papers, with gold built by the `gold/` method (labelling repo) and reviewed by the user. |
 | Models | The same model for all extractors and both baselines, so a comparison isolates the method. |
-| Fixes for conflicts with the supervisor | (1) The RAG baseline becomes a plain retrieve-then-answer: top passages over the whole corpus, a neutral prompt (today: top 2 BM25 passages of every paper by default, A6). (2) The fidelity check fails a paper that adds numbers or claims the ground truth does not have. (3) README and this page keep his design and our additions apart. |
+| Fixes for conflicts with the supervisor | (1) The RAG baseline becomes a plain retrieve-then-answer: top passages over the whole corpus, a neutral prompt (today: top 2 BM25 passages of every paper by default, A6; superseded by Part G.1, built 17 Oct). (2) The fidelity check fails a paper that adds numbers or claims the ground truth does not have. (3) README and this page keep his design and our additions apart. |
 | Second build (ev2) | To be finished: duplicates, missing information, large effects, the synthesis flags, his controlled variant (change one study, regenerate that paper, predictable shift). Its unreviewed work in progress and its contract are **not on main**; they are in the bundle `../thesis-ev2-wip.bundle` outside the repository (`git fetch ../thesis-ev2-wip.bundle 'refs/heads/*:refs/heads/*'`). |
 | Funnel engine (ours) | Per paper: screen (is there a RAG-vs-baseline experiment? else skip with a reason) → regex → completeness check against a rule the protocol declares (a RAG and a baseline condition, a shared metric, values for both on the same dataset) → escalate only the gaps (LLM, then the agent with a targeted task) → stop when complete or exhausted; gaps recorded. Modes `all` (every extractor on everything, for benchmarking) and `gaps` (answering, the 337-paper check). |
 | Proposal flow (ours) | PICO-style frame → draft (EDC-style definitions; each field's source: ontology, protocol or invented) → critic checklist → fixed choice-point cards with LLM defaults, the user decides with a reason (`decisions:` log) → freeze with a hash and a pinned vocabulary snapshot → PROSPERO/OSF-style amendments (version, amended hash, reason, impact, before the main run or not). |
@@ -118,7 +118,7 @@ see §7).
 | Evidence representation | built | `evidence/merge.py`, `graph.py`: merged items with every span and `found_by`; `graph.json` |
 | Synthesis rules | built, in the protocol (17 Oct) | parameters in the protocol's `synthesis` block (Part C); machinery `evidence/rules.py`, `synthesis.py`: same-dataset pairing, table before prose; undetermined studies with a reason code |
 | Evaluation A, B, C | built | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis, locate recall, cascade contribution, cost, stability |
-| Baselines | built | `evaluation/baselines/rag.py` (to be changed, §4), `agent.py` |
+| Baselines | built; the RAG baseline rebuilt 17 Oct as the plain retrieve-then-answer system (§4, Part G.1) | `evaluation/baselines/rag.py` (global top 8, neutral prompt with citations, the mapping call shared with the agent baseline in `common.py`), `agent.py`; score C adds completeness and traceability |
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
 | Viewer | earlier design | `webapp/`, to be rebuilt |
 
@@ -132,8 +132,8 @@ check. Their contracts are written: [`evidence-system.md`](evidence-system.md) P
 | Item | State |
 |---|---|
 | Agentic extractor | Open question for the supervisor (B14): is an agentic extractor acceptable as one implementation, with its runs replayed from records and its re-execution stability reported? |
-| Model choice in the runbook | `slurm-evidence-runbook.md` uses `sub-model-1` for the LLM extractors and `orch-model` for the agentic extractor and both baselines, and `orch-model` writes the synthetic papers. The 16 Oct decision (one model for all extractors and baselines) needs the runbook changed, and the paper writer then on other weights than the extractors (step 6). |
-| RAG baseline, fidelity check | The conflict fixes of §4 are not built (step 2). |
+| Model choice in the runbook | Done 17 Oct (Part G.3): `orch-model` is the default of every extractor and both baselines (`AgentSettings.model`, `evidence run --model`, `evaluate … --model`); `sub-model-1` writes the synthetic papers, `sub-model-2` is the blind check; the runbook's model table, rules and steps 1, 3–6 follow. |
+| Fidelity check | Of the conflict fixes of §4, the RAG baseline is built (17 Oct, Part G.1); the fidelity check that fails a paper adding numbers or claims (Part G.2) is not. |
 | Controlled variants | What is built is one study set rendered per level; the supervisor's variant (change one study, predictable shift) is in ev2. |
 | 337-paper check | Which of the 337 papers are RAG papers, and their gold (the `gold/` method; never run on the real model, [`earlier-work.md`](earlier-work.md) §6). |
 | Structured outputs on the server | pydantic-ai's `response_format` calls (LLM extractors, gold, judge) cannot ask for `disable_any_whitespace` per request; proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the `llm-setup` profile (a submodule, not changed here); count `finish_reason` length on guided calls on Slurm either way. |

@@ -14,9 +14,13 @@ from .helpers import Scripted
 from .test_agent_baseline import MAPPED, agent_record
 
 
+CITED = {"answer_text": "Retrieval helped in S001 and hurt in S002.", "citations": []}
+
+
 @pytest.fixture
 def scripted(monkeypatch: pytest.MonkeyPatch) -> Scripted:
-    model = Scripted(MAPPED)
+    """The RAG baseline's answering call (its prompt lists passages) and the mapping call of both baselines."""
+    model = Scripted(lambda prompt: CITED if "\n\nPassages:\n\n" in prompt else MAPPED)
     monkeypatch.setattr(cli, "_model", lambda alias: (model.model(alias), alias))
     return model
 
@@ -80,8 +84,11 @@ def test_rag_baseline_command(tmp_path: Path, scripted: Scripted) -> None:
     corpus = fx.write_corpus(tmp_path)
     assert cli.main(["rag-baseline", "--corpus", str(corpus), "--out", str(tmp_path / "rag"), "--k", "2"]) == 0
     answer = json.loads((tmp_path / "rag" / "answer.json").read_text(encoding="utf-8"))
-    assert answer["system"] == "rag-baseline" and len(answer["retrieved"]) == 2
+    assert answer["system"] == "rag-baseline" and len(answer["retrieved"]) == 2 and answer["label"] == "mixed"
+    assert answer["settings"] == {"retrieval": "global", "k": 2, "max_chars": 1500, "retriever": "bm25okapi"}
+    assert answer["model_call"]["model"] == answer["mapping_call"]["model"] == cli.DEFAULT_ALIAS == "orch-model"
     assert (tmp_path / "rag" / "rag-baseline-calls.jsonl").is_file()
+    assert cli.parser().parse_args(["rag-baseline", "--corpus", "c", "--out", "o"]).retrieval == "global"
 
 
 def test_agent_baseline_command(tmp_path: Path, scripted: Scripted, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -98,7 +105,9 @@ def test_agent_baseline_command(tmp_path: Path, scripted: Scripted, monkeypatch:
     monkeypatch.setattr(runner, "ResearchAgentRunner", fake_runner)
     corpus = fx.write_corpus(tmp_path)
     assert cli.main(["agent-baseline", "--corpus", str(corpus), "--out", str(tmp_path / "ag"), "--sandbox",
-                     "unsandboxed", "--steps", "5"]) == 0
+                     "unsandboxed", "--steps", "5", "--model", "sub-model-2"]) == 0
     answer = json.loads((tmp_path / "ag" / "answer.json").read_text(encoding="utf-8"))
     assert answer["system"] == "agent-baseline" and answer["label"] == "mixed"
     assert made[0]["settings"].sandbox_mode == "unsandboxed"
+    assert made[0]["settings"].model == "sub-model-2" == answer["mapping_call"]["model"]  # --model reaches the agent
+    assert cli.parser().parse_args(["agent-baseline", "--corpus", "c", "--out", "o"]).model == "orch-model"

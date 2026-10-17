@@ -181,7 +181,8 @@ every system the same way.
   hold the cell's number.
 - **Baselines:** may open only `manifest.json` and files directly in `papers/`. The retrieve-then-answer
   baseline takes the top 2 BM25 passages of every paper by default (`--retrieval global` for the plain top-k
-  over the corpus); the report shows `answered` and `accuracy_answered` next to direction accuracy.
+  over the corpus) (superseded by Part G.1, built 17 Oct: global top 8 by default); the report shows
+  `answered` and `accuracy_answered` next to direction accuracy.
 - **Scoring:** items are matched to facts one to one per paper and evidence type (Hungarian assignment); the
   rules are in the `evaluation/score.py` docstring.
 
@@ -683,10 +684,21 @@ The §7.5 LLM proposer of 15 Oct is dropped: Part E replaces it.
    with citations only ("Answer the question using only the passages below. Say what the evidence shows
    and cite the passages you rely on as [paper id, start-end]."), output `{answer_text, citations}`; a
    separate mapping call (the agent baseline's `MAP_INSTRUCTIONS`, shared) turns the answer into a label
-   and per-paper stances for score C. Score C for baselines adds **completeness** (determined true studies
-   the answer gives a stance for) and **traceability** (cited passages that overlap a ground-truth
-   placement of the study they are cited for, over cited passages), the supervisor's three comparison
-   criteria (§7).
+   and per-paper stances for score C. Score C for baselines adds **completeness** and **traceability**
+   next to correctness: the supervisor's three comparison criteria (§7; his criteria; the definitions that
+   follow are ours). Completeness = the share of the studies with a determined true direction the answer
+   gives a stance for; traceability = the share of the cited passages that overlap (share a character
+   with) a ground-truth placement of any role of the study they are cited for (lenient by design), over
+   all cited passages, where a citation the baseline dropped (naming no retrieved passage) counts as
+   untraced; null without citations. *Built 17 Oct:* `evaluation/baselines/rag.py` (`CitedAnswer`; a
+   citation must name a retrieved passage exactly, else `dropped_citations`; the mapping call reads the
+   answer text and the kept citations' headers `[paper id, start-end]` only, never the passages' text, so
+   it cannot read the evidence a second time), `common.map_answer` (the shared mapping,
+   `MAP_INSTRUCTIONS` now naming both answer forms), `score.score_synthesis` rows carry `completeness`,
+   `citations` (kept plus dropped), `traceability` (null without a `citations` list, so for the engine);
+   `answer.json` of the RAG baseline: the A4 shape plus `answer_text` (the model's own answer),
+   `citations`, `dropped_citations`, `retrieved`, `settings`, `model_call`, `mapping_call`,
+   `mapped_answer_text`.
 2. **Fidelity** fails a paper that adds content: `added_numbers` (a number outside the value placements,
    the decoys and an explicit allowlist: the plan's dataset sizes, `Table n`/`Section n`, list markers,
    `A1`-style codes), `added_claims` (a sentence matching the question's claim patterns outside the claim
@@ -695,4 +707,9 @@ The §7.5 LLM proposer of 15 Oct is dropped: Part E replaces it.
 3. **One model**: `orch-model` for every extractor and both baselines (`AgentSettings.model`; `evidence run
    --model` default `orch-model`; `llm` extractors' default `orch-model`; `evaluate … --model` reaches the
    agent baseline's agent); the synthetic papers are written by `sub-model-1` so writer and reader are
-   different weights. The runbook's model table and rules follow.
+   different weights. The runbook's model table and rules follow. *Built 17 Oct:* `AgentSettings.model`
+   (default `orch-model`; the runner builds the agent's `OrchestratorModel` on it, `runner.default_model`),
+   recorded in the agentic extractor's config as `{alias, name, revision}` (the pinned weights of an alias
+   `agent/rundir` pins, else the alias as the name with revision `unpinned`, the same the model records);
+   `evidence run --model` defaults to `orch-model` while
+   `engine.Settings.model` stays `None`; `gold/llm.model_identity` maps `orch-model` to its pin.

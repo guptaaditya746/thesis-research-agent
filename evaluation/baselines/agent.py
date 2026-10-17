@@ -6,14 +6,15 @@
    answer is a table of conclusions with the papers each rests on. That brief is the least the agent
    needs to run (it requires one) and says nothing of conditions, metrics, values or rules. A brief
    picked through the concept step (`agent concepts propose/pick`) can be given instead.
-3. The agent's answer has no explicit per-paper stance, so one schema-constrained call (the same
-   AnswerReply schema and label rules as the RAG baseline, temperature 0, cached by prompt hash,
-   model and input) maps its answer text (rows, facts, notes, and the quotes of the claims it cites)
-   to the label and the stance of every paper it relies on. An answer with no rows is
+3. The agent's answer has no explicit per-paper stance, so the mapping call shared with the RAG
+   baseline (common.map_answer: MAP_INSTRUCTIONS, AnswerReply, temperature 0, cached by prompt
+   hash, model and input) maps its answer text (rows, facts, notes, and the quotes of the claims it
+   cites) to the label and the stance of every paper it relies on. An answer with no rows is
    `insufficient` without a call.
 
 The runner is an evidence.agentic.runner.AgentRunner: ResearchAgentRunner for real runs (Linux,
-sandbox, LiteLLM gateway), a fake in tests.
+sandbox, LiteLLM gateway), a fake in tests. Its model is AgentSettings.model (`orch-model`, the one
+model every extractor and both baselines use; docs/evidence-system.md Part G.3).
 """
 from __future__ import annotations
 
@@ -26,18 +27,10 @@ from pydantic_ai.models import Model
 from evidence.agentic.runner import AgentJob, AgentRunner
 from gold.llm import JsonlCache, redact
 
-from .common import DEFAULT_QUESTION, LABEL_RULES, AnswerReply, SystemCorpus, answer_json, cached_reply
+from .common import DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, map_answer
 
 SYSTEM = "agent-baseline"
 BUDGET = {"steps": 60, "tokens": 2_000_000}  # the research runs' provisional budget (agent/rundir.BUDGET)
-
-MAP_INSTRUCTIONS = f"""You are given a research question, the ids of the papers in a corpus, and the answer a research
-agent wrote after reading the corpus: its rows, the facts it recorded (subject | predicate | object) with the quotes
-behind them, and its notes. Do not add knowledge of your own: report what the agent's answer says. Give the label the
-agent's answer amounts to and, for every corpus paper the answer relies on, the stance it attributes to that paper.
-Use only the paper ids listed.
-
-{LABEL_RULES}"""
 
 
 def question_concept(question: str) -> dict[str, Any]:
@@ -92,9 +85,6 @@ def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, quest
     if not (record.get("answer") or {}).get("rows"):
         reply, call = AnswerReply(label="insufficient", studies=[], answer_text=text or "(no answer)"), None
     else:
-        ids = ", ".join(corpus.ids)
-        prompt = f"Question: {question}\n\nCorpus paper ids: {ids}\n\nThe agent's answer:\n{text}"
-        reply, call = cached_reply(cache, MAP_INSTRUCTIONS, prompt, model=model, model_id=model_id, seed=seed)
-        call.pop("cached")
+        reply, call = map_answer(cache, question, corpus.ids, text, model=model, model_id=model_id, seed=seed)
     return answer_json(SYSTEM, question, reply, corpus.ids, corpus_id=corpus.corpus_id, agent=agent,
                        agent_answer=record.get("answer"), agent_answer_text=text, mapping_call=call)
