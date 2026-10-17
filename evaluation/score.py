@@ -68,10 +68,14 @@ truth's.
 Per extractor (`score_extractors`, pooled by `evaluate benchmark`): every item counts for every
 extractor id in its `found_by` (an item two extractors found counts for both), so the per-extractor item
 counts can exceed A's. Per extractor, evidence type and level (and `all`): items it found, matched (A's
-matching), precision, recall = its matched items / all facts of that type and level, F1, span hits and
-span accuracy of its matched items, `only` and `only_matched` as in `cascade`, and for measurements the
-association (B's `association`: condition role and metric canonical both right) of its matched items.
-Cost per extractor from the run directory (`truth.Run`): calls and model calls from calls/*.json,
+matching), precision, recall, F1, span hits and span accuracy of its matched items, `only` and
+`only_matched` as in `cascade`, and for measurements the association (B's `association`: condition role
+and metric canonical both right) of its matched items. The recall denominator is the facts of the
+(document, evidence type) pairs the extractor was actually called on (its `extractor_call` events in
+`events.jsonl`, `truth.Run.events`): a cascade `until_found` or the funnel's `gaps` strategy (Part D)
+skips later positions for documents the earlier ones completed, and those documents' facts are not
+misses of an extractor that never saw them. Without events (None), or for an extractor id with no event
+at all, every fact of the type and level counts. Cost per extractor from the run directory (`truth.Run`): calls and model calls from calls/*.json,
 seconds from the extractor_call events, tokens from the record cache when it still exists (else null).
 
 Intervals (`score_intervals`, rules in `stats`): extraction F1 per evidence type over all levels,
@@ -96,12 +100,11 @@ from evidence.contract import Item, Scope
 from evidence.rules import FLAGS
 
 from .stats import bootstrap_f1, bootstrap_mean, interval_row
-from .truth import MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
+from .truth import ENGINE, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
 
 VALUE_TOLERANCE = 0.005
 INFEASIBLE = 1e6
 ALL = "all"
-ENGINE = "evidence-engine"
 DIRECTIONS = ("supports", "contradicts", "neutral", "undetermined")
 COUNTED = ("supporting", "contradicting", "neutral")      # the counts the label table sees (C1)
 OPTIONAL_COUNTS = ("undetermined", "duplicates")          # compared when both sides report them (F1, F2)
@@ -525,18 +528,47 @@ def _associated(m: Matching, item: Item, fact: Fact) -> bool:
                 and metric and true_metric and metric.fields.get("canonical") == true_metric.data.get("canonical"))
 
 
+def called_on(run: Run | None) -> dict[str, set[tuple[str, str]]] | None:
+    """Extractor id -> the (document, evidence type) pairs it has an extractor_call event for; None without events."""
+    if run is None or run.events is None:
+        return None
+    out: dict[str, set[tuple[str, str]]] = defaultdict(set)
+    for event in run.events:
+        meta = event.get("custom_metadata") if isinstance(event.get("custom_metadata"), dict) else {}
+        document, kind = meta.get("document"), meta.get("evidence_type")
+        if event.get("agent_id") and document and kind:
+            out[str(event["agent_id"])].add((str(document), str(kind)))
+    return dict(out)
+
+
+def fact_counts(truth: GroundTruth, pairs: set[tuple[str, str]] | None = None) -> Counter[tuple[str, str]]:
+    """Facts per (evidence type, level) key, over all facts or only those of the (paper, type) pairs given."""
+    counts: Counter[tuple[str, str]] = Counter()
+    for fact in truth.facts.values():
+        if pairs is not None and (fact.paper, fact.type) not in pairs:
+            continue
+        for key in ((fact.type, fact.level), (fact.type, ALL), (ALL, fact.level), (ALL, ALL)):
+            counts[key] += 1
+    return counts
+
+
 def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
     """Per extractor id x evidence type x level: P/R/F1, span accuracy, association and `only` counts
-    (docstring: Per extractor), plus the per-extractor cost."""
+    (docstring: Per extractor), plus the per-extractor cost. Recall is against the facts of the
+    (document, type) pairs the extractor was called on (`called_on`; all facts without events)."""
     truth = m.truth
-    facts: Counter[tuple[str, str]] = Counter()
-    for fact in truth.facts.values():
-        for key in ((fact.type, fact.level), (fact.type, ALL), (ALL, fact.level), (ALL, ALL)):
-            facts[key] += 1
+    all_facts = fact_counts(truth)
+    called = called_on(run)
     # cell: items, matched, span hits, only, only matched, associated (measurements)
     sums: dict[str, dict[tuple[str, str], list[int]]] = defaultdict(lambda: defaultdict(lambda: [0] * 6))
     for extractor in ((run.run or {}) if run else {}).get("extractors", []):
         sums[extractor]
+    for extractor, pairs in (called or {}).items():   # a call that found nothing is a row with 0 items
+        for document, kind in pairs:
+            if kind in TYPES:
+                level = truth.level_of(document)
+                for key in ((kind, level), (kind, ALL), (ALL, level), (ALL, ALL)):
+                    sums[extractor][key]
     for item in m.items.values():
         by = sorted(set(item.found_by or ("unknown",)))
         level = truth.level_of(m.document[item.item_id])
@@ -556,6 +588,7 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
                 cell[5] += associated
     rows = []
     for extractor in sorted(sums):
+        facts = fact_counts(truth, called[extractor]) if called and extractor in called else all_facts
         cells = sums[extractor] or {(ALL, ALL): [0] * 6}
         for (kind, level), (n, matched, hits, only, only_matched, associated) in sorted(cells.items()):
             rows.append({"extractor": extractor, "evidence_type": kind, "level": level,
@@ -563,7 +596,7 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
                          "span_accuracy": share(hits, matched), "only": only, "only_matched": only_matched,
                          "associated": associated if kind == "measurement" else None,
                          "association_accuracy": share(associated, matched) if kind == "measurement" else None})
-    return {"rows": rows, "cost": score_extractor_cost(run)}
+    return {"rows": rows, "cost": score_extractor_cost(run), "recall_scope": "called" if called else "all_facts"}
 
 
 def score_cost(run: dict[str, Any] | None, papers: int) -> dict[str, Any] | None:

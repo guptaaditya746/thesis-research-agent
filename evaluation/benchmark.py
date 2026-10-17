@@ -8,14 +8,18 @@ evidence type and level, an item counting for every extractor in its `found_by`)
 
 - rows: counts summed per (evidence type, level) over the reports, P/R/F1 and the shares recomputed from
   the sums (micro, as score A), so a benchmark over one explicit, one paraphrased and one distributed
-  corpus has one row per level;
+  corpus has one row per level. The recall denominator is what score_extractors recorded: the facts of
+  the documents and types the extractor was called on (its extractor_call events), or every fact when a
+  run has no events; `recall_scope` lists what each report used;
 - cost: calls, model calls, tokens and seconds summed over the runs that record them, and per call
   (tokens and seconds divided by the calls of the runs that recorded them, so a run without a cache does
   not pull the average down);
-- stability: a report's stability row applies to an extractor id when the row names the id, the id's
-  name (the engine's reexec.json keys calls by extractor name, `name@version#hash` -> `name`), or the
-  report's stability summary lists the id under `extractor_ids`; calls, identical and item counts
-  summed; null when no report has stability for it;
+- stability: a report's stability row applies to an extractor id when the row names the id, or the
+  report's stability summary lists the id under `extractor_ids`, or the row names the id's bare name
+  (the engine's reexec.json keys calls by extractor name, `name@version#hash` -> `name`) and exactly one
+  extractor id of that report has that name; when several ids share the name the rows are ambiguous and
+  are not counted (the record says so under `stability_ambiguous`, benchmark.md too). Calls, identical
+  and item counts summed; null when no report has stability for it;
 - corpora: `{corpus_id, run_id, levels}` of every report that mentions the extractor.
 
 Written as `DIR/<extractor_id>/benchmark.json` and one `DIR/benchmark.md`.
@@ -43,18 +47,25 @@ def split_id(extractor_id: str) -> tuple[str, str | None]:
     return name, version or None
 
 
-def _stability_rows(report: dict[str, Any], extractor_id: str) -> list[dict[str, Any]]:
+def _stability_rows(report: dict[str, Any], extractor_id: str, ids: set[str]) -> tuple[list[dict[str, Any]], bool]:
+    """(the report's stability rows for the id, whether rows keyed by its bare name were ambiguous)."""
     stability = report.get("stability") or {}
     name = split_id(extractor_id)[0]
+    same_name = sum(split_id(e)[0] == name for e in ids)
     summary = stability.get("summary") if isinstance(stability.get("summary"), dict) else {}
-    out = []
+    out, ambiguous = [], False
     for row in stability.get("rows") or []:
         key = row.get("extractor")
         entry = summary.get(key)
         listed = (entry.get("extractor_ids") or []) if isinstance(entry, dict) else []
-        if key == extractor_id or key == name or extractor_id in listed:
+        if key == extractor_id or extractor_id in listed:
             out.append(row)
-    return out
+        elif key == name:
+            if same_name == 1:
+                out.append(row)
+            else:
+                ambiguous = True
+    return out, ambiguous
 
 
 def benchmark(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -65,6 +76,8 @@ def benchmark(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     covered: dict[str, Counter[str]] = defaultdict(Counter)   # calls of the runs that recorded a measure
     stable: dict[str, Counter[str]] = defaultdict(Counter)
     outcomes: dict[str, Counter[str]] = defaultdict(Counter)
+    ambiguous: dict[str, list[str]] = defaultdict(list)
+    scopes: dict[str, list[str]] = defaultdict(list)
     for report in reports:
         extractors = report.get("extractors") or {}
         seen: set[str] = set()
@@ -86,7 +99,11 @@ def benchmark(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         for e in seen:
             corpora[e].append({"corpus_id": report.get("corpus_id"), "run_id": report.get("run_id"),
                                "levels": list(report.get("levels") or [])})
-            for row in _stability_rows(report, e):
+            scopes[e].append(extractors.get("recall_scope") or "all_facts")
+            rows, unclear = _stability_rows(report, e, seen)
+            if unclear:
+                ambiguous[e].append(str(report.get("corpus_id")))
+            for row in rows:
                 stable[e].update(reports=1, calls=row.get("calls") or 0, identical=row.get("identical") or 0,
                                  items_original=row.get("items_original") or 0,
                                  items_reproduced=row.get("items_reproduced") or 0)
@@ -103,8 +120,8 @@ def benchmark(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         name, version = split_id(e)
         records[e] = {"extractor_id": e, "name": name, "version": version, "corpora": corpora[e], "rows": rows,
                       "levels": sorted({r["level"] for r in rows if r["level"] != "all"}, key=_level_key),
-                      "cost": _cost(cost.get(e), covered.get(e)),
-                      "stability": _stability(stable.get(e), outcomes.get(e))}
+                      "recall_scope": scopes[e], "cost": _cost(cost.get(e), covered.get(e)),
+                      "stability": _stability(stable.get(e), outcomes.get(e)), "stability_ambiguous": ambiguous.get(e, [])}
     return records
 
 
@@ -131,10 +148,12 @@ def _stability(s: Counter[str] | None, outcomes: Counter[str] | None) -> dict[st
 def render(records: dict[str, dict[str, Any]]) -> str:
     """benchmark.md: one section per extractor id."""
     out = ["# Extractor benchmark", "", "Per extractor id (B11), pooled over the reports given; an item counts for "
-           "every extractor in its `found_by`, recall is against every fact of the type and level.", ""]
+           "every extractor in its `found_by`. Recall is against the facts of the documents and types the extractor "
+           "was called on (its extractor_call events; `called`), or every fact of the type and level for a run "
+           "without events (`all_facts`).", ""]
     for e, r in records.items():
-        out += [f"## {e}", "", "Corpora: " + (", ".join(f"{c['corpus_id']} (run {c['run_id']})" for c in r["corpora"])
-                                               or "-"), "",
+        out += [f"## {e}", "", "Corpora: " + (", ".join(f"{c['corpus_id']} (run {c['run_id']}, recall scope {s})"
+                                                         for c, s in zip(r["corpora"], r["recall_scope"])) or "-"), "",
                 table(r["rows"], ROW_COLUMNS), ""]
         if r["cost"]:
             c = r["cost"]
@@ -144,6 +163,10 @@ def render(records: dict[str, dict[str, Any]]) -> str:
             out += ["Re-execution stability:", "", table([r["stability"]], STABILITY_COLUMNS), ""]
         else:
             out += ["Re-execution stability: not measured.", ""]
+        if r["stability_ambiguous"]:
+            out += [f"Stability rows keyed by the bare name `{r['name']}` were left out for "
+                    + ", ".join(r["stability_ambiguous"])
+                    + ": several extractor ids there share that name, so the rows cannot be told apart.", ""]
     return "\n".join(line.rstrip() for line in out)
 
 
