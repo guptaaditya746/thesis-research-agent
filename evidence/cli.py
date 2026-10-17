@@ -7,15 +7,26 @@
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
+    evidence propose frame --question Q [--vocab V] --out DIR [--model ALIAS]
+    evidence propose draft DIR [--template P]
+    evidence propose critic DIR [--model ALIAS]
+    evidence propose cards DIR [--model ALIAS]
+    evidence propose freeze DIR
+    evidence propose amend DIR --reason R [--before-main-run]
+    evidence vocab build --name N --source DIR --out FILE
 
 `--extractors regex-only` needs no model. `--strategy gaps` is the funnel (docs/evidence-system.md Part D):
 screen, then escalate only the gaps; `all` (default) runs every extractor on every document and records the
 screen decision. LLM extractors reach LiteLLM through gold/llm.openai_model, which
 reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
 and both baselines) is the alias of the LLM and agentic extractors. `protocol check` validates a protocol file
-and prints {id, version, sha256, phases, extractors per type}; the proposal flow (docs/evidence-system.md
-Part E) will hang its subcommands beside it. Exit status: 0 ok, 1 a replay mismatch, a cache miss or a broken
-chain, 2 usage errors and a protocol that does not validate.
+and prints {id, version, revision, sha256, phases, extractors per type}. `propose` is the proposal flow
+(docs/evidence-system.md Part E, evidence/propose): question -> frame -> draft -> critic -> cards (the person
+edits decisions.yaml) -> freeze -> amend, all files in one directory; frame, critic and cards make one cached
+model call each (`--model`, default orch-model), the rest is deterministic, and nothing runs the protocol.
+`vocab build` makes a vocabulary snapshot from local files (evidence/propose/vocab.py). Exit status: 0 ok,
+1 a replay mismatch, a cache miss or a broken chain, 2 usage errors, a protocol that does not validate and a
+refused proposal step (a decision without a reason, an amendment without a reason or a change, a stale input).
 """
 from __future__ import annotations
 
@@ -63,7 +74,75 @@ def _parser() -> argparse.ArgumentParser:
     sub.add_parser("verify", help="check the run's hash chain").add_argument("run", type=Path)
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
     proto.add_parser("check", help="validate a protocol and print its sha256 and phases").add_argument("protocol", type=Path)
+    _propose_parser(sub)
     return p
+
+
+def _propose_parser(sub: argparse._SubParsersAction) -> None:
+    pro = sub.add_parser("propose", help="the proposal flow: question to frozen protocol (Part E)").add_subparsers(
+        dest="propose_command", required=True)
+    model_help = f"model alias (default {DEFAULT_MODEL})"
+    f = pro.add_parser("frame", help="question -> frame.json (one model call)")
+    f.add_argument("--question", required=True)
+    f.add_argument("--vocab", help="vocabulary snapshot: a path or a name under evidence/vocab/")
+    f.add_argument("--out", required=True, type=Path, help="the proposal directory, e.g. proposals/<slug>")
+    f.add_argument("--model", default=DEFAULT_MODEL, help=model_help)
+    d = pro.add_parser("draft", help="frame.json + the example protocol -> draft.yaml, draft.sources.json")
+    d.add_argument("dir", type=Path)
+    d.add_argument("--template", type=Path, help="example protocol (default evidence/protocols/rag-factuality.yaml)")
+    for name, text in (("critic", "deterministic checks and an LLM checklist -> critic.json"),
+                       ("cards", "the fixed choice points -> cards.json, decisions.yaml (prefilled)")):
+        s = pro.add_parser(name, help=text)
+        s.add_argument("dir", type=Path)
+        s.add_argument("--model", default=DEFAULT_MODEL, help=model_help)
+    pro.add_parser("freeze", help="decisions applied -> protocol.yaml, proposal.json").add_argument("dir", type=Path)
+    a = pro.add_parser("amend", help="the edited protocol.yaml -> the next revision, a line in amendments.jsonl")
+    a.add_argument("dir", type=Path)
+    a.add_argument("--reason", required=True)
+    a.add_argument("--before-main-run", action="store_true", help="the amendment is made before the main run")
+    v = sub.add_parser("vocab", help="vocabulary snapshots").add_subparsers(dest="vocab_command", required=True)
+    b = v.add_parser("build", help="build a snapshot from local term files (no network)")
+    b.add_argument("--name", required=True)
+    b.add_argument("--source", required=True, type=Path, help="directory with sources.json and the term files")
+    b.add_argument("--out", required=True, type=Path)
+
+
+def _propose(args: argparse.Namespace) -> int:
+    from .propose import amend, cards, critic, draft, frame, freeze
+    from .propose.common import ProposalError
+    from .propose.vocab import VocabError
+    try:
+        if args.propose_command == "frame":
+            out = frame.run(args.question, args.out, vocab=args.vocab, alias=args.model)
+        elif args.propose_command == "draft":
+            out = draft.run(args.dir, template=args.template)
+        elif args.propose_command == "critic":
+            out = critic.run(args.dir, alias=args.model)
+        elif args.propose_command == "cards":
+            out = cards.run(args.dir, alias=args.model)
+        elif args.propose_command == "freeze":
+            out = freeze.run(args.dir)
+        else:
+            print(json.dumps(amend.run(args.dir, args.reason, before_main_run=args.before_main_run), indent=1))
+            return 0
+    except (ProposalError, VocabError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(out)
+    return 0
+
+
+def _vocab(args: argparse.Namespace) -> int:
+    from .propose import vocab
+    try:
+        data = vocab.build(args.name, args.source)
+    except (OSError, ValueError, KeyError) as exc:   # VocabError and pydantic's ValidationError are ValueErrors
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    path = vocab.write(data, args.out)
+    print(json.dumps({"file": str(path), "name": data["name"], "sha256": data["sha256"], "terms": len(data["terms"])},
+                     indent=1))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -104,6 +183,10 @@ def _dispatch(args: argparse.Namespace) -> int:
         return 0
     if args.command == "protocol":
         return _protocol_check(args.protocol)
+    if args.command == "propose":
+        return _propose(args)
+    if args.command == "vocab":
+        return _vocab(args)
     report = verify(args.run / EVENTS_FILE, head=read_json(args.run / RUN_FILE).get("chain_head"))
     print(json.dumps({"ok": report.ok, "records": report.records, "head": report.head, "errors": report.errors}, indent=1))
     return 0 if report.ok else 1
@@ -116,7 +199,8 @@ def _protocol_check(path: Path) -> int:
     except (OSError, ValueError, yaml.YAMLError) as exc:   # pydantic's ValidationError is a ValueError
         print(f"error: {path}: {exc}", file=sys.stderr)
         return 2
-    print(json.dumps({"id": protocol.id, "version": protocol.version, "sha256": protocol.sha256,
+    print(json.dumps({"id": protocol.id, "version": protocol.version, "revision": protocol.revision,
+                      "sha256": protocol.sha256,
                       "phases": protocol.phases(),
                       "extractors": {t: [r.name for r in s.extractors] for t, s in protocol.evidence_types.items()}},
                      indent=1))
