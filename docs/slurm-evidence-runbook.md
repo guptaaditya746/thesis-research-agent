@@ -1,7 +1,7 @@
 # Runbook: the evidence-level system on Slurm, first live run
 
 The evidence-level system (`evidence/`, `synth/`, `evaluation/`; formats in `docs/evidence-system.md`) is
-built and tested only offline, with scripted models (1052 passed, 1 skipped on `main`). This session runs it
+built and tested only offline, with scripted models (1156 passed, 1 skipped on `main`). This session runs it
 against the real models for the first time: an LLM-written synthetic corpus, the engine with the LLM
 extractors and the agentic extractor, replay and re-execution, both baselines, and the scores.
 
@@ -88,7 +88,7 @@ uv sync --locked --all-groups
 uv run pytest -q -W ignore::SyntaxWarning 2>&1 | tail -n 3
 ```
 
-Expect `1052 passed, 1 skipped` (WSL count; the skip is the "Landlock missing" test, so on a node with
+Expect `1156 passed, 1 skipped` (WSL count; the skip is the "Landlock missing" test, so on a node with
 Landlock the split may differ by one). A failure here: record it; fix only clear test-environment
 differences.
 

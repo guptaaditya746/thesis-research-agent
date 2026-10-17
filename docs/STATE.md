@@ -83,8 +83,8 @@ He wrote no numbered research questions. Read from his text:
 | Protocol | Hand-written now; an LLM protocol generator later (optional, as the supervisor says). |
 | Evaluation | The synthetic benchmark is the main evaluation. A check on the RAG papers among the 337 real papers, with gold built by the `gold/` method (labelling repo) and reviewed by the user. |
 | Models | The same model for all extractors and both baselines, so a comparison isolates the method. |
-| Fixes for conflicts with the supervisor | (1) The RAG baseline becomes a plain retrieve-then-answer: top passages over the whole corpus, a neutral prompt (today: top 2 BM25 passages of every paper by default, A6; superseded by Part G.1, built 17 Oct). (2) The fidelity check fails a paper that adds numbers or claims the ground truth does not have. (3) README and this page keep his design and our additions apart. |
-| Second build (ev2) | To be finished: duplicates, missing information, large effects, the synthesis flags, his controlled variant (change one study, regenerate that paper, predictable shift). Its unreviewed work in progress and its contract are **not on main**; they are in the bundle `../thesis-ev2-wip.bundle` outside the repository (`git fetch ../thesis-ev2-wip.bundle 'refs/heads/*:refs/heads/*'`). |
+| Fixes for conflicts with the supervisor | (1) The RAG baseline becomes a plain retrieve-then-answer: top passages over the whole corpus, a neutral prompt (built 17 Oct, Part G.1; before: top 2 BM25 passages of every paper and a prompt with the label rules). (2) The fidelity check fails a paper that adds numbers or claims the ground truth does not have (built 17 Oct, Part G.2: `added_numbers`, `added_claims`, `blind_extra`). (3) README and this page keep his design and our additions apart. |
+| Second build (ev2) | **Built 17 Oct** (Part F): the synthesis flags (duplicates, large effects, disagreeing claims) in `answer.json`; the generator's knobs `--duplicates/--missing/--outliers` (his §6) and `--irrelevant` (ours, for the screen); his controlled variant as `synth variant`; bootstrap intervals, flag scoring, `evaluate shift`, `evaluate benchmark`. The 15 Oct work in progress was restored from the bundle `../thesis-ev2-wip.bundle`, ported by hand onto protocol version 2, reviewed and merged. |
 | Funnel engine (ours) | Per paper: screen (is there a RAG-vs-baseline experiment? else skip with a reason) → regex → completeness check against a rule the protocol declares (a RAG and a baseline condition, a shared metric, values for both on the same dataset) → escalate only the gaps (LLM, then the agent with a targeted task) → stop when complete or exhausted; gaps recorded. Modes `all` (every extractor on everything, for benchmarking) and `gaps` (answering, the 337-paper check). |
 | Proposal flow (ours) | PICO-style frame → draft (EDC-style definitions; each field's source: ontology, protocol or invented) → critic checklist → fixed choice-point cards with LLM defaults, the user decides with a reason (`decisions:` log) → freeze with a hash and a pinned vocabulary snapshot → PROSPERO/OSF-style amendments (version, amended hash, reason, impact, before the main run or not). |
 | Ontology | Optional offline vocabulary snapshot (CS-KG 2.0 terms and synonyms, Papers with Code metric names, ML-Schema measurement shape, EXPO roles; DBLP only for metadata), used **only in the proposal flow**. The evidence graph stays plain JSON with the PROV-O / Web Annotation export; no OWL. |
@@ -93,8 +93,8 @@ He wrote no numbered research questions. Read from his text:
 ## 5. Order of work
 
 1. Contract: funnel engine, declarative synthesis, proposal flow (written before any code). **Done 17 Oct**: Parts C–G of `evidence-system.md`; the declarative synthesis is built (protocol version 2).
-2. The conflict fixes (RAG baseline, fidelity check, attribution).
-3. Finish ev2.
+2. The conflict fixes (RAG baseline, fidelity check, attribution). **Done 17 Oct** (Part G).
+3. Finish ev2. **Done 17 Oct** (Part F).
 4. Funnel engine.
 5. Proposal flow.
 6. Codex runbook and the live Slurm run.
@@ -105,27 +105,25 @@ He wrote no numbered research questions. Read from his text:
 ## 6. What exists
 
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models only
-(1052 passed, 1 skipped in WSL), **not yet run against live models**. The runbook for the first live run is
+(1156 passed, 1 skipped in WSL, 17 Oct), **not yet run against live models**. The runbook for the first live run is
 [`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (not run; written before the 16 Oct decisions,
 see §7).
 
 | Step (supervisor's order) | State | Where |
 |---|---|---|
 | Protocol by hand | built, version 2 | `evidence/protocols/rag-factuality.yaml` (four evidence types: condition, metric, measurement, author claim; field schemas, value bounds, cascade per type, locate strategy, a screening question, every synthesis parameter), `evidence/protocol.py` |
-| Synthetic corpus generator | built | `synth/`: seeded ground truth, five levels plus `mixed`, template and LLM renderers, fidelity checks with retries, one corpus per level from one study set, a review sheet, six example corpora ([`synth/README.md`](../synth/README.md)) |
+| Synthetic corpus generator | built; knobs, variants and the stricter fidelity checks added 17 Oct | `synth/`: seeded ground truth from the protocol's synthesis block, five levels plus `mixed`, template and LLM renderers, fidelity checks with retries (including added numbers, added claims, blind extras), one corpus per level from one study set, the knobs of Part F2, `synth variant` (Part F3), a review sheet, six example corpora ([`synth/README.md`](../synth/README.md)) |
 | Extractor library | built | `evidence/extractors/` (regex and single-call LLM per evidence type), `evidence/agentic/`; contract `evidence/contract.py` (Part B) |
 | Provenance and replay (ours) | built | `evidence/engine.py`, `replay.py`, `prov.py` |
 | Evidence representation | built | `evidence/merge.py`, `graph.py`: merged items with every span and `found_by`; `graph.json` |
 | Synthesis rules | built, in the protocol (17 Oct) | parameters in the protocol's `synthesis` block (Part C); machinery `evidence/rules.py`, `synthesis.py`: same-dataset pairing, table before prose; undetermined studies with a reason code |
-| Evaluation A, B, C | built | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis, locate recall, cascade contribution, cost, stability |
+| Evaluation A, B, C | built; intervals, flags, shift and benchmark records added 17 Oct | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis (direction accuracy, completeness, traceability, expected-undetermined rule, flag precision/recall), locate recall, cascade contribution, cost, stability, 95 % BCa bootstrap intervals (`stats.py`); `evaluate shift` (`shift.py`), `evaluate benchmark` (`benchmark.py`, B11 records per extractor) |
 | Baselines | built; the RAG baseline rebuilt 17 Oct as the plain retrieve-then-answer system (§4, Part G.1) | `evaluation/baselines/rag.py` (global top 8, neutral prompt with citations, the mapping call shared with the agent baseline in `common.py`), `agent.py`; score C adds completeness and traceability |
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
 | Viewer | earlier design | `webapp/`, to be rebuilt |
 
-Not built: the supervisor's controlled variant and the §6 knobs (in the ev2 bundle), confidence intervals in
-the comparison, per-extractor benchmark records (B11), the funnel engine, the proposal flow, the 337-paper
-check. Their contracts are written: [`evidence-system.md`](evidence-system.md) Parts D (funnel), E
-(proposal flow), F (ev2), G (the conflict fixes of §4).
+Not built: the funnel engine (Part D; the protocol's `screen` block is parsed but not run), the proposal flow
+(Part E), the 337-paper check. Their contracts are written in [`evidence-system.md`](evidence-system.md).
 
 ## 7. Open
 
@@ -133,11 +131,10 @@ check. Their contracts are written: [`evidence-system.md`](evidence-system.md) P
 |---|---|
 | Agentic extractor | Open question for the supervisor (B14): is an agentic extractor acceptable as one implementation, with its runs replayed from records and its re-execution stability reported? |
 | Model choice in the runbook | Done 17 Oct (Part G.3): `orch-model` is the default of every extractor and both baselines (`AgentSettings.model`, `evidence run --model`, `evaluate … --model`); `sub-model-1` writes the synthetic papers, `sub-model-2` is the blind check; the runbook's model table, rules and steps 1, 3–6 follow. |
-| Fidelity check | Of the conflict fixes of §4, the RAG baseline is built (17 Oct, Part G.1); the fidelity check that fails a paper adding numbers or claims (Part G.2) is not. |
-| Controlled variants | What is built is one study set rendered per level; the supervisor's variant (change one study, predictable shift) is in ev2. |
 | 337-paper check | Which of the 337 papers are RAG papers, and their gold (the `gold/` method; never run on the real model, [`earlier-work.md`](earlier-work.md) §6). |
 | Structured outputs on the server | pydantic-ai's `response_format` calls (LLM extractors, gold, judge) cannot ask for `disable_any_whitespace` per request; proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the `llm-setup` profile (a submodule, not changed here); count `finish_reason` length on guided calls on Slurm either way. |
-| Statistics | Intervals for the per-level comparison and the baseline comparison are not decided yet (ev2 has a bootstrap draft). |
+| Statistics | 95 % BCa bootstrap intervals (2,000 resamples, papers resampled; paired engine-minus-baseline difference) are built (Part F4); whether to report a test besides the intervals is open. |
+| Runbook | `slurm-evidence-runbook.md` predates Parts F and G in its step list: the knob corpora, `synth variant`, `evaluate shift`/`benchmark` and the new baseline outputs are not in it yet (plan step 6). |
 
 ## 8. Documents
 
