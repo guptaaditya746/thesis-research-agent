@@ -4,6 +4,11 @@
     evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval per_paper|global] [--k N]
     evaluate agent-baseline --corpus CORPUS --out DIR [--model ALIAS] [--sandbox ...] [--steps N] [--tokens N]
     evaluate compare REPORT [REPORT ...] --out DIR
+    evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
+    evaluate benchmark REPORT [REPORT ...] --out DIR
+
+`shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
+files written by `score` (a directory holding one is accepted too).
 
 Model calls go to the LiteLLM gateway ($LITELLM_BASE_URL, default http://127.0.0.1:4000/v1); the
 key is read from $LITELLM_MASTER_KEY when a model is made and is never printed or written.
@@ -110,6 +115,36 @@ def cmd_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def _report(path: Path) -> dict[str, Any]:
+    path = path / "report.json" if path.is_dir() else path
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def cmd_shift(args: argparse.Namespace) -> int:
+    from .shift import shift, write_shift
+
+    spec = json.loads(args.variant_json.read_text(encoding="utf-8"))
+    try:
+        result = shift(_report(args.base), _report(args.variant), spec)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from None
+    js, md = write_shift(result, args.out)
+    verdict = ", ".join(f"{s['system']}={'yes' if s['shifted_as_expected'] else 'no'}" for s in result["systems"])
+    print(f"wrote {js} and {md}: shifted as expected: {verdict or 'no system in both reports'}")
+    return 0
+
+
+def cmd_benchmark(args: argparse.Namespace) -> int:
+    from .benchmark import benchmark, write_benchmark
+
+    records = benchmark([_report(p) for p in args.reports])
+    if not records:
+        raise SystemExit("evaluate benchmark: no report has an `extractors` section (score a run, not answers only)")
+    paths = write_benchmark(records, args.out)
+    print(f"wrote {len(paths) - 1} benchmark.json record(s) and {paths[-1]}")
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evaluate", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -156,6 +191,18 @@ def parser() -> argparse.ArgumentParser:
     c.add_argument("reports", type=Path, nargs="+", help="report.json files or directories holding one")
     c.add_argument("--out", type=Path, required=True)
     c.set_defaults(func=cmd_compare)
+
+    sh = sub.add_parser("shift", help="a counterfactual variant: did the answer shift as variant.json predicts")
+    sh.add_argument("--base", type=Path, required=True, help="report.json of the base corpus (or its directory)")
+    sh.add_argument("--variant", type=Path, required=True, help="report.json of the variant corpus (or its directory)")
+    sh.add_argument("--variant-json", type=Path, required=True, help="variant.json written by `synth variant`")
+    sh.add_argument("--out", type=Path, required=True)
+    sh.set_defaults(func=cmd_shift)
+
+    b = sub.add_parser("benchmark", help="the B11 benchmark record per extractor id, pooled over reports")
+    b.add_argument("reports", type=Path, nargs="+", help="report.json files or directories holding one")
+    b.add_argument("--out", type=Path, required=True, help="writes <out>/<extractor_id>/benchmark.json and benchmark.md")
+    b.set_defaults(func=cmd_benchmark)
     return p
 
 

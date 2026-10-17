@@ -1,13 +1,16 @@
-"""Scoring a run against a corpus's ground truth (docs/evidence-system.md A5).
+"""Scoring a run against a corpus's ground truth (docs/evidence-system.md A5, additions F4).
 
-Three parts are scored separately, so an error is counted where it happens:
+Three parts are scored separately, so an error is counted where it happens (the supervisor's A/B/C):
 
 - **A extraction**: items against the ground-truth facts of the same paper and evidence type.
 - **B integration**: whether matched measurements are linked to the right condition and metric, and
   whether each study's rag/baseline pair is the true one.
-- **C synthesis**: per-study direction and the answer label, for the engine and every baseline answer.
+- **C synthesis**: per-study direction, the answer label and the flags, for the engine and every
+  baseline answer.
 
-Plus locate recall, cascade contribution, cost and re-execution stability.
+Plus locate recall, cascade contribution, cost and re-execution stability (A5), and from Part F4 (our
+additions): bootstrap intervals, the flag scores, the expected-undetermined rule and the per-extractor
+rows `evaluate benchmark` pools into the B11 records.
 
 Matching rules (A; B and the pair check reuse A's matching):
 
@@ -39,9 +42,46 @@ item whose `canonical` is the true metric's canonical (`association` = both). `c
 (metric) fact. True pair: the engine's answer names measurement items for treatment and control per
 study; the pair is true when A matched them to the facts `effect.treatment` and `effect.control`.
 
-C: for every ground-truth study, the system's `studies` entry with `document` = the study's paper
-gives a direction; it is correct when it equals `effect.direction`. A missing or `undetermined` entry
-is wrong (and counted as unanswered). The label is correct when equal to `answer.label`.
+C: for every ground-truth study with an expected direction, the system's `studies` entry with `document`
+= the study's paper gives a direction (a missing entry, or one with a direction outside supports /
+contradicts / neutral / undetermined, counts as `undetermined`); it is correct when it equals the
+expected direction. The expected direction is `effect.direction`, or `undetermined` for a study that is
+`relevant: false` (F2; `expected_direction`); a study without either is not scored. So a study whose
+true effect is `undetermined` (missing information) or that is irrelevant is right when the system says
+`undetermined` or does not answer it (F4). `direction_accuracy` is over all scored studies; `answered`
+(share with a determined given direction) and `accuracy_answered` (accuracy over those) are over the
+studies with a *determined* expected direction only, so a system that answers everything is not
+rewarded for guessing on a study nobody can determine. The confusion counts include expected
+`undetermined`. The label is correct when equal to `answer.label`.
+
+Flags (C, F4; `score_flags`): null for an answer without a `flags` key (the baselines, and engine
+answers from before Part F). Otherwise per flag in `rules.FLAGS`: the expected set is the papers whose
+ground-truth study lists the flag (`duplicate` also when `duplicate_of` is set), the given set is the
+answer's top-level `flags[flag]`, else the documents whose study entry lists the flag; tp/fp/fn,
+precision (null when nothing was given) and recall (null when nothing was expected). `counts_correct`:
+the answer's `counts` for supporting, contradicting and neutral equal the lengths of the ground-truth
+`answer` lists, and `undetermined` and `duplicates` too when both sides have them (null without
+`counts`). `duplicates_correct`: the documents flagged as duplicates (the answer's `duplicates` list,
+else the given `duplicate` set) are exactly the expected ones and each `duplicate_of` matches the
+truth's.
+
+Per extractor (`score_extractors`, pooled by `evaluate benchmark`): every item counts for every
+extractor id in its `found_by` (an item two extractors found counts for both), so the per-extractor item
+counts can exceed A's. Per extractor, evidence type and level (and `all`): items it found, matched (A's
+matching), precision, recall, F1, span hits and span accuracy of its matched items, `only` and
+`only_matched` as in `cascade`, and for measurements the association (B's `association`: condition role
+and metric canonical both right) of its matched items. The recall denominator is the facts of the
+(document, evidence type) pairs the extractor was actually called on (its `extractor_call` events in
+`events.jsonl`, `truth.Run.events`): a cascade `until_found` or the funnel's `gaps` strategy (Part D)
+skips later positions for documents the earlier ones completed, and those documents' facts are not
+misses of an extractor that never saw them. Without events (None), or for an extractor id with no event
+at all, every fact of the type and level counts. Cost per extractor from the run directory (`truth.Run`): calls and model calls from calls/*.json,
+seconds from the extractor_call events, tokens from the record cache when it still exists (else null).
+
+Intervals (`score_intervals`, rules in `stats`): extraction F1 per evidence type over all levels,
+resampling papers (per paper: matched, items, facts; the statistic is the micro F1 of the resample);
+direction accuracy per system, resampling studies; and for each baseline the paired difference engine
+correct minus baseline correct per study.
 
 Locate recall: a placement is inside the scope when one `locate.json` entry for its paper and its
 fact's evidence type has a scope that contains it (`evidence.contract.Scope.contains`).
@@ -49,6 +89,7 @@ fact's evidence type has a scope that contains it (`evidence.contract.Scope.cont
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -56,13 +97,17 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from evidence.contract import Item, Scope
+from evidence.rules import FLAGS
 
-from .truth import MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
+from .stats import bootstrap_f1, bootstrap_mean, interval_row
+from .truth import ENGINE, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
 
 VALUE_TOLERANCE = 0.005
 INFEASIBLE = 1e6
 ALL = "all"
 DIRECTIONS = ("supports", "contradicts", "neutral", "undetermined")
+COUNTED = ("supporting", "contradicting", "neutral")      # the counts the label table sees (C1)
+OPTIONAL_COUNTS = ("undetermined", "duplicates")          # compared when both sides report them (F1, F2)
 
 
 # --- small helpers ---------------------------------------------------------------------------------
@@ -170,9 +215,9 @@ class Matching:
         grouped: dict[tuple[str, str], list[Item]] = defaultdict(list)
         for item in items:
             grouped[(self.document[item.item_id], item.evidence_type)].append(item)
-        papers = {s["paper"] for s in truth.studies} | {p for p, _ in grouped}
+        self.papers = sorted({s["paper"] for s in truth.studies} | {p for p, _ in grouped})
         self.cells: dict[tuple[str, str], tuple[int, int, int, int]] = {}  # (paper, type) -> items, facts, matched, spans ok
-        for paper in sorted(papers):
+        for paper in self.papers:
             for kind in TYPES:
                 its, facts = grouped.get((paper, kind), []), truth.of(paper, kind)
                 pairs = match(its, facts, truth)
@@ -250,33 +295,119 @@ def score_integration(m: Matching, answer: dict[str, Any] | None) -> dict[str, A
 
 # --- C: synthesis ----------------------------------------------------------------------------------
 
+def expected_direction(study: dict[str, Any]) -> str | None:
+    """`effect.direction`; `undetermined` for a `relevant: false` study (F2); None when there is neither."""
+    if study.get("relevant") is False:
+        return "undetermined"
+    return (study.get("effect") or {}).get("direction")
+
+
 def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any]:
-    """Per-study direction accuracy and label correctness of one system's answer.json."""
+    """Per-study direction accuracy, label correctness and flags of one system's answer.json."""
     given = {s.get("document"): s.get("direction", "undetermined") for s in answer.get("studies", [])}
     per_level: dict[str, Counter[str]] = defaultdict(Counter)
     confusion: Counter[tuple[str, str]] = Counter()
     studies = []
     for study in truth.studies:
-        expected = (study.get("effect") or {}).get("direction")
+        expected = expected_direction(study)
         if expected is None:
             continue
         got = given.get(study["paper"], "undetermined")
         if got not in DIRECTIONS:
             got = "undetermined"
+        determined = expected != "undetermined"   # F4: answered/accuracy_answered over determined expectations
         confusion[(expected, got)] += 1
-        studies.append({"study": study["study_id"], "paper": study["paper"], "level": study["level"],
-                        "expected": expected, "given": got, "correct": got == expected})
-        for level in (study["level"], ALL):
-            per_level[level].update(studies=1, correct=got == expected, answered=got != "undetermined",
-                                    correct_answered=got == expected and got != "undetermined")
-    rows = [{"level": level, "studies": c["studies"], "direction_accuracy": share(c["correct"], c["studies"]),
-             "answered": share(c["answered"], c["studies"]),
+        studies.append({"study": study["study_id"], "paper": study["paper"], "level": study.get("level", "unknown"),
+                        "expected": expected, "given": got, "correct": got == expected, "determined": determined})
+        for level in (study.get("level", "unknown"), ALL):
+            per_level[level].update(studies=1, correct=got == expected, determined=determined,
+                                    answered=determined and got != "undetermined",
+                                    correct_answered=determined and got == expected and got != "undetermined")
+    rows = [{"level": level, "studies": c["studies"], "determined": c["determined"],
+             "direction_accuracy": share(c["correct"], c["studies"]),
+             "answered": share(c["answered"], c["determined"]),
              "accuracy_answered": share(c["correct_answered"], c["answered"])}
             for level, c in sorted(per_level.items())]
     expected_label = truth.answer.get("label")
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,
             "label_correct": answer.get("label") == expected_label, "rows": rows, "studies": studies,
-            "confusion": [{"expected": e, "given": g, "n": n} for (e, g), n in sorted(confusion.items())]}
+            "confusion": [{"expected": e, "given": g, "n": n} for (e, g), n in sorted(confusion.items())],
+            "flags": score_flags(truth, answer)}
+
+
+# --- C flags (F4, our addition) --------------------------------------------------------------------
+
+def expected_flags(truth: GroundTruth, flag: str) -> set[str]:
+    """Papers whose ground-truth study carries `flag` (F2; `duplicate` also from `duplicate_of`)."""
+    return {s["paper"] for s in truth.studies
+            if flag in (s.get("flags") or []) or (flag == "duplicate" and s.get("duplicate_of"))}
+
+
+def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | None:
+    """Flag precision and recall, counts and duplicates of one answer (docstring: Flags); None without `flags`."""
+    if "flags" not in answer:
+        return None
+    top = answer.get("flags") if isinstance(answer.get("flags"), dict) else {}
+    entries = {s.get("document"): s for s in answer.get("studies", []) if isinstance(s, dict)}
+    rows = []
+    given_sets: dict[str, set[str]] = {}
+    for flag in FLAGS:
+        expected = expected_flags(truth, flag)
+        if isinstance(top.get(flag), list):
+            given = {str(d) for d in top[flag]}
+        else:
+            given = {d for d, s in entries.items() if flag in (s.get("flags") or [])}
+        given_sets[flag] = given
+        tp = len(expected & given)
+        rows.append({"flag": flag, "expected": sorted(expected), "given": sorted(given), "tp": tp,
+                     "fp": len(given - expected), "fn": len(expected - given),
+                     "precision": share(tp, len(given)), "recall": share(tp, len(expected))})
+    counts = answer.get("counts") if isinstance(answer.get("counts"), dict) else None
+    expected_counts = {k: len(v) for k, v in truth.answer.items() if isinstance(v, list)}
+    compared = [k for k in (*COUNTED, *OPTIONAL_COUNTS)
+                if k in expected_counts and (k in COUNTED or k in (counts or {}))]
+    counts_correct = None
+    if counts is not None and all(k in expected_counts for k in COUNTED):
+        counts_correct = all(counts.get(k) == expected_counts[k] for k in compared)
+    expected_dups = {s["paper"]: s.get("duplicate_of") for s in truth.studies
+                     if s.get("duplicate_of") or "duplicate" in (s.get("flags") or [])}
+    flagged = ({str(d) for d in answer["duplicates"]} if isinstance(answer.get("duplicates"), list)
+               else given_sets["duplicate"])
+    given_dups = {d: (entries.get(d) or {}).get("duplicate_of") for d in sorted(flagged)}
+    return {"rows": rows, "counts_correct": counts_correct,
+            "counts": {"expected": {k: expected_counts[k] for k in compared},
+                       "given": {k: (counts or {}).get(k) for k in compared}},
+            "duplicates_correct": given_dups == expected_dups,
+            "duplicates": {"expected": dict(sorted(expected_dups.items())), "given": given_dups}}
+
+
+# --- intervals (F4, our addition) ------------------------------------------------------------------
+
+def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[str, Any]:
+    """Bootstrap intervals (docstring: Intervals; rules in stats.py) for extraction F1, direction accuracy
+    and the paired engine-minus-baseline difference."""
+    extraction = []
+    if m is not None:
+        for kind in (*TYPES, ALL):
+            kinds = TYPES if kind == ALL else (kind,)
+            rows = []
+            for paper in m.papers:
+                cells = [m.cells.get((paper, k), (0, 0, 0, 0)) for k in kinds]
+                rows.append((sum(c[2] for c in cells), sum(c[0] for c in cells), sum(c[1] for c in cells)))
+            extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind))
+    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in system["studies"]), system=system["system"])
+                 for system in systems]
+    engine = next((s for s in systems if s["system"] == ENGINE), None)
+    paired = []
+    if engine is not None:
+        engine_correct = {s["paper"]: int(s["correct"]) for s in engine["studies"]}
+        for system in systems:
+            if system is engine:
+                continue
+            diffs = [engine_correct[s["paper"]] - int(s["correct"]) for s in system["studies"]
+                     if s["paper"] in engine_correct]
+            paired.append(interval_row(bootstrap_mean(diffs), system=system["system"]))
+    return {"extraction": extraction, "synthesis": synthesis, "paired": paired}
 
 
 # --- locate, cascade, cost, stability --------------------------------------------------------------
@@ -344,6 +475,130 @@ def score_cascade(m: Matching, run: dict[str, Any] | None) -> dict[str, Any]:
             "missed_by_all": dict(sorted(missed.items()))}
 
 
+# --- per extractor (F4 / B11, our addition) --------------------------------------------------------
+
+def _seconds(event: dict[str, Any]) -> float | None:
+    try:
+        started, ended = (datetime.fromisoformat(str(event[k]).replace("Z", "+00:00"))
+                          for k in ("started_at", "ended_at"))
+    except (KeyError, TypeError, ValueError):
+        return None
+    return (ended - started).total_seconds()
+
+
+def score_extractor_cost(run: Run | None) -> list[dict[str, Any]] | None:
+    """Per extractor id: calls, model calls, tokens (from the cache, else null) and seconds (from the events,
+    else null); None for a run without calls/*.json."""
+    if run is None or run.calls is None:
+        return None
+    rows: dict[str, dict[str, Any]] = {}
+
+    def row(extractor: str) -> dict[str, Any]:
+        return rows.setdefault(extractor, {"extractor": extractor, "calls": 0, "model_calls": 0,
+                                           "input_tokens": 0 if run.usage is not None else None,
+                                           "output_tokens": 0 if run.usage is not None else None,
+                                           "seconds": 0.0 if run.events is not None else None})
+
+    for call in run.calls:
+        r = row(str(call.get("extractor_id") or "unknown"))
+        ids = [str(i) for i in call.get("model_calls") or []]
+        r["calls"] += 1
+        r["model_calls"] += len(ids)
+        for usage in (run.usage.get(i) for i in ids) if run.usage is not None else ():
+            if usage:
+                r["input_tokens"] += usage["input_tokens"]
+                r["output_tokens"] += usage["output_tokens"]
+    for event in run.events or []:
+        r = row(str(event.get("agent_id") or "unknown"))
+        seconds = _seconds(event)
+        if seconds is not None:
+            r["seconds"] += seconds
+    for r in rows.values():
+        if r["seconds"] is not None:
+            r["seconds"] = round(r["seconds"], 3)
+    return [rows[e] for e in sorted(rows)]
+
+
+def _associated(m: Matching, item: Item, fact: Fact) -> bool:
+    """B's `association` for one matched measurement: condition role and metric canonical both right."""
+    truth = m.truth
+    true_condition, true_metric = truth.facts.get(fact.data.get("condition", "")), truth.facts.get(fact.data.get("metric", ""))
+    condition, metric = m.items.get(link(item, "condition") or ""), m.items.get(link(item, "metric") or "")
+    return bool(condition and true_condition and condition.fields.get("role") == true_condition.data.get("role")
+                and metric and true_metric and metric.fields.get("canonical") == true_metric.data.get("canonical"))
+
+
+def called_on(run: Run | None) -> dict[str, set[tuple[str, str]]] | None:
+    """Extractor id -> the (document, evidence type) pairs it has an extractor_call event for; None without events."""
+    if run is None or run.events is None:
+        return None
+    out: dict[str, set[tuple[str, str]]] = defaultdict(set)
+    for event in run.events:
+        meta = event.get("custom_metadata") if isinstance(event.get("custom_metadata"), dict) else {}
+        document, kind = meta.get("document"), meta.get("evidence_type")
+        if event.get("agent_id") and document and kind:
+            out[str(event["agent_id"])].add((str(document), str(kind)))
+    return dict(out)
+
+
+def fact_counts(truth: GroundTruth, pairs: set[tuple[str, str]] | None = None) -> Counter[tuple[str, str]]:
+    """Facts per (evidence type, level) key, over all facts or only those of the (paper, type) pairs given."""
+    counts: Counter[tuple[str, str]] = Counter()
+    for fact in truth.facts.values():
+        if pairs is not None and (fact.paper, fact.type) not in pairs:
+            continue
+        for key in ((fact.type, fact.level), (fact.type, ALL), (ALL, fact.level), (ALL, ALL)):
+            counts[key] += 1
+    return counts
+
+
+def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
+    """Per extractor id x evidence type x level: P/R/F1, span accuracy, association and `only` counts
+    (docstring: Per extractor), plus the per-extractor cost. Recall is against the facts of the
+    (document, type) pairs the extractor was called on (`called_on`; all facts without events)."""
+    truth = m.truth
+    all_facts = fact_counts(truth)
+    called = called_on(run)
+    # cell: items, matched, span hits, only, only matched, associated (measurements)
+    sums: dict[str, dict[tuple[str, str], list[int]]] = defaultdict(lambda: defaultdict(lambda: [0] * 6))
+    for extractor in ((run.run or {}) if run else {}).get("extractors", []):
+        sums[extractor]
+    for extractor, pairs in (called or {}).items():   # a call that found nothing is a row with 0 items
+        for document, kind in pairs:
+            if kind in TYPES:
+                level = truth.level_of(document)
+                for key in ((kind, level), (kind, ALL), (ALL, level), (ALL, ALL)):
+                    sums[extractor][key]
+    for item in m.items.values():
+        by = sorted(set(item.found_by or ("unknown",)))
+        level = truth.level_of(m.document[item.item_id])
+        fact = truth.facts.get(m.fact_of.get(item.item_id, ""))
+        matched = fact is not None
+        hit = bool(fact) and span_hit(item, fact, truth)
+        associated = bool(fact) and fact.type == "measurement" and _associated(m, item, fact)
+        only = len(by) == 1
+        for extractor in by:
+            for key in ((item.evidence_type, level), (item.evidence_type, ALL), (ALL, level), (ALL, ALL)):
+                cell = sums[extractor][key]
+                cell[0] += 1
+                cell[1] += matched
+                cell[2] += hit
+                cell[3] += only
+                cell[4] += only and matched
+                cell[5] += associated
+    rows = []
+    for extractor in sorted(sums):
+        facts = fact_counts(truth, called[extractor]) if called and extractor in called else all_facts
+        cells = sums[extractor] or {(ALL, ALL): [0] * 6}
+        for (kind, level), (n, matched, hits, only, only_matched, associated) in sorted(cells.items()):
+            rows.append({"extractor": extractor, "evidence_type": kind, "level": level,
+                         **prf(matched, n, facts[(kind, level)]), "span_hits": hits,
+                         "span_accuracy": share(hits, matched), "only": only, "only_matched": only_matched,
+                         "associated": associated if kind == "measurement" else None,
+                         "association_accuracy": share(associated, matched) if kind == "measurement" else None})
+    return {"rows": rows, "cost": score_extractor_cost(run), "recall_scope": "called" if called else "all_facts"}
+
+
 def score_cost(run: dict[str, Any] | None, papers: int) -> dict[str, Any] | None:
     if not run or "cost" not in run:
         return None
@@ -371,6 +626,7 @@ def score_stability(reexec: Any | None) -> dict[str, Any] | None:
     out: dict[str, Any] = {"rows": [{"extractor": e, "calls": sum(c.values()), "identical": c["identical"],
                                      "identical_share": share(c["identical"], sum(c.values())),
                                      "item_stability": share(items[e]["reproduced"], items[e]["original"]),
+                                     "items_original": items[e]["original"], "items_reproduced": items[e]["reproduced"],
                                      "outcomes": dict(c)}
                                     for e, c in sorted(rows.items())]}
     if isinstance(reexec, dict) and "summary" in reexec:
@@ -396,7 +652,9 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "corpus_id": truth.corpus_id, "levels": truth.levels, "run_id": (run.run or {}).get("run_id", run.root.name),
         "question": truth.question, "extraction": score_extraction(m),
         "integration": score_integration(m, run.answer), "synthesis": systems,
+        "intervals": score_intervals(m, systems),
         "locate": score_locate(truth, run.locate), "cascade": score_cascade(m, run.run),
+        "extractors": score_extractors(m, run),
         "cost": score_cost(run.run, len(truth.studies)), "stability": score_stability(run.reexec),
     }
 
@@ -404,7 +662,8 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
 def score_answers(corpus: Path, answers: Iterable[Path]) -> dict[str, Any]:
     """C only, for baseline answers without an engine run."""
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
+    systems = [score_synthesis(truth, read_json(p)) for p in answers]
     return {"corpus_id": truth.corpus_id, "levels": truth.levels, "run_id": None, "question": truth.question,
-            "extraction": None, "integration": None,
-            "synthesis": [score_synthesis(truth, read_json(p)) for p in answers],
-            "locate": None, "cascade": None, "cost": None, "stability": None}
+            "extraction": None, "integration": None, "synthesis": systems,
+            "intervals": score_intervals(None, systems), "locate": None, "cascade": None, "extractors": None,
+            "cost": None, "stability": None}
