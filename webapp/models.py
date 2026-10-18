@@ -104,6 +104,9 @@ class JobStep(BaseModel):
     exit_code: int | None = None
     started_at: str | None = None
     ended_at: str | None = None
+    pid: int | None = Field(None, description="the running command's process id (also its process group's)")
+    pid_start: str | None = Field(None, description="the process's start time (/proc/<pid>/stat), so a reused pid "
+                                                   "is never taken for the job's process")
 
     @field_validator("needs", mode="before")
     @classmethod
@@ -128,4 +131,8 @@ class Job(BaseModel):
     exit_code: int | None = None
     error: str | None = None
     warnings: list[str] = Field([], description="optional steps that failed (the job can still be done)")
+    failed_calls: int | None = Field(None, description="an engine run's extractor calls that ended in an error "
+                                                       "(calls/*.json status error): done, but with failed calls")
+    orphaned: bool = Field(False, description="the server that started it stopped while its process ran on; this "
+                                              "server watches the process and can cancel it")
     steps: list[JobStep] = []

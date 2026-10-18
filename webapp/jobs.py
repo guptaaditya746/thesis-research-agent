@@ -9,13 +9,19 @@ default: one model behind the gateway, so its jobs queue in the order they were 
 
 Every step's output goes to the job's log, `$EV/.jobs/<id>.log`, after a `$ <command>` line; the job's state
 is `$EV/.jobs/<id>.json`, rewritten (atomically) at every change, so a restarted server (and a reloaded page)
-still lists old jobs. A job that was queued or running when the server stopped is marked failed when the next
-server starts: its subprocess is no longer ours to watch.
+still lists old jobs. Each command starts a session of its own (its pid is its process group's id); the step
+records that pid and the process's start time. When a new server finds a job that was running: if that
+process still runs (same pid, same start time, so a reused pid is never mistaken for it), the job stays
+running, `orphaned`, holds its lane, counts as busy and can be cancelled; the server watches the process and
+marks the job failed when it ends (its exit status is lost; the log and the files it wrote are what it left).
+Any other job that was queued or running is marked failed.
 
 A step one of whose `needs` files is missing is skipped (the proposal flow's later steps after a failed one);
 a failed step does not stop the next ones, but a failed `required` step fails the job, and a failed optional
-one adds a warning to it. Cancelling a queued job ends it at once; a running one gets SIGTERM (then SIGKILL
-after a grace period at server stop) and skips its remaining steps.
+one adds a warning to it. A finished job is then checked (`after`, set by the app: an engine run's failed
+extractor calls become `failed_calls` and a warning). Cancelling a queued job ends it at once; a running one's
+whole process group gets SIGTERM (its grandchildren too: the sandboxed agent commands, the broker) and skips
+its remaining steps; at server stop, SIGKILL to the group after a grace period.
 
 The request handlers read the jobs from the server's thread pool while the event loop adds them, so every
 read iterates over a snapshot (`list(...)`, which copies without yielding).
@@ -34,6 +40,7 @@ import shlex
 import signal
 import subprocess
 from collections import deque
+from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -46,6 +53,7 @@ from .settings import REPO, Settings
 
 ACTIVE = ("queued", "running")
 STOP_GRACE_S = 30
+ORPHAN_POLL_S = 1.0
 TAIL_BYTES = 256 * 1024   # the log tail reads at most this much from the end
 
 
@@ -56,9 +64,35 @@ def step(name: str, argv: list[str], *, required: bool = True,
     return JobStep(name=name, argv=argv, command=shlex.join(argv), required=required, needs=[str(n) for n in needs])
 
 
+def process_start(pid: int) -> str | None:
+    """The process's start time in clock ticks since boot (/proc/<pid>/stat field 22); None when it is gone, a
+    zombie, or there is no /proc (then no process outlives its server as far as the app can tell)."""
+    try:
+        data = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    fields = data.rsplit(")", 1)[-1].split()   # after "pid (comm)": state is field 3, starttime field 22
+    if len(fields) < 20 or fields[0] in ("Z", "X"):
+        return None
+    return fields[19]
+
+
+def alive(s: JobStep) -> bool:
+    return s.pid is not None and s.pid_start is not None and process_start(s.pid) == s.pid_start
+
+
+def signal_group(pid: int, sig: int) -> None:
+    """`sig` to the process group the command leads (start_new_session), so its children get it too."""
+    try:
+        os.killpg(pid, sig)
+    except (ProcessLookupError, PermissionError):
+        pass
+
+
 class JobManager:
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, after: Callable[[Job], None] | None = None) -> None:
         self.settings = settings
+        self.after = after   # called with a finished job whose required steps all passed (webapp/app.py)
         self.jobs: dict[str, Job] = {}
         self._lanes: dict[str, asyncio.Semaphore] = {}
         self._procs: dict[str, asyncio.subprocess.Process] = {}
@@ -78,22 +112,35 @@ class JobManager:
     # --- state ---------------------------------------------------------------------------------------
 
     def load(self) -> None:
-        """Read the jobs of earlier servers; any still queued or running lost its process."""
+        """Read the jobs of earlier servers: one whose process still runs stays running (orphaned, watched when
+        an event loop runs); any other that was queued or running lost its process and is marked failed."""
         if self.dir is None or not self.dir.is_dir():
             return
+        try:
+            loop: asyncio.AbstractEventLoop | None = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
         for path in sorted(self.dir.glob("*.json")):
             data = read_json(path)
             try:
                 job = Job.model_validate(data)
             except ValueError:
                 continue
-            if job.state in ACTIVE:
-                job.state, job.error, job.ended_at = "failed", f"the server stopped while the job was {job.state}", utc_now()
-                for s in job.steps:
-                    if s.state in ("pending", "running"):
-                        s.state = "skipped" if s.state == "pending" else "failed"
-                self._save(job)
             self.jobs[job.id] = job
+            if job.state not in ACTIVE:
+                continue
+            running = next((s for s in job.steps if s.state == "running"), None)
+            if job.state == "running" and running is not None and alive(running):
+                job.orphaned = True
+                self._save(job)
+                if loop is not None:
+                    self._spawn(self._watch_orphan(job.id))
+                continue
+            job.state, job.error, job.ended_at = "failed", f"the server stopped while the job was {job.state}", utc_now()
+            for s in job.steps:
+                if s.state in ("pending", "running"):
+                    s.state = "skipped" if s.state == "pending" else "failed"
+            self._save(job)
 
     def _save(self, job: Job) -> None:
         assert self.dir is not None
@@ -132,7 +179,7 @@ class JobManager:
         return [j for j in list(self.jobs.values()) if j.state in ACTIVE and kind in (None, j.kind)]
 
     def busy(self, ref: str, value: str) -> Job | None:
-        """The queued or running job that writes `ref` (corpus, run, score, proposal) `value`, if any."""
+        """The queued or running (orphaned included) job that writes `ref` (corpus, run, score, proposal) `value`."""
         return next((j for j in self.active() if j.refs.get(ref) == value), None)
 
     # --- running ---------------------------------------------------------------------------------------
@@ -141,6 +188,11 @@ class JobManager:
         if lane not in self._lanes:
             self._lanes[lane] = asyncio.Semaphore(self.settings.model_jobs if lane == "model" else self.settings.cpu_jobs)
         return self._lanes[lane]
+
+    def _spawn(self, coro: Any) -> None:
+        task = asyncio.get_running_loop().create_task(coro)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
 
     def submit(self, kind: str, args: dict[str, Any], steps: list[JobStep], *, lane: Lane = "cpu",
                refs: dict[str, str] | None = None) -> Job:
@@ -153,9 +205,7 @@ class JobManager:
         self.dir.mkdir(parents=True, exist_ok=True)
         self.jobs[job.id] = job
         self._save(job)
-        task = asyncio.get_running_loop().create_task(self._run(job.id))
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.discard)
+        self._spawn(self._run(job.id))
         return job
 
     async def _run(self, job_id: str) -> None:
@@ -173,6 +223,11 @@ class JobManager:
                 self._finish(job, error=f"{type(exc).__name__}: {exc}")
                 return
             failed = [s for s in job.steps if s.required and s.state == "failed"]
+            if not failed and job_id not in self._cancelled and self.after is not None:
+                try:
+                    self.after(job)
+                except Exception as exc:  # noqa: BLE001 - a check must never lose the job's own result
+                    job.warnings.append(f"the check after the job failed: {type(exc).__name__}: {exc}")
             self._finish(job, exit_code=failed[0].exit_code if failed else 0, error=self._cancelled.get(job_id))
 
     async def _step(self, job: Job, s: JobStep, log: Any) -> None:
@@ -191,12 +246,14 @@ class JobManager:
         try:
             proc = await asyncio.create_subprocess_exec(
                 *s.argv, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, cwd=REPO, env=self.env(),
-                start_new_session=True)  # a Ctrl-C at the server's terminal is not sent to the child
+                start_new_session=True)  # its own session and process group; a Ctrl-C at the server is not sent to it
         except OSError as exc:
             log.write(f"# cannot start {s.name}: {exc}\n".encode())
             code = 127
         else:
             self._procs[job.id] = proc
+            s.pid, s.pid_start = proc.pid, process_start(proc.pid)
+            self._save(job)
             try:
                 code = await proc.wait()
             finally:
@@ -208,6 +265,18 @@ class JobManager:
             job.warnings.append(f"{s.name} failed (exit {code}); see the log")
         self._save(job)
 
+    async def _watch_orphan(self, job_id: str) -> None:
+        """Hold the lane while the orphaned process runs; when it ends, the job fails (its exit status is lost)."""
+        job = self.jobs[job_id]
+        running = next(s for s in job.steps if s.state == "running")
+        async with self._lane(job.lane):
+            while alive(running):
+                await asyncio.sleep(ORPHAN_POLL_S)
+            running.state, running.ended_at = "failed", utc_now()
+            why = self._cancelled.get(job_id) or ("its process ended while no server watched it start; exit status "
+                                                  "unknown (see the log and what it wrote)")
+            self._finish(job, error=why)
+
     def _finish(self, job: Job, *, exit_code: int | None = None, error: str | None = None) -> None:
         for s in job.steps:
             if s.state == "pending":
@@ -217,7 +286,8 @@ class JobManager:
         self._save(job)
 
     def cancel(self, job_id: str, why: str = "cancelled") -> Job:
-        """A queued job ends at once; a running one gets SIGTERM and skips its remaining steps."""
+        """A queued job ends at once; a running (or orphaned) one's process group gets SIGTERM and skips its
+        remaining steps."""
         job = self.get(job_id)
         if job.state not in ACTIVE:
             return job
@@ -227,18 +297,22 @@ class JobManager:
             return job
         proc = self._procs.get(job.id)
         if proc is not None and proc.returncode is None:
-            proc.send_signal(signal.SIGTERM)
+            signal_group(proc.pid, signal.SIGTERM)
+        elif job.orphaned:
+            running = next((s for s in job.steps if s.state == "running"), None)
+            if running is not None and alive(running):
+                signal_group(running.pid, signal.SIGTERM)  # type: ignore[arg-type]
         return job
 
     async def shutdown(self) -> None:
-        """Server stop: SIGTERM to running steps (SIGKILL after a grace period); the jobs fail."""
+        """Server stop: SIGTERM to the running groups (SIGKILL after a grace period); the jobs fail."""
         for job in self.active():
             self.cancel(job.id, "the server stopped")
         for proc in list(self._procs.values()):
             try:
                 await asyncio.wait_for(proc.wait(), STOP_GRACE_S)
             except TimeoutError:
-                proc.kill()
+                signal_group(proc.pid, signal.SIGKILL)
         if self._tasks:
             await asyncio.wait(list(self._tasks), timeout=5)
         for job in self.active():

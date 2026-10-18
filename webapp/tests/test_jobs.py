@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from webapp.files import Conflict
-from webapp.jobs import JobManager, step
+from webapp.jobs import JobManager, process_start, step
 from webapp.models import Job
 from webapp.settings import Settings
 
@@ -183,3 +183,94 @@ def test_log_tail(tmp_path: Path) -> None:
     tail = manager.tail(job.id, 3)
     assert tail == "498\n499\n# count exit 0\n"
     assert manager.tail(job.id, 1000).startswith("$ ")
+
+
+GRANDCHILD = ("import subprocess, sys, time; p = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']); "
+              "open(sys.argv[1], 'w').write(str(p.pid)); time.sleep(60)")
+
+
+def gone(pid: int, timeout: float = 10) -> bool:
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        if process_start(pid) is None:
+            return True
+        time.sleep(0.05)
+    return False
+
+
+@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="process groups and /proc (Linux)")
+def test_cancel_stops_the_whole_process_group(tmp_path: Path) -> None:
+    """A command's children (the agent's sandboxed commands, the broker) end with it."""
+    settings = settings_in(tmp_path)
+    pidfile = tmp_path / "grandchild.pid"
+
+    async def main() -> Job:
+        manager = JobManager(settings)
+        job = manager.submit("run", {}, [step("spawns", py(GRANDCHILD, str(pidfile)))], lane="model")
+        while not pidfile.exists() or not pidfile.read_text():
+            await asyncio.sleep(0.05)
+        assert job.steps[0].pid is not None and job.steps[0].pid_start == process_start(job.steps[0].pid)
+        manager.cancel(job.id)
+        return await finished(manager, job)
+
+    job = asyncio.run(main())
+    assert (job.state, job.error) == ("failed", "cancelled")
+    assert gone(int(pidfile.read_text()))
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="SIGTERM (POSIX)")
+def test_the_tool_turns_sigterm_into_a_clean_exit(tmp_path: Path) -> None:
+    """`python -m webapp.tool` installs agent/stopping.py before the package's main: SIGTERM raises
+    SystemExit(143), so finally blocks (broker, sandbox) run."""
+    import subprocess
+
+    from webapp.settings import REPO
+    code = ("import sys, time\n"
+            "import webapp.tool as tool\n"
+            "from evidence import cli\n"
+            "def main(argv):\n"
+            "    try:\n        print('ready', flush=True); time.sleep(30)\n"
+            "    finally:\n        open(argv[0], 'w').write('cleaned up')\n"
+            "cli.main = main\n"
+            "sys.exit(tool.main(['evidence', sys.argv[1]]))\n")
+    marker = tmp_path / "marker"
+    proc = subprocess.Popen([sys.executable, "-c", code, str(marker)], cwd=REPO, stdout=subprocess.PIPE, text=True)
+    assert proc.stdout is not None and proc.stdout.readline().strip() == "ready"
+    proc.terminate()
+    assert proc.wait(10) == 143 and marker.read_text() == "cleaned up"
+
+
+@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="process start times from /proc (Linux)")
+def test_a_job_whose_process_outlives_its_server_stays_running_and_cancellable(tmp_path: Path) -> None:
+    import subprocess
+
+    settings = settings_in(tmp_path)
+    settings.jobs_dir.mkdir(parents=True)
+    orphan = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], start_new_session=True)
+    s = step("evidence run", ["python", "-m", "webapp.tool", "evidence", "run"])
+    s.state, s.pid, s.pid_start = "running", orphan.pid, process_start(orphan.pid)
+    live = Job(id="20260101T000000-run-aaaaaa", kind="run", lane="model", args={}, refs={"run": "cascade~c1"},
+               state="running", created_at="2026-01-01T00:00:00Z", steps=[s, step("next", ["true"])])
+    dead_step = s.model_copy(update={"pid_start": "1"})   # the same pid with another start time: a reused pid
+    dead = live.model_copy(update={"id": "20260101T000000-run-bbbbbb", "refs": {"run": "cascade~c2"}, "steps": [dead_step]})
+    for job in (live, dead):
+        (settings.jobs_dir / f"{job.id}.json").write_text(job.model_dump_json(), encoding="utf-8")
+
+    async def main() -> tuple[Job, Job, bool]:
+        manager = JobManager(settings)
+        manager.load()
+        kept, lost = manager.get(live.id), manager.get(dead.id)
+        assert (kept.state, kept.orphaned) == ("running", True)
+        assert manager.busy("run", "cascade~c1") is kept and manager.busy("run", "cascade~c2") is None
+        queued = manager.submit("run", {}, [step("waits", py("pass"))], lane="model")
+        await asyncio.sleep(0.5)
+        waited = queued.state == "queued"           # the orphan holds the model lane
+        manager.cancel(kept.id)                     # SIGTERM to its process group
+        await finished(manager, kept)
+        await finished(manager, queued)
+        return kept, lost, waited
+
+    kept, lost, waited = asyncio.run(main())
+    orphan.wait(10)
+    assert waited and (kept.state, kept.error) == ("failed", "cancelled") and kept.steps[1].state == "skipped"
+    assert lost.state == "failed" and "server stopped" in (lost.error or "")
