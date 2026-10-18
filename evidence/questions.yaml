@@ -1,0 +1,11 @@
+# The questions the web app offers (webapp/evquestions.py; README "Web app"): the user selects one, never types it.
+# Per question: `id` (a plain name), `question` (exactly as its hand-written protocol asks it), `protocol` (the
+# hand-written protocol, a path from the repository root into evidence/protocols/; leave it out and the question
+# gets its protocol through the proposal flow, docs/evidence-system.md Part E), `agentic_protocol` (its variant
+# with the agentic extractor) and `vocab` (the proposal flow's vocabulary snapshot under evidence/vocab/).
+questions:
+  - id: rag-factuality
+    question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
+    protocol: evidence/protocols/rag-factuality.yaml
+    agentic_protocol: evidence/protocols/rag-factuality-agentic.yaml
+    vocab: rag-factuality
