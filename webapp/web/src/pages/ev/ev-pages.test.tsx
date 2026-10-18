@@ -21,28 +21,20 @@ beforeAll(async () => {
     import("@/pages/ev/HomePage"), import("@/pages/ev/CorporaPage"), import("@/pages/ev/CorpusPage"), import("@/pages/ev/CorpusPaperPage"),
     import("@/pages/ev/ProtocolsPage"), import("@/pages/ev/ProtocolPage"), import("@/pages/ev/ProposalPage"), import("@/pages/ev/RunsPage"),
     import("@/pages/ev/RunPage"), import("@/pages/ev/RunPaperPage"), import("@/pages/ev/ScoresPage"), import("@/pages/ev/ReportPage"),
-    import("@/pages/ev/ComparePage"), import("@/pages/ev/ShiftPage"), import("@/pages/ev/BenchmarkPage"), import("@/pages/OverviewPage"),
+    import("@/pages/ev/ComparePage"), import("@/pages/ev/ShiftPage"), import("@/pages/ev/BenchmarkPage"), import("@/pages/flow/FlowPage"), import("@/pages/JobsPage"),
   ])
 }, 180_000)
 
-describe("the flow", () => {
-  it("home maps the steps with what is on disk, and the earlier work apart", async () => {
+describe("home", () => {
+  it("offers the questions to select, what is on disk and the directories", async () => {
     renderRoutes(routes, "/")
-    expect(await screen.findByRole("heading", { name: "Evidence-level flow" }, T)).toBeInTheDocument()
-    expect(await screen.findByText("Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?", {}, T)).toBeInTheDocument()
-    for (const step of ["Protocol", "Corpora", "Runs", "Scores"]) expect(screen.getAllByRole("link", { name: step }).length).toBeGreaterThan(0)
+    expect(await screen.findByRole("heading", { name: "Evidence-level synthesis" }, T)).toBeInTheDocument()
+    const question = await screen.findByRole("link", { name: "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?" }, T)
+    expect(question).toHaveAttribute("href", "/flow/rag-factuality")
     expect(await screen.findByText(/4 corpora/, {}, T)).toBeInTheDocument()
-    const nav = screen.getAllByRole("link", { name: /Earlier work|Questions/ })
-    expect(nav.some((a) => a.getAttribute("href") === "/earlier")).toBe(true)
+    expect(screen.getByText("hand-written protocol rag-factuality")).toBeInTheDocument()
     expect(screen.getByText("/srv/ev")).toBeInTheDocument()
-  })
-
-  it("the earlier work keeps its pages under /earlier, framed as such", async () => {
-    renderRoutes(routes, "/earlier")
-    expect(await screen.findByRole("heading", { name: "Overview" }, T)).toBeInTheDocument()
-    expect(screen.getByText(/dropped as a study on 16 Oct/)).toBeInTheDocument()
-    const links = await screen.findAllByRole("link", { name: /q01/ }, T)
-    expect(links.every((a) => a.getAttribute("href")?.startsWith("/earlier/"))).toBe(true)
+    expect(screen.queryByText(/earlier work/i)).toBeNull()
   })
 })
 

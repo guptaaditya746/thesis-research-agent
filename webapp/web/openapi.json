@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Thesis research agent",
-    "description": "The evidence-level viewer (/api/ev) and the earlier work: runs, provenance, gold standard and scores of the research agent (docs/earlier-work.md).",
+    "title": "Thesis: evidence-level synthesis",
+    "description": "The supervisor's flow: question, protocol (or a proposal), corpus, run, evidence graph, answer and scores with the baselines beside the engine; the jobs that make them.",
     "version": "0.2.0"
   },
   "paths": {
@@ -20,1332 +20,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Health"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/config": {
-      "get": {
-        "tags": [
-          "app"
-        ],
-        "summary": "Config",
-        "operationId": "config",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppConfig"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/questions": {
-      "get": {
-        "tags": [
-          "questions"
-        ],
-        "summary": "Questions",
-        "operationId": "questions",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Question"
-                  },
-                  "type": "array",
-                  "title": "Response Questions"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/questions/{qid}": {
-      "get": {
-        "tags": [
-          "questions"
-        ],
-        "summary": "Question",
-        "operationId": "question",
-        "parameters": [
-          {
-            "name": "qid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Qid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QuestionDetail"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/questions/{qid}/concepts/propose": {
-      "post": {
-        "tags": [
-          "questions"
-        ],
-        "summary": "Propose",
-        "operationId": "propose",
-        "parameters": [
-          {
-            "name": "qid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Qid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProposeRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/questions/{qid}/concepts/pick": {
-      "post": {
-        "tags": [
-          "questions"
-        ],
-        "summary": "Pick",
-        "operationId": "pick",
-        "parameters": [
-          {
-            "name": "qid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Qid"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PickRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QuestionDetail"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Runs",
-        "operationId": "runs",
-        "parameters": [
-          {
-            "name": "qid",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "the question's runs on its current concept",
-              "title": "Qid"
-            },
-            "description": "the question's runs on its current concept"
-          },
-          {
-            "name": "condition",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Condition"
-            }
-          },
-          {
-            "name": "verify",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "description": "run `agent verify` on runs not checked yet (slow)",
-              "default": false,
-              "title": "Verify"
-            },
-            "description": "run `agent verify` on runs not checked yet (slow)"
-          },
-          {
-            "name": "include_stale",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "description": "with qid: also runs on a replaced concept",
-              "default": false,
-              "title": "Include Stale"
-            },
-            "description": "with qid: also runs on a replaced concept"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RunSummary"
-                  },
-                  "title": "Response Runs"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Start Run",
-        "operationId": "start_run",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RunRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Run",
-        "operationId": "run",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RunDetail"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}/steps": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Steps",
-        "operationId": "steps",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Step"
-                  },
-                  "title": "Response Steps"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}/steps/{step}/output": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Step Output",
-        "operationId": "step_output",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          },
-          {
-            "name": "step",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Step"
-            }
-          },
-          {
-            "name": "agent_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Agent Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "the command's full output",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}/stream": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Stream",
-        "operationId": "stream",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "server-sent events",
-            "content": {
-              "text/event-stream": {}
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}/claims": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Claims",
-        "operationId": "claims",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Claim"
-                  },
-                  "title": "Response Claims"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}/graph": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Graph",
-        "operationId": "graph",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/KnowledgeGraph"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}/facts/{fact_id}/walk": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Walk",
-        "operationId": "walk",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          },
-          {
-            "name": "fact_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Fact Id"
-            }
-          },
-          {
-            "name": "judge",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "description": "also ask the judge (gold/judge.py, a model call per quote it has not cached) about quotes score.json has no verdict for",
-              "default": false,
-              "title": "Judge"
-            },
-            "description": "also ask the judge (gold/judge.py, a model call per quote it has not cached) about quotes score.json has no verdict for"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FactWalk"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/runs/{run_id}/score": {
-      "get": {
-        "tags": [
-          "runs"
-        ],
-        "summary": "Score",
-        "operationId": "score",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Score"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/corpus/{paper_id}": {
-      "get": {
-        "tags": [
-          "corpus"
-        ],
-        "summary": "Corpus",
-        "operationId": "corpus",
-        "parameters": [
-          {
-            "name": "paper_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Paper Id"
-            }
-          },
-          {
-            "name": "start",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Start"
-            }
-          },
-          {
-            "name": "end",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer",
-                  "minimum": 0
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "End"
-            }
-          },
-          {
-            "name": "context",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 20000,
-              "minimum": 0,
-              "default": 1500,
-              "title": "Context"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Passage"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/gold": {
-      "get": {
-        "tags": [
-          "gold"
-        ],
-        "summary": "Gold",
-        "description": "The questions, then any other question directory in $GOLD (a plain id holding gold files).",
-        "operationId": "gold",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/GoldEntry"
-                  },
-                  "type": "array",
-                  "title": "Response Gold"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/gold/{qid}/key": {
-      "get": {
-        "tags": [
-          "gold"
-        ],
-        "summary": "Gold Key",
-        "operationId": "gold_key",
-        "parameters": [
-          {
-            "name": "qid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Qid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AnswerKey"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/gold/{qid}/build": {
-      "post": {
-        "tags": [
-          "gold"
-        ],
-        "summary": "Gold Build",
-        "operationId": "gold_build",
-        "parameters": [
-          {
-            "name": "qid",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Qid"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/results": {
-      "get": {
-        "tags": [
-          "results"
-        ],
-        "summary": "Results",
-        "operationId": "results",
-        "parameters": [
-          {
-            "name": "batch",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "the batch root ($RUNS/<batch>) whose report to show; default $RUNS/report, else the newest batch's",
-              "title": "Batch"
-            },
-            "description": "the batch root ($RUNS/<batch>) whose report to show; default $RUNS/report, else the newest batch's"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Results"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/sparql": {
-      "post": {
-        "tags": [
-          "provenance"
-        ],
-        "summary": "Sparql",
-        "operationId": "sparql",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SparqlRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SparqlResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/queries/{n}": {
-      "get": {
-        "tags": [
-          "provenance"
-        ],
-        "summary": "Provenance Query",
-        "operationId": "provenance_query",
-        "parameters": [
-          {
-            "name": "n",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "N"
-            }
-          },
-          {
-            "name": "run_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Run Id"
-            }
-          },
-          {
-            "name": "edge",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Edge"
-            }
-          },
-          {
-            "name": "fact",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Fact"
-            }
-          },
-          {
-            "name": "claim",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Claim"
-            }
-          },
-          {
-            "name": "step",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Step"
-            }
-          },
-          {
-            "name": "agent",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Agent"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/QueryResult"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/jobs": {
-      "get": {
-        "tags": [
-          "jobs"
-        ],
-        "summary": "Jobs",
-        "operationId": "jobs",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/Job"
-                  },
-                  "type": "array",
-                  "title": "Response Jobs"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/jobs/{job_id}": {
-      "get": {
-        "tags": [
-          "jobs"
-        ],
-        "summary": "Job",
-        "operationId": "job",
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/jobs/{job_id}/log": {
-      "get": {
-        "tags": [
-          "jobs"
-        ],
-        "summary": "Job Log",
-        "operationId": "job_log",
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "server-sent events",
-            "content": {
-              "text/event-stream": {}
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/jobs/{job_id}/cancel": {
-      "post": {
-        "tags": [
-          "jobs"
-        ],
-        "summary": "Cancel Job",
-        "operationId": "cancel_job",
-        "parameters": [
-          {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Job Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Job"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/chat": {
-      "post": {
-        "tags": [
-          "chat"
-        ],
-        "summary": "Chat Route",
-        "description": "Body: an AI SDK v5 chat request ({id, messages, trigger}); `run_id` in the body or the query\nscopes the chat to one run.",
-        "operationId": "chat_route",
-        "parameters": [
-          {
-            "name": "run_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Run Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Vercel AI SDK UI-message stream (x-vercel-ai-ui-message-stream: v1)",
-            "content": {
-              "text/event-stream": {}
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2170,10 +844,642 @@
           }
         }
       }
+    },
+    "/api/ev/questions": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Questions",
+        "operationId": "ev_questions",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Question"
+                  },
+                  "type": "array",
+                  "title": "Response Ev Questions"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/questions/{qid}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Question",
+        "operationId": "ev_question",
+        "parameters": [
+          {
+            "name": "qid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Qid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Question"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Jobs",
+        "operationId": "ev_jobs",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Job"
+                  },
+                  "type": "array",
+                  "title": "Response Ev Jobs"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Job",
+        "operationId": "ev_job",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/{job_id}/log": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Job Log",
+        "operationId": "ev_job_log",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "lines",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "default": 200,
+              "title": "Lines"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "the last lines of the job's log",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/{job_id}/cancel": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Cancel Job",
+        "operationId": "ev_cancel_job",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/synth": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Synth",
+        "operationId": "ev_start_synth",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SynthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/run": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Run",
+        "operationId": "ev_start_run",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/rag-baseline": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Rag Baseline",
+        "operationId": "ev_start_rag_baseline",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RagBaselineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/agent-baseline": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Agent Baseline",
+        "operationId": "ev_start_agent_baseline",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentBaselineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/score": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Score",
+        "operationId": "ev_start_score",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/compare": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Compare",
+        "operationId": "ev_start_compare",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompareRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/propose": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Propose",
+        "operationId": "ev_start_propose",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/jobs/freeze": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Freeze",
+        "operationId": "ev_start_freeze",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FreezeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/proposals/{name}/decisions": {
+      "put": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Put Decisions",
+        "operationId": "ev_put_decisions",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionsResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AgentBaselineRequest": {
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Corpus"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$",
+            "title": "Model",
+            "default": "orch-model"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "corpus"
+        ],
+        "title": "AgentBaselineRequest",
+        "description": "`evaluate agent-baseline` into `$EV/runs/agent-baseline/<corpus>`."
+      },
       "AgentTrace": {
         "properties": {
           "run_id": {
@@ -2347,340 +1653,6 @@
           "end"
         ],
         "title": "Anchor"
-      },
-      "Answer": {
-        "properties": {
-          "concept_sha256": {
-            "type": "string",
-            "title": "Concept Sha256"
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "table",
-              "graph"
-            ],
-            "title": "Kind"
-          },
-          "rows": {
-            "items": {
-              "$ref": "#/components/schemas/AnswerRow"
-            },
-            "type": "array",
-            "title": "Rows"
-          },
-          "notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Notes"
-          }
-        },
-        "type": "object",
-        "required": [
-          "concept_sha256",
-          "kind",
-          "rows"
-        ],
-        "title": "Answer"
-      },
-      "AnswerKey": {
-        "properties": {
-          "qid": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qid"
-          },
-          "concept_sha256": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concept Sha256"
-          },
-          "kind": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Kind"
-          },
-          "version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Version"
-          },
-          "reviewed": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reviewed"
-          },
-          "rows": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Rows",
-            "default": []
-          },
-          "notes": {
-            "title": "Notes"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "title": "AnswerKey"
-      },
-      "AnswerRow": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "facts": {
-            "items": {
-              "$ref": "#/components/schemas/Fact"
-            },
-            "type": "array",
-            "title": "Facts"
-          },
-          "cells": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cells"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source"
-          },
-          "source_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source Type"
-          },
-          "predicate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Predicate"
-          },
-          "target": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Target"
-          },
-          "target_type": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Target Type"
-          },
-          "attributes": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Attributes"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "id",
-          "facts"
-        ],
-        "title": "AnswerRow",
-        "description": "A table row (`cells`) or a graph row (source, predicate, target, ...), with its facts."
-      },
-      "AnswerShape": {
-        "properties": {
-          "kind": {
-            "type": "string",
-            "enum": [
-              "table",
-              "graph"
-            ],
-            "title": "Kind"
-          },
-          "columns": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Column"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Columns"
-          },
-          "nodes": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/NodeType"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Nodes"
-          },
-          "edges": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/EdgeType"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Edges"
-          }
-        },
-        "type": "object",
-        "required": [
-          "kind"
-        ],
-        "title": "AnswerShape",
-        "description": "A table (columns) or a graph (node types and edge types): the brief's answer template."
-      },
-      "AppConfig": {
-        "properties": {
-          "corpus": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Corpus"
-          },
-          "runs_root": {
-            "type": "string",
-            "title": "Runs Root"
-          },
-          "gold_root": {
-            "type": "string",
-            "title": "Gold Root"
-          },
-          "concepts_root": {
-            "type": "string",
-            "title": "Concepts Root"
-          },
-          "llm_base_url": {
-            "type": "string",
-            "title": "Llm Base Url"
-          },
-          "llm_key_set": {
-            "type": "boolean",
-            "title": "Llm Key Set"
-          },
-          "argilla_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Argilla Url"
-          }
-        },
-        "type": "object",
-        "required": [
-          "corpus",
-          "runs_root",
-          "gold_root",
-          "concepts_root",
-          "llm_base_url",
-          "llm_key_set",
-          "argilla_url"
-        ],
-        "title": "AppConfig"
       },
       "BenchmarkView": {
         "properties": {
@@ -3379,24 +2351,6 @@
         ],
         "title": "ClaimRef"
       },
-      "Column": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "type": {
-            "type": "string",
-            "title": "Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "name",
-          "type"
-        ],
-        "title": "Column"
-      },
       "Compare": {
         "properties": {
           "treatment": {
@@ -3416,6 +2370,34 @@
         ],
         "title": "Compare",
         "description": "The condition roles a study's pair is made of: the effect is treatment against control."
+      },
+      "CompareRequest": {
+        "properties": {
+          "reports": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 60,
+            "minItems": 2,
+            "title": "Reports",
+            "description": "score ids (`<group>~<name>`)"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Name",
+            "description": "the output directory under the scores root, e.g. compare-funnel-<corpus>"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reports",
+          "name"
+        ],
+        "title": "CompareRequest",
+        "description": "`evaluate compare` over score reports into `$EV/scores/<name>`."
       },
       "CompareTable": {
         "properties": {
@@ -3459,116 +2441,6 @@
           "markdown"
         ],
         "title": "CompareTable"
-      },
-      "ConceptBrief": {
-        "properties": {
-          "id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "definition": {
-            "type": "string",
-            "title": "Definition"
-          },
-          "measure": {
-            "$ref": "#/components/schemas/Measure"
-          },
-          "scope": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Scope"
-          },
-          "answer_shape": {
-            "$ref": "#/components/schemas/AnswerShape"
-          },
-          "competency_questions": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Competency Questions"
-          },
-          "needs": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Needs"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "title",
-          "definition",
-          "measure",
-          "scope",
-          "answer_shape",
-          "competency_questions"
-        ],
-        "title": "ConceptBrief",
-        "description": "One reading of a question (agent/schemas/concept.schema.json)."
-      },
-      "ConceptStatus": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "none",
-              "proposed",
-              "picked"
-            ],
-            "title": "Status"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "picked_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Picked By",
-            "description": "user, claude or provisional-first (the pick record's)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "title": "ConceptStatus"
       },
       "CorpusDetail": {
         "properties": {
@@ -4292,36 +3164,88 @@
         ],
         "title": "Decision"
       },
-      "EdgeType": {
+      "DecisionEntry": {
         "properties": {
-          "source": {
+          "card": {
             "type": "string",
-            "title": "Source"
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Card"
           },
-          "predicate": {
+          "choice": {
             "type": "string",
-            "title": "Predicate"
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Choice",
+            "description": "an option id of the card, or custom (with a value)"
           },
-          "target": {
+          "value": {
+            "title": "Value",
+            "description": "only with choice custom: the value in the card's shape"
+          },
+          "reason": {
             "type": "string",
-            "title": "Target"
+            "maxLength": 4000,
+            "title": "Reason"
           },
-          "attributes": {
+          "by": {
+            "type": "string",
+            "enum": [
+              "model",
+              "user"
+            ],
+            "title": "By",
+            "description": "model: the model's default, kept; user: decided in the app (written as the server's $WEBAPP_USER)"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "card",
+          "choice",
+          "reason",
+          "by"
+        ],
+        "title": "DecisionEntry"
+      },
+      "DecisionsRequest": {
+        "properties": {
+          "decisions": {
             "items": {
-              "$ref": "#/components/schemas/Column"
+              "$ref": "#/components/schemas/DecisionEntry"
             },
             "type": "array",
-            "title": "Attributes",
-            "default": []
+            "maxItems": 50,
+            "title": "Decisions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decisions"
+        ],
+        "title": "DecisionsRequest"
+      },
+      "DecisionsResult": {
+        "properties": {
+          "written": {
+            "type": "string",
+            "title": "Written",
+            "description": "the decisions.yaml written"
+          },
+          "problems": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Problems",
+            "description": "what `evidence propose freeze` would refuse (cards.validate)"
           }
         },
         "type": "object",
         "required": [
-          "source",
-          "predicate",
-          "target"
+          "written",
+          "problems"
         ],
-        "title": "EdgeType"
+        "title": "DecisionsResult"
       },
       "EvAnswer": {
         "properties": {
@@ -4537,6 +3461,59 @@
           },
           "protocols": {
             "$ref": "#/components/schemas/Root"
+          },
+          "questions": {
+            "$ref": "#/components/schemas/Root",
+            "description": "the questions file (evidence/questions.yaml; `exists`: the file is there)"
+          },
+          "jobs": {
+            "$ref": "#/components/schemas/Root",
+            "description": "$EV/.jobs: the state and logs of the jobs the app starts (none without $EV)"
+          },
+          "user": {
+            "type": "string",
+            "title": "User",
+            "description": "who decides a card in the app (`by` in decisions.yaml, $WEBAPP_USER)"
+          },
+          "default_model": {
+            "type": "string",
+            "title": "Default Model",
+            "description": "the model alias every model job uses unless told otherwise (orch-model)"
+          },
+          "llm_base_url": {
+            "type": "string",
+            "title": "Llm Base Url",
+            "description": "the model gateway the jobs reach ($LITELLM_BASE_URL)"
+          },
+          "llm_key_set": {
+            "type": "boolean",
+            "title": "Llm Key Set",
+            "description": "whether $LITELLM_MASTER_KEY is set in the server's environment"
+          },
+          "agent_root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agent Root",
+            "description": "$AGENT_ROOT, the agent baseline's pinned toolchain"
+          },
+          "model_jobs": {
+            "type": "integer",
+            "title": "Model Jobs",
+            "description": "model jobs that run at a time; the rest queue"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Levels",
+            "description": "the synthetic corpus levels a template build can write (synth/levels.py)"
           }
         },
         "type": "object",
@@ -4548,7 +3525,16 @@
           "proposals",
           "cache",
           "agent_work",
-          "protocols"
+          "protocols",
+          "questions",
+          "jobs",
+          "user",
+          "default_model",
+          "llm_base_url",
+          "llm_key_set",
+          "agent_root",
+          "model_jobs",
+          "levels"
         ],
         "title": "EvConfig"
       },
@@ -5125,42 +4111,6 @@
         ],
         "title": "EvRunSummary"
       },
-      "Evidence": {
-        "properties": {
-          "file": {
-            "type": "string",
-            "title": "File"
-          },
-          "paper": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Paper"
-          },
-          "start": {
-            "type": "integer",
-            "title": "Start"
-          },
-          "end": {
-            "type": "integer",
-            "title": "End"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "file",
-          "paper",
-          "start",
-          "end"
-        ],
-        "title": "Evidence"
-      },
       "EvidenceTypeSpec": {
         "properties": {
           "description": {
@@ -5461,198 +4411,6 @@
         "title": "ExtractorSpec",
         "description": "Identity of one extractor version (contract section 3)."
       },
-      "Fact": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "s": {
-            "type": "string",
-            "title": "S"
-          },
-          "p": {
-            "type": "string",
-            "title": "P"
-          },
-          "o": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "integer"
-              },
-              {
-                "type": "boolean"
-              }
-            ],
-            "title": "O"
-          },
-          "claims": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Claims"
-          },
-          "origin": {
-            "type": "string",
-            "title": "Origin"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "s",
-          "p",
-          "o",
-          "claims",
-          "origin"
-        ],
-        "title": "Fact"
-      },
-      "FactScores": {
-        "properties": {
-          "tp": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tp"
-          },
-          "fp": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fp"
-          },
-          "fn": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fn"
-          },
-          "precision": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Precision"
-          },
-          "recall": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Recall"
-          },
-          "f1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "F1"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "title": "FactScores"
-      },
-      "FactWalk": {
-        "properties": {
-          "run_id": {
-            "type": "string",
-            "title": "Run Id"
-          },
-          "fact": {
-            "$ref": "#/components/schemas/Fact"
-          },
-          "row_id": {
-            "type": "string",
-            "title": "Row Id"
-          },
-          "row": {
-            "$ref": "#/components/schemas/AnswerRow"
-          },
-          "claims": {
-            "items": {
-              "$ref": "#/components/schemas/WalkClaim"
-            },
-            "type": "array",
-            "title": "Claims"
-          },
-          "support": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Verdict"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "the best verdict over the fact's quotes, or null"
-          },
-          "label": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "supports",
-                  "partial",
-                  "no",
-                  "unsourced",
-                  "pending"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Label",
-            "description": "the fact's support label as scoring defines it (best verdict over its claims; unsourced: no accepted claim; pending: a verdict is missing); null: nothing judged"
-          }
-        },
-        "type": "object",
-        "required": [
-          "run_id",
-          "fact",
-          "row_id",
-          "row",
-          "claims",
-          "support"
-        ],
-        "title": "FactWalk"
-      },
       "Flags": {
         "properties": {
           "duplicates": {
@@ -5671,6 +4429,21 @@
         "additionalProperties": false,
         "type": "object",
         "title": "Flags"
+      },
+      "FreezeRequest": {
+        "properties": {
+          "proposal": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Proposal"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "proposal"
+        ],
+        "title": "FreezeRequest"
       },
       "FunnelDecision": {
         "properties": {
@@ -5824,267 +4597,6 @@
         ],
         "title": "FunnelStep"
       },
-      "GoldEntry": {
-        "properties": {
-          "qid": {
-            "type": "string",
-            "title": "Qid"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "none",
-              "building",
-              "draft",
-              "reviewing",
-              "reviewed"
-            ],
-            "title": "Status"
-          },
-          "stage": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stage",
-            "description": "the gold builder's stage (progress.json), when it wrote one"
-          },
-          "coverage": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Coverage"
-          },
-          "counts": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Counts"
-          },
-          "key_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Key Version"
-          },
-          "report": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Report"
-          },
-          "rows": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rows"
-          },
-          "facts": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Facts"
-          }
-        },
-        "type": "object",
-        "required": [
-          "qid",
-          "status"
-        ],
-        "title": "GoldEntry"
-      },
-      "GoldStatus": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "none",
-              "building",
-              "draft",
-              "reviewing",
-              "reviewed"
-            ],
-            "title": "Status"
-          },
-          "rows": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rows"
-          },
-          "facts": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Facts"
-          },
-          "stage": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Stage",
-            "description": "the gold builder's own stage (progress.json: starting, building, failed, writing, done), when it wrote one; `building` with stage done or failed and no job running means D is there but triage, pool or draft have not run"
-          }
-        },
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "title": "GoldStatus"
-      },
-      "GraphEdge": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "claim": {
-            "type": "string",
-            "title": "Claim"
-          },
-          "origin": {
-            "type": "string",
-            "title": "Origin"
-          },
-          "step_id": {
-            "type": "integer",
-            "title": "Step Id"
-          },
-          "agent_id": {
-            "type": "string",
-            "title": "Agent Id"
-          },
-          "source": {
-            "type": "string",
-            "title": "Source"
-          },
-          "target": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Target"
-          },
-          "literal": {
-            "title": "Literal"
-          },
-          "predicate": {
-            "$ref": "#/components/schemas/Predicate"
-          },
-          "evidence": {
-            "$ref": "#/components/schemas/Evidence"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "id",
-          "claim",
-          "origin",
-          "step_id",
-          "agent_id",
-          "source",
-          "target",
-          "predicate",
-          "evidence"
-        ],
-        "title": "GraphEdge"
-      },
-      "GraphNode": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "kind": {
-            "type": "string",
-            "enum": [
-              "paper",
-              "entity"
-            ],
-            "title": "Kind"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          },
-          "paper": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Paper"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "id",
-          "kind",
-          "label"
-        ],
-        "title": "GraphNode"
-      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -6115,24 +4627,6 @@
           "version"
         ],
         "title": "Health"
-      },
-      "Highlight": {
-        "properties": {
-          "start": {
-            "type": "integer",
-            "title": "Start"
-          },
-          "end": {
-            "type": "integer",
-            "title": "End"
-          }
-        },
-        "type": "object",
-        "required": [
-          "start",
-          "end"
-        ],
-        "title": "Highlight"
       },
       "Item": {
         "properties": {
@@ -6211,12 +4705,32 @@
           "kind": {
             "type": "string",
             "title": "Kind",
-            "description": "concepts, run or gold; one job of a kind runs at a time"
+            "description": "synth, run, rag-baseline, agent-baseline, score, compare, propose, freeze"
+          },
+          "lane": {
+            "type": "string",
+            "enum": [
+              "model",
+              "cpu"
+            ],
+            "title": "Lane",
+            "description": "model: calls a model, queued one (WEBAPP_MODEL_JOBS) at a time; cpu: no model call, runs beside them (WEBAPP_CPU_JOBS at a time)",
+            "default": "cpu"
           },
           "args": {
             "additionalProperties": true,
             "type": "object",
-            "title": "Args"
+            "title": "Args",
+            "description": "the request the job was made from"
+          },
+          "refs": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Refs",
+            "description": "what the job writes, as viewer ids: corpus, run, score, proposal",
+            "default": {}
           },
           "state": {
             "type": "string",
@@ -6253,28 +4767,6 @@
               }
             ],
             "title": "Ended At"
-          },
-          "run_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Run Id"
-          },
-          "qid": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qid"
           },
           "exit_code": {
             "anyOf": [
@@ -6320,9 +4812,17 @@
         "required": [
           "id",
           "kind",
+          "lane",
           "args",
+          "refs",
           "state",
-          "created_at"
+          "created_at",
+          "started_at",
+          "ended_at",
+          "exit_code",
+          "error",
+          "warnings",
+          "steps"
         ],
         "title": "Job"
       },
@@ -6409,47 +4909,15 @@
         "required": [
           "name",
           "argv",
-          "command"
+          "command",
+          "required",
+          "needs",
+          "state",
+          "exit_code",
+          "started_at",
+          "ended_at"
         ],
         "title": "JobStep"
-      },
-      "KnowledgeGraph": {
-        "properties": {
-          "run_id": {
-            "type": "string",
-            "title": "Run Id"
-          },
-          "nodes": {
-            "items": {
-              "$ref": "#/components/schemas/GraphNode"
-            },
-            "type": "array",
-            "title": "Nodes"
-          },
-          "edges": {
-            "items": {
-              "$ref": "#/components/schemas/GraphEdge"
-            },
-            "type": "array",
-            "title": "Edges"
-          },
-          "namespaces": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Namespaces",
-            "default": {}
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "run_id",
-          "nodes",
-          "edges"
-        ],
-        "title": "KnowledgeGraph"
       },
       "LabelRow": {
         "properties": {
@@ -6520,73 +4988,6 @@
         "additionalProperties": false,
         "type": "object",
         "title": "Locate"
-      },
-      "Measure": {
-        "properties": {
-          "operation": {
-            "type": "string",
-            "title": "Operation"
-          },
-          "of": {
-            "type": "string",
-            "title": "Of"
-          },
-          "group_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Group By"
-          },
-          "filter": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Filter"
-          },
-          "order": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "asc",
-                  "desc"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Order"
-          },
-          "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Limit"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "operation",
-          "of"
-        ],
-        "title": "Measure"
       },
       "ModelCall": {
         "properties": {
@@ -6778,19 +5179,6 @@
         "title": "ModelCallRecord",
         "description": "One record of the engine's record cache (evidence/recording.py): request, response, usage, error."
       },
-      "NodeType": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "title": "Type"
-          }
-        },
-        "type": "object",
-        "required": [
-          "type"
-        ],
-        "title": "NodeType"
-      },
       "Pairing": {
         "properties": {
           "rule": {
@@ -6819,174 +5207,6 @@
         "type": "object",
         "title": "Pairing",
         "description": "How a study's treatment and control measurements are chosen (evidence/synthesis.py): on the same\ndataset (the first dataset in document order that has both), preferring, in order, a value in a table\ncell over prose and the earlier value over the later one."
-      },
-      "Passage": {
-        "properties": {
-          "paper_id": {
-            "type": "string",
-            "title": "Paper Id"
-          },
-          "title": {
-            "type": "string",
-            "title": "Title"
-          },
-          "text": {
-            "type": "string",
-            "title": "Text",
-            "description": "the window of the paper's text around the span"
-          },
-          "highlight": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Highlight"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "the span in `text`, in code points (Python, the anchors)"
-          },
-          "highlight_utf16": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Highlight"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "the same span in UTF-16 code units: text.slice(start, end) in JavaScript"
-          },
-          "offset": {
-            "type": "integer",
-            "title": "Offset",
-            "description": "raw offset of `text` in the paper file, in code points"
-          },
-          "length": {
-            "type": "integer",
-            "title": "Length",
-            "description": "length of the whole paper file in code points"
-          }
-        },
-        "type": "object",
-        "required": [
-          "paper_id",
-          "title",
-          "text",
-          "highlight",
-          "offset",
-          "length"
-        ],
-        "title": "Passage",
-        "description": "Offsets count Unicode code points (Python's), as the agent's anchors do; JavaScript strings count\nUTF-16 code units, which differ after any character outside the BMP (e.g. math italic letters in\na converted PDF), so the frontend slices `text` with `highlight_utf16`."
-      },
-      "Pick": {
-        "properties": {
-          "choice": {
-            "type": "integer",
-            "title": "Choice"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "picked_by": {
-            "type": "string",
-            "title": "Picked By",
-            "description": "user, claude or provisional-first"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "concept_sha256": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concept Sha256"
-          },
-          "replaces_concept_sha256": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Replaces Concept Sha256",
-            "description": "the concept this pick replaced, if it changed one"
-          }
-        },
-        "type": "object",
-        "required": [
-          "choice",
-          "picked_by"
-        ],
-        "title": "Pick",
-        "description": "The current pick: the last `concept_pick` record of the session's hash chain."
-      },
-      "PickRequest": {
-        "properties": {
-          "choice": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
-            "title": "Choice"
-          },
-          "picked_by": {
-            "type": "string",
-            "enum": [
-              "user",
-              "claude",
-              "provisional-first"
-            ],
-            "title": "Picked By",
-            "default": "user"
-          },
-          "reason": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 2000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason"
-          },
-          "force": {
-            "type": "boolean",
-            "title": "Force",
-            "description": "change the pick although runs use the current concept (they then show as concept_current false)",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": [
-          "choice"
-        ],
-        "title": "PickRequest"
       },
       "Placement": {
         "properties": {
@@ -7026,35 +5246,6 @@
           "exact"
         ],
         "title": "Placement"
-      },
-      "Predicate": {
-        "properties": {
-          "text": {
-            "type": "string",
-            "title": "Text"
-          },
-          "curie": {
-            "type": "string",
-            "title": "Curie"
-          },
-          "iri": {
-            "type": "string",
-            "title": "Iri"
-          },
-          "vocabulary": {
-            "type": "string",
-            "title": "Vocabulary"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "text",
-          "curie",
-          "iri",
-          "vocabulary"
-        ],
-        "title": "Predicate"
       },
       "ProposalDetail": {
         "properties": {
@@ -7345,21 +5536,32 @@
       },
       "ProposeRequest": {
         "properties": {
-          "temperature": {
-            "type": "number",
-            "maximum": 2.0,
-            "minimum": 0.0,
-            "title": "Temperature",
-            "default": 0.7
+          "proposal": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Proposal"
           },
-          "seed": {
-            "type": "integer",
-            "title": "Seed",
-            "default": 1
+          "question": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Question",
+            "description": "the question's id in the questions file"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$",
+            "title": "Model",
+            "default": "orch-model"
           }
         },
+        "additionalProperties": false,
         "type": "object",
-        "title": "ProposeRequest"
+        "required": [
+          "proposal",
+          "question"
+        ],
+        "title": "ProposeRequest",
+        "description": "The proposal flow's frame, draft, critic and cards steps into `$EV/proposals/<proposal>` (resumed from the\nfirst step whose file is missing)."
       },
       "Protocol": {
         "properties": {
@@ -7522,6 +5724,31 @@
         ],
         "title": "ProtocolEntry"
       },
+      "ProtocolRef": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "repo",
+              "proposal"
+            ],
+            "title": "Source",
+            "description": "repo: a hand-written protocol under the protocols directory; proposal: a frozen proposal's protocol.yaml"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "name"
+        ],
+        "title": "ProtocolRef"
+      },
       "ProtocolView": {
         "properties": {
           "source": {
@@ -7588,60 +5815,17 @@
         ],
         "title": "ProtocolView"
       },
-      "QueryResult": {
-        "properties": {
-          "n": {
-            "type": "integer",
-            "title": "N"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "run_id": {
-            "type": "string",
-            "title": "Run Id"
-          },
-          "rows": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Rows"
-          }
-        },
-        "type": "object",
-        "required": [
-          "n",
-          "name",
-          "run_id",
-          "rows"
-        ],
-        "title": "QueryResult"
-      },
       "Question": {
         "properties": {
           "id": {
             "type": "string",
             "title": "Id"
           },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
           "question": {
             "type": "string",
             "title": "Question"
           },
-          "source": {
+          "protocol": {
             "anyOf": [
               {
                 "type": "string"
@@ -7650,9 +5834,10 @@
                 "type": "null"
               }
             ],
-            "title": "Source"
+            "title": "Protocol",
+            "description": "the hand-written protocol's name under the protocols directory (`/api/ev/protocols/{name}`), or null: the question needs a proposal"
           },
-          "notes": {
+          "agentic_protocol": {
             "anyOf": [
               {
                 "type": "string"
@@ -7661,35 +5846,10 @@
                 "type": "null"
               }
             ],
-            "title": "Notes"
+            "title": "Agentic Protocol",
+            "description": "its variant with the agentic extractor, when there is one"
           },
-          "concept": {
-            "$ref": "#/components/schemas/ConceptStatus"
-          },
-          "gold": {
-            "$ref": "#/components/schemas/GoldStatus"
-          },
-          "runs": {
-            "$ref": "#/components/schemas/RunCounts"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "question",
-          "concept",
-          "gold",
-          "runs"
-        ],
-        "title": "Question"
-      },
-      "QuestionDetail": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "category": {
+          "vocab": {
             "anyOf": [
               {
                 "type": "string"
@@ -7698,82 +5858,29 @@
                 "type": "null"
               }
             ],
-            "title": "Category"
+            "title": "Vocab",
+            "description": "the vocabulary snapshot the proposal flow's frame step uses"
           },
-          "question": {
-            "type": "string",
-            "title": "Question"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source"
-          },
-          "notes": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Notes"
-          },
-          "concept": {
-            "$ref": "#/components/schemas/ConceptStatus"
-          },
-          "gold": {
-            "$ref": "#/components/schemas/GoldStatus"
-          },
-          "runs": {
-            "$ref": "#/components/schemas/RunCounts"
-          },
-          "briefs": {
+          "proposals": {
             "items": {
-              "$ref": "#/components/schemas/ConceptBrief"
+              "type": "string"
             },
             "type": "array",
-            "title": "Briefs",
+            "title": "Proposals",
+            "description": "proposals (by directory name) whose frame asks this question",
             "default": []
-          },
-          "picked": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Pick"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "concept_brief": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ConceptBrief"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "the frozen concept.json, once picked"
           }
         },
         "type": "object",
         "required": [
           "id",
           "question",
-          "concept",
-          "gold",
-          "runs"
+          "protocol",
+          "agentic_protocol",
+          "vocab",
+          "proposals"
         ],
-        "title": "QuestionDetail"
+        "title": "Question"
       },
       "QuestionMetric": {
         "properties": {
@@ -7793,6 +5900,44 @@
           "higher_is_better"
         ],
         "title": "QuestionMetric"
+      },
+      "RagBaselineRequest": {
+        "properties": {
+          "corpus": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Corpus"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$",
+            "title": "Model",
+            "default": "orch-model"
+          },
+          "retrieval": {
+            "type": "string",
+            "enum": [
+              "global",
+              "per_paper"
+            ],
+            "title": "Retrieval",
+            "default": "global"
+          },
+          "k": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "K",
+            "default": 8
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "corpus"
+        ],
+        "title": "RagBaselineRequest",
+        "description": "`evaluate rag-baseline` into `$EV/runs/rag-baseline/<corpus>`."
       },
       "Rejected": {
         "properties": {
@@ -8050,13 +6195,6 @@
         ],
         "title": "ReportView"
       },
-      "Results": {
-        "properties": {},
-        "additionalProperties": true,
-        "type": "object",
-        "title": "Results",
-        "description": "$RUNS/report/report.json (scoring, M4) as written: per question x condition means, paired\ndifferences, intervals, Wilcoxon results and the pre-registered primary test."
-      },
       "Root": {
         "properties": {
           "path": {
@@ -8083,73 +6221,6 @@
           "exists"
         ],
         "title": "Root"
-      },
-      "RunCounts": {
-        "properties": {
-          "claim_on": {
-            "type": "integer",
-            "title": "Claim On",
-            "default": 0
-          },
-          "claim_off": {
-            "type": "integer",
-            "title": "Claim Off",
-            "default": 0
-          }
-        },
-        "type": "object",
-        "title": "RunCounts"
-      },
-      "RunDetail": {
-        "properties": {
-          "summary": {
-            "$ref": "#/components/schemas/RunSummary"
-          },
-          "config": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Config"
-          },
-          "concept": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ConceptBrief"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "answer": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Answer"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "verify": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Verification"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "summary",
-          "config",
-          "concept",
-          "answer",
-          "verify"
-        ],
-        "title": "RunDetail"
       },
       "RunPaper": {
         "properties": {
@@ -8233,494 +6304,73 @@
       },
       "RunRequest": {
         "properties": {
-          "qid": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qid",
-            "description": "question id; its picked concept ($CONCEPTS/<qid>/concept.json) is used"
+          "corpus": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Corpus"
           },
-          "concept_path": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concept Path",
-            "description": "a concept.json under $CONCEPTS or $RUNS instead of a qid"
+          "protocol": {
+            "$ref": "#/components/schemas/ProtocolRef"
           },
-          "condition": {
+          "extractors": {
             "type": "string",
             "enum": [
-              "claim_on",
-              "claim_off"
+              "regex-only",
+              "cascade"
             ],
-            "title": "Condition",
-            "default": "claim_on"
+            "title": "Extractors",
+            "default": "cascade"
           },
-          "temperature": {
-            "type": "number",
-            "maximum": 2.0,
-            "minimum": 0.0,
-            "title": "Temperature",
-            "default": 0.7
-          },
-          "seed": {
-            "type": "integer",
-            "title": "Seed",
-            "default": 1
-          },
-          "steps": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Steps"
-          },
-          "tokens": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "minimum": 1.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tokens"
-          },
-          "sandbox": {
+          "strategy": {
             "type": "string",
             "enum": [
-              "landlock",
-              "unsandboxed"
+              "all",
+              "gaps"
             ],
-            "title": "Sandbox",
-            "default": "landlock"
+            "title": "Strategy",
+            "default": "all"
           },
-          "attach": {
-            "type": "boolean",
-            "title": "Attach",
-            "description": "claim_off: run the attach step after the run",
-            "default": true
-          },
-          "force": {
-            "type": "boolean",
-            "title": "Force",
-            "description": "start although a run the web app did not start (a batch on the cluster) is live: both then share the orchestrator, which slows the batch runs and inflates their recorded time",
-            "default": false
-          }
-        },
-        "type": "object",
-        "title": "RunRequest"
-      },
-      "RunSummary": {
-        "properties": {
-          "run_id": {
+          "model": {
             "type": "string",
-            "title": "Run Id",
-            "description": "the run directory's name, or <batch>~<name> for a run one level down ($RUNS/<batch>/<name>, e.g. m4-72~q01-claim_on-r1-a1, web~...)"
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$",
+            "title": "Model",
+            "default": "orch-model"
           },
-          "batch": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Batch",
-            "description": "the directory the run is in below $RUNS (a batch manifest's name, or `web` for runs the web app started)"
-          },
-          "qid": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qid"
-          },
-          "concept_sha256": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concept Sha256"
-          },
-          "concept_current": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Concept Current",
-            "description": "the run used the question's current pick; false: a replaced or another concept (left out of the question's counts); null: the question has no pick"
-          },
-          "condition": {
-            "type": "string",
-            "title": "Condition"
-          },
-          "seed": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Seed"
-          },
-          "temperature": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Temperature"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "sandbox": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sandbox",
-            "description": "config.json sandbox.mode: landlock, or unsandboxed (for tests only: commands ran with network and write access); null: not recorded"
-          },
-          "exit_status": {
-            "type": "string",
-            "title": "Exit Status",
-            "description": "submitted, budget, context_full, error, cut, running, incomplete, or another exit status the harness recorded"
-          },
-          "answer_from": {
+          "group": {
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "final",
-                  "draft",
-                  "none"
-                ]
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Answer From",
-            "description": "final: the model's final answer; draft: the agent's draft file, taken by the harness (answer_from_draft); none: the harness wrote an answer with no rows (no_final_answer); null: no answer yet or not recorded"
+            "title": "Group",
+            "description": "default as the runbook names it: regex-only, cascade, cascade-gaps, agentic, agentic-gaps, or <protocol>-..."
           },
-          "steps": {
-            "type": "integer",
-            "title": "Steps"
-          },
-          "model_calls": {
-            "type": "integer",
-            "title": "Model Calls"
-          },
-          "tokens": {
-            "type": "integer",
-            "title": "Tokens"
-          },
-          "seconds": {
-            "type": "number",
-            "title": "Seconds"
-          },
-          "tokens_without_attach": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tokens Without Attach"
-          },
-          "seconds_without_attach": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Seconds Without Attach"
-          },
-          "rows": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rows"
-          },
-          "facts": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Facts"
-          },
-          "claims_accepted": {
-            "type": "integer",
-            "title": "Claims Accepted"
-          },
-          "claims_rejected": {
-            "type": "integer",
-            "title": "Claims Rejected"
-          },
-          "attach": {
-            "type": "string",
-            "enum": [
-              "not_applicable",
-              "pending",
-              "cut",
-              "done"
-            ],
-            "title": "Attach"
-          },
-          "verify": {
-            "type": "string",
-            "enum": [
-              "ok",
-              "failed",
-              "unknown"
-            ],
-            "title": "Verify"
-          },
-          "verify_from": {
+          "name": {
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "verify",
-                  "score"
-                ]
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Verify From",
-            "description": "where `verify` comes from: the app's own `agent verify` (cached while the server runs), or score.json's verify_ok when the scorer checked the run after its last record"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ScoreSummary"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "live": {
-            "type": "boolean",
-            "title": "Live",
-            "description": "the agent is still writing the run (research, or the attach step)"
-          },
-          "post_processing": {
-            "type": "boolean",
-            "title": "Post Processing",
-            "description": "a web-app job still runs verify, pairs, graph, export-prov or score on the finished run",
-            "default": false
+            "title": "Name",
+            "description": "default: the corpus name"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
-          "run_id",
-          "qid",
-          "condition",
-          "seed",
-          "temperature",
-          "created_at",
-          "exit_status",
-          "steps",
-          "model_calls",
-          "tokens",
-          "seconds",
-          "rows",
-          "facts",
-          "claims_accepted",
-          "claims_rejected",
-          "attach",
-          "verify",
-          "score",
-          "live"
+          "corpus",
+          "protocol"
         ],
-        "title": "RunSummary"
-      },
-      "Score": {
-        "properties": {
-          "run_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Run Id"
-          },
-          "qid": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qid"
-          },
-          "condition": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Condition"
-          },
-          "seed": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Seed"
-          },
-          "key_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Key Version"
-          },
-          "rows": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/FactScores"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "facts": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "$ref": "#/components/schemas/FactScores"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Facts"
-          },
-          "vital_recall": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Vital Recall"
-          },
-          "support": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Support"
-          },
-          "cost": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cost"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "title": "Score",
-        "description": "`<run>/score.json` (scoring, M4); only the plan's top-level fields are typed."
+        "title": "RunRequest",
+        "description": "`evidence run` over one corpus into `$EV/runs/<group>/<name>` (the runbook's layout)."
       },
       "ScoreRef": {
         "properties": {
@@ -8807,68 +6457,21 @@
         ],
         "title": "ScoreRef"
       },
-      "ScoreSummary": {
+      "ScoreRequest": {
         "properties": {
-          "support_share": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Support Share"
-          },
-          "fact_f1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fact F1"
-          },
-          "row_f1": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Row F1"
-          },
-          "key_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Key Version",
-            "description": "the answer key's version (v1, or v1-draft)"
-          },
-          "provisional": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Provisional",
-            "description": "scored against the draft key: tests the pipeline, never a result"
+          "run": {
+            "type": "string",
+            "title": "Run",
+            "description": "the run's id, `<group>~<name>`"
           }
         },
+        "additionalProperties": false,
         "type": "object",
-        "title": "ScoreSummary"
+        "required": [
+          "run"
+        ],
+        "title": "ScoreRequest",
+        "description": "`evaluate score` of an engine run (with the corpus's baselines beside it) into `$EV/scores/<group>/<name>`."
       },
       "ScoresIndex": {
         "properties": {
@@ -9046,69 +6649,6 @@
           "selector"
         ],
         "title": "Span"
-      },
-      "SparqlRequest": {
-        "properties": {
-          "query": {
-            "type": "string",
-            "maxLength": 100000,
-            "minLength": 1,
-            "title": "Query"
-          },
-          "run_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Run Id"
-          }
-        },
-        "type": "object",
-        "required": [
-          "query"
-        ],
-        "title": "SparqlRequest"
-      },
-      "SparqlResult": {
-        "properties": {
-          "vars": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Vars"
-          },
-          "rows": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Rows"
-          },
-          "boolean": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Boolean",
-            "description": "ASK queries: the answer (vars and rows are empty)"
-          }
-        },
-        "type": "object",
-        "required": [
-          "vars",
-          "rows"
-        ],
-        "title": "SparqlResult"
       },
       "Step": {
         "properties": {
@@ -9487,6 +7027,86 @@
         ],
         "title": "StudyReason"
       },
+      "SynthRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Name"
+          },
+          "seed": {
+            "type": "integer",
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Seed",
+            "default": 1
+          },
+          "studies": {
+            "type": "integer",
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Studies",
+            "default": 20
+          },
+          "levels": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "explicit",
+                "paraphrased",
+                "distributed",
+                "complex",
+                "contradictory"
+              ]
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Levels",
+            "default": [
+              "explicit",
+              "paraphrased",
+              "distributed",
+              "complex",
+              "contradictory"
+            ]
+          },
+          "duplicates": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Duplicates",
+            "default": 0
+          },
+          "missing": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Missing",
+            "default": 0
+          },
+          "outliers": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Outliers",
+            "default": 0
+          },
+          "irrelevant": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 0.0,
+            "title": "Irrelevant",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "SynthRequest",
+        "description": "`synth build --renderer template` (no model); writes `<name>-<level>` per level and `<name>-mixed`."
+      },
       "Synthesis": {
         "properties": {
           "compare": {
@@ -9834,175 +7454,6 @@
         ],
         "title": "VariantInfo",
         "description": "variant.json of a counterfactual corpus (`synth variant`, F3)."
-      },
-      "Verdict": {
-        "properties": {
-          "label": {
-            "type": "string",
-            "enum": [
-              "supports",
-              "partial",
-              "no"
-            ],
-            "title": "Label"
-          },
-          "rationale": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rationale"
-          },
-          "model": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Model"
-          },
-          "prompt_sha256": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Prompt Sha256"
-          },
-          "cached": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cached"
-          },
-          "source": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "score",
-                  "judge"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Source",
-            "description": "score: the verdict score.json counted (the primary outcome's); judge: asked live (?judge=true) because the run has no scored verdict"
-          }
-        },
-        "additionalProperties": true,
-        "type": "object",
-        "required": [
-          "label"
-        ],
-        "title": "Verdict"
-      },
-      "Verification": {
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "title": "Ok"
-          },
-          "errors": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Errors"
-          },
-          "stats": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Stats"
-          }
-        },
-        "type": "object",
-        "required": [
-          "ok",
-          "errors",
-          "stats"
-        ],
-        "title": "Verification"
-      },
-      "WalkClaim": {
-        "properties": {
-          "claim_id": {
-            "type": "string",
-            "title": "Claim Id"
-          },
-          "claim": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Claim"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "null when the id is not an accepted claim of this run"
-          },
-          "step": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Step"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "passage": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Passage"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "anchor_status": {
-            "type": "string",
-            "title": "Anchor Status",
-            "description": "ok, relocated, ambiguous, broken, or unknown (no corpus)"
-          },
-          "support": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Verdict"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "claim_id",
-          "claim",
-          "step",
-          "passage",
-          "anchor_status"
-        ],
-        "title": "WalkClaim"
       }
     }
   }

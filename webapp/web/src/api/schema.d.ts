@@ -21,456 +21,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Config */
-        get: operations["config"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/questions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Questions */
-        get: operations["questions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/questions/{qid}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Question */
-        get: operations["question"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/questions/{qid}/concepts/propose": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Propose */
-        post: operations["propose"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/questions/{qid}/concepts/pick": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pick */
-        post: operations["pick"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Runs */
-        get: operations["runs"];
-        put?: never;
-        /** Start Run */
-        post: operations["start_run"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Run */
-        get: operations["run"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/steps": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Steps */
-        get: operations["steps"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/steps/{step}/output": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Step Output */
-        get: operations["step_output"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stream */
-        get: operations["stream"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/claims": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Claims */
-        get: operations["claims"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/graph": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Graph */
-        get: operations["graph"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/facts/{fact_id}/walk": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Walk */
-        get: operations["walk"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/runs/{run_id}/score": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Score */
-        get: operations["score"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/corpus/{paper_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Corpus */
-        get: operations["corpus"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/gold": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Gold
-         * @description The questions, then any other question directory in $GOLD (a plain id holding gold files).
-         */
-        get: operations["gold"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/gold/{qid}/key": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Gold Key */
-        get: operations["gold_key"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/gold/{qid}/build": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Gold Build */
-        post: operations["gold_build"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/results": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Results */
-        get: operations["results"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/sparql": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sparql */
-        post: operations["sparql"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/queries/{n}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Provenance Query */
-        get: operations["provenance_query"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/jobs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Jobs */
-        get: operations["jobs"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/jobs/{job_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Job */
-        get: operations["job"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/jobs/{job_id}/log": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Job Log */
-        get: operations["job_log"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/jobs/{job_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel Job */
-        post: operations["cancel_job"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/chat": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Chat Route
-         * @description Body: an AI SDK v5 chat request ({id, messages, trigger}); `run_id` in the body or the query
-         *     scopes the chat to one run.
-         */
-        post: operations["chat_route"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/ev/config": {
         parameters: {
             query?: never;
@@ -831,10 +381,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Questions */
+        get: operations["ev_questions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/questions/{qid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Question */
+        get: operations["ev_question"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Jobs */
+        get: operations["ev_jobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Job */
+        get: operations["ev_job"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/{job_id}/log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ev Job Log */
+        get: operations["ev_job_log"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Cancel Job */
+        post: operations["ev_cancel_job"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/synth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Synth */
+        post: operations["ev_start_synth"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Run */
+        post: operations["ev_start_run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/rag-baseline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Rag Baseline */
+        post: operations["ev_start_rag_baseline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/agent-baseline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Agent Baseline */
+        post: operations["ev_start_agent_baseline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Score */
+        post: operations["ev_start_score"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Compare */
+        post: operations["ev_start_compare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Propose */
+        post: operations["ev_start_propose"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/jobs/freeze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ev Start Freeze */
+        post: operations["ev_start_freeze"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/proposals/{name}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ev Put Decisions */
+        put: operations["ev_put_decisions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AgentBaselineRequest
+         * @description `evaluate agent-baseline` into `$EV/runs/agent-baseline/<corpus>`.
+         */
+        AgentBaselineRequest: {
+            /** Corpus */
+            corpus: string;
+            /**
+             * Model
+             * @default orch-model
+             */
+            model?: string;
+        };
         /** AgentTrace */
         AgentTrace: {
             /** Run Id */
@@ -896,108 +714,6 @@ export interface components {
             start: number;
             /** End */
             end: number;
-        };
-        /** Answer */
-        Answer: {
-            /** Concept Sha256 */
-            concept_sha256: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "table" | "graph";
-            /** Rows */
-            rows: components["schemas"]["AnswerRow"][];
-            /** Notes */
-            notes?: string | null;
-        };
-        /** AnswerKey */
-        AnswerKey: {
-            /** Qid */
-            qid?: string | null;
-            /** Concept Sha256 */
-            concept_sha256?: string | null;
-            /** Kind */
-            kind?: string | null;
-            /** Version */
-            version?: string | null;
-            /** Reviewed */
-            reviewed?: boolean | null;
-            /**
-             * Rows
-             * @default []
-             */
-            rows?: {
-                [key: string]: unknown;
-            }[];
-            /** Notes */
-            notes?: unknown;
-        } & {
-            [key: string]: unknown;
-        };
-        /**
-         * AnswerRow
-         * @description A table row (`cells`) or a graph row (source, predicate, target, ...), with its facts.
-         */
-        AnswerRow: {
-            /** Id */
-            id: string;
-            /** Facts */
-            facts: components["schemas"]["Fact"][];
-            /** Cells */
-            cells?: {
-                [key: string]: unknown;
-            } | null;
-            /** Source */
-            source?: string | null;
-            /** Source Type */
-            source_type?: string | null;
-            /** Predicate */
-            predicate?: string | null;
-            /** Target */
-            target?: string | null;
-            /** Target Type */
-            target_type?: string | null;
-            /** Attributes */
-            attributes?: {
-                [key: string]: unknown;
-            } | null;
-        } & {
-            [key: string]: unknown;
-        };
-        /**
-         * AnswerShape
-         * @description A table (columns) or a graph (node types and edge types): the brief's answer template.
-         */
-        AnswerShape: {
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "table" | "graph";
-            /** Columns */
-            columns?: components["schemas"]["Column"][] | null;
-            /** Nodes */
-            nodes?: components["schemas"]["NodeType"][] | null;
-            /** Edges */
-            edges?: components["schemas"]["EdgeType"][] | null;
-        };
-        /** AppConfig */
-        AppConfig: {
-            /** Corpus */
-            corpus: string | null;
-            /** Runs Root */
-            runs_root: string;
-            /** Gold Root */
-            gold_root: string;
-            /** Concepts Root */
-            concepts_root: string;
-            /** Llm Base Url */
-            llm_base_url: string;
-            /** Llm Key Set */
-            llm_key_set: boolean;
-            /** Argilla Url */
-            argilla_url: string | null;
         };
         /** BenchmarkView */
         BenchmarkView: {
@@ -1257,13 +973,6 @@ export interface components {
             /** O */
             o?: unknown;
         };
-        /** Column */
-        Column: {
-            /** Name */
-            name: string;
-            /** Type */
-            type: string;
-        };
         /**
          * Compare
          * @description The condition roles a study's pair is made of: the effect is treatment against control.
@@ -1273,6 +982,22 @@ export interface components {
             treatment: string;
             /** Control */
             control: string;
+        };
+        /**
+         * CompareRequest
+         * @description `evaluate compare` over score reports into `$EV/scores/<name>`.
+         */
+        CompareRequest: {
+            /**
+             * Reports
+             * @description score ids (`<group>~<name>`)
+             */
+            reports: string[];
+            /**
+             * Name
+             * @description the output directory under the scores root, e.g. compare-funnel-<corpus>
+             */
+            name: string;
         };
         /** CompareTable */
         CompareTable: {
@@ -1290,45 +1015,6 @@ export interface components {
             }[];
             /** Markdown */
             markdown: string | null;
-        };
-        /**
-         * ConceptBrief
-         * @description One reading of a question (agent/schemas/concept.schema.json).
-         */
-        ConceptBrief: {
-            /** Id */
-            id?: string | null;
-            /** Title */
-            title: string;
-            /** Definition */
-            definition: string;
-            measure: components["schemas"]["Measure"];
-            /** Scope */
-            scope: {
-                [key: string]: string;
-            };
-            answer_shape: components["schemas"]["AnswerShape"];
-            /** Competency Questions */
-            competency_questions: string[];
-            /** Needs */
-            needs?: string[] | null;
-        } & {
-            [key: string]: unknown;
-        };
-        /** ConceptStatus */
-        ConceptStatus: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "none" | "proposed" | "picked";
-            /** Title */
-            title?: string | null;
-            /**
-             * Picked By
-             * @description user, claude or provisional-first (the pick record's)
-             */
-            picked_by?: string | null;
         };
         /** CorpusDetail */
         CorpusDetail: {
@@ -1576,19 +1262,46 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** EdgeType */
-        EdgeType: {
-            /** Source */
-            source: string;
-            /** Predicate */
-            predicate: string;
-            /** Target */
-            target: string;
+        /** DecisionEntry */
+        DecisionEntry: {
+            /** Card */
+            card: string;
             /**
-             * Attributes
-             * @default []
+             * Choice
+             * @description an option id of the card, or custom (with a value)
              */
-            attributes?: components["schemas"]["Column"][];
+            choice: string;
+            /**
+             * Value
+             * @description only with choice custom: the value in the card's shape
+             */
+            value?: unknown;
+            /** Reason */
+            reason: string;
+            /**
+             * By
+             * @description model: the model's default, kept; user: decided in the app (written as the server's $WEBAPP_USER)
+             * @enum {string}
+             */
+            by: "model" | "user";
+        };
+        /** DecisionsRequest */
+        DecisionsRequest: {
+            /** Decisions */
+            decisions: components["schemas"]["DecisionEntry"][];
+        };
+        /** DecisionsResult */
+        DecisionsResult: {
+            /**
+             * Written
+             * @description the decisions.yaml written
+             */
+            written: string;
+            /**
+             * Problems
+             * @description what `evidence propose freeze` would refuse (cards.validate)
+             */
+            problems: string[];
         };
         /** EvAnswer */
         EvAnswer: {
@@ -1676,6 +1389,45 @@ export interface components {
             /** @description the agentic extractor's agent run directories */
             agent_work: components["schemas"]["Root"];
             protocols: components["schemas"]["Root"];
+            /** @description the questions file (evidence/questions.yaml; `exists`: the file is there) */
+            questions: components["schemas"]["Root"];
+            /** @description $EV/.jobs: the state and logs of the jobs the app starts (none without $EV) */
+            jobs: components["schemas"]["Root"];
+            /**
+             * User
+             * @description who decides a card in the app (`by` in decisions.yaml, $WEBAPP_USER)
+             */
+            user: string;
+            /**
+             * Default Model
+             * @description the model alias every model job uses unless told otherwise (orch-model)
+             */
+            default_model: string;
+            /**
+             * Llm Base Url
+             * @description the model gateway the jobs reach ($LITELLM_BASE_URL)
+             */
+            llm_base_url: string;
+            /**
+             * Llm Key Set
+             * @description whether $LITELLM_MASTER_KEY is set in the server's environment
+             */
+            llm_key_set: boolean;
+            /**
+             * Agent Root
+             * @description $AGENT_ROOT, the agent baseline's pinned toolchain
+             */
+            agent_root: string | null;
+            /**
+             * Model Jobs
+             * @description model jobs that run at a time; the rest queue
+             */
+            model_jobs: number;
+            /**
+             * Levels
+             * @description the synthetic corpus levels a template build can write (synth/levels.py)
+             */
+            levels: string[];
         };
         /** EvGraph */
         EvGraph: {
@@ -1878,19 +1630,6 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
-        /** Evidence */
-        Evidence: {
-            /** File */
-            file: string;
-            /** Paper */
-            paper: string | null;
-            /** Start */
-            start: number;
-            /** End */
-            end: number;
-        } & {
-            [key: string]: unknown;
-        };
         /** EvidenceTypeSpec */
         EvidenceTypeSpec: {
             /**
@@ -2026,56 +1765,6 @@ export interface components {
              */
             determinism: "exact" | "near_exact" | "variable";
         };
-        /** Fact */
-        Fact: {
-            /** Id */
-            id: string;
-            /** S */
-            s: string;
-            /** P */
-            p: string;
-            /** O */
-            o: string | number | boolean;
-            /** Claims */
-            claims: string[];
-            /** Origin */
-            origin: string;
-        };
-        /** FactScores */
-        FactScores: {
-            /** Tp */
-            tp?: number | null;
-            /** Fp */
-            fp?: number | null;
-            /** Fn */
-            fn?: number | null;
-            /** Precision */
-            precision?: number | null;
-            /** Recall */
-            recall?: number | null;
-            /** F1 */
-            f1?: number | null;
-        } & {
-            [key: string]: unknown;
-        };
-        /** FactWalk */
-        FactWalk: {
-            /** Run Id */
-            run_id: string;
-            fact: components["schemas"]["Fact"];
-            /** Row Id */
-            row_id: string;
-            row: components["schemas"]["AnswerRow"];
-            /** Claims */
-            claims: components["schemas"]["WalkClaim"][];
-            /** @description the best verdict over the fact's quotes, or null */
-            support: components["schemas"]["Verdict"] | null;
-            /**
-             * Label
-             * @description the fact's support label as scoring defines it (best verdict over its claims; unsourced: no accepted claim; pending: a verdict is missing); null: nothing judged
-             */
-            label?: ("supports" | "partial" | "no" | "unsourced" | "pending") | null;
-        };
         /** Flags */
         Flags: {
             /**
@@ -2090,6 +1779,11 @@ export interface components {
              *     }
              */
             large_effect?: components["schemas"]["LargeEffect"];
+        };
+        /** FreezeRequest */
+        FreezeRequest: {
+            /** Proposal */
+            proposal: string;
         };
         /** FunnelDecision */
         FunnelDecision: {
@@ -2148,95 +1842,6 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** GoldEntry */
-        GoldEntry: {
-            /** Qid */
-            qid: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "none" | "building" | "draft" | "reviewing" | "reviewed";
-            /**
-             * Stage
-             * @description the gold builder's stage (progress.json), when it wrote one
-             */
-            stage?: string | null;
-            /** Coverage */
-            coverage?: {
-                [key: string]: unknown;
-            } | null;
-            /** Counts */
-            counts?: {
-                [key: string]: unknown;
-            } | null;
-            /** Key Version */
-            key_version?: string | null;
-            /** Report */
-            report?: {
-                [key: string]: unknown;
-            } | null;
-            /** Rows */
-            rows?: number | null;
-            /** Facts */
-            facts?: number | null;
-        };
-        /** GoldStatus */
-        GoldStatus: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "none" | "building" | "draft" | "reviewing" | "reviewed";
-            /** Rows */
-            rows?: number | null;
-            /** Facts */
-            facts?: number | null;
-            /**
-             * Stage
-             * @description the gold builder's own stage (progress.json: starting, building, failed, writing, done), when it wrote one; `building` with stage done or failed and no job running means D is there but triage, pool or draft have not run
-             */
-            stage?: string | null;
-        };
-        /** GraphEdge */
-        GraphEdge: {
-            /** Id */
-            id: string;
-            /** Claim */
-            claim: string;
-            /** Origin */
-            origin: string;
-            /** Step Id */
-            step_id: number;
-            /** Agent Id */
-            agent_id: string;
-            /** Source */
-            source: string;
-            /** Target */
-            target: string | null;
-            /** Literal */
-            literal?: unknown;
-            predicate: components["schemas"]["Predicate"];
-            evidence: components["schemas"]["Evidence"];
-        } & {
-            [key: string]: unknown;
-        };
-        /** GraphNode */
-        GraphNode: {
-            /** Id */
-            id: string;
-            /**
-             * Kind
-             * @enum {string}
-             */
-            kind: "paper" | "entity";
-            /** Label */
-            label: string;
-            /** Paper */
-            paper?: string | null;
-        } & {
-            [key: string]: unknown;
-        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2248,13 +1853,6 @@ export interface components {
             ok: boolean;
             /** Version */
             version: string;
-        };
-        /** Highlight */
-        Highlight: {
-            /** Start */
-            start: number;
-            /** End */
-            end: number;
         };
         /**
          * Item
@@ -2292,12 +1890,30 @@ export interface components {
             id: string;
             /**
              * Kind
-             * @description concepts, run or gold; one job of a kind runs at a time
+             * @description synth, run, rag-baseline, agent-baseline, score, compare, propose, freeze
              */
             kind: string;
-            /** Args */
+            /**
+             * Lane
+             * @description model: calls a model, queued one (WEBAPP_MODEL_JOBS) at a time; cpu: no model call, runs beside them (WEBAPP_CPU_JOBS at a time)
+             * @default cpu
+             * @enum {string}
+             */
+            lane: "model" | "cpu";
+            /**
+             * Args
+             * @description the request the job was made from
+             */
             args: {
                 [key: string]: unknown;
+            };
+            /**
+             * Refs
+             * @description what the job writes, as viewer ids: corpus, run, score, proposal
+             * @default {}
+             */
+            refs: {
+                [key: string]: string;
             };
             /**
              * State
@@ -2307,28 +1923,24 @@ export interface components {
             /** Created At */
             created_at: string;
             /** Started At */
-            started_at?: string | null;
+            started_at: string | null;
             /** Ended At */
-            ended_at?: string | null;
-            /** Run Id */
-            run_id?: string | null;
-            /** Qid */
-            qid?: string | null;
+            ended_at: string | null;
             /** Exit Code */
-            exit_code?: number | null;
+            exit_code: number | null;
             /** Error */
-            error?: string | null;
+            error: string | null;
             /**
              * Warnings
              * @description optional steps that failed (the job can still be done)
              * @default []
              */
-            warnings?: string[];
+            warnings: string[];
             /**
              * Steps
              * @default []
              */
-            steps?: components["schemas"]["JobStep"][];
+            steps: components["schemas"]["JobStep"][];
         };
         /** JobStep */
         JobStep: {
@@ -2346,43 +1958,25 @@ export interface components {
              * @description a failure fails the job (an optional step's failure is a warning)
              * @default true
              */
-            required?: boolean;
+            required: boolean;
             /**
              * Needs
              * @description files the step needs; it is skipped when one is missing
              * @default []
              */
-            needs?: string[];
+            needs: string[];
             /**
              * State
              * @default pending
              * @enum {string}
              */
-            state?: "pending" | "running" | "done" | "failed" | "skipped";
+            state: "pending" | "running" | "done" | "failed" | "skipped";
             /** Exit Code */
-            exit_code?: number | null;
+            exit_code: number | null;
             /** Started At */
-            started_at?: string | null;
+            started_at: string | null;
             /** Ended At */
-            ended_at?: string | null;
-        };
-        /** KnowledgeGraph */
-        KnowledgeGraph: {
-            /** Run Id */
-            run_id: string;
-            /** Nodes */
-            nodes: components["schemas"]["GraphNode"][];
-            /** Edges */
-            edges: components["schemas"]["GraphEdge"][];
-            /**
-             * Namespaces
-             * @default {}
-             */
-            namespaces?: {
-                [key: string]: string;
-            };
-        } & {
-            [key: string]: unknown;
+            ended_at: string | null;
         };
         /**
          * LabelRow
@@ -2424,23 +2018,6 @@ export interface components {
             params?: {
                 [key: string]: unknown;
             };
-        };
-        /** Measure */
-        Measure: {
-            /** Operation */
-            operation: string;
-            /** Of */
-            of: string;
-            /** Group By */
-            group_by?: string | null;
-            /** Filter */
-            filter?: string | null;
-            /** Order */
-            order?: ("asc" | "desc") | null;
-            /** Limit */
-            limit?: number | null;
-        } & {
-            [key: string]: unknown;
         };
         /** ModelCall */
         ModelCall: {
@@ -2499,11 +2076,6 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** NodeType */
-        NodeType: {
-            /** Type */
-            type: string;
-        };
         /**
          * Pairing
          * @description How a study's treatment and control measurements are chosen (evidence/synthesis.py): on the same
@@ -2526,80 +2098,6 @@ export interface components {
              */
             prefer?: ("table_cell" | "document_order")[];
         };
-        /**
-         * Passage
-         * @description Offsets count Unicode code points (Python's), as the agent's anchors do; JavaScript strings count
-         *     UTF-16 code units, which differ after any character outside the BMP (e.g. math italic letters in
-         *     a converted PDF), so the frontend slices `text` with `highlight_utf16`.
-         */
-        Passage: {
-            /** Paper Id */
-            paper_id: string;
-            /** Title */
-            title: string;
-            /**
-             * Text
-             * @description the window of the paper's text around the span
-             */
-            text: string;
-            /** @description the span in `text`, in code points (Python, the anchors) */
-            highlight: components["schemas"]["Highlight"] | null;
-            /** @description the same span in UTF-16 code units: text.slice(start, end) in JavaScript */
-            highlight_utf16?: components["schemas"]["Highlight"] | null;
-            /**
-             * Offset
-             * @description raw offset of `text` in the paper file, in code points
-             */
-            offset: number;
-            /**
-             * Length
-             * @description length of the whole paper file in code points
-             */
-            length: number;
-        };
-        /**
-         * Pick
-         * @description The current pick: the last `concept_pick` record of the session's hash chain.
-         */
-        Pick: {
-            /** Choice */
-            choice: number;
-            /** Title */
-            title?: string | null;
-            /**
-             * Picked By
-             * @description user, claude or provisional-first
-             */
-            picked_by: string;
-            /** Reason */
-            reason?: string | null;
-            /** Concept Sha256 */
-            concept_sha256?: string | null;
-            /**
-             * Replaces Concept Sha256
-             * @description the concept this pick replaced, if it changed one
-             */
-            replaces_concept_sha256?: string | null;
-        };
-        /** PickRequest */
-        PickRequest: {
-            /** Choice */
-            choice: number;
-            /**
-             * Picked By
-             * @default user
-             * @enum {string}
-             */
-            picked_by?: "user" | "claude" | "provisional-first";
-            /** Reason */
-            reason?: string | null;
-            /**
-             * Force
-             * @description change the pick although runs use the current concept (they then show as concept_current false)
-             * @default false
-             */
-            force?: boolean;
-        };
         /** Placement */
         Placement: {
             /** Fact */
@@ -2614,19 +2112,6 @@ export interface components {
             end: number;
             /** Exact */
             exact: string;
-        } & {
-            [key: string]: unknown;
-        };
-        /** Predicate */
-        Predicate: {
-            /** Text */
-            text: string;
-            /** Curie */
-            curie: string;
-            /** Iri */
-            iri: string;
-            /** Vocabulary */
-            vocabulary: string;
         } & {
             [key: string]: unknown;
         };
@@ -2743,18 +2228,24 @@ export interface components {
              */
             amendments: number;
         };
-        /** ProposeRequest */
+        /**
+         * ProposeRequest
+         * @description The proposal flow's frame, draft, critic and cards steps into `$EV/proposals/<proposal>` (resumed from the
+         *     first step whose file is missing).
+         */
         ProposeRequest: {
+            /** Proposal */
+            proposal: string;
             /**
-             * Temperature
-             * @default 0.7
+             * Question
+             * @description the question's id in the questions file
              */
-            temperature?: number;
+            question: string;
             /**
-             * Seed
-             * @default 1
+             * Model
+             * @default orch-model
              */
-            seed?: number;
+            model?: string;
         };
         /** Protocol */
         Protocol: {
@@ -2797,6 +2288,17 @@ export interface components {
             /** Error */
             error: string | null;
         };
+        /** ProtocolRef */
+        ProtocolRef: {
+            /**
+             * Source
+             * @description repo: a hand-written protocol under the protocols directory; proposal: a frozen proposal's protocol.yaml
+             * @enum {string}
+             */
+            source: "repo" | "proposal";
+            /** Name */
+            name: string;
+        };
         /** ProtocolView */
         ProtocolView: {
             /**
@@ -2819,58 +2321,33 @@ export interface components {
             /** Error */
             error: string | null;
         };
-        /** QueryResult */
-        QueryResult: {
-            /** N */
-            n: number;
-            /** Name */
-            name: string;
-            /** Run Id */
-            run_id: string;
-            /** Rows */
-            rows: {
-                [key: string]: unknown;
-            }[];
-        };
         /** Question */
         Question: {
             /** Id */
             id: string;
-            /** Category */
-            category?: string | null;
             /** Question */
             question: string;
-            /** Source */
-            source?: string | null;
-            /** Notes */
-            notes?: string | null;
-            concept: components["schemas"]["ConceptStatus"];
-            gold: components["schemas"]["GoldStatus"];
-            runs: components["schemas"]["RunCounts"];
-        };
-        /** QuestionDetail */
-        QuestionDetail: {
-            /** Id */
-            id: string;
-            /** Category */
-            category?: string | null;
-            /** Question */
-            question: string;
-            /** Source */
-            source?: string | null;
-            /** Notes */
-            notes?: string | null;
-            concept: components["schemas"]["ConceptStatus"];
-            gold: components["schemas"]["GoldStatus"];
-            runs: components["schemas"]["RunCounts"];
             /**
-             * Briefs
+             * Protocol
+             * @description the hand-written protocol's name under the protocols directory (`/api/ev/protocols/{name}`), or null: the question needs a proposal
+             */
+            protocol: string | null;
+            /**
+             * Agentic Protocol
+             * @description its variant with the agentic extractor, when there is one
+             */
+            agentic_protocol: string | null;
+            /**
+             * Vocab
+             * @description the vocabulary snapshot the proposal flow's frame step uses
+             */
+            vocab: string | null;
+            /**
+             * Proposals
+             * @description proposals (by directory name) whose frame asks this question
              * @default []
              */
-            briefs?: components["schemas"]["ConceptBrief"][];
-            picked?: components["schemas"]["Pick"] | null;
-            /** @description the frozen concept.json, once picked */
-            concept_brief?: components["schemas"]["ConceptBrief"] | null;
+            proposals: string[];
         };
         /** QuestionMetric */
         QuestionMetric: {
@@ -2878,6 +2355,30 @@ export interface components {
             canonical: string;
             /** Higher Is Better */
             higher_is_better: boolean;
+        };
+        /**
+         * RagBaselineRequest
+         * @description `evaluate rag-baseline` into `$EV/runs/rag-baseline/<corpus>`.
+         */
+        RagBaselineRequest: {
+            /** Corpus */
+            corpus: string;
+            /**
+             * Model
+             * @default orch-model
+             */
+            model?: string;
+            /**
+             * Retrieval
+             * @default global
+             * @enum {string}
+             */
+            retrieval?: "global" | "per_paper";
+            /**
+             * K
+             * @default 8
+             */
+            k?: number;
         };
         /** Rejected */
         Rejected: {
@@ -2974,14 +2475,6 @@ export interface components {
             /** Markdown */
             markdown: string | null;
         };
-        /**
-         * Results
-         * @description $RUNS/report/report.json (scoring, M4) as written: per question x condition means, paired
-         *     differences, intervals, Wilcoxon results and the pre-registered primary test.
-         */
-        Results: {
-            [key: string]: unknown;
-        };
         /** Root */
         Root: {
             /**
@@ -2994,30 +2487,6 @@ export interface components {
              * @default false
              */
             exists: boolean;
-        };
-        /** RunCounts */
-        RunCounts: {
-            /**
-             * Claim On
-             * @default 0
-             */
-            claim_on?: number;
-            /**
-             * Claim Off
-             * @default 0
-             */
-            claim_off?: number;
-        };
-        /** RunDetail */
-        RunDetail: {
-            summary: components["schemas"]["RunSummary"];
-            /** Config */
-            config: {
-                [key: string]: unknown;
-            };
-            concept: components["schemas"]["ConceptBrief"] | null;
-            answer: components["schemas"]["Answer"] | null;
-            verify: components["schemas"]["Verification"] | null;
         };
         /** RunPaper */
         RunPaper: {
@@ -3048,181 +2517,41 @@ export interface components {
              */
             calls: components["schemas"]["CallSummary"][];
         };
-        /** RunRequest */
-        RunRequest: {
-            /**
-             * Qid
-             * @description question id; its picked concept ($CONCEPTS/<qid>/concept.json) is used
-             */
-            qid?: string | null;
-            /**
-             * Concept Path
-             * @description a concept.json under $CONCEPTS or $RUNS instead of a qid
-             */
-            concept_path?: string | null;
-            /**
-             * Condition
-             * @default claim_on
-             * @enum {string}
-             */
-            condition?: "claim_on" | "claim_off";
-            /**
-             * Temperature
-             * @default 0.7
-             */
-            temperature?: number;
-            /**
-             * Seed
-             * @default 1
-             */
-            seed?: number;
-            /** Steps */
-            steps?: number | null;
-            /** Tokens */
-            tokens?: number | null;
-            /**
-             * Sandbox
-             * @default landlock
-             * @enum {string}
-             */
-            sandbox?: "landlock" | "unsandboxed";
-            /**
-             * Attach
-             * @description claim_off: run the attach step after the run
-             * @default true
-             */
-            attach?: boolean;
-            /**
-             * Force
-             * @description start although a run the web app did not start (a batch on the cluster) is live: both then share the orchestrator, which slows the batch runs and inflates their recorded time
-             * @default false
-             */
-            force?: boolean;
-        };
-        /** RunSummary */
-        RunSummary: {
-            /**
-             * Run Id
-             * @description the run directory's name, or <batch>~<name> for a run one level down ($RUNS/<batch>/<name>, e.g. m4-72~q01-claim_on-r1-a1, web~...)
-             */
-            run_id: string;
-            /**
-             * Batch
-             * @description the directory the run is in below $RUNS (a batch manifest's name, or `web` for runs the web app started)
-             */
-            batch?: string | null;
-            /** Qid */
-            qid: string | null;
-            /** Concept Sha256 */
-            concept_sha256?: string | null;
-            /**
-             * Concept Current
-             * @description the run used the question's current pick; false: a replaced or another concept (left out of the question's counts); null: the question has no pick
-             */
-            concept_current?: boolean | null;
-            /** Condition */
-            condition: string;
-            /** Seed */
-            seed: number | null;
-            /** Temperature */
-            temperature: number | null;
-            /** Created At */
-            created_at: string | null;
-            /**
-             * Sandbox
-             * @description config.json sandbox.mode: landlock, or unsandboxed (for tests only: commands ran with network and write access); null: not recorded
-             */
-            sandbox?: string | null;
-            /**
-             * Exit Status
-             * @description submitted, budget, context_full, error, cut, running, incomplete, or another exit status the harness recorded
-             */
-            exit_status: string;
-            /**
-             * Answer From
-             * @description final: the model's final answer; draft: the agent's draft file, taken by the harness (answer_from_draft); none: the harness wrote an answer with no rows (no_final_answer); null: no answer yet or not recorded
-             */
-            answer_from?: ("final" | "draft" | "none") | null;
-            /** Steps */
-            steps: number;
-            /** Model Calls */
-            model_calls: number;
-            /** Tokens */
-            tokens: number;
-            /** Seconds */
-            seconds: number;
-            /** Tokens Without Attach */
-            tokens_without_attach?: number | null;
-            /** Seconds Without Attach */
-            seconds_without_attach?: number | null;
-            /** Rows */
-            rows: number | null;
-            /** Facts */
-            facts: number | null;
-            /** Claims Accepted */
-            claims_accepted: number;
-            /** Claims Rejected */
-            claims_rejected: number;
-            /**
-             * Attach
-             * @enum {string}
-             */
-            attach: "not_applicable" | "pending" | "cut" | "done";
-            /**
-             * Verify
-             * @enum {string}
-             */
-            verify: "ok" | "failed" | "unknown";
-            /**
-             * Verify From
-             * @description where `verify` comes from: the app's own `agent verify` (cached while the server runs), or score.json's verify_ok when the scorer checked the run after its last record
-             */
-            verify_from?: ("verify" | "score") | null;
-            score: components["schemas"]["ScoreSummary"] | null;
-            /**
-             * Live
-             * @description the agent is still writing the run (research, or the attach step)
-             */
-            live: boolean;
-            /**
-             * Post Processing
-             * @description a web-app job still runs verify, pairs, graph, export-prov or score on the finished run
-             * @default false
-             */
-            post_processing?: boolean;
-        };
         /**
-         * Score
-         * @description `<run>/score.json` (scoring, M4); only the plan's top-level fields are typed.
+         * RunRequest
+         * @description `evidence run` over one corpus into `$EV/runs/<group>/<name>` (the runbook's layout).
          */
-        Score: {
-            /** Run Id */
-            run_id?: string | null;
-            /** Qid */
-            qid?: string | null;
-            /** Condition */
-            condition?: string | null;
-            /** Seed */
-            seed?: number | null;
-            /** Key Version */
-            key_version?: string | null;
-            rows?: components["schemas"]["FactScores"] | null;
-            /** Facts */
-            facts?: {
-                [key: string]: components["schemas"]["FactScores"];
-            } | null;
-            /** Vital Recall */
-            vital_recall?: number | null;
-            /** Support */
-            support?: {
-                [key: string]: unknown;
-            } | null;
-            /** Cost */
-            cost?: {
-                [key: string]: unknown;
-            } | null;
-        } & {
-            [key: string]: unknown;
+        RunRequest: {
+            /** Corpus */
+            corpus: string;
+            protocol: components["schemas"]["ProtocolRef"];
+            /**
+             * Extractors
+             * @default cascade
+             * @enum {string}
+             */
+            extractors?: "regex-only" | "cascade";
+            /**
+             * Strategy
+             * @default all
+             * @enum {string}
+             */
+            strategy?: "all" | "gaps";
+            /**
+             * Model
+             * @default orch-model
+             */
+            model?: string;
+            /**
+             * Group
+             * @description default as the runbook names it: regex-only, cascade, cascade-gaps, agentic, agentic-gaps, or <protocol>-...
+             */
+            group?: string | null;
+            /**
+             * Name
+             * @description default: the corpus name
+             */
+            name?: string | null;
         };
         /** ScoreRef */
         ScoreRef: {
@@ -3252,24 +2581,16 @@ export interface components {
              */
             systems: string[];
         };
-        /** ScoreSummary */
-        ScoreSummary: {
-            /** Support Share */
-            support_share?: number | null;
-            /** Fact F1 */
-            fact_f1?: number | null;
-            /** Row F1 */
-            row_f1?: number | null;
+        /**
+         * ScoreRequest
+         * @description `evaluate score` of an engine run (with the corpus's baselines beside it) into `$EV/scores/<group>/<name>`.
+         */
+        ScoreRequest: {
             /**
-             * Key Version
-             * @description the answer key's version (v1, or v1-draft)
+             * Run
+             * @description the run's id, `<group>~<name>`
              */
-            key_version?: string | null;
-            /**
-             * Provisional
-             * @description scored against the draft key: tests the pipeline, never a result
-             */
-            provisional?: boolean | null;
+            run: string;
         };
         /** ScoresIndex */
         ScoresIndex: {
@@ -3359,27 +2680,6 @@ export interface components {
             selector: {
                 [key: string]: unknown;
             };
-        };
-        /** SparqlRequest */
-        SparqlRequest: {
-            /** Query */
-            query: string;
-            /** Run Id */
-            run_id?: string | null;
-        };
-        /** SparqlResult */
-        SparqlResult: {
-            /** Vars */
-            vars: string[];
-            /** Rows */
-            rows: {
-                [key: string]: unknown;
-            }[];
-            /**
-             * Boolean
-             * @description ASK queries: the answer (vars and rows are empty)
-             */
-            boolean?: boolean | null;
         };
         /** Step */
         Step: {
@@ -3497,6 +2797,55 @@ export interface components {
             text: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * SynthRequest
+         * @description `synth build --renderer template` (no model); writes `<name>-<level>` per level and `<name>-mixed`.
+         */
+        SynthRequest: {
+            /** Name */
+            name: string;
+            /**
+             * Seed
+             * @default 1
+             */
+            seed?: number;
+            /**
+             * Studies
+             * @default 20
+             */
+            studies?: number;
+            /**
+             * Levels
+             * @default [
+             *       "explicit",
+             *       "paraphrased",
+             *       "distributed",
+             *       "complex",
+             *       "contradictory"
+             *     ]
+             */
+            levels?: ("explicit" | "paraphrased" | "distributed" | "complex" | "contradictory")[];
+            /**
+             * Duplicates
+             * @default 0
+             */
+            duplicates?: number;
+            /**
+             * Missing
+             * @default 0
+             */
+            missing?: number;
+            /**
+             * Outliers
+             * @default 0
+             */
+            outliers?: number;
+            /**
+             * Irrelevant
+             * @default 0
+             */
+            irrelevant?: number;
         };
         /** Synthesis */
         Synthesis: {
@@ -3657,55 +3006,6 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** Verdict */
-        Verdict: {
-            /**
-             * Label
-             * @enum {string}
-             */
-            label: "supports" | "partial" | "no";
-            /** Rationale */
-            rationale?: string | null;
-            /** Model */
-            model?: string | null;
-            /** Prompt Sha256 */
-            prompt_sha256?: string | null;
-            /** Cached */
-            cached?: boolean | null;
-            /**
-             * Source
-             * @description score: the verdict score.json counted (the primary outcome's); judge: asked live (?judge=true) because the run has no scored verdict
-             */
-            source?: ("score" | "judge") | null;
-        } & {
-            [key: string]: unknown;
-        };
-        /** Verification */
-        Verification: {
-            /** Ok */
-            ok: boolean;
-            /** Errors */
-            errors: string[];
-            /** Stats */
-            stats: {
-                [key: string]: unknown;
-            };
-        };
-        /** WalkClaim */
-        WalkClaim: {
-            /** Claim Id */
-            claim_id: string;
-            /** @description null when the id is not an accepted claim of this run */
-            claim: components["schemas"]["Claim"] | null;
-            step: components["schemas"]["Step"] | null;
-            passage: components["schemas"]["Passage"] | null;
-            /**
-             * Anchor Status
-             * @description ok, relocated, ambiguous, broken, or unknown (no corpus)
-             */
-            anchor_status: string;
-            support?: components["schemas"]["Verdict"] | null;
-        };
     };
     responses: never;
     parameters: never;
@@ -3731,836 +3031,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
-                };
-            };
-        };
-    };
-    config: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AppConfig"];
-                };
-            };
-        };
-    };
-    questions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Question"][];
-                };
-            };
-        };
-    };
-    question: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QuestionDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    propose: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProposeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Job"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    pick: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PickRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QuestionDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    runs: {
-        parameters: {
-            query?: {
-                /** @description the question's runs on its current concept */
-                qid?: string | null;
-                condition?: string | null;
-                /** @description run `agent verify` on runs not checked yet (slow) */
-                verify?: boolean;
-                /** @description with qid: also runs on a replaced concept */
-                include_stale?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RunSummary"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    start_run: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RunRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Job"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    run: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RunDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    steps: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Step"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    step_output: {
-        parameters: {
-            query?: {
-                agent_id?: string | null;
-            };
-            header?: never;
-            path: {
-                run_id: string;
-                step: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description the command's full output */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/plain": string;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    stream: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description server-sent events */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/event-stream": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    claims: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Claim"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    graph: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KnowledgeGraph"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    walk: {
-        parameters: {
-            query?: {
-                /** @description also ask the judge (gold/judge.py, a model call per quote it has not cached) about quotes score.json has no verdict for */
-                judge?: boolean;
-            };
-            header?: never;
-            path: {
-                run_id: string;
-                fact_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FactWalk"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    score: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                run_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Score"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    corpus: {
-        parameters: {
-            query?: {
-                start?: number | null;
-                end?: number | null;
-                context?: number;
-            };
-            header?: never;
-            path: {
-                paper_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Passage"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    gold: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoldEntry"][];
-                };
-            };
-        };
-    };
-    gold_key: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AnswerKey"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    gold_build: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Job"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    results: {
-        parameters: {
-            query?: {
-                /** @description the batch root ($RUNS/<batch>) whose report to show; default $RUNS/report, else the newest batch's */
-                batch?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Results"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    sparql: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SparqlRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SparqlResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    provenance_query: {
-        parameters: {
-            query: {
-                run_id: string;
-                edge?: string | null;
-                fact?: string | null;
-                claim?: string | null;
-                step?: number | null;
-                agent?: string | null;
-            };
-            header?: never;
-            path: {
-                n: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["QueryResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    jobs: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Job"][];
-                };
-            };
-        };
-    };
-    job: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Job"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    job_log: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description server-sent events */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/event-stream": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_job: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Job"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    chat_route: {
-        parameters: {
-            query?: {
-                run_id?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Vercel AI SDK UI-message stream (x-vercel-ai-ui-message-stream: v1) */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/event-stream": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -5142,6 +3612,471 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BenchmarkView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_questions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Question"][];
+                };
+            };
+        };
+    };
+    ev_question: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Question"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_jobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"][];
+                };
+            };
+        };
+    };
+    ev_job: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_job_log: {
+        parameters: {
+            query?: {
+                lines?: number;
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description the last lines of the job's log */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_cancel_job: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_synth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SynthRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_run: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_rag_baseline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RagBaselineRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_agent_baseline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentBaselineRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_score: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScoreRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_compare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompareRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_propose: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProposeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_freeze: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FreezeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_put_decisions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionsRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DecisionsResult"];
                 };
             };
             /** @description Validation Error */

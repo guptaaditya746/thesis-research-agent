@@ -3,12 +3,13 @@
  * corpus, cost) and tabs for the answer (label, studies with their reasons, flags; a baseline's text,
  * citations and retrieved passages), the papers (each with where the funnel stopped, opening the paper
  * view), the evidence graph, the protocol it ran, its extractors, and the agent baseline's trace. The
- * baselines on the same corpus and the run's score reports are linked. The tab is in the URL (?tab=).
+ * baselines on the same corpus and the run's score reports are linked. The tab is in the URL (?tab=). While a job
+ * of the app writes the run, the page polls, so an incomplete run fills in as the engine writes it.
  */
 import type { ReactNode } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 
-import { useBaselineTrace, useCorpus, useEvRun, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
+import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
 import { AgentTraceView } from "@/components/ev/AgentTraceView"
 import { AnswerSummary, BaselineEvidence, StudiesTable } from "@/components/ev/AnswerPanel"
 import { KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
@@ -150,7 +151,8 @@ function RunView({ run }: { run: EvRunDetail }) {
 
 export default function RunPage() {
   const { runId = "" } = useParams()
-  const run = useEvRun(runId)
+  const live = useActiveJobs({ run: runId }).length > 0   // a job of the app writes it: poll until it ends
+  const run = useEvRun(runId, live)
   return (
     <QueryPage query={run} what={`run ${runId}`} back={{ to: "/runs", label: "All runs" }}>
       {(data) => <RunView run={data} />}

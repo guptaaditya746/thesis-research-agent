@@ -1,18 +1,21 @@
 /**
- * The evidence-level viewer's API (/api/ev, webapp/evapi.py): types, client and TanStack Query hooks.
+ * The evidence-level app's API (/api/ev: webapp/evapi.py, webapp/evjobs.py): types, client and TanStack Query
+ * hooks.
  *
- * Types are aliases onto the generated schema (src/api/schema.d.ts, `npm run gen:api`), so the pages read
- * the files with the fields their writers give them (synth, evidence, evaluation; docs/evidence-system.md).
- * Every endpoint is a read of files on disk: nothing here starts a run or calls a model, so queries are
- * fetched once and refetched on focus.
+ * Types are aliases onto the generated schema (src/api/schema.d.ts, `npm run gen:api`), so the pages read the
+ * files with the fields their writers give them (synth, evidence, evaluation; docs/evidence-system.md). The
+ * viewer's endpoints are reads of files on disk, fetched once and refetched on focus; while a job writes what a
+ * page shows, the page passes `live` and the query polls. The jobs list polls while a job is queued or running.
+ * Starting a job, cancelling one or writing decisions invalidates what it changes.
  */
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { getJson } from "./client"
+import { getJson, getText, postJson, putJson } from "./client"
 import type { components } from "./schema"
 
 type S = components["schemas"]
 
+export type Health = S["Health"]
 export type EvConfig = S["EvConfig"]
 export type CorpusSummary = S["CorpusSummary"]
 export type CorpusDetail = S["CorpusDetail"]
@@ -55,6 +58,22 @@ export type SynthesisScore = S["SynthesisScore"]
 export type CompareTable = S["CompareTable"]
 export type ShiftView = S["ShiftView"]
 export type BenchmarkView = S["BenchmarkView"]
+export type Question = S["Question"]
+export type Job = S["Job"]
+export type JobStep = S["JobStep"]
+export type JobState = Job["state"]
+export type SynthRequest = S["SynthRequest"]
+export type RunRequest = S["RunRequest"]
+export type ProtocolRef = S["ProtocolRef"]
+export type RagBaselineRequest = S["RagBaselineRequest"]
+export type AgentBaselineRequest = S["AgentBaselineRequest"]
+export type ScoreRequest = S["ScoreRequest"]
+export type CompareRequest = S["CompareRequest"]
+export type ProposeRequest = S["ProposeRequest"]
+export type FreezeRequest = S["FreezeRequest"]
+export type DecisionEntry = S["DecisionEntry"]
+export type DecisionsRequest = S["DecisionsRequest"]
+export type DecisionsResult = S["DecisionsResult"]
 
 /** The effect directions of answer.json and ground_truth.json (evidence/rules.py DIRECTIONS + undetermined). */
 export type Direction = "supports" | "contradicts" | "neutral" | "undetermined"
@@ -66,10 +85,26 @@ export interface Interval {
   method?: string | null
 }
 
+/** What each job endpoint takes (POST /api/ev/jobs/<kind>). */
+export interface JobRequests {
+  synth: SynthRequest
+  run: RunRequest
+  "rag-baseline": RagBaselineRequest
+  "agent-baseline": AgentBaselineRequest
+  score: ScoreRequest
+  compare: CompareRequest
+  propose: ProposeRequest
+  freeze: FreezeRequest
+}
+export type JobKind = keyof JobRequests
+
 const seg = encodeURIComponent
 
 export const evApi = {
+  health: (signal?: AbortSignal) => getJson<Health>("/api/health", undefined, signal),
   config: (signal?: AbortSignal) => getJson<EvConfig>("/api/ev/config", undefined, signal),
+  questions: (signal?: AbortSignal) => getJson<Question[]>("/api/ev/questions", undefined, signal),
+  question: (id: string, signal?: AbortSignal) => getJson<Question>(`/api/ev/questions/${seg(id)}`, undefined, signal),
   corpora: (signal?: AbortSignal) => getJson<CorpusSummary[]>("/api/ev/corpora", undefined, signal),
   corpus: (name: string, signal?: AbortSignal) => getJson<CorpusDetail>(`/api/ev/corpora/${seg(name)}`, undefined, signal),
   corpusPaper: (name: string, paper: string, signal?: AbortSignal) =>
@@ -94,32 +129,54 @@ export const evApi = {
   compare: (id: string, signal?: AbortSignal) => getJson<CompareTable>(`/api/ev/scores/compares/${seg(id)}`, undefined, signal),
   shift: (id: string, signal?: AbortSignal) => getJson<ShiftView>(`/api/ev/scores/shifts/${seg(id)}`, undefined, signal),
   benchmark: (id: string, signal?: AbortSignal) => getJson<BenchmarkView>(`/api/ev/scores/benchmarks/${seg(id)}`, undefined, signal),
+  jobs: (signal?: AbortSignal) => getJson<Job[]>("/api/ev/jobs", undefined, signal),
+  job: (id: string, signal?: AbortSignal) => getJson<Job>(`/api/ev/jobs/${seg(id)}`, undefined, signal),
+  jobLog: (id: string, lines = 200, signal?: AbortSignal) => getText(`/api/ev/jobs/${seg(id)}/log`, { lines }, signal),
+  cancelJob: (id: string) => postJson<Job>(`/api/ev/jobs/${seg(id)}/cancel`, {}),
+  startJob: <K extends JobKind>(kind: K, body: JobRequests[K]) => postJson<Job>(`/api/ev/jobs/${kind}`, body),
+  putDecisions: (proposal: string, body: DecisionsRequest) =>
+    putJson<DecisionsResult>(`/api/ev/proposals/${seg(proposal)}/decisions`, body),
 }
 
 export const evKeys = {
   all: ["ev"] as const,
+  jobs: ["ev", "jobs"] as const,
   of: (...parts: string[]) => ["ev", ...parts] as const,
 }
 
-/** One query per endpoint; `enabled` waits for the ids a page gets from its route. */
-function useEv<T>(parts: string[], fetcher: (signal: AbortSignal) => Promise<T>, enabled = true) {
-  return useQuery({ queryKey: evKeys.of(...parts), queryFn: ({ signal }) => fetcher(signal), enabled })
+const LIVE_MS = 2_000
+const IDLE_JOBS_MS = 15_000
+
+export const isActiveJob = (job: Pick<Job, "state">) => job.state === "queued" || job.state === "running"
+
+/** One query per endpoint; `enabled` waits for the ids a page gets from its route; `live` polls. */
+function useEv<T>(parts: string[], fetcher: (signal: AbortSignal) => Promise<T>, enabled = true, live = false) {
+  return useQuery({
+    queryKey: evKeys.of(...parts),
+    queryFn: ({ signal }) => fetcher(signal),
+    enabled,
+    refetchInterval: live ? LIVE_MS : false,
+  })
 }
 
+export const useHealth = () => useQuery({ queryKey: ["health"], queryFn: ({ signal }) => evApi.health(signal) })
 export const useEvConfig = () => useEv(["config"], (s) => evApi.config(s))
-export const useCorpora = () => useEv(["corpora"], (s) => evApi.corpora(s))
+export const useQuestions = () => useEv(["questions"], (s) => evApi.questions(s))
+export const useQuestion = (id: string, live = false) => useEv(["questions", id], (s) => evApi.question(id, s), !!id, live)
+export const useCorpora = (live = false) => useEv(["corpora"], (s) => evApi.corpora(s), true, live)
 export const useCorpus = (name: string) => useEv(["corpora", name], (s) => evApi.corpus(name, s), !!name)
 export const useCorpusPaper = (name: string, paper: string) =>
   useEv(["corpora", name, "papers", paper], (s) => evApi.corpusPaper(name, paper, s), !!name && !!paper)
 export const useProtocols = () => useEv(["protocols"], (s) => evApi.protocols(s))
 export const useProtocol = (name: string) => useEv(["protocols", name], (s) => evApi.protocol(name, s), !!name)
-export const useProposals = () => useEv(["proposals"], (s) => evApi.proposals(s))
-export const useProposal = (name: string) => useEv(["proposals", name], (s) => evApi.proposal(name, s), !!name)
-export const useEvRuns = () => useEv(["runs"], (s) => evApi.runs(s))
-export const useEvRun = (id: string) => useEv(["runs", id], (s) => evApi.run(id, s), !!id)
-export const useRunPaper = (id: string, doc: string | null) =>
-  useEv(["runs", id, "papers", doc ?? ""], (s) => evApi.runPaper(id, doc ?? "", s), !!id && !!doc)
-export const useRunGraph = (id: string, enabled = true) => useEv(["runs", id, "graph"], (s) => evApi.runGraph(id, s), !!id && enabled)
+export const useProposals = (live = false) => useEv(["proposals"], (s) => evApi.proposals(s), true, live)
+export const useProposal = (name: string, live = false) => useEv(["proposals", name], (s) => evApi.proposal(name, s), !!name, live)
+export const useEvRuns = (live = false) => useEv(["runs"], (s) => evApi.runs(s), true, live)
+export const useEvRun = (id: string, live = false) => useEv(["runs", id], (s) => evApi.run(id, s), !!id, live)
+export const useRunPaper = (id: string, doc: string | null, live = false) =>
+  useEv(["runs", id, "papers", doc ?? ""], (s) => evApi.runPaper(id, doc ?? "", s), !!id && !!doc, live)
+export const useRunGraph = (id: string, enabled = true, live = false) =>
+  useEv(["runs", id, "graph"], (s) => evApi.runGraph(id, s), !!id && enabled, live)
 export const useRunProtocol = (id: string, enabled = true) =>
   useEv(["runs", id, "protocol"], (s) => evApi.runProtocol(id, s), !!id && enabled)
 export const useCall = (id: string, call: string | null) =>
@@ -129,8 +186,69 @@ export const useCallTrace = (id: string, call: string | null, agentRun: string |
     !!id && !!call && !!agentRun)
 export const useBaselineTrace = (id: string, enabled = true) =>
   useEv(["runs", id, "trace"], (s) => evApi.baselineTrace(id, s), !!id && enabled)
-export const useScores = () => useEv(["scores"], (s) => evApi.scores(s))
+export const useScores = (live = false) => useEv(["scores"], (s) => evApi.scores(s), true, live)
 export const useReport = (id: string) => useEv(["scores", "reports", id], (s) => evApi.report(id, s), !!id)
 export const useCompare = (id: string) => useEv(["scores", "compares", id], (s) => evApi.compare(id, s), !!id)
 export const useShift = (id: string) => useEv(["scores", "shifts", id], (s) => evApi.shift(id, s), !!id)
 export const useBenchmark = (id: string) => useEv(["scores", "benchmarks", id], (s) => evApi.benchmark(id, s), !!id)
+
+// --- jobs ----------------------------------------------------------------------------------------------
+
+/** Every job, newest first; polls fast while one is queued or running, slowly otherwise (jobs from another tab). */
+export const useJobs = () =>
+  useQuery({
+    queryKey: evKeys.jobs,
+    queryFn: ({ signal }) => evApi.jobs(signal),
+    refetchInterval: (query) => (query.state.data?.some(isActiveJob) ? LIVE_MS : IDLE_JOBS_MS),
+  })
+
+export const useJob = (id: string) =>
+  useQuery({
+    queryKey: [...evKeys.jobs, id],
+    queryFn: ({ signal }) => evApi.job(id, signal),
+    enabled: !!id,
+    refetchInterval: (query) => (query.state.data && isActiveJob(query.state.data) ? LIVE_MS : false),
+  })
+
+export const useJobLog = (id: string, active: boolean, lines = 200) =>
+  useQuery({
+    queryKey: [...evKeys.jobs, id, "log", lines],
+    queryFn: ({ signal }) => evApi.jobLog(id, lines, signal),
+    enabled: !!id,
+    refetchInterval: active ? LIVE_MS : false,
+  })
+
+/** The queued or running jobs whose refs match (e.g. `{run: "cascade~c1"}`, `{corpus: "c1"}`). */
+export function useActiveJobs(refs: Partial<Record<string, string | null | undefined>>) {
+  const jobs = useJobs()
+  const wanted = Object.entries(refs).filter(([, v]) => !!v) as [string, string][]
+  if (!wanted.length) return []
+  return (jobs.data ?? []).filter((j) => isActiveJob(j) && wanted.some(([k, v]) => j.refs[k] === v))
+}
+
+export function useStartJob<K extends JobKind>(kind: K) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: JobRequests[K]) => evApi.startJob(kind, body),
+    onSuccess: (job) => {
+      client.setQueryData<Job[]>(evKeys.jobs, (old) => [job, ...(old ?? []).filter((j) => j.id !== job.id)])
+      void client.invalidateQueries({ queryKey: evKeys.jobs })
+    },
+  })
+}
+
+export function useCancelJob() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => evApi.cancelJob(id),
+    onSuccess: () => void client.invalidateQueries({ queryKey: evKeys.jobs }),
+  })
+}
+
+export function usePutDecisions(proposal: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: DecisionsRequest) => evApi.putDecisions(proposal, body),
+    onSuccess: () => void client.invalidateQueries({ queryKey: evKeys.of("proposals", proposal) }),
+  })
+}

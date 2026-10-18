@@ -1,484 +1,259 @@
 /**
- * MSW handlers: the backend API (webapp/app.py) over the fixtures, for `npm run dev:mock` (service
- * worker) and the tests (Node). State lives in one in-memory `db` so that picks, new jobs and the
- * live run's end show up on the next request; `resetDb()` restores it. The refusals follow the
- * backend's: 404 for unknown ids, 400 for a bad choice or query, 409 for a state that forbids the
- * action (briefs already proposed, a pick runs depend on without `force`, a gold build started).
+ * MSW handlers: the backend API (webapp/app.py) for `npm run dev:mock` (service worker) and the tests (Node).
  *
- * The streams behave like the backend's: the live run plays its remaining events.jsonl records as
- * `event: record` and then `event: done`, and is marked finished; job logs send `event: line` per
- * line and `event: done` with the job; POST /api/chat answers in the AI SDK v5 UI message stream
- * protocol (what pydantic-ai's VercelAIAdapter sends), with one tool call and a short text.
+ * The viewer's reads come from ev-fixtures.json (src/mocks/ev.ts, the backend's own responses on a world made
+ * by the real tools). What the app starts and writes is mocked with one in-memory `db` so a started job, a
+ * new proposal or written decisions show up on the next request; `resetDb()` restores it:
+ * - POST /api/ev/jobs/<kind> validates like the backend (names, a run or corpus that exists: 409) and queues
+ *   a job with the backend's refs; a job runs and then ends `done` after `timing.jobMs` (never on its own in
+ *   the tests, which end it with `finishJob`);
+ * - a propose job makes an unfrozen proposal (the fixtures' proposal with its decisions reset to the model's
+ *   defaults) under the requested name; PUT decisions stores them and answers with what freeze would refuse
+ *   (a missing reason, a choice other than the default by the model, an unknown choice); a freeze job freezes it.
  */
 import { delay, http, HttpResponse } from "msw"
 
 import type {
-  Claim,
-  ConceptBrief,
+  Card,
+  DecisionEntry,
+  DecisionsRequest,
   Job,
-  JobStep,
-  Pick as ConceptPick,
-  PickRequest,
-  ProposeRequest,
+  JobKind,
+  JobRequests,
+  ProposalDetail,
+  ProposalSummary,
   Question,
-  QuestionDetail,
-  RunDetail,
-  RunRequest,
-  RunSummary,
-  SparqlRequest,
-} from "@/api/types"
+} from "@/api/ev"
+import { isName, runGroup } from "@/lib/jobs"
 
-import { evHandlers } from "./ev"
-import {
-  BRIEFS,
-  CLAIMS,
-  config,
-  GOLD,
-  GOLD_KEYS,
-  GRAPHS,
-  initialRunDetails,
-  JOB_LOGS,
-  JOBS,
-  LIVE_ANSWER,
-  LIVE_RECORDS,
-  PASSAGES,
-  passageOf,
-  PICKS,
-  QUESTIONS,
-  RESULTS,
-  RUNS,
-  SCORES,
-  STEPS,
-  walkFor,
-} from "./fixtures"
+import { EV_FIXTURES, evHandlers } from "./ev"
+
+const FROZEN = "rag-factuality"
 
 interface Db {
-  runs: RunSummary[]
-  details: Record<string, RunDetail>
-  briefs: Record<string, ConceptBrief[]>
-  picks: Record<string, ConceptPick>
   jobs: Job[]
-  nextJob: number
+  logs: Record<string, string[]>
+  proposals: Record<string, ProposalDetail>
+  runs: Set<string>
+  corpora: Set<string>
 }
 
-function freshDb(): Db {
-  return {
-    runs: structuredClone(RUNS),
-    details: initialRunDetails(),
-    briefs: structuredClone(BRIEFS),
-    picks: structuredClone(PICKS),
-    jobs: structuredClone(JOBS),
-    nextJob: 8,
-  }
+const fixture = <T,>(path: string) => structuredClone(EV_FIXTURES[path]) as T
+
+function initialDb(): Db {
+  const runs = fixture<{ id: string }[]>("/api/ev/runs").map((r) => r.id)
+  const corpora = fixture<{ name: string }[]>("/api/ev/corpora").map((c) => c.name)
+  return { jobs: [], logs: {}, proposals: {}, runs: new Set(runs), corpora: new Set(corpora) }
 }
 
-export const db: Db = freshDb()
+let db: Db = initialDb()
 
 export function resetDb() {
-  Object.assign(db, freshDb())
+  db = initialDb()
+  for (const t of timers) clearTimeout(t)
+  timers.clear()
 }
 
-/** How long the mock streams wait between events (0 in tests). */
-export const timing = { streamMs: 900 }
+/** jobMs: how long a mock job runs before it is done (null: until `finishJob`; the tests). */
+export const timing: { jobMs: number | null } = { jobMs: 3_000 }
+const timers = new Set<ReturnType<typeof setTimeout>>()
 
-/**
- * A text/event-stream response from an async generator of events. A plain streamed response
- * rather than msw's `sse()`, which needs EventSource where the handler is built (jsdom has none);
- * the browser's EventSource reads it through the service worker all the same.
- */
-function eventStream(events: () => AsyncGenerator<{ event?: string; data: string; id?: number }>) {
-  const encoder = new TextEncoder()
-  const body = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      for await (const { event, data, id } of events()) {
-        const lines = data.split("\n").map((line) => `data: ${line}`).join("\n")
-        controller.enqueue(encoder.encode(`${event ? `event: ${event}\n` : ""}${id !== undefined ? `id: ${id}\n` : ""}${lines}\n\n`))
-      }
-      controller.close()
-    },
-  })
-  return new HttpResponse(body, { headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } })
-}
+const now = () => new Date().toISOString()
+const conflict = (detail: string) => HttpResponse.json({ detail }, { status: 409 })
+const notFound = (detail: string) => HttpResponse.json({ detail }, { status: 404 })
+const invalid = (msg: string, loc: string[]) => HttpResponse.json({ detail: [{ loc: ["body", ...loc], msg }] }, { status: 422 })
 
-const detail = (status: number, text: string) => HttpResponse.json({ detail: text }, { status })
-const notFound = (what: string) => detail(404, `no such ${what}`)
-
-const activeJob = (kind: string, qid: string) => db.jobs.find((j) => j.kind === kind && j.qid === qid && (j.state === "queued" || j.state === "running"))
-const runsOf = (qid: string) => db.runs.filter((r) => r.qid === qid && r.concept_current !== false)
-
-function questionSummary(q: Question): Question {
-  const pick = db.picks[q.id]
-  const briefs = db.briefs[q.id] ?? []
-  const gold = GOLD.find((g) => g.qid === q.id)
+/** An unfrozen proposal made from the fixtures' frozen one: decisions back to the model's defaults. */
+export function unfrozenProposal(name: string): ProposalDetail {
+  const p = fixture<ProposalDetail>(`/api/ev/proposals/${FROZEN}`)
   return {
-    ...q,
-    concept: pick
-      ? { status: "picked", title: pick.title ?? briefs[pick.choice - 1]?.title ?? null, picked_by: pick.picked_by }
-      : briefs.length
-        ? { status: "proposed", title: null, picked_by: null }
-        : { status: "none", title: null, picked_by: null },
-    gold: gold ? { status: gold.status, rows: gold.rows ?? null, facts: gold.facts ?? null, stage: gold.stage ?? null } : q.gold,
-    runs: {
-      claim_on: runsOf(q.id).filter((r) => r.condition === "claim_on").length,
-      claim_off: runsOf(q.id).filter((r) => r.condition === "claim_off").length,
-    },
+    ...p, name, frozen: false, revision: null, protocol_sha256: null, decided_by: {}, amendments: 0, proposal: null, protocol: null,
+    revisions: [], amendment_log: [], decision_problems: [], steps: ["frame", "draft", "critic", "cards"],
+    cards: p.cards.map((c) => ({
+      ...c, problems: [], raw_decision: null,
+      decision: { card: c.id, choice: c.default ?? "draft", reason: `default: ${c.rationale ?? ""}`, by: "model", value: null, default: c.default },
+    })),
   }
 }
 
-function questionDetail(qid: string): QuestionDetail | null {
-  const q = QUESTIONS.find((x) => x.id === qid)
-  if (!q) return null
-  const pick = db.picks[qid] ?? null
-  const briefs = db.briefs[qid] ?? []
-  return { ...questionSummary(q), briefs, picked: pick, concept_brief: pick ? (briefs[pick.choice - 1] ?? null) : null }
+/** What `cards.validate` refuses, with its messages (evidence/propose/cards.py). */
+export function decisionProblems(cards: Card[], entries: DecisionEntry[]): string[] {
+  const problems: string[] = []
+  const seen = new Set<string>()
+  for (const e of entries) {
+    const card = cards.find((c) => c.id === e.card)
+    if (!card) { problems.push(`entry: unknown card '${e.card}'`); continue }
+    seen.add(card.id)
+    if (!e.reason.trim()) problems.push(`${card.id}: a decision without a reason is refused`)
+    const ids = card.options.map((o) => String(o.id))
+    if (e.choice === "custom") {
+      if (e.value === null || e.value === undefined || typeof e.value !== "object") problems.push(`${card.id}: choice custom needs a \`value\` in the card's shape`)
+    } else if (!ids.includes(e.choice)) {
+      problems.push(`${card.id}: choice '${e.choice}' is not an option of the card (${ids.join(", ")}) nor \`custom\` with a value`)
+      continue
+    }
+    if (e.choice !== card.default && e.by === "model") problems.push(`${card.id}: choice '${e.choice}' is not the model's default ('${card.default}'); set \`by\` to who decided`)
+  }
+  for (const c of cards) if (!seen.has(c.id)) problems.push(`${c.id}: no decision`)
+  return problems
 }
 
-function newJob(kind: string, args: Job["args"], steps: JobStep[], extra: Partial<Job> = {}): Job {
-  const now = new Date().toISOString()
+function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string, string> | Response {
+  switch (kind) {
+    case "synth": {
+      const b = body as JobRequests["synth"]
+      if (!isName(b.name)) return invalid("String should match pattern", ["name"])
+      const names = [...(b.levels ?? []).map((l) => `${b.name}-${l}`), `${b.name}-mixed`]
+      const taken = names.filter((n) => db.corpora.has(n))
+      if (taken.length) return conflict(`corpora ${taken.join(", ")} exist; choose another name`)
+      return { corpus_set: b.name, corpus: `${b.name}-mixed` }
+    }
+    case "run": {
+      const b = body as JobRequests["run"]
+      if (!db.corpora.has(b.corpus)) return notFound(`no such corpus: '${b.corpus}'`)
+      const group = b.group ?? runGroup({ extractors: b.extractors ?? "cascade", strategy: b.strategy ?? "all", protocol: b.protocol })
+      const id = `${group}~${b.name ?? b.corpus}`
+      if (db.runs.has(id)) return conflict(`run ${group}/${b.name ?? b.corpus} exists; give the run another name`)
+      return { run: id, corpus: b.corpus }
+    }
+    case "rag-baseline":
+    case "agent-baseline": {
+      const b = body as JobRequests["rag-baseline"]
+      if (!db.corpora.has(b.corpus)) return notFound(`no such corpus: '${b.corpus}'`)
+      const id = `${kind}~${b.corpus}`
+      if (db.runs.has(id)) return conflict(`${kind}/${b.corpus} has an answer.json; move it away to run the baseline again`)
+      return { run: id, corpus: b.corpus }
+    }
+    case "score": return { score: (body as JobRequests["score"]).run }
+    case "compare": return { score: (body as JobRequests["compare"]).name }
+    case "propose": {
+      const b = body as JobRequests["propose"]
+      if (b.proposal === FROZEN || db.proposals[b.proposal]?.frozen) return conflict(`proposal ${b.proposal} is frozen`)
+      if (db.proposals[b.proposal]) return conflict(`proposal ${b.proposal} has its cards: decide them and freeze it`)
+      return { proposal: b.proposal }
+    }
+    case "freeze": {
+      const name = (body as JobRequests["freeze"]).proposal
+      const p = db.proposals[name]
+      if (!p) return conflict(`proposal ${name} has no cards yet (run the proposal flow first)`)
+      if (p.frozen) return conflict(`proposal ${name} is frozen`)
+      if (p.decision_problems.length) return conflict(`decisions.yaml refused:\n  ${p.decision_problems.join("\n  ")}`)
+      return { proposal: name }
+    }
+  }
+  return {}
+}
+
+const LANE: Record<JobKind, Job["lane"]> = {
+  synth: "cpu", run: "model", "rag-baseline": "model", "agent-baseline": "model", score: "cpu", compare: "cpu", propose: "model", freeze: "cpu",
+}
+
+/** End a mock job (the tests' clock): its effect on the db, then `done` (or `failed`). */
+export function finishJob(id: string, state: "done" | "failed" = "done") {
+  const job = db.jobs.find((j) => j.id === id)
+  if (!job || (job.state !== "running" && job.state !== "queued")) return
+  job.state = state
+  job.ended_at = now()
+  job.exit_code = state === "done" ? 0 : 1
+  job.steps = job.steps.map((s) => ({ ...s, state: state === "done" ? "done" : "failed", exit_code: job.exit_code, ended_at: now() }))
+  db.logs[id].push(`# ${job.steps.at(-1)?.name ?? job.kind} exit ${job.exit_code}`)
+  if (state !== "done") return
+  if (job.refs.run) db.runs.add(job.refs.run)
+  if (job.kind === "synth") for (const l of [...((job.args.levels as string[]) ?? []), "mixed"]) db.corpora.add(`${job.refs.corpus_set}-${l}`)
+  if (job.kind === "propose") db.proposals[job.refs.proposal] = unfrozenProposal(job.refs.proposal)
+  if (job.kind === "freeze") {
+    const p = db.proposals[job.refs.proposal]
+    p.frozen = true
+    p.steps = [...p.steps, "freeze"]
+    p.protocol = fixture<ProposalDetail>(`/api/ev/proposals/${FROZEN}`).protocol
+  }
+}
+
+function submit<K extends JobKind>(kind: K, body: JobRequests[K]): Response {
+  const refs = refsOf(kind, body)
+  if (refs instanceof Response) return refs
+  const active = db.jobs.find((j) => (j.state === "queued" || j.state === "running") && Object.entries(refs).some(([k, v]) => j.refs[k] === v))
+  if (active) return conflict(`job ${active.id} (${active.kind}) is ${active.state}; wait for it or cancel it`)
+  const id = `20261018T120000-${kind}-${(db.jobs.length + 1).toString(16).padStart(6, "0")}`
+  const argv = ["python", "-m", "webapp.tool", kind, ...Object.entries(body).flatMap(([k, v]) => [`--${k}`, typeof v === "object" ? JSON.stringify(v) : String(v)])]
   const job: Job = {
-    id: `job-${String(db.nextJob++).padStart(4, "0")}`, kind, args, state: "queued", created_at: now,
-    started_at: null, ended_at: null, run_id: null, qid: null, exit_code: null, error: null, warnings: [], steps, ...extra,
+    id, kind, lane: LANE[kind], args: body as unknown as Record<string, unknown>, refs, state: "running", created_at: now(), started_at: now(),
+    ended_at: null, exit_code: null, error: null, warnings: [],
+    steps: [{ name: kind, argv, command: argv.join(" "), required: true, needs: [], state: "running", exit_code: null, started_at: now(), ended_at: null }],
   }
   db.jobs.unshift(job)
-  return job
-}
-
-const pending = (name: string, command: string): JobStep => ({ name, argv: command.split(" "), command, required: true, needs: [], state: "pending", exit_code: null, started_at: null, ended_at: null })
-
-function finishJob(id: string, exit = 0) {
-  const job = db.jobs.find((j) => j.id === id)
-  if (!job) return
-  Object.assign(job, { state: exit === 0 ? "done" : "failed", ended_at: new Date().toISOString(), exit_code: exit })
-  for (const s of job.steps ?? []) if (s.state === "pending" || s.state === "running") Object.assign(s, { state: exit === 0 ? "done" : "skipped", exit_code: exit === 0 ? 0 : null })
-}
-
-/**
- * The live run's end: what the backend reports once the agent stops writing it. `run` is the
- * record the stream started on; after a `resetDb()` (a test ended mid-stream) it is not in `db`
- * any more and nothing changes.
- */
-function finishLiveRun(run: RunSummary) {
-  const runDetail = db.details[run.run_id]
-  if (!db.runs.includes(run) || !runDetail || !run.live) return
-  Object.assign(run, {
-    live: false, exit_status: "submitted", answer_from: "final", steps: 6, model_calls: 6, tokens: 42_314, seconds: 52.6, rows: 1, facts: 1,
-    claims_accepted: 1, claims_rejected: 1, verify: "ok",
-  })
-  runDetail.summary = run
-  runDetail.answer = LIVE_ANSWER
-  runDetail.verify = { ok: true, errors: [], stats: { steps: 6, model_calls: 6, claims_accepted: 1, claims_rejected: 1, tokens: 42_314 } }
-  const job = db.jobs.find((j) => j.run_id === run.run_id && j.state === "running")
-  if (job) finishJob(job.id)
-}
-
-const claimsOf = (runId: string): Claim[] => CLAIMS[runId] ?? []
-const stepOf = (runId: string, c: Claim) => (STEPS[runId] ?? []).find((s) => s.step === c.step && s.agent_id === c.agent_id)
-
-/** The five provenance queries (agent/queries.py) over the fixtures; a string is a 400. */
-function provQuery(n: number, runId: string, url: URL): Record<string, unknown>[] | string {
-  const runDetail = db.details[runId]
-  const accepted = claimsOf(runId).filter((c) => c.status === "accepted")
-  const facts = (runDetail?.answer?.rows ?? []).flatMap((r) => r.facts.map((f) => ({ ...f, row_id: r.id })))
-  switch (n) {
-    case 1: {
-      const edge = url.searchParams.get("edge")
-      return accepted
-        .map((c) => ({
-          edge_id: `edge-${c.claim_id!.slice(6)}`, claim_id: c.claim_id, origin: c.origin, s: c.s, p: c.p, o: c.o,
-          step_id: c.step, agent_id: c.agent_id, phase: stepOf(runId, c)?.phase ?? null, command: stepOf(runId, c)?.command ?? null,
-          file: c.file, start: c.anchor?.start, end: c.anchor?.end, exact: c.quote,
-        }))
-        .filter((row) => !edge || row.edge_id === edge)
-    }
-    case 2: {
-      const fact = url.searchParams.get("fact")
-      const claim = url.searchParams.get("claim")
-      return facts
-        .filter((f) => !fact || f.id === fact)
-        .flatMap((f) => f.claims.filter((id) => !claim || id === claim).map((id) => {
-          const c = accepted.find((x) => x.claim_id === id)
-          const s = c && stepOf(runId, c)
-          return {
-            fact_id: f.id, claim_id: id, origin: f.origin, step_id: c?.step ?? null, agent_id: c?.agent_id ?? null,
-            phase: s?.phase ?? null, command: s?.command ?? null, model_call: s?.model_call?.task_id ?? null,
-            model: c?.agent_id === "main" ? "orch-model" : "sub-model-1",
-          }
-        }))
-    }
-    case 3: {
-      const step = url.searchParams.get("step")
-      const agent = url.searchParams.get("agent")
-      if (!step && !agent) return "query 3 needs a step, an agent, or both"
-      return claimsOf(runId)
-        .filter((c) => c.claim_id && (!step || c.step === Number(step)) && (!agent || c.agent_id === agent))
-        .map((c) => ({ claim_id: c.claim_id, origin: c.origin, s: c.s, p: c.p, o: c.o, step_id: c.step, agent_id: c.agent_id, file: c.file, exact: c.quote }))
-    }
-    case 4:
-      return []
-    case 5:
-      return facts.filter((f) => f.claims.length === 0).map((f) => ({ fact_id: f.id, row_id: f.row_id, s: f.s, p: f.p, o: f.o, origin: f.origin, cited: [] }))
-    default:
-      return `no provenance query ${n}; they are 1-5`
+  db.logs[id] = [`$ ${job.steps[0].command}`, `mock ${kind} working…`]
+  if (timing.jobMs !== null) {
+    const t = setTimeout(() => { timers.delete(t); finishJob(id) }, timing.jobMs)
+    timers.add(t)
   }
+  return HttpResponse.json(job, { status: 202 })
 }
 
-const QUERY_NAMES: Record<number, string> = { 1: "edge_to_passage", 2: "fact_producers", 3: "claims_from", 4: "unresolved_anchors", 5: "unsourced_facts" }
-
-/** AI SDK v5 UI message stream chunks for one mock assistant reply. */
-function chatChunks(runId: string | undefined, question: string): unknown[] {
-  const run = runId ? db.runs.find((r) => r.run_id === runId) : undefined
-  const text = run
-    ? `(mock reply) Run ${run.run_id} (${run.condition}, seed ${run.seed}) ended with exit status ${run.exit_status}: ` +
-      `${run.facts ?? 0} facts, ${run.claims_accepted} accepted and ${run.claims_rejected} rejected claims. ` +
-      (run.score?.support_share != null ? `Support share ${(run.score.support_share * 100).toFixed(0)}%. ` : "") +
-      `You asked: “${question}”.\n\n` +
-      // the chat agent answers with Markdown: a table, bold, and (never rendered) raw HTML
-      `| facts | accepted claims | rejected claims |\n|---|---|---|\n| ${run.facts ?? 0} | ${run.claims_accepted} | ${run.claims_rejected} |\n\n` +
-      `**Read from get_run.** <b data-testid="raw-html">raw html</b>`
-    : `(mock reply) There are ${db.runs.length} runs over ${new Set(db.runs.map((r) => r.qid)).size} questions. Open a run to ask about it. You asked: “${question}”.`
-  const words = text.split(/(?<= )/)
-  return [
-    { type: "start", messageId: `msg-${Date.now()}` },
-    { type: "start-step" },
-    { type: "tool-input-available", toolCallId: "call-1", toolName: runId ? "get_run" : "list_runs", input: runId ? { run_id: runId } : {} },
-    { type: "tool-output-available", toolCallId: "call-1", output: run ?? db.runs.map((r) => r.run_id) },
-    { type: "finish-step" },
-    { type: "start-step" },
-    { type: "text-start", id: "text-1" },
-    ...words.map((delta) => ({ type: "text-delta", id: "text-1", delta })),
-    { type: "text-end", id: "text-1" },
-    { type: "finish-step" },
-    { type: "finish" },
-  ]
+function proposalSummary(p: ProposalDetail): ProposalSummary {
+  const { name, question, steps, frozen, revision, protocol_sha256, decided_by, amendments } = p
+  return { name, question, steps, frozen, revision, protocol_sha256, decided_by, amendments }
 }
 
 export const handlers = [
-  ...evHandlers,
-  http.get("/api/health", () => HttpResponse.json({ ok: true, version: "0.2.0-mock" })),
-  http.get("/api/config", () => HttpResponse.json(config)),
-
-  // questions and concepts
-  http.get("/api/questions", () => HttpResponse.json(QUESTIONS.map(questionSummary))),
-  http.get("/api/questions/:qid", ({ params }) => {
-    const found = questionDetail(String(params.qid))
-    return found ? HttpResponse.json(found) : notFound(`question: '${String(params.qid)}'`)
+  http.get("/api/health", () => HttpResponse.json({ ok: true, version: "mock" })),
+  http.get("/api/ev/questions", () => {
+    const questions = fixture<Question[]>("/api/ev/questions")
+    return HttpResponse.json(questions.map((q) => ({ ...q, proposals: [...q.proposals, ...Object.keys(db.proposals)] })))
   }),
-  http.post("/api/questions/:qid/concepts/propose", async ({ params, request }) => {
-    const qid = String(params.qid)
-    if (!QUESTIONS.some((q) => q.id === qid)) return notFound(`question: '${qid}'`)
-    if (activeJob("concepts", qid)) return detail(409, `a concept proposal for ${qid} is already queued or running`)
-    if (db.briefs[qid]?.length) return detail(409, `${qid} already has proposed briefs; pick one`)
-    const body = (await request.json()) as ProposeRequest
-    const args = { qid, temperature: body.temperature ?? 0.7, seed: body.seed ?? 1 }
-    const job = newJob("concepts", args, [pending("propose", `python -m agent.cli concepts propose ${qid} --temperature ${args.temperature} --seed ${args.seed}`)], { qid, state: "running", started_at: new Date().toISOString() })
-    setTimeout(() => {
-      db.briefs[qid] = structuredClone(BRIEFS.q07).map((b) => ({ ...b, title: `${b.title} (${qid})` }))
-      finishJob(job.id)
-    }, timing.streamMs * 3)
-    return HttpResponse.json(job, { status: 202 })
+  http.get("/api/ev/questions/:id", ({ params }) => {
+    const q = fixture<Question[]>("/api/ev/questions").find((x) => x.id === params.id)
+    return q ? HttpResponse.json({ ...q, proposals: [...q.proposals, ...Object.keys(db.proposals)] }) : notFound(`no such question: '${String(params.id)}'`)
   }),
-  http.post("/api/questions/:qid/concepts/pick", async ({ params, request }) => {
-    const qid = String(params.qid)
-    if (!QUESTIONS.some((q) => q.id === qid)) return notFound(`question: '${qid}'`)
-    const body = (await request.json()) as PickRequest
-    if (!Number.isInteger(body.choice) || body.choice < 1 || body.choice > 5) {
-      return HttpResponse.json({ detail: [{ loc: ["body", "choice"], msg: "Input should be between 1 and 5", type: "value_error" }] }, { status: 422 })
-    }
-    const briefs = db.briefs[qid] ?? []
-    if (!briefs.length) return detail(409, `${qid} has no proposed briefs yet; propose first`)
-    if (body.choice > briefs.length) return detail(400, `choice must be 1..${briefs.length}`)
-    const gold = GOLD.find((g) => g.qid === qid)
-    if (gold && gold.status !== "none") return detail(409, `the gold build for ${qid} has started on the current pick; it can no longer change`)
-    const current = db.picks[qid]
-    const used = db.runs.filter((r) => r.qid === qid && r.concept_current === true)
-    if (current && current.choice !== body.choice && used.length && !body.force) {
-      return detail(409, `${used.length} run(s) used ${qid}'s current concept; changing the pick leaves them on a replaced concept (set force to change it anyway)`)
-    }
-    if (current && current.choice !== body.choice) for (const r of used) r.concept_current = false
-    db.picks[qid] = {
-      choice: body.choice, picked_by: body.picked_by ?? "user", reason: body.reason ?? null, title: briefs[body.choice - 1].title,
-      concept_sha256: `${"ab".repeat(31)}${String(body.choice).padStart(2, "0")}`, replaces_concept_sha256: current?.concept_sha256 ?? null,
-    }
-    return HttpResponse.json(questionDetail(qid))
+  http.get("/api/ev/proposals", () =>
+    HttpResponse.json([...fixture<ProposalSummary[]>("/api/ev/proposals"), ...Object.values(db.proposals).map(proposalSummary)])),
+  http.get("/api/ev/proposals/:name", ({ params }) => {
+    const p = db.proposals[String(params.name)]
+    return p ? HttpResponse.json(p) : undefined   // the fixtures answer the rest
   }),
-
-  // runs
-  http.get("/api/runs", ({ request }) => {
-    const url = new URL(request.url)
-    const qid = url.searchParams.get("qid")
-    const condition = url.searchParams.get("condition")
-    const stale = url.searchParams.get("include_stale") === "true"
-    const runs = db.runs
-      .filter((r) => (!qid || (r.qid === qid && (stale || r.concept_current !== false))) && (!condition || r.condition === condition))
-      .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
-    return HttpResponse.json(runs)
-  }),
-  http.post("/api/runs", async ({ request }) => {
-    const body = (await request.json()) as RunRequest
-    if (!body.qid === !body.concept_path) return detail(400, "give exactly one of qid and concept_path")
-    if (body.qid && !db.picks[body.qid]) return detail(409, `${body.qid} has no picked concept yet`)
-    const condition = body.condition ?? "claim_on"
-    const name = `${body.qid ?? "concept"}-${condition}-s${body.seed ?? 1}-web20261013T090000-${String(db.nextJob).padStart(4, "0")}`
-    const steps = ["run", ...(condition === "claim_off" && body.attach !== false ? ["attach"] : []), "verify", "pairs", "graph", "export-prov", "score"]
-    const job = newJob("run", { ...body }, steps.map((s) => pending(s, `python -m agent.cli ${s} ${name}`)), { run_id: `web~${name}`, qid: body.qid ?? null })
-    return HttpResponse.json(job, { status: 202 })
-  }),
-  http.get("/api/runs/:runId", ({ params }) => {
-    const found = db.details[String(params.runId)]
-    return found ? HttpResponse.json(found) : notFound(`run: '${String(params.runId)}'`)
-  }),
-  http.get("/api/runs/:runId/steps", ({ params }) => {
-    const steps = STEPS[String(params.runId)]
-    return steps ? HttpResponse.json(steps) : notFound(`run: '${String(params.runId)}'`)
-  }),
-  http.get("/api/runs/:runId/steps/:step/output", ({ params, request }) => {
-    const agent = new URL(request.url).searchParams.get("agent_id") ?? "main"
-    const step = (STEPS[String(params.runId)] ?? []).find((s) => s.step === Number(params.step) && s.agent_id === agent)
-    if (!step || step.output_head === null || step.output_head === undefined) return notFound(`output of step ${String(params.step)} (${agent})`)
-    return new HttpResponse(`${step.output_head}\n`, { headers: { "Content-Type": "text/plain; charset=utf-8" } })
-  }),
-  http.get("/api/runs/:runId/stream", ({ params }) => {
-    const runId = String(params.runId)
-    const run = db.runs.find((r) => r.run_id === runId)
-    if (!run) return notFound(`run: '${runId}'`)
-    return eventStream(async function* () {
-      if (run.live) {
-        let id = 0
-        for (const record of LIVE_RECORDS) {
-          await delay(timing.streamMs)
-          yield { event: "record", data: JSON.stringify(record), id: ++id }
-        }
-        await delay(timing.streamMs)
-        finishLiveRun(run)
+  http.put("/api/ev/proposals/:name/decisions", async ({ params, request }) => {
+    const p = db.proposals[String(params.name)]
+    if (!p) return conflict(`proposal ${String(params.name)} has no cards yet (run the proposal flow first)`)
+    if (p.frozen) return conflict(`proposal ${p.name} is frozen; change it with \`evidence propose amend\` (command line)`)
+    const body = (await request.json()) as DecisionsRequest
+    const problems = decisionProblems(p.cards, body.decisions)
+    p.decision_problems = problems
+    p.cards = p.cards.map((c) => {
+      const d = body.decisions.find((e) => e.card === c.id)
+      return {
+        ...c, problems: problems.filter((x) => x.startsWith(`${c.id}:`)),
+        decision: d ? { card: c.id, choice: d.choice, reason: d.reason.trim(), by: d.by === "user" ? "aditya" : "model", value: d.choice === "custom" ? d.value : null, default: c.default } : null,
       }
-      yield { event: "done", data: JSON.stringify({ run_id: runId, records: LIVE_RECORDS.length, exit_status: run.exit_status }) }
     })
+    return HttpResponse.json({ written: `/srv/ev/proposals/${p.name}/decisions.yaml`, problems })
   }),
-  http.get("/api/runs/:runId/claims", ({ params }) => {
-    const runId = String(params.runId)
-    return db.details[runId] ? HttpResponse.json(claimsOf(runId)) : notFound(`run: '${runId}'`)
+  http.get("/api/ev/jobs", () => HttpResponse.json(db.jobs)),
+  http.get("/api/ev/jobs/:id", ({ params }) => {
+    const job = db.jobs.find((j) => j.id === params.id)
+    return job ? HttpResponse.json(job) : notFound(`no such job: '${String(params.id)}'`)
   }),
-  http.get("/api/runs/:runId/graph", ({ params }) => {
-    const graph = GRAPHS[String(params.runId)]
-    return graph ? HttpResponse.json(graph) : notFound("graph.json yet (run `agent graph` on it)")
+  http.get("/api/ev/jobs/:id/log", ({ params, request }) => {
+    const lines = db.logs[String(params.id)]
+    if (!lines) return notFound(`no such job: '${String(params.id)}'`)
+    const n = Number(new URL(request.url).searchParams.get("lines") ?? 200)
+    return new HttpResponse(lines.slice(-n).join("\n") + "\n", { headers: { "Content-Type": "text/plain" } })
   }),
-  http.get("/api/runs/:runId/facts/:factId/walk", ({ params, request }) => {
-    const runId = String(params.runId)
-    const judge = new URL(request.url).searchParams.get("judge") === "true"
-    const answer = db.details[runId]?.answer ?? null
-    if (!answer) return detail(404, `${runId} has no answer.json yet`)
-    const walk = walkFor(runId, answer, String(params.factId), judge)
-    return walk ? HttpResponse.json(walk) : detail(404, `${runId} has no fact '${String(params.factId)}'`)
-  }),
-  http.get("/api/runs/:runId/score", ({ params }) => {
-    const score = SCORES[String(params.runId)]
-    return score ? HttpResponse.json(score) : detail(404, `${String(params.runId)} has no score.json yet`)
-  }),
-
-  // corpus
-  http.get("/api/corpus/:paperId", ({ params, request }) => {
-    const url = new URL(request.url)
-    const start = Number(url.searchParams.get("start"))
-    const end = Number(url.searchParams.get("end"))
-    const known = passageOf({ paper_id: String(params.paperId), anchor: { start, end } })
-    if (known) return HttpResponse.json(known)
-    if (!Object.values(PASSAGES).some((p) => p.paper_id === params.paperId)) return notFound(`paper in the corpus manifest: '${String(params.paperId)}'`)
-    const text = "(mock) this part of the paper is not in the fixtures."
-    return HttpResponse.json({ paper_id: String(params.paperId), title: String(params.paperId), text, offset: start, length: end + 1000, highlight: { start: 0, end: 6 }, highlight_utf16: { start: 0, end: 6 } })
-  }),
-
-  // gold, results
-  http.get("/api/gold", () => HttpResponse.json(GOLD)),
-  http.get("/api/gold/:qid/key", ({ params }) => {
-    const key = GOLD_KEYS[String(params.qid)]
-    return key ? HttpResponse.json(key) : detail(404, `no answer key for ${String(params.qid)} yet`)
-  }),
-  http.post("/api/gold/:qid/build", ({ params }) => {
-    const qid = String(params.qid)
-    if (!QUESTIONS.some((q) => q.id === qid)) return notFound(`question: '${qid}'`)
-    if (activeJob("gold", qid)) return detail(409, `a gold build for ${qid} is already queued or running`)
-    const job = newJob("gold", { qid }, ["build", "triage", "pool", "draft"].map((s) => pending(`gold ${s}`, `python -m gold.cli ${s} ${qid}`)), { qid })
-    return HttpResponse.json(job, { status: 202 })
-  }),
-  http.get("/api/results", () => HttpResponse.json(RESULTS)),
-
-  // provenance
-  http.post("/api/sparql", async ({ request }) => {
-    const body = (await request.json()) as SparqlRequest
-    const query = body.query.replace(/^\s*(PREFIX[^\n]*\n|#[^\n]*\n|\s)*/i, "")
-    if (!/^(SELECT|ASK|CONSTRUCT|DESCRIBE)\b/i.test(query)) {
-      return detail(400, "only SELECT, ASK, CONSTRUCT and DESCRIBE queries are allowed (the store is read-only)")
+  http.post("/api/ev/jobs/:id/cancel", ({ params }) => {
+    const job = db.jobs.find((j) => j.id === params.id)
+    if (!job) return notFound(`no such job: '${String(params.id)}'`)
+    if (job.state === "queued" || job.state === "running") {
+      job.state = "failed"
+      job.error = "cancelled"
+      job.ended_at = now()
+      job.steps = job.steps.map((s) => ({ ...s, state: s.state === "running" ? "failed" : "skipped" }))
     }
-    if (/^ASK\b/i.test(query)) return HttpResponse.json({ vars: [], rows: [], boolean: true })
-    if (body.run_id && !db.details[body.run_id]) return notFound(`run: '${body.run_id}'`)
-    const claims = body.run_id ? claimsOf(body.run_id) : Object.values(CLAIMS).flat()
-    return HttpResponse.json({
-      vars: ["claim_id", "s", "p", "o", "step_id"],
-      rows: claims.filter((c) => c.claim_id).map((c) => ({ claim_id: c.claim_id, s: c.s, p: c.p, o: c.o, step_id: c.step })),
-      boolean: null,
-    })
-  }),
-  http.get("/api/queries/:n", ({ params, request }) => {
-    const url = new URL(request.url)
-    const runId = url.searchParams.get("run_id") ?? ""
-    if (!db.details[runId]) return notFound(`run: '${runId}'`)
-    const n = Number(params.n)
-    const rows = provQuery(n, runId, url)
-    if (typeof rows === "string") return detail(n >= 1 && n <= 5 ? 400 : 404, rows)
-    return HttpResponse.json({ n, name: QUERY_NAMES[n], run_id: runId, rows })
-  }),
-
-  // jobs
-  http.get("/api/jobs", () => HttpResponse.json(db.jobs)),
-  http.get("/api/jobs/:id", ({ params }) => {
-    const job = db.jobs.find((j) => j.id === params.id)
-    return job ? HttpResponse.json(job) : notFound(`job: '${String(params.id)}'`)
-  }),
-  http.post("/api/jobs/:id/cancel", ({ params }) => {
-    const job = db.jobs.find((j) => j.id === params.id)
-    if (!job) return notFound(`job: '${String(params.id)}'`)
-    if (job.state !== "queued" && job.state !== "running") return detail(409, `job ${job.id} is ${job.state}; only a queued or running job can be cancelled`)
-    finishJob(job.id, -15)
-    job.error = "cancelled"
     return HttpResponse.json(job)
   }),
-  http.get("/api/jobs/:id/log", ({ params }) => {
-    const job = db.jobs.find((j) => j.id === params.id)
-    if (!job) return notFound(`job: '${String(params.id)}'`)
-    const lines = JOB_LOGS[job.id] ?? [`$ ${job.steps?.[0]?.command ?? job.kind}`]
-    return eventStream(async function* () {
-      let id = 0
-      for (const line of lines) {
-        await delay(timing.streamMs / 3)
-        yield { event: "line", data: line, id: ++id }
-      }
-      for (let n = 4; (job.state === "running" || job.state === "queued") && n < 40; n++) {
-        await delay(timing.streamMs * 2)
-        yield { event: "line", data: `step ${n}: waiting for the model …`, id: ++id }
-      }
-      yield { event: "done", data: JSON.stringify(job) }
-    })
+  http.post("/api/ev/jobs/:kind", async ({ params, request }) => {
+    await delay(timing.jobMs === null ? 0 : 150)
+    const kind = String(params.kind) as JobKind
+    if (!(kind in LANE)) return notFound(`no such API endpoint: /api/ev/jobs/${kind}`)
+    return submit(kind, (await request.json()) as JobRequests[typeof kind])
   }),
-
-  // chat (AI SDK v5 UI message stream)
-  http.post("/api/chat", async ({ request }) => {
-    const body = (await request.json()) as { run_id?: string; messages?: { role: string; parts?: { type: string; text?: string }[] }[] }
-    const last = [...(body.messages ?? [])].reverse().find((m) => m.role === "user")
-    const question = last?.parts?.find((p) => p.type === "text")?.text ?? ""
-    const chunks = chatChunks(body.run_id, question)
-    const encoder = new TextEncoder()
-    const stream = new ReadableStream({
-      async start(controller) {
-        for (const chunk of chunks) {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
-          await delay(timing.streamMs / 20)
-        }
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"))
-        controller.close()
-      },
-    })
-    return new HttpResponse(stream, {
-      headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "x-vercel-ai-ui-message-stream": "v1" },
-    })
-  }),
+  ...evHandlers,
 ]
