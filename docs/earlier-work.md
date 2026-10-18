@@ -222,7 +222,7 @@ FastAPI `webapp.app:create_app()`, JSON under `/api` (health, config, questions 
 runs with steps, live stream, claims, graph, fact walk and score, corpus passages, gold, results, SPARQL,
 the five queries, jobs, chat), the built frontend at `/`. Pages: Overview, Question (concept cards, pick),
 Runs, Run (Answer with claim walk, Graph, Timeline, Claims, Provenance, Score), Compare (claim_on vs
-claim_off), Results, Gold, Jobs, Chat. The current endpoint list is `webapp/web/openapi.json`; details in §6.
+claim_off), Results, Gold, Jobs, Chat. The endpoint list as it was: `git show 72da5dd:webapp/web/openapi.json`; details in §6.
 
 ## 6. Packages of the earlier system
 
@@ -322,9 +322,12 @@ names, so two batches with runs of the same name would mix. Settings in `webapp/
 Router 7, React Flow, recharts, assistant-ui; Node from the `frontend` dependency group. `uv run --group
 frontend npm ci`, then `npm run dev` (against `webapp serve`) or `npm run dev:mock` (MSW mocks, no backend);
 `npm run build` writes `dist/`, which is committed so the node needs no Node; `npm run typecheck`, `lint`,
-`test` (Vitest). API types: `npm run gen:api` (openapi-typescript → `src/api/schema.d.ts`). Rebuilt 17 Oct for
-the evidence-level flow (README "Web app"): these pages now live under `/earlier` (`/earlier/runs`,
-`/earlier/questions/<qid>`, ...), unchanged otherwise. Full text: `git show 3edd23b:webapp/web/README.md`.
+`test` (Vitest). API types: `npm run gen:api` (openapi-typescript → `src/api/schema.d.ts`). Full text: `git show
+3edd23b:webapp/web/README.md`.
+
+**Removed from the app on 18 Oct** (it now serves only the evidence-level flow, README "Web app"): these backend
+routes and modules, the pages (under `/earlier` since 17 Oct) and their tests; the last commit that has them is
+`72da5dd` (`git checkout 72da5dd -- webapp` restores them).
 
 ## 7. Runbooks
 

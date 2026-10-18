@@ -17,7 +17,7 @@ is open.
 | `synth/` | `synth` | Synthetic benchmark (supervisor's design): seeded ground truth, difficulty levels, template and LLM renderers, fidelity checks ([`synth/README.md`](synth/README.md)) |
 | `evaluation/` | `evaluate` | Scores A (extraction), B (integration), C (synthesis) per level (supervisor's design); the retrieve-then-answer baseline; plus our additions below |
 | `agent/` | `agent` | Earlier work: the research agent (sandboxed loop, `claim` broker, graph, PROV-O, replay). Now used only as the agentic extractor and the agent baseline |
-| `webapp/` | `webapp` | The viewer of the evidence-level flow (below); the earlier flow's pages under `/earlier` |
+| `webapp/` | `webapp` | The evidence-level flow as a guided stepper per question: views the files and starts the missing steps as jobs (below) |
 | `gold/`, `scoring/`, `questions/` | `gold`, `score` | Earlier work: gold document D and Argilla review, claim on/off scoring, the 12 questions ([`docs/earlier-work.md`](docs/earlier-work.md)). `gold/` is the method planned for the 337-paper check |
 
 **Our additions** (not the supervisor's): the agentic extractor (`evidence/agentic/`), the agent baseline
@@ -54,28 +54,49 @@ uv run evidence vocab build --name N --source DIR --out evidence/vocab/N.json   
 
 ## Web app
 
-A read-only viewer of the files the commands above write (it starts no run and calls no model): question →
-protocol (and proposals) → corpus → run (per paper the funnel, the items with their spans, every call down
-to its model records or the agent's trace) → evidence graph → answer → scores A/B/C per level with 95 %
-intervals, the RAG and agent baselines beside the engine, all against gaps, shift and benchmark records. The
-earlier flow (questions, concept pick, claim on/off runs, gold, jobs, chat) is under `/earlier`.
+The supervisor's flow as a guided stepper per question, which views what is on disk and starts what is
+missing: select a question (from [`evidence/questions.yaml`](evidence/questions.yaml), never typed) →
+protocol → corpus → run → evidence graph → answer → scores A/B/C, the RAG and agent baselines beside the
+engine. Every result page of the viewer is linked from it (per paper the funnel, the items with their spans,
+every call down to its model records or the agent's trace; scores with 95 % intervals, all against gaps, shift,
+benchmark records).
+
+| Step | What the app starts (one job each; the runbook's commands, `python -m webapp.tool ...`) | Lane |
+|---|---|---|
+| Protocol | the hand-written protocol, its agentic variant or a frozen proposal; **propose**: `evidence propose frame`, `draft`, `critic`, `cards` (resumed from the first missing file), then the eight cards as a form that writes `decisions.yaml` and shows what freeze would refuse, then `evidence propose freeze`. Amendments stay on the command line | model; freeze cpu |
+| Corpus | choose one under `$EV/corpora`, or `synth build --renderer template` (name, seed, studies, levels, knobs). LLM-written corpora take hours: Slurm only (runbook step 1) | cpu |
+| Run | `evidence run` (regex-only, cascade, or the agentic protocol; all or gaps; model, default `orch-model`) into `runs/<group>/<name>` with the runbook's group names; `evaluate rag-baseline --retrieval global --k 8`, `evaluate agent-baseline`; `evaluate score` (with the corpus's baselines) and `evaluate compare` | model (regex-only, score, compare: cpu) |
+
+At most one model job runs at a time (`WEBAPP_MODEL_JOBS`, default 1; the rest queue), two cpu jobs beside it
+(`WEBAPP_CPU_JOBS`). Jobs keep their state and logs in `$EV/.jobs/` (a reload or a restarted server lists
+them; a job that was running when the server stopped is marked failed); the Jobs page shows status, log tail
+and Cancel. Outputs go into the same `$EV` layout as the runbook (`corpora/`, `runs/<group>/<name>/`,
+`scores/`, `proposals/`, `cache/engine/`, `cache/rag-baseline.jsonl`, `agent-work/`), so a result made in the
+app looks exactly like one made on the command line or on Slurm, and the other way round.
+
+On the cluster, start it inside the stack job with the session environment of the runbook (step 0.3), so the
+jobs reach the gateway with the key from `llm-setup/.env` (`LITELLM_MASTER_KEY`, `LITELLM_BASE_URL`,
+`AGENT_ROOT`, `EVIDENCE_AGENT_WORK_DIR`), and reach it through an SSH tunnel:
 
 ```bash
-EV=/path/to/ev uv run webapp serve --port 8080   # then http://127.0.0.1:8080 (through an SSH tunnel on the cluster)
+srun --jobid "$JOB" --overlap --pty bash -l          # on the login node; then, on the node:
+source "$EV/in-job.env" && uv run webapp serve --port 8080
+ssh -L 8080:127.0.0.1:8080 <node>                    # from your machine (via the login node), then http://127.0.0.1:8080
 ```
 
-It reads the layout of `docs/slurm-evidence-runbook.md` under `$EV`: `corpora/`, `runs/<group>/<name>/`
-(engine runs and baseline answers), `scores/`, `proposals/`, the engine's record cache `cache/engine/` and
-the agentic extractor's `agent-work/`; each can be set apart (`CORPORA`, `EV_RUNS`, `SCORES`, `EV_PROPOSALS`,
-`EV_CACHE`, `EV_AGENT_WORK`, which defaults to the agentic extractor's own `EVIDENCE_AGENT_WORK_DIR` when that
-is set; protocols from `evidence/protocols/`, `EV_PROTOCOLS`). The earlier pages read `RUNS`, `CORPUS`, `GOLD`,
-`CONCEPTS` as before: the runbook's `in-job.env` exports `RUNS=$EV/runs`, which the viewer ignores (it reads
-`EV_RUNS`) but the earlier pages take as their batch root, so start the app without it (or unset it). A small world made by the real tools with scripted models, to
-look at offline: `uv run python -m webapp.tests.evidence_world /tmp/ev-world` and `EV=/tmp/ev-world`. The
-frontend (`webapp/web`, React, built into `webapp/web/dist`, which is committed): `uv run --group frontend npm ci`
-(Node from that dependency group), `npm run dev` (Vite, proxies `/api`),
+Offline, with no model (template corpora, regex-only runs, scores, the cards and freeze work; model jobs fail
+or record failed calls): `uv run python -m webapp.tests.evidence_world /tmp/ev-world`, then
+`EV=/tmp/ev-world uv run webapp serve`. The directories can be set apart (`CORPORA`, `EV_RUNS`, `SCORES`,
+`EV_PROPOSALS`, `EV_CACHE`, `EV_AGENT_WORK`, `EV_PROTOCOLS`, `EV_QUESTIONS`; `webapp/settings.py`), but jobs
+need `$EV`. Safety: no authentication; the server binds to 127.0.0.1, answers only loopback Host names and
+takes writes only from a loopback client as same-origin JSON (`webapp/guard.py`); every job is an argv from a
+fixed template (no shell), every name a plain directory name, every path checked to stay inside its root
+(`webapp/evjobs.py`). The frontend (`webapp/web`, React, built into `webapp/web/dist`, which is committed):
+`uv run --group frontend npm ci` (Node from that dependency group), `npm run dev` (Vite, proxies `/api`),
 `npm run dev:mock` (no backend), `npm test`, `npm run build`; after a change to the backend's models
-`uv run webapp openapi -o webapp/web/openapi.json && npm run gen:api`.
+`uv run webapp openapi -o webapp/web/openapi.json && npm run gen:api`. The pre-14-Oct app (questions, concept
+pick, claim on/off runs, gold, chat) was removed on 18 Oct; it is in git at `72da5dd`
+([`docs/earlier-work.md`](docs/earlier-work.md)).
 
 ## Setup
 

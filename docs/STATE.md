@@ -100,8 +100,11 @@ He wrote no numbered research questions. Read from his text:
 5. Proposal flow. **Done 17 Oct** (Part E).
 6. Codex runbook and the live Slurm run. Runbook written 17 Oct (`slurm-evidence-runbook.md`, dry-run
    offline); live run pending.
-7. Web app rebuild. **Done 17 Oct**: `webapp/` is a read-only viewer of the evidence-level files (`/api/ev`,
-   README "Web app"); the earlier flow's pages under `/earlier`.
+7. Web app rebuild. **Done 17 Oct** as a read-only viewer of the evidence-level files (`/api/ev`); **18 Oct**
+   it drives the flow: a guided stepper per question (selected from `evidence/questions.yaml`) that starts the
+   missing steps as jobs (template corpus, engine run, both baselines, score, compare, the proposal flow with the
+   cards as a form and freeze), one model job at a time (README "Web app"). The earlier app was removed (in git
+   at `72da5dd`).
 8. The 337-paper check.
 9. Documentation.
 
@@ -125,7 +128,7 @@ see §7).
 | Evaluation A, B, C | built; intervals, flags, shift and benchmark records added 17 Oct | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis (direction accuracy, completeness, traceability, expected-undetermined rule, flag precision/recall), locate recall, cascade contribution, cost, stability, 95 % BCa bootstrap intervals (`stats.py`); `evaluate shift` (`shift.py`), `evaluate benchmark` (`benchmark.py`, B11 records per extractor) |
 | Baselines | built; the RAG baseline rebuilt 17 Oct as the plain retrieve-then-answer system (§4, Part G.1) | `evaluation/baselines/rag.py` (global top 8, neutral prompt with citations, the mapping call shared with the agent baseline in `common.py`), `agent.py`; score C adds completeness and traceability |
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
-| Viewer | rebuilt 17 Oct for the supervisor's flow (§4); read-only, tested on a world made by the real tools with scripted models, not yet on a live run's files | `webapp/` (`evapi.py`, `evfiles.py`; frontend `webapp/web/src/pages/ev/`): corpora (levels, knobs, variants, ground truth, placements), protocol and proposals (cards, who decided and why, revisions, amendments), runs (per paper the funnel, items with their spans and `found_by`, every call with its model records or the agent's trace from `$EV/agent-work` or the record cache; evidence graph; answer with reasons and flags; baselines with citations), scores (A/B/C per level with intervals, baselines beside the engine, all vs gaps, shift, benchmark); directories from `$EV` (README "Web app"). The earlier flow's pages (questions, concept pick, claim on/off runs, results, gold, jobs, chat) under `/earlier` |
+| Viewer and guided flow | viewer rebuilt 17 Oct for the supervisor's flow (§4); 18 Oct a guided stepper per question that starts the missing steps as jobs; tested on a world made by the real tools with scripted models and an offline smoke through the API (template corpus, regex-only run, score, decisions and freeze), not yet on a live run or a live model | `webapp/` (viewer `evapi.py`, `evfiles.py`; jobs and decisions `evjobs.py`, `jobs.py`; questions `evquestions.py` over `evidence/questions.yaml`; frontend `webapp/web/src/pages/flow/`, `components/flow/`, `pages/ev/`): question → protocol (hand-written, agentic variant or a frozen proposal; propose as a job, the eight cards as a form writing `decisions.yaml`, freeze) → corpus (choose, or a template build) → run (`evidence run`, both baselines, score, compare; live job log, the run page fills in) → evidence graph → answer → scores; one model job at a time, state in `$EV/.jobs`, loopback-only writes. Viewer pages: corpora, protocols and proposals, runs (funnel, spans, calls with model records or agent traces), scores (A/B/C with intervals, all vs gaps, shift, benchmark). The earlier app was removed 18 Oct (git `72da5dd`) |
 
 Not built: the 337-paper check (§5 step 8, §7).
 
