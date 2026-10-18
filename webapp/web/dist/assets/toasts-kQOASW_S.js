@@ -1,1 +1,0 @@
-import{ag as s}from"./index-BsAc4A4M.js";function i(o,n,a){s.success(`${a}: job ${o.id} ${o.state}`,{description:"Follow its log on the Jobs page.",action:{label:"Open log",onClick:()=>n(`/earlier/jobs/${o.id}`)}})}function t(o,n){s.error(o,{description:n instanceof Error?n.message:String(n)})}export{t as a,i as b};
