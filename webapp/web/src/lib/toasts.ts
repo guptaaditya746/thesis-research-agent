@@ -2,12 +2,14 @@
 import type { NavigateFunction } from "react-router"
 import { toast } from "sonner"
 
-import type { Job } from "@/api/types"
+import type { Job } from "@/api/ev"
 
-export function announceJob(job: Job, navigate: NavigateFunction, what: string) {
-  toast.success(`${what}: job ${job.id} ${job.state}`, {
-    description: "Follow its log on the Jobs page.",
-    action: { label: "Open log", onClick: () => navigate(`/earlier/jobs/${job.id}`) },
+import { jobTitle } from "./jobs"
+
+export function announceJob(job: Job, navigate: NavigateFunction) {
+  toast.success(`Started: ${jobTitle(job)}`, {
+    description: job.lane === "model" ? "Model jobs run one at a time; it waits its turn in the queue." : undefined,
+    action: { label: "Open log", onClick: () => navigate(`/jobs/${job.id}`) },
   })
 }
 

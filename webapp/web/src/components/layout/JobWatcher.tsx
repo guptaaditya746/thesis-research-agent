@@ -1,21 +1,15 @@
 /**
- * Watches the job queue from every page: when a job finishes, the data it changed is refetched
- * (briefs after a proposal, runs and questions after a run, gold after a gold build) and a toast
- * says so, with a link to the run or the log. Jobs already finished when the app opens stay quiet.
+ * Watches the jobs from every page: when a job ends, everything read from disk is refetched (a new corpus,
+ * run, score or proposal) and a toast says so, with a link to what it made or to its log. Jobs that had
+ * already ended when the app opened stay quiet.
  */
 import { useQueryClient } from "@tanstack/react-query"
 import { useEffect, useRef } from "react"
 import { useNavigate } from "react-router"
 import { toast } from "sonner"
 
-import { isActiveJob, keys, useJobs } from "@/api/hooks"
-import type { Job } from "@/api/types"
-
-const REFRESH: Record<string, readonly (readonly string[])[]> = {
-  concepts: [keys.questions],
-  run: [keys.runs, keys.questions, ["results"]],
-  gold: [keys.gold, keys.questions],
-}
+import { isActiveJob, useJobs, type Job } from "@/api/ev"
+import { jobTarget, jobTitle } from "@/lib/jobs"
 
 export function JobWatcher() {
   const jobs = useJobs()
@@ -28,21 +22,25 @@ export function JobWatcher() {
     const before = previous.current
     previous.current = new Map(jobs.data.map((j) => [j.id, j.state]))
     if (!before) return
-    for (const job of jobs.data) {
+    const ended = jobs.data.filter((job) => {
       const was = before.get(job.id)
-      if (!was || !isActiveJob({ state: was }) || isActiveJob(job)) continue
-      for (const key of REFRESH[job.kind] ?? [keys.runs]) void client.invalidateQueries({ queryKey: key })
-      const what = `${job.kind} job ${job.id}${job.qid ? ` (${job.qid})` : ""}`
-      const action = job.run_id
-        ? { label: "Open run", onClick: () => navigate(`/earlier/runs/${encodeURIComponent(job.run_id!)}`) }
-        : { label: "Open log", onClick: () => navigate(`/earlier/jobs/${job.id}`) }
+      return was && isActiveJob({ state: was }) && !isActiveJob(job)
+    })
+    if (!ended.length) return
+    void client.invalidateQueries({ predicate: (q) => q.queryKey[0] === "ev" && q.queryKey[1] !== "jobs" })
+    for (const job of ended) {
+      const target = jobTarget(job)
+      const action = job.state === "done" && target
+        ? { label: "Open", onClick: () => navigate(target) }
+        : { label: "Open log", onClick: () => navigate(`/jobs/${job.id}`) }
       if (job.state === "done") {
-        toast.success(`${what} is done`, { description: job.warnings?.length ? job.warnings.join("; ") : undefined, action })
+        toast.success(`${jobTitle(job)} is done`, { description: job.warnings.length ? job.warnings.join("; ") : undefined, action })
       } else {
-        toast.error(`${what} failed`, { description: job.error ?? `exit ${job.exit_code ?? "?"}`, action })
+        toast.error(`${jobTitle(job)} failed`, { description: job.error ?? `exit ${job.exit_code ?? "?"}`, action })
       }
     }
   }, [jobs.data, client, navigate])
 
   return null
 }
+

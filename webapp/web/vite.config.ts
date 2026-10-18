@@ -1,8 +1,8 @@
 /// <reference types="vitest/config" />
-// Vite config for the web app (docs/earlier-work.md, "Backend API and frontend pages").
+// Vite config for the web app (README, "Web app").
 //
 // - `npm run dev`: /api is proxied to the FastAPI backend (`webapp serve`, 127.0.0.1:8080 by
-//   default; override with WEBAPP_API). Streams (SSE) pass through the proxy unbuffered.
+//   default; override with WEBAPP_API).
 // - `npm run dev:mock` (or VITE_MOCK=1): no backend; MSW answers /api from src/mocks.
 // - `npm run build`: dist/, which the backend serves at /.
 // - `npm test`: Vitest in jsdom, with the same MSW handlers in Node.

@@ -1,13 +1,11 @@
-/** Ctrl/Cmd+K: jump to a page or a run (and, under earlier work, a question or an agent run); open the chat; switch theme. */
+/** Ctrl/Cmd+K: jump to a question's flow, a page or a run; switch theme; refresh from disk. */
 import { useQueryClient } from "@tanstack/react-query"
-import { BarChart3Icon, FileQuestionIcon, ListChecksIcon, MessageSquareIcon, MoonIcon, PlayIcon, SearchIcon, SunIcon } from "lucide-react"
+import { BarChart3Icon, ListChecksIcon, ListOrderedIcon, MoonIcon, PlayIcon, SearchIcon, SunIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
 
-import { evKeys, useEvRuns } from "@/api/ev"
-import { keys, useQuestions, useRuns } from "@/api/hooks"
-import { useChat } from "@/components/chat/context"
+import { evKeys, useEvRuns, useQuestions } from "@/api/ev"
 import { Button } from "@/components/ui/button"
 import {
   CommandDialog,
@@ -22,27 +20,21 @@ import {
 import { Kbd } from "@/components/ui/kbd"
 
 const PAGES = [
-  { to: "/", label: "Evidence-level flow" },
-  { to: "/protocol", label: "Protocol" },
+  { to: "/", label: "Questions" },
+  { to: "/protocol", label: "Protocols" },
   { to: "/corpora", label: "Corpora" },
   { to: "/runs", label: "Runs" },
   { to: "/scores", label: "Scores" },
-  { to: "/earlier", label: "Earlier work: questions" },
-  { to: "/earlier/runs", label: "Earlier work: runs" },
-  { to: "/earlier/results", label: "Earlier work: results" },
-  { to: "/earlier/gold", label: "Earlier work: gold" },
-  { to: "/earlier/jobs", label: "Earlier work: jobs" },
+  { to: "/jobs", label: "Jobs" },
 ]
 
 export function CommandMenu() {
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
   const client = useQueryClient()
-  const { setOpen: setChat } = useChat()
   const { resolvedTheme, setTheme } = useTheme()
   const questions = useQuestions()
-  const runs = useRuns()
-  const evRuns = useEvRuns()
+  const runs = useEvRuns()
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -70,10 +62,18 @@ export function CommandMenu() {
       <Button variant="ghost" size="icon-sm" className="md:hidden" aria-label="Search" onClick={() => setOpen(true)}>
         <SearchIcon />
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen} title="Search" description="Jump to a page, question or run">
-        <CommandInput placeholder="Page, question id or run id…" />
+      <CommandDialog open={open} onOpenChange={setOpen} title="Search" description="Jump to a question, page or run">
+        <CommandInput placeholder="Question, page or run id…" />
         <CommandList>
           <CommandEmpty>Nothing matches.</CommandEmpty>
+          <CommandGroup heading="Questions">
+            {questions.data?.map((q) => (
+              <CommandItem key={q.id} value={`${q.id} ${q.question}`} onSelect={() => go(`/flow/${encodeURIComponent(q.id)}`)}>
+                <ListOrderedIcon />
+                <span className="truncate">{q.question}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
           <CommandGroup heading="Pages">
             {PAGES.map((p) => (
               <CommandItem key={p.to} onSelect={() => go(p.to)}>
@@ -83,7 +83,7 @@ export function CommandMenu() {
             ))}
           </CommandGroup>
           <CommandGroup heading="Runs">
-            {evRuns.data?.slice(0, 80).map((r) => (
+            {runs.data?.slice(0, 80).map((r) => (
               <CommandItem key={r.id} value={`${r.id} ${r.system}`} onSelect={() => go(`/runs/${encodeURIComponent(r.id)}`)}>
                 <ListChecksIcon />
                 <span className="font-mono">{r.id}</span>
@@ -91,36 +91,8 @@ export function CommandMenu() {
               </CommandItem>
             ))}
           </CommandGroup>
-          <CommandGroup heading="Earlier work: questions">
-            {questions.data?.map((q) => (
-              <CommandItem key={q.id} value={`${q.id} ${q.question}`} onSelect={() => go(`/earlier/questions/${q.id}`)}>
-                <FileQuestionIcon />
-                <span className="font-mono">{q.id}</span>
-                <span className="truncate text-muted-foreground">{q.question}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-          <CommandGroup heading="Earlier work: runs">
-            {runs.data?.slice(0, 50).map((r) => (
-              <CommandItem key={r.run_id} value={`${r.run_id} ${r.qid} ${r.condition}`} onSelect={() => go(`/earlier/runs/${encodeURIComponent(r.run_id)}`)}>
-                <ListChecksIcon />
-                <span className="font-mono">{r.run_id}</span>
-                <CommandShortcut>{r.condition}</CommandShortcut>
-              </CommandItem>
-            ))}
-          </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading="Actions">
-            <CommandItem
-              onSelect={() => {
-                setOpen(false)
-                setChat(true)
-              }}
-            >
-              <MessageSquareIcon />
-              Open chat
-              <CommandShortcut>Ctrl J</CommandShortcut>
-            </CommandItem>
             <CommandItem
               onSelect={() => {
                 setOpen(false)
@@ -133,8 +105,6 @@ export function CommandMenu() {
             <CommandItem
               onSelect={() => {
                 setOpen(false)
-                void client.invalidateQueries({ queryKey: keys.runs })
-                void client.invalidateQueries({ queryKey: keys.questions })
                 void client.invalidateQueries({ queryKey: evKeys.all })
               }}
             >

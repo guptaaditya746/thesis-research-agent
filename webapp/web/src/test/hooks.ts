@@ -1,6 +1,6 @@
 /**
  * What every test file gets: jest-dom matchers, the MSW server with the app's handlers (fresh
- * in-memory state and instant streams per test), and stubs for what jsdom lacks
+ * in-memory state per test, mock jobs that end only when a test ends them), and stubs for what jsdom lacks
  * (ResizeObserver, matchMedia, scrollIntoView, pointer capture) that Radix, React Flow and the
  * sidebar use. `registerHooks` runs once per file (the module itself is cached across files).
  */
@@ -45,7 +45,7 @@ function stubBrowserGaps() {
 }
 
 export function registerHooks() {
-  timing.streamMs = 0
+  timing.jobMs = null
   configure({ asyncUtilTimeout: 5_000 })
   stubBrowserGaps()
   beforeAll(() => server.listen({ onUnhandledRequest: "error" }))

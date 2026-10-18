@@ -1,24 +1,20 @@
 /**
- * The app's sidebar (shadcn `sidebar`): the evidence-level flow's pages, then the earlier work, labelled as
- * such (with its 12 questions while one of its pages is open), and the backend's state.
+ * The app's sidebar (shadcn `sidebar`): the questions (each opens its guided flow), the viewer's pages, the
+ * jobs with a count of the active ones, and the backend's state.
  */
 import {
   ActivityIcon,
-  ArchiveIcon,
-  AwardIcon,
   BarChart3Icon,
-  CircleIcon,
   DatabaseIcon,
   FileCode2Icon,
   FlaskConicalIcon,
-  LayoutDashboardIcon,
-  ListChecksIcon,
+  ListOrderedIcon,
   NetworkIcon,
   type LucideIcon,
 } from "lucide-react"
 import { NavLink, useLocation } from "react-router"
 
-import { useConfig, useHealth, useJobs, useQuestions } from "@/api/hooks"
+import { isActiveJob, useEvConfig, useHealth, useJobs, useQuestions } from "@/api/ev"
 import {
   Sidebar,
   SidebarContent,
@@ -38,27 +34,16 @@ import { cn } from "@/lib/utils"
 
 type Page = { to: string; label: string; icon: LucideIcon; end?: boolean }
 
-const FLOW: Page[] = [
-  { to: "/", label: "Flow", icon: LayoutDashboardIcon, end: true },
-  { to: "/protocol", label: "Protocol", icon: FileCode2Icon },
+const VIEWER: Page[] = [
+  { to: "/protocol", label: "Protocols", icon: FileCode2Icon },
   { to: "/corpora", label: "Corpora", icon: DatabaseIcon },
   { to: "/runs", label: "Runs", icon: FlaskConicalIcon },
   { to: "/scores", label: "Scores", icon: BarChart3Icon },
+  { to: "/jobs", label: "Jobs", icon: ActivityIcon },
 ]
-
-const EARLIER: Page[] = [
-  { to: "/earlier", label: "Questions", icon: ArchiveIcon, end: true },
-  { to: "/earlier/runs", label: "Agent runs", icon: ListChecksIcon },
-  { to: "/earlier/results", label: "Results", icon: NetworkIcon },
-  { to: "/earlier/gold", label: "Gold", icon: AwardIcon },
-  { to: "/earlier/jobs", label: "Jobs", icon: ActivityIcon },
-]
-
-const CONCEPT_DOT = { picked: "text-status-good", proposed: "text-status-warning", none: "text-muted-foreground/50" }
 
 function Pages({ pages, badge }: { pages: Page[]; badge?: (to: string) => number }) {
   const { pathname } = useLocation()
-  // a proposal belongs to the protocol page
   const active = (p: Page) => (p.end ? pathname === p.to : pathname === p.to || pathname.startsWith(`${p.to}/`))
   return (
     <SidebarMenu>
@@ -66,6 +51,7 @@ function Pages({ pages, badge }: { pages: Page[]; badge?: (to: string) => number
         const count = badge?.(p.to) ?? 0
         return (
           <SidebarMenuItem key={p.to}>
+            {/* a proposal belongs to the protocol page */}
             <SidebarMenuButton asChild tooltip={p.label} isActive={active(p) || (p.to === "/protocol" && pathname.startsWith("/proposals"))}>
               <NavLink to={p.to} end={p.end}>
                 <p.icon />
@@ -82,10 +68,9 @@ function Pages({ pages, badge }: { pages: Page[]; badge?: (to: string) => number
 
 export function AppSidebar() {
   const { pathname } = useLocation()
-  const earlier = pathname.startsWith("/earlier")
   const questions = useQuestions()
   const jobs = useJobs()
-  const active = jobs.data?.filter((j) => j.state === "running" || j.state === "queued").length ?? 0
+  const active = jobs.data?.filter(isActiveJob).length ?? 0
 
   return (
     <Sidebar collapsible="icon">
@@ -108,48 +93,33 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Evidence-level flow</SidebarGroupLabel>
+          <SidebarGroupLabel>Questions</SidebarGroupLabel>
           <SidebarGroupContent>
-            <Pages pages={FLOW} />
+            <SidebarMenu>
+              {questions.isPending && (
+                <SidebarMenuItem>
+                  <SidebarMenuSkeleton />
+                </SidebarMenuItem>
+              )}
+              {questions.data?.map((q) => (
+                <SidebarMenuItem key={q.id}>
+                  <SidebarMenuButton asChild tooltip={q.question} isActive={pathname.startsWith(`/flow/${q.id}`)}>
+                    <NavLink to={`/flow/${encodeURIComponent(q.id)}`} title={q.question}>
+                      <ListOrderedIcon />
+                      <span className="truncate">{q.id}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
-          <SidebarGroupLabel>Earlier work</SidebarGroupLabel>
+          <SidebarGroupLabel>Viewer</SidebarGroupLabel>
           <SidebarGroupContent>
-            <Pages pages={EARLIER} badge={(to) => (to === "/earlier/jobs" ? active : 0)} />
+            <Pages pages={VIEWER} badge={(to) => (to === "/jobs" ? active : 0)} />
           </SidebarGroupContent>
         </SidebarGroup>
-        {earlier && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Earlier work: questions</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {questions.isPending &&
-                  Array.from({ length: 6 }, (_, i) => (
-                    <SidebarMenuItem key={i}>
-                      <SidebarMenuSkeleton />
-                    </SidebarMenuItem>
-                  ))}
-                {questions.data?.map((q) => (
-                  <SidebarMenuItem key={q.id}>
-                    <SidebarMenuButton
-                      asChild
-                      size="sm"
-                      tooltip={q.question}
-                      isActive={pathname === `/earlier/questions/${q.id}` || pathname === `/earlier/compare/${q.id}`}
-                    >
-                      <NavLink to={`/earlier/questions/${q.id}`} title={q.question}>
-                        <CircleIcon className={cn("fill-current", CONCEPT_DOT[q.concept.status])} aria-label={`concept ${q.concept.status}`} />
-                        <span className="font-mono text-xs">{q.id}</span>
-                        <span className="truncate text-muted-foreground">{q.question}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
       <SidebarFooter>
         <BackendStatus />
@@ -161,7 +131,7 @@ export function AppSidebar() {
 
 function BackendStatus() {
   const health = useHealth()
-  const config = useConfig()
+  const config = useEvConfig()
   const ok = health.data?.ok === true
   return (
     <div className="flex items-center gap-2 px-2 py-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden" role="status">

@@ -1,38 +1,10 @@
 /**
- * The one typed client for the backend API (docs/earlier-work.md, "Backend API and frontend pages").
- *
- * All HTTP access of the app goes through `api` (JSON and text) or the URL helpers (streams,
- * links), so a change of base URL, auth or generated types happens here only. Errors become
- * `ApiError` with the HTTP status and FastAPI's `detail`; endpoints where 404 means "not there
- * yet" (score, results, gold key) resolve to null instead.
+ * The one HTTP layer of the app: every request goes through `request` here (src/api/ev.ts builds the typed
+ * client on it), so a change of base URL, auth or error handling happens in one place. Errors become
+ * `ApiError` with the HTTP status and FastAPI's `detail`. Writes send JSON bodies, which is what the backend's
+ * guard (webapp/guard.py) asks of every write.
  */
-import type {
-  AnswerKey,
-  AppConfig,
-  Claim,
-  FactWalk,
-  GoldEntry,
-  Health,
-  Job,
-  KnowledgeGraph,
-  Passage,
-  PickRequest,
-  ProposeRequest,
-  ProvQueryNumber,
-  ProvQueryParams,
-  Question,
-  QuestionDetail,
-  QueryResult,
-  ResultsReport,
-  RunDetail,
-  RunFilters,
-  RunRequest,
-  RunSummary,
-  Score,
-  SparqlRequest,
-  SparqlResult,
-  Step,
-} from "./types"
+import { QueryClient } from "@tanstack/react-query"
 
 export class ApiError extends Error {
   readonly status: number
@@ -49,7 +21,7 @@ export class ApiError extends Error {
 }
 
 export const isNotFound = (error: unknown) => error instanceof ApiError && error.status === 404
-/** 409: the backend refuses because of the state (a job already running, a pick runs depend on, ...). */
+/** 409: the backend refuses because of the state (a run that exists, a job already running, a frozen proposal). */
 export const isConflict = (error: unknown) => error instanceof ApiError && error.status === 409
 
 type Params = Record<string, string | number | boolean | null | undefined>
@@ -64,14 +36,16 @@ export function apiUrl(path: string, params?: Params): string {
   return url.toString()
 }
 
-const seg = encodeURIComponent
-
 /** FastAPI puts the reason in `detail` (a string, or a list of validation errors). */
 function describe(detail: unknown, fallback: string): string {
   if (typeof detail === "string") return detail
   if (Array.isArray(detail) && detail.length > 0) {
     return detail
-      .map((d) => (typeof d === "object" && d && "msg" in d ? String((d as { msg: unknown }).msg) : JSON.stringify(d)))
+      .map((d) => {
+        if (typeof d !== "object" || !d || !("msg" in d)) return JSON.stringify(d)
+        const loc = "loc" in d && Array.isArray(d.loc) ? (d.loc as unknown[]).filter((p) => p !== "body").join(".") : ""
+        return `${loc ? `${loc}: ` : ""}${String((d as { msg: unknown }).msg)}`
+      })
       .join("; ")
   }
   return fallback
@@ -81,13 +55,14 @@ interface RequestOptions {
   params?: Params
   body?: unknown
   signal?: AbortSignal
+  accept?: string
 }
 
-async function request(method: string, path: string, { params, body, signal }: RequestOptions = {}) {
+async function request(method: string, path: string, { params, body, signal, accept = "application/json" }: RequestOptions = {}) {
   const response = await fetch(apiUrl(path, params), {
     method,
     signal,
-    headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
+    headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   if (!response.ok) {
@@ -108,67 +83,22 @@ async function json<T>(method: string, path: string, options?: RequestOptions): 
   return (await response.json()) as T
 }
 
-async function orNull<T>(promise: Promise<T>): Promise<T | null> {
-  try {
-    return await promise
-  } catch (error) {
-    if (isNotFound(error)) return null
-    throw error
-  }
+export const getJson = <T>(path: string, params?: Params, signal?: AbortSignal) => json<T>("GET", path, { params, signal })
+export const postJson = <T>(path: string, body: unknown) => json<T>("POST", path, { body })
+export const putJson = <T>(path: string, body: unknown) => json<T>("PUT", path, { body })
+export async function getText(path: string, params?: Params, signal?: AbortSignal): Promise<string> {
+  const response = await request("GET", path, { params, signal, accept: "text/plain" })
+  return response.text()
 }
 
-const get = <T>(path: string, params?: Params, signal?: AbortSignal) => json<T>("GET", path, { params, signal })
-/** GET a JSON path: what other API modules (src/api/ev.ts) build on, so every request still goes through here. */
-export const getJson = get
-const post = <T>(path: string, body: unknown, signal?: AbortSignal) => json<T>("POST", path, { body, signal })
-
-/** A step's output file: the main agent's by default, a subagent's with its id. */
-const outputPath = (runId: string, step: number) => `/api/runs/${seg(runId)}/steps/${step}/output`
-const outputParams = (agentId?: string | null) => ({ agent_id: agentId && agentId !== "main" ? agentId : undefined })
-
-export const api = {
-  health: (signal?: AbortSignal) => get<Health>("/api/health", undefined, signal),
-  config: (signal?: AbortSignal) => get<AppConfig>("/api/config", undefined, signal),
-
-  questions: (signal?: AbortSignal) => get<Question[]>("/api/questions", undefined, signal),
-  question: (qid: string, signal?: AbortSignal) => get<QuestionDetail>(`/api/questions/${seg(qid)}`, undefined, signal),
-  proposeConcepts: (qid: string, body: ProposeRequest) => post<Job>(`/api/questions/${seg(qid)}/concepts/propose`, body),
-  pickConcept: (qid: string, body: PickRequest) => post<QuestionDetail>(`/api/questions/${seg(qid)}/concepts/pick`, body),
-
-  runs: (filters: RunFilters = {}, signal?: AbortSignal) =>
-    get<RunSummary[]>("/api/runs", { qid: filters.qid, condition: filters.condition, include_stale: filters.include_stale }, signal),
-  startRun: (body: RunRequest) => post<Job>("/api/runs", body),
-  run: (runId: string, signal?: AbortSignal) => get<RunDetail>(`/api/runs/${seg(runId)}`, undefined, signal),
-  steps: (runId: string, signal?: AbortSignal) => get<Step[]>(`/api/runs/${seg(runId)}/steps`, undefined, signal),
-  claims: (runId: string, signal?: AbortSignal) => get<Claim[]>(`/api/runs/${seg(runId)}/claims`, undefined, signal),
-  graph: (runId: string, signal?: AbortSignal) => get<KnowledgeGraph>(`/api/runs/${seg(runId)}/graph`, undefined, signal),
-  /** `judge`: also ask the judge (a model call per quote it has not cached) about quotes score.json has no verdict for. */
-  factWalk: (runId: string, factId: string, { judge = false }: { judge?: boolean } = {}, signal?: AbortSignal) =>
-    get<FactWalk>(`/api/runs/${seg(runId)}/facts/${seg(factId)}/walk`, { judge }, signal),
-  score: (runId: string, signal?: AbortSignal) => orNull(get<Score>(`/api/runs/${seg(runId)}/score`, undefined, signal)),
-
-  passage: (paperId: string, span: { start: number; end: number; context?: number }, signal?: AbortSignal) =>
-    get<Passage>(`/api/corpus/${seg(paperId)}`, { start: span.start, end: span.end, context: span.context ?? 1500 }, signal),
-
-  gold: (signal?: AbortSignal) => get<GoldEntry[]>("/api/gold", undefined, signal),
-  goldKey: (qid: string, signal?: AbortSignal) => orNull(get<AnswerKey>(`/api/gold/${seg(qid)}/key`, undefined, signal)),
-  buildGold: (qid: string) => post<Job>(`/api/gold/${seg(qid)}/build`, {}),
-  /** report.json of $RUNS/report, else of the newest batch, or of `batch` ($RUNS/<batch>/report). */
-  results: (batch?: string, signal?: AbortSignal) => orNull(get<ResultsReport>("/api/results", { batch }, signal)),
-
-  sparql: (body: SparqlRequest, signal?: AbortSignal) => post<SparqlResult>("/api/sparql", body, signal),
-  provQuery: (n: ProvQueryNumber, runId: string, params: ProvQueryParams = {}, signal?: AbortSignal) =>
-    get<QueryResult>(`/api/queries/${n}`, { run_id: runId, ...params }, signal),
-
-  jobs: (signal?: AbortSignal) => get<Job[]>("/api/jobs", undefined, signal),
-  job: (id: string, signal?: AbortSignal) => get<Job>(`/api/jobs/${seg(id)}`, undefined, signal),
-  cancelJob: (id: string) => post<Job>(`/api/jobs/${seg(id)}/cancel`, {}),
-}
-
-/** Stream and link URLs (EventSource, <a href>, the chat transport). */
-export const urls = {
-  runStream: (runId: string) => apiUrl(`/api/runs/${seg(runId)}/stream`),
-  jobLog: (jobId: string) => apiUrl(`/api/jobs/${seg(jobId)}/log`),
-  stepOutput: (runId: string, step: number, agentId?: string | null) => apiUrl(outputPath(runId, step), outputParams(agentId)),
-  chat: () => apiUrl("/api/chat"),
+/** Retry server and network errors twice; a 4xx is an answer, not a hiccup. */
+export function createQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 10_000,
+        retry: (count, error) => !(error instanceof ApiError && error.status < 500) && count < 2,
+      },
+    },
+  })
 }

@@ -7,7 +7,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { createBrowserRouter, RouterProvider } from "react-router"
 
-import { createQueryClient } from "@/api/hooks"
+import { createQueryClient } from "@/api/client"
 import { AppProviders } from "@/app/providers"
 import { routes } from "@/app/routes"
 
