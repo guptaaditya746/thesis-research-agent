@@ -111,7 +111,7 @@ He wrote no numbered research questions. Read from his text:
 ## 6. What exists
 
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models only
-(1237 passed, 1 skipped in WSL, 18 Oct, with the proposal flow and the web app driving the flow; 1253 on 17 Oct before the earlier app's webapp tests were removed), **not yet run against live models**. The runbook for the first live run is
+(1250 passed, 1 skipped in WSL, 18 Oct, with the proposal flow and the web app driving the flow; 1253 on 17 Oct before the earlier app's webapp tests were removed), **not yet run against live models**. The runbook for the first live run is
 [`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (rewritten 17 Oct for Parts D–G; not run yet,
 see §7).
 
