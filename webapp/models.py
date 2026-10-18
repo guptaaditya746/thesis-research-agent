@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 JobState = Literal["queued", "running", "done", "failed"]
 StepState = Literal["pending", "running", "done", "failed", "skipped"]
@@ -93,6 +93,8 @@ class Claim(BaseModel):
 # --- jobs --------------------------------------------------------------------------------------------
 
 class JobStep(BaseModel):
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)  # every field is always sent
+
     name: str
     argv: list[str]
     command: str = Field(description="argv as one shell-quoted line, for reading")
@@ -111,6 +113,8 @@ class JobStep(BaseModel):
 
 
 class Job(BaseModel):
+    model_config = ConfigDict(json_schema_serialization_defaults_required=True)
+
     id: str
     kind: str = Field(description="synth, run, rag-baseline, agent-baseline, score, compare, propose, freeze")
     lane: Lane = Field("cpu", description="model: calls a model, queued one (WEBAPP_MODEL_JOBS) at a time; "

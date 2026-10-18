@@ -316,7 +316,8 @@ def mock_paths(world: EvidenceWorld) -> list[str]:
 
     mixed, explicit = f"{NAME}-mixed", f"{NAME}-explicit"
     variant = next(p.name for p in sorted(world.corpora.iterdir()) if "-cf-" in p.name)
-    paths = ["/api/ev/config", "/api/ev/corpora", f"/api/ev/corpora/{mixed}", f"/api/ev/corpora/{variant}",
+    paths = ["/api/ev/config", "/api/ev/questions", "/api/ev/questions/rag-factuality", "/api/ev/corpora",
+             f"/api/ev/corpora/{mixed}", f"/api/ev/corpora/{variant}",
              f"/api/ev/corpora/{mixed}/papers/S001", "/api/ev/protocols", "/api/ev/protocols/rag-factuality",
              "/api/ev/proposals", "/api/ev/proposals/rag-factuality", "/api/ev/runs", "/api/ev/scores",
              f"/api/ev/scores/reports/cascade-gaps~{mixed}", f"/api/ev/scores/reports/cascade~{explicit}",
