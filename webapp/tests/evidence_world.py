@@ -324,7 +324,7 @@ def mock_paths(world: EvidenceWorld) -> list[str]:
              f"/api/ev/scores/shifts/shift-cascade~{variant}", "/api/ev/scores/benchmarks/benchmark-tpl"]
     runs = [f"cascade~{explicit}", f"cascade-gaps~{mixed}", f"rag-baseline~{mixed}"]
     runs += [f"agentic-gaps~{mixed}", f"agent-baseline~{mixed}"] if world.agent else []
-    with TestClient(create_app(Settings(EV=world.root, runs=world.root / "earlier-runs")), base_url=BASE) as client:  # type: ignore[arg-type]
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya", agent_root=None)), base_url=BASE) as client:  # type: ignore[arg-type]
         for run in runs:
             detail = client.get(f"/api/ev/runs/{run}").json()
             paths.append(f"/api/ev/runs/{run}")
@@ -351,7 +351,7 @@ def dump_mocks(world: EvidenceWorld, out: Path) -> Path:
     from webapp.settings import Settings
 
     responses = {}
-    with TestClient(create_app(Settings(EV=world.root, runs=world.root / "earlier-runs")), base_url=BASE) as client:  # type: ignore[arg-type]
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya", agent_root=None)), base_url=BASE) as client:  # type: ignore[arg-type]
         for path in mock_paths(world):
             response = client.get(path)
             assert response.status_code == 200, (path, response.text)

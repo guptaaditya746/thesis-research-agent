@@ -9,9 +9,27 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from .evfiles import EvidenceFiles
-from .evmodels import (AgentTrace, BenchmarkView, CallDetail, CompareTable, CorpusDetail, CorpusPaperDetail,
-                       CorpusSummary, EvConfig, EvGraph, EvRunDetail, EvRunSummary, ProposalDetail, ProposalSummary,
-                       ProtocolEntry, ProtocolView, ReportView, RunPaper, ScoresIndex, ShiftView)
+from .evmodels import (
+    AgentTrace,
+    BenchmarkView,
+    CallDetail,
+    CompareTable,
+    CorpusDetail,
+    CorpusPaperDetail,
+    CorpusSummary,
+    EvConfig,
+    EvGraph,
+    EvRunDetail,
+    EvRunSummary,
+    ProposalDetail,
+    ProposalSummary,
+    ProtocolEntry,
+    ProtocolView,
+    ReportView,
+    RunPaper,
+    ScoresIndex,
+    ShiftView,
+)
 
 
 def evidence_router(files: EvidenceFiles) -> APIRouter:  # noqa: C901 (one route per endpoint)

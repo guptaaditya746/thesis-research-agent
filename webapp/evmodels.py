@@ -8,7 +8,7 @@ evaluation adds later reaches the page without a change here.
 """
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -48,6 +48,15 @@ class EvConfig(Base):
     cache: Root = Field(description="the engine's record cache directory (extractor_calls.jsonl)")
     agent_work: Root = Field(description="the agentic extractor's agent run directories")
     protocols: Root
+    questions: Root = Field(description="the questions file (evidence/questions.yaml; `exists`: the file is there)")
+    jobs: Root = Field(description="$EV/.jobs: the state and logs of the jobs the app starts (none without $EV)")
+    user: str = Field(description="who decides a card in the app (`by` in decisions.yaml, $WEBAPP_USER)")
+    default_model: str = Field(description="the model alias every model job uses unless told otherwise (orch-model)")
+    llm_base_url: str = Field(description="the model gateway the jobs reach ($LITELLM_BASE_URL)")
+    llm_key_set: bool = Field(description="whether $LITELLM_MASTER_KEY is set in the server's environment")
+    agent_root: str | None = Field(None, description="$AGENT_ROOT, the agent baseline's pinned toolchain")
+    model_jobs: int = Field(description="model jobs that run at a time; the rest queue")
+    levels: list[str] = Field(description="the synthetic corpus levels a template build can write (synth/levels.py)")
 
 
 # --- corpora ---------------------------------------------------------------------------------------
@@ -515,3 +524,113 @@ class BenchmarkView(Base):
     ref: ScoreRef
     records: list[dict[str, Any]]
     markdown: str | None = None
+
+
+# --- questions (evidence/questions.yaml; webapp/evquestions.py) --------------------------------------------
+
+class Question(Base):
+    id: str
+    question: str
+    protocol: str | None = Field(None, description="the hand-written protocol's name under the protocols directory "
+                                                   "(`/api/ev/protocols/{name}`), or null: the question needs a "
+                                                   "proposal")
+    agentic_protocol: str | None = Field(None, description="its variant with the agentic extractor, when there is one")
+    vocab: str | None = Field(None, description="the vocabulary snapshot the proposal flow's frame step uses")
+    proposals: list[str] = Field([], description="proposals (by directory name) whose frame asks this question")
+
+
+# --- jobs: what the app can start (webapp/evjobs.py) -------------------------------------------------------
+
+NAME = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"   # webapp/files.py ID: a directory name, never a flag or a path
+MODEL = r"^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$"   # a LiteLLM alias (orch-model); never starts with a dash
+Name = Annotated[str, Field(pattern=NAME)]
+Level = Literal["explicit", "paraphrased", "distributed", "complex", "contradictory"]   # synth/levels.py LEVELS
+
+
+class Request(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class SynthRequest(Request):
+    """`synth build --renderer template` (no model); writes `<name>-<level>` per level and `<name>-mixed`."""
+    name: Name
+    seed: int = Field(1, ge=0, le=2**31 - 1)
+    studies: int = Field(20, ge=1, le=200)
+    levels: list[Level] = Field(["explicit", "paraphrased", "distributed", "complex", "contradictory"], min_length=1)
+    duplicates: int = Field(0, ge=0, le=50)
+    missing: int = Field(0, ge=0, le=50)
+    outliers: int = Field(0, ge=0, le=50)
+    irrelevant: int = Field(0, ge=0, le=50)
+
+
+class ProtocolRef(Request):
+    source: Literal["repo", "proposal"] = Field(description="repo: a hand-written protocol under the protocols "
+                                                            "directory; proposal: a frozen proposal's protocol.yaml")
+    name: Name
+
+
+class RunRequest(Request):
+    """`evidence run` over one corpus into `$EV/runs/<group>/<name>` (the runbook's layout)."""
+    corpus: Name
+    protocol: ProtocolRef
+    extractors: Literal["regex-only", "cascade"] = "cascade"
+    strategy: Literal["all", "gaps"] = "all"
+    model: str = Field("orch-model", pattern=MODEL)
+    group: Name | None = Field(None, description="default as the runbook names it: regex-only, cascade, "
+                                                 "cascade-gaps, agentic, agentic-gaps, or <protocol>-...")
+    name: Name | None = Field(None, description="default: the corpus name")
+
+
+class RagBaselineRequest(Request):
+    """`evaluate rag-baseline` into `$EV/runs/rag-baseline/<corpus>`."""
+    corpus: Name
+    model: str = Field("orch-model", pattern=MODEL)
+    retrieval: Literal["global", "per_paper"] = "global"
+    k: int = Field(8, ge=1, le=100)
+
+
+class AgentBaselineRequest(Request):
+    """`evaluate agent-baseline` into `$EV/runs/agent-baseline/<corpus>`."""
+    corpus: Name
+    model: str = Field("orch-model", pattern=MODEL)
+
+
+class ScoreRequest(Request):
+    """`evaluate score` of an engine run (with the corpus's baselines beside it) into `$EV/scores/<group>/<name>`."""
+    run: str = Field(description="the run's id, `<group>~<name>`")
+
+
+class CompareRequest(Request):
+    """`evaluate compare` over score reports into `$EV/scores/<name>`."""
+    reports: list[str] = Field(min_length=2, max_length=60, description="score ids (`<group>~<name>`)")
+    name: Name = Field(description="the output directory under the scores root, e.g. compare-funnel-<corpus>")
+
+
+class ProposeRequest(Request):
+    """The proposal flow's frame, draft, critic and cards steps into `$EV/proposals/<proposal>` (resumed from the
+    first step whose file is missing)."""
+    proposal: Name
+    question: Name = Field(description="the question's id in the questions file")
+    model: str = Field("orch-model", pattern=MODEL)
+
+
+class FreezeRequest(Request):
+    proposal: Name
+
+
+class DecisionEntry(Request):
+    card: Name
+    choice: Name = Field(description="an option id of the card, or custom (with a value)")
+    value: Any = Field(None, description="only with choice custom: the value in the card's shape")
+    reason: str = Field(max_length=4000)
+    by: Literal["model", "user"] = Field(description="model: the model's default, kept; user: decided in the app "
+                                                     "(written as the server's $WEBAPP_USER)")
+
+
+class DecisionsRequest(Request):
+    decisions: list[DecisionEntry] = Field(max_length=50)
+
+
+class DecisionsResult(Base):
+    written: str = Field(description="the decisions.yaml written")
+    problems: list[str] = Field(description="what `evidence propose freeze` would refuse (cards.validate)")

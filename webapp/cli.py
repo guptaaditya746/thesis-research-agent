@@ -1,7 +1,7 @@
 """`webapp` command line: `webapp serve` (uvicorn) and `webapp openapi` (the API schema as JSON).
 
 `serve` binds to 127.0.0.1 by default: the app has no authentication and is reached through an
-SSH tunnel (docs/earlier-work.md, Web app). `openapi` prints the schema the frontend's types are generated from
+SSH tunnel (README, "Web app"). `openapi` prints the schema the frontend's types are generated from
 (`webapp openapi > webapp/web/openapi.json`).
 """
 from __future__ import annotations

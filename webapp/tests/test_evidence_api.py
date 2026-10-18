@@ -14,18 +14,13 @@ from webapp.app import create_app
 from webapp.evfiles import RecordCache, segments
 from webapp.settings import Settings
 
-from .evidence_world import NAME, POSIX, EvidenceWorld, build
+from .evidence_world import NAME, POSIX, EvidenceWorld
 
 MIXED, EXPLICIT = f"{NAME}-mixed", f"{NAME}-explicit"
 
 
 def settings_for(world: EvidenceWorld, **more: object) -> Settings:
-    return Settings(EV=world.root, runs=world.root / "earlier-runs", **more)  # type: ignore[arg-type]
-
-
-@pytest.fixture(scope="session")
-def ev_world(tmp_path_factory: pytest.TempPathFactory) -> EvidenceWorld:
-    return build(tmp_path_factory.mktemp("ev") / "world")
+    return Settings(EV=world.root, **more)  # type: ignore[arg-type]
 
 
 @pytest.fixture(scope="module")
@@ -50,7 +45,7 @@ def test_config_defaults_under_ev(ev: TestClient, ev_world: EvidenceWorld) -> No
 
 
 def test_unconfigured_roots_are_404_with_the_variable(tmp_path: Path) -> None:
-    with TestClient(create_app(Settings(runs=tmp_path / "r"))) as c:
+    with TestClient(create_app(Settings(EV=None))) as c:
         assert c.get("/api/ev/corpora").json() == [] and c.get("/api/ev/runs").json() == []
         response = c.get("/api/ev/corpora/x")
         assert response.status_code == 404 and "$CORPORA" in response.json()["detail"]

@@ -1,11 +1,10 @@
 """Safe file access for the web app: every path a request names stays inside its root.
 
-Ids from URLs (run ids, question ids, paper ids, job ids) must match `ID` (no separators, no
-leading dot); a run id may be two such names joined by `~` (`<batch>~<run>`, a run one level down,
-$RUNS/<batch>/<run>). Every path built from request data or from a record is resolved and checked
-to lie inside the root it was built from, so `..`, absolute paths and symlinks out of a root are
-refused. The server never writes into a run directory or the corpus; it writes only job state and
-logs ($RUNS/.jobs/) and concept picks (through agent/concept_step.py, in $CONCEPTS/<qid>/).
+Ids from URLs (corpus, run, score, proposal, question and job names) must match `ID` (no separators, no
+leading dot or dash); a run or score id joins two such names with `~` (`<group>~<name>`). Every path built
+from request data or from a record is resolved and checked to lie inside the root it was built from, so `..`,
+absolute paths and symlinks out of a root are refused. The server itself writes only job state and logs
+($EV/.jobs/) and a proposal's decisions.yaml (webapp/evjobs.py); the jobs write what their commands write.
 """
 from __future__ import annotations
 
@@ -19,7 +18,7 @@ from typing import Any
 from agent.canonical import canonical_bytes
 
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
-RUN_SEP = "~"  # unreserved in URLs, never in a directory name the agent or the batch runner makes
+RUN_SEP = "~"  # unreserved in URLs, never in a directory name the commands make
 
 
 class NotFound(LookupError):
@@ -38,14 +37,6 @@ def check_id(value: str, what: str = "id") -> str:
     if not ID.fullmatch(value or ""):
         raise NotFound(f"no such {what}: {value!r}")
     return value
-
-
-def run_parts(run_id: str) -> list[str]:
-    """The directory names of a run id: `name` or `batch~name`, each a plain id."""
-    parts = (run_id or "").split(RUN_SEP)
-    if len(parts) > 2:
-        raise NotFound(f"no such run: {run_id!r}")
-    return [check_id(p, "run") for p in parts]
 
 
 def inside(root: Path, *parts: str) -> Path:

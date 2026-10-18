@@ -1,50 +1,41 @@
-"""Web app settings from the environment (docs/earlier-work.md, "Environment").
+"""Web app settings from the environment (README, "Web app").
 
-| Variable               | Setting            | Default                                  |
-|------------------------|--------------------|------------------------------------------|
-| `CORPUS`               | `corpus`           | none (passages, verify, new runs need it) |
-| `RUNS`                 | `runs`             | `runs`                                   |
-| `GOLD`                 | `gold`             | `gold-data`                              |
-| `CONCEPTS`             | `concepts`         | `concepts`                               |
-| `QUESTIONS`            | `questions`        | `<repo>/questions/questions.json`        |
-| `LITELLM_BASE_URL`     | `litellm_base_url` | `http://127.0.0.1:4000/v1`               |
-| `ARGILLA_API_URL`      | `argilla_api_url`  | none                                     |
-| `AGENT_ROOT`           | `agent_root`       | none                                     |
-| `WEBAPP_DIST`          | `web_dist`         | `<repo>/webapp/web/dist`                 |
-| `WEBAPP_PYTHON`        | `python`           | the server's interpreter                 |
-| `WEBAPP_CHAT_MODEL`    | `chat_model`       | `sub-model-1`                            |
-| `WEBAPP_LIVE_WINDOW_S` | `live_window_s`    | 900                                      |
-| `WEBAPP_POLL_S`        | `poll_s`           | 0.5                                      |
-| `WEBAPP_ALLOWED_HOSTS` | `allowed_hosts`    | `127.0.0.1,localhost,::1`                |
-
-The evidence-level viewer (`/api/ev`, webapp/evapi.py) reads the directories a live run writes
-(docs/slurm-evidence-runbook.md); `$EV` alone is enough, each may be set apart:
+The evidence-level directories (docs/slurm-evidence-runbook.md); `$EV` alone is enough, each may be set apart:
 
 | Variable         | Setting       | Default                              |
 |------------------|---------------|--------------------------------------|
 | `EV`             | `ev`          | none                                 |
 | `CORPORA`        | `corpora`     | `$EV/corpora`                        |
-| `EV_RUNS`        | `ev_runs`     | `$EV/runs` (not `$RUNS`, the earlier app's batch root) |
+| `EV_RUNS`        | `ev_runs`     | `$EV/runs`                           |
 | `SCORES`         | `scores`      | `$EV/scores`                         |
 | `EV_PROPOSALS`   | `proposals`   | `$EV/proposals`                      |
 | `EV_CACHE`       | `ev_cache`    | `$EV/cache/engine` (the engine's record cache) |
 | `EV_AGENT_WORK`  | `agent_work`  | `$EVIDENCE_AGENT_WORK_DIR` (the agentic extractor's own), else `$EV/agent-work` |
 | `EV_PROTOCOLS`   | `protocols`   | `<repo>/evidence/protocols`          |
+| `EV_QUESTIONS`   | `questions`   | `<repo>/evidence/questions.yaml`     |
+
+The jobs the app starts (webapp/jobs.py, webapp/evjobs.py) keep their state and logs in `$EV/.jobs/` (no
+jobs without `$EV`) and write into the directories above:
+
+| Variable                | Setting         | Default                                  |
+|-------------------------|-----------------|------------------------------------------|
+| `LITELLM_BASE_URL`      | `litellm_base_url` | `http://127.0.0.1:4000/v1`            |
+| `AGENT_ROOT`            | `agent_root`    | none (the agent baseline's `--agent-root`) |
+| `WEBAPP_PYTHON`         | `python`        | the server's interpreter                 |
+| `WEBAPP_MODEL_JOBS`     | `model_jobs`    | 1 (jobs that call a model, at a time)    |
+| `WEBAPP_CPU_JOBS`       | `cpu_jobs`      | 2 (jobs without a model call, at a time) |
+| `WEBAPP_USER`           | `user`          | the login name (`by` of a decision made in the app) |
+| `WEBAPP_DIST`           | `web_dist`      | `<repo>/webapp/web/dist`                 |
+| `WEBAPP_ALLOWED_HOSTS`  | `allowed_hosts` | `127.0.0.1,localhost,::1`                |
+| `WEBAPP_WRITE_CLIENTS`  | `write_clients` | `127.0.0.1,::1,::ffff:127.0.0.1`         |
 
 Relative paths are resolved against the working directory when the settings are made, so the job
-subprocesses (which run in the repo) get absolute paths; an empty variable counts as unset. The
-API keys ($LITELLM_MASTER_KEY, $ARGILLA_API_KEY) are never settings: they are read from the
-environment at call time only.
-
-$RUNS is one batch root, the RUNS_ROOT scripts/e2e-batch.sh prints for a manifest ($RUNS/m4-72 on
-the cluster; docs/earlier-work.md, Environment), which scoring takes too: its runs, its report/,
-and the web app's own runs in $RUNS/web/ (ids web~<name>), so they never count as a manifest's runs.
-A batch root one level down is listed as well (ids <batch>~<name>), but a root above several
-batches is not what the app is for: run ids are directory names, and two batches have runs of the
-same name (docs/earlier-work.md, Web app).
+subprocesses (which run in the repo) get absolute paths; an empty variable counts as unset. The API key
+($LITELLM_MASTER_KEY) is never a setting: the jobs read it from the environment they inherit.
 """
 from __future__ import annotations
 
+import getpass
 import os
 import sys
 from pathlib import Path
@@ -55,38 +46,40 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from gold.llm import DEFAULT_BASE_URL
 
 REPO = Path(__file__).resolve().parents[1]
+JOBS_DIR = ".jobs"   # under $EV; a leading dot keeps it out of every viewer listing (files.ID)
+
+
+def _login() -> str:
+    try:
+        return getpass.getuser() or "user"
+    except Exception:  # noqa: BLE001 - no login name (a container): a plain default
+        return "user"
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore", frozen=True, env_ignore_empty=True, validate_default=True)
 
-    corpus: Path | None = None
-    runs: Path = Path("runs")
-    gold: Path = Path("gold-data")
-    concepts: Path = Path("concepts")
-    questions: Path = REPO / "questions" / "questions.json"
     litellm_base_url: str = DEFAULT_BASE_URL
-    argilla_api_url: str | None = None
     agent_root: Path | None = None
     # The web app's own settings: in the environment (and as keyword arguments) only by their
-    # WEBAPP_ name, so a stray $PYTHON or $POLL_S cannot set them.
+    # WEBAPP_ name, so a stray $PYTHON or $USER cannot set them.
     web_dist: Path = Field(REPO / "webapp" / "web" / "dist", validation_alias="WEBAPP_DIST")
     python: str = Field(sys.executable, validation_alias="WEBAPP_PYTHON",
-                        description="interpreter for the job subprocesses (`python -m agent.cli ...`)")
-    chat_model: str = Field("sub-model-1", validation_alias="WEBAPP_CHAT_MODEL",
-                            description="LiteLLM alias of the chat agent's model")
-    live_window_s: float = Field(900.0, validation_alias="WEBAPP_LIVE_WINDOW_S",
-                                 description="a run with no answer.json whose events.jsonl changed this "
-                                             "recently is live: longer than the longest quiet spell of a run, "
-                                             "one model call (timeout 600 s, OrchestratorModel) after a command "
-                                             "(120 s, COMMAND_LIMITS), with a margin for the proxy's queue")
-    poll_s: float = Field(0.5, validation_alias="WEBAPP_POLL_S", description="how often the SSE streams look "
-                                                                            "for new lines")
+                        description="interpreter for the job subprocesses (`python -m webapp.tool ...`)")
+    model_jobs: int = Field(1, ge=1, validation_alias="WEBAPP_MODEL_JOBS",
+                            description="jobs that call a model running at a time; the rest wait in a queue")
+    cpu_jobs: int = Field(2, ge=1, validation_alias="WEBAPP_CPU_JOBS",
+                          description="jobs without a model call (template corpora, scores, freeze) at a time")
+    user: str = Field(default_factory=_login, validation_alias="WEBAPP_USER",
+                      description="who decides a card in the app (`by` in decisions.yaml)")
     allowed_hosts: str = Field("127.0.0.1,localhost,::1", validation_alias="WEBAPP_ALLOWED_HOSTS",
                                description="comma-separated Host names the app answers (webapp/guard.py: "
                                            "a DNS-rebinding page sends its own name)")
+    write_clients: str = Field("127.0.0.1,::1,::ffff:127.0.0.1", validation_alias="WEBAPP_WRITE_CLIENTS",
+                               description="comma-separated client addresses whose requests may write or start "
+                                           "jobs (webapp/guard.py): loopback, the end of the SSH tunnel")
 
-    # The evidence-level viewer's directories (module docstring); None: under $EV, or not configured.
+    # The evidence-level directories (module docstring); None: under $EV, or not configured.
     ev: Path | None = Field(None, validation_alias="EV")
     corpora: Path | None = Field(None, validation_alias="CORPORA")
     ev_runs: Path | None = Field(None, validation_alias="EV_RUNS")
@@ -97,13 +90,18 @@ class Settings(BaseSettings):
     # where the agentic extractor itself keeps its agent runs (evidence/agentic/extractor.py; the runbook sets it)
     extractor_agent_work: Path | None = Field(None, validation_alias="EVIDENCE_AGENT_WORK_DIR")
     protocols: Path = Field(REPO / "evidence" / "protocols", validation_alias="EV_PROTOCOLS")
+    questions: Path = Field(REPO / "evidence" / "questions.yaml", validation_alias="EV_QUESTIONS")
 
     @property
     def hosts(self) -> list[str]:
         return [h.strip() for h in self.allowed_hosts.split(",") if h.strip()]
 
-    @field_validator("corpus", "runs", "gold", "concepts", "questions", "agent_root", "web_dist", "ev", "corpora",
-                     "ev_runs", "scores", "proposals", "ev_cache", "agent_work", "extractor_agent_work", "protocols")
+    @property
+    def writers(self) -> list[str]:
+        return [h.strip() for h in self.write_clients.split(",") if h.strip()]
+
+    @field_validator("agent_root", "web_dist", "ev", "corpora", "ev_runs", "scores", "proposals", "ev_cache",
+                     "agent_work", "extractor_agent_work", "protocols", "questions")
     @classmethod
     def _absolute(cls, value: Path | None) -> Path | None:
         return None if value is None else Path(value).expanduser().resolve()
@@ -132,26 +130,18 @@ class Settings(BaseSettings):
         return self._under_ev(self.ev_cache, "cache", "engine")
 
     @property
+    def cache_root(self) -> Path | None:
+        """$EV/cache: the baselines' call caches (rag-baseline.jsonl, agent-baseline.jsonl) beside engine/."""
+        return self.ev / "cache" if self.ev else (self.ev_cache_dir.parent if self.ev_cache_dir else None)
+
+    @property
     def agent_work_dir(self) -> Path | None:
         """$EV_AGENT_WORK, else the agentic extractor's own $EVIDENCE_AGENT_WORK_DIR, else $EV/agent-work."""
         return self._under_ev(self.agent_work or self.extractor_agent_work, "agent-work")
 
     @property
-    def corpus_manifest(self) -> Path | None:
-        return self.corpus / "manifest.json" if self.corpus else None
-
-    @property
-    def jobs_dir(self) -> Path:
-        return self.runs / ".jobs"
-
-    @property
-    def report_dir(self) -> Path:
-        return self.runs / "report"
-
-    @property
-    def web_runs(self) -> Path:
-        """Where runs started from the web app go (their ids are web~<name>)."""
-        return self.runs / "web"
+    def jobs_dir(self) -> Path | None:
+        return self.ev / JOBS_DIR if self.ev else None
 
 
 def llm_key_set() -> bool:

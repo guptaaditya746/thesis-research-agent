@@ -1,61 +1,59 @@
-"""Read-only safety: no path leaves its root, SPARQL cannot write or fetch, other sites cannot write
-or rebind, the built frontend is served safely."""
+"""Safety: no path leaves its root, other hosts and other sites cannot write or rebind, the built frontend is
+served safely."""
 from __future__ import annotations
 
-import threading
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
 from agent.rundir import RunDir
+from webapp.agenttrace import output_head, steps_of
 from webapp.app import create_app
 from webapp.files import NotFound, inside
-from webapp.runs import output_head, steps_of
-
-from .world import World
+from webapp.settings import Settings
 
 SECRET = "top secret, outside every root"
 
 
 @pytest.fixture(scope="module")
-def secret(world: World) -> Path:
-    """A file next to the roots that no request may read."""
-    path = world.root / "secret.txt"
-    path.write_text(SECRET, encoding="utf-8")
-    return path
+def ev(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """An $EV with every directory and a secret file next to them that no request may read."""
+    root = tmp_path_factory.mktemp("safety") / "ev"
+    for d in ("corpora", "runs/cascade", "scores", "proposals", "cache/engine"):
+        (root / d).mkdir(parents=True)
+    (root / "secret.txt").write_text(SECRET, encoding="utf-8")
+    (root / "runs" / "secret.txt").write_text(SECRET, encoding="utf-8")
+    return root
+
+
+@pytest.fixture(scope="module")
+def client(ev: Path) -> Iterator[TestClient]:
+    with TestClient(create_app(Settings(EV=ev, WEBAPP_DIST=ev / "no-dist"))) as c:  # type: ignore[call-arg]
+        yield c
 
 
 @pytest.mark.parametrize("url", [
-    "/api/runs/..%2Fsecret.txt",
-    "/api/runs/%2e%2e/claims",
-    "/api/runs/..%2F..%2Fetc/claims",
-    "/api/runs/%2e%2e%2fruns%2fresearch-r1/claims",
-    "/api/runs/.jobs/steps",
-    "/api/runs/report/claims",
-    "/api/runs/..~research-r1/claims",
-    "/api/runs/web~..%2F..%2Fsecret.txt/claims",
-    "/api/runs/research-r1~..%2F..%2Fsecret.txt/stream",
-    "/api/runs/.jobs~x/steps",
-    "/api/runs/a~b~c/claims",
-    "/api/runs/~research-r1/claims",
-    "/api/runs/research-r1/facts/..%2F..%2Fsecret/walk",
-    "/api/corpus/..%2Fsecret.txt",
-    "/api/corpus/%2e%2e%2fsecret",
-    "/api/corpus/manifest",
-    "/api/gold/..%2Fsecret.txt/key",
-    "/api/gold/%2e%2e/key",
-    "/api/questions/..%2Fsecret.txt",
-    "/api/jobs/..%2F..%2Fsecret",
-    "/api/jobs/%2e%2e/log",
-    "/api/queries/1?run_id=..%2Fsecret.txt",
-    "/api/queries/1?run_id=..~secret.txt",
-    "/api/results?batch=..",
-    "/api/results?batch=..%2F..",
+    "/api/ev/runs/..%2Fsecret.txt",
+    "/api/ev/runs/%2e%2e~secret.txt",
+    "/api/ev/runs/cascade~..%2F..%2Fsecret.txt",
+    "/api/ev/runs/..~secret.txt/graph",
+    "/api/ev/runs/.jobs~x",
+    "/api/ev/runs/a~b~c",
+    "/api/ev/corpora/..%2Fsecret.txt",
+    "/api/ev/corpora/%2e%2e",
+    "/api/ev/corpora/x/papers/..%2F..%2Fsecret.txt",
+    "/api/ev/protocols/..%2F..%2F..%2Fpyproject",
+    "/api/ev/proposals/..%2Fsecret.txt",
+    "/api/ev/scores/reports/..~secret.txt",
+    "/api/ev/scores/compares/..%2F..",
+    "/api/ev/questions/..%2Fsecret.txt",
+    "/api/ev/jobs/..%2F..%2Fsecret",
+    "/api/ev/jobs/%2e%2e/log",
+    "/api/ev/jobs/.jobs/log",
 ])
-def test_paths_outside_the_roots_are_refused(client: TestClient, secret: Path, url: str) -> None:
+def test_paths_outside_the_roots_are_refused(client: TestClient, url: str) -> None:
     response = client.get(url)
     assert response.status_code in (404, 422), (url, response.status_code)
     assert SECRET not in response.text
@@ -63,15 +61,17 @@ def test_paths_outside_the_roots_are_refused(client: TestClient, secret: Path, u
 
 def test_inside() -> None:
     root = Path(__file__).resolve().parent
-    assert inside(root, "world.py") == root / "world.py"
+    assert inside(root, "conftest.py") == root / "conftest.py"
     for bad in ("../app.py", str(root.parent / "app.py"), "a/../../app.py", ".."):
         with pytest.raises(NotFound):
             inside(root, bad)
 
 
-def test_a_record_cannot_point_outside_its_run(world: World, secret: Path) -> None:
-    """Output files named in events.jsonl are read only inside the run directory."""
-    run = RunDir(world.research.run.root)
+def test_a_record_cannot_point_outside_its_run(tmp_path: Path) -> None:
+    """Output files named in an agent's events.jsonl are read only inside its run directory."""
+    (tmp_path / "secret.txt").write_text(SECRET, encoding="utf-8")
+    run = RunDir(tmp_path / "runs" / "r1")
+    (tmp_path / "runs" / "r1").mkdir(parents=True)
     assert output_head(run, "../../secret.txt") is None
     record = {"task_id": "t000001", "subtype": "agent_tool", "step_id": 1, "agent_id": "main",
               "used": {"command": "ls"}, "generated": {"output_file": "../../secret.txt"}, "custom_metadata": {}}
@@ -79,131 +79,45 @@ def test_a_record_cannot_point_outside_its_run(world: World, secret: Path) -> No
     assert step.output_head is None
 
 
-def test_concept_path_must_stay_in_the_roots(client: TestClient, world: World, secret: Path) -> None:
-    for path in (str(secret), "../secret.txt", "../../etc/passwd", str(world.corpus / "manifest.json")):
-        response = client.post("/api/runs", json={"concept_path": path, "condition": "claim_on", "seed": 1})
-        assert response.status_code == 400, path
-
-
-def test_sparql_is_read_only(client: TestClient) -> None:
-    count = "SELECT (COUNT(?c) AS ?n) WHERE { ?c a <urn:thesis-agent:vocab#Claim> }"
-    before = client.post("/api/sparql", json={"query": count}).json()["rows"][0]["n"]
-    assert int(before) == 9  # 6 research + 3 attach claims
-    for update in ("INSERT DATA { <urn:x> <urn:y> <urn:z> }",
-                   "DELETE WHERE { ?s ?p ?o }",
-                   "PREFIX ours: <urn:thesis-agent:vocab#>\nCLEAR ALL",
-                   "DROP GRAPH <urn:thesis-agent:run:research-r1>",
-                   "LOAD <http://example.org/data.ttl>",
-                   "SELECT * WHERE { ?s ?p ?o } ; DELETE WHERE { ?s ?p ?o }"):
-        response = client.post("/api/sparql", json={"query": update})
-        assert response.status_code == 400, update
-    assert client.post("/api/sparql", json={"query": count}).json()["rows"][0]["n"] == before
-
-
-class Recorder(BaseHTTPRequestHandler):
-    """A local HTTP server that counts the requests it gets (a SPARQL SERVICE endpoint)."""
-    hits: list[str] = []
-
-    def _answer(self) -> None:
-        Recorder.hits.append(self.path)
-        self.send_response(405)
-        self.end_headers()
-
-    do_GET = do_POST = _answer
-
-    def log_message(self, *args: Any) -> None:
-        pass
-
-
-def test_sparql_is_never_federated(client: TestClient) -> None:
-    """SERVICE makes pyoxigraph send an HTTP request to the IRI it names: the server would fetch any URL
-    a query (or a prompt-injected chat agent) names. Refused before the store sees it; the server is
-    never called. A literal or an IRI that merely says "service" is no SERVICE clause."""
-    server = HTTPServer(("127.0.0.1", 0), Recorder)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    url = f"http://127.0.0.1:{server.server_port}/sparql"
-    try:
-        Recorder.hits.clear()
-        for query in (f"SELECT * WHERE {{ SERVICE <{url}> {{ ?s ?p ?o }} }}",
-                      f"select * where {{ service silent <{url}> {{ ?s ?p ?o }} }}",
-                      f"SELECT * WHERE {{ ?a ?b ?c . # a comment\n SERVICE <{url}> {{ ?s ?p ?o }} }}",
-                      f"PREFIX ours: <urn:thesis-agent:vocab#>\nASK {{ SERVICE <{url}> {{ ?s ?p ?o }} }}"):
-            response = client.post("/api/sparql", json={"query": query})
-            assert response.status_code == 400 and "SERVICE" in response.json()["detail"], query
-        assert Recorder.hits == []
-    finally:
-        server.shutdown()
-    for harmless in ('SELECT ?s WHERE { ?s ?p "SERVICE" }', "SELECT ?s WHERE { ?s <urn:x:service> ?o }",
-                     "SELECT ?s WHERE { ?s ?p ?o } # SERVICE in a comment"):
-        assert client.post("/api/sparql", json={"query": harmless}).status_code == 200, harmless
-
-
-def test_other_sites_cannot_write_or_rebind(fresh: World) -> None:
-    """A form POST from another site (no JSON, no preflight) and a cross-origin JSON request are refused
-    before any job starts; a Host that is not a loopback name (DNS rebinding) gets nothing at all."""
-    with TestClient(create_app(fresh.settings)) as c:
+def test_other_sites_and_hosts_cannot_write_or_rebind(ev: Path) -> None:
+    """A form POST from another site (no JSON, no preflight), a cross-origin JSON request and a request from a
+    client that is not loopback are refused before any job starts; a Host that is not a loopback name (DNS
+    rebinding) gets nothing at all."""
+    body = {"name": "x", "seed": 1, "studies": 2, "levels": ["explicit"]}
+    with TestClient(create_app(Settings(EV=ev))) as c:  # type: ignore[call-arg]
         form = {"content-type": "application/x-www-form-urlencoded", "origin": "https://evil.example"}
-        assert c.post("/api/gold/q02/build", content=b"", headers=form).status_code == 403
-        assert c.post("/api/gold/q02/build", content=b"", headers={"content-type": "text/plain"}).status_code == 403
-        assert c.post("/api/jobs/x/cancel").status_code == 403
-        cross = c.post("/api/gold/q02/build", json={}, headers={"origin": "https://evil.example"})
+        assert c.post("/api/ev/jobs/synth", content=b"name=x", headers=form).status_code == 403
+        assert c.post("/api/ev/jobs/synth", content=b"{}", headers={"content-type": "text/plain"}).status_code == 403
+        assert c.post("/api/ev/jobs/x/cancel").status_code == 403
+        cross = c.post("/api/ev/jobs/synth", json=body, headers={"origin": "https://evil.example"})
         assert cross.status_code == 403 and "cross-origin" in cross.json()["detail"]
-        assert c.get("/api/jobs").json() == []  # nothing was queued
+        put = c.put("/api/ev/proposals/p/decisions", content=b"x", headers={"content-type": "text/plain"})
+        assert put.status_code == 403
+        assert c.get("/api/ev/jobs").json() == []  # nothing was queued
         assert c.get("/api/health", headers={"host": "attacker.example:8080"}).status_code == 400
         assert c.get("/api/health", headers={"host": "127.0.0.1:8080"}).status_code == 200
         assert c.get("/api/health", headers={"host": "[::1]:8080"}).status_code == 200
-        same = c.post("/api/sparql", json={"query": "ASK { ?s ?p ?o }"},
-                      headers={"host": "127.0.0.1:8080", "origin": "http://127.0.0.1:8080"})
-        assert same.status_code == 200  # the app's own page
+    with TestClient(create_app(Settings(EV=ev)), client=("192.0.2.7", 40000)) as remote:  # type: ignore[call-arg]
+        assert remote.get("/api/ev/jobs").status_code == 200       # reading is the Host rule's business
+        refused = remote.post("/api/ev/jobs/synth", json=body, headers={"host": "127.0.0.1:8080"})
+        assert refused.status_code == 403 and "192.0.2.7" in refused.json()["detail"]
+        assert remote.get("/api/ev/jobs").json() == []
+    with TestClient(create_app(Settings(EV=ev, WEBAPP_WRITE_CLIENTS="127.0.0.1")),  # type: ignore[call-arg]
+                    client=("127.0.0.1", 40000)) as local:
+        same = local.post("/api/ev/jobs/synth", json={**body, "studies": 0},
+                          headers={"host": "127.0.0.1:8080", "origin": "http://127.0.0.1:8080"})
+        assert same.status_code == 422  # the app's own page from loopback reaches the endpoint (and its validation)
 
 
-def test_sparql_queries(client: TestClient) -> None:
-    query = ("PREFIX ours: <urn:thesis-agent:vocab#>\n"
-             "SELECT ?id WHERE { ?c a ours:Claim ; ours:claimId ?id } ORDER BY ?id")
-    one = client.post("/api/sparql", json={"query": query, "run_id": "research-r1"}).json()
-    assert one["vars"] == ["id"] and [r["id"] for r in one["rows"]] == [f"claim-00000{n}" for n in range(1, 7)]
-    assert len(client.post("/api/sparql", json={"query": query}).json()["rows"]) == 9
-    ask = client.post("/api/sparql", json={"query": "ASK { ?s ?p ?o }", "run_id": "baseline-r1"}).json()
-    assert ask == {"vars": [], "rows": [], "boolean": True}
-    construct = client.post("/api/sparql", json={"query": "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o } LIMIT 3"}).json()
-    assert construct["vars"] == ["s", "p", "o"] and len(construct["rows"]) == 3
-    assert client.post("/api/sparql", json={"query": "SELECT nonsense"}).status_code == 400
-    assert client.post("/api/sparql", json={"query": query, "run_id": "nope"}).status_code == 404
-
-
-def test_provenance_queries(client: TestClient) -> None:
-    q1 = client.get("/api/queries/1", params={"run_id": "research-r1"}).json()
-    assert q1["name"] == "edge_to_passage" and len(q1["rows"]) == 6
-    [q2] = client.get("/api/queries/2", params={"run_id": "research-r1", "fact": "f3"}).json()["rows"]
-    assert (q2["claim_id"], q2["step_id"]) == ("claim-000003", 2)
-    q3 = client.get("/api/queries/3", params={"run_id": "research-r1", "agent": "sub-01"}).json()["rows"]
-    assert [r["claim_id"] for r in q3] == ["claim-000005", "claim-000006"]
-    assert client.get("/api/queries/3", params={"run_id": "research-r1"}).status_code == 400  # needs step or agent
-    assert client.get("/api/queries/4", params={"run_id": "research-r1"}).json()["rows"] == []  # every anchor resolves
-    [q5] = client.get("/api/queries/5", params={"run_id": "research-r1"}).json()["rows"]
-    assert q5["fact_id"] == "f5"
-    baseline = client.get("/api/queries/1", params={"run_id": "baseline-r1"}).json()["rows"]
-    assert {r["phase"] for r in baseline} == {"attach"}
-    assert client.get("/api/queries/6", params={"run_id": "research-r1"}).status_code == 404
-    assert client.get("/api/queries/1", params={"run_id": "nope"}).status_code == 404
-
-
-def test_queries_need_graph_ttl(fresh: World) -> None:
-    (fresh.research.run.root / "graph.ttl").unlink()
-    with TestClient(create_app(fresh.settings)) as c:
-        response = c.get("/api/queries/1", params={"run_id": "research-r1"})
-        assert response.status_code == 404 and "export-prov" in response.json()["detail"]
-
-
-def test_frontend_is_served_with_a_fallback(fresh: World) -> None:
-    dist = fresh.root / "dist"
+def test_frontend_is_served_with_a_fallback(tmp_path: Path) -> None:
+    dist = tmp_path / "dist"
     (dist / "assets").mkdir(parents=True)
     (dist / "index.html").write_text("<!doctype html><title>app</title>", encoding="utf-8")
     (dist / "assets" / "app.js").write_text("console.log(1)", encoding="utf-8")
-    (fresh.root / "secret.txt").write_text(SECRET, encoding="utf-8")
-    with TestClient(create_app(fresh.settings)) as c:
+    (tmp_path / "secret.txt").write_text(SECRET, encoding="utf-8")
+    with TestClient(create_app(Settings(WEBAPP_DIST=dist))) as c:  # type: ignore[call-arg]
         assert c.get("/").text.startswith("<!doctype html>")
-        assert c.get("/runs/research-r1").text.startswith("<!doctype html>")  # a client-side route
+        assert c.get("/flow/rag-factuality/run").text.startswith("<!doctype html>")  # a client-side route
         assert c.get("/assets/app.js").text == "console.log(1)"
         assert c.get("/api/nope").status_code == 404 and c.get("/api/nope").json()["detail"]
         assert c.get("/api/health").json()["ok"] is True

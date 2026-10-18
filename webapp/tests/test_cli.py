@@ -12,10 +12,13 @@ from webapp.cli import main
 def test_openapi_prints_the_schema(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     assert main(["openapi"]) == 0
     schema = json.loads(capsys.readouterr().out)
-    assert {"/api/runs", "/api/runs/{run_id}/stream", "/api/chat", "/api/sparql"} <= set(schema["paths"])
-    assert {"Question", "ConceptBrief", "RunSummary", "RunDetail", "Step", "Claim", "Passage", "FactWalk", "Verdict",
-            "Job", "GoldStatus", "Score", "SparqlResult"} <= set(schema["components"]["schemas"])
-    assert schema["paths"]["/api/runs"]["get"]["operationId"] == "runs"
+    paths = set(schema["paths"])
+    assert {"/api/health", "/api/ev/runs", "/api/ev/questions", "/api/ev/jobs", "/api/ev/jobs/run",
+            "/api/ev/jobs/{job_id}/log", "/api/ev/proposals/{name}/decisions"} <= paths
+    assert not any(p.startswith(("/api/runs", "/api/chat", "/api/sparql", "/api/gold", "/api/questions")) for p in paths)
+    assert {"Job", "Question", "RunRequest", "SynthRequest", "DecisionsRequest", "EvRunDetail",
+            "Step", "Claim"} <= set(schema["components"]["schemas"])
+    assert schema["paths"]["/api/ev/jobs/run"]["post"]["operationId"] == "ev_start_run"
     assert main(["openapi", "-o", str(tmp_path / "openapi.json")]) == 0
     assert json.loads((tmp_path / "openapi.json").read_text(encoding="utf-8")) == schema
 

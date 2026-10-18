@@ -1,7 +1,8 @@
 """The evidence-level files as the viewer shows them (webapp/evapi.py; docs/evidence-system.md Parts A-G).
 
-Read-only: nothing here writes, starts a run or calls a model. Launching runs stays on the command line and
-Slurm (docs/slurm-evidence-runbook.md); the viewer reads what they leave, in the layout the runbook makes:
+Read-only: nothing here writes, starts a run or calls a model (the jobs of webapp/evjobs.py do, with the same
+commands as the command line and Slurm, docs/slurm-evidence-runbook.md); the viewer reads what they leave, in the
+layout the runbook makes:
 
 - corpora: `$CORPORA/<name>/` (`synth build`, `synth variant`): manifest.json, papers/, corpus.json,
   ground_truth.json, fidelity.json, decoys.json, variant.json;
@@ -42,14 +43,47 @@ from evidence.calls import cache_key
 from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.protocol import parse
 
-from .evmodels import (AgentTrace, Amendment, BenchmarkView, CallDetail, CallSummary, Card, Check, CompareTable,
-                       CorpusDetail, CorpusPaper, CorpusPaperDetail, CorpusSummary, Decision, EvAnswer, EvConfig,
-                       EvGraph, EvRunDetail, EvRunSummary, FunnelDoc, ModelCallRecord, Placement, ProposalDetail,
-                       ProposalSummary, ProtocolEntry, ProtocolView, Report, ReportView, Root, RunPaper, ScoreRef,
-                       ScoresIndex, Segment, ShiftView, Study, TruthAnswer, VariantInfo)
+from .agenttrace import claim_of, steps_of
+from .evmodels import (
+    AgentTrace,
+    Amendment,
+    BenchmarkView,
+    CallDetail,
+    CallSummary,
+    Card,
+    Check,
+    CompareTable,
+    CorpusDetail,
+    CorpusPaper,
+    CorpusPaperDetail,
+    CorpusSummary,
+    Decision,
+    EvAnswer,
+    EvConfig,
+    EvGraph,
+    EvRunDetail,
+    EvRunSummary,
+    FunnelDoc,
+    ModelCallRecord,
+    Placement,
+    ProposalDetail,
+    ProposalSummary,
+    ProtocolEntry,
+    ProtocolView,
+    Report,
+    ReportView,
+    Root,
+    RunPaper,
+    ScoreRef,
+    ScoresIndex,
+    Segment,
+    ShiftView,
+    Study,
+    TruthAnswer,
+    VariantInfo,
+)
 from .files import ID, RUN_SEP, NotFound, check_id, inside, read_json, read_jsonl, signature
 from .models import Claim, ClaimRef, ModelCall, Step
-from .runs import claim_of, steps_of
 from .settings import Settings
 
 CACHE_FILE = "extractor_calls.jsonl"
@@ -191,10 +225,18 @@ class EvidenceFiles:
     def config(self) -> EvConfig:
         def root(path: Path | None) -> Root:
             return Root(path=str(path) if path else None, exists=bool(path and path.is_dir()))
+        from evidence.cli import DEFAULT_MODEL
+        from synth.levels import LEVELS
+
+        from .settings import llm_key_set
         s = self.s
         return EvConfig(ev=str(s.ev) if s.ev else None, corpora=root(s.corpora_dir), runs=root(s.ev_runs_dir),
                         scores=root(s.scores_dir), proposals=root(s.proposals_dir), cache=root(s.ev_cache_dir),
-                        agent_work=root(s.agent_work_dir), protocols=root(s.protocols))
+                        agent_work=root(s.agent_work_dir), protocols=root(s.protocols),
+                        questions=Root(path=str(s.questions), exists=s.questions.is_file()), jobs=root(s.jobs_dir),
+                        user=s.user, default_model=DEFAULT_MODEL, llm_base_url=s.litellm_base_url,
+                        llm_key_set=llm_key_set(), agent_root=str(s.agent_root) if s.agent_root else None,
+                        model_jobs=s.model_jobs, levels=list(LEVELS))
 
     # --- corpora -------------------------------------------------------------------------------------
 

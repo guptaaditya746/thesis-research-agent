@@ -1,25 +1,29 @@
-"""Jobs: CLI commands the web app runs for the user, as subprocesses of the server.
+"""Jobs: the evidence-level commands the web app runs for the user, as subprocesses of the server.
 
-A job is a list of steps, each one command line (`python -m agent.cli run ...`, then the post
-steps), run in order by an asyncio task in the server's event loop. Jobs of one kind run one at
-a time, in the order they were submitted (an asyncio.Lock per kind); different kinds run side by
-side. Every step's output goes to the job's log, $RUNS/.jobs/<id>.log, after a `$ <command>`
-line; the job's state is $RUNS/.jobs/<id>.json, rewritten (atomically) at every change, so a
-restarted server still lists old jobs. A job that was queued or running when the server stopped
-is marked failed when the next server starts: its subprocess is no longer ours to watch.
+A job is a list of steps, each one command line (webapp/evjobs.py builds them from fixed templates), run in
+order by an asyncio task in the server's event loop. Every job is in one of two lanes: `model` (it calls a
+model: an engine run with LLM extractors, a baseline, the proposal flow's model steps) or `cpu` (a template
+corpus, a regex-only run, a score, a freeze). At most `model_jobs` jobs of the model lane run at a time (1 by
+default: one model behind the gateway, so its jobs queue in the order they were submitted), and at most
+`cpu_jobs` of the cpu lane, beside them.
 
-A step one of whose `needs` files is missing is skipped (e.g. no post steps when the run never
-started, no score without an answer key); a failed step does not stop the next ones (the post
-steps of a run that ran out of budget are still useful), but a failed `required` step fails the
-job, and a failed optional one adds a warning to it. Cancelling sends SIGTERM to the running step
-(`agent run` and `agent attach` stop cleanly on it) and skips the rest.
+Every step's output goes to the job's log, `$EV/.jobs/<id>.log`, after a `$ <command>` line; the job's state
+is `$EV/.jobs/<id>.json`, rewritten (atomically) at every change, so a restarted server (and a reloaded page)
+still lists old jobs. A job that was queued or running when the server stopped is marked failed when the next
+server starts: its subprocess is no longer ours to watch.
 
-The request handlers read the jobs from the server's thread pool while the event loop adds
-them, so every read iterates over a snapshot (`list(...)`, which copies without yielding).
+A step one of whose `needs` files is missing is skipped (the proposal flow's later steps after a failed one);
+a failed step does not stop the next ones, but a failed `required` step fails the job, and a failed optional
+one adds a warning to it. Cancelling a queued job ends it at once; a running one gets SIGTERM (then SIGKILL
+after a grace period at server stop) and skips its remaining steps.
 
-Commands are argv lists (no shell). The subprocess environment is the server's plus the roots of
-the settings; API keys reach the children only through that inherited environment and never
-appear in an argv, a log line or a state file.
+The request handlers read the jobs from the server's thread pool while the event loop adds them, so every
+read iterates over a snapshot (`list(...)`, which copies without yielding).
+
+Commands are argv lists (no shell). The subprocess environment is the server's (the model gateway's URL and
+key come from there: start the server with llm-setup's `.env` sourced, README "Web app") plus the settings'
+gateway URL, agent root and the agentic extractor's work directory; API keys reach the children only through
+that inherited environment and never appear in an argv, a log line or a state file.
 """
 from __future__ import annotations
 
@@ -29,22 +33,20 @@ import secrets
 import shlex
 import signal
 import subprocess
-from collections.abc import AsyncIterator
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from sse_starlette import ServerSentEvent
-
 from agent.rundir import utc_now
 
-from .files import NotFound, check_id, read_json, write_json_atomic
-from .models import Job, JobStep
+from .files import Conflict, NotFound, check_id, read_json, write_json_atomic
+from .models import Job, JobStep, Lane
 from .settings import REPO, Settings
 
 ACTIVE = ("queued", "running")
-STEP_ACTIVE = ("pending", "running")
 STOP_GRACE_S = 30
+TAIL_BYTES = 256 * 1024   # the log tail reads at most this much from the end
 
 
 def step(name: str, argv: list[str], *, required: bool = True,
@@ -58,26 +60,26 @@ class JobManager:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.jobs: dict[str, Job] = {}
-        self._locks: dict[str, asyncio.Lock] = {}
+        self._lanes: dict[str, asyncio.Semaphore] = {}
         self._procs: dict[str, asyncio.subprocess.Process] = {}
         self._tasks: set[asyncio.Task[None]] = set()
         self._cancelled: dict[str, str] = {}  # job id -> why
 
     @property
-    def dir(self) -> Path:
+    def dir(self) -> Path | None:
         return self.settings.jobs_dir
 
     def env(self) -> dict[str, str]:
         s = self.settings
-        extra = {"CORPUS": s.corpus, "RUNS": s.runs, "GOLD": s.gold, "CONCEPTS": s.concepts,
-                 "LITELLM_BASE_URL": s.litellm_base_url, "AGENT_ROOT": s.agent_root, "PYTHONUNBUFFERED": "1"}
+        extra = {"LITELLM_BASE_URL": s.litellm_base_url, "AGENT_ROOT": s.agent_root,
+                 "EVIDENCE_AGENT_WORK_DIR": s.agent_work_dir, "PYTHONUNBUFFERED": "1"}
         return {**os.environ, **{k: str(v) for k, v in extra.items() if v is not None}}
 
     # --- state ---------------------------------------------------------------------------------------
 
     def load(self) -> None:
         """Read the jobs of earlier servers; any still queued or running lost its process."""
-        if not self.dir.is_dir():
+        if self.dir is None or not self.dir.is_dir():
             return
         for path in sorted(self.dir.glob("*.json")):
             data = read_json(path)
@@ -94,6 +96,7 @@ class JobManager:
             self.jobs[job.id] = job
 
     def _save(self, job: Job) -> None:
+        assert self.dir is not None
         write_json_atomic(self.dir / f"{job.id}.json", job.model_dump(mode="json"))
 
     def list(self) -> list[Job]:
@@ -106,28 +109,47 @@ class JobManager:
         return job
 
     def log_path(self, job: Job) -> Path:
+        assert self.dir is not None
         return self.dir / f"{job.id}.log"
 
-    def active(self, kind: str | None = None, *, run_id: str | None = None, qid: str | None = None) -> list[Job]:
-        return [j for j in list(self.jobs.values()) if j.state in ACTIVE and kind in (None, j.kind)
-                and run_id in (None, j.run_id) and qid in (None, j.qid)]
+    def tail(self, job_id: str, lines: int = 200) -> str:
+        """The last `lines` lines of the job's log (empty before its first step starts)."""
+        job = self.get(job_id)
+        try:
+            with open(self.log_path(job), "rb") as fh:
+                fh.seek(0, os.SEEK_END)
+                size = fh.tell()
+                fh.seek(max(0, size - TAIL_BYTES))
+                data = fh.read()
+        except OSError:
+            return ""
+        text = data.decode("utf-8", errors="replace")
+        if size > TAIL_BYTES:   # the first line read is a part of a line
+            text = text.split("\n", 1)[1] if "\n" in text else ""
+        return "\n".join(deque(text.splitlines(), maxlen=lines)) + ("\n" if text.endswith("\n") else "")
 
-    def active_run(self, run_id: str) -> bool:
-        return bool(self.active(run_id=run_id))
+    def active(self, kind: str | None = None) -> list[Job]:
+        return [j for j in list(self.jobs.values()) if j.state in ACTIVE and kind in (None, j.kind)]
 
-    def run_steps(self, run_id: str) -> dict[str, str] | None:
-        """{step name: state} of the queued or running job that works on the run; None if there is none."""
-        jobs = self.active(run_id=run_id)
-        return {s.name: s.state for s in jobs[0].steps} if jobs else None
+    def busy(self, ref: str, value: str) -> Job | None:
+        """The queued or running job that writes `ref` (corpus, run, score, proposal) `value`, if any."""
+        return next((j for j in self.active() if j.refs.get(ref) == value), None)
 
     # --- running ---------------------------------------------------------------------------------------
 
-    def submit(self, kind: str, args: dict[str, Any], steps: list[JobStep], *, run_id: str | None = None,
-               qid: str | None = None) -> Job:
+    def _lane(self, lane: Lane) -> asyncio.Semaphore:
+        if lane not in self._lanes:
+            self._lanes[lane] = asyncio.Semaphore(self.settings.model_jobs if lane == "model" else self.settings.cpu_jobs)
+        return self._lanes[lane]
+
+    def submit(self, kind: str, args: dict[str, Any], steps: list[JobStep], *, lane: Lane = "cpu",
+               refs: dict[str, str] | None = None) -> Job:
         """Queue a job; call from the event loop (an async endpoint)."""
+        if self.dir is None:
+            raise Conflict("no $EV configured: jobs keep their state in $EV/.jobs and write into the $EV layout")
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
-        job = Job(id=f"{stamp}-{kind}-{secrets.token_hex(3)}", kind=kind, args=args, state="queued",
-                  created_at=utc_now(), run_id=run_id, qid=qid, steps=steps)
+        job = Job(id=f"{stamp}-{kind}-{secrets.token_hex(3)}", kind=kind, lane=lane, args=args, refs=refs or {},
+                  state="queued", created_at=utc_now(), steps=steps)
         self.dir.mkdir(parents=True, exist_ok=True)
         self.jobs[job.id] = job
         self._save(job)
@@ -138,7 +160,7 @@ class JobManager:
 
     async def _run(self, job_id: str) -> None:
         job = self.jobs[job_id]
-        async with self._locks.setdefault(job.kind, asyncio.Lock()):
+        async with self._lane(job.lane):
             if job.state != "queued":  # cancelled while it waited
                 return
             job.state, job.started_at = "running", utc_now()
@@ -151,8 +173,7 @@ class JobManager:
                 self._finish(job, error=f"{type(exc).__name__}: {exc}")
                 return
             failed = [s for s in job.steps if s.required and s.state == "failed"]
-            self._finish(job, exit_code=failed[0].exit_code if failed else 0,
-                         error=self._cancelled.get(job_id))
+            self._finish(job, exit_code=failed[0].exit_code if failed else 0, error=self._cancelled.get(job_id))
 
     async def _step(self, job: Job, s: JobStep, log: Any) -> None:
         if job.id in self._cancelled:
@@ -222,31 +243,3 @@ class JobManager:
             await asyncio.wait(list(self._tasks), timeout=5)
         for job in self.active():
             self._finish(job, error="the server stopped")
-
-    # --- log stream ----------------------------------------------------------------------------------
-
-    async def log_stream(self, job_id: str, after: int = 0) -> AsyncIterator[ServerSentEvent]:
-        """`line` per log line (id = line number) as it is written, then `done` with the job."""
-        job = self.get(job_id)
-        path = self.log_path(job)
-        offset, line_no, pending = 0, 0, b""
-        while True:
-            finished = job.state not in ACTIVE
-            try:
-                with open(path, "rb") as fh:
-                    fh.seek(offset)
-                    chunk = fh.read()
-            except OSError:
-                chunk = b""
-            offset += len(chunk)
-            *lines, pending = (pending + chunk).split(b"\n")
-            if finished and pending:
-                lines, pending = [*lines, pending], b""
-            for raw in lines:
-                line_no += 1
-                if line_no > after:
-                    yield ServerSentEvent(raw.decode("utf-8", errors="replace"), event="line", id=str(line_no))
-            if finished:
-                yield ServerSentEvent(job.model_dump_json(), event="done")
-                return
-            await asyncio.sleep(self.settings.poll_s)
