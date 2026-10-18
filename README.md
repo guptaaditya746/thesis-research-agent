@@ -68,9 +68,14 @@ benchmark records).
 | Run | `evidence run` (regex-only, cascade, or the agentic protocol; all or gaps; model, default `orch-model`) into `runs/<group>/<name>` with the runbook's group names; `evaluate rag-baseline --retrieval global --k 8`, `evaluate agent-baseline`; `evaluate score` (with the corpus's baselines) and `evaluate compare` | model (regex-only, score, compare: cpu) |
 
 At most one model job runs at a time (`WEBAPP_MODEL_JOBS`, default 1; the rest queue), two cpu jobs beside it
-(`WEBAPP_CPU_JOBS`). Jobs keep their state and logs in `$EV/.jobs/` (a reload or a restarted server lists
-them; a job that was running when the server stopped is marked failed); the Jobs page shows status, log tail
-and Cancel. Outputs go into the same `$EV` layout as the runbook (`corpora/`, `runs/<group>/<name>/`,
+(`WEBAPP_CPU_JOBS`). A model job is refused (409, said in the UI) when the server has no `LITELLM_MASTER_KEY` or
+the gateway does not answer `GET $LITELLM_BASE_URL/models`, so it never fills the shared record cache with error
+results; an engine run that still ends with failed extractor calls is "done with N failed calls" (job, run list
+and run page), and "retry errors" (`--retry-errors`) runs them again. Jobs keep their state and logs in
+`$EV/.jobs/` (a reload or a restarted server lists them; a job whose process outlived its server stays running
+and cancellable, any other one that was running is marked failed); the Jobs page shows status, log tail and
+Cancel, which stops the command's whole process group. Saving the cards refuses to overwrite a `decisions.yaml`
+changed since the form loaded it (reload or overwrite) and keeps each card's `by` unless you change the card. Outputs go into the same `$EV` layout as the runbook (`corpora/`, `runs/<group>/<name>/`,
 `scores/`, `proposals/`, `cache/engine/`, `cache/rag-baseline.jsonl`, `agent-work/`), so a result made in the
 app looks exactly like one made on the command line or on Slurm, and the other way round.
 
