@@ -100,6 +100,16 @@ class Settings(BaseSettings):
     def writers(self) -> list[str]:
         return [h.strip() for h in self.write_clients.split(",") if h.strip()]
 
+    @field_validator("user")
+    @classmethod
+    def _a_person(cls, value: str) -> str:
+        """`by` in decisions.yaml: a decision by `model` is the model's default, so a person is never called that."""
+        value = value.strip()
+        if not value or value == "model":
+            raise ValueError("WEBAPP_USER must name a person: not blank and not 'model' (decisions.yaml's `by` "
+                             "for the model's defaults)")
+        return value
+
     @field_validator("agent_root", "web_dist", "ev", "corpora", "ev_runs", "scores", "proposals", "ev_cache",
                      "agent_work", "extractor_agent_work", "protocols", "questions")
     @classmethod

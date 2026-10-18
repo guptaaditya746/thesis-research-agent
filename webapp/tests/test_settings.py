@@ -28,6 +28,13 @@ def test_settings_from_the_environment(tmp_path: Path, monkeypatch: pytest.Monke
     assert Settings(EV="ev").jobs_dir == tmp_path / "ev" / ".jobs"   # type: ignore[call-arg]
 
 
+@pytest.mark.parametrize("name", ["model", "", "   ", " model "])
+def test_the_user_is_never_the_model_nor_blank(name: str) -> None:
+    with pytest.raises(ValueError, match="WEBAPP_USER"):
+        Settings(WEBAPP_USER=name)  # type: ignore[call-arg]
+    assert Settings(WEBAPP_USER=" aditya ").user == "aditya"  # type: ignore[call-arg]
+
+
 def test_evidence_dirs_default_under_ev(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     for name in ("EV", "CORPORA", "EV_RUNS", "SCORES", "EV_PROPOSALS", "EV_CACHE", "EV_AGENT_WORK", "EV_PROTOCOLS",
