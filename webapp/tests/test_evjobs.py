@@ -14,8 +14,10 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
+from agent.canonical import file_sha256
 from evidence.propose import cards as cards_module
 from evidence.tests.propose_support import QUESTION, Scripted, flow
+from webapp import evjobs
 from webapp.app import create_app
 from webapp.settings import REPO, Settings
 
@@ -38,6 +40,12 @@ if os.environ.get("FAKE_SLEEP"):
 tool = args[2:]
 if os.environ.get("FAKE_FAIL") in tool:
     sys.exit(1)
+if tool[:2] == ["evidence", "run"] and os.environ.get("FAKE_ERROR_CALLS"):
+    calls = Path(tool[tool.index("--out") + 1]) / tool[tool.index("--run-id") + 1] / "calls"
+    calls.mkdir(parents=True)
+    for n in range(int(os.environ["FAKE_ERROR_CALLS"])):
+        (calls / f"c{{n}}.json").write_text('{{"status": "error"}}')
+    (calls / "ok.json").write_text('{{"status": "ok"}}')
 if tool[:2] == ["evidence", "propose"]:
     step = tool[2]
     d = Path(tool[tool.index("--out") + 1]) if step == "frame" else Path(tool[3])
@@ -65,7 +73,13 @@ def fake_python(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 @pytest.fixture
-def client(world: EvidenceWorld, fake_python: Path) -> Iterator[TestClient]:
+def gateway_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The model gateway answers (no network in the tests; the probe itself is tested on its own)."""
+    monkeypatch.setattr(evjobs, "gateway_problem", lambda settings: None)
+
+
+@pytest.fixture
+def client(world: EvidenceWorld, fake_python: Path, gateway_ok: None) -> Iterator[TestClient]:
     settings = Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python), WEBAPP_USER="aditya",  # type: ignore[call-arg]
                         agent_root=Path("/opt/agent-root"))
     with TestClient(create_app(settings)) as c:
@@ -161,7 +175,8 @@ def test_baseline_jobs(client: TestClient, world: EvidenceWorld, tmp_path: Path)
     assert agent_argv == [*TOOL, "evaluate", "agent-baseline", "--corpus", str(world.corpora / corpus),
                           "--out", str(world.runs / "agent-baseline" / corpus),
                           "--cache", str(world.root / "cache" / "agent-baseline.jsonl"), "--model", "orch-model",
-                          "--agent-root", str(Path("/opt/agent-root").resolve()), "--run-id", corpus]
+                          "--agent-root", str(Path("/opt/agent-root").resolve()),
+                          "--base-url", Settings().litellm_base_url, "--run-id", corpus]
     again = client.post("/api/ev/jobs/rag-baseline", json={"corpus": MIXED})
     assert again.status_code == 409 and "answer.json" in again.json()["detail"]
 
@@ -187,6 +202,90 @@ def test_score_and_compare_jobs(client: TestClient, world: EvidenceWorld, tmp_pa
     clash = client.post("/api/ev/jobs/compare", json={"reports": [f"cascade~{MIXED}", f"cascade~{EXPLICIT}"],
                                                       "name": "cascade"})
     assert clash.status_code == 409 and "not a comparison" in clash.json()["detail"]
+
+
+@POSIX_ONLY
+def test_score_takes_the_latest_reexecution_beside_the_run(client: TestClient, world: EvidenceWorld, tmp_path: Path) -> None:
+    for stamp in ("20261017T100000", "20261018T100000"):
+        d = world.runs / "cascade" / f"{MIXED}-reexec-{stamp}"
+        d.mkdir()
+        (d / "reexec.json").write_text("{}", encoding="utf-8")
+    assert wait(client, start(client, "score", {"run": f"cascade~{MIXED}"})["id"])["state"] == "done"
+    [argv] = calls(tmp_path)
+    assert argv[argv.index("--reexec") + 1] == str(world.runs / "cascade" / f"{MIXED}-reexec-20261018T100000" / "reexec.json")
+
+
+@POSIX_ONLY
+def test_retry_errors_and_the_reserved_baseline_groups(client: TestClient, world: EvidenceWorld, tmp_path: Path) -> None:
+    corpus = f"{NAME}-paraphrased"
+    job = start(client, "run", {"corpus": corpus, "protocol": {"source": "repo", "name": "rag-factuality"},
+                                "retry_errors": True})
+    assert wait(client, job["id"])["state"] == "done"
+    assert calls(tmp_path)[0][-1] == "--retry-errors"
+    for group in ("rag-baseline", "agent-baseline"):
+        refused = client.post("/api/ev/jobs/run", json={"corpus": corpus, "group": group,
+                                                        "protocol": {"source": "repo", "name": "rag-factuality"}})
+        assert refused.status_code == 400 and "baselines" in refused.json()["detail"]
+
+
+@POSIX_ONLY
+def test_a_run_with_failed_calls_is_done_with_its_failed_calls(client: TestClient, world: EvidenceWorld,
+                                                               monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FAKE_ERROR_CALLS", "3")
+    corpus = f"{NAME}-paraphrased"
+    done = wait(client, start(client, "run", {"corpus": corpus, "protocol": {"source": "repo", "name": "rag-factuality"},
+                                              "strategy": "gaps"})["id"])
+    assert done["state"] == "done" and done["failed_calls"] == 3
+    assert any("3 extractor call(s) failed" in w for w in done["warnings"])
+    run = next(r for r in client.get("/api/ev/runs").json() if r["id"] == f"cascade-gaps~{corpus}")
+    assert run["error_calls"] == 3
+    clean = next(r for r in client.get("/api/ev/runs").json() if r["id"] == f"cascade~{MIXED}")
+    assert clean["error_calls"] == 0
+
+
+@POSIX_ONLY
+def test_model_jobs_are_refused_without_a_gateway(world: EvidenceWorld, fake_python: Path, tmp_path: Path,
+                                                  monkeypatch: pytest.MonkeyPatch) -> None:
+    import http.server
+    import threading
+
+    corpus = f"{NAME}-paraphrased"
+    regex = {"corpus": corpus, "protocol": {"source": "repo", "name": "rag-factuality"}, "extractors": "regex-only"}
+    monkeypatch.delenv("LITELLM_MASTER_KEY", raising=False)
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python)))) as c:  # type: ignore[call-arg]
+        no_key = c.post("/api/ev/jobs/rag-baseline", json={"corpus": corpus})
+        assert no_key.status_code == 409 and "LITELLM_MASTER_KEY" in no_key.json()["detail"]
+        assert c.post("/api/ev/jobs/propose", json={"proposal": "px", "question": "rag-factuality"}).status_code == 409
+        assert c.post("/api/ev/jobs/run", json=regex).status_code == 202   # no model call: no gateway needed
+    monkeypatch.setenv("LITELLM_MASTER_KEY", "sk-test-never-logged")
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python),  # type: ignore[call-arg]
+                                        litellm_base_url="http://127.0.0.1:9/v1"))) as c:
+        down = c.post("/api/ev/jobs/agent-baseline", json={"corpus": corpus})
+        assert down.status_code == 409 and "does not answer" in down.json()["detail"]
+        assert "sk-test" not in down.text
+
+    seen: list[str] = []
+
+    class Gateway(http.server.BaseHTTPRequestHandler):
+        def do_GET(self) -> None:  # noqa: N802
+            seen.append(f"{self.path} {self.headers.get('Authorization')}")
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'{"data": []}')
+
+        def log_message(self, *args: Any) -> None:
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Gateway)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        url = f"http://127.0.0.1:{server.server_address[1]}/v1"
+        with TestClient(create_app(Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python),  # type: ignore[call-arg]
+                                            litellm_base_url=url))) as c:
+            assert c.post("/api/ev/jobs/rag-baseline", json={"corpus": corpus}).status_code == 202
+    finally:
+        server.shutdown()
+    assert seen == ["/v1/models Bearer sk-test-never-logged"]
 
 
 @POSIX_ONLY
@@ -320,7 +419,7 @@ def test_model_jobs_queue_cancel_and_the_log(client: TestClient, world: Evidence
     assert [j["id"] for j in client.get("/api/ev/jobs").json()] == [second["id"], first["id"]]
     assert len(calls(tmp_path)) == 1   # the cancelled queued job never started
     # the jobs are listed again by a new server (a reloaded page asks the same list)
-    with TestClient(create_app(Settings(EV=world.root))) as again:  # type: ignore[call-arg]
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as again:  # type: ignore[call-arg]
         assert {j["id"] for j in again.get("/api/ev/jobs").json()} == {first["id"], second["id"]}
     assert ".jobs" not in [r["group"] for r in client.get("/api/ev/runs").json()]
 
@@ -331,6 +430,12 @@ def test_model_jobs_queue_cancel_and_the_log(client: TestClient, world: Evidence
 def proposal(world: EvidenceWorld) -> Path:
     """A proposal up to its cards, made by the real flow with the scripted model (evidence/tests/propose_support.py)."""
     return flow(world.proposals / "p1", Scripted(), until="cards")
+
+
+def body(directory: Path, decisions: list[dict[str, Any]], force: bool = False) -> dict[str, Any]:
+    """The PUT body: the decisions and the sha256 of decisions.yaml as it is now (what the form loaded)."""
+    path = directory / "decisions.yaml"
+    return {"decisions": decisions, "base_sha256": file_sha256(path) if path.is_file() else None, "force": force}
 
 
 def entries(directory: Path, change: dict[str, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
@@ -344,15 +449,16 @@ def entries(directory: Path, change: dict[str, dict[str, Any]] | None = None) ->
 
 def test_decisions_round_trip_through_cards_validate(proposal: Path, world: EvidenceWorld) -> None:
     with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
-        kept = c.put("/api/ev/proposals/p1/decisions", json={"decisions": entries(proposal)})
+        kept = c.put("/api/ev/proposals/p1/decisions", json=body(proposal, entries(proposal)))
         assert kept.status_code == 200 and kept.json()["problems"] == []
-        change = {"min_effect": {"choice": "lenient", "reason": "two points is the noise between runs", "by": "user"},
+        change = {"min_effect": {"choice": "lenient", "reason": "two points is the noise between runs", "by": "aditya"},
                   "pairing": {"choice": "custom", "value": {"prefer": ["document_order"]}, "reason": "order only",
-                              "by": "user"}}
+                              "by": "aditya"}}
         # sent out of order: written in card order
         sent = list(reversed(entries(proposal, change)))
-        result = c.put("/api/ev/proposals/p1/decisions", json={"decisions": sent}).json()
-        assert result == {"written": str(proposal / "decisions.yaml"), "problems": []}
+        result = c.put("/api/ev/proposals/p1/decisions", json=body(proposal, sent)).json()
+        assert result == {"written": str(proposal / "decisions.yaml"), "problems": [],
+                          "sha256": file_sha256(proposal / "decisions.yaml")}
         text = (proposal / "decisions.yaml").read_text(encoding="utf-8")
         assert text.startswith(cards_module.HEADER)
         data = yaml.safe_load(text)
@@ -369,15 +475,15 @@ def test_decisions_round_trip_through_cards_validate(proposal: Path, world: Evid
 
 @pytest.mark.parametrize(("change", "problem"), [
     ({"min_effect": {"choice": "lenient", "reason": "x", "by": "model"}}, "not the model's default"),
-    ({"min_effect": {"reason": "   ", "by": "user"}}, "without a reason"),
-    ({"min_effect": {"choice": "nope", "by": "user"}}, "not an option"),
-    ({"min_effect": {"choice": "custom", "value": {"min_effect": -1}, "by": "user"}}, "card's shape"),
-    ({"metrics": {"choice": "custom", "value": None, "by": "user"}}, "card's shape"),
+    ({"min_effect": {"reason": "   ", "by": "aditya"}}, "without a reason"),
+    ({"min_effect": {"choice": "nope", "by": "aditya"}}, "not an option"),
+    ({"min_effect": {"choice": "custom", "value": {"min_effect": -1}, "by": "aditya"}}, "card's shape"),
+    ({"metrics": {"choice": "custom", "value": None, "by": "aditya"}}, "card's shape"),
 ])
 def test_decisions_freeze_would_refuse_are_written_and_shown(proposal: Path, world: EvidenceWorld,
                                                              change: dict[str, Any], problem: str) -> None:
-    with TestClient(create_app(Settings(EV=world.root))) as c:  # type: ignore[call-arg]
-        result = c.put("/api/ev/proposals/p1/decisions", json={"decisions": entries(proposal, change)}).json()
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
+        result = c.put("/api/ev/proposals/p1/decisions", json=body(proposal, entries(proposal, change))).json()
         assert any(problem in p for p in result["problems"]), result["problems"]
         refused = c.post("/api/ev/jobs/freeze", json={"proposal": "p1"})
         assert refused.status_code == 409 and problem in refused.json()["detail"]
@@ -385,15 +491,15 @@ def test_decisions_freeze_would_refuse_are_written_and_shown(proposal: Path, wor
 
 
 def test_a_missing_card_is_a_problem(proposal: Path, world: EvidenceWorld) -> None:
-    with TestClient(create_app(Settings(EV=world.root))) as c:  # type: ignore[call-arg]
-        result = c.put("/api/ev/proposals/p1/decisions", json={"decisions": entries(proposal)[1:]}).json()
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
+        result = c.put("/api/ev/proposals/p1/decisions", json=body(proposal, entries(proposal)[1:])).json()
         assert result["problems"] == ["screen: no decision"]
 
 
 def test_freeze_through_the_real_command(proposal: Path, world: EvidenceWorld) -> None:
     with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
-        change = {"min_effect": {"choice": "lenient", "reason": "two points is the noise between runs", "by": "user"}}
-        assert c.put("/api/ev/proposals/p1/decisions", json={"decisions": entries(proposal, change)}).json()["problems"] == []
+        change = {"min_effect": {"choice": "lenient", "reason": "two points is the noise between runs", "by": "aditya"}}
+        assert c.put("/api/ev/proposals/p1/decisions", json=body(proposal, entries(proposal, change))).json()["problems"] == []
         job = start(c, "freeze", {"proposal": "p1"})
         done = wait(c, job["id"])
         assert done["state"] == "done", c.get(f"/api/ev/jobs/{job['id']}/log").text
@@ -402,19 +508,49 @@ def test_freeze_through_the_real_command(proposal: Path, world: EvidenceWorld) -
         assert (proposal / "protocol.yaml").is_file()
         detail = c.get("/api/ev/proposals/p1").json()
         assert detail["frozen"] and detail["protocol"]["error"] is None
-        again = c.put("/api/ev/proposals/p1/decisions", json={"decisions": entries(proposal)})
+        again = c.put("/api/ev/proposals/p1/decisions", json=body(proposal, entries(proposal)))
         assert again.status_code == 409 and "frozen" in again.json()["detail"]
         assert c.post("/api/ev/jobs/freeze", json={"proposal": "p1"}).status_code == 409
 
 
 def test_decisions_need_cards(world: EvidenceWorld) -> None:
     flow(world.proposals / "p0", Scripted(), until="critic")
-    with TestClient(create_app(Settings(EV=world.root))) as c:  # type: ignore[call-arg]
-        response = c.put("/api/ev/proposals/p0/decisions", json={"decisions": []})
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
+        response = c.put("/api/ev/proposals/p0/decisions", json={"decisions": [], "base_sha256": None})
         assert response.status_code == 409 and "no cards" in response.json()["detail"]
-        bad = c.put("/api/ev/proposals/p0/decisions", json={"decisions": [{"card": "screen", "choice": "draft",
-                                                                           "reason": "r", "by": "someone"}]})
-        assert bad.status_code == 422   # `by` is model or user; the server writes the user's name
+        assert c.put("/api/ev/proposals/p0/decisions", json={"decisions": []}).status_code == 422   # no base_sha256
+
+
+def test_by_is_the_model_the_user_or_the_name_already_in_the_file(proposal: Path, world: EvidenceWorld) -> None:
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
+        someone = c.put("/api/ev/proposals/p1/decisions",
+                        json=body(proposal, entries(proposal, {"min_effect": {"choice": "lenient", "by": "someone"}})))
+        assert someone.status_code == 400 and "someone" in someone.json()["detail"]
+        # a hand edit names its author; the form sends that name back for an untouched card and it is kept
+        data = yaml.safe_load((proposal / "decisions.yaml").read_text(encoding="utf-8"))
+        for d in data["decisions"]:
+            if d["card"] == "pairing":
+                d.update(choice="order_only", reason="hand edit", by="tim")
+        (proposal / "decisions.yaml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+        kept = entries(proposal, {"pairing": {"choice": "order_only", "reason": "hand edit", "by": "tim"}})
+        result = c.put("/api/ev/proposals/p1/decisions", json=body(proposal, kept))
+        assert result.status_code == 200 and result.json()["problems"] == []
+        after = {d["card"]: d for d in yaml.safe_load((proposal / "decisions.yaml").read_text(encoding="utf-8"))["decisions"]}
+        assert after["pairing"]["by"] == "tim" and after["screen"]["by"] == "model"
+
+
+def test_a_file_changed_since_it_was_loaded_is_not_overwritten_unless_forced(proposal: Path, world: EvidenceWorld) -> None:
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
+        loaded = c.get("/api/ev/proposals/p1").json()["decisions_sha256"]
+        assert loaded == file_sha256(proposal / "decisions.yaml")
+        (proposal / "decisions.yaml").write_text((proposal / "decisions.yaml").read_text(encoding="utf-8") + "# edited\n",
+                                                 encoding="utf-8")
+        stale = {"decisions": entries(proposal), "base_sha256": loaded}
+        refused = c.put("/api/ev/proposals/p1/decisions", json=stale)
+        assert refused.status_code == 409 and "changed since" in refused.json()["detail"]
+        assert (proposal / "decisions.yaml").read_text(encoding="utf-8").endswith("# edited\n")   # untouched
+        forced = c.put("/api/ev/proposals/p1/decisions", json={**stale, "force": True})
+        assert forced.status_code == 200 and "# edited" not in (proposal / "decisions.yaml").read_text(encoding="utf-8")
 
 
 # --- the real commands end to end: template corpus -> regex-only run -> score ---------------------------------

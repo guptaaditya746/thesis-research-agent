@@ -251,6 +251,8 @@ class ProposalDetail(ProposalSummary):
     amendment_log: list[Amendment] = []
     decision_problems: list[str] = Field([], description="before freeze: everything freeze would refuse in "
                                                          "decisions.yaml (evidence/propose/cards.validate)")
+    decisions_sha256: str | None = Field(None, description="sha256 of decisions.yaml as read; a PUT of the decisions "
+                                                           "sends it back and is refused if the file changed since")
 
 
 # --- runs ------------------------------------------------------------------------------------------
@@ -326,6 +328,8 @@ class EvRunSummary(Base):
     counts: Counts | None = None
     papers: int | None = None
     cost: dict[str, Any] | None = None
+    error_calls: int = Field(0, description="engine: extractor calls whose result is an error (calls/*.json status "
+                                            "error, e.g. no model gateway); `--retry-errors` runs them again")
 
 
 class FunnelDecision(Open):
@@ -579,6 +583,8 @@ class RunRequest(Request):
     group: Name | None = Field(None, description="default as the runbook names it: regex-only, cascade, "
                                                  "cascade-gaps, agentic, agentic-gaps, or <protocol>-...")
     name: Name | None = Field(None, description="default: the corpus name")
+    retry_errors: bool = Field(False, description="`--retry-errors`: run cached error results again instead of "
+                                                  "taking them from the record cache")
 
 
 class RagBaselineRequest(Request):
@@ -623,14 +629,19 @@ class DecisionEntry(Request):
     choice: Name = Field(description="an option id of the card, or custom (with a value)")
     value: Any = Field(None, description="only with choice custom: the value in the card's shape")
     reason: str = Field(max_length=4000)
-    by: Literal["model", "user"] = Field(description="model: the model's default, kept; user: decided in the app "
-                                                     "(written as the server's $WEBAPP_USER)")
+    by: str = Field(min_length=1, max_length=128,
+                    description="who decided: `model` (the model's default, kept), the server's $WEBAPP_USER (decided "
+                                "in the app), or the name decisions.yaml already has for this card (kept as it is)")
 
 
 class DecisionsRequest(Request):
     decisions: list[DecisionEntry] = Field(max_length=50)
+    base_sha256: str | None = Field(description="decisions_sha256 of the proposal as the form loaded it (null: there "
+                                                "was no decisions.yaml); refused with 409 if the file changed since")
+    force: bool = Field(False, description="write even though decisions.yaml changed since it was loaded")
 
 
 class DecisionsResult(Base):
     written: str = Field(description="the decisions.yaml written")
+    sha256: str = Field(description="its sha256 now: the base_sha256 of the next PUT")
     problems: list[str] = Field(description="what `evidence propose freeze` would refuse (cards.validate)")

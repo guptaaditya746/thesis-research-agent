@@ -25,13 +25,13 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 
 from .evapi import evidence_router
-from .evfiles import EvidenceFiles
+from .evfiles import EvidenceFiles, error_calls
 from .evjobs import evjobs_router
 from .evquestions import Questions
 from .files import BadRequest, Conflict, NotFound, inside
 from .guard import Guard
 from .jobs import JobManager
-from .models import Health
+from .models import Health, Job
 from .settings import Settings
 
 
@@ -52,9 +52,23 @@ class Services:
     questions: Questions = field(init=False)
 
     def __post_init__(self) -> None:
-        self.jobs = JobManager(self.settings)
+        self.jobs = JobManager(self.settings, after=self.check_job)
         self.evidence = EvidenceFiles(self.settings)
         self.questions = Questions(self.settings)
+
+    def check_job(self, job: Job) -> None:
+        """After an engine run: its failed extractor calls (e.g. the gateway went away); the job stays done, with
+        `failed_calls` and a warning the pages show. (A baseline whose model call fails exits non-zero itself.)"""
+        if job.kind != "run" or not job.refs.get("run"):
+            return
+        try:
+            path = self.evidence.run_dir(job.refs["run"])
+        except NotFound:
+            return
+        job.failed_calls = error_calls(path)
+        if job.failed_calls:
+            job.warnings.append(f"{job.failed_calls} extractor call(s) failed (status error in calls/); they are in "
+                                "the record cache: run again with 'retry errors' once the model answers")
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

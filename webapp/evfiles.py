@@ -111,6 +111,14 @@ def subdirs(root: Path | None) -> list[Path]:
     return sorted(p for p in root.iterdir() if ID.fullmatch(p.name) and not p.is_symlink() and p.is_dir())
 
 
+def error_calls(run: Path) -> int:
+    """An engine run's extractor calls whose checked result is an error (calls/<call_id>.json status error)."""
+    calls = run / "calls"
+    if not calls.is_dir():
+        return 0
+    return sum(1 for f in calls.glob("*.json") if (read_json(f) or {}).get("status") == "error")
+
+
 def inside_or_none(root: Path, path: Path) -> Path | None:
     """`path` (built under `root`) checked to stay inside it, or None: one bad child never fails a listing."""
     try:
@@ -441,6 +449,7 @@ class EvidenceFiles:
                               cards=out_cards, proposal={k: v for k, v in proposal.items() if k not in ("frame", "sources", "critic")}
                               if isinstance(proposal, dict) else None,
                               protocol=protocol, revisions=revisions, decision_problems=problems,
+                              decisions_sha256=file_sha256(path / "decisions.yaml") if (path / "decisions.yaml").is_file() else None,
                               amendment_log=[Amendment.model_validate(a) for a in read_jsonl(path / "amendments.jsonl")])
 
     @staticmethod
@@ -499,7 +508,8 @@ class EvidenceFiles:
                                 strategy=settings.get("strategy"), selection=settings.get("selection"),
                                 model=settings.get("model"), protocol=run.get("protocol"), corpus_id=run.get("corpus_id"),
                                 label=(answer or {}).get("label") if run else None, counts=counts if run else None,
-                                papers=len((answer or {}).get("studies") or []) or None, cost=run.get("cost")), \
+                                papers=len((answer or {}).get("studies") or []) or None, cost=run.get("cost"),
+                                error_calls=error_calls(path)), \
                 run.get("manifest_sha256")
         if answer is None or "system" not in answer:
             return None

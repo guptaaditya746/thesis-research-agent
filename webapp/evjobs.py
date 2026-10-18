@@ -15,18 +15,24 @@ evidence graph -> answer -> scores, the baselines beside the engine; README "Web
 Safety: no shell; every value a request gives is either a fixed choice (a Literal), a number with bounds, a
 plain name (webapp/files.py ID: no separator, no leading dot or dash, so never a flag or a path) or a model
 alias (no leading dash); every path is built from a configured root and a name and checked with `inside`; a
-value only ever follows its flag, never stands as one. Writes come only from loopback (webapp/guard.py). An
+value only ever follows its flag, never stands as one. Writes come only from loopback (webapp/guard.py). A
+model job is refused when the server has no key or the gateway does not answer (`gateway_problem`). An
 LLM-rendered corpus is not offered: it takes hours on two GPUs and runs on Slurm (runbook step 1).
 """
 from __future__ import annotations
 
+import asyncio
 import os
 import tempfile
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
+
+from agent.canonical import file_sha256
 
 from .evfiles import EvidenceFiles
 from .evmodels import (
@@ -43,12 +49,41 @@ from .evmodels import (
     SynthRequest,
 )
 from .evquestions import Questions
-from .files import RUN_SEP, Conflict, NotFound, check_id, inside, read_json
+from .files import RUN_SEP, BadRequest, Conflict, NotFound, check_id, inside, read_json
 from .jobs import JobManager, step
 from .models import Job, JobStep
 from .settings import Settings
 
 PROPOSE_STEPS = (("frame", "frame.json"), ("draft", "draft.yaml"), ("critic", "critic.json"), ("cards", "cards.json"))
+BASELINE_GROUPS = ("rag-baseline", "agent-baseline")   # runs/<group> of the baselines, never an engine run's
+GATEWAY_TIMEOUT_S = 3.0
+
+
+def gateway_problem(settings: Settings) -> str | None:
+    """Why a model job would fail at once, or None: no key in the server's environment, or the gateway does not
+    answer `GET $LITELLM_BASE_URL/models` within a few seconds. A model job is refused then (409), so it never
+    fills the shared record cache with error results. The key is sent only to the gateway and never logged."""
+    key = os.environ.get("LITELLM_MASTER_KEY")
+    if not key:
+        return ("no $LITELLM_MASTER_KEY in the server's environment: start `webapp serve` after sourcing "
+                "llm-setup's .env (README \"Web app\")")
+    url = settings.litellm_base_url.rstrip("/") + "/models"
+    request = urllib.request.Request(url, headers={"Authorization": f"Bearer {key}"})
+    try:
+        with urllib.request.urlopen(request, timeout=GATEWAY_TIMEOUT_S) as response:  # noqa: S310 - the configured gateway
+            if response.status == 200:
+                return None
+            return f"the model gateway {url} answered HTTP {response.status}"
+    except urllib.error.HTTPError as exc:
+        return f"the model gateway {url} answered HTTP {exc.code}"
+    except (OSError, ValueError) as exc:
+        return f"the model gateway {url} does not answer ({type(exc).__name__}); is the stack job running?"
+
+
+async def need_gateway(settings: Settings) -> None:
+    problem = await asyncio.to_thread(gateway_problem, settings)
+    if problem:
+        raise Conflict(f"model job refused: {problem}")
 
 
 class Commands:
@@ -144,6 +179,8 @@ class Commands:
         group, name = r.group or self.group(r), r.name or r.corpus
         check_id(group, "group")
         check_id(name, "run")
+        if group in BASELINE_GROUPS:
+            raise BadRequest(f"the group {group} holds the baselines' answers; an engine run goes elsewhere")
         out = inside(self.runs(), group)
         if inside(out, name).exists():
             raise Conflict(f"run {group}/{name} exists; give the run another name")
@@ -151,7 +188,7 @@ class Commands:
         self.free("run", run_id)
         argv = self.tool("evidence", "run", "--protocol", protocol, "--corpus", corpus, "--out", out,
                          "--cache", self.engine_cache(), "--extractors", r.extractors, "--strategy", r.strategy,
-                         "--model", r.model, "--run-id", name)
+                         "--model", r.model, "--run-id", name, *(["--retry-errors"] if r.retry_errors else []))
         return [step("evidence run", argv)], {"run": run_id, "corpus": r.corpus}
 
     def _baseline_out(self, system: str, corpus: str) -> tuple[Path, str]:
@@ -176,7 +213,7 @@ class Commands:
         agent_root = ["--agent-root", self.s.agent_root] if self.s.agent_root else []
         argv = self.tool("evaluate", "agent-baseline", "--corpus", corpus, "--out", out,
                          "--cache", self.cache_root() / "agent-baseline.jsonl", "--model", r.model, *agent_root,
-                         "--run-id", r.corpus)
+                         "--base-url", self.s.litellm_base_url, "--run-id", r.corpus)
         return [step("agent-baseline", argv)], {"run": run_id, "corpus": r.corpus}
 
     def score(self, r: ScoreRequest) -> tuple[list[JobStep], dict[str, str]]:
@@ -195,10 +232,15 @@ class Commands:
             answer = inside(self.runs(), system, summary.corpus, "answer.json")
             if answer.is_file():
                 baselines += ["--baseline", answer]
+        # the latest re-execution beside the run (`evidence reexec` writes <run>-reexec-<stamp>/reexec.json;
+        # runbook step 7.1), for the stability score
+        reexecs = sorted(p / "reexec.json" for p in path.parent.glob(f"{path.name}-reexec-*")
+                         if (p / "reexec.json").is_file() and not p.is_symlink())
+        reexec = ["--reexec", reexecs[-1]] if reexecs else []
         score_id = f"{summary.group}{RUN_SEP}{summary.name}"
         self.free("score", score_id)
         out = inside(self.scores(), summary.group, summary.name)
-        argv = self.tool("evaluate", "score", "--run", path, "--corpus", corpus, *baselines, "--out", out)
+        argv = self.tool("evaluate", "score", "--run", path, "--corpus", corpus, *baselines, *reexec, "--out", out)
         return [step("evaluate score", argv)], {"score": score_id}
 
     def compare(self, r: CompareRequest) -> tuple[list[JobStep], dict[str, str]]:
@@ -257,24 +299,36 @@ class Commands:
 
     def decisions(self, name: str, r: DecisionsRequest) -> DecisionsResult:
         """decisions.yaml as `evidence propose cards` writes it (its header, `decisions:` in card order), each
-        entry {card, choice, reason, by} plus `value` with choice custom; `by` user becomes $WEBAPP_USER."""
+        entry {card, choice, reason, by} plus `value` with choice custom.
+
+        `by` is `model`, the server's $WEBAPP_USER, or the name the file already has for that card (a hand edit's,
+        kept as it is): nobody else's name is written. The form sends the file's sha256 as it loaded it; a file
+        changed since (a hand edit, another tab) is refused with 409 unless `force`, so no edit is lost unseen."""
         from evidence.propose.cards import CUSTOM, HEADER
         from evidence.propose.common import dump_yaml
 
         directory = self.proposal_dir(name)
+        path = directory / "decisions.yaml"
+        current = file_sha256(path) if path.is_file() else None
+        if current != r.base_sha256 and not r.force:
+            raise Conflict("decisions.yaml changed since the form loaded it (edited by hand or in another tab): "
+                           "reload to see it, or overwrite it")
         cards = (read_json(directory / "cards.json") or {}).get("cards") or []
+        on_file, _ = self.files._decisions(directory, cards)
         order = {c.get("id"): n for n, c in enumerate(cards)}
         entries = []
         for d in sorted(r.decisions, key=lambda d: order.get(d.card, len(order))):
-            entry: dict[str, Any] = {"card": d.card, "choice": d.choice, "reason": d.reason.strip(),
-                                     "by": "model" if d.by == "model" else self.s.user}
+            kept = on_file.get(d.card, {}).get("by") if isinstance(on_file.get(d.card), dict) else None
+            if d.by not in ("model", self.s.user) and d.by != kept:
+                raise BadRequest(f"{d.card}: by {d.by!r} is neither the model, you ({self.s.user}) nor who decided "
+                                 "this card in decisions.yaml")
+            entry: dict[str, Any] = {"card": d.card, "choice": d.choice, "reason": d.reason.strip(), "by": d.by}
             if d.choice == CUSTOM:
                 entry["value"] = d.value
             entries.append(entry)
-        path = directory / "decisions.yaml"
         write_text_atomic(path, HEADER + dump_yaml({"decisions": entries}))
         _, problems = self.files._decisions(directory, cards)
-        return DecisionsResult(written=str(path), problems=problems)
+        return DecisionsResult(written=str(path), sha256=file_sha256(path), problems=problems)
 
 
 def write_text_atomic(path: Path, text: str) -> None:
@@ -330,16 +384,20 @@ def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, qu
     async def ev_start_run(request: RunRequest) -> Job:
         steps, refs = c.run(request)
         lane = "cpu" if request.extractors == "regex-only" else "model"
+        if lane == "model":
+            await need_gateway(settings)
         return jobs.submit("run", request.model_dump(), steps, lane=lane, refs=refs)
 
     @api.post("/jobs/rag-baseline", response_model=Job, status_code=202)
     async def ev_start_rag_baseline(request: RagBaselineRequest) -> Job:
         steps, refs = c.rag_baseline(request)
+        await need_gateway(settings)
         return jobs.submit("rag-baseline", request.model_dump(), steps, lane="model", refs=refs)
 
     @api.post("/jobs/agent-baseline", response_model=Job, status_code=202)
     async def ev_start_agent_baseline(request: AgentBaselineRequest) -> Job:
         steps, refs = c.agent_baseline(request)
+        await need_gateway(settings)
         return jobs.submit("agent-baseline", request.model_dump(), steps, lane="model", refs=refs)
 
     @api.post("/jobs/score", response_model=Job, status_code=202)
@@ -355,6 +413,7 @@ def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, qu
     @api.post("/jobs/propose", response_model=Job, status_code=202)
     async def ev_start_propose(request: ProposeRequest) -> Job:
         steps, refs, _ = c.propose(request)
+        await need_gateway(settings)
         return jobs.submit("propose", request.model_dump(), steps, lane="model", refs=refs)
 
     @api.post("/jobs/freeze", response_model=Job, status_code=202)
