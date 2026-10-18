@@ -12,6 +12,7 @@ import { Link, useParams, useSearchParams } from "react-router"
 import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
 import { AgentTraceView } from "@/components/ev/AgentTraceView"
 import { AnswerSummary, BaselineEvidence, StudiesTable } from "@/components/ev/AnswerPanel"
+import { ErrorCallsBadge } from "@/components/badges"
 import { KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
 import { ProtocolPanel } from "@/components/ev/ProtocolPanel"
@@ -99,6 +100,7 @@ function RunView({ run }: { run: EvRunDetail }) {
           {run.strategy && <Badge variant="outline">strategy {run.strategy}</Badge>}
           {run.mode && run.mode !== "run" && <Badge variant="secondary">{run.mode}</Badge>}
           {!run.complete && <Badge variant="destructive">incomplete: no run.json (crashed or still running); events and calls only</Badge>}
+          <ErrorCallsBadge count={run.error_calls} />
         </div>
       </PageHeader>
       <div className="grid gap-4 lg:grid-cols-2">

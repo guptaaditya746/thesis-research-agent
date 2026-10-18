@@ -33,7 +33,9 @@ export function JobWatcher() {
       const action = job.state === "done" && target
         ? { label: "Open", onClick: () => navigate(target) }
         : { label: "Open log", onClick: () => navigate(`/jobs/${job.id}`) }
-      if (job.state === "done") {
+      if (job.state === "done" && job.failed_calls) {
+        toast.warning(`${jobTitle(job)} is done with ${job.failed_calls} failed calls`, { description: job.warnings.join("; "), action })
+      } else if (job.state === "done") {
         toast.success(`${jobTitle(job)} is done`, { description: job.warnings.length ? job.warnings.join("; ") : undefined, action })
       } else {
         toast.error(`${jobTitle(job)} failed`, { description: job.error ?? `exit ${job.exit_code ?? "?"}`, action })

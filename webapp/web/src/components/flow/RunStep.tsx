@@ -22,6 +22,7 @@ import {
   type Job,
   type RunRequest,
 } from "@/api/ev"
+import { ErrorCallsBadge } from "@/components/badges"
 import { KeyValues, LabelBadge, SystemBadge } from "@/components/ev/bits"
 import { JobPanel } from "@/components/jobs/JobPanel"
 import { TableSkeleton } from "@/components/states"
@@ -31,6 +32,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { isName, runGroup } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
@@ -47,6 +49,7 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
   const [strategy, setStrategy] = useState<"all" | "gaps">("all")
   const [model, setModel] = useState("")
   const [name, setName] = useState("")
+  const [retry, setRetry] = useState(false)
   const start = useStartJob("run")
   const navigate = useNavigate()
   if (!flow.protocol) return null
@@ -54,7 +57,7 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
   const body: RunRequest = {
     corpus, protocol, extractors: extractors === "regex-only" ? "regex-only" : "cascade",
     strategy: extractors === "regex-only" ? "all" : strategy, model: model || config.data?.default_model || "orch-model",
-    group: null, name: name || null,
+    group: null, name: name || null, retry_errors: retry,
   }
   const group = runGroup({ extractors: body.extractors ?? "cascade", strategy: body.strategy ?? "all", protocol })
   const id = `${group}~${name || corpus}`
@@ -98,6 +101,10 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
           <Label htmlFor="run-name">Run name</Label>
           <Input id="run-name" className="w-56 font-mono" placeholder={corpus} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!ok} />
         </div>
+        <div className="flex items-center gap-2 pb-2">
+          <Switch id="run-retry" checked={retry} onCheckedChange={setRetry} aria-label="Retry errors" />
+          <Label htmlFor="run-retry" title="--retry-errors: run cached error results again instead of taking them from the record cache">retry errors</Label>
+        </div>
         <Button type="submit" disabled={!ok || start.isPending}>
           <PlayIcon data-icon="inline-start" />
           Start run
@@ -106,6 +113,7 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
       <p className="text-xs text-muted-foreground">
         Writes <span className="font-mono">runs/{group}/{name || corpus}</span> with protocol {protocol.name}
         {taken ? " — that run exists: give this one a name of its own." : "."} {extractors === "regex-only" ? "No model: it runs beside other jobs." : "Calls the model: model jobs run one at a time, the same model for every extractor and both baselines."}
+        {config.data && !config.data.llm_key_set && extractors !== "regex-only" && <strong className="block text-status-critical">The server has no $LITELLM_MASTER_KEY: model jobs are refused. Start it with llm-setup's .env sourced (README "Web app").</strong>}
       </p>
     </form>
   )
@@ -228,7 +236,7 @@ export function RunStep({ flow }: { flow: Flow }) {
                         <TableCell className="font-mono text-xs"><Link to={`/runs/${encodeURIComponent(r.id)}`} className="hover:underline">{r.id}</Link></TableCell>
                         <TableCell><SystemBadge system={r.system} /></TableCell>
                         <TableCell className="text-xs">{running ? "running" : r.complete ? "complete" : "incomplete"}{reports.has(r.id) ? ", scored" : ""}</TableCell>
-                        <TableCell>{r.label ? <LabelBadge label={r.label} /> : "—"}</TableCell>
+                        <TableCell>{r.label ? <LabelBadge label={r.label} /> : "—"} <ErrorCallsBadge count={r.error_calls} /></TableCell>
                         <TableCell className="space-x-1 text-right whitespace-nowrap">
                           {r.kind === "engine" && (r.id === flow.run ? <Badge>chosen</Badge> : (
                             <Button size="xs" variant="outline" onClick={() => flow.set({ run: r.id })} aria-label={`Choose ${r.id}`}>Choose</Button>

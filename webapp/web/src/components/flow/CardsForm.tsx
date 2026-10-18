@@ -1,10 +1,11 @@
 /**
  * The proposal's eight choice-point cards as a form (docs/evidence-system.md Part E): per card an option (or a
- * custom value in the card's shape, as JSON) and a reason, which is required. A card left at the model's
- * default with the model's own reason stays `by: model`; any card the user touches is decided by the user (the
- * server writes its $WEBAPP_USER). Save writes decisions.yaml (PUT, in the format evidence/propose/cards.py
- * validates) and shows what `evidence propose freeze` would refuse; Freeze starts that command as a job once
- * the saved decisions pass. Amendments after the freeze stay on the command line.
+ * custom value in the card's shape, as JSON) and a reason, which is required. A card keeps the `by` it has in
+ * decisions.yaml (the model's default, or whoever edited it by hand) until the user touches it; then it is the
+ * app's user ($WEBAPP_USER). Save writes decisions.yaml (PUT, in the format evidence/propose/cards.py validates)
+ * with the file's sha256 as the form loaded it: if the file changed since, the server refuses and the form offers
+ * reload or overwrite. It shows what `evidence propose freeze` would refuse; Freeze starts that command as a job
+ * once the saved decisions pass. Amendments after the freeze stay on the command line.
  */
 import { LockIcon, SaveIcon } from "lucide-react"
 import { useState } from "react"
@@ -25,7 +26,7 @@ import { CUSTOM, initialState, optionValue, toEntry, type CardState } from "./ca
 
 
 function CardField({ card, state, onChange, user }: { card: CardT; state: CardState; onChange: (s: CardState) => void; user: string }) {
-  const touch = (patch: Partial<CardState>) => onChange({ ...state, ...patch, by: "user" })
+  const touch = (patch: Partial<CardState>) => onChange({ ...state, ...patch, by: user })
   const { error } = toEntry(card, state)
   const id = `card-${card.id}`
   const shown = state.choice === CUSTOM ? null : optionValue(card, state.choice)
@@ -34,7 +35,7 @@ function CardField({ card, state, onChange, user }: { card: CardT; state: CardSt
       <CardHeader>
         <CardTitle id={`${id}-title`} className="flex flex-wrap items-center gap-2 text-sm">
           {card.title ?? card.id}
-          <Badge variant={state.by === "model" ? "outline" : "secondary"}>{state.by === "model" ? "model's default" : `decided by ${user}`}</Badge>
+          <Badge variant={state.by === "model" ? "outline" : "secondary"}>{state.by === "model" ? "model's default" : `decided by ${state.by}`}</Badge>
           {state.choice !== card.default && <Badge>changed from the default</Badge>}
         </CardTitle>
         <CardDescription>{card.ask}</CardDescription>
@@ -81,23 +82,26 @@ function CardField({ card, state, onChange, user }: { card: CardT; state: CardSt
   )
 }
 
-export function CardsForm({ proposal }: { proposal: ProposalDetail }) {
+/** `onReload`: load decisions.yaml again and start the form from it (the parent remounts the form). */
+export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; onReload: () => void }) {
   const config = useEvConfig()
-  const user = config.data?.user ?? "you"
+  const user = config.data?.user
   const navigate = useNavigate()
   const [states, setStates] = useState<Record<string, CardState>>(() =>
     Object.fromEntries(proposal.cards.map((c) => [c.id, initialState(c)])))
   const [dirty, setDirty] = useState(false)
+  const [base, setBase] = useState(proposal.decisions_sha256)   // the file as this form loaded it
+  const [stale, setStale] = useState(false)
   const save = usePutDecisions(proposal.name)
   const freeze = useStartJob("freeze")
   const entries = proposal.cards.map((c) => ({ card: c, ...toEntry(c, states[c.id]) }))
   const errors = entries.filter((e) => e.error)
   const problems = save.data?.problems ?? proposal.decision_problems
 
-  const onSave = () =>
-    save.mutate({ decisions: entries.map((e) => e.entry) }, {
-      onSuccess: () => setDirty(false),
-      onError: (e) => announceError("Saving the decisions failed", e),
+  const onSave = (force = false) =>
+    save.mutate({ decisions: entries.map((e) => e.entry), base_sha256: base, force }, {
+      onSuccess: (result) => { setDirty(false); setStale(false); setBase(result.sha256) },
+      onError: (e) => (isConflict(e) ? setStale(true) : announceError("Saving the decisions failed", e)),
     })
   const onFreeze = () =>
     freeze.mutate({ proposal: proposal.name }, {
@@ -109,10 +113,19 @@ export function CardsForm({ proposal }: { proposal: ProposalDetail }) {
     <section className="space-y-4" aria-label="Cards">
       <div className="grid gap-4 xl:grid-cols-2">
         {proposal.cards.map((c) => (
-          <CardField key={c.id} card={c} state={states[c.id]} user={user}
+          <CardField key={c.id} card={c} state={states[c.id]} user={user ?? "you"}
             onChange={(s) => { setStates((old) => ({ ...old, [c.id]: s })); setDirty(true) }} />
         ))}
       </div>
+      {stale && (
+        <div role="alert" className="space-y-2 rounded-md border border-status-warning/60 bg-status-warning/10 p-3 text-sm">
+          <p className="font-medium">decisions.yaml changed since this form loaded it (a hand edit, or another tab).</p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={onReload}>Reload it (drops your unsaved changes)</Button>
+            <Button size="sm" variant="destructive" onClick={() => onSave(true)} disabled={save.isPending}>Overwrite it with this form</Button>
+          </div>
+        </div>
+      )}
       {problems.length > 0 && !dirty && (
         <div role="status" className="rounded-md border border-destructive/50 p-3 text-sm">
           <p className="font-medium">decisions.yaml: freeze would refuse it</p>
@@ -120,7 +133,7 @@ export function CardsForm({ proposal }: { proposal: ProposalDetail }) {
         </div>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <Button onClick={onSave} disabled={errors.length > 0 || save.isPending}>
+        <Button onClick={() => onSave()} disabled={errors.length > 0 || save.isPending || !user}>
           <SaveIcon data-icon="inline-start" />
           Save decisions
         </Button>

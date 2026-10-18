@@ -11,8 +11,8 @@ export interface CardState {
   /** the custom value as JSON text (used with choice custom) */
   custom: string
   reason: string
-  /** model: the model's default as it stands; user: decided in the app (the server writes $WEBAPP_USER) */
-  by: "model" | "user"
+  /** who decided: `model` (the default as it stands), the name in decisions.yaml (kept), or the app's user */
+  by: string
 }
 
 export function optionValue(card: Card, id: string): unknown {
@@ -28,7 +28,7 @@ export function initialState(card: Card): CardState {
     choice,
     custom: JSON.stringify(value ?? optionValue(card, card.default ?? "draft") ?? {}, null, 2),
     reason: d?.reason ?? `default: ${card.rationale ?? ""}`,
-    by: !d || d.by === "model" ? "model" : "user",
+    by: d?.by ?? "model",
   }
 }
 

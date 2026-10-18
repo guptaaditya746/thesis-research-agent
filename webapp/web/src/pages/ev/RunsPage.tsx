@@ -7,6 +7,7 @@ import { FlaskConicalIcon } from "lucide-react"
 import { Link } from "react-router"
 
 import { useEvRuns } from "@/api/ev"
+import { ErrorCallsBadge } from "@/components/badges"
 import { LabelBadge, SystemBadge } from "@/components/ev/bits"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/states"
@@ -48,7 +49,7 @@ export default function RunsPage() {
                       <TableCell><SystemBadge system={r.system} /></TableCell>
                       <TableCell className="text-xs">{r.selection ?? "—"}</TableCell>
                       <TableCell className="text-xs">{r.strategy ?? "—"}</TableCell>
-                      <TableCell><LabelBadge label={r.label} /></TableCell>
+                      <TableCell><LabelBadge label={r.label} /> <ErrorCallsBadge count={r.error_calls} /></TableCell>
                       <TableCell className="font-mono text-xs tabular-nums">{c ? `${c.supporting ?? 0} / ${c.contradicting ?? 0} / ${c.neutral ?? 0} / ${c.undetermined ?? 0}` : "—"}</TableCell>
                       <TableCell className="text-xs tabular-nums">{cost.calls ?? "—"}</TableCell>
                       <TableCell className="text-xs tabular-nums">{cost.input_tokens === undefined ? "—" : tokens((cost.input_tokens ?? 0) + (cost.output_tokens ?? 0))}</TableCell>

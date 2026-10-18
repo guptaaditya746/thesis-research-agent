@@ -6,7 +6,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest"
 
 import { evApi, type DecisionsRequest, type JobRequests } from "@/api/ev"
 import { routes } from "@/app/routes"
-import { finishJob } from "@/mocks/handlers"
+import { finishJob, mockGateway, unfrozenProposal } from "@/mocks/handlers"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
 
@@ -83,7 +83,7 @@ describe("the stepper", () => {
     await user.click(screen.getByRole("button", { name: "Start run" }))
     await waitFor(() => expect(bodies.map((b) => b.kind)).toEqual(["run"]))
     expect(bodies[0].body).toEqual({ corpus: PARA, protocol: { source: "repo", name: "rag-factuality" }, extractors: "cascade", strategy: "gaps",
-      model: "orch-model", group: null, name: null } satisfies JobRequests["run"])
+      model: "orch-model", group: null, name: null, retry_errors: false } satisfies JobRequests["run"])
     await waitFor(() => expect(new URLSearchParams(router.state.location.search).get("run")).toBe(`cascade-gaps~${PARA}`))
     const job = await screen.findByLabelText(`Job engine run cascade-gaps~${PARA}`, {}, T)
     expect(within(job).getAllByText("running").length).toBeGreaterThan(0)
@@ -159,7 +159,7 @@ describe("the cards form", () => {
     await user.click(screen.getByRole("button", { name: "Save decisions" }))
     await waitFor(() => expect(puts).toHaveLength(1))
     expect(puts[0].decisions).toHaveLength(8)
-    expect(puts[0].decisions.find((d) => d.card === "min_effect")).toEqual({ card: "min_effect", choice: "lenient", reason: "two points is the noise between runs", by: "user", value: null })
+    expect(puts[0].decisions.find((d) => d.card === "min_effect")).toEqual({ card: "min_effect", choice: "lenient", reason: "two points is the noise between runs", by: "aditya", value: null })
     expect(puts[0].decisions.find((d) => d.card === "screen")).toMatchObject({ by: "model" })
     await waitFor(() => expect(screen.getByRole("button", { name: "Freeze" })).toBeEnabled())
     await user.click(screen.getByRole("button", { name: "Freeze" }))
@@ -196,7 +196,88 @@ describe("the cards form", () => {
     await user.paste('{"prefer": ["document_order"]}')
     await user.click(screen.getByRole("button", { name: "Save decisions" }))
     await waitFor(() => expect(puts).toHaveLength(1))
-    expect(puts[0].decisions.find((d) => d.card === "pairing")).toMatchObject({ choice: "custom", value: { prefer: ["document_order"] }, by: "user" })
+    expect(puts[0].decisions.find((d) => d.card === "pairing")).toMatchObject({ choice: "custom", value: { prefer: ["document_order"] }, by: "aditya" })
+  })
+})
+
+describe("what the review asked for", () => {
+  it("a decisions.yaml changed since the form loaded it is not overwritten unseen", async () => {
+    const user = userEvent.setup()
+    const puts: DecisionsRequest[] = []
+    server.events.on("request:start", async ({ request }) => {
+      if (request.method === "PUT") puts.push((await request.clone().json()) as DecisionsRequest)
+    })
+    const job = await evApi.startJob("propose", { proposal: "p1", question: "rag-factuality" })
+    finishJob(job.id)
+    renderRoutes(routes, "/flow/rag-factuality/protocol?proposal=p1")
+    await screen.findByRole("group", { name: /Smallest effect that counts/ }, T)
+    // another tab writes the file after this form loaded it
+    const loaded = await evApi.proposal("p1")
+    await evApi.putDecisions("p1", { decisions: [], base_sha256: loaded.decisions_sha256 })
+    await choose(user, "Choice for min_effect", /^lenient/)
+    await user.click(screen.getByRole("button", { name: "Save decisions" }))
+    expect(await screen.findByText(/changed since this form loaded it/, {}, T)).toBeInTheDocument()
+    expect(puts.at(-1)).toMatchObject({ base_sha256: "sha-0", force: false })
+    await user.click(screen.getByRole("button", { name: /Overwrite it/ }))
+    await waitFor(() => expect(puts.at(-1)).toMatchObject({ force: true }))
+    await waitFor(() => expect(screen.queryByText(/changed since this form loaded it/)).toBeNull())
+  })
+
+  it("an untouched card keeps the name decisions.yaml has for it", async () => {
+    const user = userEvent.setup()
+    const puts: DecisionsRequest[] = []
+    server.events.on("request:start", async ({ request }) => {
+      if (request.method === "PUT") puts.push((await request.clone().json()) as DecisionsRequest)
+    })
+    const p = unfrozenProposal("p1")
+    p.cards = p.cards.map((c) => (c.id === "pairing" ? { ...c, decision: { ...c.decision!, by: "tim", reason: "hand edit" } } : c))
+    server.use(http.get("/api/ev/proposals/p1", () => HttpResponse.json(p)))
+    renderRoutes(routes, "/flow/rag-factuality/protocol?proposal=p1")
+    const card = await screen.findByRole("group", { name: /Pairing preference/ }, T)
+    expect(within(card).getByText("decided by tim")).toBeInTheDocument()
+    server.use(http.put("/api/ev/proposals/p1/decisions", () => HttpResponse.json({ written: "x", sha256: "s", problems: [] })))
+    await user.click(screen.getByRole("button", { name: "Save decisions" }))
+    await waitFor(() => expect(puts).toHaveLength(1))
+    expect(puts[0].decisions.find((d) => d.card === "pairing")).toMatchObject({ by: "tim", reason: "hand edit" })
+  })
+
+  it("a model job the backend refuses (no key, no gateway) says why; regex-only still starts", async () => {
+    const user = userEvent.setup()
+    mockGateway.ok = false
+    renderRoutes(routes, `/flow/rag-factuality/run?corpus=${PARA}`)
+    await screen.findByRole("form", { name: "Start the engine" }, T)
+    expect(screen.getByText(/model jobs are refused/)).toBeInTheDocument()   // the mock config has no key
+    await user.click(screen.getByRole("button", { name: "Start run" }))
+    expect(await screen.findByText(/model job refused: no \$LITELLM_MASTER_KEY/, {}, T)).toBeInTheDocument()
+    await choose(user, "Extractors", /regex only/)
+    await user.click(screen.getByRole("button", { name: "Start run" }))
+    expect(await screen.findByLabelText(`Job engine run regex-only~${PARA}`, {}, T)).toBeInTheDocument()
+  })
+
+  it("retry errors maps to the flag, and a run done with failed calls says so", async () => {
+    const user = userEvent.setup()
+    const bodies = recordJobs()
+    renderRoutes(routes, `/flow/rag-factuality/run?corpus=${PARA}`)
+    await screen.findByRole("form", { name: "Start the engine" }, T)
+    await user.click(screen.getByRole("switch", { name: "Retry errors" }))
+    await user.click(screen.getByRole("button", { name: "Start run" }))
+    await waitFor(() => expect(bodies).toHaveLength(1))
+    expect(bodies[0].body).toMatchObject({ retry_errors: true })
+    const job = (await evApi.jobs())[0]
+    finishJob(job.id, "done", 3)
+    renderRoutes(routes, `/jobs/${job.id}`)
+    expect((await screen.findAllByText("done with 3 failed calls", {}, T)).length).toBeGreaterThan(0)
+    expect(await screen.findByText(/3 extractor call\(s\) ended in an error/, {}, T)).toHaveAttribute("role", "alert")
+  })
+
+  it("choosing another protocol clears the chosen run", async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutes(routes, `/flow/rag-factuality/protocol?corpus=${MIXED}&run=cascade~${MIXED}`)
+    await user.click(await screen.findByRole("button", { name: "Use protocol rag-factuality-agentic" }, T))
+    await waitFor(() => expect(new URLSearchParams(router.state.location.search).get("protocol")).toBe("repo:rag-factuality-agentic"))
+    const params = new URLSearchParams(router.state.location.search)
+    expect(params.get("run")).toBeNull()
+    expect(params.get("corpus")).toBe(MIXED)
   })
 })
 

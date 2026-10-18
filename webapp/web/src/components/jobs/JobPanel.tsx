@@ -35,7 +35,7 @@ export function JobPanel({ job, compact = false }: { job: Job; compact?: boolean
     <Card size="sm" aria-label={`Job ${jobTitle(job)}`}>
       <CardHeader>
         <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
-          <JobBadge state={job.state} />
+          <JobBadge state={job.state} failedCalls={job.failed_calls} />
           <span>{jobTitle(job)}</span>
           <Badge variant="outline" title={job.lane === "model" ? "calls a model: one model job at a time" : "no model call"}>{job.lane}</Badge>
         </CardTitle>
@@ -43,6 +43,7 @@ export function JobPanel({ job, compact = false }: { job: Job; compact?: boolean
           <Link to={`/jobs/${job.id}`} className="font-mono hover:underline">{job.id}</Link> · started {dateTime(job.started_at ?? job.created_at)}
           {took !== null && ` · ${duration(took)}`}
           {job.state === "queued" && job.lane === "model" && " · waits for the model job ahead of it"}
+          {job.orphaned && " · started by a server that has stopped; this one watches its process"}
           {job.error && ` · ${job.error}`}
           {job.warnings.length > 0 && ` · ${job.warnings.join("; ")}`}
         </CardDescription>
@@ -63,6 +64,12 @@ export function JobPanel({ job, compact = false }: { job: Job; compact?: boolean
         </CardAction>
       </CardHeader>
       <CardContent className="space-y-2">
+        {!!job.failed_calls && (
+          <p role="alert" className="rounded-md border border-status-warning/60 bg-status-warning/10 p-2 text-sm">
+            {job.failed_calls} extractor call(s) ended in an error (no model answer?). The run's answer misses what they would have
+            found; start it again with a new name and "retry errors" once the model answers.
+          </p>
+        )}
         {!compact && (
           <ol className="space-y-1 text-xs">
             {job.steps.map((s, n) => (

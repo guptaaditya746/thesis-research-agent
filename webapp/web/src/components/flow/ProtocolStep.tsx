@@ -53,7 +53,7 @@ function Choice({ flow, value, title, children, href }: { flow: Flow; value: Pro
       {children}
       <span className="flex-1" />
       {chosen ? <Badge>chosen</Badge> : (
-        <Button size="xs" variant="outline" onClick={() => flow.set({ protocol: protocolParam(value) })} aria-label={`Use ${value.source === "repo" ? "protocol" : "proposal"} ${value.name}`}>Use</Button>
+        <Button size="xs" variant="outline" onClick={() => flow.set({ protocol: protocolParam(value), run: null })} aria-label={`Use ${value.source === "repo" ? "protocol" : "proposal"} ${value.name}`}>Use</Button>
       )}
     </li>
   )
@@ -101,6 +101,7 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
   const jobs = useActiveJobs({ proposal: name })
   const proposal = useProposal(name, jobs.length > 0)
   const resume = useStartJob("propose")
+  const [loaded, setLoaded] = useState(0)   // bumped to start the cards form again from the file
   const config = useEvConfig()
   const navigate = useNavigate()
   const p: ProposalDetail | undefined = proposal.data
@@ -143,12 +144,13 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
             <div className="mt-2"><CriticChecks checks={p.checks} /></div>
           </details>
         )}
-        {p && p.steps.includes("cards") && !p.frozen && <CardsForm key={p.name} proposal={p} />}
+        {p && p.steps.includes("cards") && !p.frozen && <CardsForm key={`${p.name}-${loaded}`} proposal={p}
+          onReload={() => void proposal.refetch().then(() => setLoaded((n) => n + 1))} />}
         {p?.frozen && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge>frozen</Badge>
             <span>revision {p.revision} · <span className="font-mono text-xs">{p.protocol_sha256?.slice(0, 16)}</span></span>
-            <Button size="sm" onClick={() => flow.set({ protocol: protocolParam({ source: "proposal", name }) })}>Use this protocol</Button>
+            <Button size="sm" onClick={() => flow.set({ protocol: protocolParam({ source: "proposal", name }), run: null })}>Use this protocol</Button>
             <span className="text-xs text-muted-foreground">Amendments: <span className="font-mono">evidence propose amend $EV/proposals/{name} --reason …</span> on the command line.</span>
           </div>
         )}

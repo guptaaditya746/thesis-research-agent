@@ -50,12 +50,15 @@ let db: Db = initialDb()
 
 export function resetDb() {
   db = initialDb()
+  mockGateway.ok = true
   for (const t of timers) clearTimeout(t)
   timers.clear()
 }
 
 /** jobMs: how long a mock job runs before it is done (null: until `finishJob`; the tests). */
 export const timing: { jobMs: number | null } = { jobMs: 3_000 }
+/** ok false: the backend refuses model jobs (no key or no gateway), as webapp/evjobs.py need_gateway does. */
+export const mockGateway = { ok: true }
 const timers = new Set<ReturnType<typeof setTimeout>>()
 
 const now = () => new Date().toISOString()
@@ -68,7 +71,7 @@ export function unfrozenProposal(name: string): ProposalDetail {
   const p = fixture<ProposalDetail>(`/api/ev/proposals/${FROZEN}`)
   return {
     ...p, name, frozen: false, revision: null, protocol_sha256: null, decided_by: {}, amendments: 0, proposal: null, protocol: null,
-    revisions: [], amendment_log: [], decision_problems: [], steps: ["frame", "draft", "critic", "cards"],
+    revisions: [], amendment_log: [], decision_problems: [], decisions_sha256: "sha-0", steps: ["frame", "draft", "critic", "cards"],
     cards: p.cards.map((c) => ({
       ...c, problems: [], raw_decision: null,
       decision: { card: c.id, choice: c.default ?? "draft", reason: `default: ${c.rationale ?? ""}`, by: "model", value: null, default: c.default },
@@ -149,10 +152,11 @@ const LANE: Record<JobKind, Job["lane"]> = {
 }
 
 /** End a mock job (the tests' clock): its effect on the db, then `done` (or `failed`). */
-export function finishJob(id: string, state: "done" | "failed" = "done") {
+export function finishJob(id: string, state: "done" | "failed" = "done", failedCalls: number | null = null) {
   const job = db.jobs.find((j) => j.id === id)
   if (!job || (job.state !== "running" && job.state !== "queued")) return
   job.state = state
+  job.failed_calls = failedCalls
   job.ended_at = now()
   job.exit_code = state === "done" ? 0 : 1
   job.steps = job.steps.map((s) => ({ ...s, state: state === "done" ? "done" : "failed", exit_code: job.exit_code, ended_at: now() }))
@@ -170,6 +174,9 @@ export function finishJob(id: string, state: "done" | "failed" = "done") {
 }
 
 function submit<K extends JobKind>(kind: K, body: JobRequests[K]): Response {
+  if (LANE[kind] === "model" && !(kind === "run" && (body as JobRequests["run"]).extractors === "regex-only") && !mockGateway.ok) {
+    return conflict("model job refused: no $LITELLM_MASTER_KEY in the server's environment: start `webapp serve` after sourcing llm-setup's .env")
+  }
   const refs = refsOf(kind, body)
   if (refs instanceof Response) return refs
   const active = db.jobs.find((j) => (j.state === "queued" || j.state === "running") && Object.entries(refs).some(([k, v]) => j.refs[k] === v))
@@ -178,8 +185,8 @@ function submit<K extends JobKind>(kind: K, body: JobRequests[K]): Response {
   const argv = ["python", "-m", "webapp.tool", kind, ...Object.entries(body).flatMap(([k, v]) => [`--${k}`, typeof v === "object" ? JSON.stringify(v) : String(v)])]
   const job: Job = {
     id, kind, lane: LANE[kind], args: body as unknown as Record<string, unknown>, refs, state: "running", created_at: now(), started_at: now(),
-    ended_at: null, exit_code: null, error: null, warnings: [],
-    steps: [{ name: kind, argv, command: argv.join(" "), required: true, needs: [], state: "running", exit_code: null, started_at: now(), ended_at: null }],
+    ended_at: null, exit_code: null, error: null, warnings: [], failed_calls: null, orphaned: false,
+    steps: [{ name: kind, argv, command: argv.join(" "), required: true, needs: [], state: "running", exit_code: null, started_at: now(), ended_at: null, pid: 4242, pid_start: "1" }],
   }
   db.jobs.unshift(job)
   db.logs[id] = [`$ ${job.steps[0].command}`, `mock ${kind} working…`]
@@ -216,16 +223,18 @@ export const handlers = [
     if (!p) return conflict(`proposal ${String(params.name)} has no cards yet (run the proposal flow first)`)
     if (p.frozen) return conflict(`proposal ${p.name} is frozen; change it with \`evidence propose amend\` (command line)`)
     const body = (await request.json()) as DecisionsRequest
+    if (body.base_sha256 !== p.decisions_sha256 && !body.force) return conflict("decisions.yaml changed since the form loaded it (edited by hand or in another tab): reload to see it, or overwrite it")
     const problems = decisionProblems(p.cards, body.decisions)
     p.decision_problems = problems
     p.cards = p.cards.map((c) => {
       const d = body.decisions.find((e) => e.card === c.id)
       return {
         ...c, problems: problems.filter((x) => x.startsWith(`${c.id}:`)),
-        decision: d ? { card: c.id, choice: d.choice, reason: d.reason.trim(), by: d.by === "user" ? "aditya" : "model", value: d.choice === "custom" ? d.value : null, default: c.default } : null,
+        decision: d ? { card: c.id, choice: d.choice, reason: d.reason.trim(), by: d.by, value: d.choice === "custom" ? d.value : null, default: c.default } : null,
       }
     })
-    return HttpResponse.json({ written: `/srv/ev/proposals/${p.name}/decisions.yaml`, problems })
+    p.decisions_sha256 = `sha-${Number(p.decisions_sha256?.slice(4) ?? 0) + 1}`
+    return HttpResponse.json({ written: `/srv/ev/proposals/${p.name}/decisions.yaml`, sha256: p.decisions_sha256, problems })
   }),
   http.get("/api/ev/jobs", () => HttpResponse.json(db.jobs)),
   http.get("/api/ev/jobs/:id", ({ params }) => {

@@ -1,7 +1,7 @@
 /**
  * Status badges. Colour never carries meaning alone: every status has an icon and a label.
  */
-import { CheckCircle2Icon, ClockIcon, Loader2Icon, OctagonXIcon } from "lucide-react"
+import { CheckCircle2Icon, ClockIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from "lucide-react"
 import type { ReactNode } from "react"
 
 import type { JobState } from "@/api/ev"
@@ -31,11 +31,25 @@ export function StatusBadge({ tone, icon, children, title }: { tone: Tone; icon:
 
 const Spin = () => <Loader2Icon className="animate-spin motion-reduce:animate-none" />
 
-export function JobBadge({ state }: { state: JobState }) {
+/** A job's state; done with failed extractor calls is a warning, not a success. */
+export function JobBadge({ state, failedCalls }: { state: JobState; failedCalls?: number | null }) {
+  if (state === "done" && failedCalls) {
+    return <StatusBadge tone="warning" icon={<TriangleAlertIcon />} title="the engine recorded these calls as errors">done with {failedCalls} failed calls</StatusBadge>
+  }
   if (state === "done") return <StatusBadge tone="good" icon={<CheckCircle2Icon />}>done</StatusBadge>
   if (state === "failed") return <StatusBadge tone="critical" icon={<OctagonXIcon />}>failed</StatusBadge>
   if (state === "running") return <StatusBadge tone="neutral" icon={<Spin />}>running</StatusBadge>
   return <StatusBadge tone="neutral" icon={<ClockIcon />}>queued</StatusBadge>
+}
+
+/** An engine run with extractor calls that ended in an error (e.g. no model gateway): its answer misses them. */
+export function ErrorCallsBadge({ count }: { count: number | null | undefined }) {
+  if (!count) return null
+  return (
+    <StatusBadge tone="warning" icon={<TriangleAlertIcon />} title="calls/*.json with status error; run again with 'retry errors' once the model answers">
+      {count} failed calls
+    </StatusBadge>
+  )
 }
 
 /** A pulsing dot with a label for screen readers: the thing is live. */

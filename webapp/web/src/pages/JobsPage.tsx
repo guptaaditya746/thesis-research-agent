@@ -48,7 +48,7 @@ export default function JobsPage() {
             <TableBody>
               {jobs.data.map((j) => (
                 <TableRow key={j.id} data-state={j.id === jobId ? "selected" : undefined}>
-                  <TableCell><JobBadge state={j.state} /></TableCell>
+                  <TableCell><JobBadge state={j.state} failedCalls={j.failed_calls} /></TableCell>
                   <TableCell className="text-sm">{jobTitle(j)}{j.error ? <span className="text-muted-foreground"> · {j.error}</span> : null}</TableCell>
                   <TableCell><Badge variant="outline">{j.lane}</Badge></TableCell>
                   <TableCell className="text-xs">{dateTime(j.started_at ?? j.created_at)}</TableCell>

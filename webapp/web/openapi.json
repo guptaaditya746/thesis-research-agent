@@ -3188,12 +3188,10 @@
           },
           "by": {
             "type": "string",
-            "enum": [
-              "model",
-              "user"
-            ],
+            "maxLength": 128,
+            "minLength": 1,
             "title": "By",
-            "description": "model: the model's default, kept; user: decided in the app (written as the server's $WEBAPP_USER)"
+            "description": "who decided: `model` (the model's default, kept), the server's $WEBAPP_USER (decided in the app), or the name decisions.yaml already has for this card (kept as it is)"
           }
         },
         "additionalProperties": false,
@@ -3215,12 +3213,31 @@
             "type": "array",
             "maxItems": 50,
             "title": "Decisions"
+          },
+          "base_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Sha256",
+            "description": "decisions_sha256 of the proposal as the form loaded it (null: there was no decisions.yaml); refused with 409 if the file changed since"
+          },
+          "force": {
+            "type": "boolean",
+            "title": "Force",
+            "description": "write even though decisions.yaml changed since it was loaded",
+            "default": false
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "decisions"
+          "decisions",
+          "base_sha256"
         ],
         "title": "DecisionsRequest"
       },
@@ -3230,6 +3247,11 @@
             "type": "string",
             "title": "Written",
             "description": "the decisions.yaml written"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256",
+            "description": "its sha256 now: the base_sha256 of the next PUT"
           },
           "problems": {
             "items": {
@@ -3243,6 +3265,7 @@
         "type": "object",
         "required": [
           "written",
+          "sha256",
           "problems"
         ],
         "title": "DecisionsResult"
@@ -3797,6 +3820,12 @@
             ],
             "title": "Cost"
           },
+          "error_calls": {
+            "type": "integer",
+            "title": "Error Calls",
+            "description": "engine: extractor calls whose result is an error (calls/*.json status error, e.g. no model gateway); `--retry-errors` runs them again",
+            "default": 0
+          },
           "extractors": {
             "items": {
               "$ref": "#/components/schemas/ExtractorSpec"
@@ -3917,6 +3946,7 @@
           "counts",
           "papers",
           "cost",
+          "error_calls",
           "extractors",
           "settings",
           "chain_head",
@@ -4087,6 +4117,12 @@
               }
             ],
             "title": "Cost"
+          },
+          "error_calls": {
+            "type": "integer",
+            "title": "Error Calls",
+            "description": "engine: extractor calls whose result is an error (calls/*.json status error, e.g. no model gateway); `--retry-errors` runs them again",
+            "default": 0
           }
         },
         "type": "object",
@@ -4107,7 +4143,8 @@
           "label",
           "counts",
           "papers",
-          "cost"
+          "cost",
+          "error_calls"
         ],
         "title": "EvRunSummary"
       },
@@ -4799,6 +4836,24 @@
             "description": "optional steps that failed (the job can still be done)",
             "default": []
           },
+          "failed_calls": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Failed Calls",
+            "description": "an engine run's extractor calls that ended in an error (calls/*.json status error): done, but with failed calls"
+          },
+          "orphaned": {
+            "type": "boolean",
+            "title": "Orphaned",
+            "description": "the server that started it stopped while its process ran on; this server watches the process and can cancel it",
+            "default": false
+          },
           "steps": {
             "items": {
               "$ref": "#/components/schemas/JobStep"
@@ -4822,6 +4877,8 @@
           "exit_code",
           "error",
           "warnings",
+          "failed_calls",
+          "orphaned",
           "steps"
         ],
         "title": "Job"
@@ -4903,6 +4960,30 @@
               }
             ],
             "title": "Ended At"
+          },
+          "pid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pid",
+            "description": "the running command's process id (also its process group's)"
+          },
+          "pid_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pid Start",
+            "description": "the process's start time (/proc/<pid>/stat), so a reused pid is never taken for the job's process"
           }
         },
         "type": "object",
@@ -4915,7 +4996,9 @@
           "state",
           "exit_code",
           "started_at",
-          "ended_at"
+          "ended_at",
+          "pid",
+          "pid_start"
         ],
         "title": "JobStep"
       },
@@ -5427,6 +5510,18 @@
             "title": "Decision Problems",
             "description": "before freeze: everything freeze would refuse in decisions.yaml (evidence/propose/cards.validate)",
             "default": []
+          },
+          "decisions_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decisions Sha256",
+            "description": "sha256 of decisions.yaml as read; a PUT of the decisions sends it back and is refused if the file changed since"
           }
         },
         "type": "object",
@@ -5449,7 +5544,8 @@
           "protocol",
           "revisions",
           "amendment_log",
-          "decision_problems"
+          "decision_problems",
+          "decisions_sha256"
         ],
         "title": "ProposalDetail"
       },
@@ -6361,6 +6457,12 @@
             ],
             "title": "Name",
             "description": "default: the corpus name"
+          },
+          "retry_errors": {
+            "type": "boolean",
+            "title": "Retry Errors",
+            "description": "`--retry-errors`: run cached error results again instead of taking them from the record cache",
+            "default": false
           }
         },
         "additionalProperties": false,

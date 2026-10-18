@@ -1280,15 +1280,25 @@ export interface components {
             reason: string;
             /**
              * By
-             * @description model: the model's default, kept; user: decided in the app (written as the server's $WEBAPP_USER)
-             * @enum {string}
+             * @description who decided: `model` (the model's default, kept), the server's $WEBAPP_USER (decided in the app), or the name decisions.yaml already has for this card (kept as it is)
              */
-            by: "model" | "user";
+            by: string;
         };
         /** DecisionsRequest */
         DecisionsRequest: {
             /** Decisions */
             decisions: components["schemas"]["DecisionEntry"][];
+            /**
+             * Base Sha256
+             * @description decisions_sha256 of the proposal as the form loaded it (null: there was no decisions.yaml); refused with 409 if the file changed since
+             */
+            base_sha256: string | null;
+            /**
+             * Force
+             * @description write even though decisions.yaml changed since it was loaded
+             * @default false
+             */
+            force?: boolean;
         };
         /** DecisionsResult */
         DecisionsResult: {
@@ -1297,6 +1307,11 @@ export interface components {
              * @description the decisions.yaml written
              */
             written: string;
+            /**
+             * Sha256
+             * @description its sha256 now: the base_sha256 of the next PUT
+             */
+            sha256: string;
             /**
              * Problems
              * @description what `evidence propose freeze` would refuse (cards.validate)
@@ -1526,6 +1541,12 @@ export interface components {
                 [key: string]: unknown;
             } | null;
             /**
+             * Error Calls
+             * @description engine: extractor calls whose result is an error (calls/*.json status error, e.g. no model gateway); `--retry-errors` runs them again
+             * @default 0
+             */
+            error_calls: number;
+            /**
              * Extractors
              * @default []
              */
@@ -1629,6 +1650,12 @@ export interface components {
             cost: {
                 [key: string]: unknown;
             } | null;
+            /**
+             * Error Calls
+             * @description engine: extractor calls whose result is an error (calls/*.json status error, e.g. no model gateway); `--retry-errors` runs them again
+             * @default 0
+             */
+            error_calls: number;
         };
         /** EvidenceTypeSpec */
         EvidenceTypeSpec: {
@@ -1937,6 +1964,17 @@ export interface components {
              */
             warnings: string[];
             /**
+             * Failed Calls
+             * @description an engine run's extractor calls that ended in an error (calls/*.json status error): done, but with failed calls
+             */
+            failed_calls: number | null;
+            /**
+             * Orphaned
+             * @description the server that started it stopped while its process ran on; this server watches the process and can cancel it
+             * @default false
+             */
+            orphaned: boolean;
+            /**
              * Steps
              * @default []
              */
@@ -1977,6 +2015,16 @@ export interface components {
             started_at: string | null;
             /** Ended At */
             ended_at: string | null;
+            /**
+             * Pid
+             * @description the running command's process id (also its process group's)
+             */
+            pid: number | null;
+            /**
+             * Pid Start
+             * @description the process's start time (/proc/<pid>/stat), so a reused pid is never taken for the job's process
+             */
+            pid_start: string | null;
         };
         /**
          * LabelRow
@@ -2197,6 +2245,11 @@ export interface components {
              * @default []
              */
             decision_problems: string[];
+            /**
+             * Decisions Sha256
+             * @description sha256 of decisions.yaml as read; a PUT of the decisions sends it back and is refused if the file changed since
+             */
+            decisions_sha256: string | null;
         };
         /** ProposalSummary */
         ProposalSummary: {
@@ -2552,6 +2605,12 @@ export interface components {
              * @description default: the corpus name
              */
             name?: string | null;
+            /**
+             * Retry Errors
+             * @description `--retry-errors`: run cached error results again instead of taking them from the record cache
+             * @default false
+             */
+            retry_errors?: boolean;
         };
         /** ScoreRef */
         ScoreRef: {
