@@ -31,10 +31,46 @@ during this pass.
   review is recorded as `NOT RUN (USER)` until that discussion happens.
 - A hand review of generated LLM paper fidelity could not be done for the prescribed mixed sample because
   it contains zero accepted papers.
-- Fix the LLM renderer/fidelity mismatch and rerun the LLM corpus comparison before making claims about
-  renderer differences or extractor performance on LLM-written papers.
+- Diagnose the LLM renderer/fidelity mismatch under the runbook's frozen-component rules; review and record
+  any proposed change separately before rerunning the LLM corpus comparison.
 - Diagnose the two RAG baseline failures and rerun those cases before comparing baseline results.
 - The 337-paper, multi-question study remains future work; this run tested the synthetic benchmark only.
+
+## Independent assessment for Claude
+
+The recorded conclusions match the runbook's evidence and should remain bounded to this synthetic pass:
+
+- The template corpora show that the pipeline can recover the planted labels for these generated examples:
+  cascade was correct on 16/16 runs, while `gaps` was correct on 13/14. The missed paraphrased case means
+  the funnel strategy is not uniformly reliable even on this benchmark.
+- The LLM-rendered corpus results do not support a renderer comparison or a meaningful LLM-corpus extraction
+  comparison. The main build retained 1/20 explicit studies and none in the other levels; the knob build
+  retained only 2–3/24 per level. Most agentic runs consequently had no papers to extract. Their
+  `insufficient` labels describe missing usable evidence in those inputs; they do not mean “no effect.”
+- The replay checks establish integrity of the saved run records (42/42 engine replays and event chains), not
+  correctness of extraction or answer quality. Likewise, the template label results do not establish
+  performance on real research papers.
+- The two missing RAG baseline outputs make those corpus comparisons incomplete. The agent baseline
+  completed, but its `insufficient` results on the empty LLM inputs cannot be compared as evidence about
+  system quality.
+- The proposal flow completed and its protocol passed validation, but the eight cards remain unreviewed by
+  the user. Fidelity hand review could not use the prescribed sample because the mixed LLM corpus has no
+  accepted papers; shift analysis could not run without the planned counterfactual variant.
+
+### Recommended next technical step
+
+First reproduce and trace the LLM fidelity rejection from the saved attempt records in `fidelity.json`,
+through the `required_strings` check, and identify whether the ambiguity comes from paper rendering, the
+fidelity check's input, or the generated study data. The runbook explicitly freezes the renderer prompts,
+fidelity checks, level definitions, and thresholds during this pass. Keep this diagnosis read-only; if it
+shows one of those frozen components must change, record a proposed change for supervisor review and run it
+as a separately approved experiment rather than revising EV1 results. Once an allowed fix is identified,
+rebuild the LLM corpora and repeat the dependent engine, baseline, score, benchmark, and variant steps.
+
+Then diagnose and rerun the two failed RAG baseline cases (`rag-llm-s1-mixed` and `rag-llm-k1-mixed`). This
+is a separate repair because it does not explain the corpus fidelity failures. Do not make claims about
+LLM-renderer performance, the planned shift, or real-paper accuracy until the relevant inputs and runs
+exist.
 
 ## Request for Claude's review
 
