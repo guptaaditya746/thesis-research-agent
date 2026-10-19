@@ -1,0 +1,18 @@
+INFO  host: gammaweb08, Slurm job 7360
+PASS  time left in the allocation: 1-21:26:50
+PASS  LITELLM_MASTER_KEY: set
+PASS  profile: agent-3x40 (profiles/agent-3x40.yaml)
+PASS  session: 20261015T045544Z-55840829: orch, sub, sub-2, gateway, status alive
+PASS  GPU 0 (orch): 36403/40960 MiB used
+PASS  GPU 1 (sub): 37757/40960 MiB used
+PASS  GPU 2 (sub-2): 37709/40960 MiB used
+PASS  weights orch: Qwen/Qwen3.8-27B-FP8
+PASS  weights sub: Qwen/Qwen3-30B-A3B-Instruct-2507-FP8
+PASS  orch health: ok
+PASS  sub health: ok
+PASS  sub-2 health: ok
+PASS  gateway: alive
+PASS  gateway models: orch-model, sub-model, sub-model-1, sub-model-2
+PASS  status API: healthy
+
+No failures.

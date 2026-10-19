@@ -1,0 +1,126 @@
+RUN cascade/rag-llm-small-paraphrased
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-llm-small-paraphrased",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 0,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.03
+ }
+}
+RUN agentic/rag-llm-small-paraphrased
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/agentic/rag-llm-small-paraphrased",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 0,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.028
+ }
+}
+RUN agentic-gaps/rag-llm-small-paraphrased
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/agentic-gaps/rag-llm-small-paraphrased",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 0,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.027
+ }
+}
+RUN cascade/rag-llm-small-distributed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-llm-small-distributed",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 0,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.029
+ }
+}
+RUN agentic/rag-llm-small-distributed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/agentic/rag-llm-small-distributed",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 0,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.03
+ }
+}
+RUN agentic-gaps/rag-llm-small-distributed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/agentic-gaps/rag-llm-small-distributed",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 0,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.024
+ }
+}

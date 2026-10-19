@@ -99,7 +99,8 @@ He wrote no numbered research questions. Read from his text:
 4. Funnel engine. **Done 17 Oct** (Part D).
 5. Proposal flow. **Done 17 Oct** (Part E).
 6. Codex runbook and the live Slurm run. Runbook written 17 Oct (`slurm-evidence-runbook.md`, dry-run
-   offline); live run pending.
+   offline); a partial live run was conducted 18–19 Oct on Slurm job 7488. Its current result is recorded
+   in `tests/RESULTS.md` under EV1; the LLM corpus fidelity failures prevented a complete comparison.
 7. Web app rebuild. **Done 17 Oct** as a read-only viewer of the evidence-level files (`/api/ev`); **18 Oct**
    it drives the flow: a guided stepper per question (selected from `evidence/questions.yaml`) that starts the
    missing steps as jobs (template corpus, engine run, both baselines, score, compare, the proposal flow with the
@@ -110,10 +111,12 @@ He wrote no numbered research questions. Read from his text:
 
 ## 6. What exists
 
-The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models only
-(1250 passed, 1 skipped in WSL, 18 Oct, with the proposal flow and the web app driving the flow; 1253 on 17 Oct before the earlier app's webapp tests were removed), **not yet run against live models**. The runbook for the first live run is
-[`slurm-evidence-runbook.md`](slurm-evidence-runbook.md) (rewritten 17 Oct for Parts D–G; not run yet,
-see §7).
+The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models
+(1250 passed, 1 skipped in WSL, 18 Oct, with the proposal flow and the web app driving the flow; 1253 on
+17 Oct before the earlier app's webapp tests were removed). A partial first live run was conducted on
+18–19 Oct on Slurm job 7488. Its synthetic LLM corpora failed fidelity checks on nearly all studies, so
+the live results are diagnostic and not a complete benchmark. See the EV1 rows in `tests/RESULTS.md`.
+The operational procedure remains [`slurm-evidence-runbook.md`](slurm-evidence-runbook.md).
 
 | Step (supervisor's order) | State | Where |
 |---|---|---|
@@ -128,7 +131,7 @@ see §7).
 | Evaluation A, B, C | built; intervals, flags, shift and benchmark records added 17 Oct | `evaluation/score.py`, `report.py`: extraction P/R/F1 per type and level with span accuracy, integration, synthesis (direction accuracy, completeness, traceability, expected-undetermined rule, flag precision/recall), locate recall, cascade contribution, cost, stability, 95 % BCa bootstrap intervals (`stats.py`); `evaluate shift` (`shift.py`), `evaluate benchmark` (`benchmark.py`, B11 records per extractor) |
 | Baselines | built; the RAG baseline rebuilt 17 Oct as the plain retrieve-then-answer system (§4, Part G.1) | `evaluation/baselines/rag.py` (global top 8, neutral prompt with citations, the mapping call shared with the agent baseline in `common.py`), `agent.py`; score C adds completeness and traceability |
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
-| Viewer and guided flow | viewer rebuilt 17 Oct for the supervisor's flow (§4); 18 Oct a guided stepper per question that starts the missing steps as jobs; tested on a world made by the real tools with scripted models and an offline smoke through the API (template corpus, regex-only run, score, decisions and freeze), not yet on a live run or a live model | `webapp/` (viewer `evapi.py`, `evfiles.py`; jobs and decisions `evjobs.py`, `jobs.py`; questions `evquestions.py` over `evidence/questions.yaml`; frontend `webapp/web/src/pages/flow/`, `components/flow/`, `pages/ev/`): question → protocol (hand-written, agentic variant or a frozen proposal; propose as a job, the eight cards as a form writing `decisions.yaml`, freeze) → corpus (choose, or a template build) → run (`evidence run`, both baselines, score, compare; live job log, the run page fills in) → evidence graph → answer → scores; one model job at a time, state in `$EV/.jobs`, loopback-only writes. Viewer pages: corpora, protocols and proposals, runs (funnel, spans, calls with model records or agent traces), scores (A/B/C with intervals, all vs gaps, shift, benchmark). The earlier app was removed 18 Oct (git `72da5dd`) |
+| Viewer and guided flow | viewer rebuilt 17 Oct for the supervisor's flow (§4); 18 Oct a guided stepper per question that starts the missing steps as jobs; tested on a world made by the real tools with scripted models and an offline smoke through the API (template corpus, regex-only run, score, decisions and freeze); used to inspect and launch jobs on the live Ceph artifacts on 18 Oct | `webapp/` (viewer `evapi.py`, `evfiles.py`; jobs and decisions `evjobs.py`, `jobs.py`; questions `evquestions.py` over `evidence/questions.yaml`; frontend `webapp/web/src/pages/flow/`, `components/flow/`, `pages/ev/`): question → protocol (hand-written, agentic variant or a frozen proposal; propose as a job, the eight cards as a form writing `decisions.yaml`, freeze) → corpus (choose, or a template build) → run (`evidence run`, both baselines, score, compare; live job log, the run page fills in) → evidence graph → answer → scores; one model job at a time, state in `$EV/.jobs`, loopback-only writes. Viewer pages: corpora, protocols and proposals, runs (funnel, spans, calls with model records or agent traces), scores (A/B/C with intervals, all vs gaps, shift, benchmark). The earlier app was removed 18 Oct (git `72da5dd`) |
 
 Not built: the 337-paper check (§5 step 8, §7).
 
@@ -141,7 +144,7 @@ Not built: the 337-paper check (§5 step 8, §7).
 | 337-paper check | Which of the 337 papers are RAG papers, and their gold (the `gold/` method; never run on the real model, [`earlier-work.md`](earlier-work.md) §6). |
 | Structured outputs on the server | pydantic-ai's `response_format` calls (LLM extractors, gold, judge) cannot ask for `disable_any_whitespace` per request; proposed: `--structured-outputs-config '{"disable_any_whitespace": true}'` in the `llm-setup` profile (a submodule, not changed here); count `finish_reason` length on guided calls on Slurm either way. |
 | Statistics | 95 % BCa bootstrap intervals (2,000 resamples, papers resampled; paired engine-minus-baseline difference) are built (Part F4); whether to report a test besides the intervals is open. |
-| Runbook | Written 17 Oct, live run pending (plan step 6). `slurm-evidence-runbook.md` covers Parts D–G: one model (`orch-model`) for extractors, baselines and the proposal flow; knob corpora (`rag-*-k1`, 2 of each knob) beside the level corpora; a `synth variant` of the mixed corpus (LLM and template); the engine `all` and `gaps` (also the agentic protocol in both); the RAG baseline's global top 8 with citations; scores with intervals, `evaluate compare` all vs gaps, `evaluate shift`, `evaluate benchmark`; a proposal-flow dry run on `orch-model` with the committed vocabulary, defaults frozen, `protocol check` and a diff against the hand-written protocol (nothing runs it), then a **USER** review of the cards. Dry-run offline in WSL with a scripted model (tiny template corpora; the LLM-renderer builds and the agent steps parse-checked only). |
+| Runbook | **PARTIAL**: the first live pass ran 18–19 Oct on job 7488. Template and LLM corpus builds, engine runs, replay checks, baselines, scores, comparisons and benchmark records exist under `/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster`; details and failures are in `tests/RESULTS.md` EV1 and that directory's `failures.md`. The LLM renderer's fidelity check rejected almost every study, so the LLM counterfactual and agentic small-set benchmark could not test the intended evidence. Two RAG baseline runs failed with `Event loop is closed`. Fidelity hand review and proposal card review remain USER steps; shift remains unavailable without a valid variant. |
 | Funnel knobs | After an escalation adds context the funnel does not re-run the dependent type's cheap position with it; `llm_screen` reads the first 12k characters (`head_chars`). Both to be judged on the first live numbers (Part D as built). |
 
 ## 8. Documents

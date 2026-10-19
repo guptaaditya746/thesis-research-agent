@@ -1,0 +1,411 @@
+# Frozen by `evidence propose freeze` from rag-factuality/ on 2026-10-17T22:02:56+00:00: the draft with the decisions of decisions.yaml
+# applied (proposal.json says what it was made from). Change it only through `evidence propose amend`.
+id: rag-factuality
+version: 2
+revision: 1
+question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
+locate:
+  strategy: exhaustive
+  params:
+    chunk_chars: 1500
+    top_k: 6
+screen:
+  question: Does the paper report a comparison of factual accuracy metrics between a retrieval-augmented generation
+    system and a closed-book or non-retrieval baseline?
+  terms:
+  - retrieval-augmented generation
+  - RAG
+  - factual accuracy
+  - factuality
+  - closed-book
+  - hallucination
+  extractors:
+  - name: regex_screen
+  - name: llm_screen
+  on_fail: skip
+evidence_types:
+  condition:
+    description: 'An experimental condition the paper compares: a system variant whose results are reported. role
+      is rag for A system that retrieves external documents to condition the generation of answers by a large language
+      model, closed_book for A large language model that generates answers using only its internal parametric knowledge
+      without accessing external retrieval sources, other for anything else.'
+    fields:
+      type: object
+      additionalProperties: false
+      required:
+      - label
+      - role
+      properties:
+        label:
+          type: string
+          minLength: 1
+          description: the condition's name as the paper gives it
+        role:
+          type: string
+          enum:
+          - rag
+          - closed_book
+          - other
+          description: rag, closed_book or other
+    roles:
+    - condition_label
+    merge_key:
+    - label
+    - role
+    query:
+    - retrieval-augmented generation
+    - RAG
+    - retrieval augmented generation
+    - retrieval-augmented
+    - retrieval-augmented model
+    - retrieval-augmented generator
+    - RAG pipeline
+    - retrieve-then-read
+    - closed-book
+    - closed-book model
+    - closed-book baseline
+    - without retrieval
+    - no retrieval
+    - no-retrieval baseline
+    - parametric-only model
+    - vanilla LLM
+    - baseline
+    - variant
+    - system
+    - condition
+    - compare
+    extractors:
+    - name: regex_condition
+      config:
+        conditions:
+          rag:
+          - (?i)\bretrieval[- ]augmented(?:\s+generation)?+(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\s+without\b)
+          - \bRAG\b(?:\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\s+(?i:with|without)\b)
+          - (?i)\b(?:model|LLM|system|variant|generator)\s+with\s+retrieval\b
+          - (?i)(?<!\w)retrieve\-then\-read(?!\w)
+          closed_book:
+          - (?i)(?<!\w)closed\-book(?!\w)
+          - (?i)(?<!\w)without\s+retrieval(?!\w)
+          - (?i)(?<!\w)no\s+retrieval(?!\w)
+          - (?i)(?<!\w)no\-retrieval\s+baseline(?!\w)
+          - (?i)(?<!\w)parametric\-only\s+model(?!\w)
+          - (?i)(?<!\w)vanilla\s+LLM(?!\w)
+    - name: llm_condition
+  metric:
+    description: An evaluation metric the paper reports results on. canonical is factual_accuracy for factual accuracy,
+      hallucination_rate for hallucination rate, factscore for FActScore, accuracy for accuracy, other for anything
+      else.
+    fields:
+      type: object
+      additionalProperties: false
+      required:
+      - name
+      - canonical
+      - higher_is_better
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: the metric's name as the paper gives it
+        canonical:
+          type: string
+          enum:
+          - factual_accuracy
+          - hallucination_rate
+          - factscore
+          - accuracy
+          - other
+        higher_is_better:
+          type: boolean
+    roles:
+    - metric_label
+    merge_key:
+    - name
+    - canonical
+    query:
+    - factual accuracy
+    - factuality accuracy
+    - answer accuracy
+    - factual correctness
+    - QA accuracy
+    - hallucination rate
+    - rate of hallucination
+    - rate of hallucinations
+    - hallucination ratio
+    - share of hallucinated answers
+    - FActScore
+    - factuality score
+    - accuracy
+    - metric
+    - measure
+    - evaluate
+    - score
+    extractors:
+    - name: regex_metric
+      config:
+        metrics:
+        - - (?i)(?<!\w)accuracy(?!\w)
+          - accuracy
+          - true
+        - - (?i)(?<!\w)factuality\s+score(?!\w)
+          - factscore
+          - true
+        - - (?i)(?<!\w)FActScore(?!\w)
+          - factscore
+          - true
+        - - (?i)(?<!\w)share\s+of\s+hallucinated\s+answers(?!\w)
+          - hallucination_rate
+          - false
+        - - (?i)(?<!\w)hallucination\s+ratio(?!\w)
+          - hallucination_rate
+          - false
+        - - (?i)(?<!\w)factual\s+correctness(?!\w)
+          - factual_accuracy
+          - true
+        - - (?i)\bfactual(?:ity)?\s+accuracy\b
+          - factual_accuracy
+          - true
+        - - (?i)\b(?:answer|exact[- ]match|EM|QA)\s+accuracy\b
+          - factual_accuracy
+          - true
+        - - (?i)\baccuracy\b
+          - factual_accuracy
+          - true
+        - - (?i)\bexact[- ]match\b
+          - factual_accuracy
+          - true
+        - - (?i)\bFActScore\b|\bfactuality\s+score\b
+          - factual_accuracy
+          - true
+        - - (?i)\bhallucination[- ]rate\b|\brate\s+of\s+hallucinat(?:ion|ions|ed\s+answers)\b
+          - hallucination_rate
+          - false
+        - - (?i)\blatency\b
+          - other
+          - false
+        - - \bBLEU\b|\bROUGE(?:-[12L])?\b
+          - other
+          - true
+        - - (?i)\bperplexity\b
+          - other
+          - false
+        - - (?i)\bfluency\b
+          - other
+          - true
+        - - \bF1\b
+          - other
+          - true
+    - name: llm_metric
+  measurement:
+    description: 'One reported result: the value of one metric for one condition. value is normalised to a fraction
+      (62% and 62.0 under a % header are 0.62). dataset is the dataset it was measured on, or null.'
+    fields:
+      type: object
+      additionalProperties: false
+      required:
+      - value
+      - dataset
+      properties:
+        value:
+          type: number
+          description: the value as a fraction for accuracies and rates
+        dataset:
+          type:
+          - string
+          - 'null'
+          description: the dataset, or null when the paper does not say
+    links:
+      condition: condition
+      metric: metric
+    bounds:
+    - field: value
+      min: 0
+      max: 1
+      when:
+        link: metric
+        field: canonical
+        values:
+        - hallucination_rate
+        - factscore
+    context:
+    - condition
+    - metric
+    roles:
+    - value
+    - condition_label
+    - metric_label
+    merge_key:
+    - value
+    query:
+    - factual accuracy
+    - factuality accuracy
+    - answer accuracy
+    - factual correctness
+    - QA accuracy
+    - hallucination rate
+    - rate of hallucination
+    - rate of hallucinations
+    - hallucination ratio
+    - share of hallucinated answers
+    - FActScore
+    - factuality score
+    - accuracy
+    - table
+    - results
+    - achieves
+    - reaches
+    - compared
+    - '%'
+    extractors:
+    - name: regex_measurement
+      config:
+        conditions:
+          rag:
+          - (?i)\bretrieval[- ]augmented(?:\s+generation)?+(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\s+without\b)
+          - \bRAG\b(?:\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\s+(?i:with|without)\b)
+          - (?i)\b(?:model|LLM|system|variant|generator)\s+with\s+retrieval\b
+          - (?i)(?<!\w)retrieve\-then\-read(?!\w)
+          closed_book:
+          - (?i)(?<!\w)closed\-book(?!\w)
+          - (?i)(?<!\w)without\s+retrieval(?!\w)
+          - (?i)(?<!\w)no\s+retrieval(?!\w)
+          - (?i)(?<!\w)no\-retrieval\s+baseline(?!\w)
+          - (?i)(?<!\w)parametric\-only\s+model(?!\w)
+          - (?i)(?<!\w)vanilla\s+LLM(?!\w)
+        metrics:
+        - - (?i)(?<!\w)accuracy(?!\w)
+          - accuracy
+          - true
+        - - (?i)(?<!\w)factuality\s+score(?!\w)
+          - factscore
+          - true
+        - - (?i)(?<!\w)FActScore(?!\w)
+          - factscore
+          - true
+        - - (?i)(?<!\w)share\s+of\s+hallucinated\s+answers(?!\w)
+          - hallucination_rate
+          - false
+        - - (?i)(?<!\w)hallucination\s+ratio(?!\w)
+          - hallucination_rate
+          - false
+        - - (?i)(?<!\w)factual\s+correctness(?!\w)
+          - factual_accuracy
+          - true
+        - - (?i)\bfactual(?:ity)?\s+accuracy\b
+          - factual_accuracy
+          - true
+        - - (?i)\b(?:answer|exact[- ]match|EM|QA)\s+accuracy\b
+          - factual_accuracy
+          - true
+        - - (?i)\baccuracy\b
+          - factual_accuracy
+          - true
+        - - (?i)\bexact[- ]match\b
+          - factual_accuracy
+          - true
+        - - (?i)\bFActScore\b|\bfactuality\s+score\b
+          - factual_accuracy
+          - true
+        - - (?i)\bhallucination[- ]rate\b|\brate\s+of\s+hallucinat(?:ion|ions|ed\s+answers)\b
+          - hallucination_rate
+          - false
+        - - (?i)\blatency\b
+          - other
+          - false
+        - - \bBLEU\b|\bROUGE(?:-[12L])?\b
+          - other
+          - true
+        - - (?i)\bperplexity\b
+          - other
+          - false
+        - - (?i)\bfluency\b
+          - other
+          - true
+        - - \bF1\b
+          - other
+          - true
+    - name: llm_measurement
+  author_claim:
+    description: 'The authors'' own conclusion about whether retrieval-augmented generation improves factual accuracy
+      over closed-book: improves, no_effect or worsens.'
+    fields:
+      type: object
+      additionalProperties: false
+      required:
+      - direction
+      properties:
+        direction:
+          type: string
+          enum:
+          - improves
+          - no_effect
+          - worsens
+    roles:
+    - claim
+    query:
+    - retrieval-augmented generation
+    - RAG
+    - retrieval augmented generation
+    - retrieval-augmented
+    - retrieval-augmented model
+    - retrieval-augmented generator
+    - RAG pipeline
+    - retrieve-then-read
+    - factual accuracy
+    - hallucination rate
+    - FActScore
+    - accuracy
+    - improves
+    - no effect
+    - worsens
+    - conclusion
+    - show
+    - find
+    - hurts
+    - effect
+    extractors:
+    - name: regex_author_claim
+    - name: llm_author_claim
+synthesis:
+  compare:
+    treatment: rag
+    control: closed_book
+  metrics:
+  - canonical: factual_accuracy
+    higher_is_better: true
+  - canonical: hallucination_rate
+    higher_is_better: false
+  - canonical: factscore
+    higher_is_better: true
+  - canonical: accuracy
+    higher_is_better: true
+  min_effect: 0.01
+  pairing:
+    rule: same_dataset
+    prefer:
+    - table_cell
+    - document_order
+  claim_map:
+    improves: supports
+    no_effect: neutral
+    worsens: contradicts
+  label:
+  - when:
+      supporting: '>0'
+      contradicting: '>0'
+    then: mixed
+  - when:
+      supporting: '>0'
+    then: supported
+  - when:
+      contradicting: '>0'
+    then: refuted
+  - when:
+      neutral: '>0'
+    then: no_effect
+  - then: insufficient
+  flags:
+    duplicates: true
+    large_effect:
+      factor: 3.0
+      min_studies: 3

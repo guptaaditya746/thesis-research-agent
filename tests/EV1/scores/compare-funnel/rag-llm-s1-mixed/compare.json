@@ -1,0 +1,166 @@
+{
+  "intervals": [
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    }
+  ],
+  "rows": [
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    }
+  ]
+}

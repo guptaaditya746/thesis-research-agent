@@ -1,0 +1,945 @@
+{
+ "proposal": "rag-factuality",
+ "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+ "created": "2026-10-17T22:02:56+00:00",
+ "protocol": {
+  "file": "protocol.yaml",
+  "id": "rag-factuality",
+  "version": 2,
+  "revision": 1,
+  "sha256": "e40e4902fee172fe9df3e4bb4758f3e888bc1468b73e0ff24cf33eb10303cf91"
+ },
+ "vocabulary": {
+  "name": "rag-factuality",
+  "sha256": "f2960c29148df56a6e56b1e8fa909ae4c7944bc386e377c55fbe35a61d944645"
+ },
+ "models": {
+  "frame": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+  "critic": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+  "cards": "Qwen/Qwen3.8-27B-FP8@017b9c7"
+ },
+ "prompts": {
+  "frame": "556a7b11d30e5dede493c812ad113558f0df2382031a152baee4a286ba1ff9b2",
+  "critic": "5508b4e53d9f4c639aeea5cef8491c5db4cbba305f9cefa84e6a16aa04e696b2",
+  "cards": "a9052f9137446cfe0d742afc17ba0946fbb5d79bac3456d645d14bd223ae9fee"
+ },
+ "inputs": {
+  "frame_sha256": "87060a6571b9b8404f5c14a8ea9b894a8d2456b011a6506b68141271b1e45ae5",
+  "draft_sha256": "c32a601ed545f03fd1c9c73a8f6426cb40ec022ecc26d2aeaddb87c5ac553355",
+  "critic_sha256": "1c536a82ac285971a2b6e807d42c78550533c4ea03b44c297aff07d8df40009d",
+  "cards_sha256": "d342300c92ea679209ad0b8ee7563174add25e13a7ababf6a93c9fb1419ad041",
+  "decisions_sha256": "64f2828cec06ff4bd83a7752604054605a0473d528bdca7f3706aa44614597af",
+  "template": {
+   "path": "rag-factuality.yaml",
+   "sha256": "029e25985fc78171f7a48f2f2d6fe1e906b58fde6efb80a84ae40e5502144154"
+  }
+ },
+ "run_settings": {
+  "strategy": "gaps"
+ },
+ "decided_by": {
+  "model": [
+   "screen",
+   "roles",
+   "metrics",
+   "min_effect",
+   "pairing",
+   "label",
+   "cascade",
+   "locate"
+  ]
+ },
+ "decisions": [
+  {
+   "card": "screen",
+   "choice": "draft",
+   "value": {
+    "question": "Does the paper report a comparison of factual accuracy metrics between a retrieval-augmented generation system and a closed-book or non-retrieval baseline?",
+    "terms": [
+     "retrieval-augmented generation",
+     "RAG",
+     "factual accuracy",
+     "factuality",
+     "closed-book",
+     "hallucination"
+    ]
+   },
+   "default": "draft",
+   "reason": "default: The draft's screening question and terms correctly target the comparison between RAG and non-retrieval baselines, which is the core of the question. The critic's finding regarding missing synonyms in the regex patterns is a technical implementation detail of the extractor, not a flaw in the screening scope itself; the LLM screen will handle the semantic matching for terms like 'retrieve-then-read'.",
+   "by": "model"
+  },
+  {
+   "card": "roles",
+   "choice": "draft",
+   "value": {
+    "treatment": {
+     "role": "rag",
+     "definition": "A system that retrieves external documents to condition the generation of answers by a large language model."
+    },
+    "control": {
+     "role": "closed_book",
+     "definition": "A large language model that generates answers using only its internal parametric knowledge without accessing external retrieval sources."
+    }
+   },
+   "default": "draft",
+   "reason": "default: The definitions for 'rag' and 'closed_book' accurately reflect the treatment and control specified in the frame. The critic's concern about 'vanilla LLM' potentially being a different base model is a valid data quality issue, but the role definition itself is correct for the purpose of identifying the intended control condition in the protocol.",
+   "by": "model"
+  },
+  {
+   "card": "metrics",
+   "choice": "draft",
+   "value": {
+    "metrics": [
+     {
+      "canonical": "factual_accuracy",
+      "higher_is_better": true
+     },
+     {
+      "canonical": "hallucination_rate",
+      "higher_is_better": false
+     },
+     {
+      "canonical": "factscore",
+      "higher_is_better": true
+     },
+     {
+      "canonical": "accuracy",
+      "higher_is_better": true
+     }
+    ]
+   },
+   "default": "draft",
+   "reason": "default: The metrics listed (factual_accuracy, hallucination_rate, factscore, accuracy) are the standard measures for the question's outcome, and their directions (higher_is_better) align with the vocabulary entries provided.",
+   "by": "model"
+  },
+  {
+   "card": "min_effect",
+   "choice": "draft",
+   "value": {
+    "min_effect": 0.01
+   },
+   "default": "draft",
+   "reason": "default: A 1% threshold (0.01) is a standard and reasonable minimum effect size for determining statistical or practical significance in LLM evaluation studies, avoiding noise while capturing meaningful improvements.",
+   "by": "model"
+  },
+  {
+   "card": "pairing",
+   "choice": "draft",
+   "value": {
+    "prefer": [
+     "table_cell",
+     "document_order"
+    ]
+   },
+   "default": "draft",
+   "reason": "default: Preferring table cells over document order is the most reliable way to extract specific metric values, as tables are structured data sources where condition-metric pairs are explicitly laid out, reducing the risk of misattribution compared to prose.",
+   "by": "model"
+  },
+  {
+   "card": "label",
+   "choice": "draft",
+   "value": {
+    "rows": [
+     {
+      "when": {
+       "supporting": ">0",
+       "contradicting": ">0"
+      },
+      "then": "mixed"
+     },
+     {
+      "when": {
+       "supporting": ">0"
+      },
+      "then": "supported"
+     },
+     {
+      "when": {
+       "contradicting": ">0"
+      },
+      "then": "refuted"
+     },
+     {
+      "when": {
+       "neutral": ">0"
+      },
+      "then": "no_effect"
+     },
+     {
+      "when": {},
+      "then": "insufficient"
+     }
+    ]
+   },
+   "default": "draft",
+   "reason": "default: The 'any_evidence' logic (draft) is appropriate for a systematic review where a single strong study can support a claim, unless contradicted. Requiring two studies (option 'two_studies') might be too strict for a rapidly evolving field where high-quality evidence may be sparse.",
+   "by": "model"
+  },
+  {
+   "card": "cascade",
+   "choice": "gaps",
+   "value": {
+    "extractors": {
+     "condition": [
+      "regex_condition",
+      "llm_condition"
+     ],
+     "metric": [
+      "regex_metric",
+      "llm_metric"
+     ],
+     "measurement": [
+      "regex_measurement",
+      "llm_measurement"
+     ],
+     "author_claim": [
+      "regex_author_claim",
+      "llm_author_claim"
+     ],
+     "screen": [
+      "regex_screen",
+      "llm_screen"
+     ]
+    },
+    "strategy": "gaps"
+   },
+   "default": "gaps",
+   "reason": "default: The 'gaps' strategy is more efficient than 'all' because it only escalates to the LLM extractor for items that the regex extractor failed to capture or was uncertain about, reducing computational cost while maintaining coverage.",
+   "by": "model"
+  },
+  {
+   "card": "locate",
+   "choice": "draft",
+   "value": {
+    "strategy": "exhaustive",
+    "params": {
+     "chunk_chars": 1500,
+     "top_k": 6
+    }
+   },
+   "default": "draft",
+   "reason": "default: The 'exhaustive' strategy with chunking (1500 chars, top 6) is a balanced approach that ensures the extractors see the most relevant parts of the paper without processing the entire text, which is crucial for handling long academic papers efficiently.",
+   "by": "model"
+  }
+ ],
+ "checks": [
+  {
+   "id": "parses",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "validates: id rag-factuality, sha256 e40e4902fee172fe9df3e4bb4758f3e888bc1468b73e0ff24cf33eb10303cf91"
+  },
+  {
+   "id": "outcomes_complete",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "every outcome is a question metric with its direction"
+  },
+  {
+   "id": "terms_cover_synonyms",
+   "kind": "deterministic",
+   "ok": false,
+   "message": "not found by the regex patterns: treatment name 'retrieval augmented generation' (no screen term in it); treatment name 'retrieval-augmented' (no screen term in it); treatment name 'retrieval-augmented model' (no screen term in it); treatment name 'retrieval-augmented generator' (no screen term in it); treatment name 'retrieve-then-read' (no screen term in it)"
+  },
+  {
+   "id": "regex_matches_enums",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the regex steps emit only enum values and have a pattern for each"
+  },
+  {
+   "id": "screen_present",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the protocol screens on its terms"
+  },
+  {
+   "id": "label_complete",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the last label row is the default and only it"
+  },
+  {
+   "id": "extractors_registered",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "every extractor is registered"
+  },
+  {
+   "id": "vocabulary_direction",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "no outcome's direction contradicts the vocabulary"
+  }
+ ],
+ "frame": {
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "vocabulary": {
+   "name": "rag-factuality",
+   "sha256": "f2960c29148df56a6e56b1e8fa909ae4c7944bc386e377c55fbe35a61d944645",
+   "path": "evidence/vocab/rag-factuality.json"
+  },
+  "call": {
+   "step": "frame",
+   "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+   "prompt_sha256": "556a7b11d30e5dede493c812ad113558f0df2382031a152baee4a286ba1ff9b2",
+   "cache_key": "0efa0fc2216a9d3872146d396d52dc8c69cb64a4a362e4c02d6965bb8ebbdd5f",
+   "cached": false
+  },
+  "created": "2026-10-17T22:00:34+00:00",
+  "population": {
+   "description": "Papers that evaluate the factual accuracy of answers generated by large language models using retrieval-augmented generation compared to a non-retrieval baseline.",
+   "screening_question": "Does the paper report a comparison of factual accuracy metrics between a retrieval-augmented generation system and a closed-book or non-retrieval baseline?",
+   "terms": [
+    {
+     "term": "retrieval-augmented generation",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "RAG",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "factual accuracy",
+     "source": "ontology",
+     "vocab_id": "hand:factual_accuracy"
+    },
+    {
+     "term": "factuality",
+     "source": "invented",
+     "vocab_id": null
+    },
+    {
+     "term": "closed-book",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    },
+    {
+     "term": "hallucination",
+     "source": "invented",
+     "vocab_id": null
+    }
+   ],
+   "source": "invented"
+  },
+  "treatment": {
+   "role": "rag",
+   "label": "retrieval-augmented generation",
+   "definition": "A system that retrieves external documents to condition the generation of answers by a large language model.",
+   "synonyms": [
+    {
+     "term": "RAG",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "retrieval augmented generation",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "retrieval-augmented",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "retrieval-augmented model",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "retrieval-augmented generator",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "RAG pipeline",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    },
+    {
+     "term": "retrieve-then-read",
+     "source": "ontology",
+     "vocab_id": "hand:retrieval_augmented_generation"
+    }
+   ],
+   "source": "ontology",
+   "vocab_id": "hand:retrieval_augmented_generation",
+   "vocab_synonyms": []
+  },
+  "control": {
+   "role": "closed_book",
+   "label": "closed-book",
+   "definition": "A large language model that generates answers using only its internal parametric knowledge without accessing external retrieval sources.",
+   "synonyms": [
+    {
+     "term": "closed-book model",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    },
+    {
+     "term": "closed-book baseline",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    },
+    {
+     "term": "without retrieval",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    },
+    {
+     "term": "no retrieval",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    },
+    {
+     "term": "no-retrieval baseline",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    },
+    {
+     "term": "parametric-only model",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    },
+    {
+     "term": "vanilla LLM",
+     "source": "ontology",
+     "vocab_id": "hand:closed_book"
+    }
+   ],
+   "source": "ontology",
+   "vocab_id": "hand:closed_book",
+   "vocab_synonyms": []
+  },
+  "outcomes": [
+   {
+    "canonical": "factual_accuracy",
+    "label": "factual accuracy",
+    "higher_is_better": true,
+    "fraction": false,
+    "synonyms": [
+     {
+      "term": "factuality accuracy",
+      "source": "ontology",
+      "vocab_id": "hand:factual_accuracy"
+     },
+     {
+      "term": "answer accuracy",
+      "source": "ontology",
+      "vocab_id": "hand:factual_accuracy"
+     },
+     {
+      "term": "factual correctness",
+      "source": "ontology",
+      "vocab_id": "hand:factual_accuracy"
+     },
+     {
+      "term": "QA accuracy",
+      "source": "ontology",
+      "vocab_id": "hand:factual_accuracy"
+     }
+    ],
+    "source": "ontology",
+    "vocab_id": "hand:factual_accuracy",
+    "vocab_synonyms": [],
+    "vocab_higher_is_better": true
+   },
+   {
+    "canonical": "hallucination_rate",
+    "label": "hallucination rate",
+    "higher_is_better": false,
+    "fraction": true,
+    "synonyms": [
+     {
+      "term": "rate of hallucination",
+      "source": "ontology",
+      "vocab_id": "hand:hallucination_rate"
+     },
+     {
+      "term": "rate of hallucinations",
+      "source": "ontology",
+      "vocab_id": "hand:hallucination_rate"
+     },
+     {
+      "term": "hallucination ratio",
+      "source": "ontology",
+      "vocab_id": "hand:hallucination_rate"
+     },
+     {
+      "term": "share of hallucinated answers",
+      "source": "ontology",
+      "vocab_id": "hand:hallucination_rate"
+     }
+    ],
+    "source": "ontology",
+    "vocab_id": "hand:hallucination_rate",
+    "vocab_synonyms": [],
+    "vocab_higher_is_better": false
+   },
+   {
+    "canonical": "factscore",
+    "label": "FActScore",
+    "higher_is_better": true,
+    "fraction": true,
+    "synonyms": [
+     {
+      "term": "factuality score",
+      "source": "ontology",
+      "vocab_id": "hand:factscore"
+     }
+    ],
+    "source": "ontology",
+    "vocab_id": "hand:factscore",
+    "vocab_synonyms": [],
+    "vocab_higher_is_better": true
+   },
+   {
+    "canonical": "accuracy",
+    "label": "accuracy",
+    "higher_is_better": true,
+    "fraction": false,
+    "synonyms": [],
+    "source": "ontology",
+    "vocab_id": "hand:accuracy",
+    "vocab_synonyms": [],
+    "vocab_higher_is_better": true
+   }
+  ],
+  "effect_labels": [
+   {
+    "value": "improves",
+    "direction": "supports",
+    "source": "invented"
+   },
+   {
+    "value": "no_effect",
+    "direction": "neutral",
+    "source": "invented"
+   },
+   {
+    "value": "worsens",
+    "direction": "contradicts",
+    "source": "invented"
+   }
+  ]
+ },
+ "sources": {
+  "frame_sha256": "87060a6571b9b8404f5c14a8ea9b894a8d2456b011a6506b68141271b1e45ae5",
+  "template": {
+   "path": "rag-factuality.yaml",
+   "sha256": "029e25985fc78171f7a48f2f2d6fe1e906b58fde6efb80a84ae40e5502144154"
+  },
+  "vocabulary": {
+   "name": "rag-factuality",
+   "sha256": "f2960c29148df56a6e56b1e8fa909ae4c7944bc386e377c55fbe35a61d944645"
+  },
+  "fields": [
+   {
+    "path": "locate",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "screen.question",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "screen.extractors",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "screen.on_fail",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.condition.description",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.condition.fields.role.enum",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.metric.description",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.metric.fields.canonical.enum",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.measurement.bounds",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.author_claim.description",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.author_claim.fields.direction.enum",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.condition.query",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.condition.extractors",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.condition.fields",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.metric.query",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.metric.extractors",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.metric.fields",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.measurement.query",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.measurement.extractors",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.measurement.fields",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.author_claim.query",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.author_claim.extractors",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "evidence_types.author_claim.fields",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "synthesis.compare.treatment",
+    "source": "ontology",
+    "vocab_id": "hand:retrieval_augmented_generation"
+   },
+   {
+    "path": "synthesis.compare.control",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "synthesis.metrics[0].canonical",
+    "source": "ontology",
+    "vocab_id": "hand:factual_accuracy"
+   },
+   {
+    "path": "synthesis.metrics[0].higher_is_better",
+    "source": "ontology",
+    "vocab_id": "hand:factual_accuracy"
+   },
+   {
+    "path": "synthesis.metrics[1].canonical",
+    "source": "ontology",
+    "vocab_id": "hand:hallucination_rate"
+   },
+   {
+    "path": "synthesis.metrics[1].higher_is_better",
+    "source": "ontology",
+    "vocab_id": "hand:hallucination_rate"
+   },
+   {
+    "path": "synthesis.metrics[2].canonical",
+    "source": "ontology",
+    "vocab_id": "hand:factscore"
+   },
+   {
+    "path": "synthesis.metrics[2].higher_is_better",
+    "source": "ontology",
+    "vocab_id": "hand:factscore"
+   },
+   {
+    "path": "synthesis.metrics[3].canonical",
+    "source": "ontology",
+    "vocab_id": "hand:accuracy"
+   },
+   {
+    "path": "synthesis.metrics[3].higher_is_better",
+    "source": "ontology",
+    "vocab_id": "hand:accuracy"
+   },
+   {
+    "path": "synthesis.claim_map.improves",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "synthesis.claim_map.no_effect",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "synthesis.claim_map.worsens",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "synthesis.min_effect",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "synthesis.pairing",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "synthesis.label",
+    "source": "protocol",
+    "vocab_id": null
+   },
+   {
+    "path": "synthesis.flags",
+    "source": "protocol",
+    "vocab_id": null
+   }
+  ],
+  "terms": [
+   {
+    "path": "screen.terms",
+    "term": "retrieval-augmented generation",
+    "source": "ontology",
+    "vocab_id": "hand:retrieval_augmented_generation"
+   },
+   {
+    "path": "screen.terms",
+    "term": "RAG",
+    "source": "ontology",
+    "vocab_id": "hand:retrieval_augmented_generation"
+   },
+   {
+    "path": "screen.terms",
+    "term": "factual accuracy",
+    "source": "ontology",
+    "vocab_id": "hand:factual_accuracy"
+   },
+   {
+    "path": "screen.terms",
+    "term": "factuality",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "screen.terms",
+    "term": "closed-book",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "screen.terms",
+    "term": "hallucination",
+    "source": "invented",
+    "vocab_id": null
+   },
+   {
+    "path": "regex.conditions.rag",
+    "term": "retrieve-then-read",
+    "source": "ontology",
+    "vocab_id": "hand:retrieval_augmented_generation"
+   },
+   {
+    "path": "regex.conditions.closed_book",
+    "term": "closed-book",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "regex.conditions.closed_book",
+    "term": "without retrieval",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "regex.conditions.closed_book",
+    "term": "no retrieval",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "regex.conditions.closed_book",
+    "term": "no-retrieval baseline",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "regex.conditions.closed_book",
+    "term": "parametric-only model",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "regex.conditions.closed_book",
+    "term": "vanilla LLM",
+    "source": "ontology",
+    "vocab_id": "hand:closed_book"
+   },
+   {
+    "path": "regex.metrics.factual_accuracy",
+    "term": "factual correctness",
+    "source": "ontology",
+    "vocab_id": "hand:factual_accuracy"
+   },
+   {
+    "path": "regex.metrics.hallucination_rate",
+    "term": "hallucination ratio",
+    "source": "ontology",
+    "vocab_id": "hand:hallucination_rate"
+   },
+   {
+    "path": "regex.metrics.hallucination_rate",
+    "term": "share of hallucinated answers",
+    "source": "ontology",
+    "vocab_id": "hand:hallucination_rate"
+   },
+   {
+    "path": "regex.metrics.factscore",
+    "term": "FActScore",
+    "source": "ontology",
+    "vocab_id": "hand:factscore"
+   },
+   {
+    "path": "regex.metrics.factscore",
+    "term": "factuality score",
+    "source": "ontology",
+    "vocab_id": "hand:factscore"
+   },
+   {
+    "path": "regex.metrics.accuracy",
+    "term": "accuracy",
+    "source": "ontology",
+    "vocab_id": "hand:accuracy"
+   }
+  ]
+ },
+ "critic": {
+  "draft_sha256": "c32a601ed545f03fd1c9c73a8f6426cb40ec022ecc26d2aeaddb87c5ac553355",
+  "frame_sha256": "87060a6571b9b8404f5c14a8ea9b894a8d2456b011a6506b68141271b1e45ae5",
+  "ok": false,
+  "checks": [
+   {
+    "id": "parses",
+    "kind": "deterministic",
+    "ok": true,
+    "message": "validates: id rag-factuality, sha256 6798480fd2e0dfa3397f33e5a579cbf852b6f30b5eab17574642fbcbdb2f8167"
+   },
+   {
+    "id": "outcomes_complete",
+    "kind": "deterministic",
+    "ok": true,
+    "message": "every outcome is a question metric with its direction"
+   },
+   {
+    "id": "terms_cover_synonyms",
+    "kind": "deterministic",
+    "ok": false,
+    "message": "not found by the regex patterns: treatment name 'retrieval augmented generation' (no screen term in it); treatment name 'retrieval-augmented' (no screen term in it); treatment name 'retrieval-augmented model' (no screen term in it); treatment name 'retrieval-augmented generator' (no screen term in it); treatment name 'retrieve-then-read' (no screen term in it)"
+   },
+   {
+    "id": "regex_matches_enums",
+    "kind": "deterministic",
+    "ok": true,
+    "message": "the regex steps emit only enum values and have a pattern for each"
+   },
+   {
+    "id": "screen_present",
+    "kind": "deterministic",
+    "ok": true,
+    "message": "the protocol screens on its terms"
+   },
+   {
+    "id": "label_complete",
+    "kind": "deterministic",
+    "ok": true,
+    "message": "the last label row is the default and only it"
+   },
+   {
+    "id": "extractors_registered",
+    "kind": "deterministic",
+    "ok": true,
+    "message": "every extractor is registered"
+   },
+   {
+    "id": "vocabulary_direction",
+    "kind": "deterministic",
+    "ok": true,
+    "message": "no outcome's direction contradicts the vocabulary"
+   },
+   {
+    "id": "ambiguous_roles",
+    "kind": "llm",
+    "ok": false,
+    "message": "The regex for the 'rag' role includes the pattern `(?i)\\b(?:model|LLM|system|variant|generator)\\s+with\\s+retrieval\\b`. This pattern can match phrases like 'model with retrieval' which might be used to describe a baseline or a specific component rather than the full RAG system, or conversely, a 'closed-book' model might be described in a context where 'retrieval' is mentioned as something it *lacks* (e.g., 'unlike the model with retrieval, the closed-book model...'). More critically, the term 'retrieval-augmented' is a synonym for RAG, but the regex `(?i)\\bretrieval[- ]augmented...` might match 'retrieval-augmented' in a negative context if not carefully bounded, though the negative lookahead `(?!\\s+without\\b)` helps. However, the biggest issue is that 'closed_book' synonyms include 'without retrieval' and 'no retrieval'. If a paper says 'We compare RAG against a baseline without retrieval', the 'without retrieval' part is clearly control. But if a paper describes a system as 'a retrieval-augmented model' and another as 'a model with retrieval', they are likely the same. The ambiguity arises if a paper uses 'retrieval' to describe a component of a non-RAG system (e.g., 'we use a retrieval module for data selection, but generation is closed-book'). The role definitions rely on the presence of 'retrieval' to assign 'rag', which could misclassify a system that uses retrieval for non-generation purposes or a hybrid system where the 'treatment' is specifically the augmentation of generation, not just the presence of a retriever. Additionally, the term 'vanilla LLM' is mapped to 'closed_book', but 'vanilla' can sometimes imply a specific architecture or pre-training setup that might not be the direct control for a RAG system if the RAG system uses a different base LLM. The protocol assumes the control is the *same* LLM without retrieval, but the role definition for 'closed_book' is 'A large language model that generates answers using only its internal parametric knowledge'. It does not explicitly enforce that it is the *same* model as the RAG system, which is a standard requirement for a fair comparison. If a paper compares RAG (using Llama-2) against a 'vanilla LLM' (using GPT-3.5), the 'vanilla LLM' fits the 'closed_book' role definition but is not a valid control for the specific RAG system. The role definition is too broad."
+   },
+   {
+    "id": "missing_comparator",
+    "kind": "llm",
+    "ok": true,
+    "message": "The protocol defines a 'closed_book' control role, which represents the same system without the treatment (retrieval). This is a valid comparator."
+   },
+   {
+    "id": "metric_direction",
+    "kind": "llm",
+    "ok": true,
+    "message": "The directions for factual_accuracy (higher is better), hallucination_rate (lower is better), factscore (higher is better), and accuracy (higher is better) are correct."
+   },
+   {
+    "id": "scope",
+    "kind": "llm",
+    "ok": false,
+    "message": "The screening question asks for a comparison between a RAG system and a 'closed-book or non-retrieval baseline'. The terms include 'hallucination' and 'factuality'. However, the scope might be too narrow if it only looks for papers that explicitly use the term 'closed-book'. Many papers compare RAG against a 'standard LLM' or 'base model' without using the specific term 'closed-book'. The synonyms for 'closed_book' include 'vanilla LLM' and 'parametric-only model', which helps, but the screening question specifically mentions 'closed-book or non-retrieval baseline'. If a paper compares RAG against a 'standard LLM' and does not use the terms 'closed-book', 'non-retrieval', 'vanilla', or 'parametric-only', it might be missed. Conversely, the term 'hallucination' is included in the screening terms, which is good for catching papers that focus on hallucination reduction as a proxy for factual accuracy. However, the scope might admit papers that compare RAG against other retrieval-based methods (e.g., different retrievers) rather than a non-retrieval baseline, if the screening question is interpreted loosely. The question specifically asks for 'closed-book or non-retrieval baseline', so papers comparing RAG vs. RAG+ (different retriever) should be excluded. The screening question seems to enforce this, but the terms 'retrieval-augmented generation' and 'RAG' are broad. A paper might report RAG results and a 'baseline' that is actually another RAG variant. The LLM screen would need to correctly identify the baseline as 'closed_book' to include the paper. If the baseline is not clearly identified as non-retrieval, it might be misclassified. The scope is generally okay but relies heavily on the LLM screen to correctly identify the control condition as non-retrieval."
+   }
+  ],
+  "call": {
+   "step": "critic",
+   "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+   "prompt_sha256": "5508b4e53d9f4c639aeea5cef8491c5db4cbba305f9cefa84e6a16aa04e696b2",
+   "cache_key": "5ef4ae536b7ce69d948afc1444a0648a3ac5bfe2e2e3498453edf6757c91d2e3",
+   "cached": false
+  },
+  "created": "2026-10-17T22:01:50+00:00"
+ }
+}

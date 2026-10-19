@@ -1,0 +1,115 @@
+{
+  "corpus_id": "rag-tpl-s1-79207ad1",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "1",
+    "code_sha256": "acb0b213e69381f9d96972e73b4f521dba0786c7c3c6db4e37f90d12459a9fb7"
+  },
+  "renderer": "template",
+  "level": "distributed",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "distributed"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "distributed"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "distributed"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "distributed"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "distributed"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "distributed"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "distributed"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "distributed"
+    },
+    {
+      "id": "S009",
+      "study_id": "S009",
+      "level": "distributed"
+    },
+    {
+      "id": "S010",
+      "study_id": "S010",
+      "level": "distributed"
+    },
+    {
+      "id": "S011",
+      "study_id": "S011",
+      "level": "distributed"
+    },
+    {
+      "id": "S012",
+      "study_id": "S012",
+      "level": "distributed"
+    },
+    {
+      "id": "S013",
+      "study_id": "S013",
+      "level": "distributed"
+    },
+    {
+      "id": "S014",
+      "study_id": "S014",
+      "level": "distributed"
+    },
+    {
+      "id": "S015",
+      "study_id": "S015",
+      "level": "distributed"
+    },
+    {
+      "id": "S016",
+      "study_id": "S016",
+      "level": "distributed"
+    },
+    {
+      "id": "S017",
+      "study_id": "S017",
+      "level": "distributed"
+    },
+    {
+      "id": "S018",
+      "study_id": "S018",
+      "level": "distributed"
+    },
+    {
+      "id": "S019",
+      "study_id": "S019",
+      "level": "distributed"
+    },
+    {
+      "id": "S020",
+      "study_id": "S020",
+      "level": "distributed"
+    }
+  ],
+  "models": null
+}

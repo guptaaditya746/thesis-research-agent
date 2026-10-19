@@ -1,0 +1,192 @@
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-complex-replay-20261015T074205097548Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-complex",
+ "replay_run": "rag-tpl-s1-complex-replay-20261015T074205097548Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-complex
+{
+ "ok": true,
+ "records": 241,
+ "head": "bda1352e84304ce166f54cc11a4f8351e415e4494fc98cfdc7b69abe9a6042bf",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-complex
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-contradictory
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-contradictory-replay-20261015T074255384972Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-contradictory",
+ "replay_run": "rag-tpl-s1-contradictory-replay-20261015T074255384972Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-contradictory
+{
+ "ok": true,
+ "records": 241,
+ "head": "017ff57291ea699582e2e7fd013121d9bc148e271a67fc4c2faaf8faeb5eaa31",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-contradictory
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-distributed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-distributed-replay-20261015T074343462178Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-distributed",
+ "replay_run": "rag-tpl-s1-distributed-replay-20261015T074343462178Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-distributed
+{
+ "ok": true,
+ "records": 241,
+ "head": "0fc6c6b06fe0ebf56b0984eb33797caa759d2116f39f125ac23340a991ff3d3e",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-distributed
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-explicit
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-explicit-replay-20261015T074430953715Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-explicit",
+ "replay_run": "rag-tpl-s1-explicit-replay-20261015T074430953715Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-explicit
+{
+ "ok": true,
+ "records": 241,
+ "head": "0a59e6144dad8442e601b66ad29ed03975ed1ea44f0e98fdadec16149faabe65",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-explicit
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-mixed-replay-20261015T074518224872Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-mixed",
+ "replay_run": "rag-tpl-s1-mixed-replay-20261015T074518224872Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-mixed
+{
+ "ok": true,
+ "records": 241,
+ "head": "3298a97b8328ce769d367aeab1caa48693ba47a618b288a95572e19a59c6e76f",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-mixed
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-paraphrased
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-paraphrased-replay-20261015T074606224643Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-paraphrased",
+ "replay_run": "rag-tpl-s1-paraphrased-replay-20261015T074606224643Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-paraphrased
+{
+ "ok": true,
+ "records": 241,
+ "head": "e992549fe0e67b82304bd679af2ecb11888a17adb129c65fb4834d6a09e1f7b4",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-paraphrased
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-complex-replay-20261015T074653192078Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-complex",
+ "replay_run": "rag-tpl-s1-complex-replay-20261015T074653192078Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-complex
+{
+ "ok": true,
+ "records": 321,
+ "head": "71b1d6208936b1f3303364542bb79629c777efff0e0aae555ba97fb19cf67597",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-complex
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-contradictory
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-contradictory-replay-20261015T074741550918Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-contradictory",
+ "replay_run": "rag-tpl-s1-contradictory-replay-20261015T074741550918Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-contradictory
+{
+ "ok": true,
+ "records": 321,
+ "head": "ac44e29c591b0341973e174b9dd808da08b9cd33f0f3b0d386d1e0c2ed0d23c0",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-contradictory
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-distributed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-distributed-replay-20261015T074829350782Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-distributed",
+ "replay_run": "rag-tpl-s1-distributed-replay-20261015T074829350782Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-distributed
+{
+ "ok": true,
+ "records": 321,
+ "head": "50167d35c9d9005177466d97991fcf00832acd627a667171bb652c71224f76c0",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-distributed
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-explicit
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-explicit-replay-20261015T074917184877Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-explicit",
+ "replay_run": "rag-tpl-s1-explicit-replay-20261015T074917184877Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-explicit
+{
+ "ok": true,
+ "records": 321,
+ "head": "e8aaf2ddee5203c2cf2cf374f9b4e6733360c7ea4bc0821431a8eee7c4dd558f",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-explicit
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-mixed-replay-20261015T075004888702Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-mixed",
+ "replay_run": "rag-tpl-s1-mixed-replay-20261015T075004888702Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-mixed
+{
+ "ok": true,
+ "records": 321,
+ "head": "7df94dca673b53bcdab465eb49918663e41979d70c4d8b37bcdd47bb6a1c887a",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-mixed
+=== /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-paraphrased
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-paraphrased-replay-20261015T075052048446Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-s1-paraphrased",
+ "replay_run": "rag-tpl-s1-paraphrased-replay-20261015T075052048446Z"
+}
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-paraphrased
+{
+ "ok": true,
+ "records": 321,
+ "head": "20fd57e1d7ab4ff1ff74e75988010f7042e2ad4a45bc065981fabf34643792ce",
+ "errors": []
+}
+CHAIN-OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-paraphrased

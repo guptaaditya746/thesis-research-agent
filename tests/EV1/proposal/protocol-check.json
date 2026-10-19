@@ -1,0 +1,30 @@
+{
+ "id": "rag-factuality",
+ "version": 2,
+ "revision": 1,
+ "sha256": "e40e4902fee172fe9df3e4bb4758f3e888bc1468b73e0ff24cf33eb10303cf91",
+ "phases": [
+  "condition",
+  "metric",
+  "measurement",
+  "author_claim"
+ ],
+ "extractors": {
+  "condition": [
+   "regex_condition",
+   "llm_condition"
+  ],
+  "metric": [
+   "regex_metric",
+   "llm_metric"
+  ],
+  "measurement": [
+   "regex_measurement",
+   "llm_measurement"
+  ],
+  "author_claim": [
+   "regex_author_claim",
+   "llm_author_claim"
+  ]
+ }
+}

@@ -1,0 +1,82 @@
+{
+  "rows": [
+    {
+      "accuracy_answered": 1.0,
+      "answered": 0.05,
+      "association_accuracy": 1.0,
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "direction_accuracy": 0.05,
+      "extraction_f1": 0.6556,
+      "label_correct": false,
+      "level": "explicit",
+      "span_accuracy": 1.0,
+      "system": "evidence-engine",
+      "true_pair": 0.05
+    },
+    {
+      "accuracy_answered": null,
+      "answered": 0.0,
+      "association_accuracy": null,
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "direction_accuracy": 0.0,
+      "extraction_f1": 0.2198,
+      "label_correct": false,
+      "level": "paraphrased",
+      "span_accuracy": 1.0,
+      "system": "evidence-engine",
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": null,
+      "answered": 0.0,
+      "association_accuracy": null,
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": 0.0,
+      "extraction_f1": 0.5789,
+      "label_correct": false,
+      "level": "distributed",
+      "span_accuracy": 1.0,
+      "system": "evidence-engine",
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "answered": 0.25,
+      "association_accuracy": 1.0,
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "direction_accuracy": 0.25,
+      "extraction_f1": 0.623,
+      "label_correct": true,
+      "level": "complex",
+      "span_accuracy": 1.0,
+      "system": "evidence-engine",
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 0.7143,
+      "answered": 0.35,
+      "association_accuracy": 1.0,
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "direction_accuracy": 0.25,
+      "extraction_f1": 0.6745,
+      "label_correct": true,
+      "level": "contradictory",
+      "span_accuracy": 1.0,
+      "system": "evidence-engine",
+      "true_pair": 0.25
+    },
+    {
+      "accuracy_answered": 1.0,
+      "answered": 0.2,
+      "association_accuracy": 1.0,
+      "corpus_id": "rag-tpl-s1-6162b495",
+      "direction_accuracy": 0.2,
+      "extraction_f1": 0.6144,
+      "label_correct": true,
+      "level": "mixed",
+      "span_accuracy": 1.0,
+      "system": "evidence-engine",
+      "true_pair": 0.15
+    }
+  ]
+}

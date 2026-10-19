@@ -1,0 +1,36 @@
+REFRESH regex-only/rag-tpl-s1-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-complex/report.md
+REFRESH cascade/rag-tpl-s1-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-complex/report.md
+REFRESH cascade-gaps/rag-tpl-s1-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-complex/report.md
+REFRESH regex-only/rag-tpl-s1-contradictory
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-contradictory/report.md
+REFRESH cascade/rag-tpl-s1-contradictory
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-contradictory/report.md
+REFRESH cascade-gaps/rag-tpl-s1-contradictory
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-contradictory/report.md
+REFRESH regex-only/rag-tpl-s1-distributed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-distributed/report.md
+REFRESH cascade/rag-tpl-s1-distributed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-distributed/report.md
+REFRESH cascade-gaps/rag-tpl-s1-distributed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-distributed/report.md
+REFRESH regex-only/rag-tpl-s1-explicit
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-explicit/report.md
+REFRESH cascade/rag-tpl-s1-explicit
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-explicit/report.md
+REFRESH cascade-gaps/rag-tpl-s1-explicit
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-explicit/report.md
+REFRESH regex-only/rag-tpl-s1-mixed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-mixed/report.md
+REFRESH cascade/rag-tpl-s1-mixed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-mixed/report.md
+REFRESH cascade-gaps/rag-tpl-s1-mixed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-mixed/report.md
+REFRESH regex-only/rag-tpl-s1-paraphrased
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/regex-only/rag-tpl-s1-paraphrased/report.md
+REFRESH cascade/rag-tpl-s1-paraphrased
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade/rag-tpl-s1-paraphrased/report.md
+REFRESH cascade-gaps/rag-tpl-s1-paraphrased
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/cascade-gaps/rag-tpl-s1-paraphrased/report.md

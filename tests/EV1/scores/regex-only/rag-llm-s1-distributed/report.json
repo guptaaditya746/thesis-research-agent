@@ -1,0 +1,319 @@
+{
+  "cascade": {
+    "missed_by_all": {},
+    "rows": [
+      {
+        "extractor": "regex_author_claim@2#75e32ebcdf68",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "regex_condition@2#a0c64d9b6305",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "regex_measurement@2#b984f16ded3b",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "regex_metric@2#94a3000eacae",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      }
+    ]
+  },
+  "corpus_id": "rag-llm-s1-4f53cda1",
+  "cost": {
+    "papers": 0,
+    "per_paper": {},
+    "total": {
+      "cached_calls": 0,
+      "calls": 0,
+      "input_tokens": 0,
+      "made_model_calls": 0,
+      "model_calls": 0,
+      "output_tokens": 0,
+      "seconds": 0.03
+    }
+  },
+  "extraction": {
+    "missed": [],
+    "rows": [],
+    "unmatched_items": []
+  },
+  "extractors": {
+    "cost": null,
+    "recall_scope": "all_facts",
+    "rows": [
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_author_claim@2#75e32ebcdf68",
+        "f1": 0.0,
+        "facts": 0,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_condition@2#a0c64d9b6305",
+        "f1": 0.0,
+        "facts": 0,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_measurement@2#b984f16ded3b",
+        "f1": 0.0,
+        "facts": 0,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_metric@2#94a3000eacae",
+        "f1": 0.0,
+        "facts": 0,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      }
+    ]
+  },
+  "funnel": {
+    "documents": 0,
+    "per_document": {
+      "calls": null,
+      "input_tokens": null,
+      "model_calls": null,
+      "output_tokens": null,
+      "tokens": null
+    },
+    "rows": [],
+    "screen": null,
+    "stop_positions": {},
+    "strategy": "all"
+  },
+  "integration": {
+    "rows": [],
+    "studies": []
+  },
+  "intervals": {
+    "extraction": [
+      {
+        "evidence_type": "condition",
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      {
+        "evidence_type": "metric",
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      {
+        "evidence_type": "measurement",
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      {
+        "evidence_type": "author_claim",
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      {
+        "evidence_type": "all",
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      }
+    ],
+    "paired": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null,
+        "system": "rag-baseline"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null,
+        "system": "agent-baseline"
+      }
+    ],
+    "synthesis": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null,
+        "system": "evidence-engine"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null,
+        "system": "rag-baseline"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null,
+        "system": "agent-baseline"
+      }
+    ]
+  },
+  "levels": [],
+  "locate": {
+    "outside": [],
+    "rows": []
+  },
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "run_id": "rag-llm-s1-distributed",
+  "stability": null,
+  "synthesis": [
+    {
+      "confusion": [],
+      "expected_label": "insufficient",
+      "flags": {
+        "counts": {
+          "expected": {
+            "contradicting": 0,
+            "duplicates": 0,
+            "neutral": 0,
+            "supporting": 0,
+            "undetermined": 0
+          },
+          "given": {
+            "contradicting": 0,
+            "duplicates": 0,
+            "neutral": 0,
+            "supporting": 0,
+            "undetermined": 0
+          }
+        },
+        "counts_correct": true,
+        "duplicates": {
+          "expected": {},
+          "given": {}
+        },
+        "duplicates_correct": true,
+        "rows": [
+          {
+            "expected": [],
+            "flag": "claim_disagrees",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "duplicate",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "large_effect",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          }
+        ]
+      },
+      "label": "insufficient",
+      "label_correct": true,
+      "rows": [],
+      "studies": [],
+      "system": "evidence-engine"
+    },
+    {
+      "confusion": [],
+      "expected_label": "insufficient",
+      "flags": null,
+      "label": "insufficient",
+      "label_correct": true,
+      "rows": [],
+      "studies": [],
+      "system": "rag-baseline"
+    },
+    {
+      "confusion": [],
+      "expected_label": "insufficient",
+      "flags": null,
+      "label": "insufficient",
+      "label_correct": true,
+      "rows": [],
+      "studies": [],
+      "system": "agent-baseline"
+    }
+  ]
+}

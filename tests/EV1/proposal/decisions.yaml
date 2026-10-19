@@ -1,0 +1,55 @@
+# Decisions on the proposal's choice points (docs/evidence-system.md Part E). Edit, then `evidence propose freeze DIR`.
+# Per card: `choice` is an option id of cards.json, or `custom` together with a `value` in the card's shape
+# (see the options there); `reason` is required (an empty reason is refused); `by` says who decided. The
+# prefilled entries are the model's defaults (`by: model`, reason "default: ..."): freeze accepts them as they
+# stand and records `by`. A choice other than the default must name who made it in `by`.
+decisions:
+- card: screen
+  choice: draft
+  reason: 'default: The draft''s screening question and terms correctly target the comparison between RAG and non-retrieval
+    baselines, which is the core of the question. The critic''s finding regarding missing synonyms in the regex
+    patterns is a technical implementation detail of the extractor, not a flaw in the screening scope itself; the
+    LLM screen will handle the semantic matching for terms like ''retrieve-then-read''.'
+  by: model
+- card: roles
+  choice: draft
+  reason: 'default: The definitions for ''rag'' and ''closed_book'' accurately reflect the treatment and control
+    specified in the frame. The critic''s concern about ''vanilla LLM'' potentially being a different base model
+    is a valid data quality issue, but the role definition itself is correct for the purpose of identifying the
+    intended control condition in the protocol.'
+  by: model
+- card: metrics
+  choice: draft
+  reason: 'default: The metrics listed (factual_accuracy, hallucination_rate, factscore, accuracy) are the standard
+    measures for the question''s outcome, and their directions (higher_is_better) align with the vocabulary entries
+    provided.'
+  by: model
+- card: min_effect
+  choice: draft
+  reason: 'default: A 1% threshold (0.01) is a standard and reasonable minimum effect size for determining statistical
+    or practical significance in LLM evaluation studies, avoiding noise while capturing meaningful improvements.'
+  by: model
+- card: pairing
+  choice: draft
+  reason: 'default: Preferring table cells over document order is the most reliable way to extract specific metric
+    values, as tables are structured data sources where condition-metric pairs are explicitly laid out, reducing
+    the risk of misattribution compared to prose.'
+  by: model
+- card: label
+  choice: draft
+  reason: 'default: The ''any_evidence'' logic (draft) is appropriate for a systematic review where a single strong
+    study can support a claim, unless contradicted. Requiring two studies (option ''two_studies'') might be too
+    strict for a rapidly evolving field where high-quality evidence may be sparse.'
+  by: model
+- card: cascade
+  choice: gaps
+  reason: 'default: The ''gaps'' strategy is more efficient than ''all'' because it only escalates to the LLM extractor
+    for items that the regex extractor failed to capture or was uncertain about, reducing computational cost while
+    maintaining coverage.'
+  by: model
+- card: locate
+  choice: draft
+  reason: 'default: The ''exhaustive'' strategy with chunking (1500 chars, top 6) is a balanced approach that ensures
+    the extractors see the most relevant parts of the paper without processing the entire text, which is crucial
+    for handling long academic papers efficiently.'
+  by: model

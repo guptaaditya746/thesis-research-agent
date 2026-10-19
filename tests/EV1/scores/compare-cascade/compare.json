@@ -1,0 +1,1286 @@
+{
+  "intervals": [
+    {
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "direction_accuracy": {
+        "high": 1.0,
+        "low": 0.75,
+        "method": "BCa",
+        "point": 0.95
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.9736,
+        "low": 0.9181,
+        "method": "BCa",
+        "point": 0.9499
+      },
+      "level": "explicit",
+      "run_id": "rag-tpl-s1-explicit",
+      "strategy": null,
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 1.0,
+        "low": 0.9693,
+        "method": "BCa",
+        "point": 0.9938
+      },
+      "level": "paraphrased",
+      "run_id": "rag-tpl-s1-paraphrased",
+      "strategy": null,
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": {
+        "high": 0.95,
+        "low": 0.6,
+        "method": "BCa",
+        "point": 0.8
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.8915,
+        "low": 0.8,
+        "method": "BCa",
+        "point": 0.853
+      },
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "strategy": null,
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "direction_accuracy": {
+        "high": 0.9,
+        "low": 0.5,
+        "method": "BCa",
+        "point": 0.75
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.9535,
+        "low": 0.9035,
+        "method": "BCa",
+        "point": 0.9319
+      },
+      "level": "complex",
+      "run_id": "rag-tpl-s1-complex",
+      "strategy": null,
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "direction_accuracy": {
+        "high": 1.0,
+        "low": 0.7,
+        "method": "BCa",
+        "point": 0.9
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.9428,
+        "low": 0.8594,
+        "method": "BCa",
+        "point": 0.905
+      },
+      "level": "contradictory",
+      "run_id": "rag-tpl-s1-contradictory",
+      "strategy": null,
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-k1-e8fce53a",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-k1-e8fce53a",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-k1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-complex",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-contradictory",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-distributed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-explicit",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-paraphrased",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-small-distributed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-small-paraphrased",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": null
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-tpl-k1-9c3bbb32",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.9558,
+        "low": 0.893,
+        "method": "BCa",
+        "point": 0.9263
+      },
+      "level": "mixed",
+      "run_id": "rag-tpl-k1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-6162b495",
+      "direction_accuracy": {
+        "high": 1.0,
+        "low": 0.7,
+        "method": "BCa",
+        "point": 0.9
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.9663,
+        "low": 0.9092,
+        "method": "BCa",
+        "point": 0.9406
+      },
+      "level": "mixed",
+      "run_id": "rag-tpl-s1-mixed",
+      "strategy": null,
+      "system": "evidence-engine"
+    }
+  ],
+  "rows": [
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 0.9836,
+      "calls_per_document": null,
+      "completeness": 0.95,
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "direction_accuracy": 0.95,
+      "extraction_f1": 0.9499,
+      "label_correct": true,
+      "level": "explicit",
+      "run_id": "rag-tpl-s1-explicit",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": 1.0,
+      "strategy": null,
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.9938,
+      "label_correct": true,
+      "level": "paraphrased",
+      "run_id": "rag-tpl-s1-paraphrased",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": 1.0,
+      "strategy": null,
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": null,
+      "completeness": 0.8,
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": 0.8,
+      "extraction_f1": 0.853,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": 1.0,
+      "strategy": null,
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 0.8333,
+      "association_accuracy": 1.0,
+      "calls_per_document": null,
+      "completeness": 0.9,
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "direction_accuracy": 0.75,
+      "extraction_f1": 0.9319,
+      "label_correct": true,
+      "level": "complex",
+      "run_id": "rag-tpl-s1-complex",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": 1.0,
+      "strategy": null,
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 0.9,
+      "association_accuracy": 1.0,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "direction_accuracy": 0.9,
+      "extraction_f1": 0.905,
+      "label_correct": true,
+      "level": "contradictory",
+      "run_id": "rag-tpl-s1-contradictory",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": 1.0,
+      "strategy": null,
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-k1-e8fce53a",
+      "direction_accuracy": 0.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": 9.5,
+      "completeness": null,
+      "corpus_id": "rag-llm-k1-e8fce53a",
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.0,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-k1-mixed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 3471.0,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-complex",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-contradictory",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-distributed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-explicit",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-paraphrased",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-small-distributed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-small-paraphrased",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": null,
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "direction_accuracy": null,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 0.9615,
+      "calls_per_document": 9.9583,
+      "completeness": 1.0,
+      "corpus_id": "rag-tpl-k1-9c3bbb32",
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.9263,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-tpl-k1-mixed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 7929.0417,
+      "traceability": null,
+      "true_pair": 0.8
+    },
+    {
+      "accuracy_answered": 0.9474,
+      "association_accuracy": 1.0,
+      "calls_per_document": null,
+      "completeness": 0.95,
+      "corpus_id": "rag-tpl-s1-6162b495",
+      "direction_accuracy": 0.9,
+      "extraction_f1": 0.9406,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-tpl-s1-mixed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": 1.0,
+      "strategy": null,
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    }
+  ]
+}

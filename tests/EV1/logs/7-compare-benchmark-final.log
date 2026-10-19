@@ -1,0 +1,46 @@
+COMPARE regex-only
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-regex-only/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-regex-only/compare.md
+COMPARE cascade
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-cascade/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-cascade/compare.md
+COMPARE cascade-gaps
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-cascade-gaps/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-cascade-gaps/compare.md
+COMPARE agentic
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-agentic/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-agentic/compare.md
+COMPARE agentic-gaps
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-agentic-gaps/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-agentic-gaps/compare.md
+FUNNEL rag-llm-k1-mixed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-k1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-k1-mixed/compare.md
+FUNNEL rag-llm-s1-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-complex/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-complex/compare.md
+FUNNEL rag-llm-s1-contradictory
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-contradictory/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-contradictory/compare.md
+FUNNEL rag-llm-s1-distributed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-distributed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-distributed/compare.md
+FUNNEL rag-llm-s1-explicit
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-explicit/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-explicit/compare.md
+FUNNEL rag-llm-s1-mixed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-mixed/compare.md
+FUNNEL rag-llm-s1-paraphrased
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-paraphrased/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-llm-s1-paraphrased/compare.md
+FUNNEL rag-tpl-k1-mixed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-k1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-k1-mixed/compare.md
+FUNNEL rag-tpl-s1-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-complex/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-complex/compare.md
+FUNNEL rag-tpl-s1-contradictory
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-contradictory/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-contradictory/compare.md
+FUNNEL rag-tpl-s1-distributed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-distributed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-distributed/compare.md
+FUNNEL rag-tpl-s1-explicit
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-explicit/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-explicit/compare.md
+FUNNEL rag-tpl-s1-mixed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-mixed/compare.md
+FUNNEL rag-tpl-s1-paraphrased
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-paraphrased/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel/rag-tpl-s1-paraphrased/compare.md
+AGENTIC FUNNEL rag-llm-small-distributed
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel-agentic/rag-llm-small-distributed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel-agentic/rag-llm-small-distributed/compare.md
+AGENTIC FUNNEL rag-llm-small-paraphrased
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel-agentic/rag-llm-small-paraphrased/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/compare-funnel-agentic/rag-llm-small-paraphrased/compare.md
+BENCHMARK llm
+wrote 14 benchmark.json record(s) and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/benchmark-llm/benchmark.md
+BENCHMARK tpl
+wrote 8 benchmark.json record(s) and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/scores/benchmark-tpl/benchmark.md

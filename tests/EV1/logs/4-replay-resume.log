@@ -1,0 +1,3 @@
+REPLAY-OK regex-only/rag-llm-k1-mixed
+CHAIN-OK regex-only/rag-llm-k1-mixed
+REPLAY-OK regex-only/rag-llm-s1-complex

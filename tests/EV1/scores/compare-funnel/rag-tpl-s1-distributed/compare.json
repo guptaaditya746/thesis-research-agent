@@ -1,0 +1,86 @@
+{
+  "intervals": [
+    {
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": {
+        "high": 0.95,
+        "low": 0.6,
+        "method": "BCa",
+        "point": 0.8
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.8915,
+        "low": 0.8,
+        "method": "BCa",
+        "point": 0.853
+      },
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "strategy": null,
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.9333,
+        "low": 0.8392,
+        "method": "BCa",
+        "point": 0.8844
+      },
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    }
+  ],
+  "rows": [
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": null,
+      "completeness": 0.8,
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": 0.8,
+      "extraction_f1": 0.853,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": 1.0,
+      "strategy": null,
+      "system": "evidence-engine",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 7.6,
+      "completeness": 1.0,
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.8844,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": 4367.45,
+      "traceability": null,
+      "true_pair": null
+    }
+  ]
+}

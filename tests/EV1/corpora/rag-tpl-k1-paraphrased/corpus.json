@@ -1,0 +1,159 @@
+{
+  "corpus_id": "rag-tpl-k1-0007b0cc",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "c84423463833cf11ac11fec85bb1da2438953a1e6b9d84195a8e87ee6a348e67"
+  },
+  "renderer": "template",
+  "level": "paraphrased",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S009",
+      "study_id": "S009",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S010",
+      "study_id": "S010",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S011",
+      "study_id": "S011",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S012",
+      "study_id": "S012",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S013",
+      "study_id": "S013",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S014",
+      "study_id": "S014",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S015",
+      "study_id": "S015",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S016",
+      "study_id": "S016",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S017",
+      "study_id": "S017",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S018",
+      "study_id": "S018",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S019",
+      "study_id": "S019",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S020",
+      "study_id": "S020",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S021",
+      "study_id": "S021",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S022",
+      "study_id": "S022",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S023",
+      "study_id": "S023",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S024",
+      "study_id": "S024",
+      "level": "paraphrased"
+    }
+  ],
+  "models": null,
+  "settings": {
+    "name": "rag-tpl-k1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 2,
+    "missing": 2,
+    "outliers": 2,
+    "irrelevant": 2
+  }
+}

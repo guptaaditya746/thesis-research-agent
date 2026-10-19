@@ -1,0 +1,14 @@
+INFO  host: gammaweb08, Slurm job 7488
+PASS  time left in the allocation: 1-23:48:29
+PASS  LITELLM_MASTER_KEY: set
+PASS  profile: agent-3x40 (profiles/agent-3x40.yaml)
+INFO  session: none running
+FAIL  GPU 0 (orch): 35771 MiB already in use with no session running: a leftover process (nvidia-smi lists it)
+FAIL  GPU 1 (sub): 30691 MiB already in use with no session running: a leftover process (nvidia-smi lists it)
+FAIL  GPU 2 (sub-2): 30691 MiB already in use with no session running: a leftover process (nvidia-smi lists it)
+PASS  weights orch: Qwen/Qwen3.8-27B-FP8
+PASS  weights sub: Qwen/Qwen3-30B-A3B-Instruct-2507-FP8
+FAIL  port 8001 (orch): in use with no session running: another server holds it (`ss -ltnp | grep :8001`)
+
+First problem: GPU 0 (orch): 35771 MiB already in use with no session running: a leftover process (nvidia-smi lists it)
+srun: error: gammaweb08: task 0: Exited with exit code 1

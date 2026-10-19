@@ -1,0 +1,1383 @@
+{
+  "corpus_id": "rag-llm-s1-4f53cda1",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S001.m1/value: required string '29.5%' is ambiguous; S001.m2/value: required string '17.8%' is ambiguous; S001.m3/value: required string '9.4%' is ambiguous; S001.m4/value: required string '47.1%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.5%' is ambiguous; S001.m2/value: required string '17.8%' is ambiguous; S001.m3/value: required string '9.4%' is ambiguous; S001.m4/value: required string '47.1%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.5%' is ambiguous; S001.m2/value: required string '17.8%' is ambiguous; S001.m3/value: required string '9.4%' is ambiguous; S001.m4/value: required string '47.1%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.5%' is ambiguous; S001.m2/value: required string '17.8%' is ambiguous; S001.m3/value: required string '9.4%' is ambiguous; S001.m4/value: required string '47.1%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S002.m1/value: required string '50.5%' is ambiguous; S002.m2/value: required string '57.1%' is ambiguous; S002.m3/value: required string '78.1%' is ambiguous; S002.m4/value: required string '55.8%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '50.5%' is ambiguous; S002.m2/value: required string '57.1%' is ambiguous; S002.m3/value: required string '78.1%' is ambiguous; S002.m4/value: required string '55.8%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '50.5%' is ambiguous; S002.m2/value: required string '57.1%' is ambiguous; S002.m3/value: required string '78.1%' is ambiguous; S002.m4/value: required string '55.8%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '50.5%' is ambiguous; S002.m2/value: required string '57.1%' is ambiguous; S002.m3/value: required string '78.1%' is ambiguous; S002.m4/value: required string '55.8%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S003",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S003.m1/value: required string '78.3%' is ambiguous; S003.m2/value: required string '77.4%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'These results indicate that the inclusion of external retrieval does not lead to a statistically significant improvement in factual correctness.' at 2373; 'Discussion\\nThe findings suggest that retrieval augmentation, despite its theoretical advantages, does not consistently enhance fact-level accuracy in legal fact verification tasks.' at 2522; 'The parametric-only model outperforms the retrieval-augmented model by a narrow margin, though the difference is small and may not be practically meaningful.' at 2703; 'Furthermore, the results highlight the risk of over-reliance on retrieval systems, which may degrade performance if the retrieved content is not perfectly aligned with the query.' at 3385"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S003.m1/value: required string '78.3%' is ambiguous; S003.m2/value: required string '77.4%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S003.m1/value: required string '78.3%' is ambiguous; S003.m2/value: required string '77.4%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S004",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S004.m1/value: required string '59.8%' is ambiguous; S004.m2/value: required string '58.9%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S004.m1/value: required string '59.8%' is ambiguous; S004.m2/value: required string '58.9%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'0.9' at 2256: 'e retrieve-then-read model by 0.9 percentage points, though thi'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'Recent approaches have explored retrieval-augmented models that access external documents before generating responses, under the assumption that such access improves factual correctness.' at 312; 'Discussion\\nThe results indicate that retrieval augmentation does not improve answer accuracy in the context of legal fact verification.' at 2050; 'The parametric-only model outperforms the retrieve-then-read model by 0.9 percentage points, though this difference is not statistically significant given the dataset size and variance in responses.' at 2186"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S004.m1/value: required string '59.8%' is ambiguous; S004.m2/value: required string '58.9%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S005",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": false,
+          "detail": "'1' at 1146: 'on the HistoryQuest dataset: (1) closed-book model, which ans'; '2' at 1268: 'out access to any documents; (2) retrieval-augmented model, w'; '3' at 1389: 'nditions its answer on them; (3) fine-tuned model, which was '; '4' at 1481: 'estion and answer pairs; and (4) RAG without reranking, which'"
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'The retrieval-augmented model outperforms the closed-book model, suggesting that access to external documents enhances factual correctness.' at 2426"
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S005.m4/value: required string '44.8%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'13.2' at 2470: ' closed-book approach, with a 13.2 percentage point increase in '"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'Discussion\\nThe results demonstrate a clear advantage of retrieval augmentation over the closed-book approach, with a 13.2 percentage point increase in answer accuracy.' at 2353; 'The retrieval-augmented model outperforms both the fine-tuned model and the RAG without reranking condition, suggesting that the integration of retrieved information significantly improves factual correctness.' at 2521"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'1' at 1146: 'on the HistoryQuest dataset: (1) closed-book model, which ans'; '2' at 1268: 'out access to any documents; (2) retrieval-augmented model, w'; '3' at 1389: 'nditions its answer on them; (3) fine-tuned model, which was '; '4' at 1481: 'estion and answer pairs; and (4) RAG without reranking, which'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'The retrieval-augmented model outperforms the closed-book model, suggesting that access to external documents enhances factual correctness.' at 2426"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S006",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S006.m3/value: required string '9.8%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S006.m3/value: required string '9.8%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S006.m1/value: required string '21.5%' is ambiguous; S006.m2/value: required string '18.3%' is ambiguous; S006.m3/value: required string '9.8%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S006.m3/value: required string '9.8%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S007",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S007.m1/value: required string '39.1%' is ambiguous; S007.m2/value: required string '39.9%' is ambiguous; S007.m3/value: required string '18.2%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m3/value: required string '18.2%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m1/value: required string '39.1%' is ambiguous; S007.m2/value: required string '39.9%' is ambiguous; S007.m3/value: required string '18.2%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m1/value: required string '39.1%' is ambiguous; S007.m2/value: required string '39.9%' is ambiguous; S007.m3/value: required string '18.2%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S008",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S008.m1/value: required string '20.2%' is ambiguous; S008.m2/value: required string '6.3%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '20.2%' is ambiguous; S008.m2/value: required string '6.3%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '20.2%' is ambiguous; S008.m2/value: required string '6.3%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '20.2%' is ambiguous; S008.m2/value: required string '6.3%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S009",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S009.m1/value: required string '53.8%' is ambiguous; S009.m2/value: required string '46.5%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'7.3' at 3480: 'ap between the two conditions—7.3 percentage points—underscores'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'Introduction\\nThe integration of retrieval mechanisms into language models has become a prominent strategy for improving factual accuracy in question-answering systems.' at 165; 'We investigate whether retrieval augmentation improves or degrades answer quality in a high-stakes factual domain.' at 963; 'While the RAG pipeline was designed to improve reliability by grounding answers in retrieved evidence, it instead produced less accurate responses than the parametric-only model.' at 2573; 'These findings suggest that retrieval augmentation does not universally enhance factual accuracy and may, in some contexts, degrade performance.' at 3300"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S009.m1/value: required string '53.8%' is ambiguous; S009.m2/value: required string '46.5%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S009.m1/value: required string '53.8%' is ambiguous; S009.m2/value: required string '46.5%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S010",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": false,
+          "detail": "'1' at 1305: ' on the TriviaCheck dataset: (1) vanilla LLM, which is prompt'; '2' at 1376: 'e question and nothing else; (2) retrieval-augmented model, w'; '3' at 1501: 'ions its answer on them; and (3) RAG without reranking, which'"
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'The retrieval-augmented model reduces this rate, indicating that access to relevant passages improves factual grounding.' at 2679; 'The findings support the hypothesis that grounding the generator in retrieved documents leads to fewer hallucinated answers, particularly when the model is constrained to use only the provided evidence.' at 3084"
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S010.m1/value: required string '38.1%' is ambiguous; S010.m2/value: required string '32.3%' is ambiguous; S010.m3/value: required string '23.1%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S010.m2: its sentence names metrics [], not only S010.k1"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'Discussion\\nThe results demonstrate a clear trend: incorporating retrieval augmentation significantly reduces hallucination rates in generated answers.' at 2631"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S010.m2: its sentence does not name the metric verbatim; S010.m2: its sentence does not name the dataset"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'1' at 1305: ' on the TriviaCheck dataset: (1) vanilla LLM, which is prompt'; '2' at 1376: 'e question and nothing else; (2) retrieval-augmented model, w'; '3' at 1501: 'ions its answer on them; and (3) RAG without reranking, which'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'The retrieval-augmented model reduces this rate, indicating that access to relevant passages improves factual grounding.' at 2679; 'The findings support the hypothesis that grounding the generator in retrieved documents leads to fewer hallucinated answers, particularly when the model is constrained to use only the provided evidence.' at 3084"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S011",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'Discussion\\nThe results show that the retrieve-then-read model performs better than the closed-book model, suggesting that access to relevant external documents improves answer quality.' at 2251"
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S011.m3: its sentence names metrics [], not only S011.k1; S011.m4: its sentence names ['S011.c1', 'S011.c4'], not only S011.c4"
+            },
+            {
+              "name": "added_numbers",
+              "detail": "'13.3' at 2572: 'orms the closed-book model by 13.3 percentage points, suggesting'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'While closed-book models rely solely on pre-trained knowledge, recent approaches incorporate external information retrieval to improve factual accuracy.' at 305; 'Discussion\\nThe results indicate that retrieval augmentation substantially improves factual accuracy in question answering.' at 2383; \"The retrieve-then-read model outperforms the closed-book model by 13.3 percentage points, suggesting that access to relevant external documents enhances the model's ability to generate correct answers.\" at 2506; 'However, the RAG with random passages condition, despite using a retrieval framework, only marginally improves accuracy over the closed-book model.' at 2908"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S011.m2: its sentence does not name the dataset; S011.m3: its sentence does not name the condition verbatim; S011.m3: its sentence does not name the metric verbatim"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'Discussion\\nThe results show that retrieval augmentation significantly improves factual accuracy.' at 2228; 'The retrieve-then-read model outperforms the closed-book model, indicating that access to relevant external documents enhances answer quality.' at 2325"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'Discussion\\nThe results show that the retrieve-then-read model performs better than the closed-book model, suggesting that access to relevant external documents improves answer quality.' at 2251"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S012",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'Retrieval-augmented generators are designed to improve factual accuracy by grounding responses in relevant documents retrieved from a large corpus.' at 297; 'These results indicate a significant increase in the proportion of unsupported statements when retrieval augmentation is applied.' at 2081; 'While the retrieval-augmented generator has access to external evidence, the increase in unsupported statements suggests that the integration of retrieved passages may introduce noise or misinterpretation, particularly when the retrieved content is ambiguous, incomplete, or contextually mismatched.' at 2346; 'These observations challenge the assumption that retrieval augmentation inherently improves factual reliability.' at 3092"
+        },
+        {
+          "name": "level_explicit",
+          "ok": false,
+          "detail": "S012.m2: its sentence does not name the dataset"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'0.83' at 2149: 'ured using Cohen’s kappa (κ = 0.83), indicating strong reliabili'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'The results reveal a counterintuitive outcome: retrieval augmentation leads to higher hallucination rates, challenging the assumption that external grounding always improves factual reliability.' at 998; 'These results indicate that the addition of retrieved passages increases the likelihood of generating unsupported statements in the model’s output.' at 2382; 'Discussion\\nThe finding that retrieval augmentation increases hallucination rates is surprising and warrants careful interpretation.' at 2534; 'These results highlight the need for improved retrieval quality, better filtering mechanisms, and more robust integration strategies between retrieval and generation components.' at 3569"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S012.m2: its sentence does not name the dataset"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'Our analysis focuses on the hallucination rate, defined as the share of answers containing at least one unsupported statement, to assess whether retrieval augmentation improves factual fidelity.' at 1126; 'While the retrieval-augmented generator has access to external evidence, the increase in unsupported statements suggests that the integration of retrieved passages may introduce noise or misinterpretation, particularly when the retrieved content is ambiguous, incomplete, or contextually mismatched.' at 2679; 'These findings challenge the assumption that retrieval augmentation inherently improves factual reliability.' at 3183; 'The observed increase in hallucination rate indicates that the quality of retrieval and the model’s ability to correctly interpret and integrate retrieved information are critical factors in determining output accuracy.' at 3292"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'Retrieval-augmented generators are designed to improve factual accuracy by grounding responses in relevant documents retrieved from a large corpus.' at 297; 'These results indicate a significant increase in the proportion of unsupported statements when retrieval augmentation is applied.' at 2081; 'While the retrieval-augmented generator has access to external evidence, the increase in unsupported statements suggests that the integration of retrieved passages may introduce noise or misinterpretation, particularly when the retrieved content is ambiguous, incomplete, or contextually mismatched.' at 2346; 'These observations challenge the assumption that retrieval augmentation inherently improves factual reliability.' at 3092"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S012.m2: its sentence does not name the dataset"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S013",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S013.m1/value: required string '47.5%' is ambiguous; S013.m2/value: required string '40.3%' is ambiguous; S013.m3/value: required string '42.5%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The retrieval-augmented generator (RAG) paradigm aims to improve answer accuracy by grounding model responses in relevant passages retrieved from a large corpus.' at 327; 'The goal is to determine whether retrieval augmentation improves or degrades performance in a high-precision, context-sensitive setting.' at 1033; 'The fact that the random passage condition outperforms the retrieval-augmented generator implies that the retrieval process itself may be detrimental when the retrieved content is not highly relevant or when the model struggles to filter out irrelevant information.' at 2811"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S013.m2: its sentence does not name the dataset"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'Introduction\\nThe retrieval-augmented generator (RAG) paradigm has been widely adopted in question-answering systems, with the assumption that grounding model responses in retrieved passages improves factual accuracy.' at 148; 'The goal is to assess whether retrieval augmentation enhances or undermines answer accuracy in a context-sensitive domain.' at 950; 'The fact that the random passage condition outperforms the retrieval-augmented generator implies that the retrieval process itself may be detrimental when the retrieved content is not highly relevant or when the model struggles to filter out irrelevant information.' at 2610; 'This finding challenges the assumption that retrieval always improves factual accuracy and highlights the risk of over-reliance on external context.' at 2876"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S013.m1/value: required string '47.5%' is ambiguous; S013.m2/value: required string '40.3%' is ambiguous; S013.m3/value: required string '42.5%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S014",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": false,
+          "detail": "'25' at 1975: 'nse retrieval pipeline with BM25 and neural embedding-based pa'"
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'Recent approaches have increasingly relied on retrieval-augmented models, which combine pre-trained language models with external knowledge sources to improve answer quality.' at 302; 'The underlying assumption is that retrieving relevant passages improves answer accuracy by grounding responses in up-to-date and precise information.' at 477; 'The goal is to determine whether retrieval augmentation enhances or diminishes answer accuracy in this context.' at 1109; 'This outcome challenges the widely held belief that external knowledge retrieval consistently improves answer quality.' at 2451"
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S014.m1/value: required string '60.6%' is ambiguous; S014.m2/value: required string '53.5%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The results show that the retrieval-augmented model achieves lower accuracy than the closed-book model, indicating that retrieval augmentation can degrade performance in this context.' at 487; 'The assumption is that retrieving relevant passages improves answer accuracy by grounding responses in up-to-date and precise information.' at 881; 'This study investigates whether retrieval augmentation improves or harms answer accuracy in biomedical question answering, focusing on the performance gap between a closed-book model and a retrieval-augmented model.' at 1407; 'Discussion\\nThe finding that retrieval augmentation reduces answer accuracy contradicts the common assumption that external knowledge improves performance.' at 2836; \"In the BioClaimQA dataset, the retrieval-augmented model's lower accuracy suggests that the process of retrieving and integrating external passages introduces errors or noise that outweigh the benefits of additional information.\" at 2991; 'This study demonstrates that retrieval augmentation can degrade answer accuracy in the BioClaimQA benchmark, suggesting that the benefits of external knowledge are not universal and must be carefully evaluated in specialized domains.' at 4010"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'25' at 1975: 'nse retrieval pipeline with BM25 and neural embedding-based pa'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'Recent approaches have increasingly relied on retrieval-augmented models, which combine pre-trained language models with external knowledge sources to improve answer quality.' at 302; 'The underlying assumption is that retrieving relevant passages improves answer accuracy by grounding responses in up-to-date and precise information.' at 477; 'The goal is to determine whether retrieval augmentation enhances or diminishes answer accuracy in this context.' at 1109; 'This outcome challenges the widely held belief that external knowledge retrieval consistently improves answer quality.' at 2451"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S015",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S015.m1/value: required string '62.5%' is ambiguous; S015.m2/value: required string '66.1%' is ambiguous; S015.m3/value: required string '69.8%' is ambiguous; S015.m4/value: required string '33.2%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S015.m4/value: required string '33.2%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S015.m1/value: required string '62.5%' is ambiguous; S015.m2/value: required string '66.1%' is ambiguous; S015.m3/value: required string '69.8%' is ambiguous; S015.m4/value: required string '33.2%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S015.m1/value: required string '62.5%' is ambiguous; S015.m2/value: required string '66.1%' is ambiguous; S015.m3/value: required string '69.8%' is ambiguous; S015.m4/value: required string '33.2%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S016",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S016.m1/value: required string '10.3%' is ambiguous; S016.m2/value: required string '5.1%' is ambiguous; S016.m3/value: required string '41.2%' is ambiguous; S016.m4/value: required string '30.4%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S016.m1/value: required string '10.3%' is ambiguous; S016.m2/value: required string '5.1%' is ambiguous; S016.m3/value: required string '41.2%' is ambiguous; S016.m4/value: required string '30.4%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S016.m1/value: required string '10.3%' is ambiguous; S016.m2/value: required string '5.1%' is ambiguous; S016.m3/value: required string '41.2%' is ambiguous; S016.m4/value: required string '30.4%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S016.m1/value: required string '10.3%' is ambiguous; S016.m2/value: required string '5.1%' is ambiguous; S016.m3/value: required string '41.2%' is ambiguous; S016.m4/value: required string '30.4%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S017",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": false,
+          "detail": "S017.m2: its sentence names metrics [], not only S017.k1"
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": false,
+          "detail": "'10' at 2024: 'tency decoding, which samples 10 answers per question. The pri'; '7.8' at 2834: ' the no-retrieval baseline by 7.8 percentage points, indicating'"
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'The RAG pipeline, which grounds answers in retrieved documents, outperforms the no-retrieval baseline by 7.8 percentage points, indicating that retrieval provides a strong constraint on model generation.' at 2729"
+        },
+        {
+          "name": "level_explicit",
+          "ok": false,
+          "detail": "S017.m2: its sentence does not name the metric verbatim; S017.m2: its sentence does not name the dataset; S017.m4: its sentence does not name the condition verbatim"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S017.m2: its sentence names metrics [], not only S017.k1"
+            },
+            {
+              "name": "added_numbers",
+              "detail": "'10' at 1888: 'sistency decoding, which uses 10 samples per question. The pri'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'The RAG pipeline outperforms the no-retrieval baseline, indicating that grounding the answer generation process in retrieved documents improves factual accuracy.' at 2605; \"The fine-tuned model performs better than both the baseline and the RAG pipeline, suggesting that domain-specific adaptation enhances the model's ability to generate accurate responses.\" at 2767"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S017.m2: its sentence does not name the metric verbatim; S017.m2: its sentence does not name the dataset; S017.m4: its sentence does not name the condition verbatim"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S017.m2: its sentence names metrics [], not only S017.k1"
+            },
+            {
+              "name": "added_numbers",
+              "detail": "'10' at 1857: 'ncy decoding, which is set to 10. The hallucination frequency '; '7.8' at 2748: 'ng hallucination frequency by 7.8 percentage points. The fine-t'"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S017.m2: its sentence does not name the metric verbatim; S017.m4: its sentence does not name the condition verbatim"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S017.m2: its sentence names metrics [], not only S017.k1"
+            },
+            {
+              "name": "added_numbers",
+              "detail": "'10' at 2024: 'tency decoding, which samples 10 answers per question. The pri'; '7.8' at 2834: ' the no-retrieval baseline by 7.8 percentage points, indicating'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'The RAG pipeline, which grounds answers in retrieved documents, outperforms the no-retrieval baseline by 7.8 percentage points, indicating that retrieval provides a strong constraint on model generation.' at 2729"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S017.m2: its sentence does not name the metric verbatim; S017.m2: its sentence does not name the dataset; S017.m4: its sentence does not name the condition verbatim"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S018",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'4.5' at 2987: 'ually consistent answers. The 4.5 percentage point reduction in'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'The retrieve-then-read model demonstrates a lower hallucination rate of 16.3% on the same dataset.' at 2224; 'Discussion\\nThe findings show that retrieval augmentation significantly reduces hallucination rates in question-answering systems.' at 2508; 'In contrast, the retrieve-then-read model leverages external evidence to ground its responses, resulting in more accurate and factually consistent answers.' at 2827"
+            },
+            {
+              "name": "level_explicit",
+              "detail": "S018.m2: its sentence does not name the dataset"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S019",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S019.m1/value: required string '64.2%' is ambiguous; S019.m2/value: required string '63.4%' is ambiguous; S019.m3/value: required string '59.1%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'0.8' at 2500: 'eval baseline, with a drop of 0.8 percentage points. This sugge'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'Introduction\\nThe integration of external knowledge retrieval into question answering systems has become a common strategy to improve factual accuracy.' at 186; 'Method\\nWe evaluate three conditions: the no-retrieval baseline, which receives only the question and generates an answer without accessing external documents; the retrieve-then-read model, which first retrieves supporting documents using a dense retrieval method and then reads them before producing an answer; and the fine-tuned model, which was further trained on in-domain question-answer pairs to improve its performance on the target domain.' at 1095; 'Discussion\\nThe results indicate that retrieval augmentation does not improve fact-level accuracy on the TriviaCheck dataset.' at 2266; 'These findings challenge the prevailing assumption that retrieval always enhances factual correctness.' at 2981; 'Furthermore, the fact that the no-retrieval baseline outperforms both retrieval-based methods suggests that the model’s internal knowledge, when properly trained, may be sufficient for many factual questions in this domain.' at 3304"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S019.m1/value: required string '64.2%' is ambiguous; S019.m2/value: required string '63.4%' is ambiguous; S019.m3/value: required string '59.1%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S019.m1/value: required string '64.2%' is ambiguous; S019.m2/value: required string '63.4%' is ambiguous; S019.m3/value: required string '59.1%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S020",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S020.m1/value: required string '52.3%' is ambiguous; S020.m2/value: required string '64.6%' is ambiguous; S020.m3/value: required string '55.2%' is ambiguous; S020.m4/value: required string '35.7%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S020.m1/value: required string '52.3%' is ambiguous; S020.m2/value: required string '64.6%' is ambiguous; S020.m3/value: required string '55.2%' is ambiguous; S020.m4/value: required string '35.7%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S020.m1/value: required string '52.3%' is ambiguous; S020.m2/value: required string '64.6%' is ambiguous; S020.m3/value: required string '55.2%' is ambiguous; S020.m4/value: required string '35.7%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S020.m1/value: required string '52.3%' is ambiguous; S020.m2/value: required string '64.6%' is ambiguous; S020.m3/value: required string '55.2%' is ambiguous; S020.m4/value: required string '35.7%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S002",
+    "S003",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011",
+    "S012",
+    "S013",
+    "S014",
+    "S015",
+    "S016",
+    "S017",
+    "S018",
+    "S019",
+    "S020"
+  ]
+}

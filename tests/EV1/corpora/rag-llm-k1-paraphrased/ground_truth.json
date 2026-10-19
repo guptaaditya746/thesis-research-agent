@@ -1,0 +1,70 @@
+{
+  "corpus_id": "rag-llm-k1-e8fce53a",
+  "seed": 1,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "studies": [
+    {
+      "study_id": "S023",
+      "paper": "S023",
+      "level": "paraphrased",
+      "relevant": false,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [],
+      "metrics": [],
+      "measurements": [],
+      "author_claim": null,
+      "effect": {
+        "direction": "undetermined",
+        "delta": null,
+        "metric": null,
+        "treatment": null,
+        "control": null,
+        "reason": "screened_out"
+      }
+    },
+    {
+      "study_id": "S024",
+      "paper": "S024",
+      "level": "paraphrased",
+      "relevant": false,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [],
+      "metrics": [],
+      "measurements": [],
+      "author_claim": null,
+      "effect": {
+        "direction": "undetermined",
+        "delta": null,
+        "metric": null,
+        "treatment": null,
+        "control": null,
+        "reason": "screened_out"
+      }
+    }
+  ],
+  "placements": [],
+  "answer": {
+    "label": "insufficient",
+    "supporting": [],
+    "contradicting": [],
+    "neutral": [],
+    "undetermined": [
+      "S023",
+      "S024"
+    ],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}

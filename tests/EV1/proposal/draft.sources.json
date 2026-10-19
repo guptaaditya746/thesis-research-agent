@@ -1,0 +1,329 @@
+{
+ "frame_sha256": "87060a6571b9b8404f5c14a8ea9b894a8d2456b011a6506b68141271b1e45ae5",
+ "template": {
+  "path": "rag-factuality.yaml",
+  "sha256": "029e25985fc78171f7a48f2f2d6fe1e906b58fde6efb80a84ae40e5502144154"
+ },
+ "vocabulary": {
+  "name": "rag-factuality",
+  "sha256": "f2960c29148df56a6e56b1e8fa909ae4c7944bc386e377c55fbe35a61d944645"
+ },
+ "fields": [
+  {
+   "path": "locate",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "screen.question",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "screen.extractors",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "screen.on_fail",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.condition.description",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.condition.fields.role.enum",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.metric.description",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.metric.fields.canonical.enum",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.measurement.bounds",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.author_claim.description",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.author_claim.fields.direction.enum",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.condition.query",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.condition.extractors",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.condition.fields",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.metric.query",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.metric.extractors",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.metric.fields",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.measurement.query",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.measurement.extractors",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.measurement.fields",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.author_claim.query",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.author_claim.extractors",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "evidence_types.author_claim.fields",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "synthesis.compare.treatment",
+   "source": "ontology",
+   "vocab_id": "hand:retrieval_augmented_generation"
+  },
+  {
+   "path": "synthesis.compare.control",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "synthesis.metrics[0].canonical",
+   "source": "ontology",
+   "vocab_id": "hand:factual_accuracy"
+  },
+  {
+   "path": "synthesis.metrics[0].higher_is_better",
+   "source": "ontology",
+   "vocab_id": "hand:factual_accuracy"
+  },
+  {
+   "path": "synthesis.metrics[1].canonical",
+   "source": "ontology",
+   "vocab_id": "hand:hallucination_rate"
+  },
+  {
+   "path": "synthesis.metrics[1].higher_is_better",
+   "source": "ontology",
+   "vocab_id": "hand:hallucination_rate"
+  },
+  {
+   "path": "synthesis.metrics[2].canonical",
+   "source": "ontology",
+   "vocab_id": "hand:factscore"
+  },
+  {
+   "path": "synthesis.metrics[2].higher_is_better",
+   "source": "ontology",
+   "vocab_id": "hand:factscore"
+  },
+  {
+   "path": "synthesis.metrics[3].canonical",
+   "source": "ontology",
+   "vocab_id": "hand:accuracy"
+  },
+  {
+   "path": "synthesis.metrics[3].higher_is_better",
+   "source": "ontology",
+   "vocab_id": "hand:accuracy"
+  },
+  {
+   "path": "synthesis.claim_map.improves",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "synthesis.claim_map.no_effect",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "synthesis.claim_map.worsens",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "synthesis.min_effect",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "synthesis.pairing",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "synthesis.label",
+   "source": "protocol",
+   "vocab_id": null
+  },
+  {
+   "path": "synthesis.flags",
+   "source": "protocol",
+   "vocab_id": null
+  }
+ ],
+ "terms": [
+  {
+   "path": "screen.terms",
+   "term": "retrieval-augmented generation",
+   "source": "ontology",
+   "vocab_id": "hand:retrieval_augmented_generation"
+  },
+  {
+   "path": "screen.terms",
+   "term": "RAG",
+   "source": "ontology",
+   "vocab_id": "hand:retrieval_augmented_generation"
+  },
+  {
+   "path": "screen.terms",
+   "term": "factual accuracy",
+   "source": "ontology",
+   "vocab_id": "hand:factual_accuracy"
+  },
+  {
+   "path": "screen.terms",
+   "term": "factuality",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "screen.terms",
+   "term": "closed-book",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "screen.terms",
+   "term": "hallucination",
+   "source": "invented",
+   "vocab_id": null
+  },
+  {
+   "path": "regex.conditions.rag",
+   "term": "retrieve-then-read",
+   "source": "ontology",
+   "vocab_id": "hand:retrieval_augmented_generation"
+  },
+  {
+   "path": "regex.conditions.closed_book",
+   "term": "closed-book",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "regex.conditions.closed_book",
+   "term": "without retrieval",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "regex.conditions.closed_book",
+   "term": "no retrieval",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "regex.conditions.closed_book",
+   "term": "no-retrieval baseline",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "regex.conditions.closed_book",
+   "term": "parametric-only model",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "regex.conditions.closed_book",
+   "term": "vanilla LLM",
+   "source": "ontology",
+   "vocab_id": "hand:closed_book"
+  },
+  {
+   "path": "regex.metrics.factual_accuracy",
+   "term": "factual correctness",
+   "source": "ontology",
+   "vocab_id": "hand:factual_accuracy"
+  },
+  {
+   "path": "regex.metrics.hallucination_rate",
+   "term": "hallucination ratio",
+   "source": "ontology",
+   "vocab_id": "hand:hallucination_rate"
+  },
+  {
+   "path": "regex.metrics.hallucination_rate",
+   "term": "share of hallucinated answers",
+   "source": "ontology",
+   "vocab_id": "hand:hallucination_rate"
+  },
+  {
+   "path": "regex.metrics.factscore",
+   "term": "FActScore",
+   "source": "ontology",
+   "vocab_id": "hand:factscore"
+  },
+  {
+   "path": "regex.metrics.factscore",
+   "term": "factuality score",
+   "source": "ontology",
+   "vocab_id": "hand:factscore"
+  },
+  {
+   "path": "regex.metrics.accuracy",
+   "term": "accuracy",
+   "source": "ontology",
+   "vocab_id": "hand:accuracy"
+  }
+ ]
+}

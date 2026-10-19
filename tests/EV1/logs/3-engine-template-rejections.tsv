@@ -1,0 +1,13 @@
+system	corpus	rejected_by_reason
+regex-only	rag-tpl-s1-complex	none
+regex-only	rag-tpl-s1-contradictory	none
+regex-only	rag-tpl-s1-distributed	none
+regex-only	rag-tpl-s1-explicit	none
+regex-only	rag-tpl-s1-mixed	none
+regex-only	rag-tpl-s1-paraphrased	none
+cascade	rag-tpl-s1-complex	ambiguous:2
+cascade	rag-tpl-s1-contradictory	not_found:7
+cascade	rag-tpl-s1-distributed	dangling_link:8,not_found:11
+cascade	rag-tpl-s1-explicit	none
+cascade	rag-tpl-s1-mixed	not_found:3
+cascade	rag-tpl-s1-paraphrased	none

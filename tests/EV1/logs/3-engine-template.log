@@ -1,0 +1,288 @@
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "neutral": 0,
+  "supporting": 4,
+  "undetermined": 15
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.776
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 6,
+  "neutral": 1,
+  "supporting": 11,
+  "undetermined": 2
+ },
+ "cost": {
+  "cached_calls": 60,
+  "calls": 160,
+  "input_tokens": 149961,
+  "made_model_calls": 132,
+  "model_calls": 132,
+  "output_tokens": 27911,
+  "seconds": 224.346
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-contradictory",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "neutral": 1,
+  "supporting": 5,
+  "undetermined": 13
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.929
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-contradictory",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "neutral": 6,
+  "supporting": 10,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 60,
+  "calls": 160,
+  "input_tokens": 123817,
+  "made_model_calls": 138,
+  "model_calls": 138,
+  "output_tokens": 18977,
+  "seconds": 155.774
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-distributed",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 20
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.845
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-distributed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "neutral": 4,
+  "supporting": 8,
+  "undetermined": 4
+ },
+ "cost": {
+  "cached_calls": 60,
+  "calls": 160,
+  "input_tokens": 138407,
+  "made_model_calls": 137,
+  "model_calls": 137,
+  "output_tokens": 19065,
+  "seconds": 157.073
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-explicit",
+ "label": "supported",
+ "counts": {
+  "contradicting": 0,
+  "neutral": 0,
+  "supporting": 1,
+  "undetermined": 19
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.762
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-explicit",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "neutral": 3,
+  "supporting": 12,
+  "undetermined": 1
+ },
+ "cost": {
+  "cached_calls": 60,
+  "calls": 160,
+  "input_tokens": 115872,
+  "made_model_calls": 130,
+  "model_calls": 130,
+  "output_tokens": 21603,
+  "seconds": 174.495
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "neutral": 0,
+  "supporting": 3,
+  "undetermined": 16
+ },
+ "cost": {
+  "cached_calls": 64,
+  "calls": 80,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.413
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 5,
+  "neutral": 3,
+  "supporting": 11,
+  "undetermined": 1
+ },
+ "cost": {
+  "cached_calls": 140,
+  "calls": 160,
+  "input_tokens": 132723,
+  "made_model_calls": 28,
+  "model_calls": 136,
+  "output_tokens": 23136,
+  "seconds": 42.641
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/regex-only/rag-tpl-s1-paraphrased",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 20
+ },
+ "cost": {
+  "cached_calls": 16,
+  "calls": 80,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.608
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/runs/cascade/rag-tpl-s1-paraphrased",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "neutral": 4,
+  "supporting": 12,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 80,
+  "calls": 160,
+  "input_tokens": 130871,
+  "made_model_calls": 112,
+  "model_calls": 140,
+  "output_tokens": 23270,
+  "seconds": 211.095
+ }
+}

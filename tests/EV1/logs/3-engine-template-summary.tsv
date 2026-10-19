@@ -1,0 +1,13 @@
+system	corpus	label	supporting	contradicting	neutral	undetermined	model_calls	input_tokens	output_tokens	seconds
+regex-only	rag-tpl-s1-complex	mixed	4	1	0	15	0	0	0	1.776
+regex-only	rag-tpl-s1-contradictory	mixed	5	1	1	13	0	0	0	1.929
+regex-only	rag-tpl-s1-distributed	insufficient	0	0	0	20	0	0	0	1.845
+regex-only	rag-tpl-s1-explicit	supported	1	0	0	19	0	0	0	1.762
+regex-only	rag-tpl-s1-mixed	mixed	3	1	0	16	0	0	0	1.413
+regex-only	rag-tpl-s1-paraphrased	insufficient	0	0	0	20	0	0	0	1.608
+cascade	rag-tpl-s1-complex	mixed	11	6	1	2	132	149961	27911	224.346
+cascade	rag-tpl-s1-contradictory	mixed	10	4	6	0	138	123817	18977	155.774
+cascade	rag-tpl-s1-distributed	mixed	8	4	4	4	137	138407	19065	157.073
+cascade	rag-tpl-s1-explicit	mixed	12	4	3	1	130	115872	21603	174.495
+cascade	rag-tpl-s1-mixed	mixed	11	5	3	1	136	132723	23136	42.641
+cascade	rag-tpl-s1-paraphrased	mixed	12	4	4	0	140	130871	23270	211.095

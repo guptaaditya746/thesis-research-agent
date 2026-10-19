@@ -1,0 +1,73 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "levels": [],
+      "run_id": "rag-llm-s1-explicit"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "levels": [],
+      "run_id": "rag-llm-s1-paraphrased"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "levels": [],
+      "run_id": "rag-llm-s1-distributed"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "levels": [],
+      "run_id": "rag-llm-s1-complex"
+    },
+    {
+      "corpus_id": "rag-llm-s1-4f53cda1",
+      "levels": [],
+      "run_id": "rag-llm-s1-contradictory"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "levels": [],
+      "run_id": "rag-llm-small-distributed"
+    },
+    {
+      "corpus_id": "rag-llm-small-4f53cda1",
+      "levels": [],
+      "run_id": "rag-llm-small-paraphrased"
+    }
+  ],
+  "cost": null,
+  "extractor_id": "regex_author_claim@2#75e32ebcdf68",
+  "levels": [],
+  "name": "regex_author_claim",
+  "recall_scope": [
+    "all_facts",
+    "all_facts",
+    "all_facts",
+    "all_facts",
+    "all_facts",
+    "all_facts",
+    "all_facts"
+  ],
+  "rows": [
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.0,
+      "facts": 0,
+      "items": 0,
+      "level": "all",
+      "matched": 0,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "span_accuracy": null,
+      "span_hits": 0
+    }
+  ],
+  "stability": null,
+  "stability_ambiguous": [],
+  "version": "2"
+}

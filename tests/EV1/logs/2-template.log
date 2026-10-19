@@ -1,0 +1,40 @@
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/corpora/rag-tpl-s1-explicit": "rag-tpl-s1-59c5118b",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/corpora/rag-tpl-s1-paraphrased": "rag-tpl-s1-4d15ddc4",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/corpora/rag-tpl-s1-distributed": "rag-tpl-s1-79207ad1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/corpora/rag-tpl-s1-complex": "rag-tpl-s1-f0f5d48e",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/corpora/rag-tpl-s1-contradictory": "rag-tpl-s1-56b0bc02",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster/corpora/rag-tpl-s1-mixed": "rag-tpl-s1-6162b495"
+  },
+  "excluded": {},
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S001",
+      "S002",
+      "S005",
+      "S006",
+      "S008",
+      "S010",
+      "S011",
+      "S015",
+      "S016",
+      "S017",
+      "S018",
+      "S020"
+    ],
+    "contradicting": [
+      "S009",
+      "S012",
+      "S013",
+      "S014"
+    ],
+    "neutral": [
+      "S003",
+      "S004",
+      "S007",
+      "S019"
+    ]
+  }
+}

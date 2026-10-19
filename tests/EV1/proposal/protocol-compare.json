@@ -1,0 +1,417 @@
+{
+ "equal": false,
+ "differs": [
+  {
+   "path": "evidence_types.condition.extractors",
+   "hand": [
+    {
+     "name": "regex_condition",
+     "config": {},
+     "budget": null
+    },
+    {
+     "name": "llm_condition",
+     "config": {},
+     "budget": null
+    }
+   ],
+   "frozen": [
+    {
+     "name": "regex_condition",
+     "config": {
+      "conditions": {
+       "rag": [
+        "(?i)\\bretrieval[- ]augmented(?:\\s+generation)?+(?:\\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\\s+without\\b)",
+        "\\bRAG\\b(?:\\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\\s+(?i:with|without)\\b)",
+        "(?i)\\b(?:model|LLM|system|variant|generator)\\s+with\\s+retrieval\\b",
+        "(?i)(?<!\\w)retrieve\\-then\\-read(?!\\w)"
+       ],
+       "closed_book": [
+        "(?i)(?<!\\w)closed\\-book(?!\\w)",
+        "(?i)(?<!\\w)without\\s+retrieval(?!\\w)",
+        "(?i)(?<!\\w)no\\s+retrieval(?!\\w)",
+        "(?i)(?<!\\w)no\\-retrieval\\s+baseline(?!\\w)",
+        "(?i)(?<!\\w)parametric\\-only\\s+model(?!\\w)",
+        "(?i)(?<!\\w)vanilla\\s+LLM(?!\\w)"
+       ]
+      }
+     },
+     "budget": null
+    },
+    {
+     "name": "llm_condition",
+     "config": {},
+     "budget": null
+    }
+   ]
+  },
+  {
+   "path": "evidence_types.condition.fields.properties.role.enum",
+   "hand": [
+    "rag",
+    "baseline",
+    "other"
+   ],
+   "frozen": [
+    "rag",
+    "closed_book",
+    "other"
+   ]
+  },
+  {
+   "path": "evidence_types.measurement.bounds",
+   "hand": [
+    {
+     "field": "value",
+     "min": 0.0,
+     "max": 1.0,
+     "when": {
+      "link": "metric",
+      "field": "canonical",
+      "values": [
+       "factual_accuracy",
+       "hallucination_rate"
+      ]
+     }
+    }
+   ],
+   "frozen": [
+    {
+     "field": "value",
+     "min": 0.0,
+     "max": 1.0,
+     "when": {
+      "link": "metric",
+      "field": "canonical",
+      "values": [
+       "hallucination_rate",
+       "factscore"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "path": "evidence_types.measurement.extractors",
+   "hand": [
+    {
+     "name": "regex_measurement",
+     "config": {},
+     "budget": null
+    },
+    {
+     "name": "llm_measurement",
+     "config": {},
+     "budget": null
+    }
+   ],
+   "frozen": [
+    {
+     "name": "regex_measurement",
+     "config": {
+      "conditions": {
+       "rag": [
+        "(?i)\\bretrieval[- ]augmented(?:\\s+generation)?+(?:\\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\\s+without\\b)",
+        "\\bRAG\\b(?:\\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\\s+(?i:with|without)\\b)",
+        "(?i)\\b(?:model|LLM|system|variant|generator)\\s+with\\s+retrieval\\b",
+        "(?i)(?<!\\w)retrieve\\-then\\-read(?!\\w)"
+       ],
+       "closed_book": [
+        "(?i)(?<!\\w)closed\\-book(?!\\w)",
+        "(?i)(?<!\\w)without\\s+retrieval(?!\\w)",
+        "(?i)(?<!\\w)no\\s+retrieval(?!\\w)",
+        "(?i)(?<!\\w)no\\-retrieval\\s+baseline(?!\\w)",
+        "(?i)(?<!\\w)parametric\\-only\\s+model(?!\\w)",
+        "(?i)(?<!\\w)vanilla\\s+LLM(?!\\w)"
+       ]
+      },
+      "metrics": [
+       [
+        "(?i)(?<!\\w)accuracy(?!\\w)",
+        "accuracy",
+        true
+       ],
+       [
+        "(?i)(?<!\\w)factuality\\s+score(?!\\w)",
+        "factscore",
+        true
+       ],
+       [
+        "(?i)(?<!\\w)FActScore(?!\\w)",
+        "factscore",
+        true
+       ],
+       [
+        "(?i)(?<!\\w)share\\s+of\\s+hallucinated\\s+answers(?!\\w)",
+        "hallucination_rate",
+        false
+       ],
+       [
+        "(?i)(?<!\\w)hallucination\\s+ratio(?!\\w)",
+        "hallucination_rate",
+        false
+       ],
+       [
+        "(?i)(?<!\\w)factual\\s+correctness(?!\\w)",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bfactual(?:ity)?\\s+accuracy\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\b(?:answer|exact[- ]match|EM|QA)\\s+accuracy\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\baccuracy\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bexact[- ]match\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bFActScore\\b|\\bfactuality\\s+score\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bhallucination[- ]rate\\b|\\brate\\s+of\\s+hallucinat(?:ion|ions|ed\\s+answers)\\b",
+        "hallucination_rate",
+        false
+       ],
+       [
+        "(?i)\\blatency\\b",
+        "other",
+        false
+       ],
+       [
+        "\\bBLEU\\b|\\bROUGE(?:-[12L])?\\b",
+        "other",
+        true
+       ],
+       [
+        "(?i)\\bperplexity\\b",
+        "other",
+        false
+       ],
+       [
+        "(?i)\\bfluency\\b",
+        "other",
+        true
+       ],
+       [
+        "\\bF1\\b",
+        "other",
+        true
+       ]
+      ]
+     },
+     "budget": null
+    },
+    {
+     "name": "llm_measurement",
+     "config": {},
+     "budget": null
+    }
+   ]
+  },
+  {
+   "path": "evidence_types.metric.extractors",
+   "hand": [
+    {
+     "name": "regex_metric",
+     "config": {},
+     "budget": null
+    },
+    {
+     "name": "llm_metric",
+     "config": {},
+     "budget": null
+    }
+   ],
+   "frozen": [
+    {
+     "name": "regex_metric",
+     "config": {
+      "metrics": [
+       [
+        "(?i)(?<!\\w)accuracy(?!\\w)",
+        "accuracy",
+        true
+       ],
+       [
+        "(?i)(?<!\\w)factuality\\s+score(?!\\w)",
+        "factscore",
+        true
+       ],
+       [
+        "(?i)(?<!\\w)FActScore(?!\\w)",
+        "factscore",
+        true
+       ],
+       [
+        "(?i)(?<!\\w)share\\s+of\\s+hallucinated\\s+answers(?!\\w)",
+        "hallucination_rate",
+        false
+       ],
+       [
+        "(?i)(?<!\\w)hallucination\\s+ratio(?!\\w)",
+        "hallucination_rate",
+        false
+       ],
+       [
+        "(?i)(?<!\\w)factual\\s+correctness(?!\\w)",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bfactual(?:ity)?\\s+accuracy\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\b(?:answer|exact[- ]match|EM|QA)\\s+accuracy\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\baccuracy\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bexact[- ]match\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bFActScore\\b|\\bfactuality\\s+score\\b",
+        "factual_accuracy",
+        true
+       ],
+       [
+        "(?i)\\bhallucination[- ]rate\\b|\\brate\\s+of\\s+hallucinat(?:ion|ions|ed\\s+answers)\\b",
+        "hallucination_rate",
+        false
+       ],
+       [
+        "(?i)\\blatency\\b",
+        "other",
+        false
+       ],
+       [
+        "\\bBLEU\\b|\\bROUGE(?:-[12L])?\\b",
+        "other",
+        true
+       ],
+       [
+        "(?i)\\bperplexity\\b",
+        "other",
+        false
+       ],
+       [
+        "(?i)\\bfluency\\b",
+        "other",
+        true
+       ],
+       [
+        "\\bF1\\b",
+        "other",
+        true
+       ]
+      ]
+     },
+     "budget": null
+    },
+    {
+     "name": "llm_metric",
+     "config": {},
+     "budget": null
+    }
+   ]
+  },
+  {
+   "path": "evidence_types.metric.fields.properties.canonical.enum",
+   "hand": [
+    "factual_accuracy",
+    "hallucination_rate",
+    "other"
+   ],
+   "frozen": [
+    "factual_accuracy",
+    "hallucination_rate",
+    "factscore",
+    "accuracy",
+    "other"
+   ]
+  },
+  {
+   "path": "screen.terms",
+   "hand": [
+    "RAG",
+    "closed-book",
+    "retrieval",
+    "retrieval augmented",
+    "retrieval-augmented",
+    "without retrieval"
+   ],
+   "frozen": [
+    "RAG",
+    "closed-book",
+    "factual accuracy",
+    "factuality",
+    "hallucination",
+    "retrieval-augmented generation"
+   ]
+  },
+  {
+   "path": "synthesis.compare.control",
+   "hand": "baseline",
+   "frozen": "closed_book"
+  },
+  {
+   "path": "synthesis.metrics",
+   "hand": [
+    {
+     "canonical": "factual_accuracy",
+     "higher_is_better": true
+    },
+    {
+     "canonical": "hallucination_rate",
+     "higher_is_better": false
+    }
+   ],
+   "frozen": [
+    {
+     "canonical": "factual_accuracy",
+     "higher_is_better": true
+    },
+    {
+     "canonical": "hallucination_rate",
+     "higher_is_better": false
+    },
+    {
+     "canonical": "factscore",
+     "higher_is_better": true
+    },
+    {
+     "canonical": "accuracy",
+     "higher_is_better": true
+    }
+   ]
+  }
+ ],
+ "query_tokens_superset": {
+  "condition": true,
+  "metric": false,
+  "measurement": true,
+  "author_claim": true
+ }
+}

@@ -1,0 +1,871 @@
+{
+  "corpus_id": "rag-llm-s1-4f53cda1",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S001.m1/value: required string '29.5' is ambiguous; S001.m2/value: required string '17.8' is ambiguous; S001.m3/value: required string '9.4' is ambiguous; S001.m4/value: required string '47.1' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.5' is ambiguous; S001.m2/value: required string '17.8' is ambiguous; S001.m3/value: required string '9.4' is ambiguous; S001.m4/value: required string '47.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.5' is ambiguous; S001.m2/value: required string '17.8' is ambiguous; S001.m3/value: required string '9.4' is ambiguous; S001.m4/value: required string '47.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.5' is ambiguous; S001.m2/value: required string '17.8' is ambiguous; S001.m3/value: required string '9.4' is ambiguous; S001.m4/value: required string '47.1' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S002.m1/value: required string '50.5' is ambiguous; S002.m2/value: required string '57.1' is ambiguous; S002.m3/value: required string '78.1' is ambiguous; S002.m4/value: required string '55.8' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '50.5' is ambiguous; S002.m2/value: required string '57.1' is ambiguous; S002.m3/value: required string '78.1' is ambiguous; S002.m4/value: required string '55.8' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '50.5' is ambiguous; S002.m2/value: required string '57.1' is ambiguous; S002.m3/value: required string '78.1' is ambiguous; S002.m4/value: required string '55.8' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '50.5' is ambiguous; S002.m2/value: required string '57.1' is ambiguous; S002.m3/value: required string '78.1' is ambiguous; S002.m4/value: required string '55.8' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S003",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S003.m1/value: required string '78.3' is ambiguous; S003.m2/value: required string '77.4' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S003.m1/value: required string '78.3' is ambiguous; S003.m2/value: required string '77.4' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S003.m1/value: required string '78.3' is ambiguous; S003.m2/value: required string '77.4' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S003.m1/value: required string '78.3' is ambiguous; S003.m2/value: required string '77.4' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S004",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S004.m1/value: required string '59.8' is ambiguous; S004.m2/value: required string '58.9' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S004.m1/value: required string '59.8' is ambiguous; S004.m2/value: required string '58.9' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S004.m1/value: required string '59.8' is ambiguous; S004.m2/value: required string '58.9' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S004.m1/value: required string '59.8' is ambiguous; S004.m2/value: required string '58.9' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S005",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S005.m1/value: required string '40.6' is ambiguous; S005.m2/value: required string '53.8' is ambiguous; S005.m3/value: required string '47.6' is ambiguous; S005.m4/value: required string '44.8' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S005.m1/value: required string '40.6' is ambiguous; S005.m2/value: required string '53.8' is ambiguous; S005.m3/value: required string '47.6' is ambiguous; S005.m4/value: required string '44.8' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S005.m1/value: required string '40.6' is ambiguous; S005.m2/value: required string '53.8' is ambiguous; S005.m3/value: required string '47.6' is ambiguous; S005.m4/value: required string '44.8' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S005.m1/value: required string '40.6' is ambiguous; S005.m2/value: required string '53.8' is ambiguous; S005.m3/value: required string '47.6' is ambiguous; S005.m4/value: required string '44.8' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S006",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S006.m1/value: required string '21.5' is ambiguous; S006.m2/value: required string '18.3' is ambiguous; S006.m3/value: required string '9.8' is ambiguous; decoy '22.4%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S006.m1/value: required string '21.5' is ambiguous; S006.m2/value: required string '18.3' is ambiguous; S006.m3/value: required string '9.8' is ambiguous; decoy '22.4%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S006.m1/value: required string '21.5' is ambiguous; S006.m2/value: required string '18.3' is ambiguous; S006.m3/value: required string '9.8' is ambiguous; decoy '22.4%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S006.m1/value: required string '21.5' is ambiguous; S006.m2/value: required string '18.3' is ambiguous; S006.m3/value: required string '9.8' is ambiguous; decoy '22.4%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S007",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S007.m1/value: required string '39.1' is ambiguous; S007.m2/value: required string '39.9' is ambiguous; S007.m3/value: required string '18.2' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m1/value: required string '39.1' is ambiguous; S007.m2/value: required string '39.9' is ambiguous; S007.m3/value: required string '18.2' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m1/value: required string '39.1' is ambiguous; S007.m2/value: required string '39.9' is ambiguous; S007.m3/value: required string '18.2' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m1/value: required string '39.1' is ambiguous; S007.m2/value: required string '39.9' is ambiguous; S007.m3/value: required string '18.2' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S008",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S008.m1/value: required string '20.2' is ambiguous; S008.m2/value: required string '6.3' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '20.2' is ambiguous; S008.m2/value: required string '6.3' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '20.2' is ambiguous; S008.m2/value: required string '6.3' is ambiguous; decoy '19.4%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '20.2' is ambiguous; S008.m2/value: required string '6.3' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S009",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S009.m1/value: required string '53.8' is ambiguous; S009.m2/value: required string '46.5' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S009.m1/value: required string '53.8' is ambiguous; S009.m2/value: required string '46.5' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S009.m1/value: required string '53.8' is ambiguous; S009.m2/value: required string '46.5' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S009.m1/value: required string '53.8' is ambiguous; S009.m2/value: required string '46.5' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S010",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S010.m1/value: required string '38.1' is ambiguous; S010.m2/value: required string '32.3' is ambiguous; S010.m3/value: required string '23.1' is ambiguous; decoy '38.9%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S010.m1/value: required string '38.1' is ambiguous; S010.m2/value: required string '32.3' is ambiguous; S010.m3/value: required string '23.1' is ambiguous; decoy '38.9%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S010.m1/value: required string '38.1' is ambiguous; S010.m2/value: required string '32.3' is ambiguous; S010.m3/value: required string '23.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S010.m1/value: required string '38.1' is ambiguous; S010.m2/value: required string '32.3' is ambiguous; S010.m3/value: required string '23.1' is ambiguous; decoy '38.9%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S011",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S011.m1/value: required string '54.3' is ambiguous; S011.m2/value: required string '67.6' is ambiguous; S011.m3/value: required string '71.8' is ambiguous; S011.m4/value: required string '58.1' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S011.m1/value: required string '54.3' is ambiguous; S011.m2/value: required string '67.6' is ambiguous; S011.m3/value: required string '71.8' is ambiguous; S011.m4/value: required string '58.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S011.m1/value: required string '54.3' is ambiguous; S011.m2/value: required string '67.6' is ambiguous; S011.m3/value: required string '71.8' is ambiguous; S011.m4/value: required string '58.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S011.m1/value: required string '54.3' is ambiguous; S011.m2/value: required string '67.6' is ambiguous; S011.m3/value: required string '71.8' is ambiguous; S011.m4/value: required string '58.1' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S012",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S012.m1/value: required string '19.3' is ambiguous; S012.m2/value: required string '29.2' is ambiguous; decoy '8.1%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S012.m1/value: required string '19.3' is ambiguous; S012.m2/value: required string '29.2' is ambiguous; decoy '8.1%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S012.m1/value: required string '19.3' is ambiguous; S012.m2/value: required string '29.2' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S012.m1/value: required string '19.3' is ambiguous; S012.m2/value: required string '29.2' is ambiguous; decoy '8.1%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S013",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S013.m1/value: required string '47.5' is ambiguous; S013.m2/value: required string '40.3' is ambiguous; S013.m3/value: required string '42.5' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S013.m1/value: required string '47.5' is ambiguous; S013.m2/value: required string '40.3' is ambiguous; S013.m3/value: required string '42.5' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'1' at 1695: 'e conditions were evaluated: (1) vanilla LLM, where the model'; '2' at 1776: 'e question and nothing else; (2) retrieval-augmented generato'; '3' at 1913: 'along with the question; and (3) RAG with random passages, wh'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'Retrieval-augmented generation (RAG) has emerged as a promising approach to improve factual accuracy by grounding model outputs in external knowledge sources.' at 710; 'The goal is to determine whether retrieval augmentation improves answer accuracy and whether the quality of retrieved passages matters.' at 1287; 'Discussion\\nThe results indicate that retrieval augmentation does not improve answer accuracy in this setting.' at 2830; 'This suggests that the inclusion of retrieved passages may introduce noise or irrelevant information that degrades model performance.' at 3067; 'The RAG with random passages condition outperforms the retrieval-augmented generator, which implies that the quality of retrieved passages is critical—random passages, while not relevant, may be less disruptive than poorly retrieved ones.' at 3201; 'These findings challenge the assumption that retrieval augmentation universally improves factual accuracy and highlight the importance of retrieval quality and model sensitivity to external inputs.' at 3637"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S013.m1/value: required string '47.5' is ambiguous; S013.m2/value: required string '40.3' is ambiguous; S013.m3/value: required string '42.5' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S014",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S014.m1/value: required string '60.6' is ambiguous; S014.m2/value: required string '53.5' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S014.m1/value: required string '60.6' is ambiguous; S014.m2/value: required string '53.5' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S014.m1/value: required string '60.6' is ambiguous; S014.m2/value: required string '53.5' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S014.m1/value: required string '60.6' is ambiguous; S014.m2/value: required string '53.5' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S015",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S015.m1/value: required string '62.5' is ambiguous; S015.m2/value: required string '66.1' is ambiguous; S015.m3/value: required string '69.8' is ambiguous; S015.m4/value: required string '33.2' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S015.m1/value: required string '62.5' is ambiguous; S015.m2/value: required string '66.1' is ambiguous; S015.m3/value: required string '69.8' is ambiguous; S015.m4/value: required string '33.2' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S015.m1/value: required string '62.5' is ambiguous; S015.m2/value: required string '66.1' is ambiguous; S015.m3/value: required string '69.8' is ambiguous; S015.m4/value: required string '33.2' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S015.m1/value: required string '62.5' is ambiguous; S015.m2/value: required string '66.1' is ambiguous; S015.m3/value: required string '69.8' is ambiguous; S015.m4/value: required string '33.2' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S016",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S016.m1/value: required string '10.3' is ambiguous; S016.m2/value: required string '5.1' is ambiguous; S016.m3/value: required string '41.2' is ambiguous; S016.m4/value: required string '30.4' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S016.m1/value: required string '10.3' is ambiguous; S016.m2/value: required string '5.1' is ambiguous; S016.m3/value: required string '41.2' is ambiguous; S016.m4/value: required string '30.4' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S016.m1/value: required string '10.3' is ambiguous; S016.m2/value: required string '5.1' is ambiguous; S016.m3/value: required string '41.2' is ambiguous; S016.m4/value: required string '30.4' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S016.m1/value: required string '10.3' is ambiguous; S016.m2/value: required string '5.1' is ambiguous; S016.m3/value: required string '41.2' is ambiguous; S016.m4/value: required string '30.4' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S017",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S017.m1/value: required string '39.2' is ambiguous; S017.m2/value: required string '31.4' is ambiguous; S017.m3/value: required string '29.8' is ambiguous; S017.m4/value: required string '19.1' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S017.m1/value: required string '39.2' is ambiguous; S017.m2/value: required string '31.4' is ambiguous; S017.m3/value: required string '29.8' is ambiguous; S017.m4/value: required string '19.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S017.m1/value: required string '39.2' is ambiguous; S017.m2/value: required string '31.4' is ambiguous; S017.m3/value: required string '29.8' is ambiguous; S017.m4/value: required string '19.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S017.m1/value: required string '39.2' is ambiguous; S017.m2/value: required string '31.4' is ambiguous; S017.m3/value: required string '29.8' is ambiguous; S017.m4/value: required string '19.1' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S018",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S018.m1/value: required string '20.8' is ambiguous; S018.m2/value: required string '16.3' is ambiguous; decoy '19.9%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S018.m1/value: required string '20.8' is ambiguous; S018.m2/value: required string '16.3' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S018.m1/value: required string '20.8' is ambiguous; S018.m2/value: required string '16.3' is ambiguous; decoy '19.9%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S018.m1/value: required string '20.8' is ambiguous; S018.m2/value: required string '16.3' is ambiguous; decoy '19.9%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S019",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S019.m1/value: required string '64.2' is ambiguous; S019.m2/value: required string '63.4' is ambiguous; S019.m3/value: required string '59.1' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S019.m1/value: required string '64.2' is ambiguous; S019.m2/value: required string '63.4' is ambiguous; S019.m3/value: required string '59.1' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'Introduction\\nQuestion answering systems have increasingly relied on retrieval mechanisms to improve answer accuracy by grounding responses in external evidence.' at 399; 'The goal is to determine whether retrieval-based methods or in-domain fine-tuning lead to more accurate answers, as measured by the fraction of answers judged factually correct.' at 917; 'Discussion\\nThe results indicate that retrieval augmentation does not improve fact-level accuracy in this setting, contrary to the expectation that external evidence would enhance factual correctness.' at 2278; 'The no-retrieval baseline outperforms both retrieval-based and fine-tuned models, suggesting that the added complexity of retrieval may introduce noise or misinterpretation.' at 2478; 'These findings challenge the assumption that retrieval or fine-tuning necessarily improves answer quality and highlight the importance of careful design in evidence-based question answering systems.' at 2982"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S019.m1/value: required string '64.2' is ambiguous; S019.m2/value: required string '63.4' is ambiguous; S019.m3/value: required string '59.1' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S020",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S020.m1/value: required string '52.3' is ambiguous; S020.m2/value: required string '64.6' is ambiguous; S020.m3/value: required string '55.2' is ambiguous; S020.m4/value: required string '35.7' is ambiguous; decoy '51.5%' is ambiguous"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S020.m1/value: required string '52.3' is ambiguous; S020.m2/value: required string '64.6' is ambiguous; S020.m3/value: required string '55.2' is ambiguous; S020.m4/value: required string '35.7' is ambiguous; decoy '51.5%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S020.m1/value: required string '52.3' is ambiguous; S020.m2/value: required string '64.6' is ambiguous; S020.m3/value: required string '55.2' is ambiguous; S020.m4/value: required string '35.7' is ambiguous; decoy '51.5%' is ambiguous"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S020.m1/value: required string '52.3' is ambiguous; S020.m2/value: required string '64.6' is ambiguous; S020.m3/value: required string '55.2' is ambiguous; S020.m4/value: required string '35.7' is ambiguous; decoy '51.5%' is ambiguous"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory, distributed, explicit, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S002",
+    "S003",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011",
+    "S012",
+    "S013",
+    "S014",
+    "S015",
+    "S016",
+    "S017",
+    "S018",
+    "S019",
+    "S020"
+  ]
+}
