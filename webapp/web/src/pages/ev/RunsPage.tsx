@@ -4,6 +4,7 @@
  * engine sits beside the baselines on the same papers. Label, counts and cost per run.
  */
 import { FlaskConicalIcon } from "lucide-react"
+import { useState } from "react"
 import { Link } from "react-router"
 
 import { useEvRuns } from "@/api/ev"
@@ -18,10 +19,17 @@ import { tokens } from "@/lib/format"
 
 export default function RunsPage() {
   const runs = useEvRuns()
-  const groups = [...runsByCorpus(runs.data ?? []).entries()].sort(([a], [b]) => a.localeCompare(b))
+  const [showHistory, setShowHistory] = useState(false)
+  const history = (runs.data ?? []).filter((r) => r.mode === "replay" || r.mode === "reexec")
+  const visibleRuns = (runs.data ?? []).filter((r) => showHistory || (r.mode !== "replay" && r.mode !== "reexec"))
+  const groups = [...runsByCorpus(visibleRuns).entries()].sort(([a], [b]) => a.localeCompare(b))
   return (
     <div className="space-y-6">
-      <PageHeader title="Runs" description="Engine runs and baseline answers, by corpus. Made on the command line or Slurm; this page reads them." />
+      <PageHeader title="Runs" description="Main runs and baseline answers, grouped by corpus. Replay and re-execution history is optional." />
+      <label className="flex w-fit items-center gap-2 text-sm text-muted-foreground">
+        <input type="checkbox" checked={showHistory} onChange={(event) => setShowHistory(event.target.checked)} />
+        Show replay and re-execution history ({history.length})
+      </label>
       {runs.isPending && <TableSkeleton />}
       {runs.isError && <ErrorState error={runs.error} onRetry={() => void runs.refetch()} />}
       {runs.data && !runs.data.length && (

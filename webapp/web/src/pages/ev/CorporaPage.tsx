@@ -1,7 +1,5 @@
 /**
- * Corpora `/corpora` (synth build, synth variant; docs/evidence-system.md A1, F2, F3): per corpus its level,
- * renderer, seed, the knobs, the fidelity checks passed, the label it is built to have, and whether it is a
- * counterfactual variant of another corpus.
+ * Corpora `/corpora`: a compact overview, with generation settings on demand.
  */
 import { DatabaseIcon } from "lucide-react"
 import { Link } from "react-router"
@@ -19,7 +17,7 @@ export default function CorporaPage() {
   const rows = [...(corpora.data ?? [])].sort((a, b) => a.name.localeCompare(b.name) || levelOrder(a.level ?? "", b.level ?? ""))
   return (
     <div className="space-y-4">
-      <PageHeader title="Corpora" description="Synthetic corpora written from structured ground truth (synth build), one per difficulty level and a mixed one; variants change one study (synth variant)." />
+      <PageHeader title="Corpora" description="Paper collections available to run. Open a corpus for its papers, generation settings, and run history." />
       {corpora.isPending && <TableSkeleton />}
       {corpora.isError && <ErrorState error={corpora.error} onRetry={() => void corpora.refetch()} />}
       {corpora.data && !rows.length && (
@@ -30,22 +28,26 @@ export default function CorporaPage() {
           <Table aria-label="Corpora">
             <TableHeader>
               <TableRow>
-                {["corpus", "level", "renderer", "seed", "papers", "fidelity", "knobs", "expected label", "variant"].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}
+                {["corpus", "renderer", "level", "papers / fidelity", "expected label", "build details"].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.map((c) => (
                 <TableRow key={c.name}>
                   <TableCell className="font-mono text-xs"><Link to={`/corpora/${encodeURIComponent(c.name)}`} className="hover:underline">{c.name}</Link></TableCell>
-                  <TableCell>{c.level ?? "—"}</TableCell>
                   <TableCell>{c.renderer ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums">{c.seed ?? "—"}</TableCell>
-                  <TableCell className="tabular-nums">{c.papers}</TableCell>
-                  <TableCell className="tabular-nums">{c.fidelity_ok === null || c.fidelity_ok === undefined ? "—" : `${c.fidelity_ok}/${c.papers} pass`}</TableCell>
-                  <TableCell className="text-xs">{knobText(c.settings)}</TableCell>
+                  <TableCell>{c.level ?? "—"}</TableCell>
+                  <TableCell className="tabular-nums">{c.papers} papers{c.fidelity_ok !== null && c.fidelity_ok !== undefined ? ` · ${c.fidelity_ok}/${c.papers} fidelity pass` : " · fidelity n/a"}</TableCell>
                   <TableCell><LabelBadge label={c.answer?.label} /></TableCell>
                   <TableCell className="text-xs">
-                    {c.variant ? <Badge variant="outline">{c.variant.study}: {String(c.variant.from ?? "?")} → {c.variant.to ?? "?"}</Badge> : ""}
+                    <details>
+                      <summary className="cursor-pointer">seed, knobs{c.variant ? ", variant" : ""}</summary>
+                      <div className="mt-1 space-y-1 text-muted-foreground">
+                        <div>seed: {c.seed ?? "—"}</div>
+                        <div>knobs: {knobText(c.settings)}</div>
+                        {c.variant && <Badge variant="outline">{c.variant.study}: {String(c.variant.from ?? "?")} → {c.variant.to ?? "?"}</Badge>}
+                      </div>
+                    </details>
                   </TableCell>
                 </TableRow>
               ))}
