@@ -112,8 +112,10 @@ He wrote no numbered research questions. Read from his text:
 ## 6. What exists
 
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models
-(1250 passed, 1 skipped in WSL, 18 Oct, with the proposal flow and the web app driving the flow; 1253 on
-17 Oct before the earlier app's webapp tests were removed). A partial first live run was conducted on
+(1335 passed, 1 skipped in WSL, 20 Oct, after the architecture deepening below; 1250 on 18 Oct before it).
+On Windows a few tests fail for platform reasons only: the POSIX signal tests in `agent/`, a CRLF byte-count
+test in `webapp/`, one `propose` test. The web app's vitest run has one older failure, "lists every corpus with
+level, knobs and the variant". A partial first live run was conducted on
 18–19 Oct on Slurm job 7488. Its synthetic LLM corpora failed fidelity checks on nearly all studies, so
 the live results are diagnostic and not a complete benchmark. See the EV1 rows in `tests/RESULTS.md`.
 The operational procedure remains [`slurm-evidence-runbook.md`](slurm-evidence-runbook.md).
@@ -132,6 +134,18 @@ The operational procedure remains [`slurm-evidence-runbook.md`](slurm-evidence-r
 | Baselines | built; the RAG baseline rebuilt 17 Oct as the plain retrieve-then-answer system (§4, Part G.1) | `evaluation/baselines/rag.py` (global top 8, neutral prompt with citations, the mapping call shared with the agent baseline in `common.py`), `agent.py`; score C adds completeness and traceability |
 | Serving stack and cluster | works | measured 8–13 Oct ([`earlier-work.md`](earlier-work.md) §2) |
 | Viewer and guided flow | viewer rebuilt 17 Oct for the supervisor's flow (§4); 18 Oct a guided stepper per question that starts the missing steps as jobs; tested on a world made by the real tools with scripted models and an offline smoke through the API (template corpus, regex-only run, score, decisions and freeze); used to inspect and launch jobs on the live Ceph artifacts on 18 Oct | `webapp/` (viewer `evapi.py`, `evfiles.py`; jobs and decisions `evjobs.py`, `jobs.py`; questions `evquestions.py` over `evidence/questions.yaml`; frontend `webapp/web/src/pages/flow/`, `components/flow/`, `pages/ev/`): question → protocol (hand-written, agentic variant or a frozen proposal; propose as a job, the eight cards as a form writing `decisions.yaml`, freeze) → corpus (choose, or a template build) → run (`evidence run`, both baselines, score, compare; live job log, the run page fills in) → evidence graph → answer → scores; one model job at a time, state in `$EV/.jobs`, loopback-only writes. Viewer pages: corpora, protocols and proposals, runs (funnel, spans, calls with model records or agent traces), scores (A/B/C with intervals, all vs gaps, shift, benchmark). The earlier app was removed 18 Oct (git `72da5dd`) |
+
+### Architecture (20 Oct)
+
+A refactor with no change to results; plan in `docs/superpowers/plans/2026-10-20-deepen-architecture.md`.
+
+- `jsonio/`: canonical JSON and atomic writers (were `agent/canonical.py`, `webapp/files.write_json_atomic`, `evjobs.write_text_atomic`).
+- `modelcall/` (was `gold/llm.py`): `pins.py` (model pins, no dependencies), `gateway.py`, `loop.py` (the one model event loop), `cache.py` (`JsonlCache`), `prompt.py` (one prompt loader, CRLF-normalised), `call.py` (`ask`, `ask_sync`, `Answer`, `ModelCallError`, `CachedFailure`, `redact`). The RAG and agent baselines, propose, the judge, the gold calls, the synthetic renderer and the engine's Recorder all call `ask`. Cache keys are unchanged; new lines share one value shape `{output, model, served_model, usage, ...}` and old lines still read. The judge keeps the pinned model identity in `model_id` (`model` is the alias asked). `gold/prompts/**` is pinned LF in `.gitattributes`.
+- `evidence/rundir.py` `RunDir`: the one reader of a run directory (evaluation's `Run.load` and the web app); a half-written last line (a Slurm kill) is skipped, a bad middle line raises.
+- `webapp/procs.py` `Processes`: the process seam (POSIX adapter; `FakeProcesses` in tests), so job tests run on any OS. `webapp/evjobs.py` has a `JobPlan` per job kind; `GET /api/ev/run-group` names run groups (the frontend no longer computes them).
+- Write contract: scenarios in `webapp/tests/write_contract.py`, written to `webapp/web/src/mocks/write-contract.json` by `evidence_world --mocks` and replayed by `contract.test.ts`, keep the MSW mock's writes equal to the backend's.
+- Extractor ids hash their source files, several of which moved, so the engine's record cache on Slurm misses once (runbook step 0.5). The callers' own caches keep their keys.
+- Remaining `asyncio.run(` in non-test code: only `gold/build.py` (its SIGTERM handler needs the main thread; its model calls go through `ask` and the model loop).
 
 Not built: the 337-paper check (§5 step 8, §7).
 

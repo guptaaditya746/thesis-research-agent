@@ -17,6 +17,7 @@ is open.
 | `synth/` | `synth` | Synthetic benchmark (supervisor's design): seeded ground truth, difficulty levels, template and LLM renderers, fidelity checks ([`synth/README.md`](synth/README.md)) |
 | `evaluation/` | `evaluate` | Scores A (extraction), B (integration), C (synthesis) per level (supervisor's design); the retrieve-then-answer baseline; plus our additions below |
 | `agent/` | `agent` | Earlier work: the research agent (sandboxed loop, `claim` broker, graph, PROV-O, replay). Now used only as the agentic extractor and the agent baseline |
+| `jsonio/`, `modelcall/` | (libraries) | Shared plumbing: canonical JSON and atomic file writers (`jsonio`); every model call through `modelcall.ask` (gateway, one event loop, JSONL cache, prompt loader, model pins), used by the baselines, proposal, judge, gold, synthetic renderer and the engine's recorder |
 | `webapp/` | `webapp` | The evidence-level flow as a guided stepper per question: views the files and starts the missing steps as jobs (below) |
 | `gold/`, `scoring/`, `questions/` | `gold`, `score` | Earlier work: gold document D and Argilla review, claim on/off scoring, the 12 questions ([`docs/earlier-work.md`](docs/earlier-work.md)). `gold/` is the method planned for the 337-paper check |
 
