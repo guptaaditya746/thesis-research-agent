@@ -7,7 +7,7 @@ import socket
 
 import pytest
 
-from agent.canonical import write_json
+from jsonio import write_json
 from gold import build_cli, cli
 from gold.build import QuestionDir, read_jsonl
 

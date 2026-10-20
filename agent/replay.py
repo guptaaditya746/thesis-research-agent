@@ -42,7 +42,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .canonical import canonical_bytes, file_sha256, sha256_hex, write_json
+from jsonio import canonical_bytes, file_sha256, sha256_hex, write_json
 from .chain import verify
 from .rundir import COMMAND_LIMITS, RunDir, utc_now
 

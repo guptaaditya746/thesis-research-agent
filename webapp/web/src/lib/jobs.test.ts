@@ -3,21 +3,9 @@ import { describe, expect, it } from "vitest"
 import { initialState, toEntry } from "@/components/flow/cards"
 import { unfrozenProposal } from "@/mocks/handlers"
 
-import { isName, jobTarget, jobTitle, parseProtocolParam, protocolParam, runGroup } from "./jobs"
+import { isName, jobTarget, jobTitle, parseProtocolParam, protocolParam } from "./jobs"
 
-describe("run groups as the backend names them (webapp/evjobs.py)", () => {
-  const repo = (name: string) => ({ source: "repo" as const, name })
-  it("follows the runbook for the RAG protocols", () => {
-    expect(runGroup({ extractors: "regex-only", strategy: "all", protocol: repo("rag-factuality") })).toBe("regex-only")
-    expect(runGroup({ extractors: "regex-only", strategy: "all", protocol: repo("rag-factuality-agentic") })).toBe("regex-only")
-    expect(runGroup({ extractors: "cascade", strategy: "all", protocol: repo("rag-factuality") })).toBe("cascade")
-    expect(runGroup({ extractors: "cascade", strategy: "gaps", protocol: repo("rag-factuality") })).toBe("cascade-gaps")
-    expect(runGroup({ extractors: "cascade", strategy: "gaps", protocol: repo("rag-factuality-agentic") })).toBe("agentic-gaps")
-  })
-  it("prefixes other protocols and proposals", () => {
-    expect(runGroup({ extractors: "cascade", strategy: "gaps", protocol: { source: "proposal", name: "p1" } })).toBe("proposal-p1-cascade-gaps")
-    expect(runGroup({ extractors: "regex-only", strategy: "gaps", protocol: repo("other") })).toBe("other-regex-only")
-  })
+describe("how the flow names things", () => {
   it("keeps the protocol in the URL and checks names", () => {
     expect(protocolParam({ source: "proposal", name: "p1" })).toBe("proposal:p1")
     expect(parseProtocolParam("repo:rag-factuality")).toEqual({ source: "repo", name: "rag-factuality" })

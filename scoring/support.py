@@ -29,7 +29,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from agent.canonical import file_sha256
+from jsonio import file_sha256
 from agent.pairs import PAIRS, pairs
 from agent.rundir import RunDir
 

@@ -44,7 +44,7 @@ from typing import Any
 
 from agent import schema
 from agent.batch import CUT_REASONS
-from agent.canonical import file_sha256, write_json
+from jsonio import file_sha256, write_json
 from agent.concept import answer_schema_for, concept_sha256
 from agent.rundir import RunDir, git_head, utc_now
 from agent.verify import stats

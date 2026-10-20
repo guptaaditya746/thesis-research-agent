@@ -18,10 +18,10 @@ from pathlib import Path
 from typing import Any
 
 from agent.anchor import Index
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 from evidence.contract import (ExtractionError, ExtractionResult, ExtractionTask, ExtractorSpec, Item, Rejected,
                                RunContext, digest)
-from gold.llm import redact
+from modelcall import redact
 
 from . import convert
 from .runner import AgentJob, AgentRunner, AgentSettings, ResearchAgentRunner
@@ -31,8 +31,9 @@ NAME, VERSION = "agentic", 1
 DEFAULT_BUDGET = {"steps": 30, "tokens": 600_000}
 PACKAGE = Path(__file__).resolve().parent
 AGENT = PACKAGE.parents[1] / "agent"
+PINS = PACKAGE.parents[1] / "modelcall" / "pins.py"
 # Source whose change changes what the extractor does: this package, and the agent's loop, answer check,
-# broker, anchoring, reply parser, sandbox, claim client, run settings (budget, command limits: rundir.py),
+# broker, anchoring, reply parser, sandbox, claim client, run settings (budget, command limits: rundir.py; the model pins: modelcall/pins.py),
 # concept and prompt handling, stopping and spawn hooks; plus the mini-swe-agent version the loop runs on.
 # The prompt files are hashed separately (prompt_files in config).
 AGENT_FILES = ("loop.py", "answer.py", "broker.py", "anchor.py", "parse.py", "sandbox.py", "claim_client.py",
@@ -52,6 +53,7 @@ def code_sha256() -> str:
     files = sorted(PACKAGE.glob("*.py")) + [AGENT / f for f in AGENT_FILES]
     hashes = {f.name if f.parent == PACKAGE else f"agent/{f.name}": sha256_hex(f.read_bytes().replace(b"\r\n", b"\n"))
               for f in files}
+    hashes["modelcall/pins.py"] = sha256_hex(PINS.read_bytes().replace(b"\r\n", b"\n"))   # the model pins
     return digest({**hashes, "mini-swe-agent": harness_version()})
 
 

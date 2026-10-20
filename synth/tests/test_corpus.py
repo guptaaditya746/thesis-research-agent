@@ -150,7 +150,7 @@ def test_refuses_to_overwrite_a_foreign_directory(tmp_path: Path) -> None:
 
 def test_corpus_id_is_a_hash_of_the_papers_not_of_the_level(built: Path) -> None:
     """Review item 7: an id hashed from (name, level, seed, renderer) gave the level away by brute force."""
-    from agent.canonical import canonical_bytes, sha256_hex
+    from jsonio import canonical_bytes, sha256_hex
     ids = set()
     for lv in ALL:
         m = load(built / f"t-{lv}", "manifest.json")

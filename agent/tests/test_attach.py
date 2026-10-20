@@ -20,7 +20,7 @@ from agent import kg, prov, queries  # noqa: E402
 from agent.attach import (ATTACH_FILE, ATTACH_TRAJECTORY, RESULT_SCHEMA, AttachError, attach_run,  # noqa: E402
                           attach_state, load_prompt)
 from agent.replay import replay_run  # noqa: E402
-from agent.canonical import file_sha256  # noqa: E402
+from jsonio import file_sha256  # noqa: E402
 from agent.chain import verify  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.prompts import PROMPT_DIR  # noqa: E402

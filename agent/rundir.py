@@ -9,7 +9,8 @@ from pathlib import Path
 from typing import Any
 
 from . import schema
-from .canonical import file_sha256, write_json
+from jsonio import file_sha256, write_json
+from modelcall.pins import ORCHESTRATOR, SUBAGENTS  # standard library only: no pydantic-ai through rundir
 from .concept import validate_answer, validate_concept
 
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")
@@ -21,10 +22,6 @@ ANSWER_BEFORE = "answer.research.json"  # ... after keeping the run's own answer
 DRAFT_COPY = "answer.draft.json"
 
 # Fixed run settings (docs/earlier-work.md, Fixed run settings). Budget is adjusted once after 1.13, then frozen.
-ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
-                "thinking": False, "max_tokens": 4096, "context_tokens": 65536}
-SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
-              "revision": "5a5a776", "context_tokens": 32768} for i in (1, 2)]
 # Provisional (the e2e build of 13 Oct, docs/earlier-work.md; the user freezes it after the Slurm test). The token sum
 # counts the whole prompt again at every step, so the M1-real runs' 150 steps / 400k lasted only
 # ~26 steps: 2M tokens over 60 steps is ~33k per step, about what a masked context costs.

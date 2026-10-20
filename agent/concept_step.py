@@ -62,7 +62,7 @@ from filelock import FileLock, Timeout
 
 from . import schema
 from .broker import Broker
-from .canonical import canonical_bytes, file_sha256, sha256_hex, write_json
+from jsonio import canonical_bytes, file_sha256, sha256_hex, write_json
 from .chain import verify
 from .concept import validate_concept
 from .parse import parse_reply

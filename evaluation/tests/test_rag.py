@@ -12,7 +12,7 @@ import pytest
 from evaluation.baselines import rag
 from evaluation.baselines.common import MAP_INSTRUCTIONS, SystemCorpus
 from evaluation.score import score_answers
-from gold.llm import JsonlCache
+from modelcall import JsonlCache
 
 from . import fixtures as fx
 from .helpers import Scripted, guard_corpus
@@ -172,3 +172,16 @@ def test_manifest_can_point_a_baseline_only_into_papers(tmp_path: Path, file: st
 def _dump(path: Path, obj: dict) -> Path:
     fx.dump(path, obj)
     return path
+
+
+def test_rag_baseline_two_live_calls_share_one_loop(tmp_path: Path) -> None:
+    """The real model class over keep-alive HTTP: the answering call and then the mapping call in one process
+    both reach the server (EV1: the second call failed with "Event loop is closed" when each call ran in its
+    own `asyncio.run`, because the pooled connection belonged to the first, closed loop)."""
+    from modelcall import openai_model
+    from modelcall.tests.server import keepalive_server
+
+    with keepalive_server(scripted().reply) as url:
+        model = openai_model("orch-model", url=url)
+        answer = rag.rag_baseline(fx.write_corpus(tmp_path), model=model, k=3, mode="global", max_chars=200)
+    assert len(url.prompts) == 2 and answer["label"] == "mixed" and answer["mapping_call"] is not None

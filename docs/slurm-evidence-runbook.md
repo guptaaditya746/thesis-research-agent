@@ -1,8 +1,9 @@
 # Runbook: the evidence-level system on Slurm, first live run
 
 The evidence-level system (`evidence/`, `synth/`, `evaluation/`; formats in `docs/evidence-system.md`) is
-built and tested only offline, with scripted models (1250 passed, 1 skipped on `main`). This session runs it
-against the real models for the first time: LLM-written synthetic corpora (the five levels, the benchmark
+built and tested only offline, with scripted models (1338 passed, 1 skipped in WSL after the 20 Oct
+architecture change). This session runs it against the real models for the first time: LLM-written synthetic
+corpora (the five levels, the benchmark
 knobs, a counterfactual variant), the engine in both strategies (`all`, `gaps`) with the LLM extractors and
 the agentic extractor, replay and re-execution, both baselines, the scores with intervals, the shift of the
 variant, the benchmark records per extractor, and a dry run of the proposal flow.
@@ -174,6 +175,35 @@ done
 
 Row `EV-setup`: commit, pytest count, doctor result, job id, node, both protocols' sha256, the two `"ok"`
 lines.
+
+### 0.5 Live check after the 20 Oct architecture change (in the job, before step 1; once)
+
+Extractor ids hash their source files, several of which moved or changed, so the engine's record cache misses
+once: the next cascade, LLM-extractor or agentic run makes its model calls again (GPU hours). The callers' own
+caches (baselines, propose, judge, gold, synth) keep their keys and still hit. The Recorder no longer opens a
+fresh event loop per call. At pydantic-ai 2.55 that bug was not live in engine runs (the engine's default
+provider builds a fresh model and HTTP client per call); the change guards a shared-model setup.
+It runs on the committed offline example corpus `synth/examples/rag-demo-mixed`, so it needs nothing from step 1 and
+costs little before the long steps start.
+
+```bash
+C=synth/examples/rag-demo-mixed                      # committed offline corpus; the LLM corpora do not exist yet
+L="$EV/live-check"                                   # outside $RUNS, so the web app does not list it as a run group
+uv run evaluate rag-baseline --corpus "$C" --out "$L/rag1" --cache "$CACHE/live-check-rag.jsonl" \
+  --model orch-model --retrieval global --k 8
+wc -l < "$CACHE/live-check-rag.jsonl"                # n1: one line per model call made; record it
+uv run evaluate rag-baseline --corpus "$C" --out "$L/rag2" --cache "$CACHE/live-check-rag.jsonl" \
+  --model orch-model --retrieval global --k 8        # immediate rerun: every call a cache hit
+wc -l < "$CACHE/live-check-rag.jsonl"                # expect n1 again: no line appended
+cmp "$L/rag1/answer.json" "$L/rag2/answer.json" && echo "answers identical"   # expect "answers identical"
+uv run evidence run --protocol $P --corpus "$C" --out "$L" --cache "$CACHE/live-check" \
+  --extractors cascade --strategy all --model orch-model --run-id cascade-check
+grep -l "Event loop is closed" "$L"/cascade-check/calls/*.json    # expect no output
+```
+
+Row `EV-setup`, notes: no `Event loop is closed` in any `calls/*.json` error; the RAG cache's line count
+after the second run equals the count after the first (n1, recorded) and `cmp` printed `answers identical`
+(the rerun made no model call); the cascade run completed.
 
 ## 1. LLM-written corpora **(long)**
 

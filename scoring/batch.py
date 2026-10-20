@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any
 
 from agent.batch import CUT_REASONS, Manifest, attempts
-from agent.canonical import canonical, file_sha256, write_json
+from jsonio import canonical, file_sha256, write_json
 from agent.rundir import RunDir, attach_state, utc_now
 
 from .judge import Judge

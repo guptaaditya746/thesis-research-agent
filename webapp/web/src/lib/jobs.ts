@@ -1,19 +1,7 @@
 /**
- * What a job writes and how the flow names things, as the backend does (webapp/evjobs.py), so a form can say
- * where its job's result will appear before it starts.
+ * What a job writes and how the flow names things (the run group is named by the backend only: useRunGroup).
  */
-import type { Job, ProtocolRef, RunRequest } from "@/api/ev"
-
-/** The runbook's group names (docs/slurm-evidence-runbook.md step 3, 5): the backend's Commands.group. */
-export function runGroup(r: Pick<RunRequest, "extractors" | "strategy"> & { protocol: ProtocolRef }): string {
-  const gaps = r.strategy === "gaps" ? "-gaps" : ""
-  const { name, source } = r.protocol
-  if (r.extractors === "regex-only" && source === "repo" && name.startsWith("rag-factuality")) return "regex-only"
-  if (source === "repo" && name === "rag-factuality") return `cascade${gaps}`
-  if (source === "repo" && name === "rag-factuality-agentic") return `agentic${gaps}`
-  const prefix = source === "proposal" ? `proposal-${name}` : name
-  return `${prefix}-${r.extractors}${r.extractors !== "regex-only" ? gaps : ""}`
-}
+import type { Job, ProtocolRef } from "@/api/ev"
 
 /** "repo:rag-factuality" <-> {source, name}: how the flow keeps the chosen protocol in the URL. */
 export function protocolParam(ref: ProtocolRef): string {

@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from agent.canonical import write_json
+from jsonio import write_json
 from gold import build_cli, review
 from gold.build import norm
 from gold.cli import main

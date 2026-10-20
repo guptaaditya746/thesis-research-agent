@@ -15,7 +15,7 @@ altogether with a fake `AgentRunner`.
 
 The agent's model is `AgentSettings.model`, a LiteLLM alias (default `orch-model`: one model for every
 extractor and both baselines, docs/evidence-system.md Part G.3). The runner builds the agent's
-`OrchestratorModel` on that alias (`default_model`); for an alias agent/rundir pins (`orch-model`,
+`OrchestratorModel` on that alias (`default_model`); for an alias modelcall/pins.py pins (`orch-model`,
 `sub-model-*`) the config and the model record the pinned name and revision, for any other alias the
 alias as the name and the revision "unpinned" (the same in both places).
 """
@@ -29,18 +29,19 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Protocol
 
-from agent.canonical import file_sha256, sha256_hex
+from jsonio import file_sha256, sha256_hex
+from evidence.rundir import ANSWER_FILE, EVENTS_FILE
 from agent.rundir import BUDGET, COMMAND_LIMITS, ORCHESTRATOR, SUBAGENTS
 
 REPO = Path(__file__).resolve().parents[2]
 PINNED: dict[str, dict[str, Any]] = {m["alias"]: dict(m) for m in (ORCHESTRATOR, *SUBAGENTS)}
 
 
-UNPINNED = "unpinned"  # the revision recorded, and given to the model, for an alias agent/rundir does not pin
+UNPINNED = "unpinned"  # the revision recorded, and given to the model, for an alias modelcall/pins.py does not pin
 
 
 def model_record(alias: str) -> dict[str, Any]:
-    """{alias, name, revision} for the config: the pinned weights of an alias agent/rundir pins (for
+    """{alias, name, revision} for the config: the pinned weights of an alias modelcall/pins.py pins (for
     orch-model byte for byte what the config held before `model` existed), else the alias as the name with
     revision "unpinned", the same the model itself records (`default_model`)."""
     pinned = PINNED.get(alias)
@@ -68,7 +69,7 @@ class AgentSettings:
 
 def default_model(settings: AgentSettings) -> Any:
     """The agent's model for `settings.model`: agent.loop.OrchestratorModel on that alias through LiteLLM at
-    `base_url`, with the pinned name, revision and context window of an alias agent/rundir pins (for
+    `base_url`, with the pinned name, revision and context window of an alias modelcall/pins.py pins (for
     `orch-model` exactly what agent.loop.research_run builds by itself); an unpinned alias is served and
     recorded under its own name with revision "unpinned"."""
     from agent.loop import OrchestratorModel  # LiteLLM and mini-swe-agent: imported only when an agent runs
@@ -123,7 +124,7 @@ def collect(run_root: Path, outcome: dict[str, Any] | None = None) -> dict[str, 
                        "reason": meta.get("reason"), **{k: meta.get(k) for k in ("s", "p", "o", "quote")},
                        "file": (used.get("anchor") or {}).get("file") or used.get("file"), "anchor": used.get("anchor")})
     commands, calls = [], []
-    events = _lines(run_root / "events.jsonl")
+    events = _lines(run_root / EVENTS_FILE)
     for r in events:
         if r["subtype"] == "agent_tool":
             out = run_root / r["generated"]["output_file"]
@@ -135,7 +136,7 @@ def collect(run_root: Path, outcome: dict[str, Any] | None = None) -> dict[str, 
                           "prompt_sha256": r["used"].get("prompt_sha256"),
                           "response_sha256": r["generated"].get("response_sha256"),
                           "usage": r["generated"].get("usage")})
-    answer = run_root / "answer.json"
+    answer = run_root / ANSWER_FILE
     trajectory = run_root / "trajectory.json"
     return {"run_id": run_root.name, "outcome": outcome or {}, "claims": claims, "commands": commands,
             "model_calls": calls, "answer": json.loads(answer.read_text(encoding="utf-8")) if answer.is_file() else None,

@@ -96,7 +96,7 @@ def test_a_failed_model_call_exits_1(tmp_path: Path, monkeypatch: pytest.MonkeyP
 
     def broken(messages, info):   # noqa: ANN001, ANN202
         raise ConnectionError("server down, key sk-secret1234")
-    monkeypatch.setattr(common.llm, "openai_model", lambda alias: FunctionModel(broken, model_name=alias))
+    monkeypatch.setattr(common.modelcall, "openai_model", lambda alias: FunctionModel(broken, model_name=alias))
     assert cli.main(["propose", "frame", "--question", "Q?", "--out", str(tmp_path / "p")]) == 1
     err = capsys.readouterr().err
     assert "model call failed" in err and "sk-secret1234" not in err

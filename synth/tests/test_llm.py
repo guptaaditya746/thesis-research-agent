@@ -243,3 +243,16 @@ def test_model_errors_are_failed_attempts_with_the_key_redacted(tmp_path: Path, 
     assert not r.fidelity.ok and r.fidelity.attempts == 2
     detail = json.dumps(r.fidelity.json())
     assert "sk-test-secret-key-123" not in detail and "***" in detail and "model_call" in detail
+
+
+def test_a_repeated_value_says_how_often_and_where(studies: list[truth.Study]) -> None:
+    """EV1: almost every LLM paper repeated a value (e.g. in the Abstract and in Results); the retry must
+    learn how often and in which sections, not just "ambiguous"."""
+    plan = make_plan(studies[0], "explicit", plan_rng(SEED, studies[0].study_id, "explicit"))
+    text, _, _ = render(plan, plan_rng(SEED, studies[0].study_id, "explicit:text"))
+    value = next(v.text for v in plan.values.values() if v.fmt != "relative")
+    abstract = text.index("## Abstract\n") + len("## Abstract\n")
+    text = text[:abstract] + f"The headline value is {value}.\n" + text[abstract:]
+    _, _, problems = locate(text, plan)
+    said = next(p for p in problems if repr(value) in p)
+    assert "is ambiguous: it occurs 2 times (in Abstract, Results); write it exactly once" in said

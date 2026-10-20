@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +12,7 @@ from agent.concept import validate_concept
 from evaluation.baselines import agent as baseline
 from evaluation.score import score_answers
 from evidence.agentic.runner import AgentSettings, ResearchAgentRunner, write_agent_corpus
-from gold.llm import JsonlCache
+from modelcall import JsonlCache
 
 from . import fixtures as fx
 from .agentic_fakes import FakeRunner
@@ -78,6 +79,7 @@ def test_agent_corpus_layout_is_what_the_broker_reads(tmp_path: Path) -> None:
     assert corpus.name("S001") == "S001.md" and corpus.index("S001.md").text == fx.S001
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="agent.sandbox needs signal.SIGKILL at import (POSIX)")
 def test_baseline_with_the_real_agent(tmp_path: Path) -> None:
     from .test_agentic_agent import FENCE, POSIX, Scripted as ScriptedAgent
 

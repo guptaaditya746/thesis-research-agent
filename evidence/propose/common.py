@@ -2,7 +2,6 @@
 model call, and the error every step raises for a refusal (the CLI prints it and exits 2)."""
 from __future__ import annotations
 
-import asyncio
 import json
 import re
 from datetime import UTC, datetime
@@ -10,11 +9,11 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from pydantic_ai.models import Model
 
-from agent.canonical import file_sha256, sha256_hex
-from gold import llm
+from jsonio import file_sha256, sha256_hex
+import modelcall
 
 HERE = Path(__file__).resolve().parent
 EXAMPLE_PROTOCOL = HERE.parent / "protocols" / "rag-factuality.yaml"   # the draft's template
@@ -33,7 +32,7 @@ class ProposalError(ValueError):
 
 def prompt(name: str) -> str:
     """A prompt template from prompts/ with LF line ends, so its hash is the same on every checkout."""
-    return (HERE / "prompts" / name).read_text(encoding="utf-8").replace("\r\n", "\n").strip() + "\n"
+    return modelcall.load_prompt(HERE / "prompts" / name, strip=True).text
 
 
 def need(directory: Path, name: str, step: str) -> Path:
@@ -115,7 +114,7 @@ def slug_id(name: str) -> str:
 
 def model_for(alias: str | None, model: Model | None) -> Model:
     """The model of a step: an injected one (tests), else the LiteLLM alias (default orch-model)."""
-    return model if model is not None else llm.openai_model(alias or DEFAULT_MODEL)
+    return model if model is not None else modelcall.openai_model(alias or DEFAULT_MODEL)
 
 
 REDO = "the reply is cached in {cache} (key {key}); run the step again with --refresh to ask the model again"
@@ -123,35 +122,29 @@ REDO = "the reply is cached in {cache} (key {key}); run the step again with --re
 
 def ask(directory: Path, step: str, instructions: str, user_prompt: str, output_type: type[T], *,
         model: Model, refresh: bool = False) -> tuple[T, dict[str, Any]]:
-    """One schema-constrained call through gold.llm.structured, cached in DIR/cache.jsonl.
+    """One schema-constrained call through modelcall.ask, cached in DIR/cache.jsonl.
 
-    The key is gold.llm.cache_key over the step, the prompt hash (instructions and output schema), the model
-    identity (the pinned weights of an alias, gold.llm.model_identity) and the user prompt's sha256, so a
+    The key is modelcall.cache_key over the step, the prompt hash (instructions and output schema), the model
+    identity (the pinned weights of an alias, modelcall.model_identity) and the user prompt's sha256, so a
     rerun with the same inputs answers from the cache and makes no model call. `refresh` skips the cached
     reply and asks again (the new reply is appended under the same key and wins on the next load; a step
     whose cached reply it cannot use says so, `REDO`). Returns the output and the call's record {step,
-    model, prompt_sha256, cache_key, cached}.
+    model, prompt_sha256, cache_key, cached}. A failed call is modelcall.ModelCallError (a RuntimeError)
+    with a redacted reason: provider errors can echo the key.
     """
-    cache = llm.JsonlCache(Path(directory) / CACHE)
-    record = {"step": step, "prompt_sha256": llm.prompt_sha256(instructions, output_type),
-              "model": llm.model_identity([model]), "input_sha256": sha256_hex(user_prompt.encode("utf-8")),
+    cache = modelcall.JsonlCache(Path(directory) / CACHE)
+    record = {"step": step, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
+              "model": modelcall.model_identity([model]), "input_sha256": sha256_hex(user_prompt.encode("utf-8")),
               "settings": {"temperature": 0.0, "seed": 0, "max_tokens": 4096}}
-    key = llm.cache_key(record)
-    hit = None if refresh else cache.get(key)
-    if hit is not None:
-        try:
-            output = output_type.model_validate(hit)
-        except ValueError as exc:
-            raise ProposalError(f"{step}: the cached reply does not validate ({exc}); "
-                                + REDO.format(cache=Path(directory) / CACHE, key=key)) from exc
-        return output, {**_public(record), "cache_key": key, "cached": True}
+    key = modelcall.cache_key(record)
     try:
-        output = asyncio.run(llm.structured(instructions, user_prompt, output_type, model=model,
-                                            model_settings=llm.settings(seed=0, max_tokens=4096)))
-    except Exception as exc:   # provider errors can echo the key: never let it reach a file or a log
-        raise RuntimeError(llm.redact(f"{type(exc).__name__}: {exc}")) from None
-    cache.put(key, output.model_dump(mode="json"))
-    return output, {**_public(record), "cache_key": key, "cached": False}
+        answer = modelcall.ask_sync(modelcall.Prompt.inline(instructions, output_type), user_prompt, model=model,
+                                    settings=modelcall.CallSettings(seed=0, max_tokens=4096), cache=cache,
+                                    key=record, refresh=refresh)
+    except ValidationError as exc:   # only a cached reply is decoded without the model: it no longer validates
+        raise ProposalError(f"{step}: the cached reply does not validate ({exc}); "
+                            + REDO.format(cache=Path(directory) / CACHE, key=key)) from exc
+    return answer.output, {**_public(record), "cache_key": key, "cached": answer.cached}
 
 
 def _public(record: dict[str, Any]) -> dict[str, Any]:

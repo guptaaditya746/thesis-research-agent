@@ -112,12 +112,12 @@ synonym in paraphrased papers); `aliases` hold the codes.
   conclusion) with filler from the fixed vocabularies in `vocab.py` (no digits, no fact names in filler).
   Same seed, byte-identical corpus.
 - `render_llm.py`: the model gets the rendering plan (facts, level instructions, the exact strings: values,
-  claim sentences, decoy, names) and returns `{"markdown": …}` (`gold/llm.structured_reply`). Values, claims
+  claim sentences, decoy, names) and returns `{"markdown": …}` (`modelcall.ask`). Values, claims
   and the decoy are located with `anchor.find` (missing or ambiguous = failure); names at every
   word-bounded occurrence. Up to `--attempts` tries, each failure's reasons fed into the next prompt. All
-  calls cached (`gold/llm.JsonlCache`, `<out>/.synth-cache/llm.jsonl`), key = prompt hash + model identity +
+  calls cached (`modelcall.JsonlCache`, `<out>/.synth-cache/llm.jsonl`), key = prompt hash + model identity +
   full prompt (holds the plan) + seed. Models in `corpus.json` `models`. Key only from
-  `$LITELLM_MASTER_KEY`; errors pass through `gold/llm.redact`.
+  `$LITELLM_MASTER_KEY`; errors pass through `modelcall.redact`.
 
 ## Fidelity (`fidelity.py`, `fidelity.json`)
 

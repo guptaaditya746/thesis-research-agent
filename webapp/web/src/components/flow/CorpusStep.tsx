@@ -76,7 +76,7 @@ function SynthForm({ flow }: { flow: Flow }) {
       e.preventDefault()
       const body: SynthRequest = { name, seed, studies, levels: levels.filter((l) => chosen.includes(l)) as SynthRequest["levels"], ...knobs }
       start.mutate(body, {
-        onSuccess: (job) => { announceJob(job, navigate); flow.set({ corpus: `${name}-mixed`, run: null }) },
+        onSuccess: (job) => { announceJob(job, navigate); flow.set({ corpus: job.refs.corpus ?? null, run: null }) },
         onError: (err) => announceError("The corpus build did not start", err),
       })
     }}>

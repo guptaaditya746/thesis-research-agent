@@ -13,7 +13,7 @@ import pytest
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE / "fixtures" / "papers"
@@ -82,7 +82,7 @@ def prompt_of(messages: list[ModelMessage]) -> str:
 
 
 def respond(info: AgentInfo, args: dict[str, Any]) -> ModelResponse:
-    """The reply in the output mode structured_reply chose: an output tool call, or JSON text."""
+    """The reply in the output mode modelcall.ask chose: an output tool call, or JSON text."""
     if info.output_tools:
         return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, args)])
     return ModelResponse(parts=[TextPart(json.dumps(args))])

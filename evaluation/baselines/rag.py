@@ -13,7 +13,7 @@
 3. One schema-constrained call (CitedAnswer: the answer text and the passages it cites; temperature 0,
    fixed seed) answers from those passages alone, under a neutral prompt (INSTRUCTIONS): no label, no
    per-paper stance, no rules. A citation that is not one of the retrieved passages is dropped into
-   `dropped_citations`. The call is cached (gold.llm.JsonlCache) by prompt hash, model and the exact
+   `dropped_citations`. The call is cached (modelcall.JsonlCache) by prompt hash, model and the exact
    user prompt, so a rerun costs nothing and gives the same answer.json.
 4. The mapping call shared with the agent baseline (common.map_answer) turns the answer (its text and
    the headers of its kept citations, not the passages' text) into the label and per-paper stances the
@@ -36,7 +36,7 @@ from pydantic_ai.models import Model
 from rank_bm25 import BM25Okapi
 
 from gold.chunks import split
-from gold.llm import JsonlCache
+from modelcall import JsonlCache
 
 from .common import DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, cached_reply, map_answer
 

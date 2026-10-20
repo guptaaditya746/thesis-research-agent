@@ -10,7 +10,7 @@ import copy
 from typing import Any
 
 from . import schema
-from .canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 
 
 def concept_sha256(concept: dict[str, Any]) -> str:

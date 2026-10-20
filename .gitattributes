@@ -47,6 +47,8 @@ webapp/web/dist/** -text
 evidence/protocols/** text eol=lf
 evidence/extractors/prompts/** text eol=lf
 evidence/tests/fixtures/** text eol=lf
+# The judge and gold prompts are hashed into cache keys and result lines.
+gold/prompts/** text eol=lf
 
 # Synthetic benchmark (synth/): example corpora (placements are code-point offsets into the papers as stored)
 # and the renderer prompts (hashed into corpus.json).

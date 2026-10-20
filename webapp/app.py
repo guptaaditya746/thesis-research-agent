@@ -24,14 +24,17 @@ from importlib.metadata import PackageNotFoundError, version
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 
+from evidence.rundir import RunDir
+
 from .evapi import evidence_router
-from .evfiles import EvidenceFiles, error_calls
+from .evfiles import EvidenceFiles
 from .evjobs import evjobs_router
 from .evquestions import Questions
-from .files import BadRequest, Conflict, NotFound, inside
+from .files import BadRequest, Conflict, Damaged, NotFound, inside
 from .guard import Guard
 from .jobs import JobManager
 from .models import Health, Job
+from .procs import PosixProcesses
 from .settings import Settings
 
 
@@ -52,7 +55,7 @@ class Services:
     questions: Questions = field(init=False)
 
     def __post_init__(self) -> None:
-        self.jobs = JobManager(self.settings, after=self.check_job)
+        self.jobs = JobManager(self.settings, after=self.check_job, processes=PosixProcesses())
         self.evidence = EvidenceFiles(self.settings)
         self.questions = Questions(self.settings)
 
@@ -65,7 +68,7 @@ class Services:
             path = self.evidence.run_dir(job.refs["run"])
         except NotFound:
             return
-        job.failed_calls = error_calls(path)
+        job.failed_calls = RunDir(path).error_calls()
         if job.failed_calls:
             job.warnings.append(f"{job.failed_calls} extractor call(s) failed (status error in calls/); they are in "
                                 "the record cache: run again with 'retry errors' once the model answers")
@@ -86,7 +89,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.services = services
     s = services.settings
     app.add_middleware(Guard, allowed_hosts=s.hosts, write_clients=s.writers)  # webapp/guard.py
-    for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400)):
+    for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400), (Damaged, 422)):
         app.add_exception_handler(exc_type, _handler(status))
     app.include_router(health_router(), prefix="/api")
     app.include_router(evidence_router(services.evidence), prefix="/api/ev")

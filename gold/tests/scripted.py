@@ -27,7 +27,7 @@ from pydantic_ai.messages import ModelResponse, TextPart, ToolCallPart, UserProm
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from agent.tests.conftest import write_corpus
-from gold import llm
+import modelcall
 from gold.build import BuildSettings
 from gold.chunks import GoldCorpus
 from gold.screen import TEXT_END, TEXT_START
@@ -166,8 +166,8 @@ class Script:
             return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, reply)])
         return ModelResponse(parts=[TextPart(json.dumps(reply))])  # native (JSON schema) output, as on LiteLLM
 
-    def rotation(self) -> llm.Rotation:
-        return llm.Rotation([FunctionModel(self, model_name=f"scripted-{n}") for n in (1, 2)])
+    def rotation(self) -> modelcall.Rotation:
+        return modelcall.Rotation([FunctionModel(self, model_name=f"scripted-{n}") for n in (1, 2)])
 
 
 def corpus(tmp_path: Path) -> GoldCorpus:

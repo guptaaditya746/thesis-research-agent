@@ -16,6 +16,7 @@ import {
   useEvRun,
   useEvRuns,
   useJobs,
+  useRunGroup,
   useScores,
   useStartJob,
   type EvRunSummary,
@@ -34,7 +35,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { isName, runGroup } from "@/lib/jobs"
+import { isName } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
 
 import { protocolLabel, type Flow } from "./flow"
@@ -52,22 +53,23 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
   const [retry, setRetry] = useState(false)
   const start = useStartJob("run")
   const navigate = useNavigate()
-  if (!flow.protocol) return null
   const protocol = extractors === "agentic" && q.agentic_protocol ? { source: "repo" as const, name: q.agentic_protocol } : flow.protocol
+  const selected = { extractors: extractors === "regex-only" ? "regex-only" as const : "cascade" as const, strategy: extractors === "regex-only" ? "all" as const : strategy }
+  const groupName = useRunGroup(protocol ?? { source: "repo", name: "" }, selected.extractors, selected.strategy)
+  if (!protocol) return null
   const body: RunRequest = {
-    corpus, protocol, extractors: extractors === "regex-only" ? "regex-only" : "cascade",
-    strategy: extractors === "regex-only" ? "all" : strategy, model: model || config.data?.default_model || "orch-model",
+    corpus, protocol, ...selected, model: model || config.data?.default_model || "orch-model",
     group: null, name: name || null, retry_errors: retry,
   }
-  const group = runGroup({ extractors: body.extractors ?? "cascade", strategy: body.strategy ?? "all", protocol })
-  const id = `${group}~${name || corpus}`
-  const taken = existing.has(id)
+  const group = groupName.data?.group
+  const id = group ? `${group}~${name || corpus}` : null
+  const taken = id !== null && existing.has(id)
   const ok = (!name || isName(name)) && !taken
   return (
     <form className="space-y-3" aria-label="Start the engine" onSubmit={(e) => {
       e.preventDefault()
       start.mutate(body, {
-        onSuccess: (job) => { announceJob(job, navigate); flow.set({ run: job.refs.run ?? id }) },
+        onSuccess: (job) => { announceJob(job, navigate); flow.set({ run: job.refs.run ?? id ?? null }) },
         onError: (err) => announceError("The run did not start", err),
       })
     }}>
@@ -113,7 +115,7 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Writes <span className="font-mono">runs/{group}/{name || corpus}</span> with protocol {protocol.name}. {extractors === "regex-only" ? "No model: it runs beside other jobs." : "Calls the model: model jobs run one at a time, the same model for every extractor and both baselines."}
+        Writes <span className="font-mono">runs/{group ?? "…"}/{name || corpus}</span> with protocol {protocol.name}. {extractors === "regex-only" ? "No model: it runs beside other jobs." : "Calls the model: model jobs run one at a time, the same model for every extractor and both baselines."}
         {config.data && !config.data.llm_key_set && extractors !== "regex-only" && <strong className="block text-status-critical">The server has no $LITELLM_MASTER_KEY: model jobs are refused. Start it with llm-setup's .env sourced (README "Web app").</strong>}
       </p>
     </form>

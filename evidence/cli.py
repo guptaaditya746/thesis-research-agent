@@ -17,7 +17,7 @@
 
 `--extractors regex-only` needs no model. `--strategy gaps` is the funnel (docs/evidence-system.md Part D):
 screen, then escalate only the gaps; `all` (default) runs every extractor on every document and records the
-screen decision. LLM extractors reach LiteLLM through gold/llm.openai_model, which
+screen decision. LLM extractors reach LiteLLM through modelcall.openai_model, which
 reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
 and both baselines) is the alias of the LLM and agentic extractors. `protocol check` validates a protocol file
 and prints {id, version, revision, sha256, phases, extractors per type}. `propose` is the proposal flow

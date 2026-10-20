@@ -7,7 +7,7 @@ A snapshot `evidence/vocab/<name>.json` is
     {name, sha256, sources: [{name, version, url}],
      terms: [{id, label, synonyms, kind: metric | condition | method, source, higher_is_better?}]}
 
-`sha256` is the digest (agent/canonical.py: sorted keys, no whitespace, UTF-8) of the snapshot without
+`sha256` is the digest (jsonio: sorted keys, no whitespace, UTF-8) of the snapshot without
 its `sha256` key, so it names the content whatever the file's layout; `load` refuses a file whose
 content does not match it.
 

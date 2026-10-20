@@ -68,11 +68,12 @@ from time import monotonic
 from typing import Any
 
 from agent.broker import Rejected
-from agent.canonical import canonical, canonical_bytes, file_sha256, sha256_hex
+from jsonio import canonical, canonical_bytes, file_sha256, sha256_hex
 from agent.concept import concept_sha256
 from agent.rundir import utc_now
 
-from . import docmd, extract, llm, screen
+import modelcall
+from . import docmd, extract, screen
 from .calls import Caller, CallError
 from .chunks import MAX_CHARS, Chunk, GoldCorpus, halve, paper_chunks
 from .screen import Task
@@ -732,7 +733,7 @@ def claim_folder(qdir: QuestionDir, concept_hash: str, partial: bool, replace: b
             "`gold build` afterwards restores the whole D from the cache without model calls)")
 
 
-async def _build(task: Task, corpus: GoldCorpus, qdir: QuestionDir, rotation: llm.Rotation,
+async def _build(task: Task, corpus: GoldCorpus, qdir: QuestionDir, rotation: modelcall.Rotation,
                  settings: BuildSettings, log: Callable[[str], None], replace: bool) -> dict[str, Any]:
     papers = select_papers(corpus, settings)
     concept_hash = concept_sha256(task.concept)
@@ -742,7 +743,7 @@ async def _build(task: Task, corpus: GoldCorpus, qdir: QuestionDir, rotation: ll
     started_at, clock = utc_now(), monotonic()
     git = git_state(log)
     progress = Progress(qdir.progress, task.qid, log, call_timeout_s=settings.call_timeout_s)
-    cache = llm.JsonlCache(qdir.cache)
+    cache = modelcall.JsonlCache(qdir.cache)
     if cache.skipped:
         log(f"{task.qid}: skipped {cache.skipped} cut lines of {qdir.cache} (their calls are made again)")
     caller = Caller(rotation, cache, concurrency=settings.concurrency, timeout_s=settings.call_timeout_s,
@@ -806,8 +807,8 @@ async def _build(task: Task, corpus: GoldCorpus, qdir: QuestionDir, rotation: ll
         "kind": task.concept["answer_shape"]["kind"], "concept": task.concept,
         "built": {
             "git_commit": git["commit"], "git": git,
-            "models": {"aliases": [llm.model_name(m) for m in rotation.models], "served": sorted(caller.served),
-                       "model_key": caller.model_key, "base_url": llm.base_url(),
+            "models": {"aliases": [modelcall.model_name(m) for m in rotation.models], "served": sorted(caller.served),
+                       "model_key": caller.model_key, "base_url": modelcall.base_url(),
                        "identity": "model_key is the pinned name@revision (agent/rundir.SUBAGENTS), not observed"},
             "prompts": {"screen": screen.PROMPT.json(), "extract": work.prompt.json(),
                         "retry": extract.RETRY_PROMPT.json()},
@@ -841,11 +842,13 @@ async def _build(task: Task, corpus: GoldCorpus, qdir: QuestionDir, rotation: ll
     return doc
 
 
-def build(qid: str, concept: dict[str, Any], corpus: GoldCorpus, out_root: Path, *, rotation: llm.Rotation,
+def build(qid: str, concept: dict[str, Any], corpus: GoldCorpus, out_root: Path, *, rotation: modelcall.Rotation,
           settings: BuildSettings | None = None, question: str | None = None,
           log: Callable[[str], None] = print, replace: bool = False) -> dict[str, Any]:
     """Build D for one question into out_root/<qid>/ and return doc.json's content."""
     task = Task(qid, question, concept)
+    # Its own loop in the main thread, not modelcall.run_sync: the SIGTERM handler (_build) needs the main thread's
+    # loop. The model calls themselves run on the model loop (Caller.call -> modelcall.ask -> on_model_loop).
     return asyncio.run(_build(task, corpus, QuestionDir(Path(out_root) / qid), rotation,
                               settings or BuildSettings.from_env(), log, replace))
 

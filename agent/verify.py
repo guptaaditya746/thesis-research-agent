@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 from .anchor import Selector, read_text, resolve
-from .canonical import file_sha256
+from jsonio import file_sha256
 from .chain import verify as verify_chain
 from .concept import claim_ids
 from .rundir import ATTACH_FILE, RunDir

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.canonical import write_json
+from jsonio import write_json
 
 from .conftest import REPO
 from .runs import baseline_run, research_run

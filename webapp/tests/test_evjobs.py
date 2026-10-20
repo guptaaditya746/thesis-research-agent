@@ -14,7 +14,7 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from agent.canonical import file_sha256
+from jsonio import file_sha256
 from evidence.propose import cards as cards_module
 from evidence.tests.propose_support import QUESTION, Scripted, flow
 from webapp import evjobs

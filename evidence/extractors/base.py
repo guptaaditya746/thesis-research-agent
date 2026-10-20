@@ -12,14 +12,14 @@ from pathlib import Path
 from typing import Any
 
 from agent.anchor import selector_at
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 
 from ..contract import Coverage, ExtractionTask, Item, Span, digest
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 # Modules every extractor's behaviour depends on: offsets and anchoring, sections and chunks, these helpers.
-SHARED_SOURCES = (HERE / "base.py", ROOT / "agent" / "anchor.py", ROOT / "agent" / "canonical.py",
+SHARED_SOURCES = (HERE / "base.py", ROOT / "agent" / "anchor.py", ROOT / "jsonio" / "__init__.py",
                   ROOT / "gold" / "chunks.py", ROOT / "evidence" / "contract.py")
 
 

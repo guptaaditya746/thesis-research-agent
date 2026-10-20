@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from agent import kg
-from agent.canonical import canonical
+from jsonio import canonical
 from agent.cli import main as cli
 
 from .runs import Built, baseline, corpus_env, research  # noqa: F401  (pytest fixtures)

@@ -17,17 +17,18 @@ connection of a closed loop and lose the verdict after the server answered ("Eve
 On that loop a Judge bounds model calls to `concurrency` at a time and runs identical inputs that are in
 flight together as one call.
 
-Calls go through gold/llm.py: pydantic-ai, the reply decoded under the output's JSON schema (rationale
+Calls go through modelcall: pydantic-ai, the reply decoded under the output's JSON schema (rationale
 first, then the label), temperature 0, seed 0, thinking off, round robin over sub-model-1/-2. Both
 replicas serve the same weights, so the model identity is the pinned name and revision, not the alias.
-Every result is cached in $GOLD/judge-cache.jsonl (llm.JsonlCache), keyed by sha256 of the task, the
+Every result is cached in $GOLD/judge-cache.jsonl (modelcall.JsonlCache), keyed by sha256 of the task, the
 prompt hash (instructions and output schema), the sha256 of the exact user prompt the model got, the
 model identity and the settings (temperature, seed, max_tokens): a rescore costs no model call, and a
-changed prompt, rendering, model or setting never reuses an old answer. A cache line records the call:
-task, input, prompt and user-prompt hashes, model and the model the server says answered, settings,
-token usage and time. `Judge(cache_only=True)` never calls a model and returns None for an input it has
+changed prompt, rendering, model or setting never reuses an old answer. A cache line records the call
+(modelcall.ask's value: output, the alias asked as `model`, served_model, usage; plus task, input, the model
+identity as `model_id`, alias, prompt and user-prompt hashes, settings and time; lines written before
+modelcall.ask hold the reply's fields flat and the identity as `model`, and still read). `Judge(cache_only=True)` never calls a model and returns None for an input it has
 not seen (pending), so the web app can read verdicts without spending tokens. The prompts are
-gold/prompts/judge-*.txt; a verdict records its prompt_sha256 (llm.prompt_sha256 of the text and the
+gold/prompts/judge-*.txt; a verdict records its prompt_sha256 (modelcall.prompt_sha256 of the text and the
 output schema) and `served_model`; `render_sha256()` fingerprints how inputs are rendered into prompts.
 
 Context: the calibration judges each quote with `context_for(...)`, the paper id and CONTEXT_CHARS of
@@ -56,17 +57,17 @@ import json
 import re
 import threading
 from collections import Counter
-from collections.abc import Awaitable, Coroutine, Iterable
-from dataclasses import dataclass
+from collections.abc import Awaitable, Iterable
 from pathlib import Path
 from typing import Any, Literal, TypedDict, TypeVar
 
 from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
 
-from agent.canonical import file_sha256, sha256_hex
+from jsonio import file_sha256, sha256_hex
 
-from . import argilla_io, llm, review
+import modelcall
+from . import argilla_io, review
 from .agreement import KAPPA_BAR, kappa, wilson
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
@@ -104,23 +105,11 @@ class Verdict(TypedDict):
 TASKS: dict[str, type[BaseModel]] = {"support": SupportReply, "same-fact": MatchReply, "same-row": MatchReply}
 
 
-@dataclass(frozen=True)
-class Prompt:
-    task: str
-    text: str
-    output: type[BaseModel]
-
-    @property
-    def sha256(self) -> str:
-        return llm.prompt_sha256(self.text, self.output)
-
-    @property
-    def file(self) -> str:
-        return f"gold/prompts/judge-{self.task}.txt"
+Prompt = modelcall.Prompt
 
 
 def load_prompt(task: str) -> Prompt:
-    return Prompt(task, (PROMPT_DIR / f"judge-{task}.txt").read_text(encoding="utf-8"), TASKS[task])
+    return modelcall.load_prompt(PROMPT_DIR / f"judge-{task}.txt", TASKS[task])
 
 
 # --- what the model sees ----------------------------------------------------------------------------------
@@ -204,43 +193,9 @@ def render_sha256() -> dict[str, str]:
 
 # --- one event loop for every model call (see the module docstring) ------------------------------------
 
-_loop: asyncio.AbstractEventLoop | None = None
-_loop_lock = threading.Lock()
-
-
-def judge_loop() -> asyncio.AbstractEventLoop:
-    """The loop all judge calls run on: started at first use in a daemon thread, never closed."""
-    global _loop
-    with _loop_lock:
-        if _loop is None:
-            _loop = asyncio.new_event_loop()
-            threading.Thread(target=_loop.run_forever, name="gold-judge-loop", daemon=True).start()
-        return _loop
-
-
-def _running() -> asyncio.AbstractEventLoop | None:
-    try:
-        return asyncio.get_running_loop()
-    except RuntimeError:
-        return None
-
-
-def run_sync(coro: Coroutine[Any, Any, T]) -> T:
-    """Run a coroutine on the judge loop and wait for it: from sync code in any thread, or from inside
-    another running loop (which then waits too; async code should await the async calls instead)."""
-    loop = judge_loop()
-    if _running() is loop:
-        coro.close()
-        raise RuntimeError("a sync judge call on the judge's own loop would wait for itself; await the async call")
-    return asyncio.run_coroutine_threadsafe(coro, loop).result()
-
-
-async def on_judge_loop(coro: Coroutine[Any, Any, T]) -> T:
-    """Await a coroutine on the judge loop from any loop (directly when already on it)."""
-    loop = judge_loop()
-    if _running() is loop:
-        return await coro
-    return await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(coro, loop))
+judge_loop = modelcall.model_loop       # the process's one model loop, shared with the baselines and the proposal
+run_sync = modelcall.run_sync
+on_judge_loop = modelcall.on_model_loop
 
 
 # --- the judge ------------------------------------------------------------------------------------------
@@ -253,11 +208,11 @@ class Judge:
                  model_id: str | None = None, cache_only: bool = False, temperature: float = 0.0,
                  seed: int = 0, concurrency: int = CONCURRENCY) -> None:
         self.root = review.gold_root(root)
-        self.cache = llm.JsonlCache(self.root / CACHE_FILE)
+        self.cache = modelcall.JsonlCache(self.root / CACHE_FILE)
         self._models = models
-        self._rotation: llm.Rotation | None = None
-        self.model_id = model_id or (llm.model_name(models[0]) if models
-                                     else f"{llm.SUB_MODEL['name']}@{llm.SUB_MODEL['revision']}")
+        self._rotation: modelcall.Rotation | None = None
+        self.model_id = model_id or (modelcall.model_name(models[0]) if models
+                                     else f"{modelcall.SUB_MODEL['name']}@{modelcall.SUB_MODEL['revision']}")
         self.cache_only = cache_only
         self.settings = {"temperature": temperature, "seed": seed, "max_tokens": MAX_TOKENS}
         self.prompts = {task: load_prompt(task) for task in TASKS}
@@ -271,18 +226,20 @@ class Judge:
 
     def _model(self) -> Model:
         if self._rotation is None:
-            self._rotation = llm.Rotation(self._models)
+            self._rotation = modelcall.Rotation(self._models)
         return self._rotation.next()
 
     async def _ask(self, task: str, payload: dict[str, Any], user_prompt: str) -> dict[str, Any] | None:
         return await on_judge_loop(self._ask_here(task, payload, user_prompt))
 
+    def _key(self, task: str, user_sha: str) -> dict[str, Any]:
+        return {"task": task, "prompt_sha256": self.prompts[task].sha256, "user_prompt_sha256": user_sha,
+                "model": self.model_id, "settings": self.settings}
+
     async def _ask_here(self, task: str, payload: dict[str, Any], user_prompt: str) -> dict[str, Any] | None:
         """On the judge loop: the cached answer, else one model call per distinct input in flight."""
-        prompt = self.prompts[task]
         user_sha = sha256_hex(user_prompt.encode("utf-8"))
-        key = llm.cache_key({"task": task, "prompt_sha256": prompt.sha256, "user_prompt_sha256": user_sha,
-                             "model": self.model_id, "settings": self.settings})
+        key = modelcall.cache_key(self._key(task, user_sha))
         hit = self.cache.get(key)
         if hit is not None:
             return self._verdict(task, hit, cached=True)
@@ -291,31 +248,32 @@ class Judge:
         pending = self._inflight.get(key)
         mine = pending is None
         if pending is None:
-            pending = asyncio.ensure_future(self._call(task, payload, user_prompt, user_sha, key))
+            pending = asyncio.ensure_future(self._call(task, payload, user_prompt, user_sha))
             self._inflight[key] = pending
             pending.add_done_callback(lambda _: self._inflight.pop(key, None))
         value = await asyncio.shield(pending)
         return self._verdict(task, value, cached=not mine)
 
-    async def _call(self, task: str, payload: dict[str, Any], user_prompt: str, user_sha: str,
-                    key: str) -> dict[str, Any]:
+    async def _call(self, task: str, payload: dict[str, Any], user_prompt: str, user_sha: str) -> dict[str, Any]:
+        """One model call through modelcall.ask, which stores the value; returns that value."""
         prompt = self.prompts[task]
         async with self._gate:
-            reply = await llm.structured_reply(prompt.text, user_prompt, prompt.output, model=self._model(),
-                                               model_settings=llm.settings(**self.settings))
+            model = self._model()
+            extra = {"task": task, "input": payload, "model_id": self.model_id, "alias": modelcall.model_name(model),
+                     "prompt_sha256": prompt.sha256, "user_prompt_sha256": user_sha, "settings": self.settings,
+                     "created_at": review.utc_now()}
+            answer = await modelcall.ask(prompt, user_prompt, model=model,
+                                         settings=modelcall.CallSettings(**self.settings), cache=self.cache,
+                                         key=self._key(task, user_sha), extra=extra)
         self.calls += 1
-        value = {**reply.output.model_dump(), "task": task, "input": payload, "model": self.model_id,
-                 "alias": reply.model, "served_model": reply.served_model, "prompt_sha256": prompt.sha256,
-                 "user_prompt_sha256": user_sha, "settings": self.settings,
-                 "usage": {"input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens},
-                 "created_at": review.utc_now()}
-        self.cache.put(key, value)
-        return value
+        return {"output": answer.output.model_dump(mode="json"), "model": answer.model,
+                "served_model": answer.served_model, **extra}
 
     def _verdict(self, task: str, value: dict[str, Any], *, cached: bool) -> dict[str, Any]:
-        """What a caller gets: the reply's fields plus model, served_model, prompt_sha256 and cached."""
-        reply = {k: value[k] for k in self.prompts[task].output.model_fields}
-        return {**reply, "model": value["model"], "served_model": value.get("served_model"),
+        """What a caller gets: the reply's fields plus model (the identity), served_model, prompt_sha256 and
+        cached. A value of modelcall.ask holds the identity in `model_id`; an older one in `model`."""
+        output, _, served, _, _ = modelcall.decode(value, self.prompts[task].output_type)
+        return {**output.model_dump(), "model": value.get("model_id", value["model"]), "served_model": served,
                 "prompt_sha256": value["prompt_sha256"], "cached": cached}
 
     async def asupport(self, fact: dict[str, Any], quote: str, *, context: str | None = None) -> Verdict | None:
@@ -642,7 +600,7 @@ def calibration_report(root: Path, corpus: review.Corpus, *, judge: Judge, seed:
     prompt = judge.prompts["support"]
     report = {**report, "model": judge.model_id,
               "served_models": sorted({str(v.get("served_model")) for v in found if v and v.get("served_model")}),
-              "prompt_file": prompt.file, "prompt_sha256": prompt.sha256,
+              "prompt_file": prompt.name, "prompt_sha256": prompt.sha256,
               "render_sha256": render_sha256()["support"], "settings": judge.settings,
               "context_chars": CONTEXT_CHARS, "model_calls": judge.calls}
     review.write_json(Path(root) / REPORT_FILE, report)

@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field, create_model
 
 from agent.anchor import AnchorError, find
 from agent.broker import Broker, Rejected
-from agent.canonical import canonical_bytes
+from jsonio import canonical_bytes
 
 from .calls import Caller, CallError, PromptFile, load_prompt
 from .chunks import Chunk, GoldCorpus

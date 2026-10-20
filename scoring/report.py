@@ -58,7 +58,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from agent.canonical import canonical, file_sha256, write_json
+from jsonio import canonical, file_sha256, write_json
 from agent.rundir import utc_now
 
 from .batch import BATCH_FILE, REPORT_DIR, SCORES_FILE

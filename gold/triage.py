@@ -41,7 +41,7 @@ from pydantic import BaseModel
 
 from agent.rundir import utc_now
 
-from . import llm
+import modelcall
 from .build import BuildSettings, QuestionDir, append_jsonl, load_doc, read_jsonl, write_json
 from .calls import Caller, CallError, PromptFile, load_prompt
 from .chunks import GoldCorpus
@@ -111,7 +111,7 @@ def batch_prompt(doc: dict[str, Any], batch: list[dict[str, Any]], texts: Texts)
     }, ensure_ascii=False, indent=1)
 
 
-async def _triage(qdir: QuestionDir, texts: Texts, rotation: llm.Rotation, settings: BuildSettings, batch: int,
+async def _triage(qdir: QuestionDir, texts: Texts, rotation: modelcall.Rotation, settings: BuildSettings, batch: int,
                   log: Callable[[str], None]) -> Counter[str]:
     doc = load_doc(qdir)
     concept_hash = doc["concept_sha256"]
@@ -121,7 +121,7 @@ async def _triage(qdir: QuestionDir, texts: Texts, rotation: llm.Rotation, setti
     batches = [todo[i:i + batch] for i in range(0, len(todo), max(1, batch))]
     log(f"{qdir.qid}: {len(todo)} candidates to sort ({len(candidates) - len(todo)} already sorted), "
         f"{len(batches)} calls" + ("" if texts.corpus else " (no corpus: facts shown with their quote only)"))
-    caller = Caller(rotation, llm.JsonlCache(qdir.cache), concurrency=settings.concurrency,
+    caller = Caller(rotation, modelcall.JsonlCache(qdir.cache), concurrency=settings.concurrency,
                     timeout_s=settings.call_timeout_s, temperature=settings.temperature, seed=settings.seed)
     qdir.root.mkdir(parents=True, exist_ok=True)
     started_at = utc_now()
@@ -168,7 +168,7 @@ def _record_run(qdir: QuestionDir, doc: dict[str, Any], texts: Texts, caller: Ca
     runs.append({
         "started_at": started_at, "ended_at": utc_now(), "concept_sha256": doc["concept_sha256"],
         "prompt": PROMPT.json(), "batch": batch, "context_chars": CONTEXT_CHARS, "max_tokens": MAX_TOKENS,
-        **caller.settings(), "models": [llm.model_name(m) for m in caller.rotation.models],
+        **caller.settings(), "models": [modelcall.model_name(m) for m in caller.rotation.models],
         "served": sorted(caller.served), "passages": corpus is not None,
         "corpus_manifest_sha256": corpus.manifest_sha256 if corpus else None,
         "to_sort": todo, "unsorted": counts["unsorted"], "model_calls": caller.counters.json(),
@@ -176,10 +176,10 @@ def _record_run(qdir: QuestionDir, doc: dict[str, Any], texts: Texts, caller: Ca
     write_json(qdir.triage_runs, {"qid": qdir.qid, "runs": runs})
 
 
-def triage(qid: str, out_root: Path, corpus: GoldCorpus | None, rotation: llm.Rotation, *,
+def triage(qid: str, out_root: Path, corpus: GoldCorpus | None, rotation: modelcall.Rotation, *,
            settings: BuildSettings | None = None, batch: int = BATCH,
            log: Callable[[str], None] = print) -> dict[str, int]:
     """Label every candidate of $GOLD/<qid>/ that has no label yet; returns the label counts (and unsorted)."""
-    counts = asyncio.run(_triage(QuestionDir(Path(out_root) / qid), Texts(corpus), rotation,
-                                 settings or BuildSettings.from_env(), batch, log))
+    counts = modelcall.run_sync(_triage(QuestionDir(Path(out_root) / qid), Texts(corpus), rotation,
+                                settings or BuildSettings.from_env(), batch, log))
     return {label: counts.get(label, 0) for label in (*LABELS, "unsorted")}

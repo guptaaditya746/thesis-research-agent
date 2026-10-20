@@ -14,19 +14,23 @@ import secrets
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
-from agent.canonical import GENESIS, canonical_bytes, file_sha256, sha256_hex
+from jsonio import GENESIS, canonical_bytes, file_sha256, sha256_hex
 from agent.chain import FIELDS, line, seal, task_id
 from agent.rundir import utc_now
 
-from .contract import DocumentRef
+from modelcall import JsonlCache
+
+from .contract import DocumentRef, Item
 
 RUN_FILE, PROTOCOL_FILE, EVENTS_FILE = "run.json", "protocol.yaml", "events.jsonl"
 LOCATE_FILE, EVIDENCE_FILE, GRAPH_FILE, ANSWER_FILE = "locate.json", "evidence.jsonl", "graph.json", "answer.json"
 CALLS_DIR, REEXEC_FILE, PROV_FILE = "calls", "reexec.json", "prov.ttl"
 FUNNEL_FILE = "funnel.json"   # the funnel's steps and decisions per document (Part D)
 CACHE_FILE = "extractor_calls.jsonl"
+ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR)   # what only the engine writes in a run dir
+REEXEC_GLOB = "{name}-reexec-*"   # sibling directories `evidence reexec` writes next to a run
 
 
 class CorpusError(RuntimeError):
@@ -104,14 +108,6 @@ class Events:
         return sealed["task_id"]
 
 
-def write_canonical(path: Path, obj: Any) -> str:
-    """Canonical JSON plus a newline (agent/canonical.write_json); returns the sha256 of the bytes."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    data = canonical_bytes(obj) + b"\n"
-    path.write_bytes(data)
-    return sha256_hex(data)
-
-
 def write_lines(path: Path, rows: list[Any]) -> str:
     data = b"".join(canonical_bytes(r) + b"\n" for r in rows)
     path.write_bytes(data)
@@ -123,4 +119,116 @@ def read_json(path: Path) -> Any:
 
 
 def read_lines(path: Path) -> list[Any]:
-    return [json.loads(raw) for raw in path.read_bytes().decode("utf-8").splitlines() if raw.strip()]
+    """The JSON lines of a file. A process killed mid-append leaves a cut last line with no line break: that
+    one is skipped. A bad line anywhere else is damage and raises ValueError naming `path:line`."""
+    data = path.read_bytes().decode("utf-8")
+    rows = data.split("\n")
+    out: list[Any] = []
+    for n, raw in enumerate(rows, 1):
+        if not raw.strip():
+            continue
+        try:
+            out.append(json.loads(raw))
+        except ValueError as exc:
+            if n == len(rows):   # no line break after it: the torn tail of an interrupted append
+                continue
+            raise ValueError(f"{path}:{n}: {exc}") from exc
+    return out
+
+
+class RunDir:
+    """The read side of a run directory: what the engine (or a baseline) wrote, optional files as None.
+
+    Readers (scoring, the web app) go through this instead of repeating the layout. A torn last line of
+    events.jsonl or evidence.jsonl is skipped (read_lines); a malformed required file raises."""
+
+    def __init__(self, root: Path | str) -> None:
+        self.root = Path(root)
+
+    @property
+    def complete(self) -> bool:
+        """True when run.json parses to a non-empty object: the engine writes it last, so a directory without
+        one (or with a cut or empty one) crashed or is still running."""
+        run = self.try_json(RUN_FILE)
+        return isinstance(run, dict) and bool(run)
+
+    @property
+    def kind(self) -> Literal["engine", "baseline"] | None:
+        """"engine" when run.json parses to an object (even an empty one) or the directory holds something only
+        the engine writes (ENGINE_MARKERS); "baseline" when answer.json is an object naming its `system`; else
+        None. An unparsable run.json or answer.json counts as absent, so a listing never fails on one."""
+        if isinstance(self.try_json(RUN_FILE), dict) or any(self.file(m).exists() for m in ENGINE_MARKERS):
+            return "engine"
+        answer = self.try_json(ANSWER_FILE)
+        return "baseline" if isinstance(answer, dict) and answer.get("system") else None
+
+    def file(self, name: str) -> Path:
+        return self.root / name
+
+    def json(self, name: str) -> Any | None:
+        path = self.file(name)
+        return read_json(path) if path.is_file() else None
+
+    def try_json(self, name: str) -> Any | None:
+        """The file's JSON, or None when it is missing or unreadable (cut, being written, not UTF-8)."""
+        try:
+            return self.json(name)
+        except (OSError, ValueError):
+            return None
+
+    def items(self) -> list[Item]:
+        path = self.file(EVIDENCE_FILE)
+        return [Item.model_validate(row) for row in read_lines(path)] if path.is_file() else []
+
+    def events(self) -> list[dict[str, Any]] | None:
+        path = self.file(EVENTS_FILE)
+        return [e for e in read_lines(path) if isinstance(e, dict)] if path.is_file() else None
+
+    def events_of(self, subtype: str) -> list[dict[str, Any]] | None:
+        events = self.events()
+        return None if events is None else [e for e in events if e.get("subtype") == subtype]
+
+    def calls(self) -> list[dict[str, Any]] | None:
+        folder = self.file(CALLS_DIR)
+        return [read_json(p) for p in sorted(folder.glob("*.json"))] if folder.is_dir() else None
+
+    def error_calls(self) -> int:
+        """Calls whose checked result is an error (calls/<call_id>.json status "error"); an unreadable file is not one."""
+        folder = self.file(CALLS_DIR)
+        if not folder.is_dir():
+            return 0
+        found = (self.try_json(f"{CALLS_DIR}/{p.name}") for p in sorted(folder.glob("*.json")))
+        return sum(1 for c in found if isinstance(c, dict) and c.get("status") == "error")
+
+    def cache_file(self) -> Path | None:
+        """The record cache run.json names (`settings.cache`, a directory or the jsonl file), when it exists."""
+        cache = (((self.json(RUN_FILE) or {}).get("settings")) or {}).get("cache")
+        if not cache:
+            return None
+        path = Path(cache)
+        if path.is_dir():
+            path = path / CACHE_FILE
+        return path if path.is_file() else None
+
+    def usage(self) -> dict[str, dict[str, int]] | None:
+        """Model-call record id -> token usage, from the cache run.json names (None without one)."""
+        path = self.cache_file()
+        if path is None:
+            return None
+        usage: dict[str, dict[str, int]] = {}
+        for _, value in JsonlCache(path).items():
+            for record in (value.get("model_calls") if isinstance(value, dict) else None) or []:
+                if isinstance(record, dict) and record.get("id") and isinstance(record.get("usage"), dict):
+                    usage[record["id"]] = {k: int(record["usage"].get(k) or 0)
+                                           for k in ("input_tokens", "output_tokens")}
+        return usage
+
+    def latest_reexec(self) -> Path | None:
+        """The newest sibling `<name>-reexec-<stamp>/reexec.json` (stamps sort by time); symlinks are left out."""
+        found = sorted(p / REEXEC_FILE for p in self.root.parent.glob(REEXEC_GLOB.format(name=self.root.name))
+                       if (p / REEXEC_FILE).is_file() and not p.is_symlink())
+        return found[-1] if found else None
+
+    def watched(self) -> tuple[Path, ...]:
+        """The files whose change a reader's cache must notice."""
+        return tuple(self.file(n) for n in (RUN_FILE, ANSWER_FILE, *ENGINE_MARKERS))

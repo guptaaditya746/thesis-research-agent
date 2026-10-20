@@ -7,7 +7,7 @@ from rdflib import Graph
 
 from agent import kg, prov, queries
 from agent.anchor import read_text
-from agent.canonical import write_json
+from jsonio import write_json
 from agent.cli import main as cli
 
 from .runs import GSM8K, Built, baseline, corpus_env, research, rows  # noqa: F401  (pytest fixtures)

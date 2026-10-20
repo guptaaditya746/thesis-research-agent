@@ -82,7 +82,7 @@ from minisweagent.models.litellm_textbased_model import LitellmTextbasedModel  #
 from minisweagent.models.utils.retry import retry  # noqa: E402
 
 from . import sandbox, stopping  # noqa: E402
-from .canonical import canonical_bytes, sha256_hex, write_json  # noqa: E402
+from jsonio import canonical_bytes, sha256_hex, write_json  # noqa: E402
 from .answer import accepted_claim_ids, build_answer, empty_answer, reply_schema  # noqa: E402
 from .parse import Parsed, files_read, normalise_command, parse_reply  # noqa: E402
 from .prompts import Prompt, task_vars  # noqa: E402

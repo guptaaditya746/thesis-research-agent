@@ -17,7 +17,7 @@ import litellm  # noqa: E402
 
 from agent import concept_step  # noqa: E402
 from agent.broker import Broker, Channel  # noqa: E402
-from agent.canonical import file_sha256  # noqa: E402
+from jsonio import file_sha256  # noqa: E402
 from agent.chain import verify  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.concept import concept_sha256  # noqa: E402

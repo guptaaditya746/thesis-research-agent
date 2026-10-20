@@ -58,7 +58,7 @@ from pathlib import Path
 from typing import Any
 
 from agent import anchor
-from agent.canonical import canonical_bytes, file_sha256, sha256_hex
+from jsonio import canonical_bytes, file_sha256, sha256_hex
 from agent.concept import concept_sha256 as concept_hash
 from agent.concept import validate_answer
 from agent.rundir import git_head

@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from agent.anchor import Index
-from gold.llm import JsonlCache, redact
+from modelcall import JsonlCache, redact
 
 from .contract import ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Item, digest
 from .recording import Provider, Recorder
@@ -141,7 +141,7 @@ class CallCache:
         if spec.extractor_id in self._warned:
             return
         self._warned.add(spec.extractor_id)
-        others = {v["extractor_id"] for v in self.cache._data.values()
+        others = {v["extractor_id"] for _, v in self.cache.items()
                   if isinstance(v, dict) and isinstance(v.get("spec"), dict) and v["spec"].get("name") == spec.name
                   and v["spec"].get("version") == spec.version and v["spec"].get("code_sha256") != spec.code_sha256}
         if others:

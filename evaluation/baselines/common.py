@@ -13,7 +13,6 @@ that answer into the label and the stance of every paper it relies on, for the s
 """
 from __future__ import annotations
 
-import asyncio
 import json
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -22,9 +21,9 @@ from typing import Any, Literal, TypeVar
 from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
 
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 from evidence import protocol as protocol_module, rules
-from gold.llm import JsonlCache, cache_key, model_name, prompt_sha256, redact, settings, structured_reply
+from modelcall import CallSettings, JsonlCache, Prompt, ask_sync, cache_key, model_name, prompt_sha256
 
 DEFAULT_PROTOCOL = Path(__file__).resolve().parents[2] / "evidence" / "protocols" / "rag-factuality.yaml"
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
@@ -127,26 +126,18 @@ def cached_reply(cache: JsonlCache | None, instructions: str, prompt: str, *, mo
     """One schema-constrained call (temperature 0, fixed seed), cached by prompt hash, model and input.
 
     Returns the reply (an `output_type`) and its record: model, served model, tokens, prompt hash, cache
-    key, whether it came from the cache. The key never contains the API key (gold.llm reads it from the
+    key, whether it came from the cache. The key never contains the API key (modelcall reads it from the
     environment).
     """
     record = {"prompt_sha256": prompt_sha256(instructions, output_type), "model": model_id or model_name(model),
               "input_sha256": sha256_hex(prompt.encode("utf-8")),
               "settings": {"temperature": 0.0, "seed": seed, "max_tokens": max_tokens}}
-    key = cache_key(record)
-    hit = cache.get(key) if cache is not None else None
-    if hit is not None:
-        return output_type.model_validate(hit["output"]), record | {"key": key, "cached": True} | hit["usage"]
-    try:
-        reply = asyncio.run(structured_reply(instructions, prompt, output_type, model=model,
-                                             model_settings=settings(seed=seed, max_tokens=max_tokens)))
-    except Exception as exc:  # provider errors can echo the key: never let it reach a log
-        raise RuntimeError(redact(f"{type(exc).__name__}: {exc}")) from None
-    usage = {"served_model": reply.served_model, "input_tokens": reply.input_tokens,
-             "output_tokens": reply.output_tokens}
-    if cache is not None:
-        cache.put(key, {"output": reply.output.model_dump(mode="json"), "usage": usage})
-    return reply.output, record | {"key": key, "cached": False} | usage
+    # A failure is modelcall.ModelCallError (a RuntimeError) with a redacted reason: provider errors can echo the key.
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+    usage = {"served_model": answer.served_model, "input_tokens": answer.input_tokens,
+             "output_tokens": answer.output_tokens}
+    return answer.output, record | {"key": cache_key(record), "cached": answer.cached} | usage
 
 
 def map_answer(cache: JsonlCache | None, question: str, known: list[str], text: str, *, model: Model,
