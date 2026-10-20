@@ -17,7 +17,8 @@ funnel's gaps stay visible. Without bash (Windows) the agentic run and the agent
 
     uv run python -m webapp.tests.evidence_world OUT     # write the world to OUT (e.g. for `webapp serve`)
     uv run python -m webapp.tests.evidence_world OUT --mocks webapp/web/src/mocks/ev-fixtures.json
-                                                         # and the frontend's mock responses from it
+                                                         # and the frontend's mock responses from it, with
+                                                         # write-contract.json beside them (write_contract.py)
 """
 from __future__ import annotations
 
@@ -374,5 +375,7 @@ if __name__ == "__main__":
         raise SystemExit(f"{target} exists; give a new directory")
     built = build(target)
     if mocks:
+        from .write_contract import write
         dump_mocks(built, mocks)
+        write(built, mocks.parent / "write-contract.json")
     print(built.root)

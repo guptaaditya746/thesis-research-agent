@@ -1,0 +1,464 @@
+[
+ {
+  "name": "synth with a new name",
+  "method": "POST",
+  "path": "/api/ev/jobs/synth",
+  "body": {
+   "name": "contract-set",
+   "studies": 4,
+   "levels": [
+    "explicit"
+   ]
+  },
+  "status": 202,
+  "response": {
+   "id": "*",
+   "kind": "synth",
+   "lane": "cpu",
+   "args": {
+    "name": "contract-set",
+    "seed": 1,
+    "studies": 4,
+    "levels": [
+     "explicit"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+   },
+   "refs": {
+    "corpus_set": "contract-set",
+    "corpus": "contract-set-mixed"
+   },
+   "state": "queued",
+   "created_at": "*",
+   "started_at": "*",
+   "ended_at": "*",
+   "exit_code": null,
+   "error": null,
+   "warnings": [],
+   "failed_calls": null,
+   "orphaned": false,
+   "steps": [
+    {
+     "name": "synth build",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "synth",
+      "build",
+      "--name",
+      "contract-set",
+      "--seed",
+      "1",
+      "--studies",
+      "4",
+      "--renderer",
+      "template",
+      "--levels",
+      "explicit",
+      "--duplicates",
+      "0",
+      "--missing",
+      "0",
+      "--outliers",
+      "0",
+      "--irrelevant",
+      "0",
+      "--out",
+      "*"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    }
+   ]
+  }
+ },
+ {
+  "name": "synth reusing the world's corpus set name",
+  "method": "POST",
+  "path": "/api/ev/jobs/synth",
+  "body": {
+   "name": "rag-tpl-w1",
+   "studies": 4,
+   "levels": [
+    "explicit",
+    "paraphrased"
+   ]
+  },
+  "status": 409,
+  "response": {
+   "detail": "corpora rag-tpl-w1-explicit, rag-tpl-w1-paraphrased, rag-tpl-w1-mixed exist; choose another name"
+  }
+ },
+ {
+  "name": "run cascade on the mixed corpus with a new name",
+  "method": "POST",
+  "path": "/api/ev/jobs/run",
+  "body": {
+   "corpus": "rag-tpl-w1-mixed",
+   "protocol": {
+    "source": "repo",
+    "name": "rag-factuality"
+   },
+   "extractors": "cascade",
+   "strategy": "all",
+   "name": "contract-run"
+  },
+  "status": 202,
+  "response": {
+   "id": "*",
+   "kind": "run",
+   "lane": "model",
+   "args": {
+    "corpus": "rag-tpl-w1-mixed",
+    "protocol": {
+     "source": "repo",
+     "name": "rag-factuality"
+    },
+    "extractors": "cascade",
+    "strategy": "all",
+    "model": "orch-model",
+    "group": null,
+    "name": "contract-run",
+    "retry_errors": false
+   },
+   "refs": {
+    "run": "cascade~contract-run",
+    "corpus": "rag-tpl-w1-mixed"
+   },
+   "state": "queued",
+   "created_at": "*",
+   "started_at": "*",
+   "ended_at": "*",
+   "exit_code": null,
+   "error": null,
+   "warnings": [],
+   "failed_calls": null,
+   "orphaned": false,
+   "steps": [
+    {
+     "name": "evidence run",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "evidence",
+      "run",
+      "--protocol",
+      "*",
+      "--corpus",
+      "*",
+      "--out",
+      "*",
+      "--cache",
+      "*",
+      "--extractors",
+      "cascade",
+      "--strategy",
+      "all",
+      "--model",
+      "orch-model",
+      "--run-id",
+      "contract-run"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    }
+   ]
+  }
+ },
+ {
+  "name": "run on an existing run name",
+  "method": "POST",
+  "path": "/api/ev/jobs/run",
+  "body": {
+   "corpus": "rag-tpl-w1-mixed",
+   "protocol": {
+    "source": "repo",
+    "name": "rag-factuality"
+   },
+   "extractors": "cascade",
+   "strategy": "all"
+  },
+  "status": 409,
+  "response": {
+   "detail": "run cascade/rag-tpl-w1-mixed exists; give the run another name"
+  }
+ },
+ {
+  "name": "run on an unknown corpus",
+  "method": "POST",
+  "path": "/api/ev/jobs/run",
+  "body": {
+   "corpus": "no-such-corpus",
+   "protocol": {
+    "source": "repo",
+    "name": "rag-factuality"
+   }
+  },
+  "status": 404,
+  "response": {
+   "detail": "no such corpus: 'no-such-corpus'"
+  }
+ },
+ {
+  "name": "rag-baseline on a corpus that has an answer",
+  "method": "POST",
+  "path": "/api/ev/jobs/rag-baseline",
+  "body": {
+   "corpus": "rag-tpl-w1-mixed"
+  },
+  "status": 409,
+  "response": {
+   "detail": "rag-baseline/rag-tpl-w1-mixed has an answer.json; move it away to run the baseline again"
+  }
+ },
+ {
+  "name": "propose on the frozen proposal",
+  "method": "POST",
+  "path": "/api/ev/jobs/propose",
+  "body": {
+   "proposal": "rag-factuality",
+   "question": "rag-factuality"
+  },
+  "status": 409,
+  "response": {
+   "detail": "proposal rag-factuality is frozen; change it with `evidence propose amend` (command line)"
+  }
+ },
+ {
+  "name": "propose with a new name",
+  "method": "POST",
+  "path": "/api/ev/jobs/propose",
+  "body": {
+   "proposal": "p-new",
+   "question": "rag-factuality"
+  },
+  "status": 202,
+  "response": {
+   "id": "*",
+   "kind": "propose",
+   "lane": "model",
+   "args": {
+    "proposal": "p-new",
+    "question": "rag-factuality",
+    "model": "orch-model"
+   },
+   "refs": {
+    "proposal": "p-new"
+   },
+   "state": "queued",
+   "created_at": "*",
+   "started_at": "*",
+   "ended_at": "*",
+   "exit_code": null,
+   "error": null,
+   "warnings": [],
+   "failed_calls": null,
+   "orphaned": false,
+   "steps": [
+    {
+     "name": "propose frame",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "evidence",
+      "propose",
+      "frame",
+      "--question",
+      "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+      "--vocab",
+      "rag-factuality",
+      "--out",
+      "*",
+      "--model",
+      "orch-model"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    },
+    {
+     "name": "propose draft",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "evidence",
+      "propose",
+      "draft",
+      "*"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [
+      "*"
+     ],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    },
+    {
+     "name": "propose critic",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "evidence",
+      "propose",
+      "critic",
+      "*",
+      "--model",
+      "orch-model"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [
+      "*"
+     ],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    },
+    {
+     "name": "propose cards",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "evidence",
+      "propose",
+      "cards",
+      "*",
+      "--model",
+      "orch-model"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [
+      "*"
+     ],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    }
+   ]
+  }
+ },
+ {
+  "name": "decisions with four problems",
+  "method": "PUT",
+  "path": "/api/ev/proposals/p-new/decisions",
+  "body": {
+   "decisions": [
+    {
+     "card": "screen",
+     "choice": "draft",
+     "reason": "  ",
+     "by": "model"
+    },
+    {
+     "card": "roles",
+     "choice": "draft",
+     "reason": "default: roles",
+     "by": "model"
+    },
+    {
+     "card": "metrics",
+     "choice": "draft",
+     "reason": "default: metrics",
+     "by": "model"
+    },
+    {
+     "card": "min_effect",
+     "choice": "strict",
+     "reason": "noise",
+     "by": "model"
+    },
+    {
+     "card": "pairing",
+     "choice": "median",
+     "reason": "the median pairs best",
+     "by": "aditya"
+    },
+    {
+     "card": "label",
+     "choice": "custom",
+     "value": null,
+     "reason": "my own rows",
+     "by": "aditya"
+    },
+    {
+     "card": "cascade",
+     "choice": "draft",
+     "reason": "default: cascade",
+     "by": "model"
+    },
+    {
+     "card": "locate",
+     "choice": "draft",
+     "reason": "default: locate",
+     "by": "model"
+    }
+   ],
+   "base_sha256": null,
+   "force": true
+  },
+  "status": 200,
+  "response": {
+   "written": "/srv/ev/proposals/p-new/decisions.yaml",
+   "sha256": "71920625dba2b58939683f0febc063f7b1d8f029d97a33d2d8e125cb529d3efa",
+   "problems": [
+    "screen: a decision without a reason is refused",
+    "min_effect: choice 'strict' is not the model's default ('draft'); set `by` to who decided",
+    "pairing: choice 'median' is not an option of the card (draft, order_only) nor `custom` with a value",
+    "label: choice custom needs a `value` in the card's shape: Input should be a valid dictionary or instance of LabelValue at value"
+   ]
+  }
+ },
+ {
+  "name": "freeze a proposal with problems",
+  "method": "POST",
+  "path": "/api/ev/jobs/freeze",
+  "body": {
+   "proposal": "p-new"
+  },
+  "status": 409,
+  "response": {
+   "detail": "decisions.yaml refused:\n  screen: a decision without a reason is refused\n  min_effect: choice 'strict' is not the model's default ('draft'); set `by` to who decided\n  pairing: choice 'median' is not an option of the card (draft, order_only) nor `custom` with a value\n  label: choice custom needs a `value` in the card's shape: Input should be a valid dictionary or instance of LabelValue at value"
+  }
+ }
+]

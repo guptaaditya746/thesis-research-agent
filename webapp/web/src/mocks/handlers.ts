@@ -1,15 +1,18 @@
 /**
  * MSW handlers: the backend API (webapp/app.py) for `npm run dev:mock` (service worker) and the tests (Node).
+ * What the writes answer is checked against the backend's own answers (write-contract.json, contract.test.ts).
  *
  * The viewer's reads come from ev-fixtures.json (src/mocks/ev.ts, the backend's own responses on a world made
  * by the real tools). What the app starts and writes is mocked with one in-memory `db` so a started job, a
  * new proposal or written decisions show up on the next request; `resetDb()` restores it:
  * - POST /api/ev/jobs/<kind> validates like the backend (names, a run or corpus that exists: 409) and queues
- *   a job with the backend's refs; a job runs and then ends `done` after `timing.jobMs` (never on its own in
- *   the tests, which end it with `finishJob`);
+ *   a job with the backend's refs (a run's group from the backend's run-group answers in the fixtures); a job
+ *   runs and then ends `done` after `timing.jobMs` (never on its own in the tests, which end it with `finishJob`);
  * - a propose job makes an unfrozen proposal (the fixtures' proposal with its decisions reset to the model's
  *   defaults) under the requested name; PUT decisions stores them and answers with what freeze would refuse
- *   (a missing reason, a choice other than the default by the model, an unknown choice); a freeze job freezes it.
+ *   (a missing reason, a choice other than the default by the model, an unknown choice, custom without a value);
+ *   a freeze job freezes it. A run whose protocol and selection have no run-group answer in the fixtures (a
+ *   proposal's protocol) is refused with 404, as GET /api/ev/run-group is.
  */
 import { delay, http, HttpResponse } from "msw"
 
@@ -43,10 +46,9 @@ const fixture = <T,>(path: string) => structuredClone(EV_FIXTURES[path]) as T
 /** The fixture key of a run-group answer (webapp/tests/evidence_world.py records it in this param order). */
 const groupKey = (p: URLSearchParams) =>
   `/api/ev/run-group?source=${p.get("source")}&name=${p.get("name")}&extractors=${p.get("extractors")}&strategy=${p.get("strategy")}`
-const groupOf = (r: { protocol: { source: string; name: string }; extractors?: string; strategy?: string }): string => {
-  const params = new URLSearchParams({ source: r.protocol.source, name: r.protocol.name, extractors: r.extractors ?? "cascade", strategy: r.strategy ?? "all" })
-  return (EV_FIXTURES[groupKey(params)] as { group: string } | undefined)?.group ?? `${r.protocol.source === "proposal" ? "proposal-" : ""}${r.protocol.name}-${r.extractors ?? "cascade"}${r.strategy === "gaps" && r.extractors !== "regex-only" ? "-gaps" : ""}`
-}
+/** The run-group fixture key of a run request (its defaults as the backend's RunRequest has them). */
+const groupKeyOf = (r: { protocol: { source: string; name: string }; extractors?: string; strategy?: string }) =>
+  groupKey(new URLSearchParams({ source: r.protocol.source, name: r.protocol.name, extractors: r.extractors ?? "cascade", strategy: r.strategy ?? "all" }))
 
 function initialDb(): Db {
   const runs = fixture<{ id: string }[]>("/api/ev/runs").map((r) => r.id)
@@ -73,6 +75,9 @@ const now = () => new Date().toISOString()
 const conflict = (detail: string) => HttpResponse.json({ detail }, { status: 409 })
 const notFound = (detail: string) => HttpResponse.json({ detail }, { status: 404 })
 const invalid = (msg: string, loc: string[]) => HttpResponse.json({ detail: [{ loc: ["body", ...loc], msg }] }, { status: 422 })
+const frozen = (name: string) => conflict(`proposal ${name} is frozen; change it with \`evidence propose amend\` (command line)`)
+/** The model of a card's value (evidence/propose/cards.py: screen -> ScreenValue, min_effect -> MinEffectValue). */
+const valueModel = (card: string) => `${card.replace(/(^|_)([a-z])/g, (_, __, c: string) => c.toUpperCase())}Value`
 
 /** An unfrozen proposal made from the fixtures' frozen one: decisions back to the model's defaults. */
 export function unfrozenProposal(name: string): ProposalDetail {
@@ -87,25 +92,27 @@ export function unfrozenProposal(name: string): ProposalDetail {
   }
 }
 
-/** What `cards.validate` refuses, with its messages (evidence/propose/cards.py). */
-export function decisionProblems(cards: Card[], entries: DecisionEntry[]): string[] {
+/** What `cards.validate` refuses, with its messages (evidence/propose/cards.py), for the entries the form sends
+ * (one per card): a missing reason, a choice that is no option, custom without a value (an object; its shape is
+ * not checked), a choice other than the default by the model. */
+function decisionProblems(cards: Card[], entries: DecisionEntry[]): string[] {
   const problems: string[] = []
-  const seen = new Set<string>()
   for (const e of entries) {
     const card = cards.find((c) => c.id === e.card)
-    if (!card) { problems.push(`entry: unknown card '${e.card}'`); continue }
-    seen.add(card.id)
+    if (!card) continue
     if (!e.reason.trim()) problems.push(`${card.id}: a decision without a reason is refused`)
     const ids = card.options.map((o) => String(o.id))
     if (e.choice === "custom") {
-      if (e.value === null || e.value === undefined || typeof e.value !== "object") problems.push(`${card.id}: choice custom needs a \`value\` in the card's shape`)
+      if (e.value === null || typeof e.value !== "object" || Array.isArray(e.value)) {
+        problems.push(`${card.id}: choice custom needs a \`value\` in the card's shape: Input should be a valid dictionary or instance of ${valueModel(card.id)} at value`)
+        continue
+      }
     } else if (!ids.includes(e.choice)) {
       problems.push(`${card.id}: choice '${e.choice}' is not an option of the card (${ids.join(", ")}) nor \`custom\` with a value`)
       continue
     }
     if (e.choice !== card.default && e.by === "model") problems.push(`${card.id}: choice '${e.choice}' is not the model's default ('${card.default}'); set \`by\` to who decided`)
   }
-  for (const c of cards) if (!seen.has(c.id)) problems.push(`${c.id}: no decision`)
   return problems
 }
 
@@ -122,7 +129,8 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
     case "run": {
       const b = body as JobRequests["run"]
       if (!db.corpora.has(b.corpus)) return notFound(`no such corpus: '${b.corpus}'`)
-      const group = b.group ?? groupOf(b)
+      const group = b.group ?? (EV_FIXTURES[groupKeyOf(b)] as { group: string } | undefined)?.group
+      if (!group) return notFound(`not in the mock fixtures: ${groupKeyOf(b)}`)
       const id = `${group}~${b.name ?? b.corpus}`
       if (db.runs.has(id)) return conflict(`run ${group}/${b.name ?? b.corpus} exists; give the run another name`)
       return { run: id, corpus: b.corpus }
@@ -139,15 +147,14 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
     case "compare": return { score: (body as JobRequests["compare"]).name }
     case "propose": {
       const b = body as JobRequests["propose"]
-      if (b.proposal === FROZEN || db.proposals[b.proposal]?.frozen) return conflict(`proposal ${b.proposal} is frozen`)
-      if (db.proposals[b.proposal]) return conflict(`proposal ${b.proposal} has its cards: decide them and freeze it`)
+      if (b.proposal === FROZEN || db.proposals[b.proposal]?.frozen) return frozen(b.proposal)
       return { proposal: b.proposal }
     }
     case "freeze": {
       const name = (body as JobRequests["freeze"]).proposal
       const p = db.proposals[name]
       if (!p) return conflict(`proposal ${name} has no cards yet (run the proposal flow first)`)
-      if (p.frozen) return conflict(`proposal ${name} is frozen`)
+      if (p.frozen) return frozen(name)
       if (p.decision_problems.length) return conflict(`decisions.yaml refused:\n  ${p.decision_problems.join("\n  ")}`)
       return { proposal: name }
     }
@@ -229,7 +236,7 @@ export const handlers = [
   http.put("/api/ev/proposals/:name/decisions", async ({ params, request }) => {
     const p = db.proposals[String(params.name)]
     if (!p) return conflict(`proposal ${String(params.name)} has no cards yet (run the proposal flow first)`)
-    if (p.frozen) return conflict(`proposal ${p.name} is frozen; change it with \`evidence propose amend\` (command line)`)
+    if (p.frozen) return frozen(p.name)
     const body = (await request.json()) as DecisionsRequest
     if (body.base_sha256 !== p.decisions_sha256 && !body.force) return conflict("decisions.yaml changed since the form loaded it (edited by hand or in another tab): reload to see it, or overwrite it")
     const problems = decisionProblems(p.cards, body.decisions)
