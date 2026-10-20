@@ -6,13 +6,16 @@ import os
 import re
 import threading
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, TypeVar
+
+from pydantic import BaseModel
 
 from jsonio import canonical_bytes, sha256_hex
 
 # One cache line starts `{"key": "<key>"`: json.dumps(sort_keys=True) puts "key" before "value". A reader can
 # find a key's line without parsing every value.
 KEY_LINE = re.compile(rb'^\s*\{"key":\s*"([^"]+)"')
+T = TypeVar("T", bound=BaseModel)
 
 
 def cache_key(payload: dict[str, Any]) -> str:
@@ -62,3 +65,27 @@ class JsonlCache:
             with open(self.path, "a", encoding="utf-8", newline="\n") as fh:
                 fh.write(("\n" if self._newline else "") + line)
             self._newline = False
+
+
+def decode(value: Any, output_type: type[T]) -> tuple[T, str | None, str | None, int, int]:
+    """A cached value as (output, model, served_model, input_tokens, output_tokens).
+
+    `ask` stores `{"output", "model", "served_model", "usage": {"input_tokens", "output_tokens"}, **extra}`;
+    the older shapes are read too (modelcall/tests/test_golden_keys.py pins them):
+    - no `"output"`: the value holds the output's own fields beside other metadata (judge, propose);
+    - tokens in `value["usage"]` or at the top level (synth);
+    - `served_model` at the top level or inside `usage` (baselines).
+    It never makes an output up: a flat value whose fields do not validate raises pydantic's ValidationError.
+    A cached failure (`"too_long": True`) is `call.ask`'s to handle and never reaches here."""
+    if "output" in value:
+        raw = value["output"]
+    else:
+        raw = {k: value[k] for k in output_type.model_fields if k in value}
+    usage = value.get("usage") or {}
+
+    def tokens(name: str) -> int:
+        return int(usage.get(name, value.get(name)) or 0)
+
+    return (output_type.model_validate(raw), value.get("model"),
+            value.get("served_model") or usage.get("served_model"),
+            tokens("input_tokens"), tokens("output_tokens"))

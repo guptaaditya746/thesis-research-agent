@@ -50,6 +50,7 @@ INJECTED = ("evidence_type", "field_schema", "links", "roles", "description", "q
 REGEX_SOURCES = (base.HERE / "screen.py", *base.SHARED_SOURCES)
 LLM_SOURCES = (base.HERE / "screen.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "screen-v1.md",
                base.ROOT / "modelcall" / "gateway.py", base.ROOT / "modelcall" / "pins.py",
+               base.ROOT / "modelcall" / "call.py",
                base.ROOT / "modelcall" / "prompt.py",
                base.ROOT / "evidence" / "recording.py", *base.SHARED_SOURCES)
 LLM_DEFAULTS: dict[str, Any] = {"model": "orch-model", "prompt": "screen-v1.md", "temperature": 0.0, "seed": 0,
