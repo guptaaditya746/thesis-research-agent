@@ -82,6 +82,7 @@ from .evmodels import (
     TruthAnswer,
     VariantInfo,
 )
+from modelcall.cache import KEY_LINE
 from .files import ID, RUN_SEP, NotFound, check_id, inside, read_json, read_jsonl, signature
 from .models import Claim, ClaimRef, ModelCall, Step
 from .settings import Settings
@@ -91,7 +92,6 @@ ENGINE_MARKERS = ("events.jsonl", "protocol.yaml", "funnel.json", "calls")   # w
 STEPS = ("frame", "draft", "critic", "cards", "freeze")
 STEP_FILES = {"frame": "frame.json", "draft": "draft.yaml", "critic": "critic.json", "cards": "cards.json",
               "freeze": "proposal.json"}
-KEY_LINE = re.compile(rb'^\s*\{"key":\s*"([^"]+)"')   # gold.llm.JsonlCache lines: sort_keys puts "key" first
 REVISION_FILE = re.compile(r"^protocol\.v(\d+)\.yaml$")
 OUTPUT_HEAD = 4096
 
@@ -142,7 +142,7 @@ def segments(text: str, spans: Iterable[tuple[int, int, str, str]]) -> list[Segm
 
 
 class RecordCache:
-    """Random access to a gold.llm.JsonlCache file without loading every value: one scan for the byte offset of
+    """Random access to a modelcall.JsonlCache file without loading every value: one scan for the byte offset of
     each key's last line (a later line wins, as JsonlCache.load does), redone when the file changes. The engine's
     cache holds every model call's messages and every agent record, so loading it whole per request (what
     JsonlCache does) would not do; no library indexes JSON lines by key, hence this small scanner.

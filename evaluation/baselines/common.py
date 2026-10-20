@@ -23,7 +23,7 @@ from pydantic_ai.models import Model
 
 from jsonio import sha256_hex
 from evidence import protocol as protocol_module, rules
-from gold.llm import JsonlCache, cache_key, model_name, prompt_sha256, redact, run_sync, settings, structured_reply
+from modelcall import JsonlCache, cache_key, model_name, prompt_sha256, redact, run_sync, settings, structured_reply
 
 DEFAULT_PROTOCOL = Path(__file__).resolve().parents[2] / "evidence" / "protocols" / "rag-factuality.yaml"
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
@@ -126,7 +126,7 @@ def cached_reply(cache: JsonlCache | None, instructions: str, prompt: str, *, mo
     """One schema-constrained call (temperature 0, fixed seed), cached by prompt hash, model and input.
 
     Returns the reply (an `output_type`) and its record: model, served model, tokens, prompt hash, cache
-    key, whether it came from the cache. The key never contains the API key (gold.llm reads it from the
+    key, whether it came from the cache. The key never contains the API key (modelcall reads it from the
     environment).
     """
     record = {"prompt_sha256": prompt_sha256(instructions, output_type), "model": model_id or model_name(model),

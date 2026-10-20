@@ -49,7 +49,7 @@ def make_renderer(args: argparse.Namespace, out: Path):
         from synth.render_template import TemplateRenderer
         renderer: corpus.Renderer = TemplateRenderer()
     else:
-        from gold.llm import openai_model
+        from modelcall import openai_model
         from synth.render_llm import LlmRenderer
         cache = args.cache or out / ".synth-cache" / "llm.jsonl"
         renderer = LlmRenderer(openai_model(args.model), cache, attempts=args.attempts,

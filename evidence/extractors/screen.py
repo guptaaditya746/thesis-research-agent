@@ -35,7 +35,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from agent.anchor import AnchorError, find
-from gold import llm as gold_llm
+import modelcall
 
 from ..contract import (Coverage, ExtractionError, ExtractionResult, ExtractionTask, ExtractorSpec, Item, Rejected,
                         RunContext, Span)
@@ -49,7 +49,8 @@ ROLE = SCREEN_ROLES[0]
 INJECTED = ("evidence_type", "field_schema", "links", "roles", "description", "question_metrics", "compare")
 REGEX_SOURCES = (base.HERE / "screen.py", *base.SHARED_SOURCES)
 LLM_SOURCES = (base.HERE / "screen.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "screen-v1.md",
-               base.ROOT / "gold" / "llm.py", base.ROOT / "evidence" / "recording.py", *base.SHARED_SOURCES)
+               base.ROOT / "modelcall" / "gateway.py", base.ROOT / "modelcall" / "prompt.py",
+               base.ROOT / "evidence" / "recording.py", *base.SHARED_SOURCES)
 LLM_DEFAULTS: dict[str, Any] = {"model": "orch-model", "prompt": "screen-v1.md", "temperature": 0.0, "seed": 0,
                                 "max_tokens": 1024, "head_chars": 12000}
 
@@ -134,8 +135,8 @@ class LLMScreen:
             raise ValueError("llm_screen: head_chars must be positive")
         config_out = {k: cfg[k] for k in ("model", "prompt", "temperature", "seed", "max_tokens", "head_chars")}
         config_out |= {"evidence_type": SCREEN_TYPE, "question": self.question,
-                       "prompt_sha256": gold_llm.prompt_sha256(self.instructions, ScreenReply),
-                       "model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
+                       "prompt_sha256": modelcall.prompt_sha256(self.instructions, ScreenReply),
+                       "model_settings": dict(modelcall.settings(temperature=cfg["temperature"], seed=cfg["seed"],
                                                                 max_tokens=cfg["max_tokens"]))}
         self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="llm", evidence_types=(SCREEN_TYPE,),
                                   code_sha256=base.source_sha256(*LLM_SOURCES), config=config_out,

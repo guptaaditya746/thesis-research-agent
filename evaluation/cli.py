@@ -47,14 +47,14 @@ def _question(args: argparse.Namespace) -> str:
 
 def _model(alias: str) -> tuple[Any, str]:
     """The pydantic-ai model for an alias, and the identity its cache keys use (the pinned weights for orch-model)."""
-    from gold.llm import openai_model
+    from modelcall import openai_model
 
     pinned = f"{ORCHESTRATOR['name']}@{ORCHESTRATOR['revision']}" if alias == ORCHESTRATOR["alias"] else alias
     return openai_model(alias), pinned
 
 
 def _cache(args: argparse.Namespace, system: str) -> Any:
-    from gold.llm import JsonlCache
+    from modelcall import JsonlCache
 
     return JsonlCache(args.cache or args.out / f"{system}-calls.jsonl")
 

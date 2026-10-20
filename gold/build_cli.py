@@ -23,7 +23,7 @@ from typing import Any
 
 from agent.concept import validate_concept
 
-from . import llm
+import modelcall
 from .build import REPO, BuildSettings, BuildStopped, FolderInUse, QuestionDir, build, live_stage, outcome, read_jsonl
 from .chunks import GoldCorpus
 
@@ -53,8 +53,8 @@ def _corpus(args: argparse.Namespace) -> GoldCorpus:
     return GoldCorpus(Path(root), Path(args.manifest or Path(root) / "manifest.json"))
 
 
-def _rotation(args: argparse.Namespace) -> llm.Rotation:
-    return llm.Rotation(aliases=tuple(a.strip() for a in args.models.split(",") if a.strip()))
+def _rotation(args: argparse.Namespace) -> modelcall.Rotation:
+    return modelcall.Rotation(aliases=tuple(a.strip() for a in args.models.split(",") if a.strip()))
 
 
 def _settings(args: argparse.Namespace, **extra: Any) -> BuildSettings:
@@ -231,7 +231,7 @@ def _common(p: argparse.ArgumentParser, *, corpus: bool = False, models: bool = 
         p.add_argument("--corpus", type=Path, help="frozen Markdown corpus (default: $CORPUS)")
         p.add_argument("--manifest", type=Path, help="corpus manifest (default: <corpus>/manifest.json)")
     if models:
-        p.add_argument("--models", default=",".join(llm.SUB_ALIASES),
+        p.add_argument("--models", default=",".join(modelcall.SUB_ALIASES),
                        help="LiteLLM aliases used in turn (default: %(default)s)")
         p.add_argument("--concurrency", type=_positive_int, help="calls in flight (default: $GOLD_CONCURRENCY, else 6)")
         p.add_argument("--timeout", type=_positive_float,

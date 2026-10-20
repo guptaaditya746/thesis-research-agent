@@ -25,7 +25,7 @@ from typing import Any
 from pydantic_ai.models import Model
 
 from evidence.agentic.runner import AgentJob, AgentRunner
-from gold.llm import JsonlCache, redact
+from modelcall import JsonlCache, redact
 
 from .common import DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, map_answer
 

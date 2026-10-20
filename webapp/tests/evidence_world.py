@@ -194,7 +194,7 @@ def build(root: Path, *, agent: bool | None = None) -> EvidenceWorld:
     from evaluation.baselines.rag import rag_baseline
     from evidence import engine
     from evidence.agentic.runner import ResearchAgentRunner
-    from gold.llm import JsonlCache
+    from modelcall import JsonlCache
     from synth import cli as synth
 
     agent = POSIX if agent is None else agent

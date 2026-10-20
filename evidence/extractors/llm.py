@@ -1,7 +1,7 @@
 """Single-call LLM extractors, one per evidence type (kind llm, determinism near_exact).
 
 Per chunk of the task's scope (gold/chunks.py, section-aware) one schema-constrained call
-(gold/llm.structured_reply through the run's recorder, temperature 0, fixed seed) lists the items with
+(modelcall.structured_reply through the run's recorder, temperature 0, fixed seed) lists the items with
 their fields, links to context items and a verbatim quote per span role. Every quote is anchored with
 agent/anchor.find against the whole document; quotes rejected for a reason a new quote can fix get one
 retry call per chunk with the reason (as gold/extract.py does). A `value` span is narrowed to the number
@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from agent.anchor import AnchorError, Selector, find, selector_at
-from gold import llm as gold_llm
+import modelcall
 from gold.chunks import split
 
 from ..contract import (Coverage, ExtractionError, ExtractionResult, ExtractionTask, ExtractorSpec, Item, Rejected,
@@ -29,8 +29,8 @@ DEFAULTS: dict[str, Any] = {"model": "orch-model", "prompt": "extract-v1.md", "r
                             "temperature": 0.0, "seed": 0, "max_tokens": 4096, "retry_max_tokens": 2048,
                             "chunk_chars": 12000, "quote_retry": 1}
 SOURCES = (base.HERE / "llm.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "extract-v1.md",
-           llm_schema.PROMPT_DIR / "retry-v1.md", base.ROOT / "gold" / "llm.py", base.ROOT / "evidence" / "recording.py",
-           *base.SHARED_SOURCES)
+           llm_schema.PROMPT_DIR / "retry-v1.md", base.ROOT / "modelcall" / "gateway.py",
+           base.ROOT / "modelcall" / "prompt.py", base.ROOT / "evidence" / "recording.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
 
 
@@ -61,12 +61,12 @@ class LLMExtractor:
         config_out = {k: cfg[k] for k in ("model", "prompt", "retry_prompt", "temperature", "seed", "max_tokens",
                                           "retry_max_tokens", "chunk_chars", "quote_retry")}
         config_out |= {"evidence_type": evidence_type,
-                       "prompt_sha256": gold_llm.prompt_sha256(self.instructions, self.output_type),
-                       "retry_prompt_sha256": gold_llm.prompt_sha256(self.retry_instructions, llm_schema.Retry),
+                       "prompt_sha256": modelcall.prompt_sha256(self.instructions, self.output_type),
+                       "retry_prompt_sha256": modelcall.prompt_sha256(self.retry_instructions, llm_schema.Retry),
                        # what every call sends (thinking off via extra_body): a change is a new extractor id
-                       "model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
+                       "model_settings": dict(modelcall.settings(temperature=cfg["temperature"], seed=cfg["seed"],
                                                                 max_tokens=cfg["max_tokens"])),
-                       "retry_model_settings": dict(gold_llm.settings(temperature=cfg["temperature"], seed=cfg["seed"],
+                       "retry_model_settings": dict(modelcall.settings(temperature=cfg["temperature"], seed=cfg["seed"],
                                                                       max_tokens=cfg["retry_max_tokens"]))}
         self.spec = ExtractorSpec(name=f"llm_{evidence_type}", version=VERSION, kind="llm",
                                   evidence_types=(evidence_type,),  # type: ignore[arg-type]

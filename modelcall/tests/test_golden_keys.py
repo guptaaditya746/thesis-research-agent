@@ -18,7 +18,7 @@ from evidence import calls as engine_calls
 from evidence.propose.common import CACHE, ask
 from gold import judge
 from gold.calls import Caller, PromptFile
-from gold.llm import JsonlCache, Rotation, run_sync
+from modelcall import JsonlCache, Rotation, run_sync
 from synth.render_llm import LlmRenderer, PaperReply
 
 

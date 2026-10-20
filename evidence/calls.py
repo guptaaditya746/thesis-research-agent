@@ -19,7 +19,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from agent.anchor import Index
-from gold.llm import JsonlCache, redact
+from modelcall import JsonlCache, redact
 
 from .contract import ExtractionError, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Item, digest
 from .recording import Provider, Recorder

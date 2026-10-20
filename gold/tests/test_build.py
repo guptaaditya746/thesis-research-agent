@@ -18,8 +18,9 @@ from pydantic_ai.models.function import FunctionModel
 from agent.anchor import read_text
 from jsonio import sha256_hex
 from agent.concept import concept_sha256
+import modelcall
 from gold import build as build_module
-from gold import calls, extract, llm, screen
+from gold import calls, extract, screen
 from gold.build import (
     BuildSettings,
     BuildStopped,
@@ -469,8 +470,8 @@ def test_caller_times_out_and_does_not_cache_failures(tmp_path):
         await asyncio.sleep(1)
 
     async def go():
-        cache = llm.JsonlCache(tmp_path / "c.jsonl")
-        caller = calls.Caller(llm.Rotation([FunctionModel(slow)]), cache, timeout_s=0.05)
+        cache = modelcall.JsonlCache(tmp_path / "c.jsonl")
+        caller = calls.Caller(modelcall.Rotation([FunctionModel(slow)]), cache, timeout_s=0.05)
         with pytest.raises(calls.CallError) as exc:
             await caller.call("screen", screen.PROMPT, screen.Screening, "x", max_tokens=10)
         return exc.value, caller, cache
@@ -486,7 +487,7 @@ def test_a_context_window_400_is_too_long_and_its_verdict_cached(tmp_path):
                                                                  "maximum context length is 32768 tokens"}})
 
     async def go():
-        caller = calls.Caller(llm.Rotation([FunctionModel(full)]), llm.JsonlCache(tmp_path / "c.jsonl"))
+        caller = calls.Caller(modelcall.Rotation([FunctionModel(full)]), modelcall.JsonlCache(tmp_path / "c.jsonl"))
         errors = []
         for _ in range(2):
             with pytest.raises(calls.CallError) as exc:
@@ -509,7 +510,7 @@ def test_failure_reasons_never_carry_the_key(tmp_path, monkeypatch):
                            f"{sha256_hex(key.encode())}; key {key}")
 
     async def go():
-        caller = calls.Caller(llm.Rotation([FunctionModel(denied)]), llm.JsonlCache(tmp_path / "c.jsonl"))
+        caller = calls.Caller(modelcall.Rotation([FunctionModel(denied)]), modelcall.JsonlCache(tmp_path / "c.jsonl"))
         with pytest.raises(calls.CallError) as exc:
             await caller.call("screen", screen.PROMPT, screen.Screening, "x", max_tokens=10)
         return exc.value
@@ -521,10 +522,10 @@ def test_failure_reasons_never_carry_the_key(tmp_path, monkeypatch):
 
 
 def test_cache_key_ignores_which_replica_answers():
-    sub = llm.Rotation([llm.openai_model("sub-model-1"), llm.openai_model("sub-model-2")])
-    one = llm.Rotation([llm.openai_model("sub-model-1")])
+    sub = modelcall.Rotation([modelcall.openai_model("sub-model-1"), modelcall.openai_model("sub-model-2")])
+    one = modelcall.Rotation([modelcall.openai_model("sub-model-1")])
     assert calls.model_key(sub.models) == calls.model_key(one.models) == \
-        f"{llm.SUB_MODEL['name']}@{llm.SUB_MODEL['revision']}"
+        f"{modelcall.SUB_MODEL['name']}@{modelcall.SUB_MODEL['revision']}"
     assert calls.model_key([FunctionModel(lambda m, i: None, model_name="b"),
                             FunctionModel(lambda m, i: None, model_name="a")]) == "a+b"
 

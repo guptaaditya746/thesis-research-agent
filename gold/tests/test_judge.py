@@ -18,7 +18,8 @@ from agent import anchor
 from jsonio import sha256_hex
 from agent.pairs import write_pairs
 from agent.tests.runs import baseline_run, research_run
-from gold import judge, llm, review
+import modelcall
+from gold import judge, review
 
 from .fixtures import NQ, Env, env, pulled  # noqa: F401
 
@@ -61,7 +62,7 @@ def test_support_verdict_and_cache(tmp_path: Path) -> None:
     first = j.support(SPIDER, QUOTE)
     prompt = (judge.PROMPT_DIR / "judge-support.txt").read_text(encoding="utf-8")
     assert first == {"label": "supports", "rationale": "the quote names Spider", "model": "scripted-judge",
-                     "served_model": "scripted-judge", "prompt_sha256": llm.prompt_sha256(prompt, judge.SupportReply),
+                     "served_model": "scripted-judge", "prompt_sha256": modelcall.prompt_sha256(prompt, judge.SupportReply),
                      "cached": False}
     assert j.support(SPIDER, QUOTE) == {**first, "cached": True} and len(calls) == 1
     line = json.loads((tmp_path / judge.CACHE_FILE).read_text(encoding="utf-8"))["value"]  # what was asked, of whom
@@ -168,7 +169,7 @@ def test_sync_calls_reuse_the_http_client(tmp_path: Path, openai_server: FakeOpe
     """The real model class over keep-alive HTTP: one sync call after another, from this thread and
     from inside other event loops, all reach the server and all succeed (a pooled connection is only
     ever used by the loop that opened it)."""
-    j = judge.Judge(tmp_path, [llm.openai_model("sub-model-1", url=openai_server.url)])
+    j = judge.Judge(tmp_path, [modelcall.openai_model("sub-model-1", url=openai_server.url)])
     verdicts = [j.support({**SPIDER, "o": o}, QUOTE) for o in ("Spider", "Bird", "WikiSQL", "Spider")]
     assert [v["label"] for v in verdicts] == ["supports", "supports", "no", "supports"]
     assert len(openai_server.requests) == 3 and j.calls == 3  # the last one came from the cache

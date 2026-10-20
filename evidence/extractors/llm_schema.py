@@ -13,6 +13,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, create_model
 
+from modelcall import load_prompt
+
 from ..contract import ITEM_PREFIX, Focus, Item
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
@@ -20,7 +22,7 @@ SCALARS: dict[str, Any] = {"string": str, "number": float, "integer": int, "bool
 
 
 def read_prompt(name: str) -> str:
-    return (PROMPT_DIR / name).read_bytes().decode("utf-8").replace("\r\n", "\n")
+    return load_prompt(PROMPT_DIR / name).text
 
 
 def annotation(prop: dict[str, Any]) -> Any:

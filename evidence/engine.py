@@ -44,7 +44,7 @@ from typing import Any, Literal
 from agent.anchor import Index
 from jsonio import sha256_hex, write_json
 from agent.rundir import utc_now
-from gold.llm import JsonlCache
+from modelcall import JsonlCache
 
 from . import checks, extractors, graph, merge, synthesis
 from .calls import CallCache, EngineContext, Mode, NotRecorded
@@ -79,7 +79,7 @@ class Settings:
 
 
 def default_provider(alias: str) -> Any:
-    from gold.llm import openai_model  # the key comes from $LITELLM_MASTER_KEY only
+    from modelcall import openai_model  # the key comes from $LITELLM_MASTER_KEY only
     return openai_model(alias)
 
 

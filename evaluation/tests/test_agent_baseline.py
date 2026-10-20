@@ -11,7 +11,7 @@ from agent.concept import validate_concept
 from evaluation.baselines import agent as baseline
 from evaluation.score import score_answers
 from evidence.agentic.runner import AgentSettings, ResearchAgentRunner, write_agent_corpus
-from gold.llm import JsonlCache
+from modelcall import JsonlCache
 
 from . import fixtures as fx
 from .agentic_fakes import FakeRunner

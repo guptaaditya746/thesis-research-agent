@@ -1,15 +1,15 @@
 """Model calls of the gold builder and triage (M3): prompt files, result cache, concurrency, timeout.
 
-Every call goes through gold/llm.py (pydantic-ai on LiteLLM, schema-constrained output, thinking off,
-temperature and seed fixed) and the sub-model replicas in turn (`llm.Rotation`). Around it:
+Every call goes through modelcall (pydantic-ai on LiteLLM, schema-constrained output, thinking off,
+temperature and seed fixed) and the sub-model replicas in turn (`modelcall.Rotation`). Around it:
 
-- Prompts are files in gold/prompts/. Each output line records `prompt_sha256` = llm.prompt_sha256 of
+- Prompts are files in gold/prompts/. Each output line records `prompt_sha256` = modelcall.prompt_sha256 of
   the template and its output schema (the extraction schema depends on the concept, so its hash
   does too); the template's own file hash is recorded in doc.json.built.prompts. Templates are read
   with LF line ends whatever the checkout, so a hash is the same on Windows and on the cluster.
 - A call is keyed by the sha256 of its whole input: stage, prompt hash, the user prompt, the model
-  identity and the sampling settings (llm.cache_key). The key leaves out which replica answered:
-  sub-model-1 and -2 serve the same pinned model (llm.model_identity), so a rerun that happens to
+  identity and the sampling settings (modelcall.cache_key). The key leaves out which replica answered:
+  sub-model-1 and -2 serve the same pinned model (modelcall.model_identity), so a rerun that happens to
   rotate differently, or runs on one replica, still hits the cache. A rerun with the same inputs
   makes no model call; a stopped build resumes where it stopped (cache.jsonl).
 - Failures come in two kinds (`CallError.kind`). `failed` (a timeout, a server error, a reply the
@@ -19,7 +19,7 @@ temperature and seed fixed) and the sub-model replicas in turn (`llm.Rotation`).
   temperature 0, so the verdict is cached and the caller cuts its input instead (gold/build.py).
 - At most `concurrency` calls are in flight (GOLD_CONCURRENCY, default 6: the 3 sequences per replica
   that ran without preemption in L3), and each has its own timeout; waiting for a slot does not count.
-- Error reasons are short and pass llm.redact, so no key or key hash reaches a file or a log.
+- Error reasons are short and pass modelcall.redact, so no key or key hash reaches a file or a log.
 
 This module is model-agnostic apart from the gold prompts directory: C2's judge can use `Caller` too.
 """
@@ -39,7 +39,7 @@ from pydantic_ai.messages import ModelResponse
 from jsonio import sha256_hex
 from agent.rundir import utc_now
 
-from . import llm
+import modelcall
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 T = TypeVar("T", bound=BaseModel)
@@ -54,20 +54,20 @@ class PromptFile:
     name: str           # file name in gold/prompts/
     text: str           # LF line ends
     file_sha256: str    # sha256 of `text` (UTF-8)
-    sha256: str         # llm.prompt_sha256(text, output_type): what every output line records
+    sha256: str         # modelcall.prompt_sha256(text, output_type): what every output line records
 
     def json(self) -> dict[str, str]:
         return {"file": f"gold/prompts/{self.name}", "file_sha256": self.file_sha256, "prompt_sha256": self.sha256}
 
 
 def load_prompt(name: str, output_type: type[BaseModel]) -> PromptFile:
-    text = (PROMPT_DIR / name).read_bytes().decode("utf-8").replace("\r\n", "\n")
-    return PromptFile(name, text, sha256_hex(text.encode("utf-8")), llm.prompt_sha256(text, output_type))
+    prompt = modelcall.load_prompt(PROMPT_DIR / name, output_type)
+    return PromptFile(name, prompt.text, prompt.file_sha256, prompt.sha256)
 
 
 def model_key(models: list[Any]) -> str:
-    """The model identity in cache keys (llm.model_identity)."""
-    return llm.model_identity(models)
+    """The model identity in cache keys (modelcall.model_identity)."""
+    return modelcall.model_identity(models)
 
 
 class CallError(Exception):
@@ -93,7 +93,7 @@ def classify(exc: BaseException, messages: list[Any]) -> tuple[str, str]:
     squashed = text.casefold().replace(" ", "").replace("_", "")
     if isinstance(exc, ModelHTTPError) and exc.status_code == 400 and any(m in squashed for m in CONTEXT_MARKERS):
         return "too_long", "too_long: the prompt and max_tokens exceed the context window (HTTP 400)"
-    return "failed", llm.redact(text)[:300]
+    return "failed", modelcall.redact(text)[:300]
 
 
 class _Failed(Exception):
@@ -135,8 +135,8 @@ class Result(Generic[T]):
 @dataclass
 class Caller:
     """Cached, bounded, timed structured calls over a model rotation (see the module docstring)."""
-    rotation: llm.Rotation
-    cache: llm.JsonlCache
+    rotation: modelcall.Rotation
+    cache: modelcall.JsonlCache
     concurrency: int = 6
     timeout_s: float = 300.0
     temperature: float = 0.0
@@ -150,7 +150,7 @@ class Caller:
         self.model_key = model_key(self.rotation.models)
 
     def key(self, stage: str, prompt: PromptFile, user_prompt: str, max_tokens: int) -> str:
-        return llm.cache_key({
+        return modelcall.cache_key({
             "stage": stage, "prompt_sha256": prompt.sha256, "user_sha256": sha256_hex(user_prompt.encode("utf-8")),
             "model": self.model_key, "temperature": self.temperature, "seed": self.seed, "max_tokens": max_tokens,
         })
@@ -164,12 +164,12 @@ class Caller:
             self.on_change()
 
     async def _ask(self, prompt: PromptFile, output_type: type[T], user_prompt: str, model: Any,
-                   max_tokens: int) -> llm.Reply[T]:
+                   max_tokens: int) -> modelcall.Reply[T]:
         with capture_run_messages() as messages:
             try:
-                return await llm.structured_reply(
+                return await modelcall.structured_reply(
                     prompt.text, user_prompt, output_type, model=model,
-                    model_settings=llm.settings(temperature=self.temperature, seed=self.seed, max_tokens=max_tokens))
+                    model_settings=modelcall.settings(temperature=self.temperature, seed=self.seed, max_tokens=max_tokens))
             except Exception as exc:
                 raise _Failed(exc, list(messages)) from exc
 
@@ -204,7 +204,7 @@ class Caller:
                 kind, reason = classify(exc.exc, exc.messages) if isinstance(exc, _Failed) else classify(exc, [])
                 if kind == "too_long":
                     self.counters.too_long += 1
-                    self.cache.put(key, {"too_long": True, "reason": reason, "model": llm.model_name(model),
+                    self.cache.put(key, {"too_long": True, "reason": reason, "model": modelcall.model_name(model),
                                          "prompt_sha256": prompt.sha256, "at": utc_now()})
                 else:
                     self.counters.failed += 1
@@ -218,7 +218,7 @@ class Caller:
         if refused:
             self.counters.failed += 1
             self._changed()
-            raise CallError(stage, llm.redact(refused)[:300])
+            raise CallError(stage, modelcall.redact(refused)[:300])
         self.counters.made += 1
         if reply.served_model:
             self.served.add(reply.served_model)

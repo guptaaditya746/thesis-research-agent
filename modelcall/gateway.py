@@ -1,4 +1,4 @@
-"""LLM calls outside the agent loop (gold builder, judge, chat), shared by gold/, scoring/ and webapp/.
+"""The model side of a call: pinned models, LiteLLM endpoints, rotation, settings, structured replies.
 
 pydantic-ai on LiteLLM's OpenAI-compatible endpoint. Every call has thinking off, a fixed temperature
 and seed, and (for `structured`) its reply decoded under the output type's JSON schema: pydantic-ai's
@@ -8,13 +8,10 @@ read from $LITELLM_MASTER_KEY when a model is made and never logged or hashed.
 """
 from __future__ import annotations
 
-import asyncio
 import itertools
-import json
 import os
 import re
 import threading
-from collections.abc import Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
 
@@ -26,61 +23,20 @@ from pydantic_ai.profiles.openai import OpenAIModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.settings import ModelSettings
 
-from jsonio import canonical_bytes, sha256_hex
-from agent.rundir import ORCHESTRATOR, SUBAGENTS
+from jsonio import sha256_hex
 
 DEFAULT_BASE_URL = "http://127.0.0.1:4000/v1"
+
+# Fixed run settings (docs/earlier-work.md, Fixed run settings).
+ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
+                "thinking": False, "max_tokens": 4096, "context_tokens": 65536}
+SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
+              "revision": "5a5a776", "context_tokens": 32768} for i in (1, 2)]
 SUB_ALIASES = tuple(s["alias"] for s in SUBAGENTS)  # sub-model-1, sub-model-2
 SUB_MODEL = {"name": SUBAGENTS[0]["name"], "revision": SUBAGENTS[0].get("revision")}
 ORCH_ALIAS = ORCHESTRATOR["alias"]  # orch-model: the one model of every extractor and both baselines
 ORCH_MODEL = {"name": ORCHESTRATOR["name"], "revision": ORCHESTRATOR.get("revision")}
 T = TypeVar("T", bound=BaseModel)
-R = TypeVar("R")
-
-
-# --- one event loop for every one-off model call -------------------------------------------------------
-# pydantic-ai's OpenAI models share one cached httpx client per process, and a pooled keep-alive connection
-# belongs to the loop that opened it: a second `asyncio.run` in the same process reuses a connection of the
-# first, closed loop and fails after the server answered ("Event loop is closed"). Sync callers therefore
-# run every call on this one loop in a daemon thread.
-
-_loop: asyncio.AbstractEventLoop | None = None
-_loop_lock = threading.Lock()
-
-
-def model_loop() -> asyncio.AbstractEventLoop:
-    """The loop model calls run on: started at first use in a daemon thread, never closed."""
-    global _loop
-    with _loop_lock:
-        if _loop is None:
-            _loop = asyncio.new_event_loop()
-            threading.Thread(target=_loop.run_forever, name="gold-model-loop", daemon=True).start()
-        return _loop
-
-
-def _running() -> asyncio.AbstractEventLoop | None:
-    try:
-        return asyncio.get_running_loop()
-    except RuntimeError:
-        return None
-
-
-def run_sync(coro: Coroutine[Any, Any, R]) -> R:
-    """Run a coroutine on the model loop and wait for it: from sync code in any thread, or from inside
-    another running loop (which then waits too; async code should await `on_model_loop` instead)."""
-    loop = model_loop()
-    if _running() is loop:
-        coro.close()
-        raise RuntimeError("a sync model call on the model loop would wait for itself; await the async call")
-    return asyncio.run_coroutine_threadsafe(coro, loop).result()
-
-
-async def on_model_loop(coro: Coroutine[Any, Any, R]) -> R:
-    """Await a coroutine on the model loop from any loop (directly when already on it)."""
-    loop = model_loop()
-    if _running() is loop:
-        return await coro
-    return await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(coro, loop))
 
 
 def base_url() -> str:
@@ -107,15 +63,20 @@ class Rotation:
             return self.models[next(self._cycle)]
 
 
+@dataclass(frozen=True)
+class CallSettings:
+    """The sampling settings of a call; thinking is always off."""
+    temperature: float = 0.0
+    seed: int = 0
+    max_tokens: int = 4096
+
+    def model_settings(self) -> ModelSettings:
+        return ModelSettings(temperature=self.temperature, seed=self.seed, max_tokens=self.max_tokens,
+                             extra_body={"chat_template_kwargs": {"enable_thinking": False}})
+
+
 def settings(*, temperature: float = 0.0, seed: int = 0, max_tokens: int = 4096) -> ModelSettings:
-    return ModelSettings(temperature=temperature, seed=seed, max_tokens=max_tokens,
-                         extra_body={"chat_template_kwargs": {"enable_thinking": False}})
-
-
-def prompt_sha256(instructions: str, output_type: type[BaseModel] | None = None) -> str:
-    """Hash of a prompt template and its output schema: recorded with every result it produced."""
-    schema = output_type.model_json_schema() if output_type else None
-    return sha256_hex(canonical_bytes({"instructions": instructions, "schema": schema}))
+    return CallSettings(temperature, seed, max_tokens).model_settings()
 
 
 def model_name(model: Model) -> str:
@@ -136,59 +97,14 @@ async def structured(instructions: str, user_prompt: str, output_type: type[T], 
     return result.output
 
 
-def cache_key(payload: dict[str, Any]) -> str:
-    """Key for a result cache line: sha256 of the canonical call input (prompt hash, model, inputs)."""
-    return sha256_hex(canonical_bytes(payload))
-
-
-class JsonlCache:
-    """Append-only `{key, value}` lines; a rerun with the same inputs costs no model call.
-
-    A process killed in the middle of an append (a Slurm time limit, a full quota) leaves a cut last
-    line. Loading skips lines that do not parse (counted in `skipped`; their calls are simply made
-    again), and the first append after such a load starts on a new line, so the cut line never
-    swallows a good one."""
-
-    def __init__(self, path: os.PathLike[str] | str) -> None:
-        self.path = os.fspath(path)
-        self._lock = threading.Lock()
-        self._data: dict[str, Any] = {}
-        self.skipped = 0
-        self._newline = False  # the file does not end with a line break: start the next append with one
-        if os.path.exists(self.path):
-            with open(self.path, "rb") as fh:
-                data = fh.read()
-            self._newline = bool(data) and not data.endswith(b"\n")
-            for line in data.split(b"\n"):
-                if not line.strip():
-                    continue
-                try:
-                    row = json.loads(line)
-                    self._data[row["key"]] = row["value"]
-                except (ValueError, KeyError, TypeError):
-                    self.skipped += 1
-
-    def get(self, key: str) -> Any | None:
-        return self._data.get(key)
-
-    def put(self, key: str, value: Any) -> None:
-        with self._lock:
-            self._data[key] = value
-            os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-            line =json.dumps({"key": key, "value": value}, ensure_ascii=False, sort_keys=True) + "\n"
-            with open(self.path, "a", encoding="utf-8", newline="\n") as fh:
-                fh.write(("\n" if self._newline else "") + line)
-            self._newline = False
-
-
 def model_identity(models: list[Model]) -> str:
-    """The model identity for cache keys: the pinned sub-model (name@revision, agent/rundir.SUBAGENTS)
+    """The model identity for cache keys: the pinned sub-model (name@revision, modelcall/gateway.SUBAGENTS)
     for its replicas, so it does not matter which replica answered; the pinned orchestrator model
-    (agent/rundir.ORCHESTRATOR) for `orch-model`; else the sorted model names.
+    (modelcall/gateway.ORCHESTRATOR) for `orch-model`; else the sorted model names.
 
     The identity is the pin, not observed from the server: the serving profile pins the same revision
     and serves it as `sub-model` (vLLM's served name), which names no weights. Serving other weights
-    behind the aliases needs a new pin in agent/rundir, which changes every key."""
+    behind the aliases needs a new pin in modelcall/gateway, which changes every key."""
     names = sorted({model_name(m) for m in models})
     if set(names) <= set(SUB_ALIASES):
         return f"{SUB_MODEL['name']}@{SUB_MODEL['revision']}"

@@ -21,7 +21,7 @@ from agent.anchor import Index
 from jsonio import sha256_hex
 from evidence.contract import (ExtractionError, ExtractionResult, ExtractionTask, ExtractorSpec, Item, Rejected,
                                RunContext, digest)
-from gold.llm import redact
+from modelcall import redact
 
 from . import convert
 from .runner import AgentJob, AgentRunner, AgentSettings, ResearchAgentRunner

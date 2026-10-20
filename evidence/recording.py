@@ -1,11 +1,11 @@
 """Recorded model calls: the only way an extractor reaches a model (contract section 12, `ctx.llm()`).
 
-Every call goes through gold/llm.structured_reply (schema-constrained output, thinking off, fixed
+Every call goes through modelcall.structured_reply (schema-constrained output, thinking off, fixed
 temperature and seed) and leaves a record: the request (model alias, prompt hash, instructions, user
 prompt, settings), the response (the decoded output, the served model name), token usage, or the
 redacted error. The engine stores the records with the extractor's result in the cache, so a replay
 needs no model. The model itself is injected (`provider`: alias -> pydantic-ai Model), so tests use
-FunctionModels and real runs gold/llm.openai_model, which reads the key from $LITELLM_MASTER_KEY only.
+FunctionModels and real runs modelcall.openai_model, which reads the key from $LITELLM_MASTER_KEY only.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from pydantic_ai import capture_run_messages
 from pydantic_ai.messages import ModelMessagesTypeAdapter
 from pydantic_ai.models import Model
 
-from gold import llm
+import modelcall
 
 from .contract import digest
 
@@ -50,7 +50,7 @@ class Recorder:
     def structured(self, alias: str, instructions: str, user_prompt: str, output_type: type[T], *,
                    temperature: float = 0.0, seed: int = 0, max_tokens: int = 4096) -> tuple[T, str]:
         """One schema-constrained call; returns the output and the id of its record."""
-        request = {"model": alias, "prompt_sha256": llm.prompt_sha256(instructions, output_type),
+        request = {"model": alias, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
                    "instructions": instructions, "user_prompt": user_prompt,
                    "settings": {"temperature": temperature, "seed": seed, "max_tokens": max_tokens}}
         call_id = f"mc-{digest([request, len(self.records)])[:16]}"
@@ -59,13 +59,13 @@ class Recorder:
         if self.provider is None:
             record["error"] = "no model provider: this run cannot make model calls"
             raise NoModel(record["error"], call_id)
-        settings = llm.settings(temperature=temperature, seed=seed, max_tokens=max_tokens)
+        settings = modelcall.settings(temperature=temperature, seed=seed, max_tokens=max_tokens)
         with capture_run_messages() as messages:
             try:
-                reply = _run(llm.structured_reply(instructions, user_prompt, output_type,
+                reply = _run(modelcall.structured_reply(instructions, user_prompt, output_type,
                                                   model=self.provider(alias), model_settings=settings))
             except Exception as exc:  # noqa: BLE001 - every failure becomes a recorded, redacted reason
-                record["error"] = llm.redact(f"{type(exc).__name__}: {exc}")[:300]
+                record["error"] = modelcall.redact(f"{type(exc).__name__}: {exc}")[:300]
                 record["messages"] = _messages(messages)
                 raise ModelCallError(record["error"], call_id) from exc
         record["response"] = {"output": reply.output.model_dump(mode="json"), "model": reply.model,

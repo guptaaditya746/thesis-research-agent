@@ -35,7 +35,7 @@ Three packages, each owned by one builder, talk only through the files below.
 Shared code, written before the split and changed only by agreement: `evidence/contract.py` (the
 contract's pydantic models), `evidence/rules.py` (effect direction and answer label, used by both the
 engine and the ground-truth generator). Existing code reused: `agent/anchor.py`, `jsonio/__init__.py`,
-`agent/chain.py`, `gold/llm.py`, `gold/chunks.py`, `agent/prov.py`.
+`agent/chain.py`, `modelcall/`, `gold/chunks.py`, `agent/prov.py`.
 
 **Hard rule:** the engine and both baselines never read `ground_truth.json`, `fidelity.json` or
 `corpus.json`; only `manifest.json` and `papers/`. A test enforces it.
@@ -112,7 +112,7 @@ runs/evidence/<run_id>/
   answer.json      A4
 ```
 
-The record cache is `<cache_dir>/extractor_calls.jsonl` (`gold/llm.JsonlCache`), key
+The record cache is `<cache_dir>/extractor_calls.jsonl` (`modelcall.JsonlCache`), key
 `digest([extractor_id, task_sha256])`, value the full ExtractionResult plus its model-call records.
 `evidence replay <run>` uses the cache only (a miss is an error) and must reproduce every output hash in
 `run.json`; `evidence reexec <run>` bypasses it and writes a stability report.
@@ -350,7 +350,7 @@ the items it counted, so a number in the answer walks back to the table cell it 
 
 - **Cache key** = `sha256(extractor_id, task_sha256)`. The cache stores the full `ExtractionResult` and the
   records of every model call inside it (request and response; for an agent its whole trajectory). It is
-  the `JsonlCache` of `gold/llm.py`, append-only.
+  the `JsonlCache` of `modelcall/`, append-only.
 - **Normal run:** a cache hit returns the stored result; a miss runs the extractor and stores the result.
 - **Replay** (`engine replay <run>`): cache only. A miss is an error ("not recorded"), never a new call. The
   run's evidence, graph and answer are rebuilt and must hash the same as recorded. This is what "every
@@ -372,7 +372,7 @@ the items it counted, so a number in the answer walks back to the table cell it 
 |---|---|
 | regex | patterns with flags, the mapping from groups to fields, value normalisers (number formats, percent → fraction) |
 | model | model name and weights sha256, thresholds, input window |
-| llm | model alias and served revision, `prompt_sha256` (instructions + output schema, `gold/llm.py`), temperature 0, seed, max_tokens, decoding = JSON schema, chunking settings (`gold/chunks.py`), quote-retry rule (one retry with the reason, as `gold/extract.py`) |
+| llm | model alias and served revision, `prompt_sha256` (instructions + output schema, `modelcall/`), temperature 0, seed, max_tokens, decoding = JSON schema, chunking settings (`gold/chunks.py`), quote-retry rule (one retry with the reason, as `gold/extract.py`) |
 | agent | model alias and revision, prompt version and hash, allowed commands, the `claim` command (its accepted claims become items), budget, seed, sandbox mode; its trajectory is part of the record |
 
 ## B10. Several extractors for one evidence type
@@ -406,7 +406,7 @@ class Extractor(Protocol):
 
 class RunContext:                  # given by the engine, the only way out of the extractor
     def document(self) -> anchor.Index           # the text, normalised once
-    def llm(self) -> RecordingModel             # LiteLLM through gold/llm.py; every call recorded
+    def llm(self) -> RecordingModel             # LiteLLM through modelcall/; every call recorded
     def agent(self, budget) -> RecordingAgent   # agentic extractors only; trajectory recorded
 ```
 
@@ -420,7 +420,7 @@ schemas are published with the library so results can be validated outside Pytho
 | Span selector, quote check, re-finding a span | `agent/anchor.py` (`Selector`, `find`, `resolve`) |
 | Canonical JSON and hashes | `jsonio/__init__.py` |
 | Hash-chained event log | `agent/broker.py` |
-| Schema-constrained LLM calls, prompt hash, cache | `gold/llm.py` (`structured`, `prompt_sha256`, `cache_key`, `JsonlCache`) |
+| Schema-constrained LLM calls, prompt hash, cache | `modelcall/` (`structured`, `prompt_sha256`, `cache_key`, `JsonlCache`) |
 | Section-aware chunking, quote retry, per-paper coverage | `gold/chunks.py`, `gold/extract.py`, `gold/screen.py` |
 | Agentic extractor | `agent/loop.py`, the sandbox, the `claim` command |
 | Replay and re-execution pattern | `agent replay`, `agent reexec` |
@@ -613,7 +613,7 @@ as files, so Codex, tests and later the web app drive it the same way. Directory
 Choice points (fixed): 1 screening question and terms; 2 treatment and control role definitions;
 3 question metrics and direction; 4 `min_effect`; 5 pairing preference; 6 label table; 7 cascade per
 type and funnel strategy; 8 locate strategy. A decision without a reason is refused. Every model call
-goes through `gold/llm.structured` with the record cache; nothing runs a proposed protocol automatically.
+goes through `modelcall.structured` with the record cache; nothing runs a proposed protocol automatically.
 
 **Vocabulary snapshot** `evidence/vocab/<name>.json`: `{name, sha256, sources: [{name, version, url}],
 terms: [{id, label, synonyms, kind: metric | condition | method, source, higher_is_better?}]}`, built
@@ -644,9 +644,9 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   `--force`. Refusals are `ProposalError`, exit 2 with the message (also a malformed vocabulary, a broken
   base revision, a non-string choice); a failed model call exits 1. The flow hashes raw bytes, so
   `.gitattributes` keeps `proposals/**`, `evidence/propose/**` and `evidence/vocab/**` LF.
-- **Model calls.** frame, critic and cards make one call each through `gold.llm.structured` (temperature 0,
-  seed 0, thinking off), cached in `DIR/cache.jsonl` under `gold.llm.cache_key({step, prompt_sha256 (the
-  instructions and the output schema), model identity (gold.llm.model_identity: the pinned weights of
+- **Model calls.** frame, critic and cards make one call each through `modelcall.structured` (temperature 0,
+  seed 0, thinking off), cached in `DIR/cache.jsonl` under `modelcall.cache_key({step, prompt_sha256 (the
+  instructions and the output schema), model identity (modelcall.model_identity: the pinned weights of
   orch-model), input_sha256 (the user prompt), settings})`; a rerun with the same inputs makes no call.
   Each result file has `call: {step, model, prompt_sha256, cache_key, cached}`. A cached reply the step
   cannot use (a frame whose ids do not validate, a cached record that no longer fits the schema) would be
@@ -890,4 +890,4 @@ The §7.5 LLM proposer of 15 Oct is dropped: Part E replaces it.
    recorded in the agentic extractor's config as `{alias, name, revision}` (the pinned weights of an alias
    `agent/rundir` pins, else the alias as the name with revision `unpinned`, the same the model records);
    `evidence run --model` defaults to `orch-model` while
-   `engine.Settings.model` stays `None`; `gold/llm.model_identity` maps `orch-model` to its pin.
+   `engine.Settings.model` stays `None`; `modelcall.model_identity` maps `orch-model` to its pin.

@@ -43,7 +43,7 @@ from pathlib import Path
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from gold.llm import DEFAULT_BASE_URL
+from modelcall import DEFAULT_BASE_URL
 
 REPO = Path(__file__).resolve().parents[1]
 JOBS_DIR = ".jobs"   # under $EV; a leading dot keeps it out of every viewer listing (files.ID)

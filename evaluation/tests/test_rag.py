@@ -12,7 +12,7 @@ import pytest
 from evaluation.baselines import rag
 from evaluation.baselines.common import MAP_INSTRUCTIONS, SystemCorpus
 from evaluation.score import score_answers
-from gold.llm import JsonlCache
+from modelcall import JsonlCache
 
 from . import fixtures as fx
 from .helpers import Scripted, guard_corpus
@@ -181,7 +181,7 @@ def test_rag_baseline_two_live_calls_share_one_loop(tmp_path: Path) -> None:
     import threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-    from gold.llm import openai_model
+    from modelcall import openai_model
 
     prompts: list[str] = []
 
