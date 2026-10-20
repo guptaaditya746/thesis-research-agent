@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Architecture review: thesis-research-agent</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { useMaxWidth: true } });
+</script>
+<style>
+  .deep { background: linear-gradient(135deg, #0f172a, #1e293b); color: #f8fafc; }
+  .seam { border-style: dashed !important; }
+  .lbl { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+  .mermaid { display: flex; justify-content: center; }
+</style>
+</head>
+<body class="bg-stone-50 text-slate-900 font-sans">
+<main class="max-w-5xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+
+<header class="space-y-3">
+  <p class="lbl text-slate-500">Architecture review · 20 Oct 2026</p>
+  <h1 class="font-serif text-4xl">thesis-research-agent</h1>
+  <p class="text-sm text-slate-600">Scope: the hot spots of the last two weeks (evidence/, evaluation/, synth/, gold/, webapp/) plus the uncommitted <code>run_sync</code> diff.</p>
+  <div class="flex flex-wrap gap-4 text-xs text-slate-600 pt-2">
+    <span class="flex items-center gap-2"><span class="inline-block w-5 h-4 border border-slate-400 bg-white"></span>module</span>
+    <span class="flex items-center gap-2"><span class="inline-block w-5 h-0 border-t-2 border-dashed border-slate-500"></span>seam</span>
+    <span class="flex items-center gap-2"><span class="inline-block w-5 h-0 border-t-2 border-red-600"></span>leak / duplicated knowledge</span>
+    <span class="flex items-center gap-2"><span class="inline-block w-5 h-4 deep"></span>deep module</span>
+  </div>
+</header>
+
+<section id="candidates" class="space-y-10">
+
+<!-- 1 -->
+<article id="c1" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">1 · One deep cached model-call module</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-2 py-0.5">in-process</span>
+  </div>
+  <ul class="font-mono text-sm text-slate-700 space-y-0.5">
+    <li>gold/llm.py · structured / structured_reply / JsonlCache / cache_key / redact / run_sync</li>
+    <li>evaluation/baselines/common.py · cached_reply</li>
+    <li>evidence/propose/common.py · ask</li>
+    <li>gold/judge.py · Judge._ask_here / _call</li>
+    <li>gold/calls.py · Caller.key / call</li>
+    <li>synth/render_llm.py · LlmRenderer._call</li>
+    <li>evidence/recording.py · Recorder.structured / _run</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-3"><p class="lbl text-slate-500 mb-2">Before: six callers reassemble shallow parts</p>
+<pre class="mermaid">
+flowchart LR
+  B[baselines] & P[propose] & J[judge] & C[gold calls] & S[synth render] & R[Recorder]
+  B & P & J & C & S --> K[cache_key + prompt hash]
+  B & P & J & C & S --> Q[JsonlCache]
+  B & P & J & C & S & R --> X[redact]
+  B & P & J & C & S & R --> L[structured / structured_reply]
+  R --> A[asyncio.run per call]
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+  class A leak
+</pre></div>
+    <div class="rounded-lg border border-slate-200 p-3"><p class="lbl text-slate-500 mb-2">After: one interface, one place to test</p>
+<pre class="mermaid">
+flowchart LR
+  B[baselines] & P[propose] & J[judge] & C[gold calls] & S[synth render] & R[Recorder] --> M
+  subgraph M[model call: ask prompt for output type, under step, cached here]
+    direction TB
+    k[key recipe] --- v[stored value + usage] --- i[model identity] --- r[redaction] --- l[one event loop]
+  end
+  classDef deep fill:#0f172a,color:#f8fafc,stroke:#0f172a;
+  class M deep
+</pre></div>
+  </div>
+  <p><b>Problem.</b> The cache-hash-call-redact-store sequence is written by hand six times, and the copies disagree: hashed prompt field (<code>input_sha256</code>, <code>user_prompt_sha256</code>, <code>user_sha256</code>, raw prompt), model identity (alias, <code>model_identity</code>, pinned <code>SUB_MODEL</code>), cache value shape, and redaction length.</p>
+  <p><b>Solution.</b> One module owns the key recipe, stored value, model identity, redaction, usage capture and the event loop; callers pass prompt, output type, step name and cache location. Rotation, concurrency gates and <code>accept</code> stay caller options.</p>
+  <div class="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-900"><b>Likely live bug.</b> The uncommitted diff moves four callers onto <code>run_sync</code>, but <code>evidence/recording.py:84</code> still runs <code>asyncio.run</code> per call, the busiest path in the funnel engine. From the second LLM extractor call in a real run it should hit "Event loop is closed", and <code>CallCache</code> then stores the error. Engine tests use FunctionModels, which open no HTTP connection, so none catch it. Also <code>synth/render_llm.py render_all</code>, <code>gold/build.py</code>, <code>gold/triage.py</code>.</div>
+  <ul class="grid sm:grid-cols-2 gap-x-6 list-disc pl-5 text-sm text-slate-700">
+    <li>locality: one key recipe, one redaction</li>
+    <li>leverage: one interface, six call sites</li>
+    <li>no caller can pick an event loop</li>
+    <li>keep-alive test covers every caller</li>
+    <li>per-caller cache tests shrink to "step X"</li>
+    <li>gold.llm grab-bag splits along it</li>
+  </ul>
+</article>
+
+<!-- 2 -->
+<article id="c2" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">2 · The run directory module reads what it writes</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-2 py-0.5">local-substitutable (tmp dirs)</span>
+  </div>
+  <ul class="font-mono text-sm text-slate-700 space-y-0.5">
+    <li>evidence/rundir.py · RUN_FILE, FUNNEL_FILE, CALLS_DIR, REEXEC_FILE, CACHE_FILE</li>
+    <li>evaluation/truth.py · Run.load, read_jsonl, read_usage, CACHE_FILE copy</li>
+    <li>webapp/evfiles.py · _run_info, run_dir, error_calls, _calls, run_paper, ENGINE_MARKERS, KEY_LINE</li>
+    <li>webapp/evjobs.py:237 · "{name}-reexec-*"</li>
+    <li>evidence/replay.py · _attempts; evidence/agentic/runner.py</li>
+    <li>evidence/calls.py · CallCache._check_version reads JsonlCache._data</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4"><p class="lbl text-slate-500 mb-3">Before: four readers re-derive the layout</p>
+      <div class="rounded border border-slate-400 p-2 text-center text-sm mb-3">evidence/rundir <span class="text-slate-500">(writes only)</span></div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="rounded border-2 border-red-500 p-2">evaluation/truth<br><span class="text-red-700">"run.json", "calls", CACHE_FILE copy, own jsonl parser</span></div>
+        <div class="rounded border-2 border-red-500 p-2">webapp/evfiles<br><span class="text-red-700">ENGINE_MARKERS, KEY_LINE regex, literals</span></div>
+        <div class="rounded border-2 border-red-500 p-2">webapp/evjobs<br><span class="text-red-700">reexec glob</span></div>
+        <div class="rounded border-2 border-red-500 p-2">replay / agentic<br><span class="text-red-700">literals</span></div>
+      </div>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4"><p class="lbl text-slate-500 mb-3">After: one owner of the layout</p>
+      <div class="grid grid-cols-4 gap-2 text-xs text-center mb-2">
+        <div class="rounded border border-slate-400 p-1">truth</div><div class="rounded border border-slate-400 p-1">evfiles</div><div class="rounded border border-slate-400 p-1">evjobs</div><div class="rounded border border-slate-400 p-1">replay</div>
+      </div>
+      <div class="border-t-2 border-dashed border-slate-500 my-2"></div>
+      <div class="deep rounded-lg p-4 text-sm">
+        <p class="lbl text-slate-300 mb-2">engine run (open a run directory)</p>
+        <div class="grid grid-cols-2 gap-1 text-xs text-slate-400">
+          <span>kind: engine / baseline / incomplete</span><span>calls · error calls</span><span>events · usage</span><span>latest re-execution</span><span>record for extractor, task, attempt</span><span>tolerant cache lines</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p><b>Problem.</b> The run layout lives in <code>rundir</code> for writing and is restated by every reader; a renamed file or a new marker means four edits and no failure until runtime.</p>
+  <p><b>Solution.</b> <code>evidence/rundir</code> also owns reading an engine run; evaluation and the web app call it, and only the cache's own module parses cache lines.</p>
+  <div class="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-900"><b>Likely bug.</b> <code>JsonlCache</code> skips a half-written last line from a Slurm time-limit kill; <code>evaluation/truth.py:38 read_jsonl</code> calls <code>json.loads</code> on every line, so scoring would crash on the same file.</div>
+  <ul class="grid sm:grid-cols-2 gap-x-6 list-disc pl-5 text-sm text-slate-700">
+    <li>locality: layout changes in one module</li>
+    <li>tests run on real engine output</li>
+    <li>webapp fixtures stop faking markers</li>
+    <li>one truncated-line test, every reader</li>
+  </ul>
+</article>
+
+<!-- 3 -->
+<article id="c3" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">3 · A job plan per job kind</h2>
+    <span class="rounded-full bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5">Strong</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-2 py-0.5">in-process</span>
+  </div>
+  <ul class="font-mono text-sm text-slate-700 space-y-0.5">
+    <li>webapp/evjobs.py · Commands (group, score, propose, synth), PROPOSE_STEPS</li>
+    <li>webapp/evfiles.py · STEP_FILES; privates _run_summary, _score_dir, _decisions</li>
+    <li>evidence/propose/common.py · FRAME, CARDS …</li>
+    <li>webapp/web/src/lib/jobs.ts · runGroup (TS copy of Commands.group)</li>
+    <li>webapp/web/src/steps/CorpusStep.tsx, RunStep.tsx, mocks/handlers.ts</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-3"><p class="lbl text-slate-500 mb-2">Before: run-group naming in two languages</p>
+<pre class="mermaid">
+flowchart TB
+  UI[RunStep.tsx] --> TS[lib/jobs.ts runGroup]
+  MK[mock handlers] --> TS
+  EJ[evjobs Commands.group] -.same rules.-> TS
+  EJ -->|private calls| EF[evfiles _run_summary, _decisions]
+  EJ -->|argv, flag names unchecked| CLI[evidence / evaluation CLIs]
+  EF -->|STEP_FILES copy| PR[propose FRAME, CARDS]
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+  class TS,EF leak
+</pre></div>
+    <div class="rounded-lg border border-slate-200 p-3"><p class="lbl text-slate-500 mb-2">After: the plan owns argv + outputs + refs</p>
+<pre class="mermaid">
+flowchart TB
+  UI[RunStep.tsx] -->|reads planned group, run id| API[job response]
+  API --> JP
+  subgraph JP[job plan for each kind]
+    direction LR
+    a[argv] --- o[output paths] --- f[refs, lane, needs gateway]
+  end
+  JP --> CLI[evidence / evaluation CLIs]
+  classDef deep fill:#0f172a,color:#f8fafc,stroke:#0f172a;
+  class JP deep
+</pre></div>
+  </div>
+  <p><b>Problem.</b> What a job kind runs and writes is spread over <code>Commands</code>, <code>EvidenceFiles</code> privates, the CLIs and the frontend; <code>runGroup</code> and the synth corpus names (<code>&lt;name&gt;-&lt;level&gt;</code>) exist in Python and TypeScript.</p>
+  <p><b>Solution.</b> Each job kind gets one module that owns its argv, the paths it writes and its refs; the backend returns the planned outputs, and the frontend stops computing them.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 list-disc pl-5 text-sm text-slate-700">
+    <li>delete the TypeScript runGroup</li>
+    <li>evjobs stops reaching into evfiles</li>
+    <li>argv tests run on Windows</li>
+    <li>no subprocess in plan tests</li>
+  </ul>
+  <p class="text-xs text-slate-500">Today argv is checked only over HTTP with a fake POSIX interpreter, and <code>test_evjobs.py</code> skips those tests on Windows, the dev machine.</p>
+</article>
+
+<!-- 4 -->
+<article id="c4" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">4 · One prompt-file module</h2>
+    <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-2 py-0.5">Worth exploring</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-2 py-0.5">in-process</span>
+  </div>
+  <ul class="font-mono text-sm text-slate-700 space-y-0.5">
+    <li>gold/calls.py · load_prompt, PromptFile</li>
+    <li>gold/judge.py · load_prompt, Prompt (no line-ending normalisation)</li>
+    <li>evidence/extractors/llm_schema.py · read_prompt</li>
+    <li>synth/render_llm.py; evidence/propose/common.py</li>
+    <li>.gitattributes · gold/prompts/** not pinned to LF</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4 space-y-1"><p class="lbl text-slate-500 mb-2">Before: five loaders</p>
+      <div class="h-9 border-l-4 border-slate-400 bg-slate-50 pl-2 flex items-center text-xs">gold/calls · strip \r\n</div>
+      <div class="h-9 border-l-4 border-slate-400 bg-slate-50 pl-2 flex items-center text-xs">llm_schema · strip \r\n</div>
+      <div class="h-9 border-l-4 border-slate-400 bg-slate-50 pl-2 flex items-center text-xs">synth/render_llm · strip \r\n</div>
+      <div class="h-9 border-l-4 border-slate-400 bg-slate-50 pl-2 flex items-center text-xs">propose/common · strip \r\n</div>
+      <div class="h-9 border-l-4 border-red-500 bg-red-50 pl-2 flex items-center text-xs text-red-800">gold/judge · raw bytes → hash differs if CRLF</div>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4"><p class="lbl text-slate-500 mb-2">After: one prompt value</p>
+      <div class="deep rounded-lg h-[13.5rem] p-4 flex flex-col justify-center">
+        <p class="text-sm">prompt: text · output type · hash</p>
+        <p class="text-xs text-slate-400 mt-1">loaded and normalised one way; input to the model-call module (candidate 1)</p>
+      </div>
+    </div>
+  </div>
+  <p><b>Problem.</b> Five loaders normalise differently; with <code>core.autocrlf=true</code> on this laptop and no LF pin on <code>gold/prompts/**</code>, a CRLF checkout would silently change every judge cache key between laptop and Slurm.</p>
+  <p><b>Solution.</b> A prompt is loaded, normalised and hashed by one module; candidate 1 takes it as input.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 list-disc pl-5 text-sm text-slate-700">
+    <li>locality: one normalisation rule</li>
+    <li>first CRLF test in the repo</li>
+  </ul>
+</article>
+
+<!-- 5 -->
+<article id="c5" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">5 · A process seam under the job manager</h2>
+    <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-2 py-0.5">Worth exploring</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-2 py-0.5">ports &amp; adapters</span>
+  </div>
+  <ul class="font-mono text-sm text-slate-700 space-y-0.5">
+    <li>webapp/jobs.py · process_start (/proc), signal_group (os.killpg), load (orphans), _step, cancel</li>
+    <li>webapp/tests/test_jobs.py · sleep-and-poll loops</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-3"><p class="lbl text-slate-500 mb-2">Before: queueing fused with POSIX</p>
+<pre class="mermaid">
+flowchart TB
+  JM[JobManager: lanes, needs, after-check, persistence, orphans, cancel] --> OS[/proc, killpg, real subprocess/]
+  T[test_jobs: real sleeping processes] --> JM
+  classDef leak stroke:#dc2626,stroke-width:2px,color:#991b1b;
+  class OS leak
+</pre></div>
+    <div class="rounded-lg border border-slate-200 p-3"><p class="lbl text-slate-500 mb-2">After: two adapters justify the seam</p>
+<pre class="mermaid">
+flowchart TB
+  JM[JobManager] -.process group seam.-> P[POSIX adapter]
+  JM -.process group seam.-> F[in-memory adapter]
+  T[fast tests, any OS] --> JM
+  classDef deep fill:#0f172a,color:#f8fafc,stroke:#0f172a;
+  class JM deep
+</pre></div>
+  </div>
+  <p><b>Problem.</b> Orphan adoption silently does nothing without <code>/proc</code>, and restart, orphan and cancel logic can only be tested with slow, timing-sensitive real processes.</p>
+  <p><b>Solution.</b> Put a seam at "start a process group, check it is alive, signal it, wait": the POSIX adapter in production, an in-memory adapter in tests.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 list-disc pl-5 text-sm text-slate-700">
+    <li>tests drop their sleeps</li>
+    <li>one POSIX test keeps the adapter honest</li>
+  </ul>
+</article>
+
+<!-- 6 -->
+<article id="c6" class="rounded-xl border border-slate-200 bg-white p-6 space-y-5 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">6 · Record the write side of the mock backend</h2>
+    <span class="rounded-full bg-amber-100 text-amber-800 text-xs px-2 py-0.5">Worth exploring</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-2 py-0.5">mock</span>
+  </div>
+  <ul class="font-mono text-sm text-slate-700 space-y-0.5">
+    <li>webapp/web/src/mocks/handlers.ts · decisionProblems, refsOf, LANE</li>
+    <li>evidence/propose/cards.py · validate; webapp/evjobs.py · conflict checks, lane choice</li>
+    <li>webapp/tests/evidence_world.py · already records the read responses</li>
+  </ul>
+  <div class="grid md:grid-cols-2 gap-4">
+    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2"><p class="lbl text-slate-500">Before</p>
+      <div class="flex gap-2"><div class="flex-1 rounded border border-slate-400 p-2">reads: replayed from the real backend ✓</div></div>
+      <div class="flex gap-2"><div class="flex-1 rounded border-2 border-red-500 p-2 text-red-800">writes: a second implementation of cards.validate, conflict checks, refs, lanes; messages copied verbatim</div></div>
+    </div>
+    <div class="rounded-lg border border-slate-200 p-4 text-xs space-y-2"><p class="lbl text-slate-500">After</p>
+      <div class="rounded border border-slate-400 p-2">reads and writes: recorded 202 / 409 bodies from evidence_world</div>
+      <div class="rounded border border-slate-300 p-2 text-slate-500">mock shrinks to an in-memory job clock</div>
+    </div>
+  </div>
+  <p><b>Problem.</b> <code>flow.test.tsx</code> asserts on rules the mock re-implements, so a backend change can leave every frontend test green against stale rules.</p>
+  <p><b>Solution.</b> Record job and decision responses from the real backend the same way reads are recorded.</p>
+  <ul class="grid sm:grid-cols-2 gap-x-6 list-disc pl-5 text-sm text-slate-700">
+    <li>frontend tests see real messages</li>
+    <li>delete two duplicated rule sets</li>
+  </ul>
+</article>
+
+<!-- 7 -->
+<article id="c7" class="rounded-xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
+  <div class="flex flex-wrap items-center gap-2">
+    <h2 class="font-serif text-2xl mr-2">7 · Move canonical JSON out of agent/</h2>
+    <span class="rounded-full bg-slate-200 text-slate-700 text-xs px-2 py-0.5">Speculative</span>
+    <span class="rounded-full bg-slate-100 text-slate-700 text-xs px-2 py-0.5">local-substitutable</span>
+  </div>
+  <ul class="font-mono text-sm text-slate-700 space-y-0.5">
+    <li>agent/canonical.py (~45 importers) · evidence/rundir.write_canonical</li>
+    <li>write_json in propose/common, gold/build, gold/review, webapp/files (write_json_atomic)</li>
+  </ul>
+  <div class="flex items-end gap-6 text-xs">
+    <div><p class="lbl text-slate-500 mb-1">Before</p><div class="flex gap-1 items-end"><div class="w-6 h-10 border border-slate-400"></div><div class="w-6 h-10 border border-slate-400"></div><div class="w-6 h-10 border border-slate-400"></div><div class="w-6 h-10 border border-slate-400"></div><div class="w-6 h-10 border border-slate-400"></div><div class="w-6 h-10 border border-slate-400"></div></div><p class="text-slate-500 mt-1">six writers</p></div>
+    <div><p class="lbl text-slate-500 mb-1">After</p><div class="flex gap-1 items-end"><div class="deep w-14 h-10"></div><div class="deep w-14 h-10"></div></div><p class="text-slate-500 mt-1">hashed output · human-edited file</p></div>
+  </div>
+  <p><b>Problem.</b> <code>evidence</code> depends on the older <code>agent</code> package for canonical bytes, and writers differ on atomicity and format. Deletion test: removing the copies mostly moves code, so leverage is low; do it only alongside candidate 2.</p>
+</article>
+
+</section>
+
+<section id="top-recommendation" class="rounded-2xl deep p-8 space-y-3">
+  <p class="lbl text-slate-300">Top recommendation</p>
+  <h2 class="font-serif text-3xl"><a href="#c1" class="underline decoration-emerald-400 underline-offset-4">1 · One deep cached model-call module</a></h2>
+  <p class="text-slate-300">It is the seam your uncommitted diff is already patching one caller at a time, and it hides a likely live bug (<code>Recorder._run</code> still uses <code>asyncio.run</code> per call) that only real HTTP calls on Slurm would expose. Deepening it fixes the loop for every caller at once, gives one key recipe for all caches, and makes candidates 4 and the gold.llm split fall out almost for free.</p>
+</section>
+
+</main>
+</body>
+</html>
