@@ -17,7 +17,8 @@ funnel's gaps stay visible. Without bash (Windows) the agentic run and the agent
 
     uv run python -m webapp.tests.evidence_world OUT     # write the world to OUT (e.g. for `webapp serve`)
     uv run python -m webapp.tests.evidence_world OUT --mocks webapp/web/src/mocks/ev-fixtures.json
-                                                         # and the frontend's mock responses from it
+                                                         # and the frontend's mock responses from it, with
+                                                         # write-contract.json beside them (write_contract.py)
 """
 from __future__ import annotations
 
@@ -326,6 +327,9 @@ def mock_paths(world: EvidenceWorld) -> list[str]:
     paths += [f"/api/ev/run-group?source=repo&name={protocol}&extractors={extractors}&strategy={strategy}"
               for protocol in ("rag-factuality", "rag-factuality-agentic")
               for extractors in ("regex-only", "cascade") for strategy in ("all", "gaps")]   # the app's key order
+    paths += [f"/api/ev/run-group?source=proposal&name={proposal}&extractors={extractors}&strategy={strategy}"
+              for proposal in sorted(p.name for p in world.proposals.iterdir() if p.is_dir())
+              for extractors in ("regex-only", "cascade") for strategy in ("all", "gaps")]
     runs = [f"cascade~{explicit}", f"cascade-gaps~{mixed}", f"rag-baseline~{mixed}"]
     runs += [f"agentic-gaps~{mixed}", f"agent-baseline~{mixed}"] if world.agent else []
     with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya", agent_root=None)), base_url=BASE) as client:  # type: ignore[arg-type]
@@ -374,5 +378,7 @@ if __name__ == "__main__":
         raise SystemExit(f"{target} exists; give a new directory")
     built = build(target)
     if mocks:
+        from .write_contract import write
         dump_mocks(built, mocks)
+        write(built, mocks.parent / "write-contract.json")
     print(built.root)
