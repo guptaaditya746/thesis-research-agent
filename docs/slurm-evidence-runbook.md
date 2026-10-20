@@ -118,7 +118,7 @@ uv sync --locked --all-groups
 uv run pytest -q -W ignore::SyntaxWarning 2>&1 | tail -n 3
 ```
 
-Expect `1250 passed, 1 skipped` (WSL count; the skip is the "Landlock missing" test, so on a node with
+Expect `1338 passed, 1 skipped` (WSL count; the skip is the "Landlock missing" test, so on a node with
 Landlock the split may differ by one). A failure here: record it; fix only clear test-environment
 differences.
 
