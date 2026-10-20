@@ -38,10 +38,13 @@ from pydantic import ValidationError
 
 from agent.anchor import read_text
 from jsonio import file_sha256, sha256_hex
-from agent.rundir import RunDir
+from agent.rundir import RunDir as AgentRunDir
 from evidence.calls import cache_key
 from evidence.contract import ExtractionResult, ExtractorSpec, Item
+from evidence.propose.common import CARDS, CRITIC, DRAFT, FRAME, PROPOSAL
 from evidence.protocol import parse
+from evidence.rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, PROTOCOL_FILE,
+                             RUN_FILE, RunDir)
 
 from .agenttrace import claim_of, steps_of
 from .evmodels import (
@@ -87,11 +90,8 @@ from .files import ID, RUN_SEP, NotFound, check_id, inside, read_json, read_json
 from .models import Claim, ClaimRef, ModelCall, Step
 from .settings import Settings
 
-CACHE_FILE = "extractor_calls.jsonl"
-ENGINE_MARKERS = ("events.jsonl", "protocol.yaml", "funnel.json", "calls")   # what only the engine writes in a run dir
 STEPS = ("frame", "draft", "critic", "cards", "freeze")
-STEP_FILES = {"frame": "frame.json", "draft": "draft.yaml", "critic": "critic.json", "cards": "cards.json",
-              "freeze": "proposal.json"}
+STEP_FILES = {"frame": FRAME, "draft": DRAFT, "critic": CRITIC, "cards": CARDS, "freeze": PROPOSAL}
 REVISION_FILE = re.compile(r"^protocol\.v(\d+)\.yaml$")
 OUTPUT_HEAD = 4096
 
@@ -109,14 +109,6 @@ def subdirs(root: Path | None) -> list[Path]:
     if root is None or not root.is_dir():
         return []
     return sorted(p for p in root.iterdir() if ID.fullmatch(p.name) and not p.is_symlink() and p.is_dir())
-
-
-def error_calls(run: Path) -> int:
-    """An engine run's extractor calls whose checked result is an error (calls/<call_id>.json status error)."""
-    calls = run / "calls"
-    if not calls.is_dir():
-        return 0
-    return sum(1 for f in calls.glob("*.json") if (read_json(f) or {}).get("status") == "error")
 
 
 def inside_or_none(root: Path, path: Path) -> Path | None:
@@ -423,7 +415,7 @@ class EvidenceFiles:
         card_list = [c for c in (cards.get("cards") or [] if isinstance(cards, dict) else []) if isinstance(c, dict) and "id" in c]
         frozen = {d.get("card"): d for d in (proposal or {}).get("decisions") or [] if isinstance(d, dict)} \
             if isinstance(proposal, dict) else {}
-        pending, problems = self._decisions(path, card_list) if not frozen else ({}, [])
+        pending, problems = self.decisions_of(path, card_list) if not frozen else ({}, [])
         out_cards = []
         for card in card_list:
             cid = str(card["id"])
@@ -453,7 +445,7 @@ class EvidenceFiles:
                               amendment_log=[Amendment.model_validate(a) for a in read_jsonl(path / "amendments.jsonl")])
 
     @staticmethod
-    def _decisions(path: Path, cards: list[dict[str, Any]]) -> tuple[dict[str, Any], list[str]]:
+    def decisions_of(path: Path, cards: list[dict[str, Any]]) -> tuple[dict[str, Any], list[str]]:
         """decisions.yaml before freeze, as the person left it: the entry per card (whatever its shape) and
         what `evidence propose freeze` would refuse (cards.validate's own messages). The person edits this file
         by hand, so anything in it is shown, never a reason to fail the page."""
@@ -485,34 +477,36 @@ class EvidenceFiles:
         if len(names) != 2:
             raise NotFound(f"no such run: {run_id!r} (ids are <group>~<name>)")
         path = inside(root, *names)
-        if not (any((path / m).exists() for m in ENGINE_MARKERS) or (path / "answer.json").is_file()):
+        if RunDir(path).kind is None:
             raise NotFound(f"no such run: {run_id!r}")
         return path
 
     @staticmethod
     def _run_info(path: Path) -> tuple[EvRunSummary, str | None] | None:
         """The run's summary from its own files (without the corpus, which depends on the corpora root), and its
-        manifest sha256. An engine run is a directory the engine wrote into (ENGINE_MARKERS: it makes
-        events.jsonl, protocol.yaml and calls/ first, run.json last); without run.json it is incomplete
-        (crashed, or still running). A baseline is an answer.json of a baseline system and nothing of those."""
-        run = read_json(path / "run.json")
-        answer = read_json(path / "answer.json")
+        manifest sha256. What an engine run or a baseline is, and when it is complete, is `RunDir.kind` and
+        `RunDir.complete`: without a run.json an engine run is incomplete (crashed, or still running)."""
+        rd = RunDir(path)
+        kind = rd.kind
+        if kind is None:
+            return None
+        run = rd.try_json(RUN_FILE)
+        run = run if isinstance(run, dict) else {}
+        answer = rd.try_json(ANSWER_FILE)
         answer = answer if isinstance(answer, dict) else None
         run_id = f"{path.parent.name}{RUN_SEP}{path.name}"
         counts = answer.get("counts") if answer else None
-        if isinstance(run, dict) or any((path / m).exists() for m in ENGINE_MARKERS):
-            run = run if isinstance(run, dict) else {}
+        if kind == "engine":
             settings = run.get("settings") or {}
-            return EvRunSummary(id=run_id, group=path.parent.name, name=path.name, kind="engine", complete=bool(run),
+            return EvRunSummary(id=run_id, group=path.parent.name, name=path.name, kind="engine", complete=rd.complete,
                                 system=(answer or {}).get("system", "evidence-engine"), mode=run.get("mode"),
                                 strategy=settings.get("strategy"), selection=settings.get("selection"),
                                 model=settings.get("model"), protocol=run.get("protocol"), corpus_id=run.get("corpus_id"),
                                 label=(answer or {}).get("label") if run else None, counts=counts if run else None,
                                 papers=len((answer or {}).get("studies") or []) or None, cost=run.get("cost"),
-                                error_calls=error_calls(path)), \
+                                error_calls=rd.error_calls()), \
                 run.get("manifest_sha256")
-        if answer is None or "system" not in answer:
-            return None
+        assert answer is not None
         settings = answer.get("settings") or {}
         return EvRunSummary(id=run_id, group=path.parent.name, name=path.name, kind="baseline", system=answer["system"],
                             strategy=settings.get("retrieval"), model=(answer.get("model_call") or answer.get("mapping_call")
@@ -520,9 +514,9 @@ class EvidenceFiles:
                             corpus_id=answer.get("corpus_id"), label=answer.get("label"), counts=counts,
                             papers=len(answer.get("studies") or []) or None), None
 
-    def _run_summary(self, path: Path) -> EvRunSummary | None:
+    def run_summary(self, path: Path) -> EvRunSummary | None:
         """The cached file part, then the corpus looked up now (the corpora root may have changed since)."""
-        info = self._cached(("run", path), tuple(path / f for f in ("run.json", "answer.json", *ENGINE_MARKERS)),
+        info = self._cached(("run", path), RunDir(path).watched(),
                             lambda: self._run_info(path))
         if info is None:
             return None
@@ -533,7 +527,7 @@ class EvidenceFiles:
         out = []
         for group in subdirs(self.s.ev_runs_dir):
             for path in subdirs(group):
-                summary = self._run_summary(path)
+                summary = self.run_summary(path)
                 if summary is not None:
                     out.append(summary)
         return out
@@ -544,9 +538,11 @@ class EvidenceFiles:
 
         def make() -> list[CallSummary]:
             out = []
-            for r in read_jsonl(path / "events.jsonl"):
-                if r.get("subtype") != "extractor_call":
-                    continue
+            try:
+                events = RunDir(path).events_of("extractor_call") or []
+            except ValueError:   # damage in the middle of the chain: the calls it shows are none
+                events = []
+            for r in events:
                 meta = r.get("custom_metadata") or {}
                 out.append(CallSummary(call_id=r["task_id"], document=str(meta.get("document", r.get("group_id", ""))),
                                        evidence_type=str(meta.get("evidence_type", "")), extractor_id=r.get("agent_id", ""),
@@ -556,16 +552,18 @@ class EvidenceFiles:
                                        items=len(r.get("generated") or []), rejected=int(meta.get("rejected") or 0),
                                        model_calls=len(meta.get("model_calls") or [])))
             return out
-        return self._cached(("calls", path), (path / "events.jsonl",), make)
+        return self._cached(("calls", path), (RunDir(path).file(EVENTS_FILE),), make)
 
     def run(self, run_id: str) -> EvRunDetail:
         path = self.run_dir(run_id)
-        summary = self._run_summary(path)
+        summary = self.run_summary(path)
         if summary is None:
             raise NotFound(f"run {run_id!r} has neither a run.json nor a baseline's answer.json")
-        run = read_json(path / "run.json") or {}
-        answer = read_json(path / "answer.json")
-        funnel = read_json(path / "funnel.json")
+        rd = RunDir(path)
+        run = rd.try_json(RUN_FILE)
+        run = run if isinstance(run, dict) else {}
+        answer = rd.try_json(ANSWER_FILE)
+        funnel = rd.try_json(FUNNEL_FILE)
         documents: list[str] = []
         if summary.corpus:
             manifest = read_json(self.corpus_dir(summary.corpus) / "manifest.json") or {}
@@ -591,16 +589,20 @@ class EvidenceFiles:
 
     def _items(self, path: Path) -> list[Item]:
         def make() -> list[Item]:
-            return [Item.model_validate(r) for r in read_jsonl(path / "evidence.jsonl")]
-        return self._cached(("items", path), (path / "evidence.jsonl",), make)
+            return RunDir(path).items()
+        return self._cached(("items", path), (RunDir(path).file(EVIDENCE_FILE),), make)
 
     def run_paper(self, run_id: str, document: str) -> RunPaper:
         path = self.run_dir(run_id)
         document = check_id(document, "paper")
-        summary = self._run_summary(path)
-        run = read_json(path / "run.json") or {}
-        answer = read_json(path / "answer.json") or {}
-        funnel = (read_json(path / "funnel.json") or {}).get("documents") or {}
+        summary = self.run_summary(path)
+        rd = RunDir(path)
+        run = rd.try_json(RUN_FILE)
+        run = run if isinstance(run, dict) else {}
+        answer = rd.try_json(ANSWER_FILE)
+        answer = answer if isinstance(answer, dict) else {}
+        funnel = rd.try_json(FUNNEL_FILE)
+        funnel = (funnel.get("documents") if isinstance(funnel, dict) else None) or {}
         text, file = None, f"papers/{document}.md"
         if summary and summary.corpus:
             entry, text = self._paper_text(self.corpus_dir(summary.corpus), document)
@@ -621,16 +623,17 @@ class EvidenceFiles:
 
     def run_graph(self, run_id: str) -> EvGraph:
         path = self.run_dir(run_id)
-        graph = read_json(path / "graph.json")
+        graph = RunDir(path).try_json(GRAPH_FILE)
         if not isinstance(graph, dict):
             raise NotFound(f"run {run_id!r} has no graph.json")
         return EvGraph.model_validate(graph)
 
     def run_protocol(self, run_id: str) -> ProtocolView:
         path = self.run_dir(run_id)
-        if not (path / "protocol.yaml").is_file():
+        protocol = RunDir(path).file(PROTOCOL_FILE)
+        if not protocol.is_file():
             raise NotFound(f"run {run_id!r} has no protocol.yaml (a baseline runs without one)")
-        return self.protocol_view(path / "protocol.yaml", "run", run_id)
+        return self.protocol_view(protocol, "run", run_id)
 
     def _cache_file(self) -> Path | None:
         root = self.s.ev_cache_dir
@@ -658,13 +661,13 @@ class EvidenceFiles:
     def _call(self, run_id: str, call_id: str) -> tuple[Path, dict[str, Any], CallSummary, ExtractionResult]:
         path = self.run_dir(run_id)
         call_id = check_id(call_id, "call")
-        summary = self._run_summary(path)
+        summary = self.run_summary(path)
         if summary is None or summary.kind != "engine":
             raise NotFound(f"run {run_id!r} is a baseline: it has no extractor calls")
-        run = read_json(path / "run.json")
+        run = RunDir(path).try_json(RUN_FILE)
         run = run if isinstance(run, dict) else {}
         call = next((c for c in self._calls(path, run) if c.call_id == call_id), None)
-        data = read_json(inside(path, "calls", f"{call_id}.json"))
+        data = read_json(inside(path, CALLS_DIR, f"{call_id}.json"))
         if call is None or not isinstance(data, dict):
             raise NotFound(f"run {run_id!r} has no call {call_id!r}")
         return path, run, call, ExtractionResult.model_validate(data)
@@ -702,23 +705,23 @@ class EvidenceFiles:
                      if isinstance(m.get("agent_run"), dict) and m["agent_run"].get("run_id") == agent_run), None)
         root = self.s.agent_work_dir
         candidates = [d / "runs" / agent_run for d in subdirs(root) if d.name.startswith(f"{agent_run}-")]
-        candidates = [c for c in (inside_or_none(root, c) for c in candidates if root) if c and (c / "events.jsonl").is_file()]
+        candidates = [c for c in (inside_or_none(root, c) for c in candidates if root) if c and AgentRunDir(c).events.is_file()]
         if kept and kept.get("head"):
-            candidates = [c for c in candidates if (read_jsonl(c / "events.jsonl") or [{}])[-1].get("hash") == kept["head"]]
+            candidates = [c for c in candidates if (read_jsonl(AgentRunDir(c).events) or [{}])[-1].get("hash") == kept["head"]]
         elif self._unrecorded(run, call):
             # a fresh re-executed call: its agent run is one of those made since the re-execution began (the
             # engine writes protocol.yaml first), never the original run's
             began = (path / "protocol.yaml").stat().st_mtime if (path / "protocol.yaml").exists() else 0.0
-            candidates = [c for c in candidates if (c / "events.jsonl").stat().st_mtime >= began]
+            candidates = [c for c in candidates if AgentRunDir(c).events.stat().st_mtime >= began]
         if candidates:
-            return self._trace_of_dir(max(candidates, key=lambda c: (c / "events.jsonl").stat().st_mtime), agent_run)
+            return self._trace_of_dir(max(candidates, key=lambda c: AgentRunDir(c).events.stat().st_mtime), agent_run)
         if kept:
             return trace_of_record(kept)
         raise NotFound(f"no trace of {agent_run}: no run directory under the agent work root and no cache record")
 
     @staticmethod
     def _trace_of_dir(run_root: Path, run_id: str) -> AgentTrace:
-        records = read_jsonl(run_root / "events.jsonl")
+        records = read_jsonl(AgentRunDir(run_root).events)
         claims = [claim_of(r) for r in read_jsonl(run_root / "claims.jsonl")]
         answer = read_json(run_root / "answer.json")
         concept = read_json(run_root / "concept.json")
@@ -727,7 +730,7 @@ class EvidenceFiles:
         if isinstance(trajectory, dict):
             outcome = (trajectory.get("info") or {}).get("outcome") or {"exit_status": (trajectory.get("info") or {}).get("exit_status")}
         return AgentTrace(run_id=run_id, source="run_dir", outcome=outcome, concept=concept if isinstance(concept, dict) else None,
-                          answer=answer if isinstance(answer, dict) else None, steps=steps_of(RunDir(run_root), records),
+                          answer=answer if isinstance(answer, dict) else None, steps=steps_of(AgentRunDir(run_root), records),
                           claims=claims)
 
     def _baseline_run_dir(self, path: Path) -> Path | None:
@@ -737,8 +740,8 @@ class EvidenceFiles:
         if not run_id or not ID.fullmatch(str(run_id)):
             return None
         found = [d / "runs" / run_id for d in subdirs(path / "agent-runs") if d.name.startswith(f"{run_id}-")]
-        found = [f for f in (inside_or_none(path, f) for f in found) if f and (f / "events.jsonl").is_file()]
-        return max(found, key=lambda f: (f / "events.jsonl").stat().st_mtime) if found else None
+        found = [f for f in (inside_or_none(path, f) for f in found) if f and AgentRunDir(f).events.is_file()]
+        return max(found, key=lambda f: AgentRunDir(f).events.stat().st_mtime) if found else None
 
     def baseline_trace(self, run_id: str) -> AgentTrace:
         path = self.run_dir(run_id)
@@ -780,7 +783,7 @@ class EvidenceFiles:
                                                                            and (d / "benchmark.json").is_file()]}))
         return index
 
-    def _score_dir(self, score_id: str, file: str) -> tuple[Path, ScoreRef]:
+    def score_dir(self, score_id: str, file: str) -> tuple[Path, ScoreRef]:
         root = self._need(self.s.scores_dir, "scores", "SCORES")
         names = parts(score_id, "score", most=2)
         path = inside(root, *names)
@@ -796,7 +799,7 @@ class EvidenceFiles:
             return None
 
     def report(self, score_id: str) -> ReportView:
-        path, ref = self._score_dir(score_id, "report.json")
+        path, ref = self.score_dir(score_id, "report.json")
         report = Report.model_validate(read_json(path / "report.json"))
         ref = ref.model_copy(update={"corpus_id": report.corpus_id, "run_id": report.run_id, "levels": report.levels,
                                      "strategy": (report.funnel or {}).get("strategy"),
@@ -804,17 +807,17 @@ class EvidenceFiles:
         return ReportView(ref=ref, report=report, markdown=self._markdown(path / "report.md"))
 
     def compare(self, score_id: str) -> CompareTable:
-        path, ref = self._score_dir(score_id, "compare.json")
+        path, ref = self.score_dir(score_id, "compare.json")
         data = read_json(path / "compare.json") or {}
         return CompareTable(ref=ref, rows=list(data.get("rows") or []), intervals=list(data.get("intervals") or []),
                             markdown=self._markdown(path / "compare.md"))
 
     def shift(self, score_id: str) -> ShiftView:
-        path, ref = self._score_dir(score_id, "shift.json")
+        path, ref = self.score_dir(score_id, "shift.json")
         return ShiftView(ref=ref, shift=read_json(path / "shift.json") or {}, markdown=self._markdown(path / "shift.md"))
 
     def benchmark(self, score_id: str) -> BenchmarkView:
-        path, ref = self._score_dir(score_id, "benchmark.md")
+        path, ref = self.score_dir(score_id, "benchmark.md")
         records = [r for d in sorted(path.iterdir()) if d.is_dir()
                    for r in [read_json(d / "benchmark.json")] if isinstance(r, dict)]
         return BenchmarkView(ref=ref, records=records, markdown=self._markdown(path / "benchmark.md"))

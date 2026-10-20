@@ -411,6 +411,24 @@ def test_an_incomplete_engine_run_is_listed_and_reachable(ev_fresh: EvidenceWorl
     assert detail["answer"] is None and detail["documents"] and paper["calls"] and call.status_code == 200
 
 
+def test_run_with_torn_events_line_lists_and_opens(ev_fresh: EvidenceWorld) -> None:
+    run = ev_fresh.runs / "cascade" / EXPLICIT
+    with (run / "events.jsonl").open("ab") as fh:
+        fh.write(b'{"task_id": "t9", "subtype": "extractor_ca')   # an append cut mid-line
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        listed = {r["id"] for r in c.get("/api/ev/runs").json()}
+        detail = c.get(f"/api/ev/runs/cascade~{EXPLICIT}")
+        paper = c.get(f"/api/ev/runs/cascade~{EXPLICIT}/papers/S001")
+    assert f"cascade~{EXPLICIT}" in listed and detail.status_code == 200 and paper.status_code == 200
+
+
+def test_a_corrupt_run_json_does_not_fail_the_listing(ev_fresh: EvidenceWorld) -> None:
+    (ev_fresh.runs / "cascade" / EXPLICIT / "run.json").write_text('{"protocol": ', encoding="utf-8")
+    with TestClient(create_app(settings_for(ev_fresh))) as c:
+        listed = {r["id"]: r for r in c.get("/api/ev/runs").json()}[f"cascade~{EXPLICIT}"]
+    assert (listed["kind"], listed["complete"]) == ("engine", False)
+
+
 def test_an_engine_run_with_an_answer_but_no_run_json_is_not_a_baseline(ev_fresh: EvidenceWorld) -> None:
     (ev_fresh.runs / "cascade" / EXPLICIT / "run.json").unlink()
     with TestClient(create_app(settings_for(ev_fresh))) as c:

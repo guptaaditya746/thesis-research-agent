@@ -31,6 +31,7 @@ from typing import Any
 from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 
+from evidence.rundir import RunDir
 from jsonio import file_sha256, write_text_atomic
 
 from .evfiles import EvidenceFiles
@@ -217,7 +218,7 @@ class Commands:
 
     def score(self, r: ScoreRequest) -> tuple[list[JobStep], dict[str, str]]:
         path = self.files.run_dir(r.run)
-        summary = self.files._run_summary(path)
+        summary = self.files.run_summary(path)
         if summary is None or summary.kind != "engine":
             raise Conflict(f"{r.run} is not an engine run (a baseline is scored beside the engine run of its corpus)")
         self.free("run", r.run)
@@ -233,9 +234,8 @@ class Commands:
                 baselines += ["--baseline", answer]
         # the latest re-execution beside the run (`evidence reexec` writes <run>-reexec-<stamp>/reexec.json;
         # runbook step 7.1), for the stability score
-        reexecs = sorted(p / "reexec.json" for p in path.parent.glob(f"{path.name}-reexec-*")
-                         if (p / "reexec.json").is_file() and not p.is_symlink())
-        reexec = ["--reexec", reexecs[-1]] if reexecs else []
+        latest = RunDir(path).latest_reexec()
+        reexec = ["--reexec", latest] if latest else []
         score_id = f"{summary.group}{RUN_SEP}{summary.name}"
         self.free("score", score_id)
         out = inside(self.scores(), summary.group, summary.name)
@@ -243,7 +243,7 @@ class Commands:
         return [step("evaluate score", argv)], {"score": score_id}
 
     def compare(self, r: CompareRequest) -> tuple[list[JobStep], dict[str, str]]:
-        reports = [self.files._score_dir(score_id, "report.json")[0] for score_id in dict.fromkeys(r.reports)]
+        reports = [self.files.score_dir(score_id, "report.json")[0] for score_id in dict.fromkeys(r.reports)]
         if len(reports) < 2:
             raise Conflict("a comparison needs two different reports")
         out = inside(self.scores(), r.name)
@@ -291,7 +291,7 @@ class Commands:
         cards = read_json(directory / "cards.json") or {}
         if not (directory / "decisions.yaml").is_file():
             raise Conflict(f"proposal {r.proposal} has no decisions.yaml")
-        _, problems = self.files._decisions(directory, cards.get("cards") or [])
+        _, problems = self.files.decisions_of(directory, cards.get("cards") or [])
         if problems:
             raise Conflict("decisions.yaml refused:\n  " + "\n  ".join(problems))
         return [step("propose freeze", self.tool("evidence", "propose", "freeze", directory))], {"proposal": r.proposal}
@@ -313,7 +313,7 @@ class Commands:
             raise Conflict("decisions.yaml changed since the form loaded it (edited by hand or in another tab): "
                            "reload to see it, or overwrite it")
         cards = (read_json(directory / "cards.json") or {}).get("cards") or []
-        on_file, _ = self.files._decisions(directory, cards)
+        on_file, _ = self.files.decisions_of(directory, cards)
         order = {c.get("id"): n for n, c in enumerate(cards)}
         entries = []
         for d in sorted(r.decisions, key=lambda d: order.get(d.card, len(order))):
@@ -326,7 +326,7 @@ class Commands:
                 entry["value"] = d.value
             entries.append(entry)
         write_text_atomic(path, HEADER + dump_yaml({"decisions": entries}))
-        _, problems = self.files._decisions(directory, cards)
+        _, problems = self.files.decisions_of(directory, cards)
         return DecisionsResult(written=str(path), sha256=file_sha256(path), problems=problems)
 
 
