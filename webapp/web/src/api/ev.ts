@@ -17,6 +17,7 @@ type S = components["schemas"]
 
 export type Health = S["Health"]
 export type EvConfig = S["EvConfig"]
+export type RunGroup = S["RunGroup"]
 export type CorpusSummary = S["CorpusSummary"]
 export type CorpusDetail = S["CorpusDetail"]
 export type CorpusPaper = S["CorpusPaper"]
@@ -104,6 +105,8 @@ export const evApi = {
   health: (signal?: AbortSignal) => getJson<Health>("/api/health", undefined, signal),
   config: (signal?: AbortSignal) => getJson<EvConfig>("/api/ev/config", undefined, signal),
   questions: (signal?: AbortSignal) => getJson<Question[]>("/api/ev/questions", undefined, signal),
+  runGroup: (protocol: ProtocolRef, extractors: string, strategy: string, signal?: AbortSignal) =>
+    getJson<RunGroup>("/api/ev/run-group", { source: protocol.source, name: protocol.name, extractors, strategy }, signal),
   question: (id: string, signal?: AbortSignal) => getJson<Question>(`/api/ev/questions/${seg(id)}`, undefined, signal),
   corpora: (signal?: AbortSignal) => getJson<CorpusSummary[]>("/api/ev/corpora", undefined, signal),
   corpus: (name: string, signal?: AbortSignal) => getJson<CorpusDetail>(`/api/ev/corpora/${seg(name)}`, undefined, signal),
@@ -161,6 +164,9 @@ function useEv<T>(parts: string[], fetcher: (signal: AbortSignal) => Promise<T>,
 
 export const useHealth = () => useQuery({ queryKey: ["health"], queryFn: ({ signal }) => evApi.health(signal) })
 export const useEvConfig = () => useEv(["config"], (s) => evApi.config(s))
+/** The group a run with this protocol and selection is written under: only the backend names it. */
+export const useRunGroup = (protocol: ProtocolRef, extractors: string, strategy: string) =>
+  useEv(["run-group", protocol.source, protocol.name, extractors, strategy], (s) => evApi.runGroup(protocol, extractors, strategy, s), !!protocol.name)
 export const useQuestions = () => useEv(["questions"], (s) => evApi.questions(s))
 export const useQuestion = (id: string, live = false) => useEv(["questions", id], (s) => evApi.question(id, s), !!id, live)
 export const useCorpora = (live = false) => useEv(["corpora"], (s) => evApi.corpora(s), true, live)

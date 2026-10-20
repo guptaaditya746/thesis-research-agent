@@ -1403,6 +1403,91 @@
         }
       }
     },
+    "/api/ev/run-group": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Run Group",
+        "description": "The group a run with this protocol and selection is written under (runs/<group>/<name>).",
+        "operationId": "ev_run_group",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "repo",
+                "proposal"
+              ],
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "extractors",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "regex-only",
+                "cascade"
+              ],
+              "type": "string",
+              "default": "cascade",
+              "title": "Extractors"
+            }
+          },
+          {
+            "name": "strategy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "all",
+                "gaps"
+              ],
+              "type": "string",
+              "default": "all",
+              "title": "Strategy"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunGroup"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ev/proposals/{name}/decisions": {
       "put": {
         "tags": [
@@ -6317,6 +6402,20 @@
           "exists"
         ],
         "title": "Root"
+      },
+      "RunGroup": {
+        "properties": {
+          "group": {
+            "type": "string",
+            "title": "Group"
+          }
+        },
+        "type": "object",
+        "required": [
+          "group"
+        ],
+        "title": "RunGroup",
+        "description": "The group `evidence run` writes under for a protocol and selection (`runs/<group>/<name>`)."
       },
       "RunPaper": {
         "properties": {
