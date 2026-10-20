@@ -147,16 +147,19 @@ class RunDir:
 
     @property
     def complete(self) -> bool:
-        return self.file(RUN_FILE).is_file()
+        """True when run.json parses to a non-empty object: the engine writes it last, so a directory without
+        one (or with a cut or empty one) crashed or is still running."""
+        run = self.try_json(RUN_FILE)
+        return isinstance(run, dict) and bool(run)
 
     @property
     def kind(self) -> Literal["engine", "baseline"] | None:
-        if self.complete or any(self.file(m).exists() for m in ENGINE_MARKERS):
+        """"engine" when run.json parses to an object (even an empty one) or the directory holds something only
+        the engine writes (ENGINE_MARKERS); "baseline" when answer.json is an object naming its `system`; else
+        None. An unparsable run.json or answer.json counts as absent, so a listing never fails on one."""
+        if isinstance(self.try_json(RUN_FILE), dict) or any(self.file(m).exists() for m in ENGINE_MARKERS):
             return "engine"
-        try:
-            answer = self.json(ANSWER_FILE)
-        except ValueError:
-            return None
+        answer = self.try_json(ANSWER_FILE)
         return "baseline" if isinstance(answer, dict) and answer.get("system") else None
 
     def file(self, name: str) -> Path:
@@ -165,6 +168,13 @@ class RunDir:
     def json(self, name: str) -> Any | None:
         path = self.file(name)
         return read_json(path) if path.is_file() else None
+
+    def try_json(self, name: str) -> Any | None:
+        """The file's JSON, or None when it is missing or unreadable (cut, being written, not UTF-8)."""
+        try:
+            return self.json(name)
+        except (OSError, ValueError):
+            return None
 
     def items(self) -> list[Item]:
         path = self.file(EVIDENCE_FILE)
@@ -183,7 +193,12 @@ class RunDir:
         return [read_json(p) for p in sorted(folder.glob("*.json"))] if folder.is_dir() else None
 
     def error_calls(self) -> int:
-        return sum(1 for c in self.calls() or [] if (c or {}).get("status") == "error")
+        """Calls whose checked result is an error (calls/<call_id>.json status "error"); an unreadable file is not one."""
+        folder = self.file(CALLS_DIR)
+        if not folder.is_dir():
+            return 0
+        found = (self.try_json(f"{CALLS_DIR}/{p.name}") for p in sorted(folder.glob("*.json")))
+        return sum(1 for c in found if isinstance(c, dict) and c.get("status") == "error")
 
     def cache_file(self) -> Path | None:
         """The record cache run.json names (`settings.cache`, a directory or the jsonl file), when it exists."""

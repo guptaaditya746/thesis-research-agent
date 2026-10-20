@@ -86,3 +86,40 @@ def test_error_calls_counts_status_error(tmp_path):
         (calls / f"{name}.json").write_text(json.dumps({"status": status}))
     assert RunDir(tmp_path).error_calls() == 2
     assert RunDir(tmp_path / "none").error_calls() == 0
+
+
+def test_empty_run_json_is_incomplete_but_engine(tmp_path):
+    (tmp_path / "run.json").write_text("{}")
+    run = RunDir(tmp_path)
+    assert run.complete is False and run.kind == "engine"
+
+
+def test_run_json_with_content_is_complete(tmp_path):
+    (tmp_path / "run.json").write_text('{"protocol": "p"}')
+    assert RunDir(tmp_path).complete is True
+
+
+def test_corrupt_run_json_counts_as_absent(tmp_path):
+    (tmp_path / "run.json").write_text('{"protocol": ')
+    run = RunDir(tmp_path)
+    assert run.complete is False and run.kind is None
+    (tmp_path / "events.jsonl").write_text("")
+    assert run.kind == "engine"
+
+
+def test_corrupt_answer_json_counts_as_absent(tmp_path):
+    (tmp_path / "answer.json").write_text('{"system": ')
+    assert RunDir(tmp_path).kind is None
+
+
+def test_non_dict_run_json_is_not_engine(tmp_path):
+    (tmp_path / "run.json").write_text("[1]")
+    run = RunDir(tmp_path)
+    assert run.complete is False and run.kind is None
+
+
+def test_corrupt_call_file_does_not_raise_in_error_calls(tmp_path):
+    (tmp_path / "calls").mkdir()
+    (tmp_path / "calls" / "a.json").write_text('{"status": "error"}')
+    (tmp_path / "calls" / "b.json").write_text('{"status": ')
+    assert RunDir(tmp_path).error_calls() == 1

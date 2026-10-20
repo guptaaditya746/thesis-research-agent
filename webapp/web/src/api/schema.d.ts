@@ -619,6 +619,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/run-group": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ev Run Group
+         * @description The group a run with this protocol and selection is written under (runs/<group>/<name>).
+         */
+        get: operations["ev_run_group"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/proposals/{name}/decisions": {
         parameters: {
             query?: never;
@@ -2541,6 +2561,14 @@ export interface components {
              */
             exists: boolean;
         };
+        /**
+         * RunGroup
+         * @description The group `evidence run` writes under for a protocol and selection (`runs/<group>/<name>`).
+         */
+        RunGroup: {
+            /** Group */
+            group: string;
+        };
         /** RunPaper */
         RunPaper: {
             /** Run */
@@ -4101,6 +4129,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_run_group: {
+        parameters: {
+            query: {
+                source: "repo" | "proposal";
+                name: string;
+                extractors?: "regex-only" | "cascade";
+                strategy?: "all" | "gaps";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunGroup"];
                 };
             };
             /** @description Validation Error */

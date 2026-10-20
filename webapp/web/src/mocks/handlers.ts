@@ -24,7 +24,7 @@ import type {
   ProposalSummary,
   Question,
 } from "@/api/ev"
-import { isName, runGroup } from "@/lib/jobs"
+import { isName } from "@/lib/jobs"
 
 import { EV_FIXTURES, evHandlers } from "./ev"
 
@@ -39,6 +39,14 @@ interface Db {
 }
 
 const fixture = <T,>(path: string) => structuredClone(EV_FIXTURES[path]) as T
+
+/** The fixture key of a run-group answer (webapp/tests/evidence_world.py records it in this param order). */
+const groupKey = (p: URLSearchParams) =>
+  `/api/ev/run-group?source=${p.get("source")}&name=${p.get("name")}&extractors=${p.get("extractors")}&strategy=${p.get("strategy")}`
+const groupOf = (r: { protocol: { source: string; name: string }; extractors?: string; strategy?: string }): string => {
+  const params = new URLSearchParams({ source: r.protocol.source, name: r.protocol.name, extractors: r.extractors ?? "cascade", strategy: r.strategy ?? "all" })
+  return (EV_FIXTURES[groupKey(params)] as { group: string } | undefined)?.group ?? `${r.protocol.source === "proposal" ? "proposal-" : ""}${r.protocol.name}-${r.extractors ?? "cascade"}${r.strategy === "gaps" && r.extractors !== "regex-only" ? "-gaps" : ""}`
+}
 
 function initialDb(): Db {
   const runs = fixture<{ id: string }[]>("/api/ev/runs").map((r) => r.id)
@@ -114,7 +122,7 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
     case "run": {
       const b = body as JobRequests["run"]
       if (!db.corpora.has(b.corpus)) return notFound(`no such corpus: '${b.corpus}'`)
-      const group = b.group ?? runGroup({ extractors: b.extractors ?? "cascade", strategy: b.strategy ?? "all", protocol: b.protocol })
+      const group = b.group ?? groupOf(b)
       const id = `${group}~${b.name ?? b.corpus}`
       if (db.runs.has(id)) return conflict(`run ${group}/${b.name ?? b.corpus} exists; give the run another name`)
       return { run: id, corpus: b.corpus }
@@ -263,6 +271,12 @@ export const handlers = [
     const kind = String(params.kind) as JobKind
     if (!(kind in LANE)) return notFound(`no such API endpoint: /api/ev/jobs/${kind}`)
     return submit(kind, (await request.json()) as JobRequests[typeof kind])
+  }),
+  http.get("/api/ev/run-group", ({ request }) => {
+    const key = groupKey(new URL(request.url).searchParams)
+    return key in EV_FIXTURES
+      ? HttpResponse.json(EV_FIXTURES[key] as Record<string, unknown>)
+      : HttpResponse.json({ detail: `not in the mock fixtures: ${key}` }, { status: 404 })
   }),
   ...evHandlers,
 ]

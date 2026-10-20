@@ -573,6 +573,11 @@ class ProtocolRef(Request):
     name: Name
 
 
+class RunGroup(Base):
+    """The group `evidence run` writes under for a protocol and selection (`runs/<group>/<name>`)."""
+    group: str
+
+
 class RunRequest(Request):
     """`evidence run` over one corpus into `$EV/runs/<group>/<name>` (the runbook's layout)."""
     corpus: Name
