@@ -175,26 +175,28 @@ done
 Row `EV-setup`: commit, pytest count, doctor result, job id, node, both protocols' sha256, the two `"ok"`
 lines.
 
-### 0.5 Live check after the 20 Oct architecture change (in the job; once)
+### 0.5 Live check after the 20 Oct architecture change (in the job, before step 1; once)
 
 Extractor ids hash their source files, several of which moved or changed, so the engine's record cache misses
 once: the next cascade, LLM-extractor or agentic run makes its model calls again (GPU hours). The callers' own
 caches (baselines, propose, judge, gold, synth) keep their keys and still hit. The Recorder no longer opens a
 fresh event loop per call. At pydantic-ai 2.55 that bug was not live in engine runs (the engine's default
 provider builds a fresh model and HTTP client per call); the change guards a shared-model setup.
+It runs on the committed offline example corpus `synth/examples/rag-demo-mixed`, so it needs nothing from step 1 and
+costs little before the long steps start.
 
 ```bash
-C=$CORPORA/rag-llm-s1-mixed
+C=synth/examples/rag-demo-mixed                      # committed offline corpus; the LLM corpora do not exist yet
 uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/live-check/rag1" --cache "$CACHE/live-check-rag.jsonl" \
   --model orch-model --retrieval global --k 8
 uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/live-check/rag2" --cache "$CACHE/live-check-rag.jsonl" \
   --model orch-model --retrieval global --k 8                    # immediate rerun: expect 0 model calls
 uv run evidence run --protocol $P --corpus "$C" --out "$RUNS/live-check" --cache "$CACHE/live-check" \
   --extractors cascade --strategy all --model orch-model --run-id cascade-check
-grep -l "Event loop is closed" "$RUNS"/live-check/*/calls/*.json    # expect no output
+grep -l "Event loop is closed" "$RUNS"/live-check/cascade-check/calls/*.json    # expect no output
 ```
 
-Row `EV-setup` notes: no `Event loop is closed` in any `calls/*.json` error; the second RAG run made 0 model
+Row `EV-setup`, notes: no `Event loop is closed` in any `calls/*.json` error; the second RAG run made 0 model
 calls (cache hit); the cascade run completed.
 
 ## 1. LLM-written corpora **(long)**
