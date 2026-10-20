@@ -8,11 +8,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from modelcall import (Answer, JsonlCache, ModelCallError, Prompt, ask, ask_sync, cache_key, default_key,
+from modelcall import (Answer, CachedFailure, JsonlCache, ModelCallError, Prompt, ask, ask_sync, cache_key,
+                       default_key,
                        run_sync)
 from modelcall.gateway import CallSettings
 
@@ -119,7 +120,7 @@ def test_error_is_redacted(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "secret123" not in err.reason and "secret123" not in str(err)
     assert err.reason.startswith("RuntimeError: ") and len(err.reason) <= 1000
     assert isinstance(err.cause, RuntimeError) and "secret123" in str(err.cause)
-    assert err.__cause__ is None and err.__suppress_context__
+    assert err.__cause__ is None and err.__context__ is None and err.__suppress_context__
     assert err.messages  # the request that was sent
 
 
@@ -146,6 +147,9 @@ LEGACY = {
     "judge": ({**OUT, "alias": "x", "created_at": "t", "input": {}, "model": "x", "prompt_sha256": "p",
                "served_model": "srv", "settings": {}, "task": "support", "user_prompt_sha256": "u",
                "usage": {"input_tokens": 3, "output_tokens": 4}}, "srv", 3, 4),
+    # gold.calls.Caller: the new shape plus the time and the prompt hash
+    "gold_calls": ({"at": "t", "model": "x", "output": OUT, "prompt_sha256": "p", "served_model": "srv",
+                    "usage": {"input_tokens": 3, "output_tokens": 4}}, "srv", 3, 4),
     # synth.render_llm: tokens at the top level
     "synth": ({"output": OUT, "model": "x", "served_model": "srv", "input_tokens": 3, "output_tokens": 4},
               "srv", 3, 4),
@@ -173,3 +177,33 @@ def test_ask_from_another_running_loop() -> None:
 
     with pytest.raises(RuntimeError, match="wait for itself"):
         run_sync(nested())
+
+
+def test_cached_too_long_raises_cached_failure(tmp_path: Path) -> None:
+    value = {"too_long": True, "reason": "prompt too long: 70000 tokens", "model": "x", "prompt_sha256": "p",
+             "at": "2026-10-20T00:00:00Z"}  # gold.calls.Caller's line for a prompt over the context
+    cache = JsonlCache(tmp_path / "c.jsonl")
+    cache.put(cache_key({"k": 1}), value)
+    counted = Counted()
+    with pytest.raises(CachedFailure) as info:
+        ask_sync(PROMPT, "P", model=counted.model(), cache=cache, key={"k": 1})
+    assert counted.calls == 0
+    err = info.value
+    assert isinstance(err, ModelCallError) and err.reason == "prompt too long: 70000 tokens"
+    assert err.value == value and err.cause is None and err.messages == []
+
+
+def test_flat_legacy_value_missing_fields_is_not_made_up(tmp_path: Path) -> None:
+    cache = JsonlCache(tmp_path / "c.jsonl")
+    cache.put(cache_key({"k": 1}), {"label": "x"})  # none of Out's fields
+    with pytest.raises(ValidationError):
+        ask_sync(PROMPT, "P", model=Counted().model(), cache=cache, key={"k": 1})
+
+
+@pytest.mark.parametrize("name", ["output", "model", "served_model", "usage"])
+def test_extra_cannot_overwrite_stored_fields(tmp_path: Path, name: str) -> None:
+    counted = Counted()
+    with pytest.raises(ValueError, match=name):
+        ask_sync(PROMPT, "P", model=counted.model(), cache=JsonlCache(tmp_path / "c.jsonl"), key={"k": 1},
+                 extra={name: "x"})
+    assert counted.calls == 0

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from evidence import extractors
-from evidence.extractors import base, llm, regex
+from evidence.extractors import base, llm, regex, screen
 import modelcall
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,6 +22,7 @@ def test_code_hash_covers_the_modules_the_extractors_depend_on() -> None:
                      "evidence/extractors/prompts/extract-v1.md"} <= names(llm.SOURCES)
     assert regex.CODE_SHA256 == base.source_sha256(*regex.SOURCES)
     assert llm.CODE_SHA256 == base.source_sha256(*llm.SOURCES)
+    assert "modelcall/call.py" in names(llm.SOURCES) and "modelcall/call.py" in names(screen.LLM_SOURCES)
 
 
 def test_model_settings_are_in_the_llm_config() -> None:

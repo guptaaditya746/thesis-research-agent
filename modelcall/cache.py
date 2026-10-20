@@ -74,7 +74,9 @@ def decode(value: Any, output_type: type[T]) -> tuple[T, str | None, str | None,
     the older shapes are read too (modelcall/tests/test_golden_keys.py pins them):
     - no `"output"`: the value holds the output's own fields beside other metadata (judge, propose);
     - tokens in `value["usage"]` or at the top level (synth);
-    - `served_model` at the top level or inside `usage` (baselines)."""
+    - `served_model` at the top level or inside `usage` (baselines).
+    It never makes an output up: a flat value whose fields do not validate raises pydantic's ValidationError.
+    A cached failure (`"too_long": True`) is `call.ask`'s to handle and never reaches here."""
     if "output" in value:
         raw = value["output"]
     else:

@@ -70,11 +70,24 @@ class ModelCallError(RuntimeError):
     """A model call failed. `reason` is redacted and at most 1000 characters; `cause` (the original exception)
     is never printed by callers, only classified; `messages` are the messages exchanged before the failure."""
 
-    def __init__(self, reason: str, cause: BaseException, messages: list[Any]) -> None:
+    def __init__(self, reason: str, cause: BaseException | None, messages: list[Any]) -> None:
         super().__init__(reason)
         self.reason = reason
+        # The UNREDACTED original exception: for classification only, never logged, printed or written.
         self.cause = cause
         self.messages = messages
+
+
+class CachedFailure(ModelCallError):
+    """A cache hit that records a failed call (gold.calls' `{"too_long": True, "reason", ...}` line): the call
+    is not made again. `value` is the cached dict; there is no cause and no messages."""
+
+    def __init__(self, reason: str, value: dict[str, Any]) -> None:
+        super().__init__(redact(str(reason))[:1000], None, [])
+        self.value = value
+
+
+STORED = ("output", "model", "served_model", "usage")  # the fields `ask` stores; `extra` may not overwrite them
 
 
 async def _reply(instructions: str, user_prompt: str, output_type: type[T], *, model: Model,
@@ -121,8 +134,12 @@ async def _attempt(prompt: Prompt, user_prompt: str, model: Model, settings: Cal
                           model_settings=settings.model_settings())
             reply = await (asyncio.wait_for(call, timeout_s) if timeout_s is not None else call)
         except Exception as exc:  # noqa: BLE001 - every failure leaves only as a redacted reason
-            raise ModelCallError(redact(f"{type(exc).__name__}: {exc}")[:1000], exc, list(messages)) from None
-    return reply, list(messages)
+            err = ModelCallError(redact(f"{type(exc).__name__}: {exc}")[:1000], exc, list(messages))
+        else:
+            return reply, list(messages)
+    # Raised outside the except block, so the unredacted exception is not the error's __context__ either.
+    err.__context__ = None
+    raise err from None
 
 
 async def ask(prompt: Prompt, user_prompt: str, *, model: Model, settings: CallSettings = CallSettings(),
@@ -136,9 +153,14 @@ async def ask(prompt: Prompt, user_prompt: str, *, model: Model, settings: CallS
         raise ValueError(f"prompt {prompt.name} has no output type")
     if cache is not None and key is None:
         raise ValueError("a cached call needs a key: the caller's key recipe, or default_key(...)")
+    clash = sorted(set(extra or {}) & set(STORED))
+    if clash:
+        raise ValueError(f"extra may not overwrite the stored fields {clash}")
     k = cache_key(key) if cache is not None and key is not None else None
     if cache is not None and k is not None and not refresh:
         hit = cache.get(k)
+        if isinstance(hit, dict) and hit.get("too_long") is True:
+            raise CachedFailure(hit.get("reason", "too_long"), hit)
         if hit is not None:
             output, _, served, input_tokens, output_tokens = decode(hit, prompt.output_type)
             return Answer(output, model_name(model), served, input_tokens, output_tokens, True, k, [])
