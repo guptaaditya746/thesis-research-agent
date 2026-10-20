@@ -43,8 +43,8 @@ def redact(text: str) -> str:
 
 
 @dataclass(frozen=True)
-class Reply(Generic[T]):
-    """A structured reply with what produced it: the alias asked, the model name the server reported
+class _Reply(Generic[T]):
+    """What one made call returned: the output, the alias asked, the model name the server reported
     (LiteLLM passes vLLM's served name through), and token usage for cost accounting."""
     output: T
     model: str
@@ -91,7 +91,7 @@ STORED = ("output", "model", "served_model", "usage")  # the fields `ask` stores
 
 
 async def _reply(instructions: str, user_prompt: str, output_type: type[T], *, model: Model,
-                 model_settings: ModelSettings | None = None, retries: int = 1) -> Reply[T]:
+                 model_settings: ModelSettings | None = None, retries: int = 1) -> _Reply[T]:
     """One call whose reply must be an `output_type` object, with the served model name and usage.
 
     Schema-constrained decoding (NativeOutput) where the model supports it, as the LiteLLM models do;
@@ -101,21 +101,8 @@ async def _reply(instructions: str, user_prompt: str, output_type: type[T], *, m
                                   instructions=instructions, retries=retries)
     result = await agent.run(user_prompt, model_settings=model_settings or default_settings())
     usage = result.usage() if callable(result.usage) else result.usage
-    return Reply(result.output, model_name(model), result.response.model_name,
+    return _Reply(result.output, model_name(model), result.response.model_name,
                  usage.input_tokens or 0, usage.output_tokens or 0)
-
-
-# Until Task 5 ports their callers onto `ask`: the old public names, as thin wrappers over `_reply`.
-async def structured_reply(instructions: str, user_prompt: str, output_type: type[T], *, model: Model,
-                           model_settings: ModelSettings | None = None, retries: int = 1) -> Reply[T]:
-    return await _reply(instructions, user_prompt, output_type, model=model, model_settings=model_settings,
-                        retries=retries)
-
-
-async def structured(instructions: str, user_prompt: str, output_type: type[T], *, model: Model,
-                     model_settings: ModelSettings | None = None, retries: int = 1) -> T:
-    return (await _reply(instructions, user_prompt, output_type, model=model, model_settings=model_settings,
-                         retries=retries)).output
 
 
 def default_key(prompt: Prompt, user_prompt: str, model: Model, settings: CallSettings) -> dict[str, Any]:
@@ -125,7 +112,7 @@ def default_key(prompt: Prompt, user_prompt: str, model: Model, settings: CallSe
 
 
 async def _attempt(prompt: Prompt, user_prompt: str, model: Model, settings: CallSettings,
-                   timeout_s: float | None) -> tuple[Reply[Any], list[Any]]:
+                   timeout_s: float | None) -> tuple[_Reply[Any], list[Any]]:
     """One model call on the current (model) loop; every failure becomes a redacted `ModelCallError`."""
     assert prompt.output_type is not None
     with capture_run_messages() as messages:

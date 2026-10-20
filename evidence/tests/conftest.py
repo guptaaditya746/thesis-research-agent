@@ -82,7 +82,7 @@ def prompt_of(messages: list[ModelMessage]) -> str:
 
 
 def respond(info: AgentInfo, args: dict[str, Any]) -> ModelResponse:
-    """The reply in the output mode structured_reply chose: an output tool call, or JSON text."""
+    """The reply in the output mode modelcall.ask chose: an output tool call, or JSON text."""
     if info.output_tools:
         return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, args)])
     return ModelResponse(parts=[TextPart(json.dumps(args))])

@@ -22,7 +22,8 @@ def test_code_hash_covers_the_modules_the_extractors_depend_on() -> None:
                      "evidence/extractors/prompts/extract-v1.md"} <= names(llm.SOURCES)
     assert regex.CODE_SHA256 == base.source_sha256(*regex.SOURCES)
     assert llm.CODE_SHA256 == base.source_sha256(*llm.SOURCES)
-    assert "modelcall/call.py" in names(llm.SOURCES) and "modelcall/call.py" in names(screen.LLM_SOURCES)
+    for module in ("modelcall/call.py", "modelcall/pins.py"):
+        assert module in names(llm.SOURCES) and module in names(screen.LLM_SOURCES)
 
 
 def test_model_settings_are_in_the_llm_config() -> None:

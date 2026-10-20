@@ -3,9 +3,8 @@
 `call.ask` (and `ask_sync`) is the entry point: a `Prompt`, a user prompt, a model and its `CallSettings`, cached
 under a key, every failure a redacted `ModelCallError`. Under it: `pins` (the pinned models, standard library
 only), `loop` (the one event loop), `gateway` (LiteLLM endpoints, rotation, settings), `cache` (the append-only
-result cache, its key and `decode`) and `prompt` (prompt files and their hash). `structured`, `structured_reply`
-and `Reply` stay until their callers move onto `ask`. Names load on first use (PEP 562), so
-`import modelcall.pins` does not import pydantic-ai."""
+result cache, its key and `decode`) and `prompt` (prompt files and their hash). Names load on first use
+(PEP 562), so `import modelcall.pins` does not import pydantic-ai."""
 from __future__ import annotations
 
 from importlib import import_module
@@ -13,8 +12,7 @@ from typing import Any
 
 _EXPORTS = {
     "cache": ("KEY_LINE", "JsonlCache", "cache_key", "decode"),
-    "call": ("Answer", "CachedFailure", "ModelCallError", "Reply", "ask", "ask_sync", "default_key", "redact",
-             "structured", "structured_reply"),
+    "call": ("Answer", "CachedFailure", "ModelCallError", "ask", "ask_sync", "default_key", "redact"),
     "gateway": ("DEFAULT_BASE_URL", "CallSettings", "Rotation", "base_url", "model_identity", "model_name",
                 "openai_model", "settings"),
     "loop": ("model_loop", "on_model_loop", "run_sync"),

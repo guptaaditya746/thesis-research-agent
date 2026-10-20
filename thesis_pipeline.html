@@ -479,7 +479,7 @@ const STAGE_DETAILS = {
     what: "Finds the experimental setup: which models were compared, under which conditions (with or without retrieval), on which dataset.",
     how: ["An LLM extractor with a JSON schema per call (guided decoding through LiteLLM), over section-sized chunks, as the gold builder already does for any answer shape."],
     io: ["methods and setup sections", "Experiment and Condition items"],
-    code: ["reusable: gold/extract.py and gold/llm.py (schema-constrained extraction with retries), gold/chunks.py"],
+    code: ["reusable: gold/extract.py and modelcall/call.py (schema-constrained extraction with retries), gold/chunks.py"],
   },
   x_metric: {
     what: "Finds how factual accuracy was measured: the metric's name, what it counts, and whether higher is better.",
@@ -552,7 +552,7 @@ const STAGE_DETAILS = {
       "Append-only; a changed extractor (new code or config hash) has a new id, so it never hits an old entry.",
     ],
     io: ["extractor id + task hash", "the recorded result"],
-    code: ["reusable: gold/llm.py (cache_key, JsonlCache)"],
+    code: ["reusable: modelcall/cache.py (cache_key, JsonlCache)"],
   },
   replay: {
     what: "Rebuilds the evidence, the graph and the answer from the records alone. A missing record is an error, never a new call.",
@@ -613,7 +613,7 @@ const STAGE_DETAILS = {
     ],
     io: ["ground truth + rendering plan", "paper.md per study"],
     differs: ["An LLM can add, drop or change facts while writing; that is why the fidelity check exists."],
-    code: ["reusable: gold/llm.py (pydantic-ai calls through LiteLLM), llm-setup (the model stack)"],
+    code: ["reusable: modelcall/gateway.py and modelcall/call.py (pydantic-ai calls through LiteLLM), llm-setup (the model stack)"],
   },
   fidelity: {
     what: "Checks that every generated paper faithfully contains its ground truth: no unintended additions, omissions or contradictions.",
@@ -714,8 +714,8 @@ const STAGE_DETAILS = {
   },
   gateway: {
     what: "LiteLLM on port 4000: one OpenAI-compatible endpoint with stable model aliases.",
-    how: ["Structured output (a JSON schema per call) is how extractors get typed items back; the helper in gold/llm.py already does this with pydantic-ai."],
-    code: ["gold/llm.py"],
+    how: ["Structured output (a JSON schema per call) is how extractors get typed items back; modelcall.ask (modelcall/call.py) already does this with pydantic-ai."],
+    code: ["modelcall/call.py"],
   },
 
   // ---------------------------------------------------------------- Extensions

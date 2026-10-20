@@ -613,7 +613,7 @@ as files, so Codex, tests and later the web app drive it the same way. Directory
 Choice points (fixed): 1 screening question and terms; 2 treatment and control role definitions;
 3 question metrics and direction; 4 `min_effect`; 5 pairing preference; 6 label table; 7 cascade per
 type and funnel strategy; 8 locate strategy. A decision without a reason is refused. Every model call
-goes through `modelcall.structured` with the record cache; nothing runs a proposed protocol automatically.
+goes through `modelcall.ask` with the record cache; nothing runs a proposed protocol automatically.
 
 **Vocabulary snapshot** `evidence/vocab/<name>.json`: `{name, sha256, sources: [{name, version, url}],
 terms: [{id, label, synonyms, kind: metric | condition | method, source, higher_is_better?}]}`, built
@@ -644,7 +644,7 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   `--force`. Refusals are `ProposalError`, exit 2 with the message (also a malformed vocabulary, a broken
   base revision, a non-string choice); a failed model call exits 1. The flow hashes raw bytes, so
   `.gitattributes` keeps `proposals/**`, `evidence/propose/**` and `evidence/vocab/**` LF.
-- **Model calls.** frame, critic and cards make one call each through `modelcall.structured` (temperature 0,
+- **Model calls.** frame, critic and cards make one call each through `modelcall.ask` (temperature 0,
   seed 0, thinking off), cached in `DIR/cache.jsonl` under `modelcall.cache_key({step, prompt_sha256 (the
   instructions and the output schema), model identity (modelcall.model_identity: the pinned weights of
   orch-model), input_sha256 (the user prompt), settings})`; a rerun with the same inputs makes no call.

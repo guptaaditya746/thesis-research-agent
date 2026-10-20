@@ -1,8 +1,6 @@
 """modelcall: structured calls, rotation, prompt hashes, the result cache."""
 from __future__ import annotations
 
-import asyncio
-
 from pydantic import BaseModel
 from pydantic_ai.models.test import TestModel
 
@@ -14,10 +12,10 @@ class Verdict(BaseModel):
     findings: list[str]
 
 
-def test_structured_returns_the_output_type():
-    out = asyncio.run(modelcall.structured("Screen the text.", "some text", Verdict,
-                                     model=TestModel(custom_output_args={"relevant": True, "findings": ["x"]})))
-    assert out == Verdict(relevant=True, findings=["x"])
+def test_ask_returns_the_output_type():
+    answer = modelcall.ask_sync(modelcall.Prompt.inline("Screen the text.", Verdict), "some text",
+                                model=TestModel(custom_output_args={"relevant": True, "findings": ["x"]}))
+    assert answer.output == Verdict(relevant=True, findings=["x"])
 
 
 def test_litellm_models_use_schema_constrained_output(monkeypatch):
