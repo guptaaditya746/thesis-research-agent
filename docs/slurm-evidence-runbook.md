@@ -1,8 +1,9 @@
 # Runbook: the evidence-level system on Slurm, first live run
 
 The evidence-level system (`evidence/`, `synth/`, `evaluation/`; formats in `docs/evidence-system.md`) is
-built and tested only offline, with scripted models (1335 passed, 1 skipped on `arch/deepen`). This session runs it
-against the real models for the first time: LLM-written synthetic corpora (the five levels, the benchmark
+built and tested only offline, with scripted models (1338 passed, 1 skipped in WSL after the 20 Oct
+architecture change). This session runs it against the real models for the first time: LLM-written synthetic
+corpora (the five levels, the benchmark
 knobs, a counterfactual variant), the engine in both strategies (`all`, `gaps`) with the LLM extractors and
 the agentic extractor, replay and re-execution, both baselines, the scores with intervals, the shift of the
 variant, the benchmark records per extractor, and a dry run of the proposal flow.
@@ -187,17 +188,22 @@ costs little before the long steps start.
 
 ```bash
 C=synth/examples/rag-demo-mixed                      # committed offline corpus; the LLM corpora do not exist yet
-uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/live-check/rag1" --cache "$CACHE/live-check-rag.jsonl" \
+L="$EV/live-check"                                   # outside $RUNS, so the web app does not list it as a run group
+uv run evaluate rag-baseline --corpus "$C" --out "$L/rag1" --cache "$CACHE/live-check-rag.jsonl" \
   --model orch-model --retrieval global --k 8
-uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/live-check/rag2" --cache "$CACHE/live-check-rag.jsonl" \
-  --model orch-model --retrieval global --k 8                    # immediate rerun: expect 0 model calls
-uv run evidence run --protocol $P --corpus "$C" --out "$RUNS/live-check" --cache "$CACHE/live-check" \
+wc -l < "$CACHE/live-check-rag.jsonl"                # n1: one line per model call made; record it
+uv run evaluate rag-baseline --corpus "$C" --out "$L/rag2" --cache "$CACHE/live-check-rag.jsonl" \
+  --model orch-model --retrieval global --k 8        # immediate rerun: every call a cache hit
+wc -l < "$CACHE/live-check-rag.jsonl"                # expect n1 again: no line appended
+cmp "$L/rag1/answer.json" "$L/rag2/answer.json" && echo "answers identical"   # expect "answers identical"
+uv run evidence run --protocol $P --corpus "$C" --out "$L" --cache "$CACHE/live-check" \
   --extractors cascade --strategy all --model orch-model --run-id cascade-check
-grep -l "Event loop is closed" "$RUNS"/live-check/cascade-check/calls/*.json    # expect no output
+grep -l "Event loop is closed" "$L"/cascade-check/calls/*.json    # expect no output
 ```
 
-Row `EV-setup`, notes: no `Event loop is closed` in any `calls/*.json` error; the second RAG run made 0 model
-calls (cache hit); the cascade run completed.
+Row `EV-setup`, notes: no `Event loop is closed` in any `calls/*.json` error; the RAG cache's line count
+after the second run equals the count after the first (n1, recorded) and `cmp` printed `answers identical`
+(the rerun made no model call); the cascade run completed.
 
 ## 1. LLM-written corpora **(long)**
 

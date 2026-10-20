@@ -112,7 +112,7 @@ He wrote no numbered research questions. Read from his text:
 ## 6. What exists
 
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models
-(1335 passed, 1 skipped in WSL, 20 Oct, after the architecture deepening below; 1250 on 18 Oct before it).
+(1338 passed, 1 skipped in WSL, 20 Oct, after the architecture deepening below; 1250 on 18 Oct before it).
 On Windows a few tests fail for platform reasons only: the POSIX signal tests in `agent/`, a CRLF byte-count
 test in `webapp/`, one `propose` test. The web app's vitest run has one older failure, "lists every corpus with
 level, knobs and the variant". A partial first live run was conducted on
