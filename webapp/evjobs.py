@@ -25,12 +25,14 @@ import asyncio
 import os
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 
+from evidence.propose.common import CARDS, CRITIC, DECISIONS, DRAFT, FRAME, PROTOCOL
 from evidence.rundir import RunDir
 from jsonio import file_sha256, write_text_atomic
 
@@ -41,9 +43,12 @@ from .evmodels import (
     DecisionsRequest,
     DecisionsResult,
     FreezeRequest,
+    Name,
     ProposeRequest,
+    ProtocolRef,
     Question,
     RagBaselineRequest,
+    RunGroup,
     RunRequest,
     ScoreRequest,
     SynthRequest,
@@ -51,10 +56,10 @@ from .evmodels import (
 from .evquestions import Questions
 from .files import RUN_SEP, BadRequest, Conflict, NotFound, check_id, inside, read_json
 from .jobs import JobManager, step
-from .models import Job, JobStep
+from .models import Job, JobStep, Lane
 from .settings import Settings
 
-PROPOSE_STEPS = (("frame", "frame.json"), ("draft", "draft.yaml"), ("critic", "critic.json"), ("cards", "cards.json"))
+PROPOSE_STEPS = (("frame", FRAME), ("draft", DRAFT), ("critic", CRITIC), ("cards", CARDS))
 BASELINE_GROUPS = ("rag-baseline", "agent-baseline")   # runs/<group> of the baselines, never an engine run's
 GATEWAY_TIMEOUT_S = 3.0
 
@@ -86,8 +91,35 @@ async def need_gateway(settings: Settings) -> None:
         raise Conflict(f"model job refused: {problem}")
 
 
+@dataclass(frozen=True)
+class JobPlan:
+    """What one job kind starts: its steps, the refs the viewer follows, the lane and whether it needs the model
+    gateway. Built by `Commands.<kind>(request)`, started by the router's `_start`."""
+
+    kind: str   # synth, run, rag-baseline, agent-baseline, score, compare, propose, freeze
+    steps: list[JobStep]
+    refs: dict[str, str]
+    lane: Lane
+    needs_gateway: bool
+
+
+def run_group(protocol: ProtocolRef, extractors: str, strategy: str) -> str:
+    """The runbook's group names: regex-only, cascade, cascade-gaps, agentic, agentic-gaps; else the protocol's
+    name (a proposal's prefixed with proposal-) and the selection. The only place a run group is named."""
+    gaps = "-gaps" if strategy == "gaps" else ""
+    name, source = protocol.name, protocol.source
+    if extractors == "regex-only" and source == "repo" and name.startswith("rag-factuality"):
+        return "regex-only"   # the regex extractors of both RAG protocols are the same
+    if source == "repo" and name == "rag-factuality":
+        return f"cascade{gaps}"
+    if source == "repo" and name == "rag-factuality-agentic":
+        return f"agentic{gaps}"
+    prefix = f"proposal-{name}" if source == "proposal" else name
+    return f"{prefix}-{extractors}{gaps if extractors != 'regex-only' else ''}"
+
+
 class Commands:
-    """The argv templates; every method checks its inputs against the configured roots and returns the steps."""
+    """The argv templates; every method checks its inputs against the configured roots and returns the plan."""
 
     def __init__(self, settings: Settings, files: EvidenceFiles, jobs: JobManager, questions: Questions) -> None:
         self.s, self.files, self.jobs, self.questions = settings, files, jobs, questions
@@ -136,31 +168,16 @@ class Commands:
             if not path.is_file():
                 raise NotFound(f"no such protocol: {name!r}")
             return path
-        path = inside(self.proposals(), name, "protocol.yaml")
+        path = inside(self.proposals(), name, PROTOCOL)
         if not path.parent.is_dir():
             raise NotFound(f"no such proposal: {name!r}")
         if not path.is_file():
             raise Conflict(f"proposal {name} is not frozen yet (no protocol.yaml): decide the cards and freeze it")
         return path
 
-    @staticmethod
-    def group(request: RunRequest) -> str:
-        """The runbook's group names: regex-only, cascade, cascade-gaps, agentic, agentic-gaps; else the protocol's
-        name (a proposal's prefixed with proposal-) and the selection."""
-        gaps = "-gaps" if request.strategy == "gaps" else ""
-        name, source = request.protocol.name, request.protocol.source
-        if request.extractors == "regex-only" and source == "repo" and name.startswith("rag-factuality"):
-            return "regex-only"   # the regex extractors of both RAG protocols are the same
-        if source == "repo" and name == "rag-factuality":
-            return f"cascade{gaps}"
-        if source == "repo" and name == "rag-factuality-agentic":
-            return f"agentic{gaps}"
-        prefix = f"proposal-{name}" if source == "proposal" else name
-        return f"{prefix}-{request.extractors}{gaps if request.extractors != 'regex-only' else ''}"
-
     # --- the commands ----------------------------------------------------------------------------------
 
-    def synth(self, r: SynthRequest) -> tuple[list[JobStep], dict[str, str]]:
+    def synth(self, r: SynthRequest) -> JobPlan:
         root = self.corpora()
         outputs = [f"{r.name}-{level}" for level in r.levels] + [f"{r.name}-mixed"]
         there = [n for n in outputs if inside(root, check_id(n, "corpus")).exists()]
@@ -171,12 +188,12 @@ class Commands:
                          "--renderer", "template", "--levels", ",".join(dict.fromkeys(r.levels)),
                          "--duplicates", r.duplicates, "--missing", r.missing, "--outliers", r.outliers,
                          "--irrelevant", r.irrelevant, "--out", root)
-        return [step("synth build", argv)], {"corpus_set": r.name, "corpus": f"{r.name}-mixed"}
+        return JobPlan("synth", [step("synth build", argv)], {"corpus_set": r.name, "corpus": f"{r.name}-mixed"}, "cpu", False)
 
-    def run(self, r: RunRequest) -> tuple[list[JobStep], dict[str, str]]:
+    def run(self, r: RunRequest) -> JobPlan:
         corpus = self.corpus(r.corpus)
         protocol = self.protocol(r.protocol.source, r.protocol.name)
-        group, name = r.group or self.group(r), r.name or r.corpus
+        group, name = r.group or run_group(r.protocol, r.extractors, r.strategy), r.name or r.corpus
         check_id(group, "group")
         check_id(name, "run")
         if group in BASELINE_GROUPS:
@@ -189,7 +206,9 @@ class Commands:
         argv = self.tool("evidence", "run", "--protocol", protocol, "--corpus", corpus, "--out", out,
                          "--cache", self.engine_cache(), "--extractors", r.extractors, "--strategy", r.strategy,
                          "--model", r.model, "--run-id", name, *(["--retry-errors"] if r.retry_errors else []))
-        return [step("evidence run", argv)], {"run": run_id, "corpus": r.corpus}
+        regex_only = r.extractors == "regex-only"
+        return JobPlan("run", [step("evidence run", argv)], {"run": run_id, "corpus": r.corpus},
+                       "cpu" if regex_only else "model", not regex_only)
 
     def _baseline_out(self, system: str, corpus: str) -> tuple[Path, str]:
         out = inside(self.runs(), system, corpus)
@@ -199,24 +218,24 @@ class Commands:
         self.free("run", run_id)
         return out, run_id
 
-    def rag_baseline(self, r: RagBaselineRequest) -> tuple[list[JobStep], dict[str, str]]:
+    def rag_baseline(self, r: RagBaselineRequest) -> JobPlan:
         corpus = self.corpus(r.corpus)
         out, run_id = self._baseline_out("rag-baseline", r.corpus)
         argv = self.tool("evaluate", "rag-baseline", "--corpus", corpus, "--out", out,
                          "--cache", self.cache_root() / "rag-baseline.jsonl", "--model", r.model,
                          "--retrieval", r.retrieval, "--k", r.k)
-        return [step("rag-baseline", argv)], {"run": run_id, "corpus": r.corpus}
+        return JobPlan("rag-baseline", [step("rag-baseline", argv)], {"run": run_id, "corpus": r.corpus}, "model", True)
 
-    def agent_baseline(self, r: AgentBaselineRequest) -> tuple[list[JobStep], dict[str, str]]:
+    def agent_baseline(self, r: AgentBaselineRequest) -> JobPlan:
         corpus = self.corpus(r.corpus)
         out, run_id = self._baseline_out("agent-baseline", r.corpus)
         agent_root = ["--agent-root", self.s.agent_root] if self.s.agent_root else []
         argv = self.tool("evaluate", "agent-baseline", "--corpus", corpus, "--out", out,
                          "--cache", self.cache_root() / "agent-baseline.jsonl", "--model", r.model, *agent_root,
                          "--base-url", self.s.litellm_base_url, "--run-id", r.corpus)
-        return [step("agent-baseline", argv)], {"run": run_id, "corpus": r.corpus}
+        return JobPlan("agent-baseline", [step("agent-baseline", argv)], {"run": run_id, "corpus": r.corpus}, "model", True)
 
-    def score(self, r: ScoreRequest) -> tuple[list[JobStep], dict[str, str]]:
+    def score(self, r: ScoreRequest) -> JobPlan:
         path = self.files.run_dir(r.run)
         summary = self.files.run_summary(path)
         if summary is None or summary.kind != "engine":
@@ -240,9 +259,9 @@ class Commands:
         self.free("score", score_id)
         out = inside(self.scores(), summary.group, summary.name)
         argv = self.tool("evaluate", "score", "--run", path, "--corpus", corpus, *baselines, *reexec, "--out", out)
-        return [step("evaluate score", argv)], {"score": score_id}
+        return JobPlan("score", [step("evaluate score", argv)], {"score": score_id}, "cpu", False)
 
-    def compare(self, r: CompareRequest) -> tuple[list[JobStep], dict[str, str]]:
+    def compare(self, r: CompareRequest) -> JobPlan:
         reports = [self.files.score_dir(score_id, "report.json")[0] for score_id in dict.fromkeys(r.reports)]
         if len(reports) < 2:
             raise Conflict("a comparison needs two different reports")
@@ -251,14 +270,14 @@ class Commands:
             raise Conflict(f"scores/{r.name} exists and is not a comparison; choose another name")
         self.free("score", r.name)
         argv = self.tool("evaluate", "compare", "--out", out, *reports)
-        return [step("evaluate compare", argv)], {"score": r.name}
+        return JobPlan("compare", [step("evaluate compare", argv)], {"score": r.name}, "cpu", False)
 
-    def propose(self, r: ProposeRequest) -> tuple[list[JobStep], dict[str, str], Question]:
+    def propose(self, r: ProposeRequest) -> JobPlan:
         q = self.questions.get(r.question)
         directory = inside(self.proposals(), r.proposal)
-        if (directory / "protocol.yaml").exists():
+        if (directory / PROTOCOL).exists():
             raise Conflict(f"proposal {r.proposal} is frozen; change it with `evidence propose amend` (command line)")
-        frame = read_json(directory / "frame.json")
+        frame = read_json(directory / FRAME)
         if isinstance(frame, dict) and frame.get("question") != q.question:
             raise Conflict(f"proposal {r.proposal} asks another question; choose another name")
         self.free("proposal", r.proposal)
@@ -275,26 +294,27 @@ class Commands:
         for n, (name, _) in enumerate(PROPOSE_STEPS[first:], start=first):
             needs = directory / PROPOSE_STEPS[n - 1][1] if n > 0 else None
             steps.append(step(f"propose {name}", argv[name], needs=needs))
-        return steps, {"proposal": r.proposal}, q
+        return JobPlan("propose", steps, {"proposal": r.proposal}, "model", True)
 
     def proposal_dir(self, name: str) -> Path:
         directory = inside(self.proposals(), check_id(name, "proposal"))
-        if not (directory / "cards.json").is_file():
+        if not (directory / CARDS).is_file():
             raise Conflict(f"proposal {name} has no cards yet (run the proposal flow first)")
-        if (directory / "protocol.yaml").exists():
+        if (directory / PROTOCOL).exists():
             raise Conflict(f"proposal {name} is frozen; change it with `evidence propose amend` (command line)")
         self.free("proposal", name)
         return directory
 
-    def freeze(self, r: FreezeRequest) -> tuple[list[JobStep], dict[str, str]]:
+    def freeze(self, r: FreezeRequest) -> JobPlan:
         directory = self.proposal_dir(r.proposal)
-        cards = read_json(directory / "cards.json") or {}
-        if not (directory / "decisions.yaml").is_file():
+        cards = read_json(directory / CARDS) or {}
+        if not (directory / DECISIONS).is_file():
             raise Conflict(f"proposal {r.proposal} has no decisions.yaml")
         _, problems = self.files.decisions_of(directory, cards.get("cards") or [])
         if problems:
             raise Conflict("decisions.yaml refused:\n  " + "\n  ".join(problems))
-        return [step("propose freeze", self.tool("evidence", "propose", "freeze", directory))], {"proposal": r.proposal}
+        return JobPlan("freeze", [step("propose freeze", self.tool("evidence", "propose", "freeze", directory))],
+                       {"proposal": r.proposal}, "cpu", False)
 
     def decisions(self, name: str, r: DecisionsRequest) -> DecisionsResult:
         """decisions.yaml as `evidence propose cards` writes it (its header, `decisions:` in card order), each
@@ -307,12 +327,12 @@ class Commands:
         from evidence.propose.common import dump_yaml
 
         directory = self.proposal_dir(name)
-        path = directory / "decisions.yaml"
+        path = directory / DECISIONS
         current = file_sha256(path) if path.is_file() else None
         if current != r.base_sha256 and not r.force:
             raise Conflict("decisions.yaml changed since the form loaded it (edited by hand or in another tab): "
                            "reload to see it, or overwrite it")
-        cards = (read_json(directory / "cards.json") or {}).get("cards") or []
+        cards = (read_json(directory / CARDS) or {}).get("cards") or []
         on_file, _ = self.files.decisions_of(directory, cards)
         order = {c.get("id"): n for n, c in enumerate(cards)}
         entries = []
@@ -363,51 +383,49 @@ def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, qu
     async def ev_cancel_job(job_id: str) -> Job:
         return jobs.cancel(job_id)
 
+    async def _start(plan: JobPlan, request: Any) -> Job:
+        if plan.needs_gateway:
+            await need_gateway(settings)
+        return jobs.submit(plan.kind, request.model_dump(), plan.steps, lane=plan.lane, refs=plan.refs)
+
     @api.post("/jobs/synth", response_model=Job, status_code=202)
     async def ev_start_synth(request: SynthRequest) -> Job:
-        steps, refs = c.synth(request)
-        return jobs.submit("synth", request.model_dump(), steps, lane="cpu", refs=refs)
+        return await _start(c.synth(request), request)
 
     @api.post("/jobs/run", response_model=Job, status_code=202)
     async def ev_start_run(request: RunRequest) -> Job:
-        steps, refs = c.run(request)
-        lane = "cpu" if request.extractors == "regex-only" else "model"
-        if lane == "model":
-            await need_gateway(settings)
-        return jobs.submit("run", request.model_dump(), steps, lane=lane, refs=refs)
+        return await _start(c.run(request), request)
 
     @api.post("/jobs/rag-baseline", response_model=Job, status_code=202)
     async def ev_start_rag_baseline(request: RagBaselineRequest) -> Job:
-        steps, refs = c.rag_baseline(request)
-        await need_gateway(settings)
-        return jobs.submit("rag-baseline", request.model_dump(), steps, lane="model", refs=refs)
+        return await _start(c.rag_baseline(request), request)
 
     @api.post("/jobs/agent-baseline", response_model=Job, status_code=202)
     async def ev_start_agent_baseline(request: AgentBaselineRequest) -> Job:
-        steps, refs = c.agent_baseline(request)
-        await need_gateway(settings)
-        return jobs.submit("agent-baseline", request.model_dump(), steps, lane="model", refs=refs)
+        return await _start(c.agent_baseline(request), request)
 
     @api.post("/jobs/score", response_model=Job, status_code=202)
     async def ev_start_score(request: ScoreRequest) -> Job:
-        steps, refs = c.score(request)
-        return jobs.submit("score", request.model_dump(), steps, lane="cpu", refs=refs)
+        return await _start(c.score(request), request)
 
     @api.post("/jobs/compare", response_model=Job, status_code=202)
     async def ev_start_compare(request: CompareRequest) -> Job:
-        steps, refs = c.compare(request)
-        return jobs.submit("compare", request.model_dump(), steps, lane="cpu", refs=refs)
+        return await _start(c.compare(request), request)
 
     @api.post("/jobs/propose", response_model=Job, status_code=202)
     async def ev_start_propose(request: ProposeRequest) -> Job:
-        steps, refs, _ = c.propose(request)
-        await need_gateway(settings)
-        return jobs.submit("propose", request.model_dump(), steps, lane="model", refs=refs)
+        return await _start(c.propose(request), request)
 
     @api.post("/jobs/freeze", response_model=Job, status_code=202)
     async def ev_start_freeze(request: FreezeRequest) -> Job:
-        steps, refs = c.freeze(request)
-        return jobs.submit("freeze", request.model_dump(), steps, lane="cpu", refs=refs)
+        return await _start(c.freeze(request), request)
+
+    @api.get("/run-group", response_model=RunGroup)
+    def ev_run_group(source: Literal["repo", "proposal"], name: Name,
+                     extractors: Literal["regex-only", "cascade"] = "cascade",
+                     strategy: Literal["all", "gaps"] = "all") -> RunGroup:
+        """The group a run with this protocol and selection is written under (runs/<group>/<name>)."""
+        return RunGroup(group=run_group(ProtocolRef(source=source, name=name), extractors, strategy))
 
     # --- decisions -----------------------------------------------------------------------------------
 
