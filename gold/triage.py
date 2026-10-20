@@ -180,6 +180,6 @@ def triage(qid: str, out_root: Path, corpus: GoldCorpus | None, rotation: modelc
            settings: BuildSettings | None = None, batch: int = BATCH,
            log: Callable[[str], None] = print) -> dict[str, int]:
     """Label every candidate of $GOLD/<qid>/ that has no label yet; returns the label counts (and unsorted)."""
-    counts = asyncio.run(_triage(QuestionDir(Path(out_root) / qid), Texts(corpus), rotation,
-                                 settings or BuildSettings.from_env(), batch, log))
+    counts = modelcall.run_sync(_triage(QuestionDir(Path(out_root) / qid), Texts(corpus), rotation,
+                                settings or BuildSettings.from_env(), batch, log))
     return {label: counts.get(label, 0) for label in (*LABELS, "unsorted")}

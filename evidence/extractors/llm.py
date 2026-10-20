@@ -1,7 +1,7 @@
 """Single-call LLM extractors, one per evidence type (kind llm, determinism near_exact).
 
 Per chunk of the task's scope (gold/chunks.py, section-aware) one schema-constrained call
-(modelcall.structured_reply through the run's recorder, temperature 0, fixed seed) lists the items with
+(modelcall.ask through the run's recorder, temperature 0, fixed seed) lists the items with
 their fields, links to context items and a verbatim quote per span role. Every quote is anchored with
 agent/anchor.find against the whole document; quotes rejected for a reason a new quote can fix get one
 retry call per chunk with the reason (as gold/extract.py does). A `value` span is narrowed to the number

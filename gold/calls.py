@@ -32,7 +32,6 @@ from pathlib import Path
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel
-from pydantic_ai import capture_run_messages
 from pydantic_ai.exceptions import IncompleteToolCall, ModelHTTPError
 from pydantic_ai.messages import ModelResponse
 
@@ -82,8 +81,9 @@ class CallError(Exception):
         self.cached = cached
 
 
-def classify(exc: BaseException, messages: list[Any]) -> tuple[str, str]:
-    """(kind, reason) of a failed call, from the exception and the messages the run exchanged."""
+def classify(exc: BaseException | None, messages: list[Any]) -> tuple[str, str]:
+    """(kind, reason) of a failed call, from the original exception (`modelcall.ModelCallError.cause`) and the
+    messages the run exchanged (`.messages`). Only the redacted reason leaves this function."""
     if isinstance(exc, TimeoutError):
         return "failed", "timeout"
     cut = any(isinstance(m, ModelResponse) and m.finish_reason == "length" for m in messages)
@@ -96,12 +96,19 @@ def classify(exc: BaseException, messages: list[Any]) -> tuple[str, str]:
     return "failed", modelcall.redact(text)[:300]
 
 
-class _Failed(Exception):
-    """A failed structured call with the messages its run exchanged (for `classify`)."""
+class _Staged:
+    """The cache as `modelcall.ask` sees it: reads go to the cache, the one write is held back until the caller's
+    `accept` passes (a refused reply is never cached)."""
 
-    def __init__(self, exc: Exception, messages: list[Any]) -> None:
-        super().__init__(str(exc))
-        self.exc, self.messages = exc, messages
+    def __init__(self, cache: modelcall.JsonlCache) -> None:
+        self.cache = cache
+        self.line: tuple[str, Any] | None = None
+
+    def get(self, key: str) -> Any | None:
+        return self.cache.get(key)
+
+    def put(self, key: str, value: Any) -> None:
+        self.line = (key, value)
 
 
 @dataclass
@@ -149,11 +156,12 @@ class Caller:
         self._slots = asyncio.Semaphore(max(1, self.concurrency))
         self.model_key = model_key(self.rotation.models)
 
+    def _key(self, stage: str, prompt: PromptFile, user_prompt: str, max_tokens: int) -> dict[str, Any]:
+        return {"stage": stage, "prompt_sha256": prompt.sha256, "user_sha256": sha256_hex(user_prompt.encode("utf-8")),
+                "model": self.model_key, "temperature": self.temperature, "seed": self.seed, "max_tokens": max_tokens}
+
     def key(self, stage: str, prompt: PromptFile, user_prompt: str, max_tokens: int) -> str:
-        return modelcall.cache_key({
-            "stage": stage, "prompt_sha256": prompt.sha256, "user_sha256": sha256_hex(user_prompt.encode("utf-8")),
-            "model": self.model_key, "temperature": self.temperature, "seed": self.seed, "max_tokens": max_tokens,
-        })
+        return modelcall.cache_key(self._key(stage, prompt, user_prompt, max_tokens))
 
     def settings(self) -> dict[str, Any]:
         return {"model_key": self.model_key, "concurrency": self.concurrency, "timeout_s": self.timeout_s,
@@ -163,69 +171,71 @@ class Caller:
         if self.on_change is not None:
             self.on_change()
 
-    async def _ask(self, prompt: PromptFile, output_type: type[T], user_prompt: str, model: Any,
-                   max_tokens: int) -> modelcall.Reply[T]:
-        with capture_run_messages() as messages:
-            try:
-                return await modelcall.structured_reply(
-                    prompt.text, user_prompt, output_type, model=model,
-                    model_settings=modelcall.settings(temperature=self.temperature, seed=self.seed, max_tokens=max_tokens))
-            except Exception as exc:
-                raise _Failed(exc, list(messages)) from exc
-
     async def call(self, stage: str, prompt: PromptFile, output_type: type[T], user_prompt: str, *,
                    max_tokens: int, accept: Callable[[T], str | None] | None = None) -> Result[T]:
-        """One structured call. `accept(output)` may return a reason to refuse a reply: it then counts
-        as a failed call and is not cached (a rerun asks again)."""
-        key = self.key(stage, prompt, user_prompt, max_tokens)
+        """One structured call through modelcall.ask. `accept(output)` may return a reason to refuse a reply: it
+        then counts as a failed call and is not cached (a rerun asks again)."""
+        record = self._key(stage, prompt, user_prompt, max_tokens)
+        key = modelcall.cache_key(record)
+        ask_prompt = modelcall.Prompt(f"gold/prompts/{prompt.name}", prompt.text, output_type)
+        call_settings = modelcall.CallSettings(temperature=self.temperature, seed=self.seed, max_tokens=max_tokens)
+        staged = _Staged(self.cache)
         hit = self.cache.get(key)
-        if hit is not None and hit.get("too_long"):
+        try:
+            if hit is not None:  # a cached result or verdict: no slot, no replica, no model call
+                answer = await modelcall.ask(ask_prompt, user_prompt, model=self.rotation.models[0],
+                                             settings=call_settings, cache=staged, key=record)  # type: ignore[arg-type]
+            else:
+                async with self._slots:
+                    model = self.rotation.next()
+                    self.counters.in_flight += 1
+                    self._changed()
+                    try:
+                        answer = await modelcall.ask(ask_prompt, user_prompt, model=model, settings=call_settings,
+                                                     cache=staged, key=record,  # type: ignore[arg-type]
+                                                     extra={"prompt_sha256": prompt.sha256, "at": utc_now()},
+                                                     timeout_s=self.timeout_s)
+                    except modelcall.CachedFailure:
+                        raise
+                    except modelcall.ModelCallError as err:  # any failure is recorded, and retried or cut
+                        kind, reason = classify(err.cause, err.messages)
+                        if kind == "too_long":
+                            self.counters.too_long += 1
+                            self.cache.put(key, {"too_long": True, "reason": reason,
+                                                 "model": modelcall.model_name(model),
+                                                 "prompt_sha256": prompt.sha256, "at": utc_now()})
+                        else:
+                            self.counters.failed += 1
+                        raise CallError(stage, reason, kind=kind) from None
+                    finally:
+                        self.counters.in_flight -= 1
+                        self._changed()
+        except modelcall.CachedFailure as err:
             self.counters.too_long += 1
             self._changed()
-            raise CallError(stage, hit["reason"], kind="too_long", cached=True)
-        if hit is not None:
+            raise CallError(stage, err.value["reason"], kind="too_long", cached=True) from None
+        if answer.cached:  # the line read before the call, or (an identical call ahead of this one) after it
+            stored = hit if hit is not None else self.cache.get(key)
             self.counters.cached += 1
-            usage = hit.get("usage") or {}
-            self.counters.cached_input_tokens += usage.get("input_tokens", 0)
-            self.counters.cached_output_tokens += usage.get("output_tokens", 0)
-            if hit.get("served_model"):
-                self.served.add(hit["served_model"])
+            self.counters.cached_input_tokens += answer.input_tokens
+            self.counters.cached_output_tokens += answer.output_tokens
+            if answer.served_model:
+                self.served.add(answer.served_model)
             self._changed()
-            meta = {k: v for k, v in hit.items() if k != "output"}
-            return Result(output_type.model_validate(hit["output"]), {**meta, "cached": True})
-        async with self._slots:
-            model = self.rotation.next()
-            self.counters.in_flight += 1
-            self._changed()
-            try:
-                reply = await asyncio.wait_for(self._ask(prompt, output_type, user_prompt, model, max_tokens),
-                                               timeout=self.timeout_s)
-            except Exception as exc:  # noqa: BLE001 - any failure is recorded, and retried or cut
-                kind, reason = classify(exc.exc, exc.messages) if isinstance(exc, _Failed) else classify(exc, [])
-                if kind == "too_long":
-                    self.counters.too_long += 1
-                    self.cache.put(key, {"too_long": True, "reason": reason, "model": modelcall.model_name(model),
-                                         "prompt_sha256": prompt.sha256, "at": utc_now()})
-                else:
-                    self.counters.failed += 1
-                raise CallError(stage, reason, kind=kind) from exc
-            finally:
-                self.counters.in_flight -= 1
-                self._changed()
-        self.counters.input_tokens += reply.input_tokens
-        self.counters.output_tokens += reply.output_tokens
-        refused = accept(reply.output) if accept is not None else None
+            meta = {k: v for k, v in stored.items() if k != "output"}
+            return Result(answer.output, {**meta, "cached": True})
+        self.counters.input_tokens += answer.input_tokens
+        self.counters.output_tokens += answer.output_tokens
+        refused = accept(answer.output) if accept is not None else None
         if refused:
             self.counters.failed += 1
             self._changed()
             raise CallError(stage, modelcall.redact(refused)[:300])
         self.counters.made += 1
-        if reply.served_model:
-            self.served.add(reply.served_model)
-        value = {"output": reply.output.model_dump(mode="json"), "model": reply.model,
-                 "served_model": reply.served_model, "prompt_sha256": prompt.sha256, "at": utc_now(),
-                 "usage": {"input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens}}
-        self.cache.put(key, value)
+        if answer.served_model:
+            self.served.add(answer.served_model)
+        assert staged.line is not None
+        self.cache.put(*staged.line)
         self._changed()
-        meta = {k: v for k, v in value.items() if k != "output"}
-        return Result(reply.output, {**meta, "cached": False})
+        meta = {k: v for k, v in staged.line[1].items() if k != "output"}
+        return Result(answer.output, {**meta, "cached": False})

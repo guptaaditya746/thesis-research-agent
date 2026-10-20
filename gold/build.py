@@ -847,6 +847,8 @@ def build(qid: str, concept: dict[str, Any], corpus: GoldCorpus, out_root: Path,
           log: Callable[[str], None] = print, replace: bool = False) -> dict[str, Any]:
     """Build D for one question into out_root/<qid>/ and return doc.json's content."""
     task = Task(qid, question, concept)
+    # Its own loop in the main thread, not modelcall.run_sync: the SIGTERM handler (_build) needs the main thread's
+    # loop. The model calls themselves run on the model loop (Caller.call -> modelcall.ask -> on_model_loop).
     return asyncio.run(_build(task, corpus, QuestionDir(Path(out_root) / qid), rotation,
                               settings or BuildSettings.from_env(), log, replace))
 

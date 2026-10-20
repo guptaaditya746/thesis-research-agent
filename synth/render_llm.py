@@ -6,7 +6,7 @@ ambiguous is a fidelity failure); names are located at every word-bounded occurr
 reasons go into the next prompt, up to `attempts` times. Every call is cached in a JsonlCache keyed by
 prompt hash, model identity and the full prompt (which holds the plan), so a rebuild costs no call.
 The model is injected: tests pass a FunctionModel, real runs `modelcall.openai_model(alias)`, whose key
-comes only from $LITELLM_MASTER_KEY and is never logged; error text goes through `modelcall.redact`.
+comes only from $LITELLM_MASTER_KEY and is never logged; every call is `modelcall.ask`, whose errors are redacted.
 """
 from __future__ import annotations
 
@@ -173,17 +173,13 @@ class LlmRenderer:
                 "served": sorted(self.served)}
 
     async def _call(self, instructions: str, prompt: str, output: type[BaseModel], model: Model, seed: int) -> dict:
-        key = modelcall.cache_key({"prompt_sha256": modelcall.prompt_sha256(instructions, output),
-                             "model": modelcall.model_identity([model]), "prompt": prompt, "seed": seed})
-        hit = self.cache.get(key)
-        if hit is None:
-            reply = await modelcall.structured_reply(instructions, prompt, output, model=model,
-                                               model_settings=modelcall.settings(seed=seed, max_tokens=self.max_tokens))
-            hit = {"output": reply.output.model_dump(), "model": reply.model, "served_model": reply.served_model,
-                   "input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens}
-            self.cache.put(key, hit)
-        self.served.add(hit["served_model"] or hit["model"])
-        return hit["output"]
+        key = {"prompt_sha256": modelcall.prompt_sha256(instructions, output),
+               "model": modelcall.model_identity([model]), "prompt": prompt, "seed": seed}
+        answer = await modelcall.ask(modelcall.Prompt.inline(instructions, output), prompt, model=model,
+                                     settings=modelcall.CallSettings(seed=seed, max_tokens=self.max_tokens),
+                                     cache=self.cache, key=key)
+        self.served.add(answer.served_model or answer.model)
+        return answer.output.model_dump()
 
     async def _blind(self, text: str, seed: int) -> BlindExtraction:
         out = await self._call(BLIND_INSTRUCTIONS, "Paper:\n\n" + text, BlindExtraction, self.verify_model, seed)
@@ -214,7 +210,9 @@ class LlmRenderer:
                 checks += check_paper(text, plan, ps, decoys) if not problems else []
                 if self.verify_model is not None and all(c.ok for c in checks):
                     checks += await blind_check(text, plan, lambda t: self._blind(t, seed))
-            except Exception as exc:  # a dead server or a malformed reply is one failed attempt
+            except modelcall.ModelCallError as exc:  # a dead server or a malformed reply is one failed attempt
+                checks = [Check("model_call", False, exc.reason)]
+            except Exception as exc:  # a cached reply that no longer decodes, too
                 checks = [Check("model_call", False, modelcall.redact(f"{type(exc).__name__}: {exc}"))]
             failed = [c for c in checks if not c.ok]
             if not failed:
@@ -238,4 +236,4 @@ class LlmRenderer:
             duplicates = await asyncio.gather(*(one(s, lv, titles.get((s.duplicate_of, lv)))
                                                 for s, lv in jobs if s.duplicate_of))
             return [*originals, *duplicates]
-        return {(r.study.study_id, r.plan.level): r for r in asyncio.run(run())}
+        return {(r.study.study_id, r.plan.level): r for r in modelcall.run_sync(run())}

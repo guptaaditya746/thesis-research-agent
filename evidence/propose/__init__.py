@@ -8,6 +8,6 @@ protocol through files a person reads and edits.
     freeze          decisions applied to the draft, validated -> protocol.yaml, proposal.json
     amend           the edited protocol.yaml -> revision + 1, a line in amendments.jsonl
 
-Every model call goes through `modelcall.structured` with a record cache in the proposal directory
+Every model call goes through `modelcall.ask` with a record cache in the proposal directory
 (`cache.jsonl`), so a rerun makes no model call. Nothing here runs a protocol.
 """

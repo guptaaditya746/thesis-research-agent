@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import yaml
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from pydantic_ai.models import Model
 
 from jsonio import file_sha256, sha256_hex
@@ -122,35 +122,29 @@ REDO = "the reply is cached in {cache} (key {key}); run the step again with --re
 
 def ask(directory: Path, step: str, instructions: str, user_prompt: str, output_type: type[T], *,
         model: Model, refresh: bool = False) -> tuple[T, dict[str, Any]]:
-    """One schema-constrained call through modelcall.structured, cached in DIR/cache.jsonl.
+    """One schema-constrained call through modelcall.ask, cached in DIR/cache.jsonl.
 
     The key is modelcall.cache_key over the step, the prompt hash (instructions and output schema), the model
     identity (the pinned weights of an alias, modelcall.model_identity) and the user prompt's sha256, so a
     rerun with the same inputs answers from the cache and makes no model call. `refresh` skips the cached
     reply and asks again (the new reply is appended under the same key and wins on the next load; a step
     whose cached reply it cannot use says so, `REDO`). Returns the output and the call's record {step,
-    model, prompt_sha256, cache_key, cached}.
+    model, prompt_sha256, cache_key, cached}. A failed call is modelcall.ModelCallError (a RuntimeError)
+    with a redacted reason: provider errors can echo the key.
     """
     cache = modelcall.JsonlCache(Path(directory) / CACHE)
     record = {"step": step, "prompt_sha256": modelcall.prompt_sha256(instructions, output_type),
               "model": modelcall.model_identity([model]), "input_sha256": sha256_hex(user_prompt.encode("utf-8")),
               "settings": {"temperature": 0.0, "seed": 0, "max_tokens": 4096}}
     key = modelcall.cache_key(record)
-    hit = None if refresh else cache.get(key)
-    if hit is not None:
-        try:
-            output = output_type.model_validate(hit)
-        except ValueError as exc:
-            raise ProposalError(f"{step}: the cached reply does not validate ({exc}); "
-                                + REDO.format(cache=Path(directory) / CACHE, key=key)) from exc
-        return output, {**_public(record), "cache_key": key, "cached": True}
     try:
-        output = modelcall.run_sync(modelcall.structured(instructions, user_prompt, output_type, model=model,
-                                              model_settings=modelcall.settings(seed=0, max_tokens=4096)))
-    except Exception as exc:   # provider errors can echo the key: never let it reach a file or a log
-        raise RuntimeError(modelcall.redact(f"{type(exc).__name__}: {exc}")) from None
-    cache.put(key, output.model_dump(mode="json"))
-    return output, {**_public(record), "cache_key": key, "cached": False}
+        answer = modelcall.ask_sync(modelcall.Prompt.inline(instructions, output_type), user_prompt, model=model,
+                                    settings=modelcall.CallSettings(seed=0, max_tokens=4096), cache=cache,
+                                    key=record, refresh=refresh)
+    except ValidationError as exc:   # only a cached reply is decoded without the model: it no longer validates
+        raise ProposalError(f"{step}: the cached reply does not validate ({exc}); "
+                            + REDO.format(cache=Path(directory) / CACHE, key=key)) from exc
+    return answer.output, {**_public(record), "cache_key": key, "cached": answer.cached}
 
 
 def _public(record: dict[str, Any]) -> dict[str, Any]:

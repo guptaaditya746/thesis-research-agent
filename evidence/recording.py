@@ -1,7 +1,8 @@
 """Recorded model calls: the only way an extractor reaches a model (contract section 12, `ctx.llm()`).
 
-Every call goes through modelcall.structured_reply (schema-constrained output, thinking off, fixed
-temperature and seed) and leaves a record: the request (model alias, prompt hash, instructions, user
+Every call goes through modelcall.ask (schema-constrained output, thinking off, fixed temperature and
+seed, run on the one model loop, so a pooled keep-alive connection is never reused from a closed loop) and
+leaves a record: the request (model alias, prompt hash, instructions, user
 prompt, settings), the response (the decoded output, the served model name), token usage, or the
 redacted error. The engine stores the records with the extractor's result in the cache, so a replay
 needs no model. The model itself is injected (`provider`: alias -> pydantic-ai Model), so tests use
@@ -9,13 +10,10 @@ FunctionModels and real runs modelcall.openai_model, which reads the key from $L
 """
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any, TypeVar
 
 from pydantic import BaseModel
-from pydantic_ai import capture_run_messages
 from pydantic_ai.messages import ModelMessagesTypeAdapter
 from pydantic_ai.models import Model
 
@@ -28,7 +26,8 @@ Provider = Callable[[str], Model]
 
 
 class ModelCallError(Exception):
-    """A model call failed; `reason` is short and redacted."""
+    """A model call of an extractor failed; `reason` is short and redacted. The engine's own error, carrying the
+    record id: not `modelcall.ModelCallError` (the failure of `modelcall.ask`), which `Recorder` turns into this."""
 
     def __init__(self, reason: str, call_id: str = "") -> None:
         super().__init__(reason)
@@ -59,31 +58,23 @@ class Recorder:
         if self.provider is None:
             record["error"] = "no model provider: this run cannot make model calls"
             raise NoModel(record["error"], call_id)
-        settings = modelcall.settings(temperature=temperature, seed=seed, max_tokens=max_tokens)
-        with capture_run_messages() as messages:
-            try:
-                reply = _run(modelcall.structured_reply(instructions, user_prompt, output_type,
-                                                  model=self.provider(alias), model_settings=settings))
-            except Exception as exc:  # noqa: BLE001 - every failure becomes a recorded, redacted reason
-                record["error"] = modelcall.redact(f"{type(exc).__name__}: {exc}")[:300]
-                record["messages"] = _messages(messages)
-                raise ModelCallError(record["error"], call_id) from exc
-        record["response"] = {"output": reply.output.model_dump(mode="json"), "model": reply.model,
-                              "served_model": reply.served_model}
-        record["usage"] = {"input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens}
-        record["messages"] = _messages(messages)
-        return reply.output, call_id
-
-
-def _run(coro: Any) -> Any:
-    """Run a coroutine to completion from sync code, also when the caller is inside an event loop (then on a
-    worker thread with its own loop), so the engine can be driven from async code too."""
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        return pool.submit(asyncio.run, coro).result()
+        prompt = modelcall.Prompt.inline(instructions, output_type)
+        settings = modelcall.CallSettings(temperature=temperature, seed=seed, max_tokens=max_tokens)
+        try:
+            answer = modelcall.ask_sync(prompt, user_prompt, model=self.provider(alias), settings=settings)
+        except modelcall.ModelCallError as exc:
+            record["error"] = exc.reason[:300]
+            record["messages"] = _messages(exc.messages)
+            raise ModelCallError(record["error"], call_id) from None
+        except Exception as exc:  # noqa: BLE001 - the provider failed before a call was made
+            record["error"] = modelcall.redact(f"{type(exc).__name__}: {exc}")[:300]
+            record["messages"] = _messages([])
+            raise ModelCallError(record["error"], call_id) from None
+        record["response"] = {"output": answer.output.model_dump(mode="json"), "model": answer.model,
+                              "served_model": answer.served_model}
+        record["usage"] = {"input_tokens": answer.input_tokens, "output_tokens": answer.output_tokens}
+        record["messages"] = _messages(answer.messages)
+        return answer.output, call_id
 
 
 def _messages(messages: list[Any]) -> Any:

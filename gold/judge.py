@@ -23,9 +23,10 @@ replicas serve the same weights, so the model identity is the pinned name and re
 Every result is cached in $GOLD/judge-cache.jsonl (modelcall.JsonlCache), keyed by sha256 of the task, the
 prompt hash (instructions and output schema), the sha256 of the exact user prompt the model got, the
 model identity and the settings (temperature, seed, max_tokens): a rescore costs no model call, and a
-changed prompt, rendering, model or setting never reuses an old answer. A cache line records the call:
-task, input, prompt and user-prompt hashes, model and the model the server says answered, settings,
-token usage and time. `Judge(cache_only=True)` never calls a model and returns None for an input it has
+changed prompt, rendering, model or setting never reuses an old answer. A cache line records the call
+(modelcall.ask's value: output, the alias asked as `model`, served_model, usage; plus task, input, the model
+identity as `model_id`, alias, prompt and user-prompt hashes, settings and time; lines written before
+modelcall.ask hold the reply's fields flat and the identity as `model`, and still read). `Judge(cache_only=True)` never calls a model and returns None for an input it has
 not seen (pending), so the web app can read verdicts without spending tokens. The prompts are
 gold/prompts/judge-*.txt; a verdict records its prompt_sha256 (modelcall.prompt_sha256 of the text and the
 output schema) and `served_model`; `render_sha256()` fingerprints how inputs are rendered into prompts.
@@ -231,12 +232,14 @@ class Judge:
     async def _ask(self, task: str, payload: dict[str, Any], user_prompt: str) -> dict[str, Any] | None:
         return await on_judge_loop(self._ask_here(task, payload, user_prompt))
 
+    def _key(self, task: str, user_sha: str) -> dict[str, Any]:
+        return {"task": task, "prompt_sha256": self.prompts[task].sha256, "user_prompt_sha256": user_sha,
+                "model": self.model_id, "settings": self.settings}
+
     async def _ask_here(self, task: str, payload: dict[str, Any], user_prompt: str) -> dict[str, Any] | None:
         """On the judge loop: the cached answer, else one model call per distinct input in flight."""
-        prompt = self.prompts[task]
         user_sha = sha256_hex(user_prompt.encode("utf-8"))
-        key = modelcall.cache_key({"task": task, "prompt_sha256": prompt.sha256, "user_prompt_sha256": user_sha,
-                             "model": self.model_id, "settings": self.settings})
+        key = modelcall.cache_key(self._key(task, user_sha))
         hit = self.cache.get(key)
         if hit is not None:
             return self._verdict(task, hit, cached=True)
@@ -245,31 +248,32 @@ class Judge:
         pending = self._inflight.get(key)
         mine = pending is None
         if pending is None:
-            pending = asyncio.ensure_future(self._call(task, payload, user_prompt, user_sha, key))
+            pending = asyncio.ensure_future(self._call(task, payload, user_prompt, user_sha))
             self._inflight[key] = pending
             pending.add_done_callback(lambda _: self._inflight.pop(key, None))
         value = await asyncio.shield(pending)
         return self._verdict(task, value, cached=not mine)
 
-    async def _call(self, task: str, payload: dict[str, Any], user_prompt: str, user_sha: str,
-                    key: str) -> dict[str, Any]:
+    async def _call(self, task: str, payload: dict[str, Any], user_prompt: str, user_sha: str) -> dict[str, Any]:
+        """One model call through modelcall.ask, which stores the value; returns that value."""
         prompt = self.prompts[task]
         async with self._gate:
-            reply = await modelcall.structured_reply(prompt.text, user_prompt, prompt.output_type, model=self._model(),
-                                               model_settings=modelcall.settings(**self.settings))
+            model = self._model()
+            extra = {"task": task, "input": payload, "model_id": self.model_id, "alias": modelcall.model_name(model),
+                     "prompt_sha256": prompt.sha256, "user_prompt_sha256": user_sha, "settings": self.settings,
+                     "created_at": review.utc_now()}
+            answer = await modelcall.ask(prompt, user_prompt, model=model,
+                                         settings=modelcall.CallSettings(**self.settings), cache=self.cache,
+                                         key=self._key(task, user_sha), extra=extra)
         self.calls += 1
-        value = {**reply.output.model_dump(), "task": task, "input": payload, "model": self.model_id,
-                 "alias": reply.model, "served_model": reply.served_model, "prompt_sha256": prompt.sha256,
-                 "user_prompt_sha256": user_sha, "settings": self.settings,
-                 "usage": {"input_tokens": reply.input_tokens, "output_tokens": reply.output_tokens},
-                 "created_at": review.utc_now()}
-        self.cache.put(key, value)
-        return value
+        return {"output": answer.output.model_dump(mode="json"), "model": answer.model,
+                "served_model": answer.served_model, **extra}
 
     def _verdict(self, task: str, value: dict[str, Any], *, cached: bool) -> dict[str, Any]:
-        """What a caller gets: the reply's fields plus model, served_model, prompt_sha256 and cached."""
-        reply = {k: value[k] for k in self.prompts[task].output_type.model_fields}
-        return {**reply, "model": value["model"], "served_model": value.get("served_model"),
+        """What a caller gets: the reply's fields plus model (the identity), served_model, prompt_sha256 and
+        cached. A value of modelcall.ask holds the identity in `model_id`; an older one in `model`."""
+        output, _, served, _, _ = modelcall.decode(value, self.prompts[task].output_type)
+        return {**output.model_dump(), "model": value.get("model_id", value["model"]), "served_model": served,
                 "prompt_sha256": value["prompt_sha256"], "cached": cached}
 
     async def asupport(self, fact: dict[str, Any], quote: str, *, context: str | None = None) -> Verdict | None:
