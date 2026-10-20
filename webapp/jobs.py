@@ -37,8 +37,6 @@ import asyncio
 import os
 import secrets
 import shlex
-import signal
-import subprocess
 from collections import deque
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -50,6 +48,7 @@ from jsonio import write_json_atomic
 
 from .files import Conflict, NotFound, check_id, read_json
 from .models import Job, JobStep, Lane
+from .procs import PosixProcesses, Proc, Processes
 from .settings import REPO, Settings
 
 ACTIVE = ("queued", "running")
@@ -65,40 +64,20 @@ def step(name: str, argv: list[str], *, required: bool = True,
     return JobStep(name=name, argv=argv, command=shlex.join(argv), required=required, needs=[str(n) for n in needs])
 
 
-def process_start(pid: int) -> str | None:
-    """The process's start time in clock ticks since boot (/proc/<pid>/stat field 22); None when it is gone, a
-    zombie, or there is no /proc (then no process outlives its server as far as the app can tell)."""
-    try:
-        data = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return None
-    fields = data.rsplit(")", 1)[-1].split()   # after "pid (comm)": state is field 3, starttime field 22
-    if len(fields) < 20 or fields[0] in ("Z", "X"):
-        return None
-    return fields[19]
-
-
-def alive(s: JobStep) -> bool:
-    return s.pid is not None and s.pid_start is not None and process_start(s.pid) == s.pid_start
-
-
-def signal_group(pid: int, sig: int) -> None:
-    """`sig` to the process group the command leads (start_new_session), so its children get it too."""
-    try:
-        os.killpg(pid, sig)
-    except (ProcessLookupError, PermissionError):
-        pass
-
-
 class JobManager:
-    def __init__(self, settings: Settings, after: Callable[[Job], None] | None = None) -> None:
+    def __init__(self, settings: Settings, after: Callable[[Job], None] | None = None,
+                 processes: Processes | None = None) -> None:
         self.settings = settings
+        self.processes: Processes = processes or PosixProcesses()
         self.after = after   # called with a finished job whose required steps all passed (webapp/app.py)
         self.jobs: dict[str, Job] = {}
         self._lanes: dict[str, asyncio.Semaphore] = {}
-        self._procs: dict[str, asyncio.subprocess.Process] = {}
+        self._procs: dict[str, Proc] = {}
         self._tasks: set[asyncio.Task[None]] = set()
         self._cancelled: dict[str, str] = {}  # job id -> why
+
+    def alive(self, s: JobStep) -> bool:
+        return s.pid is not None and s.pid_start is not None and self.processes.start_token(s.pid) == s.pid_start
 
     @property
     def dir(self) -> Path | None:
@@ -131,7 +110,7 @@ class JobManager:
             if job.state not in ACTIVE:
                 continue
             running = next((s for s in job.steps if s.state == "running"), None)
-            if job.state == "running" and running is not None and alive(running):
+            if job.state == "running" and running is not None and self.alive(running):
                 job.orphaned = True
                 self._save(job)
                 if loop is not None:
@@ -245,15 +224,13 @@ class JobManager:
         s.state, s.started_at = "running", utc_now()
         self._save(job)
         try:
-            proc = await asyncio.create_subprocess_exec(
-                *s.argv, stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, cwd=REPO, env=self.env(),
-                start_new_session=True)  # its own session and process group; a Ctrl-C at the server is not sent to it
+            proc = await self.processes.start(s.argv, log=log, cwd=REPO, env=self.env())
         except OSError as exc:
             log.write(f"# cannot start {s.name}: {exc}\n".encode())
             code = 127
         else:
             self._procs[job.id] = proc
-            s.pid, s.pid_start = proc.pid, process_start(proc.pid)
+            s.pid, s.pid_start = proc.pid, self.processes.start_token(proc.pid)
             self._save(job)
             try:
                 code = await proc.wait()
@@ -271,7 +248,7 @@ class JobManager:
         job = self.jobs[job_id]
         running = next(s for s in job.steps if s.state == "running")
         async with self._lane(job.lane):
-            while alive(running):
+            while self.alive(running):
                 await asyncio.sleep(ORPHAN_POLL_S)
             running.state, running.ended_at = "failed", utc_now()
             why = self._cancelled.get(job_id) or ("its process ended while no server watched it start; exit status "
@@ -298,11 +275,11 @@ class JobManager:
             return job
         proc = self._procs.get(job.id)
         if proc is not None and proc.returncode is None:
-            signal_group(proc.pid, signal.SIGTERM)
+            self.processes.signal(proc.pid, "term")
         elif job.orphaned:
             running = next((s for s in job.steps if s.state == "running"), None)
-            if running is not None and alive(running):
-                signal_group(running.pid, signal.SIGTERM)  # type: ignore[arg-type]
+            if running is not None and self.alive(running):
+                self.processes.signal(running.pid, "term")  # type: ignore[arg-type]
         return job
 
     async def shutdown(self) -> None:
@@ -313,7 +290,7 @@ class JobManager:
             try:
                 await asyncio.wait_for(proc.wait(), STOP_GRACE_S)
             except TimeoutError:
-                signal_group(proc.pid, signal.SIGKILL)
+                self.processes.signal(proc.pid, "kill")
         if self._tasks:
             await asyncio.wait(list(self._tasks), timeout=5)
         for job in self.active():
