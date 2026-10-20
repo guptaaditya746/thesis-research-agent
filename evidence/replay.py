@@ -24,7 +24,7 @@ from .locate import Locator
 from .recording import Provider
 from jsonio import write_json
 
-from .rundir import CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, PROTOCOL_FILE, REEXEC_FILE, RUN_FILE, read_json, read_lines
+from .rundir import CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, PROTOCOL_FILE, REEXEC_FILE, RUN_FILE, RunDir, read_json, read_lines
 
 OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_missing", "fields_differ")
 
@@ -76,7 +76,7 @@ def _stamp() -> str:
 def _attempts(run: Path) -> dict[str, int]:
     """cache key -> the attempt of the record each call of the run used (calls.py)."""
     return {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
-            for e in read_lines(run / EVENTS_FILE) if e["subtype"] == "extractor_call"}
+            for e in RunDir(run).events_of("extractor_call") or []}
 
 
 def _calls(run: Path) -> dict[tuple[str, str, int, str], dict[str, Any]]:
