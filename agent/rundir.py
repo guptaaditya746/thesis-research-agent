@@ -10,7 +10,7 @@ from typing import Any
 
 from . import schema
 from jsonio import file_sha256, write_json
-from modelcall.gateway import ORCHESTRATOR, SUBAGENTS  # the pins live with the gateway that uses them
+from modelcall.pins import ORCHESTRATOR, SUBAGENTS  # standard library only: no pydantic-ai through rundir
 from .concept import validate_answer, validate_concept
 
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")

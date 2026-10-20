@@ -25,17 +25,10 @@ from pydantic_ai.settings import ModelSettings
 
 from jsonio import sha256_hex
 
+from .pins import ORCH_ALIAS, ORCH_MODEL, ORCHESTRATOR, SUB_ALIASES, SUB_MODEL, SUBAGENTS  # noqa: F401
+
 DEFAULT_BASE_URL = "http://127.0.0.1:4000/v1"
 
-# Fixed run settings (docs/earlier-work.md, Fixed run settings).
-ORCHESTRATOR = {"alias": "orch-model", "name": "Qwen/Qwen3.8-27B-FP8", "revision": "017b9c7",
-                "thinking": False, "max_tokens": 4096, "context_tokens": 65536}
-SUBAGENTS = [{"alias": f"sub-model-{i}", "name": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8",
-              "revision": "5a5a776", "context_tokens": 32768} for i in (1, 2)]
-SUB_ALIASES = tuple(s["alias"] for s in SUBAGENTS)  # sub-model-1, sub-model-2
-SUB_MODEL = {"name": SUBAGENTS[0]["name"], "revision": SUBAGENTS[0].get("revision")}
-ORCH_ALIAS = ORCHESTRATOR["alias"]  # orch-model: the one model of every extractor and both baselines
-ORCH_MODEL = {"name": ORCHESTRATOR["name"], "revision": ORCHESTRATOR.get("revision")}
 T = TypeVar("T", bound=BaseModel)
 
 

@@ -30,7 +30,8 @@ DEFAULTS: dict[str, Any] = {"model": "orch-model", "prompt": "extract-v1.md", "r
                             "chunk_chars": 12000, "quote_retry": 1}
 SOURCES = (base.HERE / "llm.py", base.HERE / "llm_schema.py", llm_schema.PROMPT_DIR / "extract-v1.md",
            llm_schema.PROMPT_DIR / "retry-v1.md", base.ROOT / "modelcall" / "gateway.py",
-           base.ROOT / "modelcall" / "prompt.py", base.ROOT / "evidence" / "recording.py", *base.SHARED_SOURCES)
+           base.ROOT / "modelcall" / "pins.py", base.ROOT / "modelcall" / "prompt.py",
+           base.ROOT / "evidence" / "recording.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
 
 

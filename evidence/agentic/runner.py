@@ -15,7 +15,7 @@ altogether with a fake `AgentRunner`.
 
 The agent's model is `AgentSettings.model`, a LiteLLM alias (default `orch-model`: one model for every
 extractor and both baselines, docs/evidence-system.md Part G.3). The runner builds the agent's
-`OrchestratorModel` on that alias (`default_model`); for an alias agent/rundir pins (`orch-model`,
+`OrchestratorModel` on that alias (`default_model`); for an alias modelcall/pins.py pins (`orch-model`,
 `sub-model-*`) the config and the model record the pinned name and revision, for any other alias the
 alias as the name and the revision "unpinned" (the same in both places).
 """
@@ -36,11 +36,11 @@ REPO = Path(__file__).resolve().parents[2]
 PINNED: dict[str, dict[str, Any]] = {m["alias"]: dict(m) for m in (ORCHESTRATOR, *SUBAGENTS)}
 
 
-UNPINNED = "unpinned"  # the revision recorded, and given to the model, for an alias agent/rundir does not pin
+UNPINNED = "unpinned"  # the revision recorded, and given to the model, for an alias modelcall/pins.py does not pin
 
 
 def model_record(alias: str) -> dict[str, Any]:
-    """{alias, name, revision} for the config: the pinned weights of an alias agent/rundir pins (for
+    """{alias, name, revision} for the config: the pinned weights of an alias modelcall/pins.py pins (for
     orch-model byte for byte what the config held before `model` existed), else the alias as the name with
     revision "unpinned", the same the model itself records (`default_model`)."""
     pinned = PINNED.get(alias)
@@ -68,7 +68,7 @@ class AgentSettings:
 
 def default_model(settings: AgentSettings) -> Any:
     """The agent's model for `settings.model`: agent.loop.OrchestratorModel on that alias through LiteLLM at
-    `base_url`, with the pinned name, revision and context window of an alias agent/rundir pins (for
+    `base_url`, with the pinned name, revision and context window of an alias modelcall/pins.py pins (for
     `orch-model` exactly what agent.loop.research_run builds by itself); an unpinned alias is served and
     recorded under its own name with revision "unpinned"."""
     from agent.loop import OrchestratorModel  # LiteLLM and mini-swe-agent: imported only when an agent runs
