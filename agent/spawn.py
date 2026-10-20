@@ -62,7 +62,7 @@ from minisweagent.exceptions import LimitsExceeded
 
 from . import prompts, stopping
 from .broker import Corpus, Rejected
-from .canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 from .loop import (Broker, LoopSettings, OrchestratorModel, ResearchAgent, SandboxEnvironment, StepCounter,
                    claim_records)
 from .rundir import SUBAGENTS, RunDir, utc_now

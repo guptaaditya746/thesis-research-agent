@@ -12,7 +12,7 @@ import yaml
 from pydantic import BaseModel
 from pydantic_ai.models import Model
 
-from agent.canonical import file_sha256, sha256_hex
+from jsonio import file_sha256, sha256_hex
 from gold import llm
 
 HERE = Path(__file__).resolve().parent

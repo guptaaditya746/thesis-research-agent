@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 from evidence import cli
 from evidence.propose import vocab
 

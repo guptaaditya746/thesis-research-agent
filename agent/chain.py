@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .canonical import GENESIS, canonical, canonical_bytes, sha256_hex
+from jsonio import GENESIS, canonical, canonical_bytes, sha256_hex
 
 FIELDS = ("task_id", "subtype", "used", "generated", "parent_task_id", "group_id", "agent_id",
           "source_agent_id", "workflow_id", "started_at", "ended_at", "status", "custom_metadata",

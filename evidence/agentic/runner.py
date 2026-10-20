@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Protocol
 
-from agent.canonical import file_sha256, sha256_hex
+from jsonio import file_sha256, sha256_hex
 from agent.rundir import BUDGET, COMMAND_LIMITS, ORCHESTRATOR, SUBAGENTS
 
 REPO = Path(__file__).resolve().parents[2]

@@ -14,7 +14,7 @@ so each triple can be walked back to its claim, step and passage (agent/queries.
 - Each edge also names the paper whose file holds the claim's quote (`evidence`), with the
   manifest id taken from the anchor's file name.
 
-Output: runs/<id>/graph.json in canonical JSON (agent/canonical.py).
+Output: runs/<id>/graph.json in canonical JSON (jsonio).
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .canonical import file_sha256, write_json
+from jsonio import file_sha256, write_json
 from .rundir import RunDir
 
 GRAPH_FILE = "graph.json"

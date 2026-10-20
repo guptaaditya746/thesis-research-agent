@@ -23,7 +23,7 @@ import litellm  # noqa: E402
 
 from agent import sandbox  # noqa: E402
 from agent.anchor import AnchorError, Index, find  # noqa: E402
-from agent.canonical import canonical  # noqa: E402
+from jsonio import canonical  # noqa: E402
 from agent.chain import verify  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.loop import POSIX_BROKER, OrchestratorModel, is_context_full, research_run  # noqa: E402

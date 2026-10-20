@@ -13,7 +13,7 @@ pytest.importorskip("litellm")
 from agent import replay  # noqa: E402
 from agent.anchor import AnchorError  # noqa: E402
 from agent.attach import attach_run  # noqa: E402
-from agent.canonical import sha256_hex  # noqa: E402
+from jsonio import sha256_hex  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.reexec import first_diff, parse_steps, reexec_run  # noqa: E402
 

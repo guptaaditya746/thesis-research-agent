@@ -9,13 +9,10 @@ absolute paths and symlinks out of a root are refused. The server itself writes 
 from __future__ import annotations
 
 import json
-import os
 import re
-import tempfile
 from pathlib import Path
 from typing import Any
 
-from agent.canonical import canonical_bytes
 
 ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 RUN_SEP = "~"  # unreserved in URLs, never in a directory name the commands make
@@ -69,19 +66,6 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
         except ValueError:
             continue
     return out
-
-
-def write_json_atomic(path: Path, obj: Any) -> None:
-    """Canonical JSON plus newline, written to a temporary file and renamed over `path`."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
-    try:
-        with os.fdopen(fd, "wb") as fh:
-            fh.write(canonical_bytes(obj) + b"\n")
-        os.replace(tmp, path)
-    except BaseException:
-        Path(tmp).unlink(missing_ok=True)
-        raise
 
 
 def signature(*paths: Path) -> tuple[Any, ...]:

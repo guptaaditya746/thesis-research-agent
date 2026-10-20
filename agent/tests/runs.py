@@ -26,7 +26,7 @@ import pytest
 
 from agent import claim_client
 from agent.broker_client import InProcessBroker
-from agent.canonical import sha256_hex, write_json
+from jsonio import sha256_hex, write_json
 from agent.concept import concept_sha256, validate_answer
 from agent.rundir import RunDir
 

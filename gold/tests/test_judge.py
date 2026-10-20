@@ -15,7 +15,7 @@ from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCall
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from agent import anchor
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 from agent.pairs import write_pairs
 from agent.tests.runs import baseline_run, research_run
 from gold import judge, llm, review

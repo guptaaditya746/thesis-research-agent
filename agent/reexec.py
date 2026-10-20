@@ -55,7 +55,7 @@ from typing import Any, BinaryIO
 from . import sandbox
 from .anchor import AnchorError, find
 from .broker import Broker, Channel, Corpus, Rejected, serve_claims
-from .canonical import canonical_bytes, file_sha256, sha256_hex, write_json
+from jsonio import canonical_bytes, file_sha256, sha256_hex, write_json
 from .chain import verify
 from .rundir import COMMAND_LIMITS, RunDir, git_head, utc_now
 

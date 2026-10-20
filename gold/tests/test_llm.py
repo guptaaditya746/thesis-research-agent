@@ -89,7 +89,7 @@ def test_model_identity_is_the_pin_for_orch_model():
 
 def test_redact_removes_the_key_its_hash_and_key_shaped_tokens(monkeypatch):
     monkeypatch.setenv("LITELLM_MASTER_KEY", "my-secret-key")
-    from agent.canonical import sha256_hex
+    from jsonio import sha256_hex
 
     text = f"bad key my-secret-key (hash {sha256_hex(b'my-secret-key')}), seen as sk-abcd...wxyz"
     assert llm.redact(text) == "bad key *** (hash ***), seen as ***"

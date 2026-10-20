@@ -349,7 +349,7 @@ belong to the e2e session (step 8 of that runbook is its measurement table).
 
 | From the earlier system | Used for |
 |---|---|
-| `agent/anchor.py` (selectors, quote check), `agent/canonical.py`, `agent/chain.py` | every span check, canonical hashes, the engine's hash-chained events |
+| `agent/anchor.py` (selectors, quote check), `jsonio/__init__.py`, `agent/chain.py` | every span check, canonical hashes, the engine's hash-chained events |
 | The research loop, sandbox, `claim` and broker | the agentic extractor and the agent baseline |
 | `gold/llm.py` (structured calls, prompt hash, `JsonlCache`), `gold/chunks.py` | the LLM extractors and the record cache |
 | `agent replay` / `agent reexec` pattern, `agent/prov.py` | evidence replay, re-execution, PROV-O export |

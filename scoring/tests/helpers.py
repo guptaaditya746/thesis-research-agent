@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from agent.canonical import file_sha256, write_json
+from jsonio import file_sha256, write_json
 from agent.rundir import ATTACH_FILE, RunDir, utc_now
 from scoring.judge import Judge
 

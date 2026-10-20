@@ -34,7 +34,7 @@ Three packages, each owned by one builder, talk only through the files below.
 
 Shared code, written before the split and changed only by agreement: `evidence/contract.py` (the
 contract's pydantic models), `evidence/rules.py` (effect direction and answer label, used by both the
-engine and the ground-truth generator). Existing code reused: `agent/anchor.py`, `agent/canonical.py`,
+engine and the ground-truth generator). Existing code reused: `agent/anchor.py`, `jsonio/__init__.py`,
 `agent/chain.py`, `gold/llm.py`, `gold/chunks.py`, `agent/prov.py`.
 
 **Hard rule:** the engine and both baselines never read `ground_truth.json`, `fidelity.json` or
@@ -230,7 +230,7 @@ kind: regex | model | llm | agent
 evidence_types: [measurement]
 code_sha256: …                   # hash of the extractor's source files
 config: { … }                    # kind-specific, B9
-config_sha256: …                 # canonical hash of config (agent/canonical.py)
+config_sha256: …                 # canonical hash of config (jsonio)
 determinism: exact | near_exact | variable
 ```
 
@@ -319,7 +319,7 @@ is visible as not examined.
 | R4 | The extractor reads only the document, the declared context and its own configuration. |
 | R5 | No randomness without a recorded seed; no clock in outputs; temperature 0 for single-call LLMs. |
 | R6 | Failure is a status, not a lost call: what was found before the failure is kept (`partial`). |
-| R7 | Output is canonical: items sorted, JSON canonicalised (`agent/canonical.py`), so the same result hashes the same. |
+| R7 | Output is canonical: items sorted, JSON canonicalised (`jsonio/__init__.py`), so the same result hashes the same. |
 | R8 | The extractor writes no files; the engine records everything (B7). |
 
 ## B7. Provenance: one event per call
@@ -418,7 +418,7 @@ schemas are published with the library so results can be validated outside Pytho
 | Need | Existing code |
 |---|---|
 | Span selector, quote check, re-finding a span | `agent/anchor.py` (`Selector`, `find`, `resolve`) |
-| Canonical JSON and hashes | `agent/canonical.py` |
+| Canonical JSON and hashes | `jsonio/__init__.py` |
 | Hash-chained event log | `agent/broker.py` |
 | Schema-constrained LLM calls, prompt hash, cache | `gold/llm.py` (`structured`, `prompt_sha256`, `cache_key`, `JsonlCache`) |
 | Section-aware chunking, quote retry, per-paper coverage | `gold/chunks.py`, `gold/extract.py`, `gold/screen.py` |
@@ -745,7 +745,7 @@ snapshot for the RAG question is committed. The flow runs without one (sources a
   higher_is_better[,id]`, synonyms `;`-separated); ids default to `<source>:<label slug>`; duplicate ids are
   refused; terms are sorted by id, synonyms deduplicated in order (the label is not its own synonym), so the
   same files give the same bytes; files are read as `utf-8-sig` (a byte order mark is not content), and a
-  missing key or a malformed term is a `VocabError` naming the file. `sha256` = sha256 of the canonical JSON (`agent/canonical.py`: sorted
+  missing key or a malformed term is a `VocabError` naming the file. `sha256` = sha256 of the canonical JSON (`jsonio/__init__.py`: sorted
   keys, no whitespace, UTF-8) of the snapshot without its `sha256` key; `vocab.load` refuses a file whose
   content does not match. No network access anywhere. **The committed `evidence/vocab/rag-factuality.json`
   (15 terms: RAG, closed-book, open-book, dense and sparse retrieval, reranking, factual accuracy,

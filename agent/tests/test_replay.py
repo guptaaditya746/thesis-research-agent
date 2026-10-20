@@ -15,7 +15,7 @@ import litellm  # noqa: E402
 
 from agent import loop, replay  # noqa: E402
 from agent.broker import Broker  # noqa: E402
-from agent.canonical import canonical_bytes, sha256_hex  # noqa: E402
+from jsonio import canonical_bytes, sha256_hex  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.rundir import RunDir  # noqa: E402
 

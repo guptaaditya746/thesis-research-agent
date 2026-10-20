@@ -54,7 +54,7 @@ from rdflib import RDF, RDFS, XSD, Graph, Literal, Namespace, URIRef
 from rdflib.namespace import DCTERMS, PROV
 
 from . import kg
-from .canonical import canonical
+from jsonio import canonical
 from .chain import verify
 from .rundir import ANSWER_BEFORE, ATTACH_FILE, RunDir
 

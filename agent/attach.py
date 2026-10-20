@@ -48,7 +48,7 @@ from pathlib import Path
 from typing import Any
 
 from . import sandbox
-from .canonical import canonical, canonical_bytes, file_sha256, sha256_hex, write_json
+from jsonio import canonical, canonical_bytes, file_sha256, sha256_hex, write_json
 from .concept import validate_answer
 from .loop import (DECODINGS, DEFAULT_BASE_URL, POSIX_BROKER, Broker, FailedCall, GuidedRejected, OrchestratorModel,
                    SandboxEnvironment, TimedOut)

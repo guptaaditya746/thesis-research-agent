@@ -7,7 +7,7 @@ extractors), how passages are located, an optional screening question (Part D, t
 evidence becomes the answer: the `synthesis` block holds every rule parameter (which condition roles are
 compared, the question metrics and their direction, the neutral band, the pairing rule, the claim
 vocabulary, the label decision table, the flag thresholds), so `evidence/rules.py` knows nothing of the
-question. Its `sha256` is the digest of the parsed content (agent/canonical.py), so comments, key order
+question. Its `sha256` is the digest of the parsed content (jsonio), so comments, key order
 and line ends in the file do not change it, and every run, task and record names the protocol by that
 hash.
 

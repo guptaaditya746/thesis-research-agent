@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .canonical import canonical_bytes
+from jsonio import canonical_bytes
 from .rundir import RunDir
 
 PAIRS = "pairs.jsonl"

@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from agent.canonical import GENESIS, canonical_bytes, file_sha256, sha256_hex
+from jsonio import GENESIS, canonical_bytes, file_sha256, sha256_hex
 from agent.chain import FIELDS, line, seal, task_id
 from agent.rundir import utc_now
 
@@ -102,14 +102,6 @@ class Events:
             fh.write(line(sealed))
         self.head = sealed["hash"]
         return sealed["task_id"]
-
-
-def write_canonical(path: Path, obj: Any) -> str:
-    """Canonical JSON plus a newline (agent/canonical.write_json); returns the sha256 of the bytes."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    data = canonical_bytes(obj) + b"\n"
-    path.write_bytes(data)
-    return sha256_hex(data)
 
 
 def write_lines(path: Path, rows: list[Any]) -> str:

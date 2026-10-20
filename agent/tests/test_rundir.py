@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.canonical import canonical, file_sha256
+from jsonio import canonical, file_sha256
 from agent.cli import main
 from agent.rundir import RunDir
 

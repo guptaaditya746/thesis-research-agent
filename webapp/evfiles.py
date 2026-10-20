@@ -37,7 +37,7 @@ import yaml
 from pydantic import ValidationError
 
 from agent.anchor import read_text
-from agent.canonical import file_sha256, sha256_hex
+from jsonio import file_sha256, sha256_hex
 from agent.rundir import RunDir
 from evidence.calls import cache_key
 from evidence.contract import ExtractionResult, ExtractorSpec, Item

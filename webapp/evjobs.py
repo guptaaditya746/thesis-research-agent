@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -32,7 +31,7 @@ from typing import Any
 from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 
-from agent.canonical import file_sha256
+from jsonio import file_sha256, write_text_atomic
 
 from .evfiles import EvidenceFiles
 from .evmodels import (
@@ -329,17 +328,6 @@ class Commands:
         write_text_atomic(path, HEADER + dump_yaml({"decisions": entries}))
         _, problems = self.files._decisions(directory, cards)
         return DecisionsResult(written=str(path), sha256=file_sha256(path), problems=problems)
-
-
-def write_text_atomic(path: Path, text: str) -> None:
-    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(text)
-        os.replace(tmp, path)
-    except BaseException:
-        Path(tmp).unlink(missing_ok=True)
-        raise
 
 
 def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, questions: Questions) -> APIRouter:

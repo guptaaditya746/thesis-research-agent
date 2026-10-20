@@ -64,7 +64,7 @@ from typing import Any, Literal, TypedDict, TypeVar
 from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
 
-from agent.canonical import file_sha256, sha256_hex
+from jsonio import file_sha256, sha256_hex
 
 from . import argilla_io, llm, review
 from .agreement import KAPPA_BAR, kappa, wilson

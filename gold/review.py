@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from agent import anchor, broker
-from agent.canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = "gold-data"

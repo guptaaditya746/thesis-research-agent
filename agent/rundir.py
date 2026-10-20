@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from . import schema
-from .canonical import file_sha256, write_json
+from jsonio import file_sha256, write_json
 from .concept import validate_answer, validate_concept
 
 FILES = ("config.json", "concept.json", "events.jsonl", "claims.jsonl")

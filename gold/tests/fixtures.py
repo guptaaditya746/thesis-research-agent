@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 
 from agent import anchor
-from agent.canonical import write_json
+from jsonio import write_json
 from agent.concept import concept_sha256
 from agent.tests.conftest import fixture, write_corpus
 from agent.tests.runs import AUTHOR, GSM8K, HOTPOTQA, INVENTED, MEGAPAIRS, SPIDER_BIRD, Quote

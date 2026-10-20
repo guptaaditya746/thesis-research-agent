@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from agent.canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 from evidence import protocol as protocol_module
 from evidence import rules
 from evidence.protocol import Protocol

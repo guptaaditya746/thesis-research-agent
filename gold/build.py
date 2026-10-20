@@ -68,7 +68,7 @@ from time import monotonic
 from typing import Any
 
 from agent.broker import Rejected
-from agent.canonical import canonical, canonical_bytes, file_sha256, sha256_hex
+from jsonio import canonical, canonical_bytes, file_sha256, sha256_hex
 from agent.concept import concept_sha256
 from agent.rundir import utc_now
 

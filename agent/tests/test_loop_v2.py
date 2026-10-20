@@ -36,7 +36,7 @@ from rdflib.namespace import PROV  # noqa: E402
 from agent import loop as loop_mod  # noqa: E402
 from agent import prov, schema  # noqa: E402
 from agent.answer import reply_schema  # noqa: E402
-from agent.canonical import canonical_bytes, sha256_hex  # noqa: E402
+from jsonio import canonical_bytes, sha256_hex  # noqa: E402
 from agent.cli import main as cli  # noqa: E402
 from agent.loop import LEGACY_V1, LoopSettings, Outcome, settings_for  # noqa: E402
 from agent.rundir import RunDir  # noqa: E402

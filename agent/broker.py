@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import Any, BinaryIO
 
 from .anchor import AnchorError, Index, find
-from .canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 from .chain import line, seal, task_id, verify
 from .rundir import RunDir, utc_now
 

@@ -21,7 +21,7 @@ from typing import Any, Literal, TypeVar
 from pydantic import BaseModel, Field
 from pydantic_ai.models import Model
 
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 from evidence import protocol as protocol_module, rules
 from gold.llm import JsonlCache, cache_key, model_name, prompt_sha256, redact, run_sync, settings, structured_reply
 

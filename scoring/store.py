@@ -18,7 +18,7 @@ from typing import Any
 
 from pyoxigraph import BlankNode, Literal, NamedNode, QueryBoolean, QuerySolutions, RdfFormat, Store
 
-from agent.canonical import file_sha256
+from jsonio import file_sha256
 
 TTL_FILE = "graph.ttl"
 LOADED_FILE = "loaded.json"  # run_id -> sha256 of the graph.ttl in the store

@@ -43,7 +43,7 @@ from markdown_it import MarkdownIt
 
 from agent.anchor import Index
 from agent.broker import Corpus, Rejected
-from agent.canonical import file_sha256, sha256_hex
+from jsonio import file_sha256, sha256_hex
 
 MAX_CHARS = 40_000
 MIN_PIECE_CHARS = 1_000  # `halve` does not cut a chunk into pieces smaller than this

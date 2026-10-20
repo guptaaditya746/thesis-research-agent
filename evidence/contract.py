@@ -11,7 +11,7 @@ from typing import Any, Literal, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field
 
 from agent.anchor import Selector
-from agent.canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 
 Kind = Literal["regex", "model", "llm", "agent"]
 Determinism = Literal["exact", "near_exact", "variable"]
@@ -27,7 +27,7 @@ ITEM_PREFIX = {"condition": "c", "metric": "k", "measurement": "m", "author_clai
 
 
 def digest(obj: Any) -> str:
-    """sha256 of the canonical JSON of `obj` (agent/canonical.py)."""
+    """sha256 of the canonical JSON of `obj` (jsonio)."""
     return sha256_hex(canonical_bytes(obj))
 
 

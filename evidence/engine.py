@@ -42,7 +42,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from agent.anchor import Index
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex, write_json
 from agent.rundir import utc_now
 from gold.llm import JsonlCache
 
@@ -53,7 +53,7 @@ from .locate import Located, Locator, locate
 from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .recording import Provider, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
-                     LOCATE_FILE, PROTOCOL_FILE, RUN_FILE, Corpus, Events, new_run_id, write_canonical, write_lines)
+                     LOCATE_FILE, PROTOCOL_FILE, RUN_FILE, Corpus, Events, new_run_id, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
@@ -315,7 +315,7 @@ class Execution:
         result = checks.check(outcome.raw, task, index, spec, {i.item_id: i for i in context})
         call_id = self.events.next_id()
         result = result.model_copy(update={"call_id": call_id})
-        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_canonical(self.root / CALLS_DIR / f"{call_id}.json",
+        self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
                                                                        result.model_dump(mode="json"))
         tokens_in, tokens_out = usage(outcome.model_calls)
         self.cost["calls"] += 1
@@ -342,12 +342,12 @@ class Execution:
                          "stopped_after": self.funnel[p.id]["stopped_after"]} for p in papers if p.id in self.funnel}
         answer, used = synthesis.answer(self.protocol, [p.id for p in papers], self.items, self.reasons, funnel)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
-        self.outputs[LOCATE_FILE] = write_canonical(self.root / LOCATE_FILE, self.located)
+        self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
-        self.outputs[FUNNEL_FILE] = write_canonical(self.root / FUNNEL_FILE, {"strategy": self.strategy,
+        self.outputs[FUNNEL_FILE] = write_json(self.root / FUNNEL_FILE, {"strategy": self.strategy,
                                                                                "documents": self.funnel})
-        self.outputs[ANSWER_FILE] = write_canonical(self.root / ANSWER_FILE, answer)
-        self.outputs[GRAPH_FILE] = write_canonical(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
+        self.outputs[ANSWER_FILE] = write_json(self.root / ANSWER_FILE, answer)
+        self.outputs[GRAPH_FILE] = write_json(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
         self.events.add("synthesis", used=sorted(set(used)), generated=["answer"], agent_id=ENGINE,
                         custom={"label": answer["label"], "counts": answer["counts"],
                                 "flags": {name: len(docs) for name, docs in answer["flags"].items()},   # Part F1
@@ -378,7 +378,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     ex.finish()
     ex.cost["seconds"] = round(time.monotonic() - t0, 3)
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
-    write_canonical(root / RUN_FILE, {
+    write_json(root / RUN_FILE, {
         "run_id": run_id, "mode": mode, "source_run": source_run, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
         "manifest_sha256": corpus.manifest_sha256, "corpus_id": corpus.corpus_id, "extractors": list(specs),
         "extractor_specs": {k: _spec_json(s) for k, s in specs.items()}, "outputs": dict(sorted(ex.outputs.items())),

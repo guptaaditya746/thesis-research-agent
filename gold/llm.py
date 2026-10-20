@@ -26,7 +26,7 @@ from pydantic_ai.profiles.openai import OpenAIModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.settings import ModelSettings
 
-from agent.canonical import canonical_bytes, sha256_hex
+from jsonio import canonical_bytes, sha256_hex
 from agent.rundir import ORCHESTRATOR, SUBAGENTS
 
 DEFAULT_BASE_URL = "http://127.0.0.1:4000/v1"

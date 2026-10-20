@@ -46,7 +46,7 @@ from typing import Any
 
 from . import schema
 from .broker import Broker
-from .canonical import sha256_hex
+from jsonio import sha256_hex
 from .rundir import RunDir, attach_state, utc_now
 
 CUT_REASONS = ("job_time_limit", "interrupted")

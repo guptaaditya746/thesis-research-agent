@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from .broker import MAX_MESSAGE, Broker, Channel, Corpus, serve_claims
-from .canonical import canonical_bytes
+from jsonio import canonical_bytes
 from .rundir import RunDir
 
 

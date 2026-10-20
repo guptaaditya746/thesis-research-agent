@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from . import kg
-from .canonical import canonical, file_sha256, sha256_hex
+from jsonio import canonical, file_sha256, sha256_hex
 from .chain import verify
 from .rundir import BUDGET as RUN_BUDGET, BUDGET_M1 as RUN_BUDGET_M1, RunDir
 

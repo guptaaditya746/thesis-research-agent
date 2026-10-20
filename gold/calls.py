@@ -36,7 +36,7 @@ from pydantic_ai import capture_run_messages
 from pydantic_ai.exceptions import IncompleteToolCall, ModelHTTPError
 from pydantic_ai.messages import ModelResponse
 
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 from agent.rundir import utc_now
 
 from . import llm

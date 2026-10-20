@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .canonical import sha256_hex
+from jsonio import sha256_hex
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 CONDITIONS = ("claim_on", "claim_off")

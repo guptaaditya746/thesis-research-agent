@@ -16,7 +16,7 @@ from pydantic_ai.exceptions import ModelHTTPError
 from pydantic_ai.models.function import FunctionModel
 
 from agent.anchor import read_text
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 from agent.concept import concept_sha256
 from gold import build as build_module
 from gold import calls, extract, llm, screen

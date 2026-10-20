@@ -46,8 +46,9 @@ from pathlib import Path
 from typing import Any
 
 from agent.rundir import utc_now
+from jsonio import write_json_atomic
 
-from .files import Conflict, NotFound, check_id, read_json, write_json_atomic
+from .files import Conflict, NotFound, check_id, read_json
 from .models import Job, JobStep, Lane
 from .settings import REPO, Settings
 

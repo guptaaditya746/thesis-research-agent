@@ -22,7 +22,9 @@ from .contract import digest
 from .engine import Settings, default_provider, execute_run
 from .locate import Locator
 from .recording import Provider
-from .rundir import CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, PROTOCOL_FILE, REEXEC_FILE, RUN_FILE, read_json, read_lines, write_canonical
+from jsonio import write_json
+
+from .rundir import CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, PROTOCOL_FILE, REEXEC_FILE, RUN_FILE, read_json, read_lines
 
 OUTCOMES = ("identical", "same_items_different_spans", "items_added", "items_missing", "fields_differ")
 
@@ -62,7 +64,7 @@ def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | s
                       provider=provider if provider is not None else default_provider,
                       source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}")
     report = compare(run_dir, new, extractor)
-    write_canonical(new / REEXEC_FILE, report)
+    write_json(new / REEXEC_FILE, report)
     return new
 
 

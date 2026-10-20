@@ -13,7 +13,7 @@ import pytest
 from pydantic_ai.messages import ModelMessage, ModelResponse, TextPart, ToolCallPart, UserPromptPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from agent.canonical import sha256_hex
+from jsonio import sha256_hex
 
 HERE = Path(__file__).resolve().parent
 PAPERS = HERE / "fixtures" / "papers"
