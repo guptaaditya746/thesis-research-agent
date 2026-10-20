@@ -56,7 +56,7 @@ import json
 import re
 import threading
 from collections import Counter
-from collections.abc import Awaitable, Coroutine, Iterable
+from collections.abc import Awaitable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, TypedDict, TypeVar
@@ -204,43 +204,9 @@ def render_sha256() -> dict[str, str]:
 
 # --- one event loop for every model call (see the module docstring) ------------------------------------
 
-_loop: asyncio.AbstractEventLoop | None = None
-_loop_lock = threading.Lock()
-
-
-def judge_loop() -> asyncio.AbstractEventLoop:
-    """The loop all judge calls run on: started at first use in a daemon thread, never closed."""
-    global _loop
-    with _loop_lock:
-        if _loop is None:
-            _loop = asyncio.new_event_loop()
-            threading.Thread(target=_loop.run_forever, name="gold-judge-loop", daemon=True).start()
-        return _loop
-
-
-def _running() -> asyncio.AbstractEventLoop | None:
-    try:
-        return asyncio.get_running_loop()
-    except RuntimeError:
-        return None
-
-
-def run_sync(coro: Coroutine[Any, Any, T]) -> T:
-    """Run a coroutine on the judge loop and wait for it: from sync code in any thread, or from inside
-    another running loop (which then waits too; async code should await the async calls instead)."""
-    loop = judge_loop()
-    if _running() is loop:
-        coro.close()
-        raise RuntimeError("a sync judge call on the judge's own loop would wait for itself; await the async call")
-    return asyncio.run_coroutine_threadsafe(coro, loop).result()
-
-
-async def on_judge_loop(coro: Coroutine[Any, Any, T]) -> T:
-    """Await a coroutine on the judge loop from any loop (directly when already on it)."""
-    loop = judge_loop()
-    if _running() is loop:
-        return await coro
-    return await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(coro, loop))
+judge_loop = llm.model_loop       # the process's one model loop, shared with the baselines and the proposal
+run_sync = llm.run_sync
+on_judge_loop = llm.on_model_loop
 
 
 # --- the judge ------------------------------------------------------------------------------------------

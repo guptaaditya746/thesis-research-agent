@@ -2,7 +2,6 @@
 model call, and the error every step raises for a refusal (the CLI prints it and exits 2)."""
 from __future__ import annotations
 
-import asyncio
 import json
 import re
 from datetime import UTC, datetime
@@ -146,8 +145,8 @@ def ask(directory: Path, step: str, instructions: str, user_prompt: str, output_
                                 + REDO.format(cache=Path(directory) / CACHE, key=key)) from exc
         return output, {**_public(record), "cache_key": key, "cached": True}
     try:
-        output = asyncio.run(llm.structured(instructions, user_prompt, output_type, model=model,
-                                            model_settings=llm.settings(seed=0, max_tokens=4096)))
+        output = llm.run_sync(llm.structured(instructions, user_prompt, output_type, model=model,
+                                              model_settings=llm.settings(seed=0, max_tokens=4096)))
     except Exception as exc:   # provider errors can echo the key: never let it reach a file or a log
         raise RuntimeError(llm.redact(f"{type(exc).__name__}: {exc}")) from None
     cache.put(key, output.model_dump(mode="json"))

@@ -172,3 +172,47 @@ def test_manifest_can_point_a_baseline_only_into_papers(tmp_path: Path, file: st
 def _dump(path: Path, obj: dict) -> Path:
     fx.dump(path, obj)
     return path
+
+
+def test_rag_baseline_two_live_calls_share_one_loop(tmp_path: Path) -> None:
+    """The real model class over keep-alive HTTP: the answering call and then the mapping call in one process
+    both reach the server (EV1: the second call failed with "Event loop is closed" when each call ran in its
+    own `asyncio.run`, because the pooled connection belonged to the first, closed loop)."""
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    from gold.llm import openai_model
+
+    prompts: list[str] = []
+
+    class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"  # keep the connection open between requests, as LiteLLM does
+
+        def do_POST(self) -> None:
+            body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+            prompt = body["messages"][-1]["content"]
+            prompts.append(prompt)
+            content = json.dumps(scripted().reply(prompt))
+            data = json.dumps({"id": f"c{len(prompts)}", "object": "chat.completion", "created": 0, "model": "m",
+                               "choices": [{"index": 0, "finish_reason": "stop",
+                                            "message": {"role": "assistant", "content": content}}],
+                               "usage": {"prompt_tokens": 5, "completion_tokens": 5, "total_tokens": 10}}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+
+        def log_message(self, *args: Any) -> None:
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    server.daemon_threads = True
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        model = openai_model("orch-model", url=f"http://127.0.0.1:{server.server_address[1]}/v1")
+        answer = rag.rag_baseline(fx.write_corpus(tmp_path), model=model, k=3, mode="global", max_chars=200)
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert len(prompts) == 2 and answer["label"] == "mixed" and answer["mapping_call"] is not None

@@ -13,7 +13,6 @@ that answer into the label and the stance of every paper it relies on, for the s
 """
 from __future__ import annotations
 
-import asyncio
 import json
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -24,7 +23,7 @@ from pydantic_ai.models import Model
 
 from agent.canonical import sha256_hex
 from evidence import protocol as protocol_module, rules
-from gold.llm import JsonlCache, cache_key, model_name, prompt_sha256, redact, settings, structured_reply
+from gold.llm import JsonlCache, cache_key, model_name, prompt_sha256, redact, run_sync, settings, structured_reply
 
 DEFAULT_PROTOCOL = Path(__file__).resolve().parents[2] / "evidence" / "protocols" / "rag-factuality.yaml"
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
@@ -138,8 +137,8 @@ def cached_reply(cache: JsonlCache | None, instructions: str, prompt: str, *, mo
     if hit is not None:
         return output_type.model_validate(hit["output"]), record | {"key": key, "cached": True} | hit["usage"]
     try:
-        reply = asyncio.run(structured_reply(instructions, prompt, output_type, model=model,
-                                             model_settings=settings(seed=seed, max_tokens=max_tokens)))
+        reply = run_sync(structured_reply(instructions, prompt, output_type, model=model,
+                                          model_settings=settings(seed=seed, max_tokens=max_tokens)))
     except Exception as exc:  # provider errors can echo the key: never let it reach a log
         raise RuntimeError(redact(f"{type(exc).__name__}: {exc}")) from None
     usage = {"served_model": reply.served_model, "input_tokens": reply.input_tokens,

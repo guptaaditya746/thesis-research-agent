@@ -107,16 +107,34 @@ def plan_json(plan: Plan, avoid_title: str | None = None) -> dict[str, Any]:
     }
 
 
+def section_at(text: str, offset: int) -> str:
+    """The name of the '## ' section an offset falls in ('title' before the first one)."""
+    head = text.rfind("\n## ", 0, offset + 1)
+    if head < 0:
+        return "title"
+    end = text.find("\n", head + 4)
+    return text[head + 4:end if end >= 0 else len(text)].strip()
+
+
 def locate(text: str, plan: Plan) -> tuple[list[Placement], list[Decoy], list[str]]:
     """Placements in the model's text; problems for every required string missing or ambiguous. Codes and
     abbreviations count only where the plan puts them: table lines and their definitions."""
     index, ps, decoys, problems = anchor.Index(text), [], [], []
 
+    def where(quote: str, reason: str) -> str:
+        """For an ambiguous string, how often and in which sections it occurs, so the retry can fix it."""
+        if reason != "ambiguous":
+            return ""
+        spans = index.spans(anchor.normalize(quote))
+        sections = [section_at(text, start) for start, _ in spans]
+        return (f": it occurs {len(spans)} times (in {', '.join(sections)}); write it exactly once, where the "
+                f"level instructions put it, and nowhere else")
+
     def find_once(fact: str, role: str, quote: str, fmt: str | None = None) -> None:
         try:
             sel = anchor.find(index, quote)
         except anchor.AnchorError as exc:
-            problems.append(f"{fact}/{role}: required string {quote!r} is {exc.reason}")
+            problems.append(f"{fact}/{role}: required string {quote!r} is {exc.reason}{where(quote, exc.reason)}")
             return
         ps.append(Placement(fact, role, plan.paper, sel.start, sel.end, sel.exact, fmt))
 
