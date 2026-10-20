@@ -90,12 +90,13 @@ function PaperView({ runId, paper, documents, strategy }: { runId: string; paper
         description={<Link to={`/runs/${encodeURIComponent(runId)}`} className="font-mono underline">{runId}</Link>}
         actions={
           <>
-            <Button asChild size="sm" variant="outline" disabled={at <= 0}>
-              {at > 0 ? <Link to={href(documents[at - 1])}><ChevronLeftIcon data-icon="inline-start" />{documents[at - 1]}</Link> : <span>first</span>}
-            </Button>
-            <Button asChild size="sm" variant="outline" disabled={at < 0 || at >= documents.length - 1}>
-              {at >= 0 && at < documents.length - 1 ? <Link to={href(documents[at + 1])}>{documents[at + 1]}<ChevronRightIcon data-icon="inline-end" /></Link> : <span>last</span>}
-            </Button>
+            {/* asChild over a span ignores `disabled`, so the ends are real disabled buttons */}
+            {at > 0
+              ? <Button asChild size="sm" variant="outline"><Link to={href(documents[at - 1])}><ChevronLeftIcon data-icon="inline-start" />{documents[at - 1]}</Link></Button>
+              : <Button size="sm" variant="outline" disabled>first</Button>}
+            {at >= 0 && at < documents.length - 1
+              ? <Button asChild size="sm" variant="outline"><Link to={href(documents[at + 1])}>{documents[at + 1]}<ChevronRightIcon data-icon="inline-end" /></Link></Button>
+              : <Button size="sm" variant="outline" disabled>last</Button>}
           </>
         }>
         {study && (

@@ -1,6 +1,6 @@
 /** Ctrl/Cmd+K: jump to a question's flow, a page or a run; switch theme; refresh from disk. */
 import { useQueryClient } from "@tanstack/react-query"
-import { BarChart3Icon, ListChecksIcon, ListOrderedIcon, MoonIcon, PlayIcon, SearchIcon, SunIcon } from "lucide-react"
+import { ListChecksIcon, ListOrderedIcon, MoonIcon, PlayIcon, SearchIcon, SunIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router"
@@ -19,14 +19,12 @@ import {
 } from "@/components/ui/command"
 import { Kbd } from "@/components/ui/kbd"
 
-const PAGES = [
-  { to: "/", label: "Questions" },
-  { to: "/protocol", label: "Protocols" },
-  { to: "/corpora", label: "Corpora" },
-  { to: "/runs", label: "Runs" },
-  { to: "/scores", label: "Scores" },
-  { to: "/jobs", label: "Jobs" },
-]
+import { HOME, VIEWER } from "./pages"
+
+const PAGES = [HOME, ...VIEWER]
+
+/** ⌘K on a Mac, Ctrl K elsewhere: the shortcut takes either, the hint shows the one the keyboard has. */
+const SHORTCUT = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.userAgent) ? "⌘K" : "Ctrl K"
 
 export function CommandMenu() {
   const [open, setOpen] = useState(false)
@@ -57,7 +55,7 @@ export function CommandMenu() {
       <Button variant="outline" size="sm" className="hidden w-48 justify-start text-muted-foreground md:inline-flex" onClick={() => setOpen(true)}>
         <SearchIcon data-icon="inline-start" />
         Search…
-        <Kbd className="ml-auto">Ctrl K</Kbd>
+        <Kbd className="ml-auto">{SHORTCUT}</Kbd>
       </Button>
       <Button variant="ghost" size="icon-sm" className="md:hidden" aria-label="Search" onClick={() => setOpen(true)}>
         <SearchIcon />
@@ -77,7 +75,7 @@ export function CommandMenu() {
           <CommandGroup heading="Pages">
             {PAGES.map((p) => (
               <CommandItem key={p.to} onSelect={() => go(p.to)}>
-                <BarChart3Icon />
+                <p.icon />
                 {p.label}
               </CommandItem>
             ))}

@@ -35,7 +35,7 @@ function FieldsTable({ spec }: { spec: EvidenceTypeSpec }) {
           <TableRow key={name}>
             <TableCell className="font-mono text-xs">
               {name}
-              {schema.required?.includes(name) && <span className="text-muted-foreground" title="required">*</span>}
+              {schema.required?.includes(name) && <><span className="text-muted-foreground" title="required" aria-hidden="true">*</span><span className="sr-only"> required</span></>}
             </TableCell>
             <TableCell className="font-mono text-xs">{Array.isArray(p.type) ? p.type.join(" | ") : String(p.type ?? "")}</TableCell>
             <TableCell className="text-xs">
@@ -58,7 +58,7 @@ function EvidenceTypes({ types, phases }: { types: Record<string, EvidenceTypeSp
         return (
           <Card key={name}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle as="h3" className="flex items-center gap-2 text-base">
                 <span className="text-muted-foreground tabular-nums">{i + 1}.</span> {typeLabel(name)}
               </CardTitle>
               <CardDescription>{spec.description}</CardDescription>
@@ -72,17 +72,19 @@ function EvidenceTypes({ types, phases }: { types: Record<string, EvidenceTypeSp
                 ["bounds", spec.bounds?.length ? spec.bounds.map((b) => `${b.field} in [${b.min ?? "-∞"}, ${b.max ?? "∞"}]${b.when ? ` when ${b.when.link}.${b.when.field} ∈ {${b.when.values.join(", ")}}` : ""}`).join("; ") : "none"],
                 ["merge key", spec.merge_key?.join(", ") ?? "all fields"],
                 ["cascade", (
-                  <ol key="c" className="flex flex-wrap items-center gap-1">
-                    {spec.extractors.map((e, p) => (
-                      <li key={p} className="flex items-center gap-1">
-                        {p > 0 && <span aria-hidden="true" className="text-muted-foreground">→</span>}
-                        <Badge variant="secondary" className="font-mono" title={Object.keys(e.config ?? {}).length ? JSON.stringify(e.config) : undefined}>
-                          {p}: {e.name}
-                        </Badge>
-                      </li>
-                    ))}
+                  <div key="c" className="flex flex-wrap items-center gap-1">
+                    <ol className="contents">
+                      {spec.extractors.map((e, p) => (
+                        <li key={p} className="flex items-center gap-1">
+                          {p > 0 && <span aria-hidden="true" className="text-muted-foreground">→</span>}
+                          <Badge variant="secondary" className="font-mono" title={Object.keys(e.config ?? {}).length ? JSON.stringify(e.config) : undefined}>
+                            {p}: {e.name}
+                          </Badge>
+                        </li>
+                      ))}
+                    </ol>
                     <span className="ml-1 text-xs text-muted-foreground">({spec.cascade ?? "all"})</span>
-                  </ol>
+                  </div>
                 )],
               ]} />
             </CardContent>
@@ -98,7 +100,7 @@ export function SynthesisBlock({ synthesis }: { synthesis: Synthesis }) {
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Comparison and metrics</CardTitle>
+          <CardTitle as="h3" className="text-base">Comparison and metrics</CardTitle>
           <CardDescription>A study's effect is the treatment against the control on the first question metric with a usable pair.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -129,7 +131,7 @@ export function SynthesisBlock({ synthesis }: { synthesis: Synthesis }) {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Label decision table</CardTitle>
+          <CardTitle as="h3" className="text-base">Label decision table</CardTitle>
           <CardDescription>The first row whose conditions hold on the counts gives the label.</CardDescription>
         </CardHeader>
         <CardContent>

@@ -2,16 +2,7 @@
  * The app's sidebar (shadcn `sidebar`): the questions (each opens its guided flow), the viewer's pages, the
  * jobs with a count of the active ones, and the backend's state.
  */
-import {
-  ActivityIcon,
-  BarChart3Icon,
-  DatabaseIcon,
-  FileCode2Icon,
-  FlaskConicalIcon,
-  ListOrderedIcon,
-  NetworkIcon,
-  type LucideIcon,
-} from "lucide-react"
+import { ListOrderedIcon, NetworkIcon } from "lucide-react"
 import { NavLink, useLocation } from "react-router"
 
 import { isActiveJob, useEvConfig, useHealth, useJobs, useQuestions } from "@/api/ev"
@@ -32,15 +23,7 @@ import {
 } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 
-type Page = { to: string; label: string; icon: LucideIcon; end?: boolean }
-
-const VIEWER: Page[] = [
-  { to: "/protocol", label: "Protocols", icon: FileCode2Icon },
-  { to: "/corpora", label: "Corpora", icon: DatabaseIcon },
-  { to: "/runs", label: "Runs", icon: FlaskConicalIcon },
-  { to: "/scores", label: "Scores", icon: BarChart3Icon },
-  { to: "/jobs", label: "Jobs", icon: ActivityIcon },
-]
+import { VIEWER, type Page } from "./pages"
 
 function Pages({ pages, badge }: { pages: Page[]; badge?: (to: string) => number }) {
   const { pathname } = useLocation()
@@ -103,10 +86,14 @@ export function AppSidebar() {
               )}
               {questions.data?.map((q) => (
                 <SidebarMenuItem key={q.id}>
-                  <SidebarMenuButton asChild tooltip={q.question} isActive={pathname.startsWith(`/flow/${q.id}`)}>
-                    <NavLink to={`/flow/${encodeURIComponent(q.id)}`} title={q.question}>
-                      <ListOrderedIcon />
-                      <span className="truncate">{q.id}</span>
+                  {/* the id alone does not say which question it is: show the start of the question under it */}
+                  <SidebarMenuButton asChild tooltip={q.question} isActive={pathname.startsWith(`/flow/${q.id}`)} className="h-auto items-start py-1.5">
+                    <NavLink to={`/flow/${encodeURIComponent(q.id)}`}>
+                      <ListOrderedIcon className="mt-0.5" />
+                      <span className="grid min-w-0 leading-tight">
+                        <span className="truncate font-mono text-xs">{q.id}</span>
+                        <span className="line-clamp-2 text-xs text-sidebar-foreground/70">{q.question}</span>
+                      </span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

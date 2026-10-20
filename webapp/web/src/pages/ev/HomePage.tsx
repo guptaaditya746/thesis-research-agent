@@ -13,6 +13,8 @@ import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState, ErrorState, CardsSkeleton } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 
 export default function HomePage() {
   const config = useEvConfig()
@@ -45,11 +47,14 @@ export default function HomePage() {
           </Card>
         ))}
       </section>
-      <p className="text-sm text-muted-foreground">
-        On disk: {corpora.data?.length ?? "…"} corpora, {runs.data?.filter((r) => r.kind === "engine").length ?? "…"} engine runs,{" "}
-        {runs.data?.filter((r) => r.kind === "baseline").length ?? "…"} baseline answers, {scores.data?.reports.length ?? "…"} score reports
-        (made here, on the command line or on Slurm: the same layout).
-      </p>
+      {/* one line once every count is in, not a row of "…" filling in one by one */}
+      {corpora.isPending || runs.isPending || scores.isPending ? <Skeleton className="h-5 w-full max-w-2xl" aria-label="Counting what is on disk" /> : (
+        <p className="text-sm text-muted-foreground">
+          On disk: {corpora.data?.length ?? "?"} corpora, {runs.data?.filter((r) => r.kind === "engine").length ?? "?"} engine runs,{" "}
+          {runs.data?.filter((r) => r.kind === "baseline").length ?? "?"} baseline answers, {scores.data?.reports.length ?? "?"} score reports
+          (made here, on the command line or on Slurm: the same layout).
+        </p>
+      )}
       {active.length > 0 && (
         <section aria-label="Active jobs" className="space-y-2">
           <h2 className="text-base font-semibold">Running now</h2>
@@ -72,7 +77,7 @@ export default function HomePage() {
                 const root = config.data[k]
                 return (
                   <li key={k} className="flex min-w-0 items-center gap-2">
-                    <span className={root.exists ? "text-status-good" : "text-muted-foreground"} aria-hidden="true">●</span>
+                    <span className={cn("size-2 shrink-0 rounded-full", root.exists ? "bg-status-good" : "bg-muted-foreground/50")} aria-hidden="true" />
                     <span className="w-24 shrink-0 text-muted-foreground">{k.replace("_", " ")}</span>
                     <span className="truncate font-mono text-xs" title={root.path ?? undefined}>{root.path ?? "not configured"}</span>
                     {!root.exists && root.path && <span className="text-xs text-muted-foreground">(missing)</span>}

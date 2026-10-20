@@ -27,7 +27,8 @@ export interface Flow {
   corpus: string | null
   run: string | null
   proposal: string | null
-  set: (patch: Partial<Record<"protocol" | "corpus" | "run" | "proposal", string | null>>) => void
+  /** `push` for a choice the user made (Back undoes it); a choice that follows from a started job replaces. */
+  set: (patch: Partial<Record<"protocol" | "corpus" | "run" | "proposal", string | null>>, how?: { push?: boolean }) => void
   href: (step: StepId) => string
 }
 
@@ -35,7 +36,7 @@ export function useFlow(question: Question): Flow {
   const [params, setParams] = useSearchParams()
   const chosen = parseProtocolParam(params.get("protocol"))
   const protocol = chosen ?? (question.protocol ? { source: "repo" as const, name: question.protocol } : null)
-  const set: Flow["set"] = (patch) =>
+  const set: Flow["set"] = (patch, how) =>
     setParams((old) => {
       const next = new URLSearchParams(old)
       for (const [k, v] of Object.entries(patch)) {
@@ -43,7 +44,7 @@ export function useFlow(question: Question): Flow {
         else next.delete(k)
       }
       return next
-    }, { replace: true })
+    }, { replace: !how?.push })
   const href = (step: StepId) => {
     const query = params.toString()
     return `/flow/${encodeURIComponent(question.id)}/${step}${query ? `?${query}` : ""}`

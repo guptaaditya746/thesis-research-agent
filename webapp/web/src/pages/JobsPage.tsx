@@ -4,6 +4,7 @@
  * full. The list polls while a job is queued or running.
  */
 import { ActivityIcon } from "lucide-react"
+import { useState } from "react"
 import { Link, useParams } from "react-router"
 
 import { isActiveJob, useJob, useJobs } from "@/api/ev"
@@ -13,6 +14,7 @@ import { JobPanel } from "@/components/jobs/JobPanel"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { dateTime, duration, elapsed } from "@/lib/format"
 import { jobTitle } from "@/lib/jobs"
@@ -26,9 +28,13 @@ function JobDetail({ id }: { id: string }) {
   )
 }
 
+/** Rows shown until "show all": $EV/.jobs only grows, and a long table hides the jobs that matter (the newest). */
+const LIMIT = 50
+
 export default function JobsPage() {
   const { jobId } = useParams()
   const jobs = useJobs()
+  const [all, setAll] = useState(false)
   const active = jobs.data?.filter(isActiveJob) ?? []
   return (
     <div className="space-y-6">
@@ -46,7 +52,7 @@ export default function JobsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {jobs.data.map((j) => (
+              {(all ? jobs.data : jobs.data.slice(0, LIMIT)).map((j) => (
                 <TableRow key={j.id} data-state={j.id === jobId ? "selected" : undefined}>
                   <TableCell><JobBadge state={j.state} failedCalls={j.failed_calls} /></TableCell>
                   <TableCell className="text-sm">{jobTitle(j)}{j.error ? <span className="text-muted-foreground"> · {j.error}</span> : null}</TableCell>
@@ -58,6 +64,12 @@ export default function JobsPage() {
               ))}
             </TableBody>
           </Table>
+          {!all && jobs.data.length > LIMIT && (
+            <div className="flex items-center gap-2 border-t p-2 text-xs text-muted-foreground">
+              The latest {LIMIT} of {jobs.data.length}.
+              <Button size="sm" variant="outline" onClick={() => setAll(true)}>Show all {jobs.data.length}</Button>
+            </div>
+          )}
         </div>
       )}
     </div>

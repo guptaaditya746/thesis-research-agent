@@ -146,7 +146,7 @@ describe("runs", () => {
 
   it("the graph tab draws the evidence of one paper", async () => {
     renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}?tab=graph`)
-    expect(await screen.findByRole("img", { name: "Evidence graph of S001" }, T)).toBeInTheDocument()
+    expect(await screen.findByRole("group", { name: "Evidence graph of S001" }, T)).toBeInTheDocument()
     expect(screen.getByText(/nodes, \d+ edges/)).toBeInTheDocument()
   })
 
@@ -170,7 +170,7 @@ describe("runs", () => {
     await user.click(within(calls).getByRole("button", { name: "t000020" }))
     const sheet = await screen.findByRole("dialog", {}, T)
     expect(await within(sheet).findByText("the agent's run directory", {}, T)).toBeInTheDocument()
-    expect(within(sheet).getAllByText(/claim rejected: not_found/).length).toBeGreaterThan(0)
+    expect(within(sheet).getAllByText(/not_found/).length).toBeGreaterThan(0)
     expect(within(sheet).getByRole("list", { name: "Steps" })).toBeInTheDocument()
   })
 
@@ -228,7 +228,7 @@ describe("scores", () => {
     const c = await screen.findByRole("table", { name: "Synthesis per system" }, T)
     expect(within(c).getByText("evidence engine")).toBeInTheDocument()
     expect(within(c).getByText("RAG baseline")).toBeInTheDocument()
-    expect(screen.getByRole("img", { name: "Direction accuracy per system with intervals" })).toBeInTheDocument()
+    expect(screen.getByRole("figure", { name: "Direction accuracy per system with intervals" })).toBeInTheDocument()
     expect(screen.getByRole("table", { name: "Extraction over all levels" })).toBeInTheDocument()
     expect(screen.getByRole("table", { name: "Funnel per document" })).toBeInTheDocument()
     expect(screen.getByText(/engine − RAG baseline/)).toBeInTheDocument()

@@ -51,7 +51,7 @@ function Graph({ run, live }: { run: EvRunDetail; live: boolean }) {
   if (run.kind !== "engine") return <p className="text-sm text-muted-foreground">A baseline has no evidence graph.</p>
   if (graph.isPending) return <CardsSkeleton count={1} />
   if (graph.isError) return <p className="text-sm text-muted-foreground">{run.complete ? "No graph.json in this run." : "The engine writes graph.json when the run finishes."}</p>
-  return <EvidenceGraph graph={graph.data} documents={run.documents} />
+  return <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`} />
 }
 
 export function GraphStep({ flow }: { flow: Flow }) {

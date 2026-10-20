@@ -12,8 +12,8 @@ export type Tone = "good" | "warning" | "serious" | "critical" | "neutral"
 
 const ICON_TONE: Record<Tone, string> = {
   good: "text-status-good",
-  warning: "text-status-warning",
-  serious: "text-status-serious",
+  warning: "text-status-warning-fg",
+  serious: "text-status-serious-fg",   // the fill colour is ~2.6:1 on white; -fg is the text/icon shade
   critical: "text-status-critical",
   neutral: "text-muted-foreground",
 }

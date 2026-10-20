@@ -6,7 +6,7 @@
  * amendments log. Read-only: the decisions are made in a question's flow (the protocol step's cards form, which
  * writes decisions.yaml) or by editing decisions.yaml; amendments on the command line.
  */
-import { Link, useParams } from "react-router"
+import { Link, useParams, useSearchParams } from "react-router"
 
 import { useProposal, useQuestions, type Card as CardT } from "@/api/ev"
 import { JsonBlock, KeyValues, QueryPage, RowsTable } from "@/components/ev/bits"
@@ -67,10 +67,15 @@ function CardView({ card }: { card: CardT }) {
   )
 }
 
+const TABS = ["frame", "critic", "cards", "protocol", "amendments", "sources"]
+
 export default function ProposalPage() {
   const { name = "" } = useParams()
   const proposal = useProposal(name)
   const questions = useQuestions()
+  // the tab is in the URL (?tab=critic), so a link or a reload opens the same one
+  const [params, setParams] = useSearchParams()
+  const tab = TABS.includes(params.get("tab") ?? "") ? params.get("tab")! : "cards"
   const flowOf = (question: string | null | undefined) => {
     const q = questions.data?.find((x) => x.question === question)
     return q ? `/flow/${encodeURIComponent(q.id)}/protocol?proposal=${encodeURIComponent(name)}` : null
@@ -86,7 +91,7 @@ export default function ProposalPage() {
               {p.frozen && <span className="text-sm text-muted-foreground">revision {p.revision} · <span className="font-mono text-xs">{p.protocol_sha256?.slice(0, 16)}</span></span>}
             </div>
           </PageHeader>
-          <Tabs defaultValue="cards">
+          <Tabs value={tab} onValueChange={(v) => setParams({ tab: v }, { replace: true })}>
             <TabsList className="flex-wrap">
               <TabsTrigger value="frame">Frame</TabsTrigger>
               <TabsTrigger value="critic">Critic</TabsTrigger>

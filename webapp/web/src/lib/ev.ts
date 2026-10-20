@@ -50,6 +50,9 @@ export const TYPE_COLOR: Record<string, string> = {
   screen: "var(--muted-foreground)",
 }
 export const typeLabel = (type: string) => TYPE_LABEL[type] ?? type
+/** A short visible tag of an evidence type in a graph node, so the type is not told by border colour alone. */
+export const TYPE_TAG: Record<string, string> = { condition: "cond", metric: "metric", measurement: "meas", author_claim: "claim", screen: "screen", document: "paper" }
+export const typeTag = (type: string) => TYPE_TAG[type] ?? type.slice(0, 6)
 
 export const DIRECTION_LABEL: Record<Direction, string> = {
   supports: "supports",

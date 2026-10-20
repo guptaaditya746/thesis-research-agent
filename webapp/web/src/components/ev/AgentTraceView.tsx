@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/badges"
 import { Badge } from "@/components/ui/badge"
 import { tokens } from "@/lib/format"
 
-import { JsonBlock, KeyValues } from "./bits"
+import { Capped, JsonBlock, KeyValues } from "./bits"
 
 export function AgentTraceView({ trace }: { trace: AgentTrace }) {
   const outcome = (trace.outcome ?? {}) as Record<string, unknown>
@@ -24,8 +24,9 @@ export function AgentTraceView({ trace }: { trace: AgentTrace }) {
         ["steps", String(trace.steps.length)],
         ["claims", `${trace.claims.filter((c) => c.status === "accepted").length} accepted, ${trace.claims.filter((c) => c.status === "rejected").length} rejected`],
       ]} />
+      <Capped items={trace.steps}>{(steps) => (
       <ol className="space-y-3" aria-label="Steps">
-        {trace.steps.map((s) => (
+        {steps.map((s) => (
           <li key={`${s.agent_id}-${s.step}`} className="rounded-md border p-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono text-xs text-muted-foreground">step {s.step}</span>
@@ -50,13 +51,15 @@ export function AgentTraceView({ trace }: { trace: AgentTrace }) {
               </div>
             )}
             {(s.claims ?? []).length > 0 && (
-              <ul className="mt-2 flex flex-wrap gap-2">
+              // The badge holds the verdict only (a badge does not wrap); the claim and the reason are text that does.
+              <ul className="mt-2 space-y-1.5" aria-label={`Claims of step ${s.step}`}>
                 {(s.claims ?? []).map((c, i) => (
-                  <li key={i}>
-                    <StatusBadge tone={c.status === "accepted" ? "good" : "critical"} icon={c.status === "accepted" ? <CheckCircle2Icon /> : <OctagonXIcon />}
-                      title={`${String(c.s)} | ${String(c.p)} | ${String(c.o)}`}>
-                      claim {c.status}{c.reason ? `: ${c.reason}` : ""}
+                  <li key={i} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs">
+                    <StatusBadge tone={c.status === "accepted" ? "good" : "critical"} icon={c.status === "accepted" ? <CheckCircle2Icon /> : <OctagonXIcon />}>
+                      {c.status}
                     </StatusBadge>
+                    <span className="min-w-0 font-mono break-words">{String(c.s)} | {String(c.p)} | {String(c.o)}</span>
+                    {c.reason && <span className="basis-full break-words text-muted-foreground">{c.reason}</span>}
                   </li>
                 ))}
               </ul>
@@ -64,17 +67,20 @@ export function AgentTraceView({ trace }: { trace: AgentTrace }) {
           </li>
         ))}
       </ol>
+      )}</Capped>
       {trace.claims.length > 0 && (
         <div className="space-y-1">
           <h3 className="text-sm font-medium">Claims</h3>
+          <Capped items={trace.claims}>{(claims) => (
           <ul className="space-y-1 text-xs">
-            {trace.claims.map((c, i) => (
+            {claims.map((c, i) => (
               <li key={i} className="rounded border p-2">
                 <span className="font-mono">{c.claim_id ?? "rejected"}</span> · {c.paper_id ?? c.file ?? "?"} · {c.status}
                 {c.reason ? ` (${c.reason})` : ""}: <q>{c.quote}</q>
               </li>
             ))}
           </ul>
+          )}</Capped>
         </div>
       )}
       {trace.answer && (

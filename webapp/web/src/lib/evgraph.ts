@@ -13,7 +13,7 @@ import type { Edge, Node } from "@xyflow/react"
 
 import type { EvGraph, EvGraphNode } from "@/api/ev"
 
-import { itemLabel } from "./ev"
+import { itemLabel, typeTag } from "./ev"
 
 export type EvNodeData = { label: string; type: string; document: string | null; foundBy: string[] }
 export type EvEdgeData = { rel: string }
@@ -22,7 +22,9 @@ export type EvFlowEdge = Edge<EvEdgeData>
 
 export const EV_NODE_HEIGHT = 40
 const REVERSED = new Set(["in_document", "condition", "metric"])
-export const evNodeWidth = (label: string) => Math.min(280, Math.max(96, Math.round(label.length * 7 + 40)))
+/** Label plus padding plus the type tag (or the paper icon), which takes about its letters at text-xs. */
+export const evNodeWidth = (label: string, type = "") =>
+  Math.min(320, Math.max(96, Math.round(label.length * 7 + 40 + (type === "document" ? 0 : typeTag(type).length * 7 + 14))))
 
 export function nodeLabel(node: EvGraphNode): string {
   if (node.type === "document") return node.id
@@ -55,7 +57,7 @@ export function toEvFlow(graph: EvGraph, { document = null, withDocumentEdges = 
   g.setDefaultEdgeLabel(() => ({}))
   const nodes: EvFlowNode[] = kept.map((n) => {
     const label = nodeLabel(n)
-    g.setNode(n.id, { width: evNodeWidth(label), height: EV_NODE_HEIGHT })
+    g.setNode(n.id, { width: evNodeWidth(label, n.type), height: EV_NODE_HEIGHT })
     return {
       id: n.id,
       type: "evidence",

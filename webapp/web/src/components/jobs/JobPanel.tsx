@@ -4,10 +4,22 @@
  * model; the log is the commands' own output.
  */
 import { ExternalLinkIcon, SquareIcon } from "lucide-react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router"
 
 import { isActiveJob, useCancelJob, useJobLog, type Job } from "@/api/ev"
 import { JobBadge } from "@/components/badges"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,13 +27,18 @@ import { dateTime, duration, elapsed } from "@/lib/format"
 import { jobTarget, jobTitle } from "@/lib/jobs"
 import { announceError } from "@/lib/toasts"
 
+/** The log's tail in a <details>: it polls only while open, so a page of collapsed jobs does not poll every log. */
 export function JobLog({ job, lines = 40 }: { job: Job; lines?: number }) {
-  const log = useJobLog(job.id, isActiveJob(job), lines)
+  const [open, setOpen] = useState(true)
+  const log = useJobLog(job.id, isActiveJob(job) && open, lines)
   return (
-    <pre aria-label={`Log of job ${job.id}`} className="max-h-72 overflow-auto rounded-md bg-muted p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap">
-      {log.data ?? (log.isPending ? "…" : "")}
-      {log.data === "" && (job.state === "queued" ? "waiting for its turn" : "no output yet")}
-    </pre>
+    <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+      <summary className="cursor-pointer text-xs text-muted-foreground">Log</summary>
+      <pre aria-label={`Log of job ${job.id}`} className="mt-1 max-h-72 overflow-auto rounded-md bg-muted p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap">
+        {log.data ?? (log.isPending ? "…" : "")}
+        {log.data === "" && (job.state === "queued" ? "waiting for its turn" : "no output yet")}
+      </pre>
+    </details>
   )
 }
 
@@ -54,12 +71,28 @@ export function JobPanel({ job, compact = false }: { job: Job; compact?: boolean
               Open
             </Button>
           )}
+          {/* a cancelled job is not resumed: its run is left incomplete, so ask first */}
           {active && (
-            <Button size="xs" variant="outline" disabled={cancel.isPending}
-              onClick={() => cancel.mutate(job.id, { onError: (e) => announceError("Cancel failed", e) })}>
-              <SquareIcon data-icon="inline-start" />
-              Cancel
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="xs" variant="destructive" disabled={cancel.isPending}>
+                  <SquareIcon data-icon="inline-start" />
+                  Cancel
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel {jobTitle(job)}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    The job's process is stopped; what it wrote so far stays on disk, incomplete. It cannot be resumed, only started again.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep it running</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onClick={() => cancel.mutate(job.id, { onError: (e) => announceError("Cancel failed", e) })}>Cancel job</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </CardAction>
       </CardHeader>

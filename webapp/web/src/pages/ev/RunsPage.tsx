@@ -13,6 +13,8 @@ import { LabelBadge, SystemBadge } from "@/components/ev/bits"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { runsByCorpus, systemOrder } from "@/lib/ev"
 import { tokens } from "@/lib/format"
@@ -26,10 +28,10 @@ export default function RunsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Runs" description="Main runs and baseline answers, grouped by corpus. Replay and re-execution history is optional." />
-      <label className="flex w-fit items-center gap-2 text-sm text-muted-foreground">
-        <input type="checkbox" checked={showHistory} onChange={(event) => setShowHistory(event.target.checked)} />
-        Show replay and re-execution history ({history.length})
-      </label>
+      <div className="flex w-fit items-center gap-2">
+        <Switch id="runs-history" checked={showHistory} onCheckedChange={setShowHistory} />
+        <Label htmlFor="runs-history" className="font-normal text-muted-foreground">Show replay and re-execution history ({history.length})</Label>
+      </div>
       {runs.isPending && <TableSkeleton />}
       {runs.isError && <ErrorState error={runs.error} onRetry={() => void runs.refetch()} />}
       {runs.data && !runs.data.length && (

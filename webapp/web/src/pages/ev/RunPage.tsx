@@ -31,7 +31,7 @@ function GraphTab({ run }: { run: EvRunDetail }) {
   const graph = useRunGraph(run.id)
   if (graph.isPending) return <CardsSkeleton count={1} />
   if (graph.isError) return <ErrorState error={graph.error} />
-  return <EvidenceGraph graph={graph.data} documents={run.documents} />
+  return <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`} />
 }
 
 function ProtocolTab({ runId }: { runId: string }) {

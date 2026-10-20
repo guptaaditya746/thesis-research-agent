@@ -53,7 +53,7 @@ function Choice({ flow, value, title, children, href }: { flow: Flow; value: Pro
       {children}
       <span className="flex-1" />
       {chosen ? <Badge>chosen</Badge> : (
-        <Button size="xs" variant="outline" onClick={() => flow.set({ protocol: protocolParam(value), run: null })} aria-label={`Use ${value.source === "repo" ? "protocol" : "proposal"} ${value.name}`}>Use</Button>
+        <Button size="sm" variant="outline" onClick={() => flow.set({ protocol: protocolParam(value), run: null }, { push: true })} aria-label={`Use ${value.source === "repo" ? "protocol" : "proposal"} ${value.name}`}>Use</Button>
       )}
     </li>
   )
@@ -150,7 +150,7 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge>frozen</Badge>
             <span>revision {p.revision} · <span className="font-mono text-xs">{p.protocol_sha256?.slice(0, 16)}</span></span>
-            <Button size="sm" onClick={() => flow.set({ protocol: protocolParam({ source: "proposal", name }), run: null })}>Use this protocol</Button>
+            <Button size="sm" onClick={() => flow.set({ protocol: protocolParam({ source: "proposal", name }), run: null }, { push: true })}>Use this protocol</Button>
             <span className="text-xs text-muted-foreground">Amendments: <span className="font-mono">evidence propose amend $EV/proposals/{name} --reason …</span> on the command line.</span>
           </div>
         )}
@@ -186,7 +186,7 @@ export function ProtocolStep({ flow }: { flow: Flow }) {
                 <span className="font-mono text-xs">{p.name}</span>
                 <Badge variant="outline">{p.steps.at(-1) ?? "started"}: not frozen</Badge>
                 <span className="flex-1" />
-                <Button size="xs" variant="outline" onClick={() => flow.set({ proposal: p.name })}>Work on it</Button>
+                <Button size="xs" variant="outline" onClick={() => flow.set({ proposal: p.name }, { push: true })}>Work on it</Button>
               </li>
             ))}
           </ul>

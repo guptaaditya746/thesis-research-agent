@@ -33,7 +33,7 @@ export function Stepper({ flow, current }: { flow: Flow; current: StepId }) {
     <nav aria-label="Steps" className="overflow-x-auto">
       <ol className="flex min-w-max items-stretch gap-1 rounded-lg border p-1">
         <li className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground">
-          <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground"><CheckIcon className="size-3" /></span>
+          <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground"><CheckIcon className="size-3.5" /></span>
           <Link to="/" className="hover:underline">Question</Link>
         </li>
         {STEPS.map((s, n) => {
@@ -46,11 +46,12 @@ export function Stepper({ flow, current }: { flow: Flow; current: StepId }) {
                 aria-current={active ? "step" : undefined}
                 className={cn("flex h-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-muted", active && "bg-muted font-medium")}
               >
-                <span className={cn("flex size-5 items-center justify-center rounded-full text-[10px] tabular-nums", done ? "bg-primary text-primary-foreground" : "border")}>
-                  {done ? <CheckIcon className="size-3" /> : n + 2}
+                <span className={cn("flex size-6 items-center justify-center rounded-full text-xs tabular-nums", done ? "bg-primary text-primary-foreground" : "border")}>
+                  {done ? <CheckIcon className="size-3.5" /> : n + 2}
                 </span>
                 <span>{s.label}</span>
-                {value && <span className="max-w-40 truncate font-mono text-xs text-muted-foreground" title={value}>{value}</span>}
+                {/* muted-foreground on the active step's bg-muted falls under 4.5:1 */}
+                {value && <span className={cn("max-w-40 truncate font-mono text-xs", active ? "text-foreground/80" : "text-muted-foreground")} title={value}>{value}</span>}
               </Link>
             </li>
           )
@@ -64,7 +65,7 @@ function FlowView({ question, step }: { question: Question; step: StepId }) {
   const flow = useFlow(question)
   return (
     <div className="space-y-6">
-      <PageHeader title={<span className="text-balance">{question.question}</span>} description={<>Question <span className="font-mono">{question.id}</span>: choose its protocol, a corpus, run the engine and the baselines, then read the evidence graph, the answer and the scores.</>} />
+      <PageHeader title={<span className="text-balance">{question.question}</span>} docTitle={question.id} description={<>Question <span className="font-mono">{question.id}</span>: choose its protocol, a corpus, run the engine and the baselines, then read the evidence graph, the answer and the scores.</>} />
       <Stepper flow={flow} current={step} />
       {step === "protocol" && <ProtocolStep flow={flow} />}
       {step === "corpus" && <CorpusStep flow={flow} />}

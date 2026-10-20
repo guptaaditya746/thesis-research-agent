@@ -15,12 +15,12 @@ import { itemLabel, typeLabel } from "@/lib/ev"
 import { tokens } from "@/lib/format"
 
 import { AgentTraceView } from "./AgentTraceView"
-import { JsonBlock, KeyValues } from "./bits"
+import { Capped, JsonBlock, KeyValues } from "./bits"
 
 function Trace({ runId, callId, agentRun }: { runId: string; callId: string; agentRun: string }) {
   const trace = useCallTrace(runId, callId, agentRun)
   if (trace.isPending) return <CardsSkeleton count={1} />
-  if (trace.isError) return <ErrorState error={trace.error} title="Could not load the agent's trace" />
+  if (trace.isError) return <ErrorState error={trace.error} title="Could not load the agent's trace" onRetry={() => void trace.refetch()} />
   return <AgentTraceView trace={trace.data} />
 }
 
@@ -46,8 +46,9 @@ function CallBody({ runId, callId }: { runId: string; callId: string }) {
       {result.error && <JsonBlock value={result.error} label="error" />}
       <section className="space-y-2">
         <h3 className="text-sm font-medium">Items ({result.items?.length ?? 0})</h3>
+        <Capped items={result.items ?? []}>{(items) => (
         <ul className="space-y-1 text-sm">
-          {(result.items ?? []).map((i) => (
+          {items.map((i) => (
             <li key={i.item_id} className="rounded border p-2">
               <span className="font-mono text-xs text-muted-foreground">{i.item_id}</span> {itemLabel(i)}
               <span className="block text-xs text-muted-foreground">
@@ -56,17 +57,20 @@ function CallBody({ runId, callId }: { runId: string; callId: string }) {
             </li>
           ))}
         </ul>
+        )}</Capped>
         {(result.rejected ?? []).length > 0 && (
           <>
             <h3 className="text-sm font-medium">Rejected by the engine's checks ({result.rejected!.length})</h3>
+            <Capped items={result.rejected!}>{(rejected) => (
             <ul className="space-y-1 text-xs">
-              {result.rejected!.map((r, i) => (
+              {rejected.map((r, i) => (
                 <li key={i} className="rounded border border-destructive/40 p-2">
                   <Badge variant="destructive" className="mr-1">{r.reason}</Badge>
                   {r.detail} {(r.quotes ?? []).map((q) => <q key={q} className="ml-1">{q}</q>)}
                 </li>
               ))}
             </ul>
+            )}</Capped>
           </>
         )}
         {(result.coverage ?? []).length > 0 && (
@@ -118,7 +122,7 @@ function CallBody({ runId, callId }: { runId: string; callId: string }) {
           {agentRuns.length > 1 && (
             <div className="flex flex-wrap gap-2">
               {agentRuns.map((a) => (
-                <Button key={a} size="sm" variant={a === shown ? "default" : "outline"} onClick={() => setAgentRun(a)} className="font-mono">{a}</Button>
+                <Button key={a} size="sm" variant={a === shown ? "default" : "outline"} aria-pressed={a === shown} onClick={() => setAgentRun(a)} className="font-mono">{a}</Button>
               ))}
             </div>
           )}

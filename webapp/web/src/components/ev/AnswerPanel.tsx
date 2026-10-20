@@ -29,7 +29,7 @@ export function AnswerSummary({ answer, expected }: { answer: EvAnswer; expected
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+        <CardTitle as="h3" className="flex flex-wrap items-center gap-2 text-base">
           <SystemBadge system={answer.system} />
           <LabelBadge label={answer.label} correct={expected ? expected === answer.label : undefined} />
           {expected && <span className="text-sm font-normal text-muted-foreground">expected <span className="font-mono">{expected}</span></span>}
@@ -76,7 +76,7 @@ export function StudiesTable({ answer, paperHref, funnel, strategy }: {
         <TableBody>
           {answer.studies.map((s) => (
             <TableRow key={s.document}>
-              <TableCell className="font-mono text-xs"><Link to={paperHref(s.document)} className="hover:underline">{s.document}</Link></TableCell>
+              <TableCell className="font-mono text-xs"><Link to={paperHref(s.document)} className="underline underline-offset-2">{s.document}</Link></TableCell>
               <TableCell><DirectionBadge direction={s.direction} /></TableCell>
               {engine && <TableCell className="font-mono text-xs">{s.metric ?? DASH}</TableCell>}
               {engine && <TableCell className="font-mono text-xs tabular-nums">{pair(s)}</TableCell>}
@@ -113,7 +113,7 @@ export function BaselineEvidence({ answer, paperHref }: { answer: EvAnswer; pape
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Retrieved passages</CardTitle>
+        <CardTitle as="h3" className="text-base">Retrieved passages</CardTitle>
         <CardDescription>
           {(answer.retrieved ?? []).length} passages retrieved, {(answer.citations ?? []).length} cited
           {(answer.dropped_citations ?? []).length ? `, ${answer.dropped_citations!.length} citations dropped (no such passage)` : ""}.
@@ -132,7 +132,7 @@ export function BaselineEvidence({ answer, paperHref }: { answer: EvAnswer; pape
           <TableBody>
             {(answer.retrieved ?? []).map((r) => (
               <TableRow key={`${r.document}:${r.start}`}>
-                <TableCell className="font-mono text-xs"><Link to={paperHref(r.document)} className="hover:underline">{r.document}</Link></TableCell>
+                <TableCell className="font-mono text-xs"><Link to={paperHref(r.document)} className="underline underline-offset-2">{r.document}</Link></TableCell>
                 <TableCell className="font-mono text-xs tabular-nums">{r.start}–{r.end}</TableCell>
                 <TableCell className="font-mono text-xs tabular-nums">{num(r.score ?? null, 2)}</TableCell>
                 <TableCell className="text-xs">{cited.has(`${r.document}:${r.start}-${r.end}`) ? "cited" : ""}</TableCell>

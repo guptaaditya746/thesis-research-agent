@@ -6,11 +6,13 @@ import type { UseQueryResult } from "@tanstack/react-query"
 import {
   ArrowDownRightIcon,
   ArrowUpRightIcon,
+  CheckIcon,
   CircleHelpIcon,
   EqualIcon,
   SearchXIcon,
+  XIcon,
 } from "lucide-react"
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Link } from "react-router"
 
 import { isNotFound } from "@/api/client"
@@ -49,6 +51,8 @@ export function DirectionBadge({ direction, title }: { direction: string | null 
 export function LabelBadge({ label, correct }: { label: string | null | undefined; correct?: boolean | null }) {
   return (
     <Badge variant={correct === false ? "destructive" : "secondary"} className="font-mono" title={correct === undefined || correct === null ? undefined : correct ? "the expected label" : "not the expected label"}>
+      {correct === true && <CheckIcon aria-hidden="true" />}
+      {correct === false && <XIcon aria-hidden="true" />}
       {label ?? "—"}
       {correct === true && <span className="sr-only"> (correct)</span>}
       {correct === false && <span className="sr-only"> (wrong)</span>}
@@ -71,9 +75,22 @@ export function KeyValues({ items, className }: { items: [ReactNode, ReactNode][
 
 export function JsonBlock({ value, className, label }: { value: unknown; className?: string; label?: string }) {
   return (
-    <pre aria-label={label} className={cn("max-h-96 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs whitespace-pre-wrap", className)}>
+    // A focusable region: the block scrolls (max-h), and keyboard users need to reach it to scroll it.
+    <pre role="region" tabIndex={0} aria-label={label ?? "JSON"} className={cn("max-h-96 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs whitespace-pre-wrap focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", className)}>
       {typeof value === "string" ? value : JSON.stringify(value, null, 2)}
     </pre>
+  )
+}
+
+/** The first `limit` of a long list, with a button for the rest (an agent trace can be hundreds of steps). */
+export function Capped<T>({ items, limit = 50, children }: { items: T[]; limit?: number; children: (shown: T[]) => ReactNode }) {
+  const [all, setAll] = useState(false)
+  const capped = !all && items.length > limit
+  return (
+    <>
+      {children(capped ? items.slice(0, limit) : items)}
+      {capped && <Button size="sm" variant="outline" className="mt-2" onClick={() => setAll(true)}>Show all {items.length}</Button>}
+    </>
   )
 }
 

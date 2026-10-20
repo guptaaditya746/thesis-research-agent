@@ -99,7 +99,9 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="run-name">Run name</Label>
-          <Input id="run-name" className="w-56 font-mono" placeholder={corpus} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!ok} />
+          <Input id="run-name" className="w-56 font-mono" placeholder={corpus} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!ok} aria-describedby={ok ? undefined : "run-name-error"} />
+          {/* under the field, not in the note below the row: that is where the eye is when Start is off */}
+          {!ok && <p id="run-name-error" className="w-56 text-xs text-destructive">{taken ? "That run exists: give this one a name of its own." : "Letters, digits, . _ -; starting with a letter or digit."}</p>}
         </div>
         <div className="flex items-center gap-2 pb-2">
           <Switch id="run-retry" checked={retry} onCheckedChange={setRetry} aria-label="Retry errors" />
@@ -111,8 +113,7 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Writes <span className="font-mono">runs/{group}/{name || corpus}</span> with protocol {protocol.name}
-        {taken ? " — that run exists: give this one a name of its own." : "."} {extractors === "regex-only" ? "No model: it runs beside other jobs." : "Calls the model: model jobs run one at a time, the same model for every extractor and both baselines."}
+        Writes <span className="font-mono">runs/{group}/{name || corpus}</span> with protocol {protocol.name}. {extractors === "regex-only" ? "No model: it runs beside other jobs." : "Calls the model: model jobs run one at a time, the same model for every extractor and both baselines."}
         {config.data && !config.data.llm_key_set && extractors !== "regex-only" && <strong className="block text-status-critical">The server has no $LITELLM_MASTER_KEY: model jobs are refused. Start it with llm-setup's .env sourced (README "Web app").</strong>}
       </p>
     </form>
@@ -128,18 +129,25 @@ function Baselines({ corpus, runs, busy }: { corpus: string; runs: EvRunSummary[
   const running = (system: string) => busy.some((j) => j.refs.run === `${system}~${corpus}`)
   const model = config.data?.default_model ?? "orch-model"
   const done = { onSuccess: (job: Job) => announceJob(job, navigate), onError: (e: unknown) => announceError("The baseline did not start", e) }
+  // a disabled button says why: the answer is on disk (with a link to it) or its job is running
+  const state = (system: string) => (running(system) ? "running…" : has(system) ? "done" : null)
+  const open = (system: string) => has(system) && (
+    <Link to={`/runs/${encodeURIComponent(`${system}~${corpus}`)}`} className="text-xs underline" aria-label={`Open ${system}~${corpus}`}>open</Link>
+  )
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button variant="outline" disabled={has("rag-baseline") || running("rag-baseline") || rag.isPending}
+      <Button variant="outline" disabled={!!state("rag-baseline") || rag.isPending}
         onClick={() => rag.mutate({ corpus, model, retrieval: "global", k: 8 }, done)}>
         <SearchIcon data-icon="inline-start" />
-        RAG baseline (global top 8)
+        {state("rag-baseline") ? `RAG baseline: ${state("rag-baseline")}` : "RAG baseline (global top 8)"}
       </Button>
-      <Button variant="outline" disabled={has("agent-baseline") || running("agent-baseline") || agent.isPending}
+      {open("rag-baseline")}
+      <Button variant="outline" disabled={!!state("agent-baseline") || agent.isPending}
         onClick={() => agent.mutate({ corpus, model }, done)}>
         <BotIcon data-icon="inline-start" />
-        Agent baseline
+        {state("agent-baseline") ? `Agent baseline: ${state("agent-baseline")}` : "Agent baseline"}
       </Button>
+      {open("agent-baseline")}
       <span className="text-xs text-muted-foreground">
         Plain retrieve-then-answer and the research agent with the question only, on {model}; each writes runs/&lt;baseline&gt;/{corpus}.
         {config.data && !config.data.agent_root ? " No $AGENT_ROOT: the agent baseline runs without the pinned toolchain." : ""}
@@ -239,7 +247,7 @@ export function RunStep({ flow }: { flow: Flow }) {
                         <TableCell>{r.label ? <LabelBadge label={r.label} /> : "—"} <ErrorCallsBadge count={r.error_calls} /></TableCell>
                         <TableCell className="space-x-1 text-right whitespace-nowrap">
                           {r.kind === "engine" && (r.id === flow.run ? <Badge>chosen</Badge> : (
-                            <Button size="xs" variant="outline" onClick={() => flow.set({ run: r.id })} aria-label={`Choose ${r.id}`}>Choose</Button>
+                            <Button size="sm" variant="outline" onClick={() => flow.set({ run: r.id }, { push: true })} aria-label={`Choose ${r.id}`}>Choose</Button>
                           ))}
                           {r.kind === "engine" && r.complete && !running && (
                             <Button size="xs" variant="outline" disabled={scoring || score.isPending} onClick={() => score.mutate({ run: r.id }, done)} aria-label={`Score ${r.id}`}>

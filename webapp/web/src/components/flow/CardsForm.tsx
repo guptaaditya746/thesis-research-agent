@@ -14,6 +14,17 @@ import { useNavigate } from "react-router"
 import { isConflict } from "@/api/client"
 import { useEvConfig, usePutDecisions, useStartJob, type Card as CardT, type ProposalDetail } from "@/api/ev"
 import { JsonBlock } from "@/components/ev/bits"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,7 +38,10 @@ import { CUSTOM, initialState, optionValue, toEntry, type CardState } from "./ca
 
 function CardField({ card, state, onChange, user }: { card: CardT; state: CardState; onChange: (s: CardState) => void; user: string }) {
   const touch = (patch: Partial<CardState>) => onChange({ ...state, ...patch, by: user })
-  const { error } = toEntry(card, state)
+  // JSON is half-typed most of the time: say it does not parse once the field is left, not on every keystroke
+  const [left, setLeft] = useState(false)
+  const reasonError = state.reason.trim() ? null : "a reason is required"
+  const jsonError = state.choice === CUSTOM && left && toEntry(card, { ...state, reason: "-" }).error
   const id = `card-${card.id}`
   const shown = state.choice === CUSTOM ? null : optionValue(card, state.choice)
   return (
@@ -59,7 +73,9 @@ function CardField({ card, state, onChange, user }: { card: CardT; state: CardSt
         {state.choice === CUSTOM ? (
           <div className="grid gap-1.5">
             <Label htmlFor={`${id}-value`}>Custom value (JSON in the card's shape)</Label>
-            <Textarea id={`${id}-value`} className="min-h-28 font-mono text-xs" value={state.custom} onChange={(e) => touch({ custom: e.target.value })} />
+            <Textarea id={`${id}-value`} className="min-h-28 font-mono text-xs" value={state.custom} onChange={(e) => { setLeft(false); touch({ custom: e.target.value }) }}
+              onBlur={() => setLeft(true)} aria-invalid={!!jsonError} aria-describedby={jsonError ? `${id}-value-error` : undefined} />
+            {jsonError && <p id={`${id}-value-error`} className="text-xs text-destructive">{card.id}: {jsonError}</p>}
           </div>
         ) : (
           <details>
@@ -69,9 +85,10 @@ function CardField({ card, state, onChange, user }: { card: CardT; state: CardSt
         )}
         <div className="grid gap-1.5">
           <Label htmlFor={`${id}-reason`}>Reason (required)</Label>
-          <Textarea id={`${id}-reason`} className="min-h-16" value={state.reason} onChange={(e) => touch({ reason: e.target.value })} aria-invalid={!!error} />
+          <Textarea id={`${id}-reason`} className="min-h-16" value={state.reason} onChange={(e) => touch({ reason: e.target.value })}
+            aria-invalid={!!reasonError} aria-describedby={reasonError ? `${id}-reason-error` : undefined} />
+          {reasonError && <p id={`${id}-reason-error`} className="text-xs text-destructive">{card.id}: {reasonError}</p>}
         </div>
-        {error && <p className="text-xs text-destructive" role="alert">{card.id}: {error}</p>}
         {card.problems.length > 0 && (
           <ul className="space-y-0.5 text-xs text-destructive" aria-label={`Problems of ${card.id}`}>
             {card.problems.map((p) => <li key={p}>{p}</li>)}
@@ -97,6 +114,9 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
   const entries = proposal.cards.map((c) => ({ card: c, ...toEntry(c, states[c.id]) }))
   const errors = entries.filter((e) => e.error)
   const problems = save.data?.problems ?? proposal.decision_problems
+  const freezeOff = !proposal.steps.includes("cards") ? "the proposal has no cards yet."
+    : dirty ? "unsaved changes: save before freezing."
+    : problems.length > 0 ? "decisions.yaml has problems freeze would refuse (above)." : null
 
   const onSave = (force = false) =>
     save.mutate({ decisions: entries.map((e) => e.entry), base_sha256: base, force }, {
@@ -137,13 +157,32 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
           <SaveIcon data-icon="inline-start" />
           Save decisions
         </Button>
-        <Button variant="outline" onClick={onFreeze} disabled={dirty || problems.length > 0 || !proposal.steps.includes("cards") || freeze.isPending}>
-          <LockIcon data-icon="inline-start" />
-          Freeze
-        </Button>
+        {config.data && !user && <span className="text-xs font-medium">No $WEBAPP_USER on the server: saving is off.</span>}
+        {/* freezing is one-way (revision 1, then only `amend`): confirm it, and say why it is off */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" disabled={!!freezeOff || freeze.isPending}>
+              <LockIcon data-icon="inline-start" />
+              Freeze
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Freeze proposal {proposal.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This writes protocol.yaml as revision 1 from the saved decisions. After that the cards are fixed: later changes go through{" "}
+                <span className="font-mono">evidence propose amend</span> on the command line.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep editing</AlertDialogCancel>
+              <AlertDialogAction onClick={onFreeze}>Freeze</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <span className="text-xs text-muted-foreground">
-          {errors.length > 0 ? `${errors.length} card(s) need a reason or valid JSON.` : dirty ? "Unsaved changes: save before freezing." : save.isSuccess ? "Saved." : ""}
-          {" "}Freeze writes protocol.yaml (revision 1); after that, changes go through <span className="font-mono">evidence propose amend</span> on the command line.
+          {errors.length > 0 ? `${errors.length} card(s) need a reason or valid JSON. ` : save.isSuccess && !dirty ? "Saved. " : ""}
+          {freezeOff ? <strong className="font-medium text-foreground">Freeze is off: {freezeOff}</strong> : "Freeze writes protocol.yaml (revision 1); after that, changes go through evidence propose amend."}
         </span>
       </div>
     </section>

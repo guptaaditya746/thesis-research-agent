@@ -19,6 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { knobText } from "@/lib/ev"
 import { isName } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
+import { cn } from "@/lib/utils"
 
 import type { Flow } from "./flow"
 
@@ -33,11 +34,26 @@ type Knob = (typeof KNOBS)[number]["key"]
 function NumberField({ id, label, value, onChange, min, max, help }: {
   id: string; label: string; value: number; onChange: (n: number) => void; min: number; max: number; help?: string
 }) {
+  // The text being typed; an in-range number is passed on as it is typed, anything else is clamped
+  // when the field is left (clamping per keystroke turned a cleared field into `min` and "50" into 200).
+  const [draft, setDraft] = useState<string | null>(null)
+  const commit = () => {
+    if (draft !== null) onChange(Math.max(min, Math.min(max, Math.round(Number(draft)) || min)))
+    setDraft(null)
+  }
   return (
-    <div className="grid gap-1.5">
+    <div className="grid content-start gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} type="number" className="w-28" min={min} max={max} value={value} title={help}
-        onChange={(e) => onChange(Math.max(min, Math.min(max, Number(e.target.value) || 0)))} />
+      <Input id={id} type="number" className="w-28" min={min} max={max} value={draft ?? value} aria-describedby={help ? `${id}-help` : undefined}
+        onChange={(e) => {
+          const raw = e.target.value
+          setDraft(raw)
+          const n = Number(raw)
+          if (raw !== "" && Number.isInteger(n) && n >= min && n <= max) onChange(n)
+        }}
+        onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") commit() }} />
+      {/* shown, not a title=: a tooltip is out of reach for touch and keyboard */}
+      {help && <p id={`${id}-help`} className="w-36 text-xs text-muted-foreground">{help}</p>}
     </div>
   )
 }
@@ -53,6 +69,7 @@ function SynthForm({ flow }: { flow: Flow }) {
   const start = useStartJob("synth")
   const navigate = useNavigate()
   const ok = isName(name) && chosen.length > 0
+  const blocked = !name ? "Give the corpus a name to build it." : !isName(name) ? "That name is not allowed (see the hint under Name)." : chosen.length === 0 ? "Choose at least one level." : null
   const toggle = (level: string) => setChosen((old) => (old.includes(level) ? old.filter((l) => l !== level) : [...old, level]))
   return (
     <form className="space-y-4" aria-label="Build a template corpus" onSubmit={(e) => {
@@ -63,10 +80,12 @@ function SynthForm({ flow }: { flow: Flow }) {
         onError: (err) => announceError("The corpus build did not start", err),
       })
     }}>
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="grid gap-1.5">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="grid content-start gap-1.5">
           <Label htmlFor="synth-name">Name</Label>
-          <Input id="synth-name" className="w-56 font-mono" placeholder="rag-tpl-s2" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!name && !isName(name)} />
+          <Input id="synth-name" className="w-56 font-mono" placeholder="rag-tpl-s2" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!name && !isName(name)} aria-describedby="synth-name-hint" />
+          {/* the rule lib/jobs.ts NAME_PATTERN enforces (the server's too) */}
+          <p id="synth-name-hint" className={cn("w-56 text-xs", name && !isName(name) ? "text-destructive" : "text-muted-foreground")}>Letters, digits, . _ -; starts with a letter or digit, at most 128.</p>
         </div>
         <NumberField id="synth-seed" label="Seed" value={seed} onChange={setSeed} min={0} max={2 ** 31 - 1} />
         <NumberField id="synth-studies" label="Studies" value={studies} onChange={setStudies} min={1} max={200} />
@@ -94,6 +113,7 @@ function SynthForm({ flow }: { flow: Flow }) {
           Build template corpus
         </Button>
         <span className="text-xs text-muted-foreground">
+          {blocked && <strong className="block font-medium text-foreground">{blocked}</strong>}
           Writes {chosen.length + 1} corpora under the corpora root; no model. LLM-written corpora (sub-model-1, with the blind check) take
           hours on two GPUs: build them on Slurm (docs/slurm-evidence-runbook.md step 1), they appear here when written.
         </span>
@@ -134,7 +154,7 @@ export function CorpusStep({ flow }: { flow: Flow }) {
                       <TableCell className="text-xs">{knobText(c.settings)}</TableCell>
                       <TableCell className="text-right">
                         {c.name === flow.corpus ? <Badge>chosen</Badge> : (
-                          <Button size="xs" variant="outline" onClick={() => flow.set({ corpus: c.name, run: null })} aria-label={`Use ${c.name}`}>Use</Button>
+                          <Button size="sm" variant="outline" onClick={() => flow.set({ corpus: c.name, run: null }, { push: true })} aria-label={`Use ${c.name}`}>Use</Button>
                         )}
                       </TableCell>
                     </TableRow>

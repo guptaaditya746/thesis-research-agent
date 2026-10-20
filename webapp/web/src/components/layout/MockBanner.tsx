@@ -13,7 +13,7 @@ export function MockBanner() {
       aria-label="Mock data"
       className="flex items-center justify-center gap-2 border-b border-status-warning/50 bg-status-warning/15 px-4 py-1.5 text-center text-xs font-medium"
     >
-      <FlaskConicalIcon className="size-3.5 shrink-0 text-status-warning" aria-hidden="true" />
+      <FlaskConicalIcon className="size-3.5 shrink-0 text-status-warning-fg" aria-hidden="true" />
       Mock data (npm run dev:mock): every number on these pages is a fixture, not a result.
     </div>
   )

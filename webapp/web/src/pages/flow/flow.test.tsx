@@ -152,7 +152,7 @@ describe("the cards form", () => {
     expect(within(card).getByText("decided by aditya")).toBeInTheDocument()
     const reason = within(card).getByLabelText("Reason (required)")
     await user.clear(reason)
-    expect(within(card).getByRole("alert")).toHaveTextContent("a reason is required")
+    expect(reason).toHaveAccessibleDescription(/a reason is required/)   // under the field, no alert
     expect(screen.getByRole("button", { name: "Save decisions" })).toBeDisabled()
     await user.type(reason, "two points is the noise between runs")
     expect(screen.getByRole("button", { name: "Freeze" })).toBeDisabled()   // unsaved
@@ -163,6 +163,7 @@ describe("the cards form", () => {
     expect(puts[0].decisions.find((d) => d.card === "screen")).toMatchObject({ by: "model" })
     await waitFor(() => expect(screen.getByRole("button", { name: "Freeze" })).toBeEnabled())
     await user.click(screen.getByRole("button", { name: "Freeze" }))
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Freeze" }))   // confirmed
     await waitFor(() => expect(bodies.at(-1)).toEqual({ kind: "freeze", body: { proposal: "p1" } }))
   })
 
@@ -190,7 +191,9 @@ describe("the cards form", () => {
     const value = within(card).getByLabelText(/Custom value/)
     await user.clear(value)
     await user.type(value, "not json")
-    expect(within(card).getByRole("alert")).toHaveTextContent("not JSON")
+    expect(within(card).queryByText(/not JSON/)).toBeNull()   // not while typing
+    await user.tab()
+    expect(value).toHaveAccessibleDescription(/not JSON/)
     await user.clear(value)
     await user.click(value)
     await user.paste('{"prefer": ["document_order"]}')
@@ -291,6 +294,7 @@ describe("the Jobs page", () => {
     const panels = await screen.findAllByLabelText(`Job RAG baseline rag-baseline~${PARA}`, {}, T)
     expect(await within(panels[0]).findByLabelText(/Log of job/, {}, T)).toHaveTextContent("mock rag-baseline working")
     await user.click(within(panels[0]).getByRole("button", { name: "Cancel" }))
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel job" }))
     await waitFor(() => expect(within(table).getByText(/cancelled/)).toBeInTheDocument(), T)
   })
 })

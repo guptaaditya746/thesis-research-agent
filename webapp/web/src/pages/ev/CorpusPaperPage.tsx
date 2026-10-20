@@ -69,7 +69,7 @@ export default function CorpusPaperPage() {
                     )}
                     {Array.isArray(study.measurements) && study.measurements.length > 0 && (
                       <RowsTable caption="Measurements" rows={study.measurements as Record<string, unknown>[]} columns={["id", "condition", "metric", "value", "dataset"]}
-                        render={(c, v) => c === "id" ? <button type="button" className="font-mono underline-offset-2 hover:underline" onClick={() => setSelected(String(v))}>{String(v)}</button> : String(v ?? "—")} />
+                        render={(c, v) => c === "id" ? <button type="button" className="font-mono underline decoration-dotted underline-offset-2 hover:decoration-solid" onClick={() => setSelected(String(v))}>{String(v)}</button> : String(v ?? "—")} />
                     )}
                   </CardContent>
                 </Card>

@@ -19,8 +19,8 @@ export function ProposalSteps({ steps }: { steps: string[] }) {
       {PROPOSAL_STEPS.map((s) => (
         <li key={s}>
           {steps.includes(s)
-            ? <StatusBadge tone="good" icon={<CheckCircle2Icon />}>{s}</StatusBadge>
-            : <StatusBadge tone="neutral" icon={<CircleDashedIcon />}>{s}</StatusBadge>}
+            ? <StatusBadge tone="good" icon={<CheckCircle2Icon />}>{s}<span className="sr-only"> (done)</span></StatusBadge>
+            : <StatusBadge tone="neutral" icon={<CircleDashedIcon />}>{s}<span className="sr-only"> (pending)</span></StatusBadge>}
         </li>
       ))}
     </ol>
@@ -49,7 +49,7 @@ export function Frame({ frame }: { frame: Record<string, unknown> }) {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <Card>
-        <CardHeader><CardTitle className="text-base">Population and screen</CardTitle><CardDescription>{String(population.description ?? "")}</CardDescription></CardHeader>
+        <CardHeader><CardTitle as="h3" className="text-base">Population and screen</CardTitle><CardDescription>{String(population.description ?? "")}</CardDescription></CardHeader>
         <CardContent><KeyValues items={[["screening question", String(population.screening_question ?? "—")], ["screen terms", <Names key="t" items={population.terms as Named[]} />]]} /></CardContent>
       </Card>
       {(["treatment", "control"] as const).map((k) => {
@@ -57,7 +57,7 @@ export function Frame({ frame }: { frame: Record<string, unknown> }) {
         return (
           <Card key={k}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">{k}: <span className="font-mono">{String(s.role)}</span> <Source source={s.source} id={s.vocab_id} /></CardTitle>
+              <CardTitle as="h3" className="flex items-center gap-2 text-base">{k}: <span className="font-mono">{String(s.role)}</span> <Source source={s.source} id={s.vocab_id} /></CardTitle>
               <CardDescription>{String(s.label ?? "")}: {String(s.definition ?? "")}</CardDescription>
             </CardHeader>
             <CardContent><KeyValues items={[["synonyms", <Names key="s" items={s.synonyms as Named[]} />], ["vocabulary synonyms", ((s.vocab_synonyms as string[] | undefined) ?? []).join(", ") || "—"]]} /></CardContent>
@@ -65,7 +65,7 @@ export function Frame({ frame }: { frame: Record<string, unknown> }) {
         )
       })}
       <Card>
-        <CardHeader><CardTitle className="text-base">Outcomes</CardTitle></CardHeader>
+        <CardHeader><CardTitle as="h3" className="text-base">Outcomes</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {outcomes.map((o) => (
             <div key={String(o.canonical)} className="space-y-1 text-sm">
