@@ -86,7 +86,7 @@ from .evmodels import (
     VariantInfo,
 )
 from modelcall.cache import KEY_LINE
-from .files import ID, RUN_SEP, NotFound, check_id, inside, read_json, read_jsonl, signature
+from .files import ID, RUN_SEP, Damaged, NotFound, check_id, inside, read_json, read_jsonl, signature
 from .models import Claim, ClaimRef, ModelCall, Step
 from .settings import Settings
 
@@ -588,8 +588,18 @@ class EvidenceFiles:
                            has_trace=summary.kind == "baseline" and self._baseline_run_dir(path) is not None)
 
     def _items(self, path: Path) -> list[Item]:
+        """The run's evidence items; a damaged line (not the torn tail) is `Damaged`, named `group/run/file:line`
+        relative to the runs root, never by its server path."""
         def make() -> list[Item]:
-            return RunDir(path).items()
+            rd = RunDir(path)
+            try:
+                return rd.items()
+            except ValueError as exc:   # read_lines' `path:line: ...`, or an item that fails validation
+                shown = f"{path.parent.name}/{path.name}/{EVIDENCE_FILE}"
+                text = str(exc)
+                full = str(rd.file(EVIDENCE_FILE))
+                message = text.replace(full, shown) if full in text else f"{shown}: {text.splitlines()[0]}"
+                raise Damaged(message[:500]) from None
         return self._cached(("items", path), (RunDir(path).file(EVIDENCE_FILE),), make)
 
     def run_paper(self, run_id: str, document: str) -> RunPaper:

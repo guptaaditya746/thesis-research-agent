@@ -30,7 +30,7 @@ from .evapi import evidence_router
 from .evfiles import EvidenceFiles
 from .evjobs import evjobs_router
 from .evquestions import Questions
-from .files import BadRequest, Conflict, NotFound, inside
+from .files import BadRequest, Conflict, Damaged, NotFound, inside
 from .guard import Guard
 from .jobs import JobManager
 from .models import Health, Job
@@ -89,7 +89,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.services = services
     s = services.settings
     app.add_middleware(Guard, allowed_hosts=s.hosts, write_clients=s.writers)  # webapp/guard.py
-    for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400)):
+    for exc_type, status in ((NotFound, 404), (Conflict, 409), (BadRequest, 400), (Damaged, 422)):
         app.add_exception_handler(exc_type, _handler(status))
     app.include_router(health_router(), prefix="/api")
     app.include_router(evidence_router(services.evidence), prefix="/api/ev")

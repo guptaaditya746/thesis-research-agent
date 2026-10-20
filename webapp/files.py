@@ -30,6 +30,11 @@ class BadRequest(ValueError):
     """The request is malformed; the API answers 400."""
 
 
+class Damaged(ValueError):
+    """A file the request needs is damaged (a bad line in the middle of a JSON-lines file); the API answers 422
+    with the file (relative to its configured root) and the line."""
+
+
 def check_id(value: str, what: str = "id") -> str:
     if not ID.fullmatch(value or ""):
         raise NotFound(f"no such {what}: {value!r}")
