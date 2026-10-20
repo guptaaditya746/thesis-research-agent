@@ -11,8 +11,8 @@
  * - a propose job makes an unfrozen proposal (the fixtures' proposal with its decisions reset to the model's
  *   defaults) under the requested name; PUT decisions stores them and answers with what freeze would refuse
  *   (a missing reason, a choice other than the default by the model, an unknown choice, custom without a value);
- *   a freeze job freezes it. A run whose protocol and selection have no run-group answer in the fixtures (a
- *   proposal's protocol) is refused with 404, as GET /api/ev/run-group is.
+ *   a freeze job freezes it. A run whose protocol and selection have no run-group answer in the fixtures (the
+ *   repo's protocols and the world's proposals have them) is refused with 404, as GET /api/ev/run-group is.
  */
 import { delay, http, HttpResponse } from "msw"
 
@@ -148,6 +148,7 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
     case "propose": {
       const b = body as JobRequests["propose"]
       if (b.proposal === FROZEN || db.proposals[b.proposal]?.frozen) return frozen(b.proposal)
+      if (db.proposals[b.proposal]) return conflict(`proposal ${b.proposal} has its cards: decide them and freeze it`)
       return { proposal: b.proposal }
     }
     case "freeze": {
@@ -194,8 +195,12 @@ function submit<K extends JobKind>(kind: K, body: JobRequests[K]): Response {
   }
   const refs = refsOf(kind, body)
   if (refs instanceof Response) return refs
-  const active = db.jobs.find((j) => (j.state === "queued" || j.state === "running") && Object.entries(refs).some(([k, v]) => j.refs[k] === v))
-  if (active) return conflict(`job ${active.id} (${active.kind}) is ${active.state}; wait for it or cancel it`)
+  // busy as the backend's `free(ref, value)` checks it: what the job writes (corpus_set, run, score, proposal),
+  // never the corpus a run or baseline only reads
+  const busy = Object.entries(refs).filter(([k]) => k !== "corpus")
+  const active = db.jobs.find((j) => (j.state === "queued" || j.state === "running") && busy.some(([k, v]) => j.refs[k] === v))
+  const [ref, value] = busy.find(([k, v]) => active?.refs[k] === v) ?? []
+  if (active) return conflict(`job ${active.id} (${active.kind}) is ${active.state} on ${ref} ${value}; wait for it or cancel it`)
   const id = `20261018T120000-${kind}-${(db.jobs.length + 1).toString(16).padStart(6, "0")}`
   const argv = ["python", "-m", "webapp.tool", kind, ...Object.entries(body).flatMap(([k, v]) => [`--${k}`, typeof v === "object" ? JSON.stringify(v) : String(v)])]
   const job: Job = {

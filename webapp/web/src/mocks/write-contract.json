@@ -460,5 +460,102 @@
   "response": {
    "detail": "decisions.yaml refused:\n  screen: a decision without a reason is refused\n  min_effect: choice 'strict' is not the model's default ('draft'); set `by` to who decided\n  pairing: choice 'median' is not an option of the card (draft, order_only) nor `custom` with a value\n  label: choice custom needs a `value` in the card's shape: Input should be a valid dictionary or instance of LabelValue at value"
   }
+ },
+ {
+  "name": "run on the frozen proposal's protocol with a new name",
+  "method": "POST",
+  "path": "/api/ev/jobs/run",
+  "body": {
+   "corpus": "rag-tpl-w1-mixed",
+   "protocol": {
+    "source": "proposal",
+    "name": "rag-factuality"
+   },
+   "extractors": "cascade",
+   "strategy": "gaps",
+   "name": "contract-proposal-run"
+  },
+  "status": 202,
+  "response": {
+   "id": "*",
+   "kind": "run",
+   "lane": "model",
+   "args": {
+    "corpus": "rag-tpl-w1-mixed",
+    "protocol": {
+     "source": "proposal",
+     "name": "rag-factuality"
+    },
+    "extractors": "cascade",
+    "strategy": "gaps",
+    "model": "orch-model",
+    "group": null,
+    "name": "contract-proposal-run",
+    "retry_errors": false
+   },
+   "refs": {
+    "run": "proposal-rag-factuality-cascade-gaps~contract-proposal-run",
+    "corpus": "rag-tpl-w1-mixed"
+   },
+   "state": "queued",
+   "created_at": "*",
+   "started_at": "*",
+   "ended_at": "*",
+   "exit_code": null,
+   "error": null,
+   "warnings": [],
+   "failed_calls": null,
+   "orphaned": false,
+   "steps": [
+    {
+     "name": "evidence run",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "evidence",
+      "run",
+      "--protocol",
+      "*",
+      "--corpus",
+      "*",
+      "--out",
+      "*",
+      "--cache",
+      "*",
+      "--extractors",
+      "cascade",
+      "--strategy",
+      "gaps",
+      "--model",
+      "orch-model",
+      "--run-id",
+      "contract-proposal-run"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    }
+   ]
+  }
+ },
+ {
+  "name": "propose again on a proposal that has its cards",
+  "method": "POST",
+  "path": "/api/ev/jobs/propose",
+  "body": {
+   "proposal": "p-new",
+   "question": "rag-factuality"
+  },
+  "status": 409,
+  "response": {
+   "detail": "proposal p-new has its cards: decide them and freeze it"
+  }
  }
 ]

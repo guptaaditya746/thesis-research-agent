@@ -23,5 +23,5 @@ def test_recorded_contract_is_current(ev_world: EvidenceWorld, tmp_path: Path) -
 def test_scenarios_cover_the_rules_the_mock_keeps() -> None:
     """Accepted and refused writes both: the statuses the brief asks for, in order."""
     on_file = json.loads(CONTRACT.read_text(encoding="utf-8"))
-    assert [s["status"] for s in on_file] == [202, 409, 202, 409, 404, 409, 409, 202, 200, 409]
+    assert [s["status"] for s in on_file] == [202, 409, 202, 409, 404, 409, 409, 202, 200, 409, 202, 409]
     assert len(on_file[8]["response"]["problems"]) == 4

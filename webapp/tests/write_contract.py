@@ -7,7 +7,8 @@ order on one copy of the evidence world (evidence_world.build) with a job manage
 submitted job just sits queued or running) and the model gateway taken as answering, and adds what the backend
 answered. Scenario 8 proposes `p-new`; the recorder then makes p-new as the mock's `finishJob` does (the world's
 frozen proposal without its protocol, decisions back to the model's defaults: `unproposed`) and ends that job,
-so scenarios 9 and 10 run on the same state on both sides.
+so scenarios 9, 10 and 12 run on the same state on both sides. The backend's job ends cancelled there (it waits
+queued behind scenario 3's model job), the mock's `done`: a job's end state is not compared (nor is any `state`).
 
     uv run python -m webapp.tests.write_contract [OUT]   # build a world in a temporary directory and record
                                                          # (default OUT: webapp/web/src/mocks/write-contract.json)
@@ -69,6 +70,11 @@ SCENARIOS: list[dict[str, Any]] = [
      "body": {"decisions": _decisions(), "base_sha256": None, "force": True}},
     {"name": "freeze a proposal with problems", "method": "POST", "path": "/api/ev/jobs/freeze",
      "body": {"proposal": NEW}},
+    {"name": "run on the frozen proposal's protocol with a new name", "method": "POST", "path": "/api/ev/jobs/run",
+     "body": {"corpus": MIXED, "protocol": {"source": "proposal", "name": FROZEN}, "extractors": "cascade",
+              "strategy": "gaps", "name": "contract-proposal-run"}},
+    {"name": "propose again on a proposal that has its cards", "method": "POST", "path": "/api/ev/jobs/propose",
+     "body": {"proposal": NEW, "question": "rag-factuality"}},
 ]
 
 

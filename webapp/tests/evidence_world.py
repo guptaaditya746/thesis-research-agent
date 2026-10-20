@@ -327,6 +327,9 @@ def mock_paths(world: EvidenceWorld) -> list[str]:
     paths += [f"/api/ev/run-group?source=repo&name={protocol}&extractors={extractors}&strategy={strategy}"
               for protocol in ("rag-factuality", "rag-factuality-agentic")
               for extractors in ("regex-only", "cascade") for strategy in ("all", "gaps")]   # the app's key order
+    paths += [f"/api/ev/run-group?source=proposal&name={proposal}&extractors={extractors}&strategy={strategy}"
+              for proposal in sorted(p.name for p in world.proposals.iterdir() if p.is_dir())
+              for extractors in ("regex-only", "cascade") for strategy in ("all", "gaps")]
     runs = [f"cascade~{explicit}", f"cascade-gaps~{mixed}", f"rag-baseline~{mixed}"]
     runs += [f"agentic-gaps~{mixed}", f"agent-baseline~{mixed}"] if world.agent else []
     with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya", agent_root=None)), base_url=BASE) as client:  # type: ignore[arg-type]
