@@ -1,7 +1,7 @@
-"""The model side of a call: pinned models, LiteLLM endpoints, rotation, settings, structured replies.
+"""The model side of a call: pinned models, LiteLLM endpoints, rotation, settings. The call itself is `call.ask`.
 
 pydantic-ai on LiteLLM's OpenAI-compatible endpoint. Every call has thinking off, a fixed temperature
-and seed, and (for `structured`) its reply decoded under the output type's JSON schema: pydantic-ai's
+and seed, and (in `call.ask`) its reply decoded under the output type's JSON schema: pydantic-ai's
 NativeOutput sends `response_format: json_schema`, which vLLM enforces with structured outputs. The
 sub-model replicas are used round robin, so concurrent calls spread over both GPUs. The API key is
 read from $LITELLM_MASTER_KEY when a model is made and never logged or hashed.
@@ -10,20 +10,14 @@ from __future__ import annotations
 
 import itertools
 import os
-import re
 import threading
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
 
-from pydantic import BaseModel
-from pydantic_ai import Agent, NativeOutput
 from pydantic_ai.models import Model
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.profiles.openai import OpenAIModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.settings import ModelSettings
-
-from jsonio import sha256_hex
 
 DEFAULT_BASE_URL = "http://127.0.0.1:4000/v1"
 
@@ -36,7 +30,6 @@ SUB_ALIASES = tuple(s["alias"] for s in SUBAGENTS)  # sub-model-1, sub-model-2
 SUB_MODEL = {"name": SUBAGENTS[0]["name"], "revision": SUBAGENTS[0].get("revision")}
 ORCH_ALIAS = ORCHESTRATOR["alias"]  # orch-model: the one model of every extractor and both baselines
 ORCH_MODEL = {"name": ORCHESTRATOR["name"], "revision": ORCHESTRATOR.get("revision")}
-T = TypeVar("T", bound=BaseModel)
 
 
 def base_url() -> str:
@@ -83,20 +76,6 @@ def model_name(model: Model) -> str:
     return getattr(model, "model_name", type(model).__name__)
 
 
-async def structured(instructions: str, user_prompt: str, output_type: type[T], *, model: Model,
-                     model_settings: ModelSettings | None = None, retries: int = 1) -> T:
-    """One call whose reply must be an `output_type` object.
-
-    Schema-constrained decoding (NativeOutput) where the model supports it, as the LiteLLM models do;
-    pydantic-ai's test models get their tool-call output mode instead.
-    """
-    native = bool(model.profile.get("supports_json_schema_output"))
-    agent: Agent[None, T] = Agent(model, output_type=NativeOutput(output_type) if native else output_type,
-                                  instructions=instructions, retries=retries)
-    result = await agent.run(user_prompt, model_settings=model_settings or settings())
-    return result.output
-
-
 def model_identity(models: list[Model]) -> str:
     """The model identity for cache keys: the pinned sub-model (name@revision, modelcall/gateway.SUBAGENTS)
     for its replicas, so it does not matter which replica answered; the pinned orchestrator model
@@ -111,41 +90,3 @@ def model_identity(models: list[Model]) -> str:
     if set(names) == {ORCH_ALIAS}:
         return f"{ORCH_MODEL['name']}@{ORCH_MODEL['revision']}"
     return "+".join(names)
-
-
-_SECRET_PATTERNS = (re.compile(r"sk-[A-Za-z0-9._\-]{4,}"), re.compile(r"\b[0-9a-fA-F]{64}\b"))
-
-
-def redact(text: str) -> str:
-    """`text` with the API key, its sha256 and anything shaped like a key or a key hash replaced by
-    `***`: provider error bodies (LiteLLM's auth errors) can echo a shortened key and its hash, and
-    error reasons are written to output files and logs."""
-    key = os.environ.get("LITELLM_MASTER_KEY") or ""
-    if len(key) >= 4:
-        text = text.replace(key, "***").replace(sha256_hex(key.encode("utf-8")), "***")
-    for pattern in _SECRET_PATTERNS:
-        text = pattern.sub("***", text)
-    return text
-
-
-@dataclass(frozen=True)
-class Reply(Generic[T]):
-    """A `structured` reply with what produced it: the alias asked, the model name the server reported
-    (LiteLLM passes vLLM's served name through), and token usage for cost accounting."""
-    output: T
-    model: str
-    served_model: str | None
-    input_tokens: int
-    output_tokens: int
-
-
-async def structured_reply(instructions: str, user_prompt: str, output_type: type[T], *, model: Model,
-                           model_settings: ModelSettings | None = None, retries: int = 1) -> Reply[T]:
-    """`structured`, keeping the served model name and usage (the gold builder records both per line)."""
-    native = bool(model.profile.get("supports_json_schema_output"))
-    agent: Agent[None, T] = Agent(model, output_type=NativeOutput(output_type) if native else output_type,
-                                  instructions=instructions, retries=retries)
-    result = await agent.run(user_prompt, model_settings=model_settings or settings())
-    usage = result.usage() if callable(result.usage) else result.usage
-    return Reply(result.output, model_name(model), result.response.model_name,
-                 usage.input_tokens or 0, usage.output_tokens or 0)
