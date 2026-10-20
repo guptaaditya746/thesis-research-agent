@@ -32,6 +32,7 @@ from .files import BadRequest, Conflict, NotFound, inside
 from .guard import Guard
 from .jobs import JobManager
 from .models import Health, Job
+from .procs import PosixProcesses
 from .settings import Settings
 
 
@@ -52,7 +53,7 @@ class Services:
     questions: Questions = field(init=False)
 
     def __post_init__(self) -> None:
-        self.jobs = JobManager(self.settings, after=self.check_job)
+        self.jobs = JobManager(self.settings, after=self.check_job, processes=PosixProcesses())
         self.evidence = EvidenceFiles(self.settings)
         self.questions = Questions(self.settings)
 

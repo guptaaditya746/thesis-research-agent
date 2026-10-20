@@ -1,276 +1,322 @@
-"""The job manager (webapp/jobs.py) with small Python commands: steps, lanes, cancel, restart, the log tail."""
+"""The job manager (webapp/jobs.py) on a fake process seam (webapp/tests/fakes.py): lanes, needs, cancel, restart,
+shutdown. No real subprocess and no sleeping, so it runs on any OS; the real adapter is test_procs_posix.py."""
 from __future__ import annotations
 
 import asyncio
 import json
-import sys
-import time
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
+import webapp.jobs as jobs_module
 from webapp.files import Conflict
-from webapp.jobs import JobManager, process_start, step
+from webapp.jobs import JobManager, step
 from webapp.models import Job
 from webapp.settings import Settings
-
-
-def py(code: str, *args: str) -> list[str]:
-    return [sys.executable, "-c", code, *args]
-
-
-async def finished(manager: JobManager, job: Job, timeout: float = 20) -> Job:
-    end = time.monotonic() + timeout
-    while job.state in ("queued", "running"):
-        assert time.monotonic() < end, "job did not finish"
-        await asyncio.sleep(0.02)
-    return job
+from webapp.tests.fakes import FakeProcesses
 
 
 def settings_in(tmp_path: Path, **more: object) -> Settings:
     return Settings(EV=tmp_path / "ev", **more)  # type: ignore[arg-type]
 
 
-def test_steps_run_in_order_with_needs_and_optional_failures(tmp_path: Path) -> None:
+async def until(cond: Callable[[], bool], what: str = "condition") -> None:
+    """Yield to the event loop until `cond` holds (fake processes only move when the test says so)."""
+    for _ in range(10_000):
+        if cond():
+            return
+        await asyncio.sleep(0)
+    raise AssertionError(f"never: {what}")
+
+
+def pid_of(job: Job, index: int = 0) -> int:
+    pid = job.steps[index].pid
+    assert pid is not None
+    return pid
+
+
+def test_model_lane_runs_one_at_a_time(tmp_path: Path) -> None:
+    settings = settings_in(tmp_path)
+
+    async def main() -> None:
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
+        models = [manager.submit("run", {}, [step("s", ["m", str(n)])], lane="model") for n in range(2)]
+        cpu = manager.submit("synth", {}, [step("s", ["c"])], lane="cpu")
+        await until(lambda: len(fake.started) == 2, "first model job and the cpu job started")
+        assert fake.started == [["m", "0"], ["c"]]       # the cpu job runs beside the model queue
+        assert [j.state for j in models] == ["running", "queued"]
+        fake.finish(pid_of(models[0]))
+        await until(lambda: models[1].state == "running", "second model job started")
+        assert fake.started[-1] == ["m", "1"] and models[0].state == "done"
+        fake.finish(pid_of(models[1]))
+        fake.finish(pid_of(cpu))
+        await until(lambda: {j.state for j in [*models, cpu]} == {"done"}, "all done")
+        assert models[0].ended_at <= models[1].started_at
+
+    asyncio.run(main())
+
+
+def test_more_model_jobs_at_a_time_when_configured(tmp_path: Path) -> None:
+    settings = settings_in(tmp_path, WEBAPP_MODEL_JOBS=2)
+
+    async def main() -> None:
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
+        jobs = [manager.submit("run", {}, [step("s", ["m"])], lane="model") for _ in range(2)]
+        await until(lambda: len(fake.started) == 2, "both started")
+        fake.finish(pid_of(jobs[0]))
+        fake.finish(pid_of(jobs[1]))
+        await until(lambda: all(j.state == "done" for j in jobs))
+
+    asyncio.run(main())
+
+
+def test_needs_missing_skips_step(tmp_path: Path) -> None:
     settings = settings_in(tmp_path)
 
     async def main() -> Job:
-        manager = JobManager(settings)
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
         job = manager.submit("demo", {"n": 1}, [
-            step("hello", py("print('hello from step 1')")),
-            step("optional", py("import sys; print('broken'); sys.exit(3)"), required=False),
-            step("needs", py("print('never')"), needs=[tmp_path, tmp_path / "missing.json"]),
-            step("last", py("import sys; print('last', sys.argv[1])", "arg with spaces"), needs=tmp_path),
+            step("first", ["a"]),
+            step("needs", ["never"], needs=[tmp_path, tmp_path / "missing.json"]),
+            step("last", ["b", "arg with spaces"], needs=tmp_path),
         ], refs={"corpus": "c1"})
         assert job.state == "queued" and (settings.jobs_dir / f"{job.id}.json").is_file()
         assert manager.busy("corpus", "c1") is job and manager.busy("corpus", "c2") is None
-        return await finished(manager, job)
+        await until(lambda: len(fake.started) == 1)
+        fake.finish(pid_of(job))
+        await until(lambda: len(fake.started) == 2)
+        fake.finish(pid_of(job, 2))
+        await until(lambda: job.state == "done")
+        assert fake.started == [["a"], ["b", "arg with spaces"]]
+        return job
 
     job = asyncio.run(main())
     assert (job.state, job.exit_code, job.error, job.lane) == ("done", 0, None, "cpu")
-    assert job.warnings == ["optional failed (exit 3); see the log"]  # done, but not silently
     assert [(s.name, s.state, s.exit_code) for s in job.steps] == [
-        ("hello", "done", 0), ("optional", "failed", 3), ("needs", "skipped", None), ("last", "done", 0)]
+        ("first", "done", 0), ("needs", "skipped", None), ("last", "done", 0)]
     log = (settings.jobs_dir / f"{job.id}.log").read_text(encoding="utf-8")
-    assert "hello from step 1\n" in log and "# optional exit 3" in log and "never" not in log
-    assert f"# skipped needs: {tmp_path / 'missing.json'} does not exist" in log
-    assert "last arg with spaces" in log and "'arg with spaces'" in log  # the command line, shell-quoted
+    assert f"# skipped needs: {tmp_path / 'missing.json'} does not exist" in log and "never" not in log
+    assert "'arg with spaces'" in log   # the command line, shell-quoted
     saved = Job.model_validate_json((settings.jobs_dir / f"{job.id}.json").read_text(encoding="utf-8"))
     assert saved == job
 
 
-def test_no_jobs_without_ev(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("EV", raising=False)
+def test_failed_optional_step_warns(tmp_path: Path) -> None:
+    settings = settings_in(tmp_path)
 
-    async def main() -> None:
-        with pytest.raises(Conflict, match=r"\$EV"):
-            JobManager(Settings()).submit("demo", {}, [step("x", py("pass"))])
+    async def main() -> Job:
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
+        job = manager.submit("demo", {}, [step("optional", ["x"], required=False), step("last", ["y"])])
+        await until(lambda: len(fake.started) == 1)
+        fake.finish(pid_of(job), 3)
+        await until(lambda: len(fake.started) == 2)   # a failed step does not stop the next ones
+        fake.finish(pid_of(job, 1))
+        await until(lambda: job.state == "done")
+        return job
 
-    asyncio.run(main())
+    job = asyncio.run(main())
+    assert (job.state, job.exit_code) == ("done", 0)
+    assert job.warnings == ["optional failed (exit 3); see the log"]   # done, but not silently
+    assert [(s.state, s.exit_code) for s in job.steps] == [("failed", 3), ("done", 0)]
+    assert "# optional exit 3" in (settings.jobs_dir / f"{job.id}.log").read_text(encoding="utf-8")
 
 
 def test_a_failed_required_step_fails_the_job(tmp_path: Path) -> None:
     settings = settings_in(tmp_path)
 
     async def main() -> Job:
-        manager = JobManager(settings)
-        return await finished(manager, manager.submit("demo", {}, [step("bad", py("import sys; sys.exit(5)")),
-                                                                    step("next", py("pass"))]))
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
+        job = manager.submit("demo", {}, [step("bad", ["x"]), step("next", ["y"])])
+        await until(lambda: len(fake.started) == 1)
+        fake.finish(pid_of(job), 5)
+        await until(lambda: len(fake.started) == 2)
+        fake.finish(pid_of(job, 1))
+        await until(lambda: job.state != "running")
+        return job
 
     job = asyncio.run(main())
     assert (job.state, job.exit_code) == ("failed", 5)
-    assert [s.state for s in job.steps] == ["failed", "done"]  # later steps still run
+    assert [s.state for s in job.steps] == ["failed", "done"]
 
 
-SLEEPER = ("import sys, time; f = open(sys.argv[1], 'a'); f.write(sys.argv[2] + ' start\\n'); f.flush(); "
-           "time.sleep(0.4); f.write(sys.argv[2] + ' end\\n')")
-
-
-def test_model_jobs_queue_one_at_a_time_and_cpu_jobs_run_beside_them(tmp_path: Path) -> None:
+def test_a_command_that_cannot_start_fails_its_step(tmp_path: Path) -> None:
     settings = settings_in(tmp_path)
-    trace = tmp_path / "trace.txt"
 
-    async def main() -> list[Job]:
-        manager = JobManager(settings)
-        models = [manager.submit("run", {}, [step("s", py(SLEEPER, str(trace), f"m{n}"))], lane="model") for n in range(3)]
-        cpu = manager.submit("synth", {}, [step("s", py(SLEEPER, str(trace), "c0"))], lane="cpu")
-        assert [j.state for j in models] == ["queued"] * 3
-        for job in [*models, cpu]:
-            await finished(manager, job)
-        return [*models, cpu]
+    async def main() -> Job:
+        manager = JobManager(settings, processes=FakeProcesses(fail_start=True))
+        job = manager.submit("demo", {}, [step("nope", ["x"])])
+        await until(lambda: job.state == "failed")
+        return job
 
-    jobs = asyncio.run(main())
-    assert {j.state for j in jobs} == {"done"}
-    lines = trace.read_text().splitlines()
-    model_lines = [ln for ln in lines if ln.startswith("m")]
-    assert model_lines == ["m0 start", "m0 end", "m1 start", "m1 end", "m2 start", "m2 end"]  # never interleaved
-    assert lines.index("c0 start") < lines.index("m0 end")   # the cpu job did not wait for the model queue
-    m0, m1 = jobs[0], jobs[1]
-    assert m0.ended_at <= m1.started_at
+    job = asyncio.run(main())
+    assert job.exit_code == 127
+    assert "cannot start nope" in (settings.jobs_dir / f"{job.id}.log").read_text(encoding="utf-8")
 
 
-def test_more_model_jobs_at_a_time_when_configured(tmp_path: Path) -> None:
-    settings = settings_in(tmp_path, WEBAPP_MODEL_JOBS=2)
-    trace = tmp_path / "trace.txt"
+def test_no_jobs_without_ev(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("EV", raising=False)
 
     async def main() -> None:
-        manager = JobManager(settings)
-        jobs = [manager.submit("run", {}, [step("s", py(SLEEPER, str(trace), f"m{n}"))], lane="model") for n in range(2)]
-        for job in jobs:
-            await finished(manager, job)
+        with pytest.raises(Conflict, match=r"\$EV"):
+            JobManager(Settings(), processes=FakeProcesses()).submit("demo", {}, [step("x", ["x"])])
 
     asyncio.run(main())
-    lines = trace.read_text().splitlines()
-    assert lines.index("m1 start") < lines.index("m0 end")
 
 
-def test_cancel(tmp_path: Path) -> None:
+def test_cancel_queued_ends_at_once(tmp_path: Path) -> None:
     settings = settings_in(tmp_path)
 
-    async def main() -> tuple[Job, Job]:
-        manager = JobManager(settings)
-        running = manager.submit("run", {}, [step("sleep", py("import time; time.sleep(30)")),
-                                             step("after", py("print('after')"))], lane="model")
-        queued = manager.submit("run", {}, [step("never", py("print('never')"))], lane="model")
-        while running.steps[0].state != "running":
-            await asyncio.sleep(0.02)
-        await asyncio.sleep(0.2)
+    async def main() -> Job:
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
+        manager.submit("run", {}, [step("holds", ["h"])], lane="model")
+        queued = manager.submit("run", {}, [step("never", ["n"])], lane="model")
+        await until(lambda: len(fake.started) == 1)
         manager.cancel(queued.id)
-        assert queued.state == "failed" and queued.error == "cancelled"  # at once
-        t0 = time.monotonic()
-        manager.cancel(running.id)
-        await finished(manager, running)
-        assert time.monotonic() - t0 < 10
-        return running, queued
+        assert queued.state == "failed" and queued.error == "cancelled"   # at once
+        return queued
 
-    running, queued = asyncio.run(main())
-    assert (running.state, running.error) == ("failed", "cancelled")
-    assert [s.state for s in running.steps] == ["failed", "skipped"] and running.steps[0].exit_code != 0
+    queued = asyncio.run(main())
     assert [s.state for s in queued.steps] == ["skipped"] and queued.started_at is None
 
 
-def test_jobs_survive_a_restart(tmp_path: Path) -> None:
+def test_cancel_running_sends_term_and_skips_rest(tmp_path: Path) -> None:
+    settings = settings_in(tmp_path)
+
+    async def main() -> tuple[Job, FakeProcesses]:
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
+        job = manager.submit("run", {}, [step("sleep", ["s"]), step("after", ["a"])], lane="model")
+        await until(lambda: len(fake.started) == 1)
+        manager.cancel(job.id)
+        await until(lambda: job.state != "running")
+        return job, fake
+
+    job, fake = asyncio.run(main())
+    assert fake.signals == [(pid_of(job), "term")] and fake.started == [["s"]]
+    assert (job.state, job.error) == ("failed", "cancelled")
+    assert [s.state for s in job.steps] == ["failed", "skipped"] and job.steps[0].exit_code == -15
+
+
+def _write_running(settings: Settings, pid: int, token: str | None, *, job_id: str, run: str) -> Job:
+    settings.jobs_dir.mkdir(parents=True, exist_ok=True)
+    s = step("evidence run", ["python", "-m", "webapp.tool", "evidence", "run"])
+    s.state, s.pid, s.pid_start = "running", pid, token
+    job = Job(id=job_id, kind="run", lane="model", args={}, refs={"run": run}, state="running",
+              created_at="2026-01-01T00:00:00Z", steps=[s, step("next", ["true"])])
+    (settings.jobs_dir / f"{job.id}.json").write_text(job.model_dump_json(), encoding="utf-8")
+    return job
+
+
+def test_restart_keeps_live_orphan_and_watches_it(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(jobs_module, "ORPHAN_POLL_S", 0)
+    settings = settings_in(tmp_path)
+    live = _write_running(settings, 4242, "tick4242", job_id="20260101T000000-run-aaaaaa", run="cascade~c1")
+
+    async def main() -> tuple[Job, bool]:
+        fake = FakeProcesses()
+        fake.set_alive(4242, "tick4242")
+        manager = JobManager(settings, processes=fake)
+        manager.load()
+        kept = manager.get(live.id)
+        assert (kept.state, kept.orphaned) == ("running", True)
+        assert manager.busy("run", "cascade~c1") is kept
+        queued = manager.submit("run", {}, [step("waits", ["w"])], lane="model")
+        for _ in range(50):
+            await asyncio.sleep(0)
+        waited = queued.state == "queued" and not fake.started    # the orphan holds the model lane
+        fake.set_alive(4242, None)                                # its process ends
+        await until(lambda: kept.state == "failed", "orphan noticed to be gone")
+        await until(lambda: len(fake.started) == 1, "the lane is free again")
+        fake.finish(pid_of(queued))
+        await until(lambda: queued.state == "done")
+        return kept, waited
+
+    kept, waited = asyncio.run(main())
+    assert waited
+    assert "exit status unknown" in (kept.error or "")
+    assert kept.steps[0].state == "failed" and kept.steps[1].state == "skipped"
+
+
+def test_cancel_an_orphan_sends_term(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(jobs_module, "ORPHAN_POLL_S", 0)
+    settings = settings_in(tmp_path)
+    live = _write_running(settings, 4242, "tick4242", job_id="20260101T000000-run-aaaaaa", run="cascade~c1")
+
+    async def main() -> tuple[Job, FakeProcesses]:
+        fake = FakeProcesses()
+        fake.set_alive(4242, "tick4242")
+        manager = JobManager(settings, processes=fake)
+        manager.load()
+        kept = manager.get(live.id)
+        manager.cancel(kept.id)
+        await until(lambda: kept.state == "failed")
+        return kept, fake
+
+    kept, fake = asyncio.run(main())
+    assert fake.signals == [(4242, "term")] and kept.error == "cancelled"
+
+
+def test_restart_fails_dead_job(tmp_path: Path) -> None:
+    settings = settings_in(tmp_path)
+    reused = _write_running(settings, 4242, "old-token", job_id="20260101T000000-run-bbbbbb", run="cascade~c2")
+    queued = reused.model_copy(deep=True, update={"id": "20260101T000000-run-cccccc", "state": "queued"})
+    (settings.jobs_dir / f"{queued.id}.json").write_text(queued.model_dump_json(), encoding="utf-8")
+    (settings.jobs_dir / "garbage.json").write_text("{not json", encoding="utf-8")
+
+    fake = FakeProcesses()
+    fake.set_alive(4242, "a-different-start-time")   # the pid was reused
+    manager = JobManager(settings, processes=fake)
+    manager.load()
+    lost = manager.get(reused.id)
+    assert lost.state == "failed" and "server stopped" in (lost.error or "")
+    assert [s.state for s in lost.steps] == ["failed", "skipped"] and lost.orphaned is False
+    assert manager.get(queued.id).state == "failed"
+    assert json.loads((settings.jobs_dir / f"{reused.id}.json").read_text())["state"] == "failed"
+    assert manager.busy("run", "cascade~c2") is None
+
+
+def test_jobs_survive_a_restart_and_the_log_tail(tmp_path: Path) -> None:
     settings = settings_in(tmp_path)
 
     async def main() -> Job:
-        manager = JobManager(settings)
-        return await finished(manager, manager.submit("demo", {"a": 1}, [step("ok", py("pass"))]))
+        fake = FakeProcesses()
+        manager = JobManager(settings, processes=fake)
+        job = manager.submit("demo", {"a": 1}, [step("count", ["c"])])
+        await until(lambda: len(fake.started) == 1)
+        fake.finish(pid_of(job))
+        await until(lambda: job.state == "done")
+        with open(settings.jobs_dir / f"{job.id}.log", "ab") as fh:   # more output after the job
+            fh.write("".join(f"{n}\n" for n in range(500)).encode())
+        return job
 
     done = asyncio.run(main())
-    lost = done.model_copy(deep=True, update={"id": "20260101T000000-run-abcdef", "state": "running", "ended_at": None})
-    lost.steps[0].state = "running"
-    (settings.jobs_dir / f"{lost.id}.json").write_text(lost.model_dump_json(), encoding="utf-8")
-    (settings.jobs_dir / "garbage.json").write_text("{not json", encoding="utf-8")
-    manager = JobManager(settings)
+    manager = JobManager(settings, processes=FakeProcesses())
     manager.load()
     assert manager.get(done.id) == done
-    again = manager.get(lost.id)
-    assert again.state == "failed" and "server stopped" in again.error and again.steps[0].state == "failed"
-    assert json.loads((settings.jobs_dir / f"{lost.id}.json").read_text())["state"] == "failed"
-    assert [j.id for j in manager.list()] == [done.id, lost.id]   # newest first
+    assert [j.id for j in manager.list()] == [done.id]
+    assert manager.tail(done.id, 2) == "498\n499\n"
+    assert manager.tail(done.id, 10_000).startswith("$ ")
 
 
-def test_log_tail(tmp_path: Path) -> None:
+def test_shutdown_kills_after_grace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(jobs_module, "STOP_GRACE_S", 0)
     settings = settings_in(tmp_path)
 
-    async def main() -> Job:
-        manager = JobManager(settings)
-        return await finished(manager, manager.submit("demo", {}, [step("count", py("for n in range(500): print(n)"))]))
+    async def main() -> tuple[Job, FakeProcesses]:
+        fake = FakeProcesses(ignore_term=True)
+        manager = JobManager(settings, processes=fake)
+        job = manager.submit("run", {}, [step("stubborn", ["s"])], lane="model")
+        await until(lambda: len(fake.started) == 1)
+        await manager.shutdown()
+        return job, fake
 
-    job = asyncio.run(main())
-    manager = JobManager(settings)
-    manager.load()
-    tail = manager.tail(job.id, 3)
-    assert tail == "498\n499\n# count exit 0\n"
-    assert manager.tail(job.id, 1000).startswith("$ ")
-
-
-GRANDCHILD = ("import subprocess, sys, time; p = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']); "
-              "open(sys.argv[1], 'w').write(str(p.pid)); time.sleep(60)")
-
-
-def gone(pid: int, timeout: float = 10) -> bool:
-    end = time.monotonic() + timeout
-    while time.monotonic() < end:
-        if process_start(pid) is None:
-            return True
-        time.sleep(0.05)
-    return False
-
-
-@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="process groups and /proc (Linux)")
-def test_cancel_stops_the_whole_process_group(tmp_path: Path) -> None:
-    """A command's children (the agent's sandboxed commands, the broker) end with it."""
-    settings = settings_in(tmp_path)
-    pidfile = tmp_path / "grandchild.pid"
-
-    async def main() -> Job:
-        manager = JobManager(settings)
-        job = manager.submit("run", {}, [step("spawns", py(GRANDCHILD, str(pidfile)))], lane="model")
-        while not pidfile.exists() or not pidfile.read_text():
-            await asyncio.sleep(0.05)
-        assert job.steps[0].pid is not None and job.steps[0].pid_start == process_start(job.steps[0].pid)
-        manager.cancel(job.id)
-        return await finished(manager, job)
-
-    job = asyncio.run(main())
-    assert (job.state, job.error) == ("failed", "cancelled")
-    assert gone(int(pidfile.read_text()))
-
-
-@pytest.mark.skipif(sys.platform == "win32", reason="SIGTERM (POSIX)")
-def test_the_tool_turns_sigterm_into_a_clean_exit(tmp_path: Path) -> None:
-    """`python -m webapp.tool` installs agent/stopping.py before the package's main: SIGTERM raises
-    SystemExit(143), so finally blocks (broker, sandbox) run."""
-    import subprocess
-
-    from webapp.settings import REPO
-    code = ("import sys, time\n"
-            "import webapp.tool as tool\n"
-            "from evidence import cli\n"
-            "def main(argv):\n"
-            "    try:\n        print('ready', flush=True); time.sleep(30)\n"
-            "    finally:\n        open(argv[0], 'w').write('cleaned up')\n"
-            "cli.main = main\n"
-            "sys.exit(tool.main(['evidence', sys.argv[1]]))\n")
-    marker = tmp_path / "marker"
-    proc = subprocess.Popen([sys.executable, "-c", code, str(marker)], cwd=REPO, stdout=subprocess.PIPE, text=True)
-    assert proc.stdout is not None and proc.stdout.readline().strip() == "ready"
-    proc.terminate()
-    assert proc.wait(10) == 143 and marker.read_text() == "cleaned up"
-
-
-@pytest.mark.skipif(not Path("/proc/self/stat").exists(), reason="process start times from /proc (Linux)")
-def test_a_job_whose_process_outlives_its_server_stays_running_and_cancellable(tmp_path: Path) -> None:
-    import subprocess
-
-    settings = settings_in(tmp_path)
-    settings.jobs_dir.mkdir(parents=True)
-    orphan = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"], start_new_session=True)
-    s = step("evidence run", ["python", "-m", "webapp.tool", "evidence", "run"])
-    s.state, s.pid, s.pid_start = "running", orphan.pid, process_start(orphan.pid)
-    live = Job(id="20260101T000000-run-aaaaaa", kind="run", lane="model", args={}, refs={"run": "cascade~c1"},
-               state="running", created_at="2026-01-01T00:00:00Z", steps=[s, step("next", ["true"])])
-    dead_step = s.model_copy(update={"pid_start": "1"})   # the same pid with another start time: a reused pid
-    dead = live.model_copy(update={"id": "20260101T000000-run-bbbbbb", "refs": {"run": "cascade~c2"}, "steps": [dead_step]})
-    for job in (live, dead):
-        (settings.jobs_dir / f"{job.id}.json").write_text(job.model_dump_json(), encoding="utf-8")
-
-    async def main() -> tuple[Job, Job, bool]:
-        manager = JobManager(settings)
-        manager.load()
-        kept, lost = manager.get(live.id), manager.get(dead.id)
-        assert (kept.state, kept.orphaned) == ("running", True)
-        assert manager.busy("run", "cascade~c1") is kept and manager.busy("run", "cascade~c2") is None
-        queued = manager.submit("run", {}, [step("waits", py("pass"))], lane="model")
-        await asyncio.sleep(0.5)
-        waited = queued.state == "queued"           # the orphan holds the model lane
-        manager.cancel(kept.id)                     # SIGTERM to its process group
-        await finished(manager, kept)
-        await finished(manager, queued)
-        return kept, lost, waited
-
-    kept, lost, waited = asyncio.run(main())
-    orphan.wait(10)
-    assert waited and (kept.state, kept.error) == ("failed", "cancelled") and kept.steps[1].state == "skipped"
-    assert lost.state == "failed" and "server stopped" in (lost.error or "")
+    job, fake = asyncio.run(main())
+    assert fake.signals == [(pid_of(job), "term"), (pid_of(job), "kill")]
+    assert job.state == "failed" and job.error == "the server stopped"
