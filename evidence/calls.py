@@ -141,7 +141,7 @@ class CallCache:
         if spec.extractor_id in self._warned:
             return
         self._warned.add(spec.extractor_id)
-        others = {v["extractor_id"] for v in self.cache._data.values()
+        others = {v["extractor_id"] for _, v in self.cache.items()
                   if isinstance(v, dict) and isinstance(v.get("spec"), dict) and v["spec"].get("name") == spec.name
                   and v["spec"].get("version") == spec.version and v["spec"].get("code_sha256") != spec.code_sha256}
         if others:

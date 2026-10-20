@@ -19,6 +19,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from evidence.contract import EvidenceType, Item
+from evidence.rundir import ANSWER_FILE, FUNNEL_FILE, LOCATE_FILE, REEXEC_FILE, RUN_FILE, RunDir
 from evidence.synthesis import SYSTEM as ENGINE  # the engine's `system` name in answer.json; baselines differ
 
 # Ground-truth fact lists per evidence type, and the role of the placement that locates each kind of
@@ -32,10 +33,6 @@ TYPES: tuple[EvidenceType, ...] = ("condition", "metric", "measurement", "author
 
 def read_json(path: Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
-
-
-def read_jsonl(path: Path) -> list[Any]:
-    return [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 @dataclass(frozen=True)
@@ -122,49 +119,10 @@ class Run:
 
     @classmethod
     def load(cls, root: Path, reexec: Path | None = None) -> Run:
-        root = Path(root)
-        evidence = root / "evidence.jsonl"
-        items = [Item.model_validate(row) for row in read_jsonl(evidence)] if evidence.is_file() else []
-
-        def optional(name: str) -> Any | None:
-            path = root / name
-            return read_json(path) if path.is_file() else None
-
-        stability = read_json(reexec) if reexec else optional("reexec.json")
-        run = optional("run.json")
-        calls_dir = root / "calls"
-        calls = [read_json(p) for p in sorted(calls_dir.glob("*.json"))] if calls_dir.is_dir() else None
-        events_file = root / "events.jsonl"
-        records = [e for e in read_jsonl(events_file) if isinstance(e, dict)] if events_file.is_file() else None
-        events = [e for e in records if e.get("subtype") == "extractor_call"] if records is not None else None
-        screens = [e for e in records if e.get("subtype") == "screen"] if records is not None else None
-        return cls(root, items, optional("answer.json"), run, optional("locate.json"), stability, calls, events,
-                   read_usage(run), optional("funnel.json"), screens)
-
-
-CACHE_FILE = "extractor_calls.jsonl"   # evidence/rundir.CACHE_FILE: the record cache inside the cache directory
-
-
-def cache_file(run: dict[str, Any] | None) -> Path | None:
-    """The record cache run.json names (`settings.cache`, a directory or the jsonl file), when it exists."""
-    cache = ((run or {}).get("settings") or {}).get("cache")
-    if not cache:
-        return None
-    path = Path(cache)
-    if path.is_dir():
-        path = path / CACHE_FILE
-    return path if path.is_file() else None
-
-
-def read_usage(run: dict[str, Any] | None) -> dict[str, dict[str, int]] | None:
-    """Model-call record id -> token usage, from the JsonlCache ({key, value} lines) run.json names."""
-    path = cache_file(run)
-    if path is None:
-        return None
-    usage: dict[str, dict[str, int]] = {}
-    for row in read_jsonl(path):
-        value = row.get("value") if isinstance(row, dict) else None
-        for record in (value or {}).get("model_calls") or []:
-            if isinstance(record, dict) and record.get("id") and isinstance(record.get("usage"), dict):
-                usage[record["id"]] = {k: int(record["usage"].get(k) or 0) for k in ("input_tokens", "output_tokens")}
-    return usage
+        rd = RunDir(root)
+        records = rd.events()
+        return cls(rd.root, rd.items(), rd.json(ANSWER_FILE), rd.json(RUN_FILE), rd.json(LOCATE_FILE),
+                   read_json(reexec) if reexec else rd.json(REEXEC_FILE), rd.calls(),
+                   [e for e in records if e.get("subtype") == "extractor_call"] if records is not None else None,
+                   rd.usage(), rd.json(FUNNEL_FILE),
+                   [e for e in records if e.get("subtype") == "screen"] if records is not None else None)

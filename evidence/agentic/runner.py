@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any, Callable, Protocol
 
 from jsonio import file_sha256, sha256_hex
+from evidence.rundir import ANSWER_FILE, EVENTS_FILE
 from agent.rundir import BUDGET, COMMAND_LIMITS, ORCHESTRATOR, SUBAGENTS
 
 REPO = Path(__file__).resolve().parents[2]
@@ -123,7 +124,7 @@ def collect(run_root: Path, outcome: dict[str, Any] | None = None) -> dict[str, 
                        "reason": meta.get("reason"), **{k: meta.get(k) for k in ("s", "p", "o", "quote")},
                        "file": (used.get("anchor") or {}).get("file") or used.get("file"), "anchor": used.get("anchor")})
     commands, calls = [], []
-    events = _lines(run_root / "events.jsonl")
+    events = _lines(run_root / EVENTS_FILE)
     for r in events:
         if r["subtype"] == "agent_tool":
             out = run_root / r["generated"]["output_file"]
@@ -135,7 +136,7 @@ def collect(run_root: Path, outcome: dict[str, Any] | None = None) -> dict[str, 
                           "prompt_sha256": r["used"].get("prompt_sha256"),
                           "response_sha256": r["generated"].get("response_sha256"),
                           "usage": r["generated"].get("usage")})
-    answer = run_root / "answer.json"
+    answer = run_root / ANSWER_FILE
     trajectory = run_root / "trajectory.json"
     return {"run_id": run_root.name, "outcome": outcome or {}, "claims": claims, "commands": commands,
             "model_calls": calls, "answer": json.loads(answer.read_text(encoding="utf-8")) if answer.is_file() else None,
