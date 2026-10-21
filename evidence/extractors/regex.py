@@ -58,10 +58,12 @@ class ConditionRegex(RegexExtractor):
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         patterns = terms.condition_patterns(self.patterns["conditions"])
-        mentions = [m for a, b in parts for m in terms.find_all(text, patterns, a, b)]
+        enum = self.given.get("field_schema", {}).get("properties", {}).get("role", {}).get("enum")
+        roles = list(enum or self.patterns["conditions"])   # "other" (a qualified ablation) only if the type has it
+        mentions = [m for a, b in parts for m in terms.find_conditions(text, patterns, roles, a, b)]
         defined = {m: (a, b) for m, _, a, b in terms.aliases(text, mentions)}
         found = []
-        for role in self.patterns["conditions"]:
+        for role in dict.fromkeys([*self.patterns["conditions"], *(["other"] if "other" in roles else [])]):
             mine = [m for m in mentions if m.key == role]
             if not mine:
                 continue

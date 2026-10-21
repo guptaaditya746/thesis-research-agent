@@ -5,7 +5,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .conftest import measurements, regex_run
+import pytest
+
+from .conftest import PROTOCOL, measurements, regex_run
 
 ABSTRACT = "# P\n\n## Abstract\n\nWe compare a closed-book model with a retrieval-augmented model. {}\n"
 
@@ -38,3 +40,56 @@ def test_rag_without_reranking_is_another_system(tmp_path: Path) -> None:
     answer, items = regex_run({"D": text}, tmp_path)
     assert measurements(items, "D") == [("baseline", 0.361), ("rag", 0.305)]
     assert answer["studies"][0]["direction"] == "supports"
+
+
+# A parenthetical right after a condition qualifies it ("RAG (no retrieval)" is the control); an alias code
+# "(B)" and a negated object ("no retrieval failures") do not. Same cases under the built-in roles and under
+# the frozen EV1 proposal's roles (extraction-research/probe.py).
+PROPOSAL = Path(__file__).resolve().parents[2] / "tests" / "EV1" / "diagnostics" / "proposal" / "protocol.yaml"
+ROLE_SETS = [pytest.param(PROTOCOL, "baseline", id="built-in"), pytest.param(PROPOSAL, "closed_book", id="proposal")]
+
+
+def roles_of(text: str, protocol: Path, tmp: Path) -> list[str]:
+    _, items = regex_run({"P": f"# P\n\n{text}\n"}, tmp, protocol)
+    found = [(min(s["selector"]["start"] for s in i["spans"]), i["fields"]["role"])
+             for i in items.values() if i["evidence_type"] == "condition"]
+    return [role for _, role in sorted(found)]
+
+
+@pytest.mark.parametrize("protocol,control", ROLE_SETS)
+@pytest.mark.parametrize("text,roles", [
+    ("RAG (no retrieval) answers from its parameters.", ["CONTROL"]),
+    ("RAG (without retrieval) answers from its parameters.", ["CONTROL"]),
+    ("RAG (no reranking) is an ablation.", ["other"]),
+    ("RAG without reranking is an ablation.", []),
+    ("The RAG model has no retrieval failures.", ["rag"]),
+    ("We compare RAG against a closed-book model.", ["rag", "CONTROL"]),
+])
+def test_condition_roles_resolve_local_qualifiers(text: str, roles: list[str], protocol: Path, control: str,
+                                                  tmp_path: Path) -> None:
+    assert roles_of(text, protocol, tmp_path) == [control if r == "CONTROL" else r for r in roles]
+
+
+@pytest.mark.parametrize("protocol,control", ROLE_SETS)
+def test_unrelated_negation_keeps_the_treatment_mention(protocol: Path, control: str, tmp_path: Path) -> None:
+    text = "The RAG model has no retrieval failures, unlike the closed-book model."
+    assert roles_of(text, protocol, tmp_path) == ["rag", control]
+    _, items = regex_run({"P": f"# P\n\n{text}\n"}, tmp_path / "labels", protocol)
+    assert [i["fields"]["label"] for i in items.values()
+            if i["evidence_type"] == "condition" and i["fields"]["role"] == control] in (["closed-book model"], ["closed-book"])
+
+
+@pytest.mark.parametrize("protocol,control", ROLE_SETS)
+def test_an_alias_code_is_not_a_qualifier(protocol: Path, control: str, tmp_path: Path) -> None:
+    text = ("We compare a RAG system (R) with a closed-book baseline (B).\n\n| System | Accuracy (%) |\n|---|---|\n"
+            "| R | 75 |\n| B | 60 |\n")
+    _, items = regex_run({"P": f"# P\n\n{text}"}, tmp_path, protocol)
+    assert set(measurements(items, "P")) == {("rag", 0.75), (control, 0.60)}
+
+
+@pytest.mark.parametrize("protocol,control", ROLE_SETS)
+def test_a_qualified_row_label_resolves_to_its_role(protocol: Path, control: str, tmp_path: Path) -> None:
+    text = ("We compare RAG with RAG (no retrieval).\n\n| System | Accuracy (%) |\n|---|---|\n"
+            "| RAG | 75 |\n| RAG (no retrieval) | 60 |\n\nRAG (no retrieval) reaches an accuracy of 58%.\n")
+    _, items = regex_run({"P": f"# P\n\n{text}"}, tmp_path, protocol)
+    assert set(measurements(items, "P")) == {("rag", 0.75), (control, 0.60), (control, 0.58)}

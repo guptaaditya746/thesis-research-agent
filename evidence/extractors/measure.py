@@ -37,12 +37,13 @@ class Resolver:
     def __init__(self, text: str, context: list[Item], patterns: dict[str, Any]) -> None:
         self.text = text
         self.cond_patterns = terms.condition_patterns(patterns["conditions"])
+        self.roles = [*patterns["conditions"], "other"]   # a mention qualified as other links only to an other item
         self.metric_patterns = [tuple(m) for m in patterns["metrics"]]
         self.question = set(patterns["question_metrics"])
         self.conditions = [i for i in context if i.evidence_type == "condition"]
         self.metrics = [i for i in context if i.evidence_type == "metric"]
         self.codes: dict[str, tuple[Item, tuple[int, int]]] = {}
-        for mention, code, a, b in terms.aliases(text, terms.find_all(text, self.cond_patterns)):
+        for mention, code, a, b in terms.aliases(text, self.mentions(text)):
             item = self.condition_for(mention)
             if item is not None and code not in self.codes:
                 self.codes[code] = (item, (a, b))
@@ -63,11 +64,15 @@ class Resolver:
         for item in self.conditions:
             if terms.norm(str(item.fields.get("label", ""))) == terms.norm(label):
                 return item, None
-        found = terms.find_all(label, self.cond_patterns)
+        found = self.mentions(label)
         if len(found) == 1 and found[0].start == 0 and found[0].end == len(label):
             item = self.condition_for(found[0])
             return (item, None) if item is not None else None
         return None
+
+    def mentions(self, text: str, start: int = 0, end: int | None = None) -> list[terms.Mention]:
+        """Condition mentions with their qualifiers: "RAG (no retrieval)" is the control, not RAG."""
+        return terms.find_conditions(text, self.cond_patterns, self.roles, start, end)
 
     def metric_for(self, mention: terms.Mention) -> Item | None:
         named = [i for i in self.metrics if terms.norm(str(i.fields.get("name", ""))) == terms.norm(mention.text)]
@@ -142,7 +147,7 @@ def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> l
 
 
 def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> list[Found]:
-    conditions = [(m, r.condition_for(m)) for m in terms.find_all(text, r.cond_patterns, s, e)]
+    conditions = [(m, r.condition_for(m)) for m in r.mentions(text, s, e)]
     conditions = [(m, i) for m, i in conditions if i is not None]
     metrics = [(m, r.metric_for(m)) for m in terms.find_all(text, r.metric_patterns, s, e)]  # type: ignore[arg-type]
     metrics = [(m, i) for m, i in metrics if i is not None]
