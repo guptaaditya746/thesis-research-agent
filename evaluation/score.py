@@ -126,6 +126,8 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from evidence.contract import Item, Scope
+from evidence.protocol import load as load_protocol
+from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS
 
 from .stats import bootstrap_f1, bootstrap_mean, interval_row
@@ -846,6 +848,21 @@ def score_funnel(truth: GroundTruth, run: Run | None) -> dict[str, Any] | None:
             "stop_positions": dict(sorted(stops.items())), "screen": screen_score}
 
 
+def score_protocol(run: Run) -> dict[str, Any] | None:
+    """The run's protocol {id, sha256} (run.json) and its screen's `lexical_miss` (the run's protocol.yaml; null
+    without one): the two cascade arms share run id and strategy, so this is what tells them apart."""
+    ref = (run.run or {}).get("protocol")
+    path = run.root / PROTOCOL_FILE
+    if not ref and not path.is_file():
+        return None
+    out = {"id": (ref or {}).get("id"), "sha256": (ref or {}).get("sha256"), "lexical_miss": None}
+    if path.is_file():
+        protocol = load_protocol(path)
+        out["lexical_miss"] = protocol.screen.lexical_miss if protocol.screen else None
+        out["id"], out["sha256"] = out["id"] or protocol.id, out["sha256"] or protocol.sha256
+    return out
+
+
 # --- everything ------------------------------------------------------------------------------------
 
 def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: Path | None = None,
@@ -860,7 +877,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
     systems = [score_synthesis(truth, a) for a in answers]
     return {
         "corpus_id": truth.corpus_id, "corpus_name": corpus.name, "levels": truth.levels,
-        "run_id": (run.run or {}).get("run_id", run.root.name),
+        "run_id": (run.run or {}).get("run_id", run.root.name), "protocol": score_protocol(run),
         "question": truth.question, "extraction": score_extraction(m),
         "integration": score_integration(m, run.answer), "synthesis": systems,
         "intervals": score_intervals(m, systems),
@@ -878,7 +895,7 @@ def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = N
     given = [read_json(p) for p in answers]
     systems = [score_synthesis(truth, a) for a in given]
     return {"corpus_id": truth.corpus_id, "corpus_name": Path(corpus).name, "levels": truth.levels,
-            "run_id": None, "question": truth.question,
+            "run_id": None, "protocol": None, "question": truth.question,
             "extraction": None, "integration": None, "synthesis": systems,
             "intervals": score_intervals(None, systems), "locate": None, "cascade": None, "extractors": None,
             "cost": None, "stability": None, "funnel": None,

@@ -267,6 +267,7 @@ def compare(reports: list[dict[str, Any]], base: Path | None = None) -> dict[str
                          "run_id": report.get("run_id") if engine else None,
                          "diagnostic": system["system"] in DIAGNOSTICS,
                          "strategy": funnel.get("strategy") if engine else None,
+                         **_protocol_columns(report, engine),
                          "extraction_f1": a.get("f1") if engine else None,
                          "span_accuracy": a.get("span_accuracy") if engine else None,
                          "association_accuracy": b.get("association_accuracy") if engine else None,
@@ -281,7 +282,7 @@ def compare(reports: list[dict[str, Any]], base: Path | None = None) -> dict[str
                          "tokens_per_document": per_doc.get("tokens") if engine else None,
                          "screen_precision": screen.get("precision") if engine else None,
                          "screen_recall": screen.get("recall") if engine else None})
-    rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"], r.get("strategy") or "", r.get("run_id") or ""))
+    rows.sort(key=_row_key)
     notes: list[str] = []
     corpora_of = _corpora(reports, base, notes)
     selection, excluded = selection_rows(reports, corpora_of)
@@ -289,6 +290,19 @@ def compare(reports: list[dict[str, Any]], base: Path | None = None) -> dict[str
     return {"rows": rows, "intervals": compare_intervals(reports), "selection": selection,
             "selection_excluded": excluded, "matched": matched, "matched_extraction": matched_extraction,
             "notes": notes}
+
+
+def _protocol_columns(report: dict[str, Any], engine: bool) -> dict[str, Any]:
+    """The engine row's screen `lexical_miss` and protocol sha256 (first 12 hex digits): the reject and escalate
+    arms of one corpus share run id and strategy and differ only here (report.json `protocol`)."""
+    protocol = (report.get("protocol") or {}) if engine else {}
+    sha = protocol.get("sha256")
+    return {"lexical_miss": protocol.get("lexical_miss"), "protocol": sha[:12] if isinstance(sha, str) else None}
+
+
+def _row_key(r: dict[str, Any]) -> tuple[Any, ...]:
+    return (_level_key(r["level"]), r["corpus_id"], r["system"], r.get("strategy") or "", r.get("lexical_miss") or "",
+            r.get("protocol") or "", r.get("run_id") or "")
 
 
 def _corpus_name(report: dict[str, Any]) -> str:
@@ -443,10 +457,11 @@ def compare_intervals(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
             rows.append({"level": level, "corpus_id": report["corpus_id"], "system": name,
                          "run_id": report.get("run_id") if name == ENGINE else None,
                          "strategy": strategy if name == ENGINE else None,   # Part D: all vs gaps rows
+                         **_protocol_columns(report, name == ENGINE),
                          "extraction_f1": _strip(f1) if name == ENGINE else None,
                          "direction_accuracy": _strip(system),
                          "engine_minus_system": _strip(paired.get(name)) if name != ENGINE else None})
-    rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"], r.get("strategy") or "", r.get("run_id") or ""))
+    rows.sort(key=_row_key)
     return rows
 
 
@@ -454,10 +469,10 @@ def _strip(row: dict[str, Any] | None) -> dict[str, Any] | None:
     return {k: row.get(k) for k in ("point", "low", "high", "method")} if row else None
 
 
-COMPARE_COLUMNS = ["level", "corpus_id", "system", "strategy", "extraction_f1", "span_accuracy", "association_accuracy",
+COMPARE_COLUMNS = ["level", "corpus_id", "system", "strategy", "lexical_miss", "protocol", "extraction_f1", "span_accuracy", "association_accuracy",
                    "true_pair", "direction_accuracy", "completeness", "accuracy_answered", "traceability",
                    "overlap", "label_correct", "calls_per_document", "tokens_per_document", "screen_precision", "screen_recall"]
-COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "extraction_f1", "direction_accuracy",
+COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "lexical_miss", "protocol", "extraction_f1", "direction_accuracy",
                             "engine_minus_system"]
 
 

@@ -3,6 +3,7 @@ columns, and on a real `gaps` run of the engine over a committed synth corpus.""
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +12,7 @@ import pytest
 from evaluation import report as rep
 from evaluation.score import score
 from evidence import engine
+from evidence.protocol import load
 
 from . import fixtures as fx
 
@@ -119,3 +121,27 @@ def test_an_engine_run_on_a_synth_corpus_is_scored_with_its_funnel(tmp_path: Pat
     intervals = rep.compare([result])["intervals"]
     assert intervals[0]["strategy"] == strategy and intervals[0]["run_id"] == strategy
     assert "| strategy" in rep.render_compare(rep.compare([result]))
+
+
+def test_the_two_lexical_miss_arms_stand_apart_in_compare(tmp_path: Path) -> None:
+    """The reject and escalate arms run with one run id and one strategy; the report records the protocol and
+    the screen's lexical_miss from the run, so the compare rows (and interval rows) tell them apart."""
+    corpus = REPO / "synth" / "examples" / "rag-demo-explicit"
+    text = PROTOCOL.read_text(encoding="utf-8")
+    escalate = tmp_path / "escalate.yaml"
+    escalate.write_text(re.sub(r"(?m)^(  on_fail: skip.*)$", r"\1\n  lexical_miss: escalate", text, count=1),
+                        encoding="utf-8")
+    results = []
+    for arm, protocol in (("reject", PROTOCOL), ("escalate", escalate)):
+        run = engine.run(protocol, corpus, tmp_path / arm, selection="regex-only", run_id="same", strategy="gaps")
+        results.append(score(run, corpus))
+    reject, esc = (r["protocol"] for r in results)
+    assert reject["lexical_miss"] == "reject" and esc["lexical_miss"] == "escalate"
+    assert reject["sha256"] == load(PROTOCOL).sha256 and esc["sha256"] == load(escalate).sha256 != reject["sha256"]
+    comparison = rep.compare(results)
+    engine_rows = [r for r in comparison["rows"] if r["system"] == "evidence-engine"]
+    assert sorted(r["lexical_miss"] for r in engine_rows) == ["escalate", "reject"]
+    assert sorted(r["protocol"] for r in engine_rows) == sorted(x["sha256"][:12] for x in (reject, esc))
+    assert sorted(r["lexical_miss"] for r in comparison["intervals"]) == ["escalate", "reject"]
+    text = rep.render_compare(comparison)
+    assert "| lexical_miss" in text and "| escalate" in text and "| reject" in text
