@@ -55,9 +55,10 @@ Correctness, completeness and traceability are the supervisor's three comparison
 expected direction (not `undetermined`) the system gives a direction for, and `accuracy_answered` =
 accuracy over those, so a system that answers everything is not rewarded for guessing on a study nobody
 can determine. **traceability** = share of the cited passages (`answer.citations`, a baseline's
-`[{document, start, end}]`) that overlap (share a character with) a ground-truth placement of any role of
-the study of the paper they cite (lenient by design), over all cited passages, where the citations the
-baseline dropped (`answer.dropped_citations`: ones naming no retrieved passage, the clearest untraceable
+`[{document, start, end}]) that overlap (share a character with) a ground-truth placement of role `value`,
+`metric_label` or `claim` of the paper they cite (strict: a passage touching only a condition label traces
+nothing), over all cited passages; **overlap** is the lenient share, over a placement of any role. The
+citations the baseline dropped (`answer.dropped_citations`: ones naming no retrieved passage, the clearest untraceable
 case) count as untraced; `null` for an answer without citations (the engine's spans are scored in A).
 The confusion counts include expected `undetermined`.
 
@@ -322,24 +323,30 @@ def expected_direction(study: dict[str, Any]) -> str | None:
     return (study.get("effect") or {}).get("direction")
 
 
+TRACED_ROLES = ("value", "metric_label", "claim")   # a passage must touch one of these to trace a fact
+
+
 def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None,
                     dropped: list[dict[str, Any]] | None = None) -> dict[str, Counter[str]] | None:
-    """Traceability counts per level (and ALL): cited passages, and those overlapping a placement (of any
-    role) of the cited paper's study. The baseline's dropped citations (naming no retrieved passage) are
-    cited passages that are never traced. A cited paper outside the ground truth counts under ALL only.
+    """Traceability counts per level (and ALL): cited passages, `overlaps_placement` (those overlapping a
+    placement of any role of the cited paper) and `traced` (those overlapping a `value`, `metric_label` or
+    `claim` placement). The baseline's dropped citations (naming no retrieved passage) are cited passages
+    that are never traced. A cited paper outside the ground truth counts under ALL only.
     None without a `citations` list (the engine)."""
     if citations is None:
         return None
-    places: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    places: dict[str, list[tuple[int, int, str]]] = defaultdict(list)
     for p in truth.placements:
-        places[p["paper"]].append((p["start"], p["end"]))
+        places[p["paper"]].append((p["start"], p["end"], p.get("role", "")))
     cited: dict[str, Counter[str]] = defaultdict(Counter)
     for c, kept in [(c, True) for c in citations] + [(c, False) for c in dropped or []]:
         paper = c.get("document")
-        hit = kept and any(overlaps((int(c["start"]), int(c["end"])), p) for p in places.get(paper, []))
+        span = (int(c["start"]), int(c["end"]))
+        hits = [role for a, b, role in places.get(paper, []) if kept and overlaps(span, (a, b))]
         level = truth.level_of(paper)
         for key in ((level, ALL) if level != "unknown" else (ALL,)):
-            cited[key].update(citations=1, traced=hit)
+            cited[key].update(citations=1, overlaps_placement=bool(hits),
+                              traced=any(role in TRACED_ROLES for role in hits))
     return cited
 
 
@@ -374,7 +381,8 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
                      "completeness": share(c["complete"], c["determined"]),
                      "accuracy_answered": share(c["correct_answered"], c["complete"]),
                      "citations": None if n is None else n["citations"],
-                     "traceability": None if n is None else share(n["traced"], n["citations"])})
+                     "traceability": None if n is None else share(n["traced"], n["citations"]),
+                     "overlap": None if n is None else share(n["overlaps_placement"], n["citations"])})
     expected_label = truth.answer.get("label")
     errors = [] if expected_label is not None else ["gold answer has no label"]   # undefined, not a match
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,

@@ -135,9 +135,10 @@ def render(report: dict[str, Any]) -> str:
 
                             "accuracy_answered": overall.get("accuracy_answered"),
                             "completeness": overall.get("completeness"),
-                            "traceability": overall.get("traceability")})
+                            "traceability": overall.get("traceability"), "overlap": overall.get("overlap")})
         out += [table(summary, ["system", "label", "expected", "label_correct", "studies", "determined",
-                                "direction_accuracy", "completeness", "accuracy_answered", "traceability"]), "",
+                                "direction_accuracy", "completeness", "accuracy_answered", "traceability",
+                                "overlap"]), "",
                 *[f"- {s['system']}: {e}" for s in report["synthesis"] for e in s.get("errors") or []],
                 *([""] if any(s.get("errors") for s in report["synthesis"]) else []),
                 "direction_accuracy is over all scored studies: a study whose expected direction is undetermined "
@@ -146,13 +147,15 @@ def render(report: dict[str, Any]) -> str:
                 "`determined` studies the system gives a direction for) and accuracy_answered (accuracy over those) "
                 "are over the determined studies only, so a baseline that cites only some papers, or guesses on "
                 "undeterminable ones, is seen in both. traceability is the share of a baseline's cited passages that "
-                "overlap a ground-truth placement of the paper they cite, dropped citations counted as untraced "
+                "overlap a value, metric-label or claim placement of the paper they cite, dropped citations counted "
+                "as untraced; overlap is the lenient share, over a placement of any role, a condition label included "
                 "(none for the engine: its spans are scored in A).", ""]
         levels = [{"system": s["system"], **r} for s in report["synthesis"] for r in s["rows"] if r["level"] != "all"]
         if levels:
             levels.sort(key=lambda r: (_level_key(r["level"]), r["system"]))
             out += ["Per level:", "", table(levels, ["level", "system", "studies", "determined", "direction_accuracy",
-                                                     "completeness", "accuracy_answered", "traceability"]), ""]
+                                                     "completeness", "accuracy_answered", "traceability",
+                                                     "overlap"]), ""]
         flagged = [s for s in report["synthesis"] if s.get("flags")]
         if flagged:
             rows = [{"system": s["system"], **r} for s in flagged for r in s["flags"]["rows"]]
@@ -253,6 +256,7 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "direction_accuracy": c.get("direction_accuracy"),
                          "accuracy_answered": c.get("accuracy_answered"), "completeness": c.get("completeness"),
                          "traceability": None if engine else c.get("traceability"),  # the engine's spans: A
+                         "overlap": None if engine else c.get("overlap"),
                          "label_correct": system["label_correct"],
                          # the funnel (Part D): an `all` and a `gaps` run of one protocol stand in two rows
                          "calls_per_document": per_doc.get("calls") if engine else None,
@@ -292,7 +296,7 @@ def _strip(row: dict[str, Any] | None) -> dict[str, Any] | None:
 
 COMPARE_COLUMNS = ["level", "corpus_id", "system", "strategy", "extraction_f1", "span_accuracy", "association_accuracy",
                    "true_pair", "direction_accuracy", "completeness", "accuracy_answered", "traceability",
-                   "label_correct", "calls_per_document", "tokens_per_document", "screen_precision", "screen_recall"]
+                   "overlap", "label_correct", "calls_per_document", "tokens_per_document", "screen_precision", "screen_recall"]
 COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "extraction_f1", "direction_accuracy",
                             "engine_minus_system"]
 

@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 from evaluation import report as rep
-from evaluation.score import GroundTruth, match, score, score_answers
+from evaluation.score import GroundTruth, match, score, score_answers, score_citations
 from evaluation.truth import Fact
 from evidence.contract import Item, Span
 
@@ -192,6 +192,25 @@ def test_baseline_answers_are_scored_like_the_engine(tmp_path: Path, corpus: Pat
     assert only["intervals"]["extraction"] == [] and only["intervals"]["paired"] == []   # no engine to pair with
 
 
+def test_traceability_is_strict_and_overlap_is_lenient() -> None:
+    """D3 (the EV1 probe's citation case): a [0, 1000] citation over only a `condition_label` placement
+    overlaps a placement but traces no value, metric label or claim; over the value span both count."""
+    only_label = GroundTruth("c", "q", [{"paper": "S1", "level": "explicit"}],
+                             [{"paper": "S1", "start": 10, "end": 20, "role": "condition_label"}], {})
+    got = score_citations(only_label, [{"document": "S1", "start": 0, "end": 1000}])
+    assert (got["all"]["overlaps_placement"], got["all"]["traced"], got["all"]["citations"]) == (1, 0, 1)
+    with_value = GroundTruth("c", "q", [{"paper": "S1", "level": "explicit"}],
+                             [{"paper": "S1", "start": 10, "end": 20, "role": "condition_label"},
+                              {"paper": "S1", "start": 30, "end": 34, "role": "value"}], {})
+    both = score_citations(with_value, [{"document": "S1", "start": 28, "end": 32},   # the value span
+                                        {"document": "S1", "start": 5, "end": 12}])  # the label only
+    assert (both["all"]["overlaps_placement"], both["all"]["traced"], both["all"]["citations"]) == (2, 1, 2)
+    for role in ("metric_label", "claim"):
+        t = GroundTruth("c", "q", [{"paper": "S1", "level": "explicit"}],
+                        [{"paper": "S1", "start": 10, "end": 20, "role": role}], {})
+        assert score_citations(t, [{"document": "S1", "start": 0, "end": 1000}])["all"]["traced"] == 1
+
+
 def test_completeness_and_traceability(tmp_path: Path, corpus: Path) -> None:
     """Part G.1: completeness over the studies with a determined true direction; traceability over the cited
     passages, each against the placements of the paper it cites; null without citations (the engine)."""
@@ -210,7 +229,10 @@ def test_completeness_and_traceability(tmp_path: Path, corpus: Path) -> None:
     result = score(run_with(tmp_path, fx.perfect_items()), corpus, [tmp_path / "rag.json"])
     r = {x["level"]: x for x in system(result, "rag-baseline")["rows"]}
     assert (r["all"]["studies"], r["all"]["completeness"]) == (3, 0.5)              # S001 of S001, S002
+    # D3 recount by hand: the 62% citation overlaps a `value` placement (traced and overlapping); the title
+    # citation overlaps nothing; S999 is outside the truth. Strict and lenient agree here (1 of 3 each).
     assert (r["all"]["citations"], r["all"]["traceability"]) == (3, pytest.approx(1 / 3))
+    assert r["all"]["overlap"] == pytest.approx(1 / 3) and r["paraphrased"]["overlap"] is None
     assert (r["explicit"]["completeness"], r["explicit"]["citations"], r["explicit"]["traceability"]) == (1.0, 2, 0.5)
     assert (r["paraphrased"]["completeness"], r["paraphrased"]["citations"], r["paraphrased"]["traceability"]) == (
         0.0, 0, None)
@@ -227,6 +249,7 @@ def test_completeness_and_traceability(tmp_path: Path, corpus: Path) -> None:
     fx.dump(tmp_path / "dropped.json", dropped)
     d = {x["level"]: x for x in score_answers(corpus, [tmp_path / "dropped.json"])["synthesis"][0]["rows"]}
     assert (d["all"]["citations"], d["all"]["traceability"]) == (3, pytest.approx(1 / 3))
+    assert d["all"]["overlap"] == pytest.approx(1 / 3)   # dropped citations are never overlapping either
     assert (d["explicit"]["citations"], d["explicit"]["traceability"]) == (2, 0.5)
     only_dropped = rag | {"citations": [], "dropped_citations": [{"document": "S999", "start": 0, "end": 10}]}
     fx.dump(tmp_path / "only.json", only_dropped)

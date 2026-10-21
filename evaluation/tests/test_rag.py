@@ -150,7 +150,10 @@ def test_completeness_and_traceability_on_the_fixture_corpus(tmp_path: Path) -> 
     system = score_answers(corpus, [_dump(tmp_path / "a.json", answer)])["synthesis"][0]
     rows = {r["level"]: r for r in system["rows"]}
     assert (rows["all"]["completeness"], rows["all"]["citations"], rows["all"]["traceability"]) == (0.5, 2, 0.5)
+    # D3 recount: the "62%" chunk holds a `value` placement (traced), the title chunk holds none: strict 1/2,
+    # and no chunk holds only a label, so the lenient overlap equals it.
     assert (rows["explicit"]["completeness"], rows["explicit"]["traceability"]) == (1.0, 0.5)
+    assert (rows["all"]["overlap"], rows["explicit"]["overlap"], rows["paraphrased"]["overlap"]) == (0.5, 0.5, None)
     assert (rows["paraphrased"]["completeness"], rows["paraphrased"]["citations"],
             rows["paraphrased"]["traceability"]) == (0.0, 0, None)
     assert rows["all"]["direction_accuracy"] == 0.5 and rows["all"]["completeness"] == 0.5
