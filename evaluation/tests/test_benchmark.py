@@ -226,3 +226,19 @@ def test_a_duplicate_paper_belongs_to_its_parent_studys_cluster() -> None:
                         [], {})
     truth.seed = 7
     assert truth.cluster_of("S009") == truth.cluster_of("S001") == "7/S001"
+
+
+def test_benchmark_md_shows_the_pooled_cluster_f1(tmp_path: Path) -> None:
+    records = bm.benchmark([scored(tmp_path, "a", "explicit"), scored(tmp_path, "b", "paraphrased")])
+    text = bm.write_benchmark(records, tmp_path / "bench")[-1].read_text(encoding="utf-8")
+    assert "Pooled F1 (cluster bootstrap over parent studies): 0.875 [" in text and "2 clusters" in text
+
+
+def test_an_extractor_without_call_events_counts_every_fact_in_its_papers(tmp_path: Path,
+                                                                         monkeypatch: pytest.MonkeyPatch) -> None:
+    """As score_extractors: an extractor id with no extractor_call event at all (its items are in the run) is
+    scored against every fact, in its per-paper rows too (the benchmark's pooled F1 resamples those)."""
+    monkeypatch.setitem(globals(), "TASKS", [t for t in TASKS if t[0] == fx.REGEX])   # the LLM: no events
+    report = scored(tmp_path)
+    facts = sum(r["facts"] for r in report["extractors"]["papers"] if r["extractor"] == fx.LLM)
+    assert facts == ext_row(report, fx.LLM)["facts"] > 0

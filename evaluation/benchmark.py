@@ -36,7 +36,7 @@ from typing import Any
 
 from .report import _level_key, dumps, table
 from .score import prf, share
-from .stats import cluster_bootstrap, micro_f1
+from .stats import cluster_bootstrap, interval_text, micro_f1
 
 ROW_COLUMNS = ["evidence_type", "level", "items", "facts", "matched", "precision", "recall", "f1", "span_accuracy",
                "association_accuracy", "only", "only_matched"]
@@ -171,6 +171,12 @@ def render(records: dict[str, dict[str, Any]]) -> str:
         out += [f"## {e}", "", "Corpora: " + (", ".join(f"{c['corpus_id']} (run {c['run_id']}, recall scope {s})"
                                                          for c, s in zip(r["corpora"], r["recall_scope"])) or "-"), "",
                 table(r["rows"], ROW_COLUMNS), ""]
+        pooled = (r.get("pooled") or {}).get("f1")
+        if pooled:
+            clusters = f", {pooled['n_clusters']} clusters" if pooled.get("n_clusters") else ""
+            out += [f"Pooled F1 (cluster bootstrap over parent studies): "
+                    f"{interval_text(pooled.get('point'), pooled.get('low'), pooled.get('high'))}"
+                    f" ({pooled.get('method') or '-'}{clusters}).", ""]
         if r["cost"]:
             c = r["cost"]
             out += [f"Cost over {c['runs']} run(s), {c['calls']} calls (per call in brackets; `-`: not recorded):",

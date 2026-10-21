@@ -731,14 +731,15 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
 def _extractor_papers(m: Matching, extractors: Iterable[str], called: dict[str, set[tuple[str, str]]] | None,
                       screens: Iterable[str]) -> list[dict[str, Any]]:
     """Per extractor and paper, the all-type counts (items, matched, facts) with the paper's parent-study
-    cluster: what `evaluate benchmark` resamples for its pooled interval. Facts follow `called`."""
+    cluster: what `evaluate benchmark` resamples for its pooled interval. Facts follow `called`, as in
+    score_extractors: all facts without events or for an extractor id with no event at all."""
     truth, screens = m.truth, set(screens)
     out = []
     for extractor in sorted(set(extractors) - screens):
         pairs = called.get(extractor) if called else None
         papers: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
         for fact in truth.facts.values():
-            if called is None or (pairs and (fact.paper, fact.type) in pairs):
+            if pairs is None or (fact.paper, fact.type) in pairs:
                 papers[fact.paper][2] += 1
         for document, kind in sorted(pairs or ()):
             if kind in TYPES:
