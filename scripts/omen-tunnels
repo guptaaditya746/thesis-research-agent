@@ -2,6 +2,7 @@
 """Open the Omen -> laptop -> Webis gateway -> Slurm compute tunnels."""
 
 import argparse
+import http.client
 import json
 import os
 from pathlib import Path
@@ -10,6 +11,8 @@ import socket
 import subprocess
 import sys
 import tempfile
+import urllib.error
+import urllib.request
 
 
 # name: (Omen service port, laptop port, gateway port, compute port)
@@ -50,6 +53,7 @@ OMEN = f"{os.environ.get('OMEN_USER', 'omen-server')}@{os.environ.get('OMEN_HOST
 SSH = os.environ.get("OMEN_TUNNELS_SSH", "ssh")
 # omen-tunnels-external sets 1000 so the external gateway uses its legacy ports.
 GATEWAY_PORT_OFFSET = int(os.environ.get("OMEN_TUNNELS_GATEWAY_PORT_OFFSET", "0"))
+CHECK_TIMEOUT = 5.0
 
 
 def runtime_dir() -> Path:
@@ -95,6 +99,106 @@ def forward_args(role: str, names: list[str]) -> list[str]:
         elif role == "compute":
             args += ["-L", f"127.0.0.1:{compute}:127.0.0.1:{gateway}"]
     return args
+
+
+def gateway_port(name: str) -> int:
+    return SERVICES[name][2] + GATEWAY_PORT_OFFSET
+
+
+def listener_ports(role: str, names: list[str]) -> list[str]:
+    """The ports a hop listens on, and where: a port held there makes ssh fail."""
+    ports = []
+    for name in names:
+        omen, laptop, gateway, compute = SERVICES[name]
+        if name == "harness-ui":
+            if role == "gateway":
+                ports.append(f"{laptop} on laptop")
+            elif role == "compute":
+                ports.append(f"{gateway_port(name)} on gateway")
+        elif role == "omen":
+            ports.append(f"{laptop} on laptop")
+        elif role == "gateway":
+            ports.append(f"{gateway_port(name)} on gateway")
+        else:
+            ports.append(f"{compute} on compute")
+    return ports
+
+
+def accepts(port: int, host: str = "127.0.0.1", timeout: float = 2.0) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def check_ui_server(names: list[str]) -> None:
+    """compute start: the harness-ui hop forwards to 127.0.0.1:8080 of this machine, so the web app must listen here."""
+    if "harness-ui" not in names:
+        return
+    port = SERVICES["harness-ui"][3]
+    if not accepts(port):
+        raise RuntimeError(
+            f"Nothing accepts connections on 127.0.0.1:{port} on {socket.gethostname()}. The harness-ui hop "
+            f"forwards to port {port} of the machine it runs on, so start 'webapp serve --port {port}' first and run "
+            f"'compute start harness-ui' on that same node (from the login node: srun --jobid $JOB --overlap --pty "
+            "bash -l). --no-check skips this check.")
+
+
+def fetch(url: str, timeout: float = CHECK_TIMEOUT) -> tuple[int | None, str]:
+    """(status, body) of a GET without any proxy; (None, what went wrong) when no HTTP answer came."""
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    try:
+        with opener.open(url, timeout=timeout) as response:
+            return response.status, response.read(2000).decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.read(2000).decode("utf-8", "replace")
+    except urllib.error.URLError as exc:
+        if isinstance(exc.reason, ConnectionRefusedError):
+            return None, "connection refused: nothing listens on this port here"
+        return None, str(exc.reason)
+    except (http.client.RemoteDisconnected, ConnectionResetError, http.client.BadStatusLine):
+        return None, ("connection closed without an answer: the SSH hop listens, but its far end reaches no server "
+                      "(compute hop down, started on another node, or with another gateway port)")
+    except (OSError, http.client.HTTPException) as exc:
+        return None, str(exc) or type(exc).__name__
+
+
+def check_ui(port: int, timeout: float = CHECK_TIMEOUT) -> int:
+    """GET / and /api/health through the harness-ui port; print what answered."""
+    url = f"http://127.0.0.1:{port}/"
+    status, body = fetch(url, timeout)
+    if status is None:
+        print(f"{url}: no HTTP answer ({body})")
+        return 1
+    print(f"{url}: HTTP {status}")
+    if status == 400:
+        print(f"  the web app's guard refused it: {body.strip()}")
+    elif status != 200:
+        print(f"  body: {body.strip()[:300]}")
+    health, _ = fetch(url + "api/health", timeout)
+    if health == 200:
+        print(f"{url}api/health: HTTP 200, the web app answers")
+    else:
+        print(f"{url}api/health: {'HTTP ' + str(health) if health else 'no answer'}; "
+              "what answers is probably not 'webapp serve'")
+    return 0 if status == 200 and health == 200 else 1
+
+
+def ready_lines(machine: str, names: list[str]) -> list[str]:
+    """What start prints: both ends print the gateway ports, so the two sides can be compared."""
+    lines = [f"Ready (gateway port offset {GATEWAY_PORT_OFFSET}). On the other end use the same service names and "
+             "the same command (omen-tunnels-external: offset 1000, omen-tunnels: 0)."]
+    for name in names:
+        omen, laptop, gateway, compute = SERVICES[name]
+        if name == "harness-ui" and machine == "laptop":
+            lines.append(f"  {name}: http://127.0.0.1:{laptop} in the laptop browser (gateway port {gateway_port(name)})")
+        elif name == "harness-ui":
+            lines.append(f"  {name}: gateway port {gateway_port(name)} -> 127.0.0.1:{compute} on "
+                         f"{socket.gethostname()}")
+        else:
+            lines.append(f"  {name}: 127.0.0.1:{compute} on compute (gateway port {gateway_port(name)})")
+    return lines
 
 
 def ssh_command(role: str, names: list[str], sock: Path) -> list[str]:
@@ -150,19 +254,24 @@ def list_services() -> None:
     print(f"{'SERVICE':29} {'OMEN':>5} {'LAPTOP':>7} {'GATEWAY':>7} {'COMPUTE':>7}")
     for name, ports in SERVICES.items():
         omen = "-" if ports[0] is None else str(ports[0])
-        print(f"{name:29} {omen:>5} {ports[1]:7} {ports[2] + GATEWAY_PORT_OFFSET:7} {ports[3]:7}")
+        print(f"{name:29} {omen:>5} {ports[1]:7} {gateway_port(name):7} {ports[3]:7}")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("machine", choices=("laptop", "compute", "list"))
-    parser.add_argument("action", nargs="?", choices=("start", "status", "stop", "list"))
+    parser.add_argument("action", nargs="?", choices=("start", "status", "stop", "list", "check"))
     parser.add_argument("services", nargs="*", metavar="SERVICE")
     parser.add_argument("--dry-run", action="store_true", help="print SSH commands without connecting")
+    parser.add_argument("--no-check", action="store_true",
+                        help="compute start: skip the check that the web app listens on this machine")
     args = parser.parse_args()
     if args.machine == "list" or args.action == "list":
         list_services()
         return 0
+    if args.action == "check":
+        # laptop: the whole route through the gateway; compute: the web app itself.
+        return check_ui(SERVICES["harness-ui"][1 if args.machine == "laptop" else 3])
     if not args.action:
         parser.error("choose start, status, or stop")
     folder = runtime_dir()
@@ -179,7 +288,15 @@ def main() -> int:
             for role, _ in roles:
                 print(shlex.join(ssh_command(role, names, folder / f"{role}.sock")))
             return 0
+        if args.machine == "compute" and not args.no_check:
+            check_ui_server(names)
         if state.exists() and all(active(folder / f"{role}.sock", target) for role, target in old_roles):
+            offset = recorded.get("gateway_port_offset")
+            if offset is not None and offset != GATEWAY_PORT_OFFSET:
+                raise RuntimeError(
+                    f"Tunnels with gateway port offset {offset} are running; this command uses "
+                    f"{GATEWAY_PORT_OFFSET} (omen-tunnels-external: 1000, omen-tunnels: 0). Use the command they "
+                    "were started with, or 'stop' them first.")
             if recorded.get("services") == names and old_roles == roles:
                 print(f"Already running: {', '.join(names)}")
                 return 0
@@ -199,7 +316,7 @@ def main() -> int:
                 try:
                     subprocess.run(ssh_command(role, names, sock), check=True)
                 except subprocess.CalledProcessError as exc:
-                    ports = ", ".join(str(SERVICES[name][2] + GATEWAY_PORT_OFFSET if role == "gateway" else SERVICES[name][1 if role == "omen" else 3]) for name in names)
+                    ports = ", ".join(listener_ports(role, names))
                     hint = (
                         "Stop the earlier manual laptop-to-gateway SSH tunnel, then retry. "
                         "If no old tunnel exists, these gateway ports are held by another session."
@@ -210,22 +327,25 @@ def main() -> int:
                 if not active(sock, target):
                     raise RuntimeError(f"SSH did not keep the {role} tunnel running")
                 started.append((sock, target))
-            state.write_text(json.dumps({"services": names, "targets": dict(roles)}) + "\n")
+            state.write_text(json.dumps({"services": names, "targets": dict(roles),
+                                         "gateway_port_offset": GATEWAY_PORT_OFFSET}) + "\n")
             state.chmod(0o600)
         except Exception:
             for sock, target in reversed(started):
                 close(sock, target)
             raise
-        print("Ready. On the compute node use the same service names.")
-        for name in names:
-            if name == "harness-ui":
-                print(f"  {name}: http://127.0.0.1:{SERVICES[name][1]} in the laptop browser")
-            else:
-                print(f"  {name}: 127.0.0.1:{SERVICES[name][3]} on compute")
+        print("\n".join(ready_lines(args.machine, names)))
         return 0
     if args.action == "status":
         names = recorded.get("services", [])
         print("Services:", ", ".join(names) if names else "none recorded")
+        offset = recorded.get("gateway_port_offset")
+        if offset is not None:
+            print(f"Gateway port offset: {offset}; gateway ports: "
+                  + ", ".join(f"{name} {SERVICES[name][2] + offset}" for name in names))
+            if offset != GATEWAY_PORT_OFFSET:
+                print(f"Warning: started with offset {offset}, this command uses {GATEWAY_PORT_OFFSET} "
+                      "(omen-tunnels-external: 1000, omen-tunnels: 0)")
         for role, target in old_roles:
             print(f"{role}: {'up' if active(folder / f'{role}.sock', target) else 'down'}")
         return 0
