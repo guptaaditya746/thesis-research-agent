@@ -1,0 +1,312 @@
+{
+  "corpus_id": "rag-llm-small-efea11e7",
+  "seed": 2,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "studies": [
+    {
+      "study_id": "S003",
+      "paper": "S003",
+      "level": "paraphrased",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S003.c1",
+          "role": "baseline",
+          "label": "plain generator with no lookup step",
+          "aliases": []
+        },
+        {
+          "id": "S003.c2",
+          "role": "rag",
+          "label": "system grounded in retrieved passages",
+          "aliases": []
+        },
+        {
+          "id": "S003.c3",
+          "role": "other",
+          "label": "generator adapted to the domain by further training",
+          "aliases": []
+        },
+        {
+          "id": "S003.c4",
+          "role": "other",
+          "label": "variant that reformulates the question before the search",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S003.k1",
+          "canonical": "hallucination_rate",
+          "name": "fraction of answers judged to contain invented facts",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S003.m1",
+          "condition": "S003.c1",
+          "metric": "S003.k1",
+          "value": 0.355,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S003.m2",
+          "condition": "S003.c2",
+          "metric": "S003.k1",
+          "value": 0.449,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S003.m3",
+          "condition": "S003.c3",
+          "metric": "S003.k1",
+          "value": 0.418,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S003.m4",
+          "condition": "S003.c4",
+          "metric": "S003.k1",
+          "value": 0.312,
+          "dataset": "MedAnswerSet"
+        }
+      ],
+      "author_claim": {
+        "id": "S003.a1",
+        "direction": "worsens"
+      },
+      "effect": {
+        "direction": "contradicts",
+        "delta": -0.094,
+        "metric": "S003.k1",
+        "treatment": "S003.m2",
+        "control": "S003.m1"
+      }
+    }
+  ],
+  "placements": [
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 78,
+      "end": 147,
+      "exact": "Retrieval augmentation increases hallucinated content in the answers."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 243,
+      "end": 278,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 282,
+      "end": 319,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 323,
+      "end": 374,
+      "exact": "generator adapted to the domain by further training"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 382,
+      "end": 438,
+      "exact": "variant that reformulates the question before the search"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 676,
+      "end": 728,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1012,
+      "end": 1047,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1125,
+      "end": 1162,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1280,
+      "end": 1331,
+      "exact": "generator adapted to the domain by further training"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1412,
+      "end": 1468,
+      "exact": "variant that reformulates the question before the search"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1758,
+      "end": 1793,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1799,
+      "end": 1851,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S003.m1",
+      "role": "value",
+      "paper": "S003",
+      "start": 1856,
+      "end": 1872,
+      "exact": "355 out of 1,000"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1882,
+      "end": 1919,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1925,
+      "end": 1977,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S003.m2",
+      "role": "value",
+      "paper": "S003",
+      "start": 1982,
+      "end": 1987,
+      "exact": "0.449"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1997,
+      "end": 2048,
+      "exact": "generator adapted to the domain by further training"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2054,
+      "end": 2106,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S003.m3",
+      "role": "value",
+      "paper": "S003",
+      "start": 2111,
+      "end": 2116,
+      "exact": "41.8%"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2126,
+      "end": 2182,
+      "exact": "variant that reformulates the question before the search"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2188,
+      "end": 2240,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S003.m4",
+      "role": "value",
+      "paper": "S003",
+      "start": 2245,
+      "end": 2261,
+      "exact": "312 out of 1,000"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2670,
+      "end": 2707,
+      "exact": "system grounded in retrieved passages"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 3015,
+      "end": 3071,
+      "exact": "variant that reformulates the question before the search"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 3356,
+      "end": 3438,
+      "exact": "Grounding the generator in retrieved documents leads to more hallucinated answers."
+    }
+  ],
+  "answer": {
+    "label": "refuted",
+    "supporting": [],
+    "contradicting": [
+      "S003"
+    ],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}

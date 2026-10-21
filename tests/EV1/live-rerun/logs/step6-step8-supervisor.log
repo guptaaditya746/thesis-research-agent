@@ -1,0 +1,13 @@
+{"phase": "waiting_for_step6", "updated": "2026-10-20T22:51:46.653273+00:00", "next_step": 8}
+      "large_effect": []
+    }
+  }
+}
+WARNING: 9 studies failed fidelity and were left out; see fidelity.json
+{"phase": "running_step8", "updated": "2026-10-20T23:09:27.348991+00:00", "main_retained": 11, "main_excluded": ["S001", "S004", "S006", "S010", "S011", "S012", "S015", "S017", "S018"]}
+      ]
+    }
+  }
+}
+WARNING: 13 studies failed fidelity and were left out; see fidelity.json
+{"phase": "stopped_after_step8", "updated": "2026-10-20T23:28:47.053919+00:00", "exit_code": 0, "retained": 11}

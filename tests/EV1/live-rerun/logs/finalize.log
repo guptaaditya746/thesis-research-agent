@@ -1,0 +1,2 @@
+2026-10-21T07:37:22.037641+02:00 Step 17 marker found; starting artifact finalization
+2026-10-21T07:37:25.037181+02:00 COMMAND ['git', 'status', '--short'] exit=0

@@ -1,0 +1,452 @@
+{
+  "corpus_id": "rag-llm-small-efea11e7",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": false,
+          "detail": "S001.m1: its sentence names [], not only S001.c1"
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_paraphrased",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S001.m1: its sentence names [], not only S001.c1"
+            },
+            {
+              "name": "added_numbers",
+              "detail": "'1' at 977: '. Two conditions are tested: (1) language model used on its o'; '2' at 1087: 'y on the input question; and (2) variant that reads retrieved'"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S001.m1: its sentence names [], not only S001.c1"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S001.m1: its sentence names [], not only S001.c1"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S002.m1/value: required string '21.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '18.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '21.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '18.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '21.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '18.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '21.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '18.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S003",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_paraphrased",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "values_associated",
+              "detail": "S003.m2: its sentence names metrics [], not only S003.k1; S003.m3: its sentence names metrics [], not only S003.k1; S003.m4: its sentence names metrics [], not only S003.k1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S004",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": false,
+          "detail": "'0.7' at 1968: ', with a fixed temperature of 0.7 and a maximum output length o'; '256' at 2003: 'nd a maximum output length of 256 tokens. The evaluation is con'"
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'0.7' at 2088: ', with a fixed temperature of 0.7 and a maximum output length o'; '256' at 2123: 'nd a maximum output length of 256 tokens. The evaluation is con'"
+            },
+            {
+              "name": "added_claims",
+              "detail": "'The aim is to evaluate whether incorporating external information through retrieval improves the accuracy of responses.' at 321; 'While the retrieval-augmented generator shows a slight increase in answer accuracy compared to the vanilla LLM, the difference is minimal and does not exceed the threshold for statistical significance in this context.' at 2777; \"The results suggest that the inclusion of retrieved passages does not substantially alter the model's ability to generate correct answers.\" at 2995"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'0.7' at 1968: ', with a fixed temperature of 0.7 and a maximum output length o'; '256' at 2003: 'nd a maximum output length of 256 tokens. The evaluation is con'"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'0.7' at 1968: ', with a fixed temperature of 0.7 and a maximum output length o'; '256' at 2003: 'nd a maximum output length of 256 tokens. The evaluation is con'"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed, paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S005",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_paraphrased",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'By contrasting these two conditions, we examine whether incorporating retrieval improves the reliability of model outputs in a domain requiring precision and evidence-based reasoning.' at 754"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S002",
+    "S004",
+    "S005"
+  ]
+}

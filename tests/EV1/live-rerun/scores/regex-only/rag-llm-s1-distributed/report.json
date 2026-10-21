@@ -1,0 +1,1526 @@
+{
+  "cascade": {
+    "missed_by_all": {
+      "condition": 16,
+      "measurement": 33,
+      "metric": 1
+    },
+    "rows": [
+      {
+        "extractor": "regex_author_claim@2#b2161f228a8c",
+        "found": 11,
+        "found_matched": 11,
+        "only": 11,
+        "only_matched": 11
+      },
+      {
+        "extractor": "regex_condition@2#80486860164a",
+        "found": 17,
+        "found_matched": 17,
+        "only": 17,
+        "only_matched": 17
+      },
+      {
+        "extractor": "regex_measurement@2#9edb306c5b05",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "regex_metric@2#67f41f33eff7",
+        "found": 19,
+        "found_matched": 10,
+        "only": 19,
+        "only_matched": 10
+      }
+    ]
+  },
+  "corpus_id": "rag-llm-s1-d60fff2f",
+  "cost": {
+    "papers": 11,
+    "per_paper": {
+      "cached_calls": 0.0,
+      "calls": 5.0,
+      "input_tokens": 0.0,
+      "made_model_calls": 0.0,
+      "model_calls": 0.0,
+      "output_tokens": 0.0,
+      "seconds": 0.1265
+    },
+    "total": {
+      "cached_calls": 0,
+      "calls": 55,
+      "input_tokens": 0,
+      "made_model_calls": 0,
+      "model_calls": 0,
+      "output_tokens": 0,
+      "seconds": 1.392
+    }
+  },
+  "extraction": {
+    "missed": [
+      "S002.c1",
+      "S002.c3",
+      "S002.c4",
+      "S002.m1",
+      "S002.m2",
+      "S002.m3",
+      "S002.m4",
+      "S003.c1",
+      "S003.m1",
+      "S003.m2",
+      "S005.c3",
+      "S005.c4",
+      "S005.m1",
+      "S005.m2",
+      "S005.m3",
+      "S005.m4",
+      "S007.c1",
+      "S007.c3",
+      "S007.m1",
+      "S007.m2",
+      "S007.m3",
+      "S008.m1",
+      "S008.m2",
+      "S009.c1",
+      "S009.m1",
+      "S009.m2",
+      "S013.c3",
+      "S013.m1",
+      "S013.m2",
+      "S013.m3",
+      "S014.m1",
+      "S014.m2",
+      "S016.c3",
+      "S016.c4",
+      "S016.k1",
+      "S016.m1",
+      "S016.m2",
+      "S016.m3",
+      "S016.m4",
+      "S019.c2",
+      "S019.c3",
+      "S019.m1",
+      "S019.m2",
+      "S019.m3",
+      "S020.c3",
+      "S020.c4",
+      "S020.m1",
+      "S020.m2",
+      "S020.m3",
+      "S020.m4"
+    ],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "f1": 0.563,
+        "facts": 88,
+        "items": 47,
+        "level": "all",
+        "matched": 38,
+        "precision": 0.8085,
+        "recall": 0.4318,
+        "span_accuracy": 0.8158
+      },
+      {
+        "evidence_type": "all",
+        "f1": 0.563,
+        "facts": 88,
+        "items": 47,
+        "level": "distributed",
+        "matched": 38,
+        "precision": 0.8085,
+        "recall": 0.4318,
+        "span_accuracy": 0.8158
+      },
+      {
+        "evidence_type": "author_claim",
+        "f1": 1.0,
+        "facts": 11,
+        "items": 11,
+        "level": "all",
+        "matched": 11,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "f1": 1.0,
+        "facts": 11,
+        "items": 11,
+        "level": "distributed",
+        "matched": 11,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 0.68,
+        "facts": 33,
+        "items": 17,
+        "level": "all",
+        "matched": 17,
+        "precision": 1.0,
+        "recall": 0.5152,
+        "span_accuracy": 0.5882
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 0.68,
+        "facts": 33,
+        "items": 17,
+        "level": "distributed",
+        "matched": 17,
+        "precision": 1.0,
+        "recall": 0.5152,
+        "span_accuracy": 0.5882
+      },
+      {
+        "evidence_type": "measurement",
+        "f1": 0.0,
+        "facts": 33,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "measurement",
+        "f1": 0.0,
+        "facts": 33,
+        "items": 0,
+        "level": "distributed",
+        "matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "metric",
+        "f1": 0.6667,
+        "facts": 11,
+        "items": 19,
+        "level": "all",
+        "matched": 10,
+        "precision": 0.5263,
+        "recall": 0.9091,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "f1": 0.6667,
+        "facts": 11,
+        "items": 19,
+        "level": "distributed",
+        "matched": 10,
+        "precision": 0.5263,
+        "recall": 0.9091,
+        "span_accuracy": 1.0
+      }
+    ],
+    "unmatched_items": [
+      "k-18d0ba2126a8d74b",
+      "k-4d83cd7e19466377",
+      "k-5cd285f4c11d6a5c",
+      "k-69f68a833961f6bb",
+      "k-8b7593c1ebf33fb5",
+      "k-8e7fe9ad85450f3b",
+      "k-9f5eb988da8b5119",
+      "k-bb386aba8d911b53",
+      "k-e2004aadf3582a7d"
+    ]
+  },
+  "extractors": {
+    "cost": [
+      {
+        "calls": 11,
+        "extractor": "regex_author_claim@2#b2161f228a8c",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.176
+      },
+      {
+        "calls": 11,
+        "extractor": "regex_condition@2#80486860164a",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.162
+      },
+      {
+        "calls": 11,
+        "extractor": "regex_measurement@2#9edb306c5b05",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.217
+      },
+      {
+        "calls": 11,
+        "extractor": "regex_metric@2#67f41f33eff7",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.156
+      },
+      {
+        "calls": 11,
+        "extractor": "regex_screen@1#8301b6896dc3",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.159
+      }
+    ],
+    "recall_scope": "called",
+    "rows": [
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_author_claim@2#b2161f228a8c",
+        "f1": 1.0,
+        "facts": 11,
+        "items": 11,
+        "level": "all",
+        "matched": 11,
+        "only": 11,
+        "only_matched": 11,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_author_claim@2#b2161f228a8c",
+        "f1": 1.0,
+        "facts": 11,
+        "items": 11,
+        "level": "distributed",
+        "matched": 11,
+        "only": 11,
+        "only_matched": 11,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "regex_author_claim@2#b2161f228a8c",
+        "f1": 1.0,
+        "facts": 11,
+        "items": 11,
+        "level": "all",
+        "matched": 11,
+        "only": 11,
+        "only_matched": 11,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "regex_author_claim@2#b2161f228a8c",
+        "f1": 1.0,
+        "facts": 11,
+        "items": 11,
+        "level": "distributed",
+        "matched": 11,
+        "only": 11,
+        "only_matched": 11,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_condition@2#80486860164a",
+        "f1": 0.68,
+        "facts": 33,
+        "items": 17,
+        "level": "all",
+        "matched": 17,
+        "only": 17,
+        "only_matched": 17,
+        "precision": 1.0,
+        "recall": 0.5152,
+        "span_accuracy": 0.5882,
+        "span_hits": 10
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_condition@2#80486860164a",
+        "f1": 0.68,
+        "facts": 33,
+        "items": 17,
+        "level": "distributed",
+        "matched": 17,
+        "only": 17,
+        "only_matched": 17,
+        "precision": 1.0,
+        "recall": 0.5152,
+        "span_accuracy": 0.5882,
+        "span_hits": 10
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "regex_condition@2#80486860164a",
+        "f1": 0.68,
+        "facts": 33,
+        "items": 17,
+        "level": "all",
+        "matched": 17,
+        "only": 17,
+        "only_matched": 17,
+        "precision": 1.0,
+        "recall": 0.5152,
+        "span_accuracy": 0.5882,
+        "span_hits": 10
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "regex_condition@2#80486860164a",
+        "f1": 0.68,
+        "facts": 33,
+        "items": 17,
+        "level": "distributed",
+        "matched": 17,
+        "only": 17,
+        "only_matched": 17,
+        "precision": 1.0,
+        "recall": 0.5152,
+        "span_accuracy": 0.5882,
+        "span_hits": 10
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_measurement@2#9edb306c5b05",
+        "f1": 0.0,
+        "facts": 33,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_measurement@2#9edb306c5b05",
+        "f1": 0.0,
+        "facts": 33,
+        "items": 0,
+        "level": "distributed",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": 0,
+        "association_accuracy": null,
+        "evidence_type": "measurement",
+        "extractor": "regex_measurement@2#9edb306c5b05",
+        "f1": 0.0,
+        "facts": 33,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": 0,
+        "association_accuracy": null,
+        "evidence_type": "measurement",
+        "extractor": "regex_measurement@2#9edb306c5b05",
+        "f1": 0.0,
+        "facts": 33,
+        "items": 0,
+        "level": "distributed",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_metric@2#67f41f33eff7",
+        "f1": 0.6667,
+        "facts": 11,
+        "items": 19,
+        "level": "all",
+        "matched": 10,
+        "only": 19,
+        "only_matched": 10,
+        "precision": 0.5263,
+        "recall": 0.9091,
+        "span_accuracy": 1.0,
+        "span_hits": 10
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_metric@2#67f41f33eff7",
+        "f1": 0.6667,
+        "facts": 11,
+        "items": 19,
+        "level": "distributed",
+        "matched": 10,
+        "only": 19,
+        "only_matched": 10,
+        "precision": 0.5263,
+        "recall": 0.9091,
+        "span_accuracy": 1.0,
+        "span_hits": 10
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "regex_metric@2#67f41f33eff7",
+        "f1": 0.6667,
+        "facts": 11,
+        "items": 19,
+        "level": "all",
+        "matched": 10,
+        "only": 19,
+        "only_matched": 10,
+        "precision": 0.5263,
+        "recall": 0.9091,
+        "span_accuracy": 1.0,
+        "span_hits": 10
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "regex_metric@2#67f41f33eff7",
+        "f1": 0.6667,
+        "facts": 11,
+        "items": 19,
+        "level": "distributed",
+        "matched": 10,
+        "only": 19,
+        "only_matched": 10,
+        "precision": 0.5263,
+        "recall": 0.9091,
+        "span_accuracy": 1.0,
+        "span_hits": 10
+      }
+    ]
+  },
+  "funnel": {
+    "documents": 11,
+    "per_document": {
+      "calls": 5.0,
+      "input_tokens": 0.0,
+      "model_calls": 0.0,
+      "output_tokens": 0.0,
+      "tokens": 0.0
+    },
+    "rows": [
+      {
+        "calls": 5,
+        "document": "S002",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S003",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S005",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S007",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S008",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S009",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S013",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S014",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S016",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S019",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      },
+      {
+        "calls": 5,
+        "document": "S020",
+        "expected_relevant": true,
+        "input_tokens": 0,
+        "level": "distributed",
+        "model_calls": 0,
+        "output_tokens": 0,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 0
+      }
+    ],
+    "screen": {
+      "documents": 11,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "screened_out": [],
+      "screened_out_wrongly": [],
+      "tn": 0,
+      "tp": 11
+    },
+    "stop_positions": {
+      "exhausted": 11
+    },
+    "strategy": "all"
+  },
+  "integration": {
+    "rows": [
+      {
+        "association_accuracy": null,
+        "condition_exact": null,
+        "condition_role_accuracy": null,
+        "level": "all",
+        "matched_measurements": 0,
+        "metric_accuracy": null,
+        "metric_exact": null,
+        "studies": 11,
+        "true_pair": 0.0
+      },
+      {
+        "association_accuracy": null,
+        "condition_exact": null,
+        "condition_role_accuracy": null,
+        "level": "distributed",
+        "matched_measurements": 0,
+        "metric_accuracy": null,
+        "metric_exact": null,
+        "studies": 11,
+        "true_pair": 0.0
+      }
+    ],
+    "studies": [
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S002",
+        "study": "S002",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S003",
+        "study": "S003",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S005",
+        "study": "S005",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S007",
+        "study": "S007",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S008",
+        "study": "S008",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S009",
+        "study": "S009",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S013",
+        "study": "S013",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S014",
+        "study": "S014",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S016",
+        "study": "S016",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S019",
+        "study": "S019",
+        "treatment": null,
+        "true_pair": false
+      },
+      {
+        "control": null,
+        "level": "distributed",
+        "paper": "S020",
+        "study": "S020",
+        "treatment": null,
+        "true_pair": false
+      }
+    ]
+  },
+  "intervals": {
+    "extraction": [
+      {
+        "evidence_type": "condition",
+        "high": 0.7835,
+        "low": 0.5882,
+        "method": "BCa",
+        "point": 0.68
+      },
+      {
+        "evidence_type": "metric",
+        "high": 0.7857,
+        "low": 0.4444,
+        "method": "BCa",
+        "point": 0.6667
+      },
+      {
+        "evidence_type": "measurement",
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "high": 0.6387,
+        "low": 0.4966,
+        "method": "BCa",
+        "point": 0.563
+      }
+    ],
+    "paired": [
+      {
+        "high": -0.2727,
+        "low": -0.8182,
+        "method": "BCa",
+        "point": -0.5455,
+        "system": "rag-baseline"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": -1.0,
+        "system": "agent-baseline"
+      }
+    ],
+    "synthesis": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0,
+        "system": "evidence-engine"
+      },
+      {
+        "high": 0.8182,
+        "low": 0.2727,
+        "method": "BCa",
+        "point": 0.5455,
+        "system": "rag-baseline"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0,
+        "system": "agent-baseline"
+      }
+    ]
+  },
+  "levels": [
+    "distributed"
+  ],
+  "locate": {
+    "outside": [],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "inside": 260,
+        "level": "all",
+        "placements": 260,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 260,
+        "level": "distributed",
+        "placements": 260,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 22,
+        "level": "all",
+        "placements": 22,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 22,
+        "level": "distributed",
+        "placements": 22,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 144,
+        "level": "all",
+        "placements": 144,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 144,
+        "level": "distributed",
+        "placements": 144,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 33,
+        "level": "all",
+        "placements": 33,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 33,
+        "level": "distributed",
+        "placements": 33,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 61,
+        "level": "all",
+        "placements": 61,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 61,
+        "level": "distributed",
+        "placements": 61,
+        "recall": 1.0
+      }
+    ]
+  },
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "run_id": "rag-llm-s1-distributed",
+  "stability": null,
+  "synthesis": [
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "undetermined",
+          "n": 3
+        },
+        {
+          "expected": "neutral",
+          "given": "undetermined",
+          "n": 3
+        },
+        {
+          "expected": "supports",
+          "given": "undetermined",
+          "n": 5
+        }
+      ],
+      "expected_label": "mixed",
+      "flags": {
+        "counts": {
+          "expected": {
+            "contradicting": 3,
+            "duplicates": 0,
+            "neutral": 3,
+            "supporting": 5,
+            "undetermined": 0
+          },
+          "given": {
+            "contradicting": 0,
+            "duplicates": 0,
+            "neutral": 0,
+            "supporting": 0,
+            "undetermined": 11
+          }
+        },
+        "counts_correct": false,
+        "duplicates": {
+          "expected": {},
+          "given": {}
+        },
+        "duplicates_correct": true,
+        "rows": [
+          {
+            "expected": [],
+            "flag": "claim_disagrees",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "duplicate",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "large_effect",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          }
+        ]
+      },
+      "label": "insufficient",
+      "label_correct": false,
+      "rows": [
+        {
+          "accuracy_answered": null,
+          "citations": null,
+          "completeness": 0.0,
+          "determined": 11,
+          "direction_accuracy": 0.0,
+          "level": "all",
+          "studies": 11,
+          "traceability": null
+        },
+        {
+          "accuracy_answered": null,
+          "citations": null,
+          "completeness": 0.0,
+          "determined": 11,
+          "direction_accuracy": 0.0,
+          "level": "distributed",
+          "studies": 11,
+          "traceability": null
+        }
+      ],
+      "studies": [
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S020",
+          "study": "S020"
+        }
+      ],
+      "system": "evidence-engine"
+    },
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 2
+        },
+        {
+          "expected": "contradicts",
+          "given": "undetermined",
+          "n": 1
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 2
+        },
+        {
+          "expected": "neutral",
+          "given": "undetermined",
+          "n": 1
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 2
+        },
+        {
+          "expected": "supports",
+          "given": "undetermined",
+          "n": 3
+        }
+      ],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": 6,
+          "completeness": 0.5455,
+          "determined": 11,
+          "direction_accuracy": 0.5455,
+          "level": "all",
+          "studies": 11,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 6,
+          "completeness": 0.5455,
+          "determined": 11,
+          "direction_accuracy": 0.5455,
+          "level": "distributed",
+          "studies": 11,
+          "traceability": 1.0
+        }
+      ],
+      "studies": [
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "distributed",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "distributed",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "distributed",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "distributed",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "distributed",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "distributed",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S020",
+          "study": "S020"
+        }
+      ],
+      "system": "rag-baseline"
+    },
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 3
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 3
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 5
+        }
+      ],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 11,
+          "direction_accuracy": 1.0,
+          "level": "all",
+          "studies": 11,
+          "traceability": null
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 11,
+          "direction_accuracy": 1.0,
+          "level": "distributed",
+          "studies": 11,
+          "traceability": null
+        }
+      ],
+      "studies": [
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "distributed",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "distributed",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "distributed",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "distributed",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "distributed",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "distributed",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "distributed",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "distributed",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "distributed",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "distributed",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "distributed",
+          "paper": "S020",
+          "study": "S020"
+        }
+      ],
+      "system": "agent-baseline"
+    }
+  ]
+}

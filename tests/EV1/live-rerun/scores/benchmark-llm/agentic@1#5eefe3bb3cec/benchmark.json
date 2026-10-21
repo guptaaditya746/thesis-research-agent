@@ -1,0 +1,161 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-llm-small-distributed"
+    },
+    {
+      "corpus_id": "rag-llm-small-efea11e7",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-llm-small-paraphrased"
+    }
+  ],
+  "cost": {
+    "calls": 2,
+    "calls_recorded": {
+      "input_tokens": 2,
+      "model_calls": 2,
+      "output_tokens": 2,
+      "seconds": 2
+    },
+    "input_tokens": 351067,
+    "model_calls": 43,
+    "output_tokens": 10956,
+    "per_call": {
+      "input_tokens": 175533.5,
+      "model_calls": 21.5,
+      "output_tokens": 5478.0,
+      "seconds": 156.0145
+    },
+    "runs": 2,
+    "seconds": 312.029
+  },
+  "extractor_id": "agentic@1#5eefe3bb3cec",
+  "levels": [
+    "paraphrased",
+    "distributed"
+  ],
+  "name": "agentic",
+  "recall_scope": [
+    "called",
+    "called"
+  ],
+  "rows": [
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.0,
+      "facts": 1,
+      "items": 0,
+      "level": "paraphrased",
+      "matched": 0,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "span_accuracy": null,
+      "span_hits": 0
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.0,
+      "facts": 1,
+      "items": 0,
+      "level": "distributed",
+      "matched": 0,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "span_accuracy": null,
+      "span_hits": 0
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.0,
+      "facts": 2,
+      "items": 0,
+      "level": "all",
+      "matched": 0,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "span_accuracy": null,
+      "span_hits": 0
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 0.0,
+      "facts": 1,
+      "items": 0,
+      "level": "paraphrased",
+      "matched": 0,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "span_accuracy": null,
+      "span_hits": 0
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 0.0,
+      "facts": 1,
+      "items": 0,
+      "level": "distributed",
+      "matched": 0,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "span_accuracy": null,
+      "span_hits": 0
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 0.0,
+      "facts": 2,
+      "items": 0,
+      "level": "all",
+      "matched": 0,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "span_accuracy": null,
+      "span_hits": 0
+    }
+  ],
+  "stability": {
+    "calls": 4,
+    "identical": 3,
+    "identical_share": 0.75,
+    "item_stability": null,
+    "items_original": 0,
+    "items_reproduced": 0,
+    "outcomes": {
+      "identical": 3,
+      "items_added": 1
+    },
+    "reports": 1
+  },
+  "stability_ambiguous": [],
+  "version": "1"
+}

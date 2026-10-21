@@ -1,0 +1,464 @@
+{
+  "corpus_id": "rag-llm-small-bd3f74c0",
+  "seed": 2,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "studies": [
+    {
+      "study_id": "S003",
+      "paper": "S003",
+      "level": "distributed",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S003.c1",
+          "role": "baseline",
+          "label": "vanilla LLM",
+          "aliases": [
+            "B"
+          ]
+        },
+        {
+          "id": "S003.c2",
+          "role": "rag",
+          "label": "RAG pipeline",
+          "aliases": [
+            "R"
+          ]
+        },
+        {
+          "id": "S003.c3",
+          "role": "other",
+          "label": "fine-tuned model",
+          "aliases": [
+            "A1"
+          ]
+        },
+        {
+          "id": "S003.c4",
+          "role": "other",
+          "label": "query-rewriting variant",
+          "aliases": [
+            "A2"
+          ]
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S003.k1",
+          "canonical": "hallucination_rate",
+          "name": "hallucination frequency",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S003.m1",
+          "condition": "S003.c1",
+          "metric": "S003.k1",
+          "value": 0.355,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S003.m2",
+          "condition": "S003.c2",
+          "metric": "S003.k1",
+          "value": 0.449,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S003.m3",
+          "condition": "S003.c3",
+          "metric": "S003.k1",
+          "value": 0.418,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S003.m4",
+          "condition": "S003.c4",
+          "metric": "S003.k1",
+          "value": 0.312,
+          "dataset": "MedAnswerSet"
+        }
+      ],
+      "author_claim": {
+        "id": "S003.a1",
+        "direction": "worsens"
+      },
+      "effect": {
+        "direction": "contradicts",
+        "delta": -0.094,
+        "metric": "S003.k1",
+        "treatment": "S003.m2",
+        "control": "S003.m1"
+      }
+    }
+  ],
+  "placements": [
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 94,
+      "end": 163,
+      "exact": "Retrieval augmentation increases hallucinated content in the answers."
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 258,
+      "end": 281,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 352,
+      "end": 363,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 367,
+      "end": 379,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 383,
+      "end": 399,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 407,
+      "end": 430,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 733,
+      "end": 734,
+      "exact": "B"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 739,
+      "end": 750,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 752,
+      "end": 753,
+      "exact": "R"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 758,
+      "end": 770,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 772,
+      "end": 774,
+      "exact": "A1"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 779,
+      "end": 795,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 801,
+      "end": 803,
+      "exact": "A2"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 808,
+      "end": 831,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 851,
+      "end": 874,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 876,
+      "end": 878,
+      "exact": "HF"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1186,
+      "end": 1187,
+      "exact": "B"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1189,
+      "end": 1200,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1203,
+      "end": 1204,
+      "exact": "R"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1206,
+      "end": 1218,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1221,
+      "end": 1223,
+      "exact": "A1"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1225,
+      "end": 1241,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1248,
+      "end": 1250,
+      "exact": "A2"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1252,
+      "end": 1275,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1282,
+      "end": 1293,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1373,
+      "end": 1385,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1541,
+      "end": 1557,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1559,
+      "end": 1561,
+      "exact": "A1"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1674,
+      "end": 1697,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1699,
+      "end": 1701,
+      "exact": "A2"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1921,
+      "end": 1944,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1946,
+      "end": 1948,
+      "exact": "HF"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1966,
+      "end": 2018,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2482,
+      "end": 2484,
+      "exact": "HF"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2513,
+      "end": 2514,
+      "exact": "B"
+    },
+    {
+      "fact": "S003.m1",
+      "role": "value",
+      "paper": "S003",
+      "start": 2522,
+      "end": 2526,
+      "exact": "35.5"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2533,
+      "end": 2534,
+      "exact": "R"
+    },
+    {
+      "fact": "S003.m2",
+      "role": "value",
+      "paper": "S003",
+      "start": 2542,
+      "end": 2546,
+      "exact": "44.9"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2553,
+      "end": 2555,
+      "exact": "A1"
+    },
+    {
+      "fact": "S003.m3",
+      "role": "value",
+      "paper": "S003",
+      "start": 2562,
+      "end": 2566,
+      "exact": "41.8"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2573,
+      "end": 2575,
+      "exact": "A2"
+    },
+    {
+      "fact": "S003.m4",
+      "role": "value",
+      "paper": "S003",
+      "start": 2582,
+      "end": 2586,
+      "exact": "31.2"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 3668,
+      "end": 3750,
+      "exact": "Grounding the generator in retrieved documents leads to more hallucinated answers."
+    }
+  ],
+  "answer": {
+    "label": "refuted",
+    "supporting": [],
+    "contradicting": [
+      "S003"
+    ],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "corpus_id": "rag-orch-final-pilot-1d41de5c",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_contradictory",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '59.9' is ambiguous: it occurs 2 times (in Results, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m2/value: required string '63.2' is ambiguous: it occurs 2 times (in Results, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "excluded": []
+}

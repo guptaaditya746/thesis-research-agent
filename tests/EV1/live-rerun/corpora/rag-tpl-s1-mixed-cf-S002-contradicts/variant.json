@@ -1,0 +1,53 @@
+{
+  "base_corpus_id": "rag-tpl-s1-6162b495",
+  "study": "S002",
+  "from": "supports",
+  "to": "contradicts",
+  "corpus_id": "rag-tpl-s1-cf-596f6be3",
+  "paper": "S002",
+  "changed": [
+    {
+      "measurement": "S002.m1",
+      "from": 0.505,
+      "to": 0.753
+    },
+    {
+      "measurement": "S002.m2",
+      "from": 0.571,
+      "to": 0.662
+    },
+    {
+      "measurement": "S002.m13",
+      "from": 0.605,
+      "to": 0.574
+    },
+    {
+      "measurement": "S002.m14",
+      "from": 0.743,
+      "to": 0.535
+    }
+  ],
+  "expected": {
+    "before": {
+      "label": "mixed",
+      "counts": {
+        "supporting": 12,
+        "contradicting": 4,
+        "neutral": 4,
+        "undetermined": 0,
+        "duplicates": 0
+      }
+    },
+    "after": {
+      "label": "mixed",
+      "counts": {
+        "supporting": 11,
+        "contradicting": 5,
+        "neutral": 4,
+        "undetermined": 0,
+        "duplicates": 0
+      }
+    },
+    "label_changes": false
+  }
+}

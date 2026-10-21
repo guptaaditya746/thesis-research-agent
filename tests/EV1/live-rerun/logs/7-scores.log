@@ -1,0 +1,144 @@
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-k1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-k1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-complex/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-contradictory/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-explicit/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-llm-s1-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-k1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-k1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-complex/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-contradictory/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-explicit/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-k1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-k1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-pilot-v2-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-pilot-v2-explicit/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-complex/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-contradictory/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-explicit/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-s1-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-small-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-small-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-small-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-llm-small-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-k1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-k1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-complex/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-contradictory/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-explicit/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-k1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-k1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-complex/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-contradictory/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-explicit/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-llm-s1-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-k1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-k1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-complex/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-complex/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-contradictory/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-contradictory/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-explicit/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-explicit/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-mixed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-mixed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic/rag-llm-small-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic/rag-llm-small-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic/rag-llm-small-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic/rag-llm-small-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic-gaps/rag-llm-small-distributed/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic-gaps/rag-llm-small-distributed/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic-gaps/rag-llm-small-paraphrased/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/agentic-gaps/rag-llm-small-paraphrased/report.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-regex-only/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-regex-only/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-cascade/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-cascade/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-cascade-gaps/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-cascade-gaps/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-agentic/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-agentic/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-agentic-gaps/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-agentic-gaps/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-k1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-k1-mixed/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-complex/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-complex/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-contradictory/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-contradictory/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-distributed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-distributed/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-explicit/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-explicit/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-mixed/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-paraphrased/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-llm-s1-paraphrased/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-k1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-k1-mixed/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-complex/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-complex/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-contradictory/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-contradictory/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-distributed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-distributed/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-explicit/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-explicit/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-mixed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-mixed/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-paraphrased/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel/rag-tpl-s1-paraphrased/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel-agentic/rag-llm-small-distributed/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel-agentic/rag-llm-small-distributed/compare.md
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel-agentic/rag-llm-small-paraphrased/compare.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/compare-funnel-agentic/rag-llm-small-paraphrased/compare.md
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/.venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 216, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 131, in cmd_shift
+    result = shift(_report(args.base), _report(args.variant), spec)
+                                       ~~~~~~~^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 123, in _report
+    return json.loads(path.read_text(encoding="utf-8"))
+                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/regex-only/rag-tpl-s1-mixed-cf-S002-contradicts'
+FAIL shift regex-only rag-tpl-s1-mixed-cf-S002-contradicts
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/.venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 216, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 131, in cmd_shift
+    result = shift(_report(args.base), _report(args.variant), spec)
+                                       ~~~~~~~^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 123, in _report
+    return json.loads(path.read_text(encoding="utf-8"))
+                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade/rag-tpl-s1-mixed-cf-S002-contradicts'
+FAIL shift cascade rag-tpl-s1-mixed-cf-S002-contradicts
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/.venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 216, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 131, in cmd_shift
+    result = shift(_report(args.base), _report(args.variant), spec)
+                                       ~~~~~~~^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evaluation/cli.py", line 123, in _report
+    return json.loads(path.read_text(encoding="utf-8"))
+                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/cascade-gaps/rag-tpl-s1-mixed-cf-S002-contradicts'
+FAIL shift cascade-gaps rag-tpl-s1-mixed-cf-S002-contradicts
+wrote 16 benchmark.json record(s) and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/benchmark-llm/benchmark.md
+wrote 10 benchmark.json record(s) and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/scores/benchmark-tpl/benchmark.md

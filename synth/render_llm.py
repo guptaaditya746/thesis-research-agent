@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -41,7 +42,10 @@ LEVEL_INSTRUCTIONS = {
                    "in exactly the form given. No tables anywhere.",
     "distributed": "In the Method section introduce each condition with its name and say that it is denoted by its "
                    "code, and introduce the metric with its name and its abbreviation. Then write at least two "
-                   "paragraphs of other method details. In Results, put every value ONLY in one Markdown table whose "
+                   f"paragraphs of other method details, with at least {levelcheck.DISTANCE} characters between the "
+                   "last code or metric-abbreviation definition and the table. Define each code and abbreviation "
+                   "only once, early in Method; do not repeat the definitions near the table. "
+                   "In Results, put every value ONLY in one Markdown table whose "
                    "first column header is 'System', whose rows are the codes, and whose value column header is "
                    "'<abbreviation> (%)'. Never state a value in a sentence; never write a full condition name in the "
                    "table.",
@@ -198,8 +202,13 @@ class LlmRenderer:
             prompt = "Rendering plan:\n" + base
             if feedback:
                 prompt += "\n\nYour previous paper was rejected for these reasons; fix them:\n- " + "\n- ".join(feedback)
+                prompt += (f"\n\nRevision attempt {attempt} of {self.attempts}. Correct the rejected draft below, "
+                           "preserving facts and passages that already satisfy the plan. Return the whole corrected paper."
+                           "\n\nRejected draft:\n" + text)
             try:
-                text = (await self._call(INSTRUCTIONS, prompt, PaperReply, self.model, seed))["markdown"]
+                # A failed reply can produce identical feedback and therefore an identical prompt. Give
+                # each retry a distinct seed so the content-addressed cache cannot replay that same reply.
+                text = (await self._call(INSTRUCTIONS, prompt, PaperReply, self.model, seed + attempt - 1))["markdown"]
                 text = text.replace("\r\n", "\n").replace("\r", "\n")
                 text = text if text.endswith("\n") else text + "\n"
                 ps, decoys, problems = locate(text, plan)
@@ -215,6 +224,9 @@ class LlmRenderer:
             except Exception as exc:  # a cached reply that no longer decodes, too
                 checks = [Check("model_call", False, modelcall.redact(f"{type(exc).__name__}: {exc}"))]
             failed = [c for c in checks if not c.ok]
+            status = "passed" if not failed else "failed " + ", ".join(c.name for c in failed)
+            print(f"synth {plan.paper}/{level}: attempt {attempt}/{self.attempts} {status}",
+                  file=sys.stderr, flush=True)
             if not failed:
                 return Rendered(study, plan, text, ps, decoys,
                                 PaperFidelity(study.study_id, True, checks, attempt, history))

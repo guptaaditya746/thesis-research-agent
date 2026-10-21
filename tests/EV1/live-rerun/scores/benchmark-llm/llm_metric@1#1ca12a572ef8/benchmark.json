@@ -1,0 +1,299 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-llm-s1-5848c762",
+      "levels": [
+        "explicit"
+      ],
+      "run_id": "rag-llm-s1-explicit"
+    },
+    {
+      "corpus_id": "rag-llm-s1-404c0b6d",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-llm-s1-paraphrased"
+    },
+    {
+      "corpus_id": "rag-llm-s1-d60fff2f",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-llm-s1-distributed"
+    },
+    {
+      "corpus_id": "rag-llm-s1-a2b5bbc1",
+      "levels": [
+        "complex"
+      ],
+      "run_id": "rag-llm-s1-complex"
+    },
+    {
+      "corpus_id": "rag-llm-s1-c1d18224",
+      "levels": [
+        "contradictory"
+      ],
+      "run_id": "rag-llm-s1-contradictory"
+    },
+    {
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-llm-small-distributed"
+    },
+    {
+      "corpus_id": "rag-llm-small-efea11e7",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-llm-small-paraphrased"
+    }
+  ],
+  "cost": {
+    "calls": 57,
+    "calls_recorded": {
+      "input_tokens": 57,
+      "model_calls": 57,
+      "output_tokens": 57,
+      "seconds": 57
+    },
+    "input_tokens": 97401,
+    "model_calls": 71,
+    "output_tokens": 6723,
+    "per_call": {
+      "input_tokens": 1708.7895,
+      "model_calls": 1.2456,
+      "output_tokens": 117.9474,
+      "seconds": 3.4076
+    },
+    "runs": 7,
+    "seconds": 194.235
+  },
+  "extractor_id": "llm_metric@1#1ca12a572ef8",
+  "levels": [
+    "explicit",
+    "paraphrased",
+    "distributed",
+    "complex",
+    "contradictory"
+  ],
+  "name": "llm_metric",
+  "recall_scope": [
+    "called",
+    "called",
+    "called",
+    "called",
+    "called",
+    "called",
+    "called"
+  ],
+  "rows": [
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 11,
+      "items": 11,
+      "level": "explicit",
+      "matched": 11,
+      "only": 5,
+      "only_matched": 5,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 11
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.7368,
+      "facts": 12,
+      "items": 7,
+      "level": "paraphrased",
+      "matched": 7,
+      "only": 7,
+      "only_matched": 7,
+      "precision": 1.0,
+      "recall": 0.5833,
+      "span_accuracy": 1.0,
+      "span_hits": 7
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.88,
+      "facts": 12,
+      "items": 13,
+      "level": "distributed",
+      "matched": 11,
+      "only": 8,
+      "only_matched": 6,
+      "precision": 0.8462,
+      "recall": 0.9167,
+      "span_accuracy": 1.0,
+      "span_hits": 11
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.963,
+      "facts": 28,
+      "items": 26,
+      "level": "complex",
+      "matched": 26,
+      "only": 5,
+      "only_matched": 5,
+      "precision": 1.0,
+      "recall": 0.9286,
+      "span_accuracy": 1.0,
+      "span_hits": 26
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.9524,
+      "facts": 11,
+      "items": 10,
+      "level": "contradictory",
+      "matched": 10,
+      "only": 5,
+      "only_matched": 5,
+      "precision": 1.0,
+      "recall": 0.9091,
+      "span_accuracy": 1.0,
+      "span_hits": 10
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.922,
+      "facts": 74,
+      "items": 67,
+      "level": "all",
+      "matched": 65,
+      "only": 30,
+      "only_matched": 28,
+      "precision": 0.9701,
+      "recall": 0.8784,
+      "span_accuracy": 1.0,
+      "span_hits": 65
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "metric",
+      "f1": 1.0,
+      "facts": 11,
+      "items": 11,
+      "level": "explicit",
+      "matched": 11,
+      "only": 5,
+      "only_matched": 5,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 11
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "metric",
+      "f1": 0.7368,
+      "facts": 12,
+      "items": 7,
+      "level": "paraphrased",
+      "matched": 7,
+      "only": 7,
+      "only_matched": 7,
+      "precision": 1.0,
+      "recall": 0.5833,
+      "span_accuracy": 1.0,
+      "span_hits": 7
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "metric",
+      "f1": 0.88,
+      "facts": 12,
+      "items": 13,
+      "level": "distributed",
+      "matched": 11,
+      "only": 8,
+      "only_matched": 6,
+      "precision": 0.8462,
+      "recall": 0.9167,
+      "span_accuracy": 1.0,
+      "span_hits": 11
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "metric",
+      "f1": 0.963,
+      "facts": 28,
+      "items": 26,
+      "level": "complex",
+      "matched": 26,
+      "only": 5,
+      "only_matched": 5,
+      "precision": 1.0,
+      "recall": 0.9286,
+      "span_accuracy": 1.0,
+      "span_hits": 26
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "metric",
+      "f1": 0.9524,
+      "facts": 11,
+      "items": 10,
+      "level": "contradictory",
+      "matched": 10,
+      "only": 5,
+      "only_matched": 5,
+      "precision": 1.0,
+      "recall": 0.9091,
+      "span_accuracy": 1.0,
+      "span_hits": 10
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "metric",
+      "f1": 0.922,
+      "facts": 74,
+      "items": 67,
+      "level": "all",
+      "matched": 65,
+      "only": 30,
+      "only_matched": 28,
+      "precision": 0.9701,
+      "recall": 0.8784,
+      "span_accuracy": 1.0,
+      "span_hits": 65
+    }
+  ],
+  "stability": {
+    "calls": 23,
+    "identical": 23,
+    "identical_share": 1.0,
+    "item_stability": 1.0,
+    "items_original": 24,
+    "items_reproduced": 24,
+    "outcomes": {
+      "identical": 23
+    },
+    "reports": 3
+  },
+  "stability_ambiguous": [],
+  "version": "1"
+}

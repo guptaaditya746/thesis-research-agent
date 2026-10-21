@@ -1,0 +1,414 @@
+{
+  "step": 8,
+  "prefix": "rag-llm-k1",
+  "exit_code": 0,
+  "levels": [
+    {
+      "level": "explicit",
+      "retained": 11,
+      "total": 24,
+      "excluded": [
+        "S001",
+        "S004",
+        "S006",
+        "S007",
+        "S008",
+        "S010",
+        "S011",
+        "S012",
+        "S014",
+        "S015",
+        "S018",
+        "S021",
+        "S022"
+      ],
+      "locally_passing": 23,
+      "mean_attempts": 1.5,
+      "max_attempts": 5,
+      "failing_checks": {
+        "anchored": 1
+      },
+      "corpus_id": "rag-llm-k1-d236cc1d",
+      "models": {
+        "renderer": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+        "served": [
+          "orch-model",
+          "sub-model-2"
+        ]
+      }
+    },
+    {
+      "level": "paraphrased",
+      "retained": 11,
+      "total": 24,
+      "excluded": [
+        "S001",
+        "S004",
+        "S006",
+        "S007",
+        "S008",
+        "S010",
+        "S011",
+        "S012",
+        "S014",
+        "S015",
+        "S018",
+        "S021",
+        "S022"
+      ],
+      "locally_passing": 23,
+      "mean_attempts": 1.67,
+      "max_attempts": 5,
+      "failing_checks": {
+        "required_strings": 1
+      },
+      "corpus_id": "rag-llm-k1-588d52a1",
+      "models": {
+        "renderer": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+        "served": [
+          "orch-model",
+          "sub-model-2"
+        ]
+      }
+    },
+    {
+      "level": "distributed",
+      "retained": 11,
+      "total": 24,
+      "excluded": [
+        "S001",
+        "S004",
+        "S006",
+        "S007",
+        "S008",
+        "S010",
+        "S011",
+        "S012",
+        "S014",
+        "S015",
+        "S018",
+        "S021",
+        "S022"
+      ],
+      "locally_passing": 16,
+      "mean_attempts": 3.08,
+      "max_attempts": 5,
+      "failing_checks": {
+        "level_distributed": 6,
+        "required_strings": 2
+      },
+      "corpus_id": "rag-llm-k1-b7bbc94e",
+      "models": {
+        "renderer": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+        "served": [
+          "orch-model",
+          "sub-model-2"
+        ]
+      }
+    },
+    {
+      "level": "complex",
+      "retained": 11,
+      "total": 24,
+      "excluded": [
+        "S001",
+        "S004",
+        "S006",
+        "S007",
+        "S008",
+        "S010",
+        "S011",
+        "S012",
+        "S014",
+        "S015",
+        "S018",
+        "S021",
+        "S022"
+      ],
+      "locally_passing": 19,
+      "mean_attempts": 2.04,
+      "max_attempts": 5,
+      "failing_checks": {
+        "blind_reextraction": 4,
+        "blind_extra": 1,
+        "anchored": 1
+      },
+      "corpus_id": "rag-llm-k1-97c9450f",
+      "models": {
+        "renderer": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+        "served": [
+          "orch-model",
+          "sub-model-2"
+        ]
+      }
+    },
+    {
+      "level": "contradictory",
+      "retained": 11,
+      "total": 24,
+      "excluded": [
+        "S001",
+        "S004",
+        "S006",
+        "S007",
+        "S008",
+        "S010",
+        "S011",
+        "S012",
+        "S014",
+        "S015",
+        "S018",
+        "S021",
+        "S022"
+      ],
+      "locally_passing": 22,
+      "mean_attempts": 2.08,
+      "max_attempts": 5,
+      "failing_checks": {
+        "anchored": 2
+      },
+      "corpus_id": "rag-llm-k1-ff2a062e",
+      "models": {
+        "renderer": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+        "served": [
+          "orch-model",
+          "sub-model-2"
+        ]
+      }
+    },
+    {
+      "level": "mixed",
+      "retained": 11,
+      "total": 24,
+      "excluded": [
+        "S001",
+        "S004",
+        "S006",
+        "S007",
+        "S008",
+        "S010",
+        "S011",
+        "S012",
+        "S014",
+        "S015",
+        "S018",
+        "S021",
+        "S022"
+      ],
+      "locally_passing": 23,
+      "mean_attempts": 1.5,
+      "max_attempts": 5,
+      "failing_checks": {
+        "required_strings": 1
+      },
+      "corpus_id": "rag-llm-k1-961f46a3",
+      "models": {
+        "renderer": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+        "served": [
+          "orch-model",
+          "sub-model-2"
+        ]
+      }
+    }
+  ],
+  "failures": [
+    {
+      "level": "explicit",
+      "study": "S022",
+      "failed_checks": [
+        {
+          "name": "anchored",
+          "ok": false,
+          "detail": "S022.c2/condition_label 'retrieval-augmented generator': ambiguous; S022.c3/condition_label 'query-rewriting variant': ambiguous; S022.c2/condition_label 'retrieval-augmented generator': ambiguous; S022.c3/condition_label 'query-rewriting variant': ambiguous"
+        }
+      ]
+    },
+    {
+      "level": "paraphrased",
+      "study": "S004",
+      "failed_checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S004.m1/value: required string '0.598' is ambiguous: it occurs 2 times (in Results, Conclusion); write it exactly once, where the level instructions put it, and nowhere else; S004.m2/value: required string '589 out of 1,000' is ambiguous: it occurs 2 times (in Results, Conclusion); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S001",
+      "failed_checks": [
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S001.k1: abbreviation 'HR' defined within 300 characters of the table"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S006",
+      "failed_checks": [
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S006.k1: abbreviation 'HR' defined within 300 characters of the table"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S007",
+      "failed_checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S007.m2/value: required string '39.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S007.m3/value: required string '18.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S008",
+      "failed_checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S008.m1/value: required string '40.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S008.m2/value: required string '8.7' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S011",
+      "failed_checks": [
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S011.k1: abbreviation 'FLA' defined within 300 characters of the table"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S012",
+      "failed_checks": [
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S012.c1: code 'B' defined within 300 characters of the table; S012.c2: code 'R' defined within 300 characters of the table; S012.k1: abbreviation 'HR' defined within 300 characters of the table"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S014",
+      "failed_checks": [
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S014.k1: abbreviation 'AA' defined within 300 characters of the table"
+        }
+      ]
+    },
+    {
+      "level": "distributed",
+      "study": "S015",
+      "failed_checks": [
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S015.c1: code 'B' defined within 300 characters of the table; S015.c2: code 'R' defined within 300 characters of the table; S015.c3: code 'A1' defined within 300 characters of the table; S015.k1: abbreviation 'AA' defined within 300 characters of the table"
+        }
+      ]
+    },
+    {
+      "level": "complex",
+      "study": "S007",
+      "failed_checks": [
+        {
+          "name": "blind_reextraction",
+          "ok": false,
+          "detail": "missing ['S007.m4', 'S007.m10']"
+        }
+      ]
+    },
+    {
+      "level": "complex",
+      "study": "S010",
+      "failed_checks": [
+        {
+          "name": "blind_reextraction",
+          "ok": false,
+          "detail": "missing ['S010.m2']"
+        },
+        {
+          "name": "blind_extra",
+          "ok": false,
+          "detail": "extra [('retrieval-augmented model', 0.1)]"
+        }
+      ]
+    },
+    {
+      "level": "complex",
+      "study": "S015",
+      "failed_checks": [
+        {
+          "name": "blind_reextraction",
+          "ok": false,
+          "detail": "missing ['S015.m5']"
+        }
+      ]
+    },
+    {
+      "level": "complex",
+      "study": "S018",
+      "failed_checks": [
+        {
+          "name": "blind_reextraction",
+          "ok": false,
+          "detail": "missing ['S018.m2']"
+        }
+      ]
+    },
+    {
+      "level": "complex",
+      "study": "S021",
+      "failed_checks": [
+        {
+          "name": "anchored",
+          "ok": false,
+          "detail": "S021.c2/condition_label 'retrieval-augmented model': ambiguous; S021.c2/condition_label 'retrieval-augmented model': ambiguous"
+        }
+      ]
+    },
+    {
+      "level": "contradictory",
+      "study": "S001",
+      "failed_checks": [
+        {
+          "name": "anchored",
+          "ok": false,
+          "detail": "S001.c2/condition_label 'retrieval-augmented model': ambiguous; S001.c2/condition_label 'retrieval-augmented model': ambiguous"
+        }
+      ]
+    },
+    {
+      "level": "contradictory",
+      "study": "S021",
+      "failed_checks": [
+        {
+          "name": "anchored",
+          "ok": false,
+          "detail": "S021.c2/condition_label 'retrieval-augmented model': ambiguous; S021.c2/condition_label 'retrieval-augmented model': ambiguous"
+        }
+      ]
+    }
+  ]
+}

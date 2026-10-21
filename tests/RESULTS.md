@@ -451,3 +451,20 @@ Date: 2026-10-18–19. Slurm job 7488, node gammaweb08. Artifacts and full logs 
 | EV-fidelity | 2026-10-19 | Runbook step 8 sample from `rag-llm-s1-mixed` | NOT RUN (USER / no sample) | 0 accepted papers in the mixed LLM corpus | The prescribed review sheet cannot be generated from this empty corpus. The failure checks and attempt counts are preserved in `fidelity.json`; a user review of the rejected paper attempts is still needed if desired. |
 | EV-propose-live | 2026-10-18 | `orch-model`, committed RAG vocabulary; proposal frozen under `$EV/proposals/rag-factuality` | PARTIAL | protocol check exit 0; protocol diff exit 1 (expected: files differ) | Live proposal flow completed. The model defaults remain frozen; the runbook's user review of the eight cards has not been recorded. |
 | EV-finish | 2026-10-19 | result copy, STATE update, commit/push | PARTIAL | 641 files copied to `tests/EV1`; none exceeded 1 MiB; secret scan PASS | Result artifacts and `docs/STATE.md` are updated. Proposal-card review remains NOT RUN (USER); fidelity review has no accepted LLM sample to inspect. A concise review brief is in `docs/slurm-evidence-runbook-response.md`. |
+
+### EV1 live rerun (2026-10-20–21; Slurm job 7588)
+
+Status: PARTIAL; failures are retained in the run artifacts. Compact artifacts are in `tests/EV1/live-rerun/`; the full workspace is `$EV`.
+
+| stage | result |
+|---|---|
+| Step 6 main LLM corpus | explicit 11/20 kept; paraphrased 11/20 kept; distributed 11/20 kept; complex 11/20 kept; contradictory 11/20 kept; mixed 11/20 kept |
+| Step 8 knob LLM corpus | explicit 11/24 kept; paraphrased 11/24 kept; distributed 11/24 kept; complex 11/24 kept; contradictory 11/24 kept; mixed 11/24 kept |
+| Steps 9–11 small corpus, counterfactual and templates | exits: 0, 1, 0 |
+| Step 12 extraction engine | 99 run records; see the per-run logs and summaries |
+| Steps 13–14 replay / agentic | engine replay 43 OK, 0 mismatches; agentic replay 4 OK |
+| Steps 15–16 baselines and scoring | see baseline answers and 49 score reports |
+| Step 17 fidelity sample | exit: 0 |
+| Step 18 checks and publication | artifacts copied: 12159 files (67243809 bytes); see commit |
+
+Step 8 completed successfully. The first attempts to launch Steps 9 and 10 encountered a Slurm step-start socket collision; the retries and recovery are recorded under `tests/EV1/live-rerun/logs/` and `failures.md`. The proposal protocol passed validation but differs from the hand-written protocol; the generated proposal remains separate pending review. A human fidelity sample review remains outstanding.

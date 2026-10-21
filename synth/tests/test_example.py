@@ -53,6 +53,24 @@ def test_cli_build_and_sample(tmp_path: Path, capsys: pytest.CaptureFixture[str]
         assert r["truth"]
 
 
+def test_cli_fails_when_fidelity_excludes_every_paper(tmp_path: Path, monkeypatch, capsys) -> None:
+    class RejectedRenderer(TemplateRenderer):
+        def render_all(self, jobs, seed):
+            rendered = super().render_all(jobs, seed)
+            for paper in rendered.values():
+                paper.fidelity.ok = False
+            return rendered
+
+    monkeypatch.setattr(cli, "make_renderer", lambda args, out: RejectedRenderer())
+    code = cli.main(["build", "--name", "rejected", "--seed", "1", "--studies", "1",
+                     "--levels", "explicit", "--out", str(tmp_path)])
+    assert code == 1
+    assert "no papers retained" in capsys.readouterr().err
+    fidelity = json.loads((tmp_path / "rejected-explicit" / "fidelity.json").read_text())
+    assert fidelity["excluded"] == ["S001"]
+    assert json.loads((tmp_path / "rejected-explicit" / "manifest.json").read_text())["papers"] == []
+
+
 @pytest.mark.parametrize("bad", [["build", "--name", "x", "--seed", "1", "--levels", "easy"],
                                  ["build", "--name", "x", "--seed", "1", "--effects", "positive=1"]])
 def test_cli_rejects_bad_arguments(bad: list[str]) -> None:

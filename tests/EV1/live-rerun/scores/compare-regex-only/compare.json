@@ -1,0 +1,1126 @@
+{
+  "intervals": [
+    {
+      "corpus_id": "rag-llm-s1-5848c762",
+      "direction_accuracy": {
+        "high": 1.0,
+        "low": 0.634,
+        "method": "BCa",
+        "point": 0.9091
+      },
+      "engine_minus_system": {
+        "high": 0.0,
+        "low": -0.7273,
+        "method": "BCa",
+        "point": -0.4545
+      },
+      "extraction_f1": null,
+      "level": "explicit",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-5848c762",
+      "direction_accuracy": {
+        "high": 0.7273,
+        "low": 0.1818,
+        "method": "BCa",
+        "point": 0.4545
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7976,
+        "low": 0.6182,
+        "method": "BCa",
+        "point": 0.702
+      },
+      "level": "explicit",
+      "run_id": "rag-llm-s1-explicit",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-5848c762",
+      "direction_accuracy": {
+        "high": 0.6364,
+        "low": 0.0909,
+        "method": "BCa",
+        "point": 0.2727
+      },
+      "engine_minus_system": {
+        "high": 0.5455,
+        "low": -0.2727,
+        "method": "BCa",
+        "point": 0.1818
+      },
+      "extraction_f1": null,
+      "level": "explicit",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "direction_accuracy": {
+        "high": 0.25,
+        "low": 0.0,
+        "method": "BCa",
+        "point": 0.05
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7258,
+        "low": 0.5898,
+        "method": "BCa",
+        "point": 0.6556
+      },
+      "level": "explicit",
+      "run_id": "rag-tpl-s1-explicit",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-404c0b6d",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": -1.0
+      },
+      "extraction_f1": null,
+      "level": "paraphrased",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-404c0b6d",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.4839,
+        "low": 0.3529,
+        "method": "BCa",
+        "point": 0.4167
+      },
+      "level": "paraphrased",
+      "run_id": "rag-llm-s1-paraphrased",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-404c0b6d",
+      "direction_accuracy": {
+        "high": 0.7273,
+        "low": 0.1818,
+        "method": "BCa",
+        "point": 0.4545
+      },
+      "engine_minus_system": {
+        "high": -0.1818,
+        "low": -0.7273,
+        "method": "BCa",
+        "point": -0.4545
+      },
+      "extraction_f1": null,
+      "level": "paraphrased",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.241,
+        "low": 0.2041,
+        "method": "BCa",
+        "point": 0.2198
+      },
+      "level": "paraphrased",
+      "run_id": "rag-tpl-s1-paraphrased",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-d60fff2f",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": -1.0
+      },
+      "extraction_f1": null,
+      "level": "distributed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-d60fff2f",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.6387,
+        "low": 0.4966,
+        "method": "BCa",
+        "point": 0.563
+      },
+      "level": "distributed",
+      "run_id": "rag-llm-s1-distributed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-d60fff2f",
+      "direction_accuracy": {
+        "high": 0.8182,
+        "low": 0.2727,
+        "method": "BCa",
+        "point": 0.5455
+      },
+      "engine_minus_system": {
+        "high": -0.2727,
+        "low": -0.8182,
+        "method": "BCa",
+        "point": -0.5455
+      },
+      "extraction_f1": null,
+      "level": "distributed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.6359,
+        "low": 0.5272,
+        "method": "BCa",
+        "point": 0.5789
+      },
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-a2b5bbc1",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": {
+        "high": -0.4545,
+        "low": -0.9091,
+        "method": "BCa",
+        "point": -0.7273
+      },
+      "extraction_f1": null,
+      "level": "complex",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-a2b5bbc1",
+      "direction_accuracy": {
+        "high": 0.5455,
+        "low": 0.0909,
+        "method": "BCa",
+        "point": 0.2727
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7235,
+        "low": 0.4904,
+        "method": "BCa",
+        "point": 0.6167
+      },
+      "level": "complex",
+      "run_id": "rag-llm-s1-complex",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-a2b5bbc1",
+      "direction_accuracy": {
+        "high": 0.5455,
+        "low": 0.0,
+        "method": "BCa",
+        "point": 0.1818
+      },
+      "engine_minus_system": {
+        "high": 0.3636,
+        "low": -0.1818,
+        "method": "BCa",
+        "point": 0.0909
+      },
+      "extraction_f1": null,
+      "level": "complex",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "direction_accuracy": {
+        "high": 0.5,
+        "low": 0.1,
+        "method": "BCa",
+        "point": 0.25
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7017,
+        "low": 0.5335,
+        "method": "BCa",
+        "point": 0.623
+      },
+      "level": "complex",
+      "run_id": "rag-tpl-s1-complex",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-c1d18224",
+      "direction_accuracy": {
+        "high": 0.9091,
+        "low": 0.3636,
+        "method": "BCa",
+        "point": 0.7273
+      },
+      "engine_minus_system": {
+        "high": -0.1818,
+        "low": -0.7273,
+        "method": "BCa",
+        "point": -0.4545
+      },
+      "extraction_f1": null,
+      "level": "contradictory",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-c1d18224",
+      "direction_accuracy": {
+        "high": 0.5455,
+        "low": 0.0909,
+        "method": "BCa",
+        "point": 0.2727
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7213,
+        "low": 0.5533,
+        "method": "BCa",
+        "point": 0.6405
+      },
+      "level": "contradictory",
+      "run_id": "rag-llm-s1-contradictory",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-c1d18224",
+      "direction_accuracy": {
+        "high": 0.4545,
+        "low": 0.0,
+        "method": "BCa",
+        "point": 0.1818
+      },
+      "engine_minus_system": {
+        "high": 0.4545,
+        "low": -0.2727,
+        "method": "BCa",
+        "point": 0.0909
+      },
+      "extraction_f1": null,
+      "level": "contradictory",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "direction_accuracy": {
+        "high": 0.5,
+        "low": 0.1,
+        "method": "BCa",
+        "point": 0.25
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7377,
+        "low": 0.6016,
+        "method": "BCa",
+        "point": 0.6745
+      },
+      "level": "contradictory",
+      "run_id": "rag-tpl-s1-contradictory",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-k1-961f46a3",
+      "direction_accuracy": {
+        "high": 1.0,
+        "low": 0.4545,
+        "method": "BCa",
+        "point": 0.8182
+      },
+      "engine_minus_system": {
+        "high": 0.1818,
+        "low": -0.8182,
+        "method": "BCa",
+        "point": -0.4545
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-k1-961f46a3",
+      "direction_accuracy": {
+        "high": 0.6364,
+        "low": 0.0909,
+        "method": "BCa",
+        "point": 0.3636
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.6452,
+        "low": 0.4326,
+        "method": "BCa",
+        "point": 0.5677
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-k1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-k1-961f46a3",
+      "direction_accuracy": {
+        "high": 0.8182,
+        "low": 0.2727,
+        "method": "BCa",
+        "point": 0.5455
+      },
+      "engine_minus_system": {
+        "high": 0.2727,
+        "low": -0.5455,
+        "method": "BCa",
+        "point": -0.1818
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-0278df5c",
+      "direction_accuracy": {
+        "high": 1.0,
+        "low": 0.5455,
+        "method": "BCa",
+        "point": 0.8182
+      },
+      "engine_minus_system": {
+        "high": 0.0909,
+        "low": -0.9091,
+        "method": "BCa",
+        "point": -0.5455
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-s1-0278df5c",
+      "direction_accuracy": {
+        "high": 0.5455,
+        "low": 0.0909,
+        "method": "BCa",
+        "point": 0.2727
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.8056,
+        "low": 0.5556,
+        "method": "BCa",
+        "point": 0.6599
+      },
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-s1-0278df5c",
+      "direction_accuracy": {
+        "high": 0.8182,
+        "low": 0.2727,
+        "method": "BCa",
+        "point": 0.5455
+      },
+      "engine_minus_system": {
+        "high": 0.1818,
+        "low": -0.6364,
+        "method": "BCa",
+        "point": -0.2727
+      },
+      "extraction_f1": null,
+      "level": "mixed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-tpl-k1-e922861d",
+      "direction_accuracy": {
+        "high": 0.4545,
+        "low": 0.0909,
+        "method": "BCa",
+        "point": 0.2273
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7135,
+        "low": 0.5018,
+        "method": "BCa",
+        "point": 0.5926
+      },
+      "level": "mixed",
+      "run_id": "rag-tpl-k1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-6162b495",
+      "direction_accuracy": {
+        "high": 0.4,
+        "low": 0.05,
+        "method": "BCa",
+        "point": 0.2
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.7337,
+        "low": 0.522,
+        "method": "BCa",
+        "point": 0.6144
+      },
+      "level": "mixed",
+      "run_id": "rag-tpl-s1-mixed",
+      "strategy": "all",
+      "system": "evidence-engine"
+    }
+  ],
+  "rows": [
+    {
+      "accuracy_answered": 0.9091,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-s1-5848c762",
+      "direction_accuracy": 0.9091,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "explicit",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.4545,
+      "corpus_id": "rag-llm-s1-5848c762",
+      "direction_accuracy": 0.4545,
+      "extraction_f1": 0.702,
+      "label_correct": true,
+      "level": "explicit",
+      "run_id": "rag-llm-s1-explicit",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.8868,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.4545
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 0.2727,
+      "corpus_id": "rag-llm-s1-5848c762",
+      "direction_accuracy": 0.2727,
+      "extraction_f1": null,
+      "label_correct": false,
+      "level": "explicit",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.05,
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "direction_accuracy": 0.05,
+      "extraction_f1": 0.6556,
+      "label_correct": false,
+      "level": "explicit",
+      "run_id": "rag-tpl-s1-explicit",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.05
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-s1-404c0b6d",
+      "direction_accuracy": 1.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "paraphrased",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": 5.0,
+      "completeness": 0.0,
+      "corpus_id": "rag-llm-s1-404c0b6d",
+      "direction_accuracy": 0.0,
+      "extraction_f1": 0.4167,
+      "label_correct": false,
+      "level": "paraphrased",
+      "run_id": "rag-llm-s1-paraphrased",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.44,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 0.4545,
+      "corpus_id": "rag-llm-s1-404c0b6d",
+      "direction_accuracy": 0.4545,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "paraphrased",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": 5.0,
+      "completeness": 0.0,
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "direction_accuracy": 0.0,
+      "extraction_f1": 0.2198,
+      "label_correct": false,
+      "level": "paraphrased",
+      "run_id": "rag-tpl-s1-paraphrased",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-s1-d60fff2f",
+      "direction_accuracy": 1.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": 5.0,
+      "completeness": 0.0,
+      "corpus_id": "rag-llm-s1-d60fff2f",
+      "direction_accuracy": 0.0,
+      "extraction_f1": 0.563,
+      "label_correct": false,
+      "level": "distributed",
+      "run_id": "rag-llm-s1-distributed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.8158,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 0.5455,
+      "corpus_id": "rag-llm-s1-d60fff2f",
+      "direction_accuracy": 0.5455,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": null,
+      "association_accuracy": null,
+      "calls_per_document": 5.0,
+      "completeness": 0.0,
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "direction_accuracy": 0.0,
+      "extraction_f1": 0.5789,
+      "label_correct": false,
+      "level": "distributed",
+      "run_id": "rag-tpl-s1-distributed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-s1-a2b5bbc1",
+      "direction_accuracy": 1.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "complex",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.2727,
+      "corpus_id": "rag-llm-s1-a2b5bbc1",
+      "direction_accuracy": 0.2727,
+      "extraction_f1": 0.6167,
+      "label_correct": true,
+      "level": "complex",
+      "run_id": "rag-llm-s1-complex",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.9279,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 0.3333,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 0.5455,
+      "corpus_id": "rag-llm-s1-a2b5bbc1",
+      "direction_accuracy": 0.1818,
+      "extraction_f1": null,
+      "label_correct": false,
+      "level": "complex",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.25,
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "direction_accuracy": 0.25,
+      "extraction_f1": 0.623,
+      "label_correct": true,
+      "level": "complex",
+      "run_id": "rag-tpl-s1-complex",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.0
+    },
+    {
+      "accuracy_answered": 0.7273,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-s1-c1d18224",
+      "direction_accuracy": 0.7273,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "contradictory",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 0.75,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.3636,
+      "corpus_id": "rag-llm-s1-c1d18224",
+      "direction_accuracy": 0.2727,
+      "extraction_f1": 0.6405,
+      "label_correct": true,
+      "level": "contradictory",
+      "run_id": "rag-llm-s1-contradictory",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.9184,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.2727
+    },
+    {
+      "accuracy_answered": 0.3333,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 0.5455,
+      "corpus_id": "rag-llm-s1-c1d18224",
+      "direction_accuracy": 0.1818,
+      "extraction_f1": null,
+      "label_correct": false,
+      "level": "contradictory",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 0.7143,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.35,
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "direction_accuracy": 0.25,
+      "extraction_f1": 0.6745,
+      "label_correct": true,
+      "level": "contradictory",
+      "run_id": "rag-tpl-s1-contradictory",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.25
+    },
+    {
+      "accuracy_answered": 0.7778,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-k1-961f46a3",
+      "direction_accuracy": 0.8182,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.2222,
+      "corpus_id": "rag-llm-k1-961f46a3",
+      "direction_accuracy": 0.3636,
+      "extraction_f1": 0.5677,
+      "label_correct": false,
+      "level": "mixed",
+      "run_id": "rag-llm-k1-mixed",
+      "screen_precision": 0.9,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.8864,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.2222
+    },
+    {
+      "accuracy_answered": 0.8,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 0.5556,
+      "corpus_id": "rag-llm-k1-961f46a3",
+      "direction_accuracy": 0.5455,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 0.8182,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-s1-0278df5c",
+      "direction_accuracy": 0.8182,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.2727,
+      "corpus_id": "rag-llm-s1-0278df5c",
+      "direction_accuracy": 0.2727,
+      "extraction_f1": 0.6599,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-llm-s1-mixed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.8769,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.1818
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 0.5455,
+      "corpus_id": "rag-llm-s1-0278df5c",
+      "direction_accuracy": 0.5455,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.15,
+      "corpus_id": "rag-tpl-k1-e922861d",
+      "direction_accuracy": 0.2273,
+      "extraction_f1": 0.5926,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-tpl-k1-mixed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.1
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 5.0,
+      "completeness": 0.2,
+      "corpus_id": "rag-tpl-s1-6162b495",
+      "direction_accuracy": 0.2,
+      "extraction_f1": 0.6144,
+      "label_correct": true,
+      "level": "mixed",
+      "run_id": "rag-tpl-s1-mixed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "all",
+      "system": "evidence-engine",
+      "tokens_per_document": 0.0,
+      "traceability": null,
+      "true_pair": 0.15
+    }
+  ]
+}

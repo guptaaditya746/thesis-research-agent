@@ -1,0 +1,246 @@
+{
+  "intervals": [
+    {
+      "corpus_id": "rag-llm-small-efea11e7",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "extraction_f1": null,
+      "level": "paraphrased",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-small-efea11e7",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.9524
+      },
+      "level": "paraphrased",
+      "run_id": "rag-llm-small-paraphrased",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-small-efea11e7",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "extraction_f1": null,
+      "level": "paraphrased",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "extraction_f1": null,
+      "level": "distributed",
+      "run_id": null,
+      "strategy": null,
+      "system": "agent-baseline"
+    },
+    {
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.75
+      },
+      "level": "distributed",
+      "run_id": "rag-llm-small-distributed",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 1.0
+      },
+      "engine_minus_system": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "point": 0.0
+      },
+      "extraction_f1": null,
+      "level": "distributed",
+      "run_id": null,
+      "strategy": null,
+      "system": "rag-baseline"
+    }
+  ],
+  "rows": [
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-small-efea11e7",
+      "direction_accuracy": 1.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "paraphrased",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 8.0,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-small-efea11e7",
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.9524,
+      "label_correct": true,
+      "level": "paraphrased",
+      "run_id": "rag-llm-small-paraphrased",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.9,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": 6363.0,
+      "traceability": null,
+      "true_pair": 1.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-small-efea11e7",
+      "direction_accuracy": 1.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "paraphrased",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "direction_accuracy": 1.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "agent-baseline",
+      "tokens_per_document": null,
+      "traceability": null,
+      "true_pair": null
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 1.0,
+      "calls_per_document": 8.0,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.75,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": "rag-llm-small-distributed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 0.8333,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": 5295.0,
+      "traceability": null,
+      "true_pair": 1.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": null,
+      "calls_per_document": null,
+      "completeness": 1.0,
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "direction_accuracy": 1.0,
+      "extraction_f1": null,
+      "label_correct": true,
+      "level": "distributed",
+      "run_id": null,
+      "screen_precision": null,
+      "screen_recall": null,
+      "span_accuracy": null,
+      "strategy": null,
+      "system": "rag-baseline",
+      "tokens_per_document": null,
+      "traceability": 1.0,
+      "true_pair": null
+    }
+  ]
+}

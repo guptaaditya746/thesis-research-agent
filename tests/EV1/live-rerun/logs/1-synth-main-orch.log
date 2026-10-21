@@ -1,0 +1,317 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'synth.rend… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+synth S002/explicit: attempt 1/5 passed
+synth S001/explicit: attempt 1/5 passed
+synth S004/explicit: attempt 1/5 failed added_claims
+synth S003/explicit: attempt 1/5 failed added_claims
+synth S005/explicit: attempt 1/5 passed
+synth S004/explicit: attempt 2/5 passed
+synth S003/explicit: attempt 2/5 passed
+synth S006/explicit: attempt 1/5 passed
+synth S007/explicit: attempt 1/5 failed added_claims
+synth S008/explicit: attempt 1/5 passed
+synth S009/explicit: attempt 1/5 failed added_claims
+synth S010/explicit: attempt 1/5 passed
+synth S007/explicit: attempt 2/5 passed
+synth S011/explicit: attempt 1/5 passed
+synth S012/explicit: attempt 1/5 failed added_claims
+synth S009/explicit: attempt 2/5 passed
+synth S012/explicit: attempt 2/5 passed
+synth S013/explicit: attempt 1/5 failed added_claims
+synth S014/explicit: attempt 1/5 passed
+synth S015/explicit: attempt 1/5 failed added_claims
+synth S016/explicit: attempt 1/5 passed
+synth S013/explicit: attempt 2/5 passed
+synth S017/explicit: attempt 1/5 failed anchored, added_numbers
+synth S015/explicit: attempt 2/5 passed
+synth S018/explicit: attempt 1/5 passed
+synth S020/explicit: attempt 1/5 passed
+synth S017/explicit: attempt 2/5 failed anchored
+synth S019/explicit: attempt 1/5 failed added_claims
+synth S001/paraphrased: attempt 1/5 failed level_paraphrased
+synth S002/paraphrased: attempt 1/5 passed
+synth S017/explicit: attempt 3/5 failed anchored
+synth S019/explicit: attempt 2/5 passed
+synth S001/paraphrased: attempt 2/5 passed
+synth S003/paraphrased: attempt 1/5 failed added_claims
+synth S017/explicit: attempt 4/5 failed anchored
+synth S005/paraphrased: attempt 1/5 passed
+synth S004/paraphrased: attempt 1/5 failed required_strings
+synth S003/paraphrased: attempt 2/5 passed
+synth S017/explicit: attempt 5/5 failed anchored
+synth S006/paraphrased: attempt 1/5 failed required_strings
+synth S004/paraphrased: attempt 2/5 failed required_strings
+synth S007/paraphrased: attempt 1/5 failed values_associated, added_claims
+synth S008/paraphrased: attempt 1/5 passed
+synth S006/paraphrased: attempt 2/5 failed added_claims
+synth S004/paraphrased: attempt 3/5 failed required_strings
+synth S009/paraphrased: attempt 1/5 failed added_claims
+synth S007/paraphrased: attempt 2/5 passed
+synth S006/paraphrased: attempt 3/5 passed
+synth S004/paraphrased: attempt 4/5 failed required_strings
+synth S009/paraphrased: attempt 2/5 passed
+synth S010/paraphrased: attempt 1/5 passed
+synth S011/paraphrased: attempt 1/5 failed level_paraphrased
+synth S004/paraphrased: attempt 5/5 failed required_strings
+synth S012/paraphrased: attempt 1/5 passed
+synth S013/paraphrased: attempt 1/5 failed added_claims
+synth S011/paraphrased: attempt 2/5 passed
+synth S014/paraphrased: attempt 1/5 failed added_claims
+synth S015/paraphrased: attempt 1/5 failed required_strings
+synth S013/paraphrased: attempt 2/5 passed
+synth S016/paraphrased: attempt 1/5 passed
+synth S015/paraphrased: attempt 2/5 failed level_paraphrased
+synth S017/paraphrased: attempt 1/5 passed
+synth S014/paraphrased: attempt 2/5 passed
+synth S018/paraphrased: attempt 1/5 passed
+synth S015/paraphrased: attempt 3/5 passed
+synth S020/paraphrased: attempt 1/5 passed
+synth S019/paraphrased: attempt 1/5 failed added_claims
+synth S003/distributed: attempt 1/5 failed required_strings
+synth S002/distributed: attempt 1/5 failed level_distributed
+synth S019/paraphrased: attempt 2/5 passed
+synth S001/distributed: attempt 1/5 failed level_distributed
+synth S003/distributed: attempt 2/5 passed
+synth S002/distributed: attempt 2/5 passed
+synth S001/distributed: attempt 2/5 failed level_distributed
+synth S006/distributed: attempt 1/5 failed level_distributed
+synth S001/distributed: attempt 3/5 failed level_distributed
+synth S004/distributed: attempt 1/5 failed required_strings
+synth S001/distributed: attempt 4/5 failed level_distributed
+synth S001/distributed: attempt 5/5 failed level_distributed
+synth S004/distributed: attempt 2/5 failed added_claims
+synth S007/distributed: attempt 1/5 failed required_strings
+synth S007/distributed: attempt 2/5 failed added_claims
+synth S007/distributed: attempt 3/5 passed
+synth S004/distributed: attempt 3/5 passed
+synth S008/distributed: attempt 1/5 failed required_strings
+synth S009/distributed: attempt 1/5 failed required_strings
+synth S009/distributed: attempt 2/5 passed
+synth S008/distributed: attempt 2/5 passed
+synth S011/distributed: attempt 1/5 failed level_distributed
+synth S011/distributed: attempt 2/5 failed level_distributed
+synth S010/distributed: attempt 1/5 failed required_strings
+synth S011/distributed: attempt 3/5 failed level_distributed
+synth S005/distributed: attempt 1/5 failed model_call
+synth S011/distributed: attempt 4/5 failed level_distributed
+synth S006/distributed: attempt 2/5 failed model_call
+synth S011/distributed: attempt 5/5 failed level_distributed
+synth S006/distributed: attempt 3/5 failed level_distributed
+synth S010/distributed: attempt 2/5 failed added_claims
+synth S012/distributed: attempt 1/5 failed added_claims, level_distributed
+synth S006/distributed: attempt 4/5 failed level_distributed
+synth S010/distributed: attempt 3/5 passed
+synth S013/distributed: attempt 1/5 failed required_strings
+synth S012/distributed: attempt 2/5 failed level_distributed
+synth S006/distributed: attempt 5/5 failed level_distributed
+synth S013/distributed: attempt 2/5 passed
+synth S012/distributed: attempt 3/5 failed level_distributed
+synth S015/distributed: attempt 1/5 failed required_strings
+synth S012/distributed: attempt 4/5 failed level_distributed
+synth S005/distributed: attempt 2/5 failed model_call
+synth S005/distributed: attempt 3/5 failed required_strings
+synth S015/distributed: attempt 2/5 failed level_distributed
+synth S012/distributed: attempt 5/5 failed level_distributed
+synth S005/distributed: attempt 4/5 failed added_claims
+synth S005/distributed: attempt 5/5 passed
+synth S017/distributed: attempt 1/5 failed required_strings
+synth S015/distributed: attempt 3/5 failed level_distributed
+synth S017/distributed: attempt 2/5 passed
+synth S014/distributed: attempt 1/5 failed model_call
+synth S015/distributed: attempt 4/5 failed level_distributed
+synth S014/distributed: attempt 2/5 failed required_strings
+synth S014/distributed: attempt 3/5 passed
+synth S015/distributed: attempt 5/5 failed level_distributed
+synth S016/distributed: attempt 1/5 failed required_strings
+synth S019/distributed: attempt 1/5 failed required_strings
+synth S016/distributed: attempt 2/5 passed
+synth S019/distributed: attempt 2/5 failed required_strings
+synth S001/complex: attempt 1/5 passed
+synth S018/distributed: attempt 1/5 failed model_call
+synth S002/complex: attempt 1/5 passed
+synth S003/complex: attempt 1/5 passed
+synth S004/complex: attempt 1/5 failed required_strings
+synth S020/distributed: attempt 1/5 failed required_strings
+synth S018/distributed: attempt 2/5 failed required_strings
+synth S004/complex: attempt 2/5 passed
+synth S019/distributed: attempt 3/5 passed
+synth S018/distributed: attempt 3/5 failed added_claims, level_distributed
+synth S005/complex: attempt 1/5 passed
+synth S006/complex: attempt 1/5 passed
+synth S007/complex: attempt 1/5 failed added_claims
+synth S018/distributed: attempt 4/5 failed level_distributed
+synth S008/complex: attempt 1/5 failed required_strings
+synth S020/distributed: attempt 2/5 passed
+synth S007/complex: attempt 2/5 passed
+synth S008/complex: attempt 2/5 passed
+synth S018/distributed: attempt 5/5 failed level_distributed
+synth S009/complex: attempt 1/5 failed added_claims
+synth S010/complex: attempt 1/5 failed values_associated
+synth S009/complex: attempt 2/5 passed
+synth S011/complex: attempt 1/5 passed
+synth S012/complex: attempt 1/5 failed added_claims
+synth S010/complex: attempt 2/5 failed added_claims
+synth S014/complex: attempt 1/5 passed
+synth S013/complex: attempt 1/5 passed
+synth S012/complex: attempt 2/5 failed added_claims
+synth S010/complex: attempt 3/5 failed blind_reextraction, blind_extra
+synth S015/complex: attempt 1/5 failed blind_reextraction
+synth S010/complex: attempt 4/5 failed blind_reextraction, blind_extra
+synth S016/complex: attempt 1/5 passed
+synth S012/complex: attempt 3/5 passed
+synth S015/complex: attempt 2/5 failed blind_reextraction
+synth S010/complex: attempt 5/5 failed blind_reextraction, blind_extra
+synth S017/complex: attempt 1/5 passed
+synth S015/complex: attempt 3/5 failed blind_reextraction
+synth S018/complex: attempt 1/5 failed added_claims
+synth S019/complex: attempt 1/5 passed
+synth S015/complex: attempt 4/5 failed blind_reextraction
+synth S018/complex: attempt 2/5 failed blind_reextraction
+synth S020/complex: attempt 1/5 passed
+synth S001/contradictory: attempt 1/5 failed required_strings
+synth S015/complex: attempt 5/5 failed blind_reextraction
+synth S018/complex: attempt 3/5 failed blind_reextraction
+synth S002/contradictory: attempt 1/5 passed
+synth S001/contradictory: attempt 2/5 failed anchored
+synth S003/contradictory: attempt 1/5 failed required_strings
+synth S004/contradictory: attempt 1/5 failed required_strings
+synth S018/complex: attempt 4/5 failed blind_reextraction
+synth S001/contradictory: attempt 3/5 failed anchored
+synth S003/contradictory: attempt 2/5 passed
+synth S004/contradictory: attempt 2/5 passed
+synth S001/contradictory: attempt 4/5 failed anchored
+synth S018/complex: attempt 5/5 failed blind_reextraction
+synth S005/contradictory: attempt 1/5 failed required_strings
+synth S001/contradictory: attempt 5/5 failed anchored
+synth S006/contradictory: attempt 1/5 failed required_strings
+synth S007/contradictory: attempt 1/5 failed required_strings
+synth S005/contradictory: attempt 2/5 passed
+synth S008/contradictory: attempt 1/5 failed required_strings
+synth S006/contradictory: attempt 2/5 passed
+synth S007/contradictory: attempt 2/5 passed
+synth S009/contradictory: attempt 1/5 failed required_strings
+synth S008/contradictory: attempt 2/5 passed
+synth S010/contradictory: attempt 1/5 passed
+synth S011/contradictory: attempt 1/5 failed required_strings
+synth S009/contradictory: attempt 2/5 passed
+synth S012/contradictory: attempt 1/5 failed required_strings
+synth S013/contradictory: attempt 1/5 failed required_strings
+synth S011/contradictory: attempt 2/5 passed
+synth S014/contradictory: attempt 1/5 passed
+synth S012/contradictory: attempt 2/5 passed
+synth S013/contradictory: attempt 2/5 passed
+synth S015/contradictory: attempt 1/5 passed
+synth S016/contradictory: attempt 1/5 failed required_strings
+synth S017/contradictory: attempt 1/5 passed
+synth S018/contradictory: attempt 1/5 failed required_strings
+synth S016/contradictory: attempt 2/5 passed
+synth S019/contradictory: attempt 1/5 failed required_strings
+synth S020/contradictory: attempt 1/5 failed required_strings
+synth S018/contradictory: attempt 2/5 passed
+synth S020/contradictory: attempt 2/5 passed
+synth S019/contradictory: attempt 2/5 passed
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-explicit": "rag-llm-s1-5848c762",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-paraphrased": "rag-llm-s1-404c0b6d",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-distributed": "rag-llm-s1-d60fff2f",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-complex": "rag-llm-s1-a2b5bbc1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-contradictory": "rag-llm-s1-c1d18224",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-mixed": "rag-llm-s1-0278df5c"
+  },
+  "excluded": {
+    "S001": [
+      "contradictory",
+      "distributed"
+    ],
+    "S004": [
+      "paraphrased"
+    ],
+    "S006": [
+      "distributed"
+    ],
+    "S010": [
+      "complex"
+    ],
+    "S011": [
+      "distributed"
+    ],
+    "S012": [
+      "distributed"
+    ],
+    "S015": [
+      "complex",
+      "distributed"
+    ],
+    "S017": [
+      "explicit"
+    ],
+    "S018": [
+      "complex",
+      "distributed"
+    ]
+  },
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-llm-s1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S002",
+      "S005",
+      "S008",
+      "S016",
+      "S020"
+    ],
+    "contradicting": [
+      "S009",
+      "S013",
+      "S014"
+    ],
+    "neutral": [
+      "S003",
+      "S007",
+      "S019"
+    ],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [
+        "S005",
+        "S020"
+      ],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}
+WARNING: 9 studies failed fidelity and were left out; see fidelity.json

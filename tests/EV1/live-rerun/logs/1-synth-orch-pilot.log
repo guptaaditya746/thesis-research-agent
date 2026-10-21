@@ -1,0 +1,64 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'synth.rend… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-pilot-explicit": "rag-orch-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-pilot-paraphrased": "rag-orch-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-pilot-distributed": "rag-orch-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-pilot-complex": "rag-orch-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-pilot-contradictory": "rag-orch-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-pilot-mixed": "rag-orch-pilot-4f53cda1"
+  },
+  "excluded": {
+    "S001": [
+      "contradictory",
+      "distributed"
+    ]
+  },
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-orch-pilot",
+    "studies": 1,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "answer": {
+    "label": "insufficient",
+    "supporting": [],
+    "contradicting": [],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}
+WARNING: 1 studies failed fidelity and were left out; see fidelity.json

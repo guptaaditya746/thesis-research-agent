@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 from synth.levels import LEVELS
@@ -76,6 +77,11 @@ def cmd_build(args: argparse.Namespace) -> int:
     print(json.dumps(result, indent=2))
     if result["excluded"]:
         print(f"WARNING: {len(result['excluded'])} studies failed fidelity and were left out; see fidelity.json")
+        # Preserve the diagnostic artifacts, but do not report an empty build as successful.
+        if not any(json.loads((Path(directory) / "manifest.json").read_text())["papers"]
+                   for directory in result["corpora"]):
+            print("ERROR: no papers retained after fidelity checks; see fidelity.json", file=sys.stderr, flush=True)
+            return 1
     return 0
 
 

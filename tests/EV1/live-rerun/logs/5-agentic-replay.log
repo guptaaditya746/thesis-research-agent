@@ -1,0 +1,204 @@
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic/rag-llm-small-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic/rag-llm-small-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic-gaps/rag-llm-small-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic-gaps/rag-llm-small-paraphrased
+broker: start run=agentic-bdba2c870497c570 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-bdba2c870497c570 records=69 claims=8 head=afee0e6b80cae819fe73387bcd04db56e26b26d1399b5cf4f6a87449448a1a1e
+run agentic-bdba2c870497c570: broker head=afee0e6b80cae819fe73387bcd04db56e26b26d1399b5cf4f6a87449448a1a1e records=69 claims=8
+broker: start run=agentic-129a19b3cb91bb5a records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-129a19b3cb91bb5a records=23 claims=4 head=e1b94078bb74186f6af24552364d8cb2908752d281c2787cbac106c94f8149fd
+run agentic-129a19b3cb91bb5a: broker head=e1b94078bb74186f6af24552364d8cb2908752d281c2787cbac106c94f8149fd records=23 claims=4
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+broker: start run=agentic-0c988a2a8d411fe9 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-0c988a2a8d411fe9 records=45 claims=16 head=a4f20685d5b3765d0c50bd2fd4548c7a0b8908b71649e6221e739fa538720c9f
+run agentic-0c988a2a8d411fe9: broker head=a4f20685d5b3765d0c50bd2fd4548c7a0b8908b71649e6221e739fa538720c9f records=45 claims=16
+broker: start run=agentic-407569bbcc935acd records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-407569bbcc935acd records=17 claims=2 head=58357cde17673d9f69b5c57eccb2a415a79a319957ede41ba66a06b0de7184d4
+run agentic-407569bbcc935acd: broker head=58357cde17673d9f69b5c57eccb2a415a79a319957ede41ba66a06b0de7184d4 records=17 claims=2
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic/rag-llm-small-distributed-reexec-20261021T034814351369Z",
+ "summary": {
+  "agentic": {
+   "calls": 4,
+   "extractor_ids": [
+    "agentic@1#0f2927b8a64c",
+    "agentic@1#534f8c43c9f0",
+    "agentic@1#5eefe3bb3cec",
+    "agentic@1#6d79f0c0b881"
+   ],
+   "fields_differ": 0,
+   "identical": 3,
+   "item_stability": null,
+   "items_added": 1,
+   "items_missing": 0,
+   "items_original": 0,
+   "items_reproduced": 0,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_author_claim": {
+   "calls": 1,
+   "extractor_ids": [
+    "llm_author_claim@1#fefdf4416c50"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 1,
+   "items_reproduced": 1,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_condition": {
+   "calls": 1,
+   "extractor_ids": [
+    "llm_condition@1#134ab1a38338"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 4,
+   "items_reproduced": 4,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_measurement": {
+   "calls": 1,
+   "extractor_ids": [
+    "llm_measurement@1#31b14e5f404d"
+   ],
+   "fields_differ": 1,
+   "identical": 0,
+   "item_stability": 0.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 4,
+   "items_reproduced": 0,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_metric": {
+   "calls": 1,
+   "extractor_ids": [
+    "llm_metric@1#1ca12a572ef8"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 1,
+   "items_reproduced": 1,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_screen": {
+   "calls": 1,
+   "extractor_ids": [
+    "llm_screen@1#6bec6abaf6a0"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 1,
+   "items_reproduced": 1,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_author_claim": {
+   "calls": 1,
+   "extractor_ids": [
+    "regex_author_claim@2#b2161f228a8c"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 1,
+   "items_reproduced": 1,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_condition": {
+   "calls": 1,
+   "extractor_ids": [
+    "regex_condition@2#80486860164a"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 2,
+   "items_reproduced": 2,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_measurement": {
+   "calls": 1,
+   "extractor_ids": [
+    "regex_measurement@2#a70020d1afcc"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": null,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 0,
+   "items_reproduced": 0,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_metric": {
+   "calls": 1,
+   "extractor_ids": [
+    "regex_metric@2#67f41f33eff7"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": null,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 0,
+   "items_reproduced": 0,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_screen": {
+   "calls": 1,
+   "extractor_ids": [
+    "regex_screen@1#8301b6896dc3"
+   ],
+   "fields_differ": 0,
+   "identical": 1,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 1,
+   "items_reproduced": 1,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  }
+ },
+ "totals": {
+  "fields_differ": 1,
+  "identical": 12,
+  "items_added": 1
+ }
+}

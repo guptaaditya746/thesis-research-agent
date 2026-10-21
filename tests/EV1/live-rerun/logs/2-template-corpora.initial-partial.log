@@ -1,0 +1,160 @@
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-s1-explicit": "rag-tpl-s1-59c5118b",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-s1-paraphrased": "rag-tpl-s1-4d15ddc4",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-s1-distributed": "rag-tpl-s1-79207ad1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-s1-complex": "rag-tpl-s1-f0f5d48e",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-s1-contradictory": "rag-tpl-s1-56b0bc02",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-s1-mixed": "rag-tpl-s1-6162b495"
+  },
+  "excluded": {},
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-tpl-s1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S001",
+      "S002",
+      "S005",
+      "S006",
+      "S008",
+      "S010",
+      "S011",
+      "S015",
+      "S016",
+      "S017",
+      "S018",
+      "S020"
+    ],
+    "contradicting": [
+      "S009",
+      "S012",
+      "S013",
+      "S014"
+    ],
+    "neutral": [
+      "S003",
+      "S004",
+      "S007",
+      "S019"
+    ],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [
+        "S005",
+        "S010",
+        "S015",
+        "S020"
+      ],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-k1-explicit": "rag-tpl-k1-29f26f23",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-k1-paraphrased": "rag-tpl-k1-5f7200cc",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-k1-distributed": "rag-tpl-k1-34414892",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-k1-complex": "rag-tpl-k1-cca28678",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-k1-contradictory": "rag-tpl-k1-d6262556",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-k1-mixed": "rag-tpl-k1-e922861d"
+  },
+  "excluded": {},
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-tpl-k1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 2,
+    "missing": 2,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S001",
+      "S002",
+      "S005",
+      "S006",
+      "S008",
+      "S010",
+      "S011",
+      "S015",
+      "S016",
+      "S017",
+      "S018"
+    ],
+    "contradicting": [
+      "S009",
+      "S012",
+      "S013",
+      "S014"
+    ],
+    "neutral": [
+      "S003",
+      "S004",
+      "S007"
+    ],
+    "undetermined": [
+      "S019",
+      "S020"
+    ],
+    "duplicates": [
+      "S021",
+      "S022"
+    ],
+    "flags": {
+      "claim_disagrees": [
+        "S005",
+        "S010",
+        "S015"
+      ],
+      "duplicate": [
+        "S021",
+        "S022"
+      ],
+      "large_effect": []
+    }
+  }
+}
+cat: /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/variant-study.txt: No such file or directory
+--study : not a paper of /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-tpl-s1-mixed (excluded or unknown)

@@ -1,0 +1,73 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "levels": [
+        "explicit"
+      ],
+      "run_id": "rag-tpl-s1-explicit"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-tpl-s1-paraphrased"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-tpl-s1-distributed"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "levels": [
+        "complex"
+      ],
+      "run_id": "rag-tpl-s1-complex"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "levels": [
+        "contradictory"
+      ],
+      "run_id": "rag-tpl-s1-contradictory"
+    }
+  ],
+  "cost": {
+    "calls": 100,
+    "calls_recorded": {
+      "input_tokens": 100,
+      "model_calls": 100,
+      "output_tokens": 100,
+      "seconds": 100
+    },
+    "input_tokens": 0,
+    "model_calls": 0,
+    "output_tokens": 0,
+    "per_call": {
+      "input_tokens": 0.0,
+      "model_calls": 0.0,
+      "output_tokens": 0.0,
+      "seconds": 0.0071
+    },
+    "runs": 5,
+    "seconds": 0.709
+  },
+  "extractor_id": "regex_screen@1#8301b6896dc3",
+  "levels": [],
+  "name": "regex_screen",
+  "recall_scope": [
+    "called",
+    "called",
+    "called",
+    "called",
+    "called"
+  ],
+  "rows": [],
+  "stability": null,
+  "stability_ambiguous": [],
+  "version": "1"
+}

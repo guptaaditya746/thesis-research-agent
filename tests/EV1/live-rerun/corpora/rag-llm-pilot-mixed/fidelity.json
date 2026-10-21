@@ -1,0 +1,128 @@
+{
+  "corpus_id": "rag-llm-pilot-4f53cda1",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'This study evaluates whether access to retrieved evidence improves factual correctness in generated answers, focusing on the HistoryQuest benchmark, which contains 1,000 questions requiring precise historical knowledge.' at 620"
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'This comparison aims to determine whether external retrieval improves factual fidelity in generated responses.' at 951; 'The pattern of enhanced accuracy supports the hypothesis that retrieval provides a valuable mechanism for fact-checking and contextual enrichment during answer generation.' at 2635"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The goal is to determine whether incorporating retrieved passages improves the factual correctness of generated answers compared to models operating without external information.' at 679; 'This pattern reflects the benefit of grounding responses in retrieved evidence, which may help mitigate hallucinations and improve alignment with historical facts.' at 2094"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The primary objective is to determine whether incorporating retrieved passages improves the factual correctness of generated answers compared to models operating without external information.' at 589; 'By isolating the effect of external evidence, we assess whether grounding responses in retrieved documents yields more accurate answers.' at 1167; 'While the magnitude of improvement is modest, the directionality is clear and aligns with expectations that grounding responses in retrieved evidence can enhance factual fidelity.' at 2784"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The goal is to determine whether access to retrieved evidence improves factual correctness in generated answers.' at 991; 'This supports the idea that grounding generation in retrieved documents enhances the reliability of answers, especially in domains requiring high factual fidelity.' at 2791"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'This study evaluates whether access to retrieved evidence improves factual correctness in generated answers, focusing on the HistoryQuest benchmark, which contains 1,000 questions requiring precise historical knowledge.' at 620"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) explicit; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001"
+  ]
+}

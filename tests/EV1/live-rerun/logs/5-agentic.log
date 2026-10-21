@@ -1,0 +1,258 @@
+warning: regex_screen@1#8301b6896dc3: the cache holds ['regex_screen@1#a2821956ee33'] for the same version with other code; bump the version when behaviour changes
+warning: llm_screen@1#6bec6abaf6a0: the cache holds ['llm_screen@1#a1013a736e72'] for the same version with other code; bump the version when behaviour changes
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+warning: regex_condition@2#80486860164a: the cache holds ['regex_condition@2#a0c64d9b6305'] for the same version with other code; bump the version when behaviour changes
+warning: llm_condition@1#134ab1a38338: the cache holds ['llm_condition@1#6c050a1add96', 'llm_condition@1#f75a85c10bd4'] for the same version with other code; bump the version when behaviour changes
+warning: regex_metric@2#67f41f33eff7: the cache holds ['regex_metric@2#94a3000eacae'] for the same version with other code; bump the version when behaviour changes
+warning: llm_metric@1#1ca12a572ef8: the cache holds ['llm_metric@1#6186147fa702', 'llm_metric@1#8c11f22c1357'] for the same version with other code; bump the version when behaviour changes
+warning: regex_measurement@2#9edb306c5b05: the cache holds ['regex_measurement@2#b984f16ded3b', 'regex_measurement@2#edb257ca65c4'] for the same version with other code; bump the version when behaviour changes
+warning: llm_measurement@1#5212fc43026f: the cache holds ['llm_measurement@1#1063cc1c640e', 'llm_measurement@1#88dd1e73d7e2', 'llm_measurement@1#957820ab7bd1'] for the same version with other code; bump the version when behaviour changes
+warning: regex_author_claim@2#b2161f228a8c: the cache holds ['regex_author_claim@2#75e32ebcdf68'] for the same version with other code; bump the version when behaviour changes
+warning: llm_author_claim@1#fefdf4416c50: the cache holds ['llm_author_claim@1#1c6d8cea16f9', 'llm_author_claim@1#32acd8d697c8'] for the same version with other code; bump the version when behaviour changes
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/cascade/rag-llm-small-paraphrased",
+ "label": "refuted",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 10,
+  "input_tokens": 6860,
+  "made_model_calls": 6,
+  "model_calls": 6,
+  "output_tokens": 1604,
+  "seconds": 42.236
+ }
+}
+warning: regex_screen@1#8301b6896dc3: the cache holds ['regex_screen@1#a2821956ee33'] for the same version with other code; bump the version when behaviour changes
+warning: llm_screen@1#6bec6abaf6a0: the cache holds ['llm_screen@1#a1013a736e72'] for the same version with other code; bump the version when behaviour changes
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+warning: regex_condition@2#80486860164a: the cache holds ['regex_condition@2#a0c64d9b6305'] for the same version with other code; bump the version when behaviour changes
+warning: llm_condition@1#134ab1a38338: the cache holds ['llm_condition@1#6c050a1add96', 'llm_condition@1#f75a85c10bd4'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#0f2927b8a64c: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-8d38c29941dc1619 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-8d38c29941dc1619 records=23 claims=8 head=f0e57ffc9ca4f60f61c2f417e696cea909d199ca2c579c39f9f4c2c00ebef406
+run agentic-8d38c29941dc1619: broker head=f0e57ffc9ca4f60f61c2f417e696cea909d199ca2c579c39f9f4c2c00ebef406 records=23 claims=8
+warning: regex_metric@2#67f41f33eff7: the cache holds ['regex_metric@2#94a3000eacae'] for the same version with other code; bump the version when behaviour changes
+warning: llm_metric@1#1ca12a572ef8: the cache holds ['llm_metric@1#6186147fa702', 'llm_metric@1#8c11f22c1357'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#534f8c43c9f0: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-c4b3533fea874e72 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-c4b3533fea874e72 records=23 claims=4 head=0d0ee489ca79deb43ca2e2d54a5452d8223e99c78a7eeae6d0a0e13d5b3b992e
+run agentic-c4b3533fea874e72: broker head=0d0ee489ca79deb43ca2e2d54a5452d8223e99c78a7eeae6d0a0e13d5b3b992e records=23 claims=4
+warning: regex_measurement@2#a70020d1afcc: the cache holds ['regex_measurement@2#b984f16ded3b', 'regex_measurement@2#edb257ca65c4'] for the same version with other code; bump the version when behaviour changes
+warning: llm_measurement@1#31b14e5f404d: the cache holds ['llm_measurement@1#1063cc1c640e', 'llm_measurement@1#88dd1e73d7e2', 'llm_measurement@1#957820ab7bd1'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#6d79f0c0b881: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-3d807a3ae594f4a8 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-3d807a3ae594f4a8 records=65 claims=16 head=8c13096cb6828b166fcc9a0e061c09d14f6534a636d74030ae22029d47a61ae5
+run agentic-3d807a3ae594f4a8: broker head=8c13096cb6828b166fcc9a0e061c09d14f6534a636d74030ae22029d47a61ae5 records=65 claims=16
+warning: regex_author_claim@2#b2161f228a8c: the cache holds ['regex_author_claim@2#75e32ebcdf68'] for the same version with other code; bump the version when behaviour changes
+warning: llm_author_claim@1#fefdf4416c50: the cache holds ['llm_author_claim@1#1c6d8cea16f9', 'llm_author_claim@1#32acd8d697c8'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#5eefe3bb3cec: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-ac8df41ab0650398 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-ac8df41ab0650398 records=26 claims=3 head=7b7de6d8ea1ad34040b2b2d98e9c4eaccb8c1a0c857905f5b755d554733631d5
+run agentic-ac8df41ab0650398: broker head=7b7de6d8ea1ad34040b2b2d98e9c4eaccb8c1a0c857905f5b755d554733631d5 records=26 claims=3
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic/rag-llm-small-paraphrased",
+ "label": "refuted",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 14,
+  "input_tokens": 415119,
+  "made_model_calls": 61,
+  "model_calls": 61,
+  "output_tokens": 19104,
+  "seconds": 683.103
+ }
+}
+warning: regex_measurement@2#a70020d1afcc: the cache holds ['regex_measurement@2#b984f16ded3b', 'regex_measurement@2#edb257ca65c4'] for the same version with other code; bump the version when behaviour changes
+warning: llm_condition@1#134ab1a38338: the cache holds ['llm_condition@1#6c050a1add96', 'llm_condition@1#f75a85c10bd4'] for the same version with other code; bump the version when behaviour changes
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+warning: llm_measurement@1#31b14e5f404d: the cache holds ['llm_measurement@1#1063cc1c640e', 'llm_measurement@1#88dd1e73d7e2', 'llm_measurement@1#957820ab7bd1'] for the same version with other code; bump the version when behaviour changes
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic-gaps/rag-llm-small-paraphrased",
+ "label": "refuted",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 5,
+  "calls": 8,
+  "input_tokens": 4979,
+  "made_model_calls": 3,
+  "model_calls": 4,
+  "output_tokens": 1384,
+  "seconds": 33.53
+ }
+}
+warning: regex_screen@1#8301b6896dc3: the cache holds ['regex_screen@1#a2821956ee33'] for the same version with other code; bump the version when behaviour changes
+warning: llm_screen@1#6bec6abaf6a0: the cache holds ['llm_screen@1#a1013a736e72'] for the same version with other code; bump the version when behaviour changes
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+warning: regex_condition@2#80486860164a: the cache holds ['regex_condition@2#a0c64d9b6305'] for the same version with other code; bump the version when behaviour changes
+warning: llm_condition@1#134ab1a38338: the cache holds ['llm_condition@1#6c050a1add96', 'llm_condition@1#f75a85c10bd4'] for the same version with other code; bump the version when behaviour changes
+warning: regex_metric@2#67f41f33eff7: the cache holds ['regex_metric@2#94a3000eacae'] for the same version with other code; bump the version when behaviour changes
+warning: llm_metric@1#1ca12a572ef8: the cache holds ['llm_metric@1#6186147fa702', 'llm_metric@1#8c11f22c1357'] for the same version with other code; bump the version when behaviour changes
+warning: regex_measurement@2#9edb306c5b05: the cache holds ['regex_measurement@2#b984f16ded3b', 'regex_measurement@2#edb257ca65c4'] for the same version with other code; bump the version when behaviour changes
+warning: llm_measurement@1#5212fc43026f: the cache holds ['llm_measurement@1#1063cc1c640e', 'llm_measurement@1#88dd1e73d7e2', 'llm_measurement@1#957820ab7bd1'] for the same version with other code; bump the version when behaviour changes
+warning: regex_author_claim@2#b2161f228a8c: the cache holds ['regex_author_claim@2#75e32ebcdf68'] for the same version with other code; bump the version when behaviour changes
+warning: llm_author_claim@1#fefdf4416c50: the cache holds ['llm_author_claim@1#1c6d8cea16f9', 'llm_author_claim@1#32acd8d697c8'] for the same version with other code; bump the version when behaviour changes
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/cascade/rag-llm-small-distributed",
+ "label": "refuted",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 10,
+  "input_tokens": 7058,
+  "made_model_calls": 6,
+  "model_calls": 6,
+  "output_tokens": 1123,
+  "seconds": 30.805
+ }
+}
+warning: regex_screen@1#8301b6896dc3: the cache holds ['regex_screen@1#a2821956ee33'] for the same version with other code; bump the version when behaviour changes
+warning: llm_screen@1#6bec6abaf6a0: the cache holds ['llm_screen@1#a1013a736e72'] for the same version with other code; bump the version when behaviour changes
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+warning: regex_condition@2#80486860164a: the cache holds ['regex_condition@2#a0c64d9b6305'] for the same version with other code; bump the version when behaviour changes
+warning: llm_condition@1#134ab1a38338: the cache holds ['llm_condition@1#6c050a1add96', 'llm_condition@1#f75a85c10bd4'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#0f2927b8a64c: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-bdba2c870497c570 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-bdba2c870497c570 records=25 claims=8 head=255109cb1f8dc53211a64b1c57f39e1a84184a02f78336e00729c1162a86d0b9
+run agentic-bdba2c870497c570: broker head=255109cb1f8dc53211a64b1c57f39e1a84184a02f78336e00729c1162a86d0b9 records=25 claims=8
+warning: regex_metric@2#67f41f33eff7: the cache holds ['regex_metric@2#94a3000eacae'] for the same version with other code; bump the version when behaviour changes
+warning: llm_metric@1#1ca12a572ef8: the cache holds ['llm_metric@1#6186147fa702', 'llm_metric@1#8c11f22c1357'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#534f8c43c9f0: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-129a19b3cb91bb5a records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-129a19b3cb91bb5a records=25 claims=4 head=20db1cb57c984b185935afd6146ffbfb10eb318d606629df51dae6e097b68eff
+run agentic-129a19b3cb91bb5a: broker head=20db1cb57c984b185935afd6146ffbfb10eb318d606629df51dae6e097b68eff records=25 claims=4
+warning: regex_measurement@2#a70020d1afcc: the cache holds ['regex_measurement@2#b984f16ded3b', 'regex_measurement@2#edb257ca65c4'] for the same version with other code; bump the version when behaviour changes
+warning: llm_measurement@1#31b14e5f404d: the cache holds ['llm_measurement@1#1063cc1c640e', 'llm_measurement@1#88dd1e73d7e2', 'llm_measurement@1#957820ab7bd1'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#6d79f0c0b881: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-415bb3c4604a6210 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-415bb3c4604a6210 records=78 claims=17 head=500946ca824024f54fb6a220c6e99ab71ba22ab6411ee5f3bfe6a2efc6ac63f0
+run agentic-415bb3c4604a6210: broker head=500946ca824024f54fb6a220c6e99ab71ba22ab6411ee5f3bfe6a2efc6ac63f0 records=78 claims=17
+warning: regex_author_claim@2#b2161f228a8c: the cache holds ['regex_author_claim@2#75e32ebcdf68'] for the same version with other code; bump the version when behaviour changes
+warning: llm_author_claim@1#fefdf4416c50: the cache holds ['llm_author_claim@1#1c6d8cea16f9', 'llm_author_claim@1#32acd8d697c8'] for the same version with other code; bump the version when behaviour changes
+warning: agentic@1#5eefe3bb3cec: the cache holds ['agentic@1#240b3f4b71bc', 'agentic@1#29ebab79aaed', 'agentic@1#f412c352501a', 'agentic@1#ffff6c9b8546'] for the same version with other code; bump the version when behaviour changes
+broker: start run=agentic-407569bbcc935acd records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-407569bbcc935acd records=63 claims=2 head=e3265177c1171bc4a1812ed3571f13cf088a6a6b9c231f1fd95e72bfe19df5bf
+run agentic-407569bbcc935acd: broker head=e3265177c1171bc4a1812ed3571f13cf088a6a6b9c231f1fd95e72bfe19df5bf records=63 claims=2
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic/rag-llm-small-distributed",
+ "label": "refuted",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 14,
+  "input_tokens": 916689,
+  "made_model_calls": 88,
+  "model_calls": 88,
+  "output_tokens": 48179,
+  "seconds": 1336.835
+ }
+}
+warning: regex_measurement@2#a70020d1afcc: the cache holds ['regex_measurement@2#b984f16ded3b', 'regex_measurement@2#edb257ca65c4'] for the same version with other code; bump the version when behaviour changes
+warning: llm_metric@1#1ca12a572ef8: the cache holds ['llm_metric@1#6186147fa702', 'llm_metric@1#8c11f22c1357'] for the same version with other code; bump the version when behaviour changes
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+warning: llm_measurement@1#31b14e5f404d: the cache holds ['llm_measurement@1#1063cc1c640e', 'llm_measurement@1#88dd1e73d7e2', 'llm_measurement@1#957820ab7bd1'] for the same version with other code; bump the version when behaviour changes
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agentic-gaps/rag-llm-small-distributed",
+ "label": "refuted",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 5,
+  "calls": 8,
+  "input_tokens": 4779,
+  "made_model_calls": 3,
+  "model_calls": 4,
+  "output_tokens": 516,
+  "seconds": 13.042
+ }
+}

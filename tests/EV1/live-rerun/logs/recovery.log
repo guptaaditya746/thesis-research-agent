@@ -1,0 +1,26 @@
+START 1-synth-small 2026-10-21T04:12:58+02:00
+END 1-synth-small code=0 2026-10-21T04:14:25+02:00
+START 1-variant 2026-10-21T04:14:25+02:00
+retry 1 for 1-variant (exit 1) at 2026-10-21T04:15:06+02:00
+retry 2 for 1-variant (exit 1) at 2026-10-21T04:15:47+02:00
+retry 3 for 1-variant (exit 1) at 2026-10-21T04:16:44+02:00
+retry 4 for 1-variant (exit 1) at 2026-10-21T04:17:55+02:00
+retry 5 for 1-variant (exit 1) at 2026-10-21T04:19:21+02:00
+END 1-variant code=1 2026-10-21T04:20:36+02:00
+START 2-template-variant 2026-10-21T04:20:36+02:00
+END 2-template-variant code=0 2026-10-21T04:20:52+02:00
+START 3-engine-variant 2026-10-21T04:20:52+02:00
+END 3-engine-variant code=0 2026-10-21T04:22:01+02:00
+START 4-replay-stage 2026-10-21T04:22:01+02:00
+END 4-replay-stage code=0 2026-10-21T05:07:46+02:00
+START 5-agentic 2026-10-21T05:07:46+02:00
+END 5-agentic code=0 2026-10-21T05:46:06+02:00
+START 5-agentic-replay 2026-10-21T05:46:06+02:00
+END 5-agentic-replay code=0 2026-10-21T06:04:18+02:00
+START 6-baselines 2026-10-21T06:04:18+02:00
+END 6-baselines code=0 2026-10-21T07:16:00+02:00
+START 7-scores 2026-10-21T07:16:00+02:00
+END 7-scores code=0 2026-10-21T07:37:14+02:00
+START 8-fidelity-sample 2026-10-21T07:37:14+02:00
+END 8-fidelity-sample code=0 2026-10-21T07:37:21+02:00
+Recovery through Step 17 complete 2026-10-21T07:37:21+02:00

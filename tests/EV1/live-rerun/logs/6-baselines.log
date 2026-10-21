@@ -1,0 +1,225 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-s1-mixed/answer.json: label=mixed studies=6
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-k1-mixed/answer.json: label=mixed studies=5
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-s1-complex/answer.json: label=refuted studies=6
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-s1-contradictory/answer.json: label=supported studies=6
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-s1-distributed/answer.json: label=mixed studies=6
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-s1-explicit/answer.json: label=refuted studies=3
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-s1-paraphrased/answer.json: label=mixed studies=5
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-small-paraphrased/answer.json: label=refuted studies=1
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/rag-baseline/rag-llm-small-distributed/answer.json: label=refuted studies=1
+broker: start run=rag-llm-s1-mixed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-s1-mixed records=134 claims=13 head=c8f2bb05a590fb18a441d605250f577688d304f7a23bc47dd2995f2b7d68bb69
+run rag-llm-s1-mixed: broker head=c8f2bb05a590fb18a441d605250f577688d304f7a23bc47dd2995f2b7d68bb69 records=134 claims=13
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-s1-mixed/answer.json: label=mixed studies=11 agent exit=submitted
+broker: start run=rag-llm-k1-mixed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-k1-mixed records=47 claims=14 head=621c61b22409f5959dfa530afc15d9cbbebf39323e42b3806665f78e703c379d
+run rag-llm-k1-mixed: broker head=621c61b22409f5959dfa530afc15d9cbbebf39323e42b3806665f78e703c379d records=47 claims=14
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-k1-mixed/answer.json: label=mixed studies=9 agent exit=submitted
+broker: start run=rag-llm-s1-complex records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-s1-complex records=60 claims=11 head=21f889c494ea553c7484c85b3d2ff56f1e2f137baf9ef7bf9ef5acbe187fd089
+run rag-llm-s1-complex: broker head=21f889c494ea553c7484c85b3d2ff56f1e2f137baf9ef7bf9ef5acbe187fd089 records=60 claims=11
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-s1-complex/answer.json: label=mixed studies=11 agent exit=submitted
+broker: start run=rag-llm-s1-contradictory records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-s1-contradictory records=100 claims=41 head=908e03eaa85628fa3e860c7392d4a6c93ae1dd9539305dc5cdcb2560fd3d5b6f
+run rag-llm-s1-contradictory: broker head=908e03eaa85628fa3e860c7392d4a6c93ae1dd9539305dc5cdcb2560fd3d5b6f records=100 claims=41
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-s1-contradictory/answer.json: label=mixed studies=11 agent exit=submitted
+broker: start run=rag-llm-s1-distributed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-s1-distributed records=49 claims=12 head=faacae60f7eebb9209f98e4cce90d8311f96a8cd85bcca39abf947ca86d1655e
+run rag-llm-s1-distributed: broker head=faacae60f7eebb9209f98e4cce90d8311f96a8cd85bcca39abf947ca86d1655e records=49 claims=12
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-s1-distributed/answer.json: label=mixed studies=11 agent exit=submitted
+broker: start run=rag-llm-s1-explicit records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-s1-explicit records=42 claims=9 head=3ecde5062eadd695e264188aca81d6c80ca4946d80be9502d72191873b8255e8
+run rag-llm-s1-explicit: broker head=3ecde5062eadd695e264188aca81d6c80ca4946d80be9502d72191873b8255e8 records=42 claims=9
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-s1-explicit/answer.json: label=mixed studies=11 agent exit=submitted
+broker: start run=rag-llm-s1-paraphrased records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-s1-paraphrased records=85 claims=12 head=465d2ea00639924f213b83b30d289996885928fa785890e7658a1cd534f15340
+run rag-llm-s1-paraphrased: broker head=465d2ea00639924f213b83b30d289996885928fa785890e7658a1cd534f15340 records=85 claims=12
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-s1-paraphrased/answer.json: label=mixed studies=11 agent exit=submitted
+broker: start run=rag-llm-small-paraphrased records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-small-paraphrased records=40 claims=5 head=ff3bba3f1791a73e0eb6f2e05b132e379af2e7904ab1a025b0f23bb2e96f5c04
+run rag-llm-small-paraphrased: broker head=ff3bba3f1791a73e0eb6f2e05b132e379af2e7904ab1a025b0f23bb2e96f5c04 records=40 claims=5
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-small-paraphrased/answer.json: label=refuted studies=1 agent exit=submitted
+broker: start run=rag-llm-small-distributed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-llm-small-distributed records=28 claims=5 head=43b3319c48cdbf405858bc74588bc54e195c0d11a59cb0b21da954458044cd27
+run rag-llm-small-distributed: broker head=43b3319c48cdbf405858bc74588bc54e195c0d11a59cb0b21da954458044cd27 records=28 claims=5
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/agent-baseline/rag-llm-small-distributed/answer.json: label=refuted studies=1 agent exit=submitted

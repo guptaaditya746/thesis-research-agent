@@ -85,12 +85,15 @@ def studies() -> list[truth.Study]:
     return truth.generate(SEED, N)
 
 
-def test_one_bad_attempt_then_a_good_one(tmp_path: Path, studies: list[truth.Study]) -> None:
+def test_one_bad_attempt_then_a_good_one(tmp_path: Path, studies: list[truth.Study], capsys) -> None:
     writer = Writer(studies)
     renderer = LlmRenderer(FunctionModel(writer, model_name="fake-writer"), tmp_path / "cache.jsonl", attempts=3)
     out = corpus.build(name="l", seed=SEED, studies=N, renderer=renderer, out=tmp_path / "c",
                        levels=["explicit", "distributed", "complex", "contradictory"])
     assert out["excluded"] == {} and len(writer.calls) == 2 * N * 4
+    progress = capsys.readouterr().err
+    assert progress.count("attempt 1/3 failed required_strings") == N * 4
+    assert progress.count("attempt 2/3 passed") == N * 4
     for lv in ("explicit", "distributed", "complex", "contradictory", "mixed"):
         d = tmp_path / "c" / f"l-{lv}"
         fid = json.loads((d / "fidelity.json").read_text(encoding="utf-8"))
@@ -256,3 +259,28 @@ def test_a_repeated_value_says_how_often_and_where(studies: list[truth.Study]) -
     _, _, problems = locate(text, plan)
     said = next(p for p in problems if repr(value) in p)
     assert "is ambiguous: it occurs 2 times (in Abstract, Results); write it exactly once" in said
+
+
+def test_each_failed_attempt_uses_a_fresh_seed(studies: list[truth.Study], tmp_path: Path) -> None:
+    plan = make_plan(studies[0], "explicit", plan_rng(SEED, studies[0].study_id, "explicit"))
+    text, _, _ = render(plan, plan_rng(SEED, studies[0].study_id, "explicit:text"))
+    value = next(v.text for v in plan.values.values() if v.fmt != "relative")
+    text += value
+    renderer = LlmRenderer(FunctionModel(lambda *_: ModelResponse(parts=[]), model_name="fake-writer"),
+                           tmp_path / "cache.jsonl", attempts=3)
+    seeds: list[int] = []
+    prompts: list[str] = []
+
+    async def same_bad_reply(_instructions, _prompt, _output, _model, seed):
+        seeds.append(seed)
+        prompts.append(_prompt)
+        return {"markdown": text}
+
+    renderer._call = same_bad_reply  # type: ignore[method-assign]
+    import asyncio
+
+    result = asyncio.run(renderer.render_one(studies[0], "explicit", SEED))
+    assert not result.fidelity.ok
+    assert seeds == [SEED, SEED + 1, SEED + 2]
+    assert len(set(prompts)) == 3
+    assert "Rejected draft:\n" + text in prompts[1]

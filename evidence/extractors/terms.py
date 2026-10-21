@@ -52,7 +52,8 @@ _NOT = r"\b(?:does|did|do|is|was|are|were)\s+not\b|\b(?:doesn't|didn't|don't|isn
 _VERBS = (r"improve|help|increase|change|reduce|lower|decrease|raise|boost|enhance|affect|alter|make|lead|yield"
           r"|matter")
 CLAIMS: list[tuple[str, str]] = [
-    (r"(?i)(?:" + _NOT + r")(?:\s+\w+){0,3}?\s+(?:" + _VERBS + r")\w*"
+    # Match verb endings, rather than arbitrary suffixes ("alternative" is not "alter").
+    (r"(?i)(?:" + _NOT + r")(?:\s+\w+){0,3}?\s+(?:" + _VERBS + r")(?:s|d|ed|ing)?\b"
      r"|(?:" + _NOT + r")[^.;]{0,80}?\bmore\s+(?:accurate|factual|reliable|correct)"
      r"|\b(?:fails?|failed)\s+to\s+(?:improve|help)|\bno\s+(?:significant\s+|clear\s+|measurable\s+)?"
      r"(?:improvement|effect|difference|gain|benefit|change)|\bon\s+par\s+with\b|\b(?:essentially\s+)?unchanged\b",

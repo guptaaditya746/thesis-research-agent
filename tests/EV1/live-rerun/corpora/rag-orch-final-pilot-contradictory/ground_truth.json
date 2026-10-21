@@ -1,0 +1,274 @@
+{
+  "corpus_id": "rag-orch-final-pilot-1d41de5c",
+  "seed": 1,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "studies": [
+    {
+      "study_id": "S001",
+      "paper": "S001",
+      "level": "contradictory",
+      "relevant": true,
+      "flags": [
+        "claim_disagrees"
+      ],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S001.c1",
+          "role": "baseline",
+          "label": "closed-book model",
+          "aliases": []
+        },
+        {
+          "id": "S001.c2",
+          "role": "rag",
+          "label": "retrieval-augmented generator",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S001.k1",
+          "canonical": "factual_accuracy",
+          "name": "answer accuracy",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S001.m1",
+          "condition": "S001.c1",
+          "metric": "S001.k1",
+          "value": 0.599,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S001.m2",
+          "condition": "S001.c2",
+          "metric": "S001.k1",
+          "value": 0.632,
+          "dataset": "HistoryQuest"
+        }
+      ],
+      "author_claim": {
+        "id": "S001.a1",
+        "direction": "no_effect"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.033,
+        "metric": "S001.k1",
+        "treatment": "S001.m2",
+        "control": "S001.m1"
+      }
+    }
+  ],
+  "placements": [
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 263,
+      "end": 280,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 287,
+      "end": 316,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 444,
+      "end": 459,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 479,
+      "end": 553,
+      "exact": "Retrieval augmentation does not make the answers measurably more accurate."
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1797,
+      "end": 1814,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1943,
+      "end": 1972,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2088,
+      "end": 2103,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2120,
+      "end": 2171,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2373,
+      "end": 2402,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2583,
+      "end": 2598,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2663,
+      "end": 2678,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2703,
+      "end": 2720,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S001.m1",
+      "role": "value",
+      "paper": "S001",
+      "start": 2723,
+      "end": 2727,
+      "exact": "59.9"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2732,
+      "end": 2761,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S001.m2",
+      "role": "value",
+      "paper": "S001",
+      "start": 2764,
+      "end": 2768,
+      "exact": "63.2"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 3372,
+      "end": 3401,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 3579,
+      "end": 3594,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 3726,
+      "end": 3743,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 3800,
+      "end": 3829,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 4268,
+      "end": 4285,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 4294,
+      "end": 4323,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 4378,
+      "end": 4393,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 4395,
+      "end": 4482,
+      "exact": "Adding retrieved documents leaves the correctness of the answers essentially unchanged."
+    }
+  ],
+  "answer": {
+    "label": "supported",
+    "supporting": [
+      "S001"
+    ],
+    "contradicting": [],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [
+        "S001"
+      ],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}

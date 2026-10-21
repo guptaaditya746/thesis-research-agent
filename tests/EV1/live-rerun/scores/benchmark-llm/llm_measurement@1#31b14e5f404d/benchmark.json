@@ -1,0 +1,160 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-llm-small-bd3f74c0",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-llm-small-distributed"
+    },
+    {
+      "corpus_id": "rag-llm-small-efea11e7",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-llm-small-paraphrased"
+    }
+  ],
+  "cost": {
+    "calls": 2,
+    "calls_recorded": {
+      "input_tokens": 2,
+      "model_calls": 2,
+      "output_tokens": 2,
+      "seconds": 2
+    },
+    "input_tokens": 5420,
+    "model_calls": 4,
+    "output_tokens": 1471,
+    "per_call": {
+      "input_tokens": 2710.0,
+      "model_calls": 2.0,
+      "output_tokens": 735.5,
+      "seconds": 18.698
+    },
+    "runs": 2,
+    "seconds": 37.396
+  },
+  "extractor_id": "llm_measurement@1#31b14e5f404d",
+  "levels": [
+    "paraphrased",
+    "distributed"
+  ],
+  "name": "llm_measurement",
+  "recall_scope": [
+    "called",
+    "called"
+  ],
+  "rows": [
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 4,
+      "items": 4,
+      "level": "paraphrased",
+      "matched": 4,
+      "only": 2,
+      "only_matched": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 4
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 4,
+      "items": 4,
+      "level": "distributed",
+      "matched": 4,
+      "only": 4,
+      "only_matched": 4,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 4
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 8,
+      "items": 8,
+      "level": "all",
+      "matched": 8,
+      "only": 6,
+      "only_matched": 6,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 8
+    },
+    {
+      "associated": 3,
+      "association_accuracy": 0.75,
+      "evidence_type": "measurement",
+      "f1": 1.0,
+      "facts": 4,
+      "items": 4,
+      "level": "paraphrased",
+      "matched": 4,
+      "only": 2,
+      "only_matched": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 4
+    },
+    {
+      "associated": 4,
+      "association_accuracy": 1.0,
+      "evidence_type": "measurement",
+      "f1": 1.0,
+      "facts": 4,
+      "items": 4,
+      "level": "distributed",
+      "matched": 4,
+      "only": 4,
+      "only_matched": 4,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 4
+    },
+    {
+      "associated": 7,
+      "association_accuracy": 0.875,
+      "evidence_type": "measurement",
+      "f1": 1.0,
+      "facts": 8,
+      "items": 8,
+      "level": "all",
+      "matched": 8,
+      "only": 6,
+      "only_matched": 6,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 8
+    }
+  ],
+  "stability": {
+    "calls": 1,
+    "identical": 0,
+    "identical_share": 0.0,
+    "item_stability": 0.0,
+    "items_original": 4,
+    "items_reproduced": 0,
+    "outcomes": {
+      "fields_differ": 1
+    },
+    "reports": 1
+  },
+  "stability_ambiguous": [],
+  "version": "1"
+}

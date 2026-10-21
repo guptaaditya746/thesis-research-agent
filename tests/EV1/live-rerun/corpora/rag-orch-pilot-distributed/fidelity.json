@@ -1,0 +1,136 @@
+{
+  "corpus_id": "rag-orch-pilot-4f53cda1",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'The use of a dense retriever is a standard choice in the field, and we did not explore alternative retrieval methods in this study.' at 2993"
+        },
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S001.k1: abbreviation 'AA' defined within 300 characters of the table"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.a1/claim: required string 'Retrieval augmentation makes the generated answers clearly more accurate.' is not_found; S001.a1/claim: required string 'Grounding the generator in retrieved documents yields more accurate answers.' is not_found"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'100' at 2341: 'r of questions, multiplied by 100. We report the mean AA for ea'"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The use of a dense retriever is a standard choice in the field, and we did not explore alternative retrieval methods in this study.' at 9513"
+            },
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The use of a dense retriever is a standard choice in the field, and we did not explore alternative retrieval methods in this study.' at 2993"
+            },
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) contradictory, distributed; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001"
+  ]
+}

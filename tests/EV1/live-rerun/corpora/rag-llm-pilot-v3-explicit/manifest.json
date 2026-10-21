@@ -1,0 +1,10 @@
+{
+  "corpus_id": "rag-llm-pilot-v3-ee027440",
+  "papers": [
+    {
+      "id": "S001",
+      "file": "papers/S001.md",
+      "sha256": "4749bcef5b46852ddade51bb18bd0339d5cb19038a27cff584dda6ba10dcfa4b"
+    }
+  ]
+}

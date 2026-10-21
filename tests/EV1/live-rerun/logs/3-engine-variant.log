@@ -1,0 +1,72 @@
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/.venv/bin/evidence", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/cli.py", line 160, in main
+    return _dispatch(args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/cli.py", line 169, in _dispatch
+    root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+               model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+               strategy=args.strategy)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/engine.py", line 401, in run
+    return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
+                       provider=provider if provider is not None else default_provider, locator=locator,
+                       retry_errors=retry_errors)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/engine.py", line 366, in execute_run
+    corpus = Corpus(settings.corpus)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/rundir.py", line 58, in __init__
+    self.manifest_sha256 = file_sha256(manifest)
+                           ~~~~~~~~~~~^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/jsonio/__init__.py", line 29, in file_sha256
+    with open(path, "rb") as stream:
+         ~~~~^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-mixed-cf-S002/manifest.json'
+FAIL engine regex-only rag-llm-s1-mixed-cf-S002
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/.venv/bin/evidence", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/cli.py", line 160, in main
+    return _dispatch(args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/cli.py", line 169, in _dispatch
+    root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+               model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+               strategy=args.strategy)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/engine.py", line 401, in run
+    return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
+                       provider=provider if provider is not None else default_provider, locator=locator,
+                       retry_errors=retry_errors)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/engine.py", line 366, in execute_run
+    corpus = Corpus(settings.corpus)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/rundir.py", line 58, in __init__
+    self.manifest_sha256 = file_sha256(manifest)
+                           ~~~~~~~~~~~^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/jsonio/__init__.py", line 29, in file_sha256
+    with open(path, "rb") as stream:
+         ~~~~^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-mixed-cf-S002/manifest.json'
+FAIL engine cascade rag-llm-s1-mixed-cf-S002
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/.venv/bin/evidence", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/cli.py", line 160, in main
+    return _dispatch(args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/cli.py", line 169, in _dispatch
+    root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+               model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+               strategy=args.strategy)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/engine.py", line 401, in run
+    return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
+                       provider=provider if provider is not None else default_provider, locator=locator,
+                       retry_errors=retry_errors)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/engine.py", line 366, in execute_run
+    corpus = Corpus(settings.corpus)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/evidence/rundir.py", line 58, in __init__
+    self.manifest_sha256 = file_sha256(manifest)
+                           ~~~~~~~~~~~^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent/jsonio/__init__.py", line 29, in file_sha256
+    with open(path, "rb") as stream:
+         ~~~~^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-llm-s1-mixed-cf-S002/manifest.json'
+FAIL engine cascade-gaps rag-llm-s1-mixed-cf-S002

@@ -1,0 +1,5571 @@
+{
+  "corpus_id": "rag-llm-k1-97c9450f",
+  "seed": 1,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "studies": [
+    {
+      "study_id": "S002",
+      "paper": "S002",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S002.c1",
+          "role": "baseline",
+          "label": "parametric-only model",
+          "aliases": []
+        },
+        {
+          "id": "S002.c2",
+          "role": "rag",
+          "label": "retrieval-augmented generator",
+          "aliases": []
+        },
+        {
+          "id": "S002.c3",
+          "role": "other",
+          "label": "query-rewriting variant",
+          "aliases": []
+        },
+        {
+          "id": "S002.c4",
+          "role": "other",
+          "label": "RAG without reranking",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S002.k1",
+          "canonical": "factual_accuracy",
+          "name": "fact-level accuracy",
+          "higher_is_better": true
+        },
+        {
+          "id": "S002.k2",
+          "canonical": "other",
+          "name": "latency",
+          "higher_is_better": false
+        },
+        {
+          "id": "S002.k3",
+          "canonical": "other",
+          "name": "ROUGE-L",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S002.m1",
+          "condition": "S002.c1",
+          "metric": "S002.k1",
+          "value": 0.505,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m2",
+          "condition": "S002.c2",
+          "metric": "S002.k1",
+          "value": 0.571,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m3",
+          "condition": "S002.c3",
+          "metric": "S002.k1",
+          "value": 0.781,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m4",
+          "condition": "S002.c4",
+          "metric": "S002.k1",
+          "value": 0.558,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m5",
+          "condition": "S002.c1",
+          "metric": "S002.k2",
+          "value": 2.41,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m6",
+          "condition": "S002.c2",
+          "metric": "S002.k2",
+          "value": 3.41,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m7",
+          "condition": "S002.c3",
+          "metric": "S002.k2",
+          "value": 2.85,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m8",
+          "condition": "S002.c4",
+          "metric": "S002.k2",
+          "value": 1.64,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m9",
+          "condition": "S002.c1",
+          "metric": "S002.k3",
+          "value": 0.306,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m10",
+          "condition": "S002.c2",
+          "metric": "S002.k3",
+          "value": 0.188,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m11",
+          "condition": "S002.c3",
+          "metric": "S002.k3",
+          "value": 0.287,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m12",
+          "condition": "S002.c4",
+          "metric": "S002.k3",
+          "value": 0.459,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S002.m13",
+          "condition": "S002.c1",
+          "metric": "S002.k1",
+          "value": 0.605,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m14",
+          "condition": "S002.c2",
+          "metric": "S002.k1",
+          "value": 0.743,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m15",
+          "condition": "S002.c3",
+          "metric": "S002.k1",
+          "value": 0.697,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m16",
+          "condition": "S002.c4",
+          "metric": "S002.k1",
+          "value": 0.645,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m17",
+          "condition": "S002.c1",
+          "metric": "S002.k2",
+          "value": 2.31,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m18",
+          "condition": "S002.c2",
+          "metric": "S002.k2",
+          "value": 0.84,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m19",
+          "condition": "S002.c3",
+          "metric": "S002.k2",
+          "value": 2.64,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m20",
+          "condition": "S002.c4",
+          "metric": "S002.k2",
+          "value": 0.95,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m21",
+          "condition": "S002.c1",
+          "metric": "S002.k3",
+          "value": 0.366,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m22",
+          "condition": "S002.c2",
+          "metric": "S002.k3",
+          "value": 0.475,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m23",
+          "condition": "S002.c3",
+          "metric": "S002.k3",
+          "value": 0.115,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S002.m24",
+          "condition": "S002.c4",
+          "metric": "S002.k3",
+          "value": 0.257,
+          "dataset": "HistoryQuest"
+        }
+      ],
+      "author_claim": {
+        "id": "S002.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.066,
+        "metric": "S002.k1",
+        "treatment": "S002.m2",
+        "control": "S002.m1"
+      }
+    },
+    {
+      "study_id": "S003",
+      "paper": "S003",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S003.c1",
+          "role": "baseline",
+          "label": "parametric-only model",
+          "aliases": []
+        },
+        {
+          "id": "S003.c2",
+          "role": "rag",
+          "label": "retrieval-augmented model",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S003.k1",
+          "canonical": "factual_accuracy",
+          "name": "fact-level accuracy",
+          "higher_is_better": true
+        },
+        {
+          "id": "S003.k2",
+          "canonical": "other",
+          "name": "ROUGE-L",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S003.m1",
+          "condition": "S003.c1",
+          "metric": "S003.k1",
+          "value": 0.783,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S003.m2",
+          "condition": "S003.c2",
+          "metric": "S003.k1",
+          "value": 0.774,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S003.m3",
+          "condition": "S003.c1",
+          "metric": "S003.k2",
+          "value": 0.538,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S003.m4",
+          "condition": "S003.c2",
+          "metric": "S003.k2",
+          "value": 0.479,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S003.m5",
+          "condition": "S003.c1",
+          "metric": "S003.k1",
+          "value": 0.487,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m6",
+          "condition": "S003.c2",
+          "metric": "S003.k1",
+          "value": 0.496,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m7",
+          "condition": "S003.c1",
+          "metric": "S003.k2",
+          "value": 0.362,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S003.m8",
+          "condition": "S003.c2",
+          "metric": "S003.k2",
+          "value": 0.514,
+          "dataset": "NewsTruthQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S003.a1",
+        "direction": "no_effect"
+      },
+      "effect": {
+        "direction": "neutral",
+        "delta": -0.009,
+        "metric": "S003.k1",
+        "treatment": "S003.m2",
+        "control": "S003.m1"
+      }
+    },
+    {
+      "study_id": "S005",
+      "paper": "S005",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S005.c1",
+          "role": "baseline",
+          "label": "closed-book model",
+          "aliases": []
+        },
+        {
+          "id": "S005.c2",
+          "role": "rag",
+          "label": "retrieval-augmented model",
+          "aliases": []
+        },
+        {
+          "id": "S005.c3",
+          "role": "other",
+          "label": "fine-tuned model",
+          "aliases": []
+        },
+        {
+          "id": "S005.c4",
+          "role": "other",
+          "label": "RAG without reranking",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S005.k1",
+          "canonical": "factual_accuracy",
+          "name": "answer accuracy",
+          "higher_is_better": true
+        },
+        {
+          "id": "S005.k2",
+          "canonical": "other",
+          "name": "ROUGE-L",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S005.m1",
+          "condition": "S005.c1",
+          "metric": "S005.k1",
+          "value": 0.406,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m2",
+          "condition": "S005.c2",
+          "metric": "S005.k1",
+          "value": 0.538,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m3",
+          "condition": "S005.c3",
+          "metric": "S005.k1",
+          "value": 0.476,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m4",
+          "condition": "S005.c4",
+          "metric": "S005.k1",
+          "value": 0.448,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m5",
+          "condition": "S005.c1",
+          "metric": "S005.k2",
+          "value": 0.185,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m6",
+          "condition": "S005.c2",
+          "metric": "S005.k2",
+          "value": 0.436,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m7",
+          "condition": "S005.c3",
+          "metric": "S005.k2",
+          "value": 0.239,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m8",
+          "condition": "S005.c4",
+          "metric": "S005.k2",
+          "value": 0.464,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S005.m9",
+          "condition": "S005.c1",
+          "metric": "S005.k1",
+          "value": 0.669,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m10",
+          "condition": "S005.c2",
+          "metric": "S005.k1",
+          "value": 0.722,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m11",
+          "condition": "S005.c3",
+          "metric": "S005.k1",
+          "value": 0.659,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m12",
+          "condition": "S005.c4",
+          "metric": "S005.k1",
+          "value": 0.554,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m13",
+          "condition": "S005.c1",
+          "metric": "S005.k2",
+          "value": 0.342,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m14",
+          "condition": "S005.c2",
+          "metric": "S005.k2",
+          "value": 0.158,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m15",
+          "condition": "S005.c3",
+          "metric": "S005.k2",
+          "value": 0.112,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S005.m16",
+          "condition": "S005.c4",
+          "metric": "S005.k2",
+          "value": 0.259,
+          "dataset": "SciFactBench"
+        }
+      ],
+      "author_claim": {
+        "id": "S005.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.132,
+        "metric": "S005.k1",
+        "treatment": "S005.m2",
+        "control": "S005.m1"
+      }
+    },
+    {
+      "study_id": "S009",
+      "paper": "S009",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S009.c1",
+          "role": "baseline",
+          "label": "parametric-only model",
+          "aliases": []
+        },
+        {
+          "id": "S009.c2",
+          "role": "rag",
+          "label": "RAG pipeline",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S009.k1",
+          "canonical": "factual_accuracy",
+          "name": "fact-level accuracy",
+          "higher_is_better": true
+        },
+        {
+          "id": "S009.k2",
+          "canonical": "other",
+          "name": "ROUGE-L",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S009.m1",
+          "condition": "S009.c1",
+          "metric": "S009.k1",
+          "value": 0.538,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S009.m2",
+          "condition": "S009.c2",
+          "metric": "S009.k1",
+          "value": 0.465,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S009.m3",
+          "condition": "S009.c1",
+          "metric": "S009.k2",
+          "value": 0.169,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S009.m4",
+          "condition": "S009.c2",
+          "metric": "S009.k2",
+          "value": 0.396,
+          "dataset": "NewsTruthQA"
+        },
+        {
+          "id": "S009.m5",
+          "condition": "S009.c1",
+          "metric": "S009.k1",
+          "value": 0.499,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S009.m6",
+          "condition": "S009.c2",
+          "metric": "S009.k1",
+          "value": 0.407,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S009.m7",
+          "condition": "S009.c1",
+          "metric": "S009.k2",
+          "value": 0.382,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S009.m8",
+          "condition": "S009.c2",
+          "metric": "S009.k2",
+          "value": 0.153,
+          "dataset": "LawFactQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S009.a1",
+        "direction": "worsens"
+      },
+      "effect": {
+        "direction": "contradicts",
+        "delta": -0.073,
+        "metric": "S009.k1",
+        "treatment": "S009.m2",
+        "control": "S009.m1"
+      }
+    },
+    {
+      "study_id": "S013",
+      "paper": "S013",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S013.c1",
+          "role": "baseline",
+          "label": "vanilla LLM",
+          "aliases": []
+        },
+        {
+          "id": "S013.c2",
+          "role": "rag",
+          "label": "retrieval-augmented generator",
+          "aliases": []
+        },
+        {
+          "id": "S013.c3",
+          "role": "other",
+          "label": "RAG with random passages",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S013.k1",
+          "canonical": "factual_accuracy",
+          "name": "answer accuracy",
+          "higher_is_better": true
+        },
+        {
+          "id": "S013.k2",
+          "canonical": "other",
+          "name": "ROUGE-L",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S013.m1",
+          "condition": "S013.c1",
+          "metric": "S013.k1",
+          "value": 0.475,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S013.m2",
+          "condition": "S013.c2",
+          "metric": "S013.k1",
+          "value": 0.403,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S013.m3",
+          "condition": "S013.c3",
+          "metric": "S013.k1",
+          "value": 0.425,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S013.m4",
+          "condition": "S013.c1",
+          "metric": "S013.k2",
+          "value": 0.212,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S013.m5",
+          "condition": "S013.c2",
+          "metric": "S013.k2",
+          "value": 0.513,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S013.m6",
+          "condition": "S013.c3",
+          "metric": "S013.k2",
+          "value": 0.224,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S013.m7",
+          "condition": "S013.c1",
+          "metric": "S013.k1",
+          "value": 0.663,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S013.m8",
+          "condition": "S013.c2",
+          "metric": "S013.k1",
+          "value": 0.622,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S013.m9",
+          "condition": "S013.c3",
+          "metric": "S013.k1",
+          "value": 0.505,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S013.m10",
+          "condition": "S013.c1",
+          "metric": "S013.k2",
+          "value": 0.137,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S013.m11",
+          "condition": "S013.c2",
+          "metric": "S013.k2",
+          "value": 0.237,
+          "dataset": "SciFactBench"
+        },
+        {
+          "id": "S013.m12",
+          "condition": "S013.c3",
+          "metric": "S013.k2",
+          "value": 0.382,
+          "dataset": "SciFactBench"
+        }
+      ],
+      "author_claim": {
+        "id": "S013.a1",
+        "direction": "worsens"
+      },
+      "effect": {
+        "direction": "contradicts",
+        "delta": -0.072,
+        "metric": "S013.k1",
+        "treatment": "S013.m2",
+        "control": "S013.m1"
+      }
+    },
+    {
+      "study_id": "S016",
+      "paper": "S016",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S016.c1",
+          "role": "baseline",
+          "label": "no-retrieval baseline",
+          "aliases": []
+        },
+        {
+          "id": "S016.c2",
+          "role": "rag",
+          "label": "retrieval-augmented generator",
+          "aliases": []
+        },
+        {
+          "id": "S016.c3",
+          "role": "other",
+          "label": "RAG with random passages",
+          "aliases": []
+        },
+        {
+          "id": "S016.c4",
+          "role": "other",
+          "label": "query-rewriting variant",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S016.k1",
+          "canonical": "hallucination_rate",
+          "name": "hallucination frequency",
+          "higher_is_better": false
+        },
+        {
+          "id": "S016.k2",
+          "canonical": "other",
+          "name": "BLEU",
+          "higher_is_better": true
+        },
+        {
+          "id": "S016.k3",
+          "canonical": "other",
+          "name": "latency",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S016.m1",
+          "condition": "S016.c1",
+          "metric": "S016.k1",
+          "value": 0.103,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m2",
+          "condition": "S016.c2",
+          "metric": "S016.k1",
+          "value": 0.051,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m3",
+          "condition": "S016.c3",
+          "metric": "S016.k1",
+          "value": 0.412,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m4",
+          "condition": "S016.c4",
+          "metric": "S016.k1",
+          "value": 0.304,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m5",
+          "condition": "S016.c1",
+          "metric": "S016.k2",
+          "value": 0.451,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m6",
+          "condition": "S016.c2",
+          "metric": "S016.k2",
+          "value": 0.427,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m7",
+          "condition": "S016.c3",
+          "metric": "S016.k2",
+          "value": 0.474,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m8",
+          "condition": "S016.c4",
+          "metric": "S016.k2",
+          "value": 0.215,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m9",
+          "condition": "S016.c1",
+          "metric": "S016.k3",
+          "value": 1.62,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m10",
+          "condition": "S016.c2",
+          "metric": "S016.k3",
+          "value": 2.93,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m11",
+          "condition": "S016.c3",
+          "metric": "S016.k3",
+          "value": 2.85,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m12",
+          "condition": "S016.c4",
+          "metric": "S016.k3",
+          "value": 1.55,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S016.m13",
+          "condition": "S016.c1",
+          "metric": "S016.k1",
+          "value": 0.262,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m14",
+          "condition": "S016.c2",
+          "metric": "S016.k1",
+          "value": 0.168,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m15",
+          "condition": "S016.c3",
+          "metric": "S016.k1",
+          "value": 0.291,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m16",
+          "condition": "S016.c4",
+          "metric": "S016.k1",
+          "value": 0.252,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m17",
+          "condition": "S016.c1",
+          "metric": "S016.k2",
+          "value": 0.386,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m18",
+          "condition": "S016.c2",
+          "metric": "S016.k2",
+          "value": 0.124,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m19",
+          "condition": "S016.c3",
+          "metric": "S016.k2",
+          "value": 0.136,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m20",
+          "condition": "S016.c4",
+          "metric": "S016.k2",
+          "value": 0.361,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m21",
+          "condition": "S016.c1",
+          "metric": "S016.k3",
+          "value": 2.28,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m22",
+          "condition": "S016.c2",
+          "metric": "S016.k3",
+          "value": 1.21,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m23",
+          "condition": "S016.c3",
+          "metric": "S016.k3",
+          "value": 3.01,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S016.m24",
+          "condition": "S016.c4",
+          "metric": "S016.k3",
+          "value": 1.44,
+          "dataset": "MedAnswerSet"
+        }
+      ],
+      "author_claim": {
+        "id": "S016.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.052,
+        "metric": "S016.k1",
+        "treatment": "S016.m2",
+        "control": "S016.m1"
+      }
+    },
+    {
+      "study_id": "S017",
+      "paper": "S017",
+      "level": "complex",
+      "relevant": true,
+      "flags": [
+        "large_effect"
+      ],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S017.c1",
+          "role": "baseline",
+          "label": "no-retrieval baseline",
+          "aliases": []
+        },
+        {
+          "id": "S017.c2",
+          "role": "rag",
+          "label": "RAG pipeline",
+          "aliases": []
+        },
+        {
+          "id": "S017.c3",
+          "role": "other",
+          "label": "fine-tuned model",
+          "aliases": []
+        },
+        {
+          "id": "S017.c4",
+          "role": "other",
+          "label": "self-consistency decoding",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S017.k1",
+          "canonical": "hallucination_rate",
+          "name": "hallucination frequency",
+          "higher_is_better": false
+        },
+        {
+          "id": "S017.k2",
+          "canonical": "other",
+          "name": "BLEU",
+          "higher_is_better": true
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S017.m1",
+          "condition": "S017.c1",
+          "metric": "S017.k1",
+          "value": 0.414,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m2",
+          "condition": "S017.c2",
+          "metric": "S017.k1",
+          "value": 0.108,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m3",
+          "condition": "S017.c3",
+          "metric": "S017.k1",
+          "value": 0.298,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m4",
+          "condition": "S017.c4",
+          "metric": "S017.k1",
+          "value": 0.191,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m5",
+          "condition": "S017.c1",
+          "metric": "S017.k2",
+          "value": 0.468,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m6",
+          "condition": "S017.c2",
+          "metric": "S017.k2",
+          "value": 0.487,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m7",
+          "condition": "S017.c3",
+          "metric": "S017.k2",
+          "value": 0.126,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m8",
+          "condition": "S017.c4",
+          "metric": "S017.k2",
+          "value": 0.353,
+          "dataset": "PopCultureQA"
+        },
+        {
+          "id": "S017.m9",
+          "condition": "S017.c1",
+          "metric": "S017.k1",
+          "value": 0.446,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S017.m10",
+          "condition": "S017.c2",
+          "metric": "S017.k1",
+          "value": 0.117,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S017.m11",
+          "condition": "S017.c3",
+          "metric": "S017.k1",
+          "value": 0.428,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S017.m12",
+          "condition": "S017.c4",
+          "metric": "S017.k1",
+          "value": 0.281,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S017.m13",
+          "condition": "S017.c1",
+          "metric": "S017.k2",
+          "value": 0.363,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S017.m14",
+          "condition": "S017.c2",
+          "metric": "S017.k2",
+          "value": 0.532,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S017.m15",
+          "condition": "S017.c3",
+          "metric": "S017.k2",
+          "value": 0.378,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S017.m16",
+          "condition": "S017.c4",
+          "metric": "S017.k2",
+          "value": 0.146,
+          "dataset": "LawFactQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S017.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.306,
+        "metric": "S017.k1",
+        "treatment": "S017.m2",
+        "control": "S017.m1"
+      }
+    },
+    {
+      "study_id": "S019",
+      "paper": "S019",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S019.c1",
+          "role": "baseline",
+          "label": "no-retrieval baseline",
+          "aliases": []
+        },
+        {
+          "id": "S019.c2",
+          "role": "rag",
+          "label": "retrieve-then-read model",
+          "aliases": []
+        },
+        {
+          "id": "S019.c3",
+          "role": "other",
+          "label": "fine-tuned model",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S019.k1",
+          "canonical": "factual_accuracy",
+          "name": "fact-level accuracy",
+          "higher_is_better": true
+        },
+        {
+          "id": "S019.k2",
+          "canonical": "other",
+          "name": "ROUGE-L",
+          "higher_is_better": true
+        },
+        {
+          "id": "S019.k3",
+          "canonical": "other",
+          "name": "latency",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S019.m1",
+          "condition": "S019.c1",
+          "metric": "S019.k1",
+          "value": 0.642,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m2",
+          "condition": "S019.c2",
+          "metric": "S019.k1",
+          "value": 0.634,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m3",
+          "condition": "S019.c3",
+          "metric": "S019.k1",
+          "value": 0.591,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m4",
+          "condition": "S019.c1",
+          "metric": "S019.k2",
+          "value": 0.482,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m5",
+          "condition": "S019.c2",
+          "metric": "S019.k2",
+          "value": 0.106,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m6",
+          "condition": "S019.c3",
+          "metric": "S019.k2",
+          "value": 0.379,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m7",
+          "condition": "S019.c1",
+          "metric": "S019.k3",
+          "value": 1.91,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m8",
+          "condition": "S019.c2",
+          "metric": "S019.k3",
+          "value": 1.09,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m9",
+          "condition": "S019.c3",
+          "metric": "S019.k3",
+          "value": 0.78,
+          "dataset": "TriviaCheck"
+        },
+        {
+          "id": "S019.m10",
+          "condition": "S019.c1",
+          "metric": "S019.k1",
+          "value": 0.495,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m11",
+          "condition": "S019.c2",
+          "metric": "S019.k1",
+          "value": 0.503,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m12",
+          "condition": "S019.c3",
+          "metric": "S019.k1",
+          "value": 0.556,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m13",
+          "condition": "S019.c1",
+          "metric": "S019.k2",
+          "value": 0.291,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m14",
+          "condition": "S019.c2",
+          "metric": "S019.k2",
+          "value": 0.393,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m15",
+          "condition": "S019.c3",
+          "metric": "S019.k2",
+          "value": 0.512,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m16",
+          "condition": "S019.c1",
+          "metric": "S019.k3",
+          "value": 1.99,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m17",
+          "condition": "S019.c2",
+          "metric": "S019.k3",
+          "value": 2.63,
+          "dataset": "HistoryQuest"
+        },
+        {
+          "id": "S019.m18",
+          "condition": "S019.c3",
+          "metric": "S019.k3",
+          "value": 2.97,
+          "dataset": "HistoryQuest"
+        }
+      ],
+      "author_claim": {
+        "id": "S019.a1",
+        "direction": "no_effect"
+      },
+      "effect": {
+        "direction": "neutral",
+        "delta": -0.008,
+        "metric": "S019.k1",
+        "treatment": "S019.m2",
+        "control": "S019.m1"
+      }
+    },
+    {
+      "study_id": "S020",
+      "paper": "S020",
+      "level": "complex",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S020.c1",
+          "role": "baseline",
+          "label": "no-retrieval baseline",
+          "aliases": []
+        },
+        {
+          "id": "S020.c2",
+          "role": "rag",
+          "label": "retrieval-augmented model",
+          "aliases": []
+        },
+        {
+          "id": "S020.c3",
+          "role": "other",
+          "label": "fine-tuned model",
+          "aliases": []
+        },
+        {
+          "id": "S020.c4",
+          "role": "other",
+          "label": "self-consistency decoding",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S020.k1",
+          "canonical": "factual_accuracy",
+          "name": "answer accuracy",
+          "higher_is_better": true
+        },
+        {
+          "id": "S020.k2",
+          "canonical": "other",
+          "name": "ROUGE-L",
+          "higher_is_better": true
+        },
+        {
+          "id": "S020.k3",
+          "canonical": "other",
+          "name": "latency",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S020.m1",
+          "condition": "S020.c1",
+          "metric": "S020.k1",
+          "value": 0.523,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m2",
+          "condition": "S020.c2",
+          "metric": "S020.k1",
+          "value": 0.646,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m3",
+          "condition": "S020.c3",
+          "metric": "S020.k1",
+          "value": 0.552,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m4",
+          "condition": "S020.c4",
+          "metric": "S020.k1",
+          "value": 0.357,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m5",
+          "condition": "S020.c1",
+          "metric": "S020.k2",
+          "value": 0.431,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m6",
+          "condition": "S020.c2",
+          "metric": "S020.k2",
+          "value": 0.293,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m7",
+          "condition": "S020.c3",
+          "metric": "S020.k2",
+          "value": 0.204,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m8",
+          "condition": "S020.c4",
+          "metric": "S020.k2",
+          "value": 0.385,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m9",
+          "condition": "S020.c1",
+          "metric": "S020.k3",
+          "value": 0.41,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m10",
+          "condition": "S020.c2",
+          "metric": "S020.k3",
+          "value": 1.82,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m11",
+          "condition": "S020.c3",
+          "metric": "S020.k3",
+          "value": 3.46,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m12",
+          "condition": "S020.c4",
+          "metric": "S020.k3",
+          "value": 3.01,
+          "dataset": "LawFactQA"
+        },
+        {
+          "id": "S020.m13",
+          "condition": "S020.c1",
+          "metric": "S020.k1",
+          "value": 0.699,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m14",
+          "condition": "S020.c2",
+          "metric": "S020.k1",
+          "value": 0.802,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m15",
+          "condition": "S020.c3",
+          "metric": "S020.k1",
+          "value": 0.401,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m16",
+          "condition": "S020.c4",
+          "metric": "S020.k1",
+          "value": 0.772,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m17",
+          "condition": "S020.c1",
+          "metric": "S020.k2",
+          "value": 0.336,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m18",
+          "condition": "S020.c2",
+          "metric": "S020.k2",
+          "value": 0.309,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m19",
+          "condition": "S020.c3",
+          "metric": "S020.k2",
+          "value": 0.481,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m20",
+          "condition": "S020.c4",
+          "metric": "S020.k2",
+          "value": 0.464,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m21",
+          "condition": "S020.c1",
+          "metric": "S020.k3",
+          "value": 1.96,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m22",
+          "condition": "S020.c2",
+          "metric": "S020.k3",
+          "value": 1.27,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m23",
+          "condition": "S020.c3",
+          "metric": "S020.k3",
+          "value": 3.11,
+          "dataset": "GeoFacts"
+        },
+        {
+          "id": "S020.m24",
+          "condition": "S020.c4",
+          "metric": "S020.k3",
+          "value": 1.41,
+          "dataset": "GeoFacts"
+        }
+      ],
+      "author_claim": {
+        "id": "S020.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.123,
+        "metric": "S020.k1",
+        "treatment": "S020.m2",
+        "control": "S020.m1"
+      }
+    },
+    {
+      "study_id": "S023",
+      "paper": "S023",
+      "level": "complex",
+      "relevant": false,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [],
+      "metrics": [],
+      "measurements": [],
+      "author_claim": null,
+      "effect": {
+        "direction": "undetermined",
+        "delta": null,
+        "metric": null,
+        "treatment": null,
+        "control": null,
+        "reason": "screened_out"
+      }
+    },
+    {
+      "study_id": "S024",
+      "paper": "S024",
+      "level": "complex",
+      "relevant": false,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [],
+      "metrics": [],
+      "measurements": [],
+      "author_claim": null,
+      "effect": {
+        "direction": "undetermined",
+        "delta": null,
+        "metric": null,
+        "treatment": null,
+        "control": null,
+        "reason": "screened_out"
+      }
+    }
+  ],
+  "placements": [
+    {
+      "fact": "S002.a1",
+      "role": "claim",
+      "paper": "S002",
+      "start": 326,
+      "end": 399,
+      "exact": "Retrieval augmentation makes the generated answers clearly more accurate."
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 789,
+      "end": 810,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 814,
+      "end": 843,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S002.c3",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 847,
+      "end": 870,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S002.c4",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 878,
+      "end": 899,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 952,
+      "end": 971,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S002.k2",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 973,
+      "end": 980,
+      "exact": "latency"
+    },
+    {
+      "fact": "S002.k3",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 986,
+      "end": 993,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1336,
+      "end": 1357,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1438,
+      "end": 1467,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S002.c3",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1547,
+      "end": 1570,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S002.c4",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 1653,
+      "end": 1674,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1774,
+      "end": 1793,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1810,
+      "end": 1854,
+      "exact": "fraction of answers judged factually correct"
+    },
+    {
+      "fact": "S002.k2",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1856,
+      "end": 1863,
+      "exact": "latency"
+    },
+    {
+      "fact": "S002.k2",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1876,
+      "end": 1917,
+      "exact": "mean seconds needed to produce one answer"
+    },
+    {
+      "fact": "S002.k3",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1923,
+      "end": 1930,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S002.k3",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 1943,
+      "end": 2003,
+      "exact": "longest common subsequence overlap with the reference answer"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2106,
+      "end": 2125,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S002.k2",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2127,
+      "end": 2134,
+      "exact": "latency"
+    },
+    {
+      "fact": "S002.k3",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2140,
+      "end": 2147,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2203,
+      "end": 2222,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S002.k2",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2229,
+      "end": 2236,
+      "exact": "latency"
+    },
+    {
+      "fact": "S002.k3",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2243,
+      "end": 2250,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2296,
+      "end": 2317,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S002.m1",
+      "role": "value",
+      "paper": "S002",
+      "start": 2332,
+      "end": 2336,
+      "exact": "50.5"
+    },
+    {
+      "fact": "S002.m5",
+      "role": "value",
+      "paper": "S002",
+      "start": 2339,
+      "end": 2343,
+      "exact": "2.41"
+    },
+    {
+      "fact": "S002.m9",
+      "role": "value",
+      "paper": "S002",
+      "start": 2346,
+      "end": 2350,
+      "exact": "30.6"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2355,
+      "end": 2384,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S002.m6",
+      "role": "value",
+      "paper": "S002",
+      "start": 2410,
+      "end": 2414,
+      "exact": "3.41"
+    },
+    {
+      "fact": "S002.m10",
+      "role": "value",
+      "paper": "S002",
+      "start": 2417,
+      "end": 2421,
+      "exact": "18.8"
+    },
+    {
+      "fact": "S002.c3",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2426,
+      "end": 2449,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S002.m3",
+      "role": "value",
+      "paper": "S002",
+      "start": 2464,
+      "end": 2468,
+      "exact": "78.1"
+    },
+    {
+      "fact": "S002.m7",
+      "role": "value",
+      "paper": "S002",
+      "start": 2471,
+      "end": 2475,
+      "exact": "2.85"
+    },
+    {
+      "fact": "S002.m11",
+      "role": "value",
+      "paper": "S002",
+      "start": 2478,
+      "end": 2482,
+      "exact": "28.7"
+    },
+    {
+      "fact": "S002.c4",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2487,
+      "end": 2508,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S002.m4",
+      "role": "value",
+      "paper": "S002",
+      "start": 2523,
+      "end": 2527,
+      "exact": "55.8"
+    },
+    {
+      "fact": "S002.m8",
+      "role": "value",
+      "paper": "S002",
+      "start": 2530,
+      "end": 2534,
+      "exact": "1.64"
+    },
+    {
+      "fact": "S002.m12",
+      "role": "value",
+      "paper": "S002",
+      "start": 2537,
+      "end": 2541,
+      "exact": "45.9"
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2546,
+      "end": 2567,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S002.m13",
+      "role": "value",
+      "paper": "S002",
+      "start": 2585,
+      "end": 2589,
+      "exact": "60.5"
+    },
+    {
+      "fact": "S002.m17",
+      "role": "value",
+      "paper": "S002",
+      "start": 2592,
+      "end": 2596,
+      "exact": "2.31"
+    },
+    {
+      "fact": "S002.m21",
+      "role": "value",
+      "paper": "S002",
+      "start": 2599,
+      "end": 2603,
+      "exact": "36.6"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2608,
+      "end": 2637,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S002.m14",
+      "role": "value",
+      "paper": "S002",
+      "start": 2655,
+      "end": 2659,
+      "exact": "74.3"
+    },
+    {
+      "fact": "S002.m18",
+      "role": "value",
+      "paper": "S002",
+      "start": 2662,
+      "end": 2666,
+      "exact": "0.84"
+    },
+    {
+      "fact": "S002.m22",
+      "role": "value",
+      "paper": "S002",
+      "start": 2669,
+      "end": 2673,
+      "exact": "47.5"
+    },
+    {
+      "fact": "S002.c3",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2678,
+      "end": 2701,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S002.m15",
+      "role": "value",
+      "paper": "S002",
+      "start": 2719,
+      "end": 2723,
+      "exact": "69.7"
+    },
+    {
+      "fact": "S002.m19",
+      "role": "value",
+      "paper": "S002",
+      "start": 2726,
+      "end": 2730,
+      "exact": "2.64"
+    },
+    {
+      "fact": "S002.m23",
+      "role": "value",
+      "paper": "S002",
+      "start": 2733,
+      "end": 2737,
+      "exact": "11.5"
+    },
+    {
+      "fact": "S002.c4",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2742,
+      "end": 2763,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S002.m16",
+      "role": "value",
+      "paper": "S002",
+      "start": 2781,
+      "end": 2785,
+      "exact": "64.5"
+    },
+    {
+      "fact": "S002.m20",
+      "role": "value",
+      "paper": "S002",
+      "start": 2788,
+      "end": 2792,
+      "exact": "0.95"
+    },
+    {
+      "fact": "S002.m24",
+      "role": "value",
+      "paper": "S002",
+      "start": 2795,
+      "end": 2799,
+      "exact": "25.7"
+    },
+    {
+      "fact": "S002.k1",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 2833,
+      "end": 2852,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S002.c2",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2860,
+      "end": 2889,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S002.m2",
+      "role": "value",
+      "paper": "S002",
+      "start": 2894,
+      "end": 2922,
+      "exact": "6.6 percentage points higher"
+    },
+    {
+      "fact": "S002.c1",
+      "role": "condition_label",
+      "paper": "S002",
+      "start": 2940,
+      "end": 2961,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S002.k2",
+      "role": "metric_label",
+      "paper": "S002",
+      "start": 3843,
+      "end": 3850,
+      "exact": "latency"
+    },
+    {
+      "fact": "S002.a1",
+      "role": "claim",
+      "paper": "S002",
+      "start": 3865,
+      "end": 3941,
+      "exact": "Grounding the generator in retrieved documents yields more accurate answers."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 156,
+      "end": 177,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 184,
+      "end": 209,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 342,
+      "end": 361,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S003.k2",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 366,
+      "end": 373,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 409,
+      "end": 483,
+      "exact": "Retrieval augmentation does not make the answers measurably more accurate."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 832,
+      "end": 853,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 860,
+      "end": 885,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1151,
+      "end": 1172,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1264,
+      "end": 1289,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1651,
+      "end": 1670,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1687,
+      "end": 1731,
+      "exact": "fraction of answers judged factually correct"
+    },
+    {
+      "fact": "S003.k2",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1737,
+      "end": 1744,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S003.k2",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1765,
+      "end": 1825,
+      "exact": "longest common subsequence overlap with the reference answer"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2029,
+      "end": 2048,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S003.k2",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2055,
+      "end": 2062,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2101,
+      "end": 2122,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S003.m1",
+      "role": "value",
+      "paper": "S003",
+      "start": 2137,
+      "end": 2141,
+      "exact": "78.3"
+    },
+    {
+      "fact": "S003.m3",
+      "role": "value",
+      "paper": "S003",
+      "start": 2144,
+      "end": 2148,
+      "exact": "53.8"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2153,
+      "end": 2178,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.m4",
+      "role": "value",
+      "paper": "S003",
+      "start": 2204,
+      "end": 2208,
+      "exact": "47.9"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2213,
+      "end": 2234,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S003.m5",
+      "role": "value",
+      "paper": "S003",
+      "start": 2251,
+      "end": 2255,
+      "exact": "48.7"
+    },
+    {
+      "fact": "S003.m7",
+      "role": "value",
+      "paper": "S003",
+      "start": 2258,
+      "end": 2262,
+      "exact": "36.2"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2267,
+      "end": 2292,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.m6",
+      "role": "value",
+      "paper": "S003",
+      "start": 2309,
+      "end": 2313,
+      "exact": "49.6"
+    },
+    {
+      "fact": "S003.m8",
+      "role": "value",
+      "paper": "S003",
+      "start": 2316,
+      "end": 2320,
+      "exact": "51.4"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2354,
+      "end": 2373,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2381,
+      "end": 2406,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.m2",
+      "role": "value",
+      "paper": "S003",
+      "start": 2411,
+      "end": 2438,
+      "exact": "0.9 percentage points lower"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2456,
+      "end": 2477,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2791,
+      "end": 2810,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 3336,
+      "end": 3357,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 3366,
+      "end": 3391,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 3460,
+      "end": 3547,
+      "exact": "Adding retrieved documents leaves the correctness of the answers essentially unchanged."
+    },
+    {
+      "fact": "S005.a1",
+      "role": "claim",
+      "paper": "S005",
+      "start": 417,
+      "end": 490,
+      "exact": "Retrieval augmentation makes the generated answers clearly more accurate."
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1598,
+      "end": 1615,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1724,
+      "end": 1749,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S005.c3",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1849,
+      "end": 1865,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 1941,
+      "end": 1962,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2344,
+      "end": 2359,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2378,
+      "end": 2429,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S005.k2",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2437,
+      "end": 2444,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S005.k2",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2467,
+      "end": 2527,
+      "exact": "longest common subsequence overlap with the reference answer"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2797,
+      "end": 2812,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S005.k2",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 2819,
+      "end": 2826,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 2865,
+      "end": 2882,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S005.m1",
+      "role": "value",
+      "paper": "S005",
+      "start": 2900,
+      "end": 2904,
+      "exact": "40.6"
+    },
+    {
+      "fact": "S005.m5",
+      "role": "value",
+      "paper": "S005",
+      "start": 2907,
+      "end": 2911,
+      "exact": "18.5"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 2916,
+      "end": 2941,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S005.m6",
+      "role": "value",
+      "paper": "S005",
+      "start": 2970,
+      "end": 2974,
+      "exact": "43.6"
+    },
+    {
+      "fact": "S005.c3",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 2979,
+      "end": 2995,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S005.m3",
+      "role": "value",
+      "paper": "S005",
+      "start": 3013,
+      "end": 3017,
+      "exact": "47.6"
+    },
+    {
+      "fact": "S005.m7",
+      "role": "value",
+      "paper": "S005",
+      "start": 3020,
+      "end": 3024,
+      "exact": "23.9"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3029,
+      "end": 3050,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S005.m4",
+      "role": "value",
+      "paper": "S005",
+      "start": 3068,
+      "end": 3072,
+      "exact": "44.8"
+    },
+    {
+      "fact": "S005.m8",
+      "role": "value",
+      "paper": "S005",
+      "start": 3075,
+      "end": 3079,
+      "exact": "46.4"
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3084,
+      "end": 3101,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S005.m9",
+      "role": "value",
+      "paper": "S005",
+      "start": 3119,
+      "end": 3123,
+      "exact": "66.9"
+    },
+    {
+      "fact": "S005.m13",
+      "role": "value",
+      "paper": "S005",
+      "start": 3126,
+      "end": 3130,
+      "exact": "34.2"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3135,
+      "end": 3160,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S005.m10",
+      "role": "value",
+      "paper": "S005",
+      "start": 3178,
+      "end": 3182,
+      "exact": "72.2"
+    },
+    {
+      "fact": "S005.m14",
+      "role": "value",
+      "paper": "S005",
+      "start": 3185,
+      "end": 3189,
+      "exact": "15.8"
+    },
+    {
+      "fact": "S005.c3",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3194,
+      "end": 3210,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S005.m11",
+      "role": "value",
+      "paper": "S005",
+      "start": 3228,
+      "end": 3232,
+      "exact": "65.9"
+    },
+    {
+      "fact": "S005.m15",
+      "role": "value",
+      "paper": "S005",
+      "start": 3235,
+      "end": 3239,
+      "exact": "11.2"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3244,
+      "end": 3265,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S005.m12",
+      "role": "value",
+      "paper": "S005",
+      "start": 3283,
+      "end": 3287,
+      "exact": "55.4"
+    },
+    {
+      "fact": "S005.m16",
+      "role": "value",
+      "paper": "S005",
+      "start": 3290,
+      "end": 3294,
+      "exact": "25.9"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3337,
+      "end": 3362,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 3379,
+      "end": 3394,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S005.m2",
+      "role": "value",
+      "paper": "S005",
+      "start": 3408,
+      "end": 3437,
+      "exact": "13.2 percentage points higher"
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3451,
+      "end": 3468,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S005.c3",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3630,
+      "end": 3646,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3655,
+      "end": 3676,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S005.c2",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3755,
+      "end": 3780,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S005.k1",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 3806,
+      "end": 3821,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S005.c1",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3858,
+      "end": 3875,
+      "exact": "closed-book model"
+    },
+    {
+      "fact": "S005.k2",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 3901,
+      "end": 3908,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S005.c3",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3924,
+      "end": 3940,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 3949,
+      "end": 3970,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S005.k2",
+      "role": "metric_label",
+      "paper": "S005",
+      "start": 4353,
+      "end": 4360,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S005.c4",
+      "role": "condition_label",
+      "paper": "S005",
+      "start": 4488,
+      "end": 4509,
+      "exact": "RAG without reranking"
+    },
+    {
+      "fact": "S005.a1",
+      "role": "claim",
+      "paper": "S005",
+      "start": 5223,
+      "end": 5299,
+      "exact": "Grounding the generator in retrieved documents yields more accurate answers."
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 148,
+      "end": 169,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 176,
+      "end": 188,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.k1",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 268,
+      "end": 287,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S009.k2",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 292,
+      "end": 299,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S009.a1",
+      "role": "claim",
+      "paper": "S009",
+      "start": 329,
+      "end": 394,
+      "exact": "Retrieval augmentation makes the generated answers less accurate."
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 653,
+      "end": 674,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 681,
+      "end": 693,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 853,
+      "end": 874,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 968,
+      "end": 980,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.k1",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 1379,
+      "end": 1398,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S009.k1",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 1415,
+      "end": 1459,
+      "exact": "fraction of answers judged factually correct"
+    },
+    {
+      "fact": "S009.k2",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 1465,
+      "end": 1472,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S009.k2",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 1489,
+      "end": 1549,
+      "exact": "longest common subsequence overlap with the reference answer"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 1712,
+      "end": 1724,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.k1",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 2017,
+      "end": 2036,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S009.k2",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 2043,
+      "end": 2050,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 2089,
+      "end": 2110,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.m1",
+      "role": "value",
+      "paper": "S009",
+      "start": 2127,
+      "end": 2131,
+      "exact": "53.8"
+    },
+    {
+      "fact": "S009.m3",
+      "role": "value",
+      "paper": "S009",
+      "start": 2134,
+      "end": 2138,
+      "exact": "16.9"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 2143,
+      "end": 2155,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.m4",
+      "role": "value",
+      "paper": "S009",
+      "start": 2183,
+      "end": 2187,
+      "exact": "39.6"
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 2192,
+      "end": 2213,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.m5",
+      "role": "value",
+      "paper": "S009",
+      "start": 2228,
+      "end": 2232,
+      "exact": "49.9"
+    },
+    {
+      "fact": "S009.m7",
+      "role": "value",
+      "paper": "S009",
+      "start": 2235,
+      "end": 2239,
+      "exact": "38.2"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 2244,
+      "end": 2256,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.m6",
+      "role": "value",
+      "paper": "S009",
+      "start": 2271,
+      "end": 2275,
+      "exact": "40.7"
+    },
+    {
+      "fact": "S009.m8",
+      "role": "value",
+      "paper": "S009",
+      "start": 2278,
+      "end": 2282,
+      "exact": "15.3"
+    },
+    {
+      "fact": "S009.k1",
+      "role": "metric_label",
+      "paper": "S009",
+      "start": 2318,
+      "end": 2337,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 2346,
+      "end": 2358,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.m2",
+      "role": "value",
+      "paper": "S009",
+      "start": 2363,
+      "end": 2390,
+      "exact": "7.3 percentage points lower"
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 2408,
+      "end": 2429,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 2901,
+      "end": 2913,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 3022,
+      "end": 3043,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.c1",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 3532,
+      "end": 3553,
+      "exact": "parametric-only model"
+    },
+    {
+      "fact": "S009.c2",
+      "role": "condition_label",
+      "paper": "S009",
+      "start": 3562,
+      "end": 3574,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S009.a1",
+      "role": "claim",
+      "paper": "S009",
+      "start": 3631,
+      "end": 3707,
+      "exact": "Grounding the generator in retrieved documents yields less accurate answers."
+    },
+    {
+      "fact": "S013.c1",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 220,
+      "end": 231,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 237,
+      "end": 266,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.c3",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 272,
+      "end": 296,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S013.a1",
+      "role": "claim",
+      "paper": "S013",
+      "start": 446,
+      "end": 511,
+      "exact": "Retrieval augmentation makes the generated answers less accurate."
+    },
+    {
+      "fact": "S013.c1",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 1927,
+      "end": 1938,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 1998,
+      "end": 2027,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.c3",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 2114,
+      "end": 2138,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S013.k1",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 2465,
+      "end": 2480,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S013.k1",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 2497,
+      "end": 2548,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S013.k2",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 2554,
+      "end": 2561,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S013.k2",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 2582,
+      "end": 2642,
+      "exact": "longest common subsequence overlap with the reference answer"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 2825,
+      "end": 2854,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.k1",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 3148,
+      "end": 3163,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S013.k2",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 3168,
+      "end": 3175,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S013.k1",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 3227,
+      "end": 3242,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S013.k2",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 3249,
+      "end": 3256,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S013.c1",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3295,
+      "end": 3306,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S013.m1",
+      "role": "value",
+      "paper": "S013",
+      "start": 3324,
+      "end": 3328,
+      "exact": "47.5"
+    },
+    {
+      "fact": "S013.m4",
+      "role": "value",
+      "paper": "S013",
+      "start": 3331,
+      "end": 3335,
+      "exact": "21.2"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3340,
+      "end": 3369,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.m5",
+      "role": "value",
+      "paper": "S013",
+      "start": 3398,
+      "end": 3402,
+      "exact": "51.3"
+    },
+    {
+      "fact": "S013.c3",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3407,
+      "end": 3431,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S013.m3",
+      "role": "value",
+      "paper": "S013",
+      "start": 3449,
+      "end": 3453,
+      "exact": "42.5"
+    },
+    {
+      "fact": "S013.m6",
+      "role": "value",
+      "paper": "S013",
+      "start": 3456,
+      "end": 3460,
+      "exact": "22.4"
+    },
+    {
+      "fact": "S013.c1",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3465,
+      "end": 3476,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S013.m7",
+      "role": "value",
+      "paper": "S013",
+      "start": 3494,
+      "end": 3498,
+      "exact": "66.3"
+    },
+    {
+      "fact": "S013.m10",
+      "role": "value",
+      "paper": "S013",
+      "start": 3501,
+      "end": 3505,
+      "exact": "13.7"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3510,
+      "end": 3539,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.m8",
+      "role": "value",
+      "paper": "S013",
+      "start": 3557,
+      "end": 3561,
+      "exact": "62.2"
+    },
+    {
+      "fact": "S013.m11",
+      "role": "value",
+      "paper": "S013",
+      "start": 3564,
+      "end": 3568,
+      "exact": "23.7"
+    },
+    {
+      "fact": "S013.c3",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3573,
+      "end": 3597,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S013.m9",
+      "role": "value",
+      "paper": "S013",
+      "start": 3615,
+      "end": 3619,
+      "exact": "50.5"
+    },
+    {
+      "fact": "S013.m12",
+      "role": "value",
+      "paper": "S013",
+      "start": 3622,
+      "end": 3626,
+      "exact": "38.2"
+    },
+    {
+      "fact": "S013.k1",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 3663,
+      "end": 3678,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3687,
+      "end": 3716,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.m2",
+      "role": "value",
+      "paper": "S013",
+      "start": 3721,
+      "end": 3748,
+      "exact": "7.2 percentage points lower"
+    },
+    {
+      "fact": "S013.c1",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3766,
+      "end": 3777,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S013.k2",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 3854,
+      "end": 3861,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3904,
+      "end": 3933,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.c3",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 3993,
+      "end": 4017,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S013.c1",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 4063,
+      "end": 4074,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S013.k1",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 4087,
+      "end": 4102,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S013.k1",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 5021,
+      "end": 5036,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S013.k2",
+      "role": "metric_label",
+      "paper": "S013",
+      "start": 5041,
+      "end": 5048,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S013.c1",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 5242,
+      "end": 5253,
+      "exact": "vanilla LLM"
+    },
+    {
+      "fact": "S013.c2",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 5259,
+      "end": 5288,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S013.c3",
+      "role": "condition_label",
+      "paper": "S013",
+      "start": 5294,
+      "end": 5318,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S013.a1",
+      "role": "claim",
+      "paper": "S013",
+      "start": 5438,
+      "end": 5514,
+      "exact": "Grounding the generator in retrieved documents yields less accurate answers."
+    },
+    {
+      "fact": "S016.c1",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 278,
+      "end": 299,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S016.c2",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 303,
+      "end": 332,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S016.c3",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 336,
+      "end": 360,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S016.c4",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 368,
+      "end": 391,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S016.k1",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 427,
+      "end": 450,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S016.k2",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 452,
+      "end": 456,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S016.k3",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 469,
+      "end": 476,
+      "exact": "latency"
+    },
+    {
+      "fact": "S016.a1",
+      "role": "claim",
+      "paper": "S016",
+      "start": 500,
+      "end": 575,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S016.c1",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 1302,
+      "end": 1323,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S016.c2",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 1388,
+      "end": 1417,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S016.c3",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 1497,
+      "end": 1521,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S016.c4",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 1617,
+      "end": 1640,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S016.k1",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 1907,
+      "end": 1930,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S016.k1",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 1947,
+      "end": 1999,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S016.k2",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2001,
+      "end": 2005,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S016.k2",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2020,
+      "end": 2060,
+      "exact": "n-gram overlap with the reference answer"
+    },
+    {
+      "fact": "S016.k3",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2066,
+      "end": 2073,
+      "exact": "latency"
+    },
+    {
+      "fact": "S016.k3",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2079,
+      "end": 2120,
+      "exact": "mean seconds needed to produce one answer"
+    },
+    {
+      "fact": "S016.k1",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2239,
+      "end": 2262,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S016.k2",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2269,
+      "end": 2273,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S016.k3",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2280,
+      "end": 2287,
+      "exact": "latency"
+    },
+    {
+      "fact": "S016.c1",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2333,
+      "end": 2354,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S016.m1",
+      "role": "value",
+      "paper": "S016",
+      "start": 2372,
+      "end": 2376,
+      "exact": "10.3"
+    },
+    {
+      "fact": "S016.m5",
+      "role": "value",
+      "paper": "S016",
+      "start": 2379,
+      "end": 2383,
+      "exact": "45.1"
+    },
+    {
+      "fact": "S016.m9",
+      "role": "value",
+      "paper": "S016",
+      "start": 2386,
+      "end": 2390,
+      "exact": "1.62"
+    },
+    {
+      "fact": "S016.c2",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2395,
+      "end": 2424,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S016.m6",
+      "role": "value",
+      "paper": "S016",
+      "start": 2453,
+      "end": 2457,
+      "exact": "42.7"
+    },
+    {
+      "fact": "S016.m10",
+      "role": "value",
+      "paper": "S016",
+      "start": 2460,
+      "end": 2464,
+      "exact": "2.93"
+    },
+    {
+      "fact": "S016.c3",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2469,
+      "end": 2493,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S016.m3",
+      "role": "value",
+      "paper": "S016",
+      "start": 2511,
+      "end": 2515,
+      "exact": "41.2"
+    },
+    {
+      "fact": "S016.m7",
+      "role": "value",
+      "paper": "S016",
+      "start": 2518,
+      "end": 2522,
+      "exact": "47.4"
+    },
+    {
+      "fact": "S016.m11",
+      "role": "value",
+      "paper": "S016",
+      "start": 2525,
+      "end": 2529,
+      "exact": "2.85"
+    },
+    {
+      "fact": "S016.c4",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2534,
+      "end": 2557,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S016.m4",
+      "role": "value",
+      "paper": "S016",
+      "start": 2575,
+      "end": 2579,
+      "exact": "30.4"
+    },
+    {
+      "fact": "S016.m8",
+      "role": "value",
+      "paper": "S016",
+      "start": 2582,
+      "end": 2586,
+      "exact": "21.5"
+    },
+    {
+      "fact": "S016.m12",
+      "role": "value",
+      "paper": "S016",
+      "start": 2589,
+      "end": 2593,
+      "exact": "1.55"
+    },
+    {
+      "fact": "S016.c1",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2598,
+      "end": 2619,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S016.m13",
+      "role": "value",
+      "paper": "S016",
+      "start": 2637,
+      "end": 2641,
+      "exact": "26.2"
+    },
+    {
+      "fact": "S016.m17",
+      "role": "value",
+      "paper": "S016",
+      "start": 2644,
+      "end": 2648,
+      "exact": "38.6"
+    },
+    {
+      "fact": "S016.m21",
+      "role": "value",
+      "paper": "S016",
+      "start": 2651,
+      "end": 2655,
+      "exact": "2.28"
+    },
+    {
+      "fact": "S016.c2",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2660,
+      "end": 2689,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S016.m14",
+      "role": "value",
+      "paper": "S016",
+      "start": 2707,
+      "end": 2711,
+      "exact": "16.8"
+    },
+    {
+      "fact": "S016.m18",
+      "role": "value",
+      "paper": "S016",
+      "start": 2714,
+      "end": 2718,
+      "exact": "12.4"
+    },
+    {
+      "fact": "S016.m22",
+      "role": "value",
+      "paper": "S016",
+      "start": 2721,
+      "end": 2725,
+      "exact": "1.21"
+    },
+    {
+      "fact": "S016.c3",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2730,
+      "end": 2754,
+      "exact": "RAG with random passages"
+    },
+    {
+      "fact": "S016.m15",
+      "role": "value",
+      "paper": "S016",
+      "start": 2772,
+      "end": 2776,
+      "exact": "29.1"
+    },
+    {
+      "fact": "S016.m19",
+      "role": "value",
+      "paper": "S016",
+      "start": 2779,
+      "end": 2783,
+      "exact": "13.6"
+    },
+    {
+      "fact": "S016.m23",
+      "role": "value",
+      "paper": "S016",
+      "start": 2786,
+      "end": 2790,
+      "exact": "3.01"
+    },
+    {
+      "fact": "S016.c4",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2795,
+      "end": 2818,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S016.m16",
+      "role": "value",
+      "paper": "S016",
+      "start": 2836,
+      "end": 2840,
+      "exact": "25.2"
+    },
+    {
+      "fact": "S016.m20",
+      "role": "value",
+      "paper": "S016",
+      "start": 2843,
+      "end": 2847,
+      "exact": "36.1"
+    },
+    {
+      "fact": "S016.m24",
+      "role": "value",
+      "paper": "S016",
+      "start": 2850,
+      "end": 2854,
+      "exact": "1.44"
+    },
+    {
+      "fact": "S016.k1",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 2891,
+      "end": 2914,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S016.c2",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 2923,
+      "end": 2952,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S016.m2",
+      "role": "value",
+      "paper": "S016",
+      "start": 2957,
+      "end": 2984,
+      "exact": "5.2 percentage points lower"
+    },
+    {
+      "fact": "S016.c1",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 3002,
+      "end": 3023,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S016.c2",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 3051,
+      "end": 3080,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S016.k3",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 3128,
+      "end": 3135,
+      "exact": "Latency"
+    },
+    {
+      "fact": "S016.c4",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 3171,
+      "end": 3194,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S016.c2",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 3477,
+      "end": 3506,
+      "exact": "retrieval-augmented generator"
+    },
+    {
+      "fact": "S016.c4",
+      "role": "condition_label",
+      "paper": "S016",
+      "start": 3574,
+      "end": 3597,
+      "exact": "query-rewriting variant"
+    },
+    {
+      "fact": "S016.k3",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 3888,
+      "end": 3895,
+      "exact": "latency"
+    },
+    {
+      "fact": "S016.k1",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 4158,
+      "end": 4181,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S016.k2",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 4183,
+      "end": 4187,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S016.k3",
+      "role": "metric_label",
+      "paper": "S016",
+      "start": 4200,
+      "end": 4207,
+      "exact": "latency"
+    },
+    {
+      "fact": "S016.a1",
+      "role": "claim",
+      "paper": "S016",
+      "start": 4209,
+      "end": 4292,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    },
+    {
+      "fact": "S017.c1",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 230,
+      "end": 251,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S017.c2",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 255,
+      "end": 267,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S017.c3",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 271,
+      "end": 287,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S017.c4",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 295,
+      "end": 320,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S017.k1",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 387,
+      "end": 410,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S017.k2",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 415,
+      "end": 419,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S017.a1",
+      "role": "claim",
+      "paper": "S017",
+      "start": 562,
+      "end": 637,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S017.c1",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 1447,
+      "end": 1468,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S017.c2",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 1540,
+      "end": 1552,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S017.c3",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 1658,
+      "end": 1674,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S017.c4",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 1746,
+      "end": 1771,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S017.k1",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 2069,
+      "end": 2092,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S017.k1",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 2109,
+      "end": 2161,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S017.k2",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 2167,
+      "end": 2171,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S017.k2",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 2188,
+      "end": 2228,
+      "exact": "n-gram overlap with the reference answer"
+    },
+    {
+      "fact": "S017.k1",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 2573,
+      "end": 2596,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S017.k2",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 2603,
+      "end": 2607,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S017.c1",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 2646,
+      "end": 2667,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S017.m1",
+      "role": "value",
+      "paper": "S017",
+      "start": 2685,
+      "end": 2689,
+      "exact": "41.4"
+    },
+    {
+      "fact": "S017.m5",
+      "role": "value",
+      "paper": "S017",
+      "start": 2692,
+      "end": 2696,
+      "exact": "46.8"
+    },
+    {
+      "fact": "S017.c2",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 2701,
+      "end": 2713,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S017.m6",
+      "role": "value",
+      "paper": "S017",
+      "start": 2742,
+      "end": 2746,
+      "exact": "48.7"
+    },
+    {
+      "fact": "S017.c3",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 2751,
+      "end": 2767,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S017.m3",
+      "role": "value",
+      "paper": "S017",
+      "start": 2785,
+      "end": 2789,
+      "exact": "29.8"
+    },
+    {
+      "fact": "S017.m7",
+      "role": "value",
+      "paper": "S017",
+      "start": 2792,
+      "end": 2796,
+      "exact": "12.6"
+    },
+    {
+      "fact": "S017.c4",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 2801,
+      "end": 2826,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S017.m4",
+      "role": "value",
+      "paper": "S017",
+      "start": 2844,
+      "end": 2848,
+      "exact": "19.1"
+    },
+    {
+      "fact": "S017.m8",
+      "role": "value",
+      "paper": "S017",
+      "start": 2851,
+      "end": 2855,
+      "exact": "35.3"
+    },
+    {
+      "fact": "S017.c1",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 2860,
+      "end": 2881,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S017.m9",
+      "role": "value",
+      "paper": "S017",
+      "start": 2896,
+      "end": 2900,
+      "exact": "44.6"
+    },
+    {
+      "fact": "S017.m13",
+      "role": "value",
+      "paper": "S017",
+      "start": 2903,
+      "end": 2907,
+      "exact": "36.3"
+    },
+    {
+      "fact": "S017.c2",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 2912,
+      "end": 2924,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S017.m10",
+      "role": "value",
+      "paper": "S017",
+      "start": 2939,
+      "end": 2943,
+      "exact": "11.7"
+    },
+    {
+      "fact": "S017.m14",
+      "role": "value",
+      "paper": "S017",
+      "start": 2946,
+      "end": 2950,
+      "exact": "53.2"
+    },
+    {
+      "fact": "S017.c3",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 2955,
+      "end": 2971,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S017.m11",
+      "role": "value",
+      "paper": "S017",
+      "start": 2986,
+      "end": 2990,
+      "exact": "42.8"
+    },
+    {
+      "fact": "S017.m15",
+      "role": "value",
+      "paper": "S017",
+      "start": 2993,
+      "end": 2997,
+      "exact": "37.8"
+    },
+    {
+      "fact": "S017.c4",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 3002,
+      "end": 3027,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S017.m12",
+      "role": "value",
+      "paper": "S017",
+      "start": 3042,
+      "end": 3046,
+      "exact": "28.1"
+    },
+    {
+      "fact": "S017.m16",
+      "role": "value",
+      "paper": "S017",
+      "start": 3049,
+      "end": 3053,
+      "exact": "14.6"
+    },
+    {
+      "fact": "S017.k1",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 3090,
+      "end": 3113,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S017.c2",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 3122,
+      "end": 3134,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S017.m2",
+      "role": "value",
+      "paper": "S017",
+      "start": 3139,
+      "end": 3167,
+      "exact": "30.6 percentage points lower"
+    },
+    {
+      "fact": "S017.c1",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 3185,
+      "end": 3206,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S017.c3",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 3726,
+      "end": 3742,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S017.c4",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 3747,
+      "end": 3772,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S017.k2",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 3904,
+      "end": 3908,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S017.c1",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 4315,
+      "end": 4336,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S017.c2",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 4338,
+      "end": 4350,
+      "exact": "RAG pipeline"
+    },
+    {
+      "fact": "S017.c3",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 4352,
+      "end": 4368,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S017.c4",
+      "role": "condition_label",
+      "paper": "S017",
+      "start": 4374,
+      "end": 4399,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S017.k1",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 4469,
+      "end": 4492,
+      "exact": "hallucination frequency"
+    },
+    {
+      "fact": "S017.k2",
+      "role": "metric_label",
+      "paper": "S017",
+      "start": 4497,
+      "end": 4501,
+      "exact": "BLEU"
+    },
+    {
+      "fact": "S017.a1",
+      "role": "claim",
+      "paper": "S017",
+      "start": 4534,
+      "end": 4617,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 207,
+      "end": 228,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 232,
+      "end": 256,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 264,
+      "end": 280,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.k1",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 359,
+      "end": 378,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S019.k2",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 380,
+      "end": 387,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S019.k3",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 393,
+      "end": 400,
+      "exact": "latency"
+    },
+    {
+      "fact": "S019.a1",
+      "role": "claim",
+      "paper": "S019",
+      "start": 430,
+      "end": 504,
+      "exact": "Retrieval augmentation does not make the answers measurably more accurate."
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 870,
+      "end": 891,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 897,
+      "end": 921,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 931,
+      "end": 947,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 1136,
+      "end": 1157,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 1222,
+      "end": 1246,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 1333,
+      "end": 1349,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.k1",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1581,
+      "end": 1600,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S019.k1",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1617,
+      "end": 1661,
+      "exact": "fraction of answers judged factually correct"
+    },
+    {
+      "fact": "S019.k2",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1663,
+      "end": 1670,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S019.k2",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1687,
+      "end": 1747,
+      "exact": "longest common subsequence overlap with the reference answer"
+    },
+    {
+      "fact": "S019.k3",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1753,
+      "end": 1760,
+      "exact": "latency"
+    },
+    {
+      "fact": "S019.k3",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1777,
+      "end": 1818,
+      "exact": "mean seconds needed to produce one answer"
+    },
+    {
+      "fact": "S019.k1",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1934,
+      "end": 1953,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S019.k2",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1960,
+      "end": 1967,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S019.k3",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 1974,
+      "end": 1981,
+      "exact": "latency"
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2027,
+      "end": 2048,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.m1",
+      "role": "value",
+      "paper": "S019",
+      "start": 2065,
+      "end": 2069,
+      "exact": "64.2"
+    },
+    {
+      "fact": "S019.m4",
+      "role": "value",
+      "paper": "S019",
+      "start": 2072,
+      "end": 2076,
+      "exact": "48.2"
+    },
+    {
+      "fact": "S019.m7",
+      "role": "value",
+      "paper": "S019",
+      "start": 2079,
+      "end": 2083,
+      "exact": "1.91"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2088,
+      "end": 2112,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.m5",
+      "role": "value",
+      "paper": "S019",
+      "start": 2140,
+      "end": 2144,
+      "exact": "10.6"
+    },
+    {
+      "fact": "S019.m8",
+      "role": "value",
+      "paper": "S019",
+      "start": 2147,
+      "end": 2151,
+      "exact": "1.09"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2156,
+      "end": 2172,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.m3",
+      "role": "value",
+      "paper": "S019",
+      "start": 2189,
+      "end": 2193,
+      "exact": "59.1"
+    },
+    {
+      "fact": "S019.m6",
+      "role": "value",
+      "paper": "S019",
+      "start": 2196,
+      "end": 2200,
+      "exact": "37.9"
+    },
+    {
+      "fact": "S019.m9",
+      "role": "value",
+      "paper": "S019",
+      "start": 2203,
+      "end": 2207,
+      "exact": "0.78"
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2212,
+      "end": 2233,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.m10",
+      "role": "value",
+      "paper": "S019",
+      "start": 2251,
+      "end": 2255,
+      "exact": "49.5"
+    },
+    {
+      "fact": "S019.m13",
+      "role": "value",
+      "paper": "S019",
+      "start": 2258,
+      "end": 2262,
+      "exact": "29.1"
+    },
+    {
+      "fact": "S019.m16",
+      "role": "value",
+      "paper": "S019",
+      "start": 2265,
+      "end": 2269,
+      "exact": "1.99"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2274,
+      "end": 2298,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.m11",
+      "role": "value",
+      "paper": "S019",
+      "start": 2316,
+      "end": 2320,
+      "exact": "50.3"
+    },
+    {
+      "fact": "S019.m14",
+      "role": "value",
+      "paper": "S019",
+      "start": 2323,
+      "end": 2327,
+      "exact": "39.3"
+    },
+    {
+      "fact": "S019.m17",
+      "role": "value",
+      "paper": "S019",
+      "start": 2330,
+      "end": 2334,
+      "exact": "2.63"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2339,
+      "end": 2355,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.m12",
+      "role": "value",
+      "paper": "S019",
+      "start": 2373,
+      "end": 2377,
+      "exact": "55.6"
+    },
+    {
+      "fact": "S019.m15",
+      "role": "value",
+      "paper": "S019",
+      "start": 2380,
+      "end": 2384,
+      "exact": "51.2"
+    },
+    {
+      "fact": "S019.m18",
+      "role": "value",
+      "paper": "S019",
+      "start": 2387,
+      "end": 2391,
+      "exact": "2.97"
+    },
+    {
+      "fact": "S019.k1",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 2427,
+      "end": 2446,
+      "exact": "fact-level accuracy"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2454,
+      "end": 2478,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.m2",
+      "role": "value",
+      "paper": "S019",
+      "start": 2483,
+      "end": 2510,
+      "exact": "0.8 percentage points lower"
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2528,
+      "end": 2549,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2555,
+      "end": 2579,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.k2",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 2598,
+      "end": 2605,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S019.k3",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 2687,
+      "end": 2694,
+      "exact": "Latency"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 2730,
+      "end": 2746,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 3050,
+      "end": 3074,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 3145,
+      "end": 3161,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 3244,
+      "end": 3265,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.c1",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 3580,
+      "end": 3601,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S019.c2",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 3607,
+      "end": 3631,
+      "exact": "retrieve-then-read model"
+    },
+    {
+      "fact": "S019.c3",
+      "role": "condition_label",
+      "paper": "S019",
+      "start": 3641,
+      "end": 3657,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S019.a1",
+      "role": "claim",
+      "paper": "S019",
+      "start": 3717,
+      "end": 3804,
+      "exact": "Adding retrieved documents leaves the correctness of the answers essentially unchanged."
+    },
+    {
+      "fact": "S019.k3",
+      "role": "metric_label",
+      "paper": "S019",
+      "start": 3828,
+      "end": 3835,
+      "exact": "latency"
+    },
+    {
+      "fact": "S020.c1",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 262,
+      "end": 283,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 287,
+      "end": 312,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.c3",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 316,
+      "end": 332,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S020.c4",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 340,
+      "end": 365,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S020.k1",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 474,
+      "end": 489,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 491,
+      "end": 498,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 504,
+      "end": 511,
+      "exact": "latency"
+    },
+    {
+      "fact": "S020.a1",
+      "role": "claim",
+      "paper": "S020",
+      "start": 532,
+      "end": 605,
+      "exact": "Retrieval augmentation makes the generated answers clearly more accurate."
+    },
+    {
+      "fact": "S020.c4",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 1177,
+      "end": 1202,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S020.c1",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 1609,
+      "end": 1630,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 1702,
+      "end": 1727,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.c3",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 1823,
+      "end": 1839,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S020.c4",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 1915,
+      "end": 1940,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S020.k1",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2210,
+      "end": 2225,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S020.k1",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2242,
+      "end": 2293,
+      "exact": "proportion of questions answered with correct facts"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2295,
+      "end": 2302,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2323,
+      "end": 2383,
+      "exact": "longest common subsequence overlap with the reference answer"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2389,
+      "end": 2396,
+      "exact": "latency"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2413,
+      "end": 2454,
+      "exact": "mean seconds needed to produce one answer"
+    },
+    {
+      "fact": "S020.k1",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2651,
+      "end": 2666,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2668,
+      "end": 2675,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2681,
+      "end": 2688,
+      "exact": "latency"
+    },
+    {
+      "fact": "S020.k1",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2744,
+      "end": 2759,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2766,
+      "end": 2773,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 2780,
+      "end": 2787,
+      "exact": "latency"
+    },
+    {
+      "fact": "S020.c1",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 2833,
+      "end": 2854,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S020.m1",
+      "role": "value",
+      "paper": "S020",
+      "start": 2869,
+      "end": 2873,
+      "exact": "52.3"
+    },
+    {
+      "fact": "S020.m5",
+      "role": "value",
+      "paper": "S020",
+      "start": 2876,
+      "end": 2880,
+      "exact": "43.1"
+    },
+    {
+      "fact": "S020.m9",
+      "role": "value",
+      "paper": "S020",
+      "start": 2883,
+      "end": 2887,
+      "exact": "0.41"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 2892,
+      "end": 2917,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.m6",
+      "role": "value",
+      "paper": "S020",
+      "start": 2943,
+      "end": 2947,
+      "exact": "29.3"
+    },
+    {
+      "fact": "S020.m10",
+      "role": "value",
+      "paper": "S020",
+      "start": 2950,
+      "end": 2954,
+      "exact": "1.82"
+    },
+    {
+      "fact": "S020.c3",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 2959,
+      "end": 2975,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S020.m3",
+      "role": "value",
+      "paper": "S020",
+      "start": 2990,
+      "end": 2994,
+      "exact": "55.2"
+    },
+    {
+      "fact": "S020.m7",
+      "role": "value",
+      "paper": "S020",
+      "start": 2997,
+      "end": 3001,
+      "exact": "20.4"
+    },
+    {
+      "fact": "S020.m11",
+      "role": "value",
+      "paper": "S020",
+      "start": 3004,
+      "end": 3008,
+      "exact": "3.46"
+    },
+    {
+      "fact": "S020.c4",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3013,
+      "end": 3038,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S020.m4",
+      "role": "value",
+      "paper": "S020",
+      "start": 3053,
+      "end": 3057,
+      "exact": "35.7"
+    },
+    {
+      "fact": "S020.m8",
+      "role": "value",
+      "paper": "S020",
+      "start": 3060,
+      "end": 3064,
+      "exact": "38.5"
+    },
+    {
+      "fact": "S020.m12",
+      "role": "value",
+      "paper": "S020",
+      "start": 3067,
+      "end": 3071,
+      "exact": "3.01"
+    },
+    {
+      "fact": "S020.c1",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3076,
+      "end": 3097,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S020.m13",
+      "role": "value",
+      "paper": "S020",
+      "start": 3111,
+      "end": 3115,
+      "exact": "69.9"
+    },
+    {
+      "fact": "S020.m17",
+      "role": "value",
+      "paper": "S020",
+      "start": 3118,
+      "end": 3122,
+      "exact": "33.6"
+    },
+    {
+      "fact": "S020.m21",
+      "role": "value",
+      "paper": "S020",
+      "start": 3125,
+      "end": 3129,
+      "exact": "1.96"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3134,
+      "end": 3159,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.m14",
+      "role": "value",
+      "paper": "S020",
+      "start": 3173,
+      "end": 3177,
+      "exact": "80.2"
+    },
+    {
+      "fact": "S020.m18",
+      "role": "value",
+      "paper": "S020",
+      "start": 3180,
+      "end": 3184,
+      "exact": "30.9"
+    },
+    {
+      "fact": "S020.m22",
+      "role": "value",
+      "paper": "S020",
+      "start": 3187,
+      "end": 3191,
+      "exact": "1.27"
+    },
+    {
+      "fact": "S020.c3",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3196,
+      "end": 3212,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S020.m15",
+      "role": "value",
+      "paper": "S020",
+      "start": 3226,
+      "end": 3230,
+      "exact": "40.1"
+    },
+    {
+      "fact": "S020.m19",
+      "role": "value",
+      "paper": "S020",
+      "start": 3233,
+      "end": 3237,
+      "exact": "48.1"
+    },
+    {
+      "fact": "S020.m23",
+      "role": "value",
+      "paper": "S020",
+      "start": 3240,
+      "end": 3244,
+      "exact": "3.11"
+    },
+    {
+      "fact": "S020.c4",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3249,
+      "end": 3274,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S020.m16",
+      "role": "value",
+      "paper": "S020",
+      "start": 3288,
+      "end": 3292,
+      "exact": "77.2"
+    },
+    {
+      "fact": "S020.m20",
+      "role": "value",
+      "paper": "S020",
+      "start": 3295,
+      "end": 3299,
+      "exact": "46.4"
+    },
+    {
+      "fact": "S020.m24",
+      "role": "value",
+      "paper": "S020",
+      "start": 3302,
+      "end": 3306,
+      "exact": "1.41"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3340,
+      "end": 3365,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.k1",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 3378,
+      "end": 3393,
+      "exact": "answer accuracy"
+    },
+    {
+      "fact": "S020.m2",
+      "role": "value",
+      "paper": "S020",
+      "start": 3403,
+      "end": 3432,
+      "exact": "12.3 percentage points higher"
+    },
+    {
+      "fact": "S020.c1",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3442,
+      "end": 3463,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3595,
+      "end": 3620,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.c3",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3669,
+      "end": 3685,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 3750,
+      "end": 3757,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 3800,
+      "end": 3807,
+      "exact": "Latency"
+    },
+    {
+      "fact": "S020.c1",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3839,
+      "end": 3860,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 3941,
+      "end": 3966,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 4309,
+      "end": 4316,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 4423,
+      "end": 4430,
+      "exact": "latency"
+    },
+    {
+      "fact": "S020.c4",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 4546,
+      "end": 4571,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S020.c3",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 4689,
+      "end": 4705,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S020.c1",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 5006,
+      "end": 5027,
+      "exact": "no-retrieval baseline"
+    },
+    {
+      "fact": "S020.c2",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 5029,
+      "end": 5054,
+      "exact": "retrieval-augmented model"
+    },
+    {
+      "fact": "S020.c3",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 5056,
+      "end": 5072,
+      "exact": "fine-tuned model"
+    },
+    {
+      "fact": "S020.c4",
+      "role": "condition_label",
+      "paper": "S020",
+      "start": 5078,
+      "end": 5103,
+      "exact": "self-consistency decoding"
+    },
+    {
+      "fact": "S020.k2",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 5179,
+      "end": 5186,
+      "exact": "ROUGE-L"
+    },
+    {
+      "fact": "S020.k3",
+      "role": "metric_label",
+      "paper": "S020",
+      "start": 5192,
+      "end": 5199,
+      "exact": "latency"
+    },
+    {
+      "fact": "S020.a1",
+      "role": "claim",
+      "paper": "S020",
+      "start": 5220,
+      "end": 5296,
+      "exact": "Grounding the generator in retrieved documents yields more accurate answers."
+    }
+  ],
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S002",
+      "S005",
+      "S016",
+      "S017",
+      "S020"
+    ],
+    "contradicting": [
+      "S009",
+      "S013"
+    ],
+    "neutral": [
+      "S003",
+      "S019"
+    ],
+    "undetermined": [
+      "S023",
+      "S024"
+    ],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": [
+        "S017"
+      ]
+    }
+  }
+}

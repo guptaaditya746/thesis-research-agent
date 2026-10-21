@@ -1,0 +1,10 @@
+{
+  "corpus_id": "rag-llm-small-bd3f74c0",
+  "papers": [
+    {
+      "id": "S003",
+      "file": "papers/S003.md",
+      "sha256": "53bc6690be7c6a50127a1f1ee7305f966cef44a77632e53d021430407f91b5d8"
+    }
+  ]
+}

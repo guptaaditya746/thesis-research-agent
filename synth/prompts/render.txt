@@ -9,5 +9,6 @@ Rules:
 4. The abstract contains the abstract claim sentence; the conclusion contains the conclusion claim sentence. Do not add any other statement on whether the method helps, hurts or makes no difference.
 5. Follow the "level_instructions" exactly.
 6. Mention the main dataset as the main benchmark.
+7. Only the two exact claim sentences in the plan may state an effect of retrieval on accuracy or hallucination. Outside those sentences, do not put retrieval or RAG together with a statement that it improves, helps, increases, changes, reduces, lowers, decreases, raises, boosts, enhances, affects, alters, makes, leads, yields or matters for accuracy or hallucination; do not make these claims as questions, aims, predictions or implications either. In the Introduction, describe the aim as comparing conditions. In the Discussion, describe study design or limitations only; do not interpret the findings. The Discussion must not repeat or paraphrase measurements or numeric comparisons from Results.
 
 Reply with a JSON object {"markdown": "<the whole paper>"}.

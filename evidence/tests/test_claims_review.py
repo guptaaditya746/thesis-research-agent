@@ -26,3 +26,9 @@ def test_claim_direction(tmp_path: Path, sentence: str, direction: str) -> None:
     _, items = regex_run({"C": f"# C\n\n## Conclusion\n\n{sentence}\n"}, tmp_path)
     claims = [i["fields"]["direction"] for i in items.values() if i["evidence_type"] == "author_claim"]
     assert claims == [direction]
+
+
+def test_alternative_retrieval_methods_is_not_an_effect_claim(tmp_path: Path) -> None:
+    sentence = "The use of a dense retriever is a standard choice, and we did not explore alternative retrieval methods."
+    _, items = regex_run({"C": f"# C\n\n## Discussion\n\n{sentence}\n"}, tmp_path)
+    assert not [i for i in items.values() if i["evidence_type"] == "author_claim"]

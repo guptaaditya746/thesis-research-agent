@@ -1,0 +1,158 @@
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/runs/cascade/rag-llm-s1-distributed-reexec-20261021T030150448105Z",
+ "summary": {
+  "llm_author_claim": {
+   "calls": 11,
+   "extractor_ids": [
+    "llm_author_claim@1#fefdf4416c50"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 12,
+   "items_reproduced": 12,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_condition": {
+   "calls": 11,
+   "extractor_ids": [
+    "llm_condition@1#134ab1a38338"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 39,
+   "items_reproduced": 39,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_measurement": {
+   "calls": 11,
+   "extractor_ids": [
+    "llm_measurement@1#5212fc43026f"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 33,
+   "items_reproduced": 33,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_metric": {
+   "calls": 11,
+   "extractor_ids": [
+    "llm_metric@1#1ca12a572ef8"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 12,
+   "items_reproduced": 12,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_screen": {
+   "calls": 11,
+   "extractor_ids": [
+    "llm_screen@1#6bec6abaf6a0"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 11,
+   "items_reproduced": 11,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_author_claim": {
+   "calls": 11,
+   "extractor_ids": [
+    "regex_author_claim@2#b2161f228a8c"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 11,
+   "items_reproduced": 11,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_condition": {
+   "calls": 11,
+   "extractor_ids": [
+    "regex_condition@2#80486860164a"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 17,
+   "items_reproduced": 17,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_measurement": {
+   "calls": 11,
+   "extractor_ids": [
+    "regex_measurement@2#9edb306c5b05"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": null,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 0,
+   "items_reproduced": 0,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_metric": {
+   "calls": 11,
+   "extractor_ids": [
+    "regex_metric@2#67f41f33eff7"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 19,
+   "items_reproduced": 19,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_screen": {
+   "calls": 11,
+   "extractor_ids": [
+    "regex_screen@1#8301b6896dc3"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 11,
+   "items_reproduced": 11,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  }
+ },
+ "totals": {
+  "identical": 110
+ }
+}

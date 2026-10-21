@@ -1,0 +1,60 @@
+{
+  "corpus_id": "rag-llm-s1-d60fff2f",
+  "papers": [
+    {
+      "id": "S002",
+      "file": "papers/S002.md",
+      "sha256": "fd67aecb584232a3af1a7ff7d8d6575539edbee737182b8a6e29f9e98d37ebca"
+    },
+    {
+      "id": "S003",
+      "file": "papers/S003.md",
+      "sha256": "8cef92aceda7b471182fb2669c196595094a81556435c0e719bfd5f6a9e97132"
+    },
+    {
+      "id": "S005",
+      "file": "papers/S005.md",
+      "sha256": "8a589c7253756914b2bb560e5a448ad3c832d450cd061ca81ce6439e4f5ee74a"
+    },
+    {
+      "id": "S007",
+      "file": "papers/S007.md",
+      "sha256": "dbf563a27ec6c4cc1c88c30941e65a914301b2de58f2424f9bc9635fb3be0942"
+    },
+    {
+      "id": "S008",
+      "file": "papers/S008.md",
+      "sha256": "4429ef6bfd2b148dccdda3f793cbbe6a3673a4b06b83c0136708aebec1118bca"
+    },
+    {
+      "id": "S009",
+      "file": "papers/S009.md",
+      "sha256": "ccb82954fa97a4e45eb83c4cd5eebf831f0aa42c7a0925573b1ff76ad9a775c9"
+    },
+    {
+      "id": "S013",
+      "file": "papers/S013.md",
+      "sha256": "25437332ea5e85cf905b86b0f5273f638d0f3a64ad2672955ac640f9b8884a50"
+    },
+    {
+      "id": "S014",
+      "file": "papers/S014.md",
+      "sha256": "ed278e072c44a9e1cce559d5375248e6f274bcf2a813002e076f70c627f68fdc"
+    },
+    {
+      "id": "S016",
+      "file": "papers/S016.md",
+      "sha256": "bedfd8514c663c413dbd06531e214beb83057fc221a808c7ded070573394ded7"
+    },
+    {
+      "id": "S019",
+      "file": "papers/S019.md",
+      "sha256": "c742ea2b749f7749c1480a0c144bb2fe4e2cbda6d31d8647b047f41242ad4b2d"
+    },
+    {
+      "id": "S020",
+      "file": "papers/S020.md",
+      "sha256": "e9837a652eb7fa6b4ce3d0df71baddfb5d3b3e9fe052165a7fe35c84925bb4fa"
+    }
+  ]
+}

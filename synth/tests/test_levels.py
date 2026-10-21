@@ -229,6 +229,12 @@ def test_sentences_without_the_subject_or_without_an_effect_are_not_claims() -> 
     assert "added_claims" not in failing(plan, text, ps, decoys)
 
 
+def test_alternative_retrieval_methods_is_not_an_added_claim() -> None:
+    text, plan, ps, decoys = _llm_read("explicit", lambda t, p: t +
+        "\nThe use of a dense retriever is a standard choice, and we did not explore alternative retrieval methods.\n")
+    assert "added_claims" not in failing(plan, text, ps, decoys)
+
+
 def test_irrelevant_papers_pass_every_check_and_place_nothing() -> None:
     from synth.levels import irrelevant_plan
     for topic in truth.IRRELEVANT_TOPICS:

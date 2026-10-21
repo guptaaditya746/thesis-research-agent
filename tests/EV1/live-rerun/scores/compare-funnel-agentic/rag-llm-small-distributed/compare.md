@@ -1,0 +1,23 @@
+# Comparison over corpora
+
+| level       | corpus_id              | system          | strategy   | extraction_f1   | span_accuracy   | association_accuracy   | true_pair   | direction_accuracy   | completeness   | accuracy_answered   | traceability   | label_correct   | calls_per_document   | tokens_per_document   | screen_precision   | screen_recall   |
+|-------------|------------------------|-----------------|------------|-----------------|-----------------|------------------------|-------------|----------------------|----------------|---------------------|----------------|-----------------|----------------------|-----------------------|--------------------|-----------------|
+| distributed | rag-llm-small-bd3f74c0 | agent-baseline  | -          | -               | -               | -                      | -           | 1.000                | 1.000          | 1.000               | -              | yes             | -                    | -                     | -                  | -               |
+| distributed | rag-llm-small-bd3f74c0 | agent-baseline  | -          | -               | -               | -                      | -           | 1.000                | 1.000          | 1.000               | -              | yes             | -                    | -                     | -                  | -               |
+| distributed | rag-llm-small-bd3f74c0 | evidence-engine | all        | 0.952           | 1.000           | 1.000                  | 1.000       | 1.000                | 1.000          | 1.000               | -              | yes             | 14.000               | 964868.000            | 1.000              | 1.000           |
+| distributed | rag-llm-small-bd3f74c0 | evidence-engine | gaps       | 0.750           | 0.833           | 1.000                  | 1.000       | 1.000                | 1.000          | 1.000               | -              | yes             | 8.000                | 5295.000              | 1.000              | 1.000           |
+| distributed | rag-llm-small-bd3f74c0 | rag-baseline    | -          | -               | -               | -                      | -           | 1.000                | 1.000          | 1.000               | 1.000          | yes             | -                    | -                     | -                  | -               |
+| distributed | rag-llm-small-bd3f74c0 | rag-baseline    | -          | -               | -               | -                      | -           | 1.000                | 1.000          | 1.000               | 1.000          | yes             | -                    | -                     | -                  | -               |
+
+## Intervals
+
+95 % bootstrap over papers, `point [low, high]` (BCa, or percentile where BCa is undefined: the method is in each report's Intervals section); `[n/a]`: degenerate sample.
+
+| level       | corpus_id              | system          | strategy   | extraction_f1   | direction_accuracy   | engine_minus_system   |
+|-------------|------------------------|-----------------|------------|-----------------|----------------------|-----------------------|
+| distributed | rag-llm-small-bd3f74c0 | agent-baseline  | -          | -               | 1.000 [n/a]          | 0.000 [n/a]           |
+| distributed | rag-llm-small-bd3f74c0 | agent-baseline  | -          | -               | 1.000 [n/a]          | 0.000 [n/a]           |
+| distributed | rag-llm-small-bd3f74c0 | evidence-engine | all        | 0.952 [n/a]     | 1.000 [n/a]          | -                     |
+| distributed | rag-llm-small-bd3f74c0 | evidence-engine | gaps       | 0.750 [n/a]     | 1.000 [n/a]          | -                     |
+| distributed | rag-llm-small-bd3f74c0 | rag-baseline    | -          | -               | 1.000 [n/a]          | 0.000 [n/a]           |
+| distributed | rag-llm-small-bd3f74c0 | rag-baseline    | -          | -               | 1.000 [n/a]          | 0.000 [n/a]           |

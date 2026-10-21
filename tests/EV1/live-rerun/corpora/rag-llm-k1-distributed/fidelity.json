@@ -1,0 +1,2352 @@
+{
+  "corpus_id": "rag-llm-k1-b7bbc94e",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S001.k1: abbreviation 'HR' defined within 300 characters of the table"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S001.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) contradictory, distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S002.k1: abbreviation 'FLA' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S003",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S003.m1/value: required string '78.3' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S003.m2/value: required string '77.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S004",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S004.m1/value: required string '59.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S004.m2/value: required string '58.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S004.a1/claim: required string 'Retrieval augmentation does not make the answers measurably more accurate.' is not_found; S004.a1/claim: required string 'Adding retrieved documents leaves the correctness of the answers essentially unchanged.' is not_found"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The findings suggest that the addition of retrieval does not necessarily lead to improved factual accuracy in this specific context.' at 12696"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) paraphrased; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S005",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "model_call",
+              "detail": "UnexpectedModelBehavior: Exceeded maximum output retries (1)"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S005.m1/value: required string '40.6' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S005.m2/value: required string '53.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S005.m3/value: required string '47.6' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S005.m4/value: required string '44.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S006",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S006.k1: abbreviation 'HR' defined within 300 characters of the table"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S006.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S006.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S006.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S006.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S006.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S007",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S007.m2/value: required string '39.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S007.m3/value: required string '18.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m2/value: required string '39.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S007.m3/value: required string '18.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m2/value: required string '39.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S007.m3/value: required string '18.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m2/value: required string '39.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S007.m3/value: required string '18.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m2/value: required string '39.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S007.m3/value: required string '18.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S007.m2/value: required string '39.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S007.m3/value: required string '18.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S008",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S008.m1/value: required string '40.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S008.m2/value: required string '8.7' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '40.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S008.m2/value: required string '8.7' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '40.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S008.m2/value: required string '8.7' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '40.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S008.m2/value: required string '8.7' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '40.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S008.m2/value: required string '8.7' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S008.m1/value: required string '40.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S008.m2/value: required string '8.7' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S009",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S009.m1/value: required string '53.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S009.m2/value: required string '46.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S010",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S010.a1/claim: required string 'Retrieval augmentation clearly reduces hallucinated content in the answers.' is not_found; S010.a1/claim: required string 'Grounding the generator in retrieved documents leads to fewer hallucinated answers.' is not_found"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The discussion does not make claims about the effect of retrieval on accuracy or hallucination, except as stated in the abstract and conclusion.' at 11840"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S011",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S011.k1: abbreviation 'FLA' defined within 300 characters of the table"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S011.k1: abbreviation 'FLA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S011.k1: abbreviation 'FLA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S011.k1: abbreviation 'FLA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S011.k1: abbreviation 'FLA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S011.k1: abbreviation 'FLA' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S012",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S012.c1: code 'B' defined within 300 characters of the table; S012.c2: code 'R' defined within 300 characters of the table; S012.k1: abbreviation 'HR' defined within 300 characters of the table"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The findings suggest that retrieval augmentation may not always reduce hallucination.' at 12781"
+            },
+            {
+              "name": "level_distributed",
+              "detail": "S012.c1: code 'B' defined within 300 characters of the table; S012.c2: code 'R' defined within 300 characters of the table; S012.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S012.c1: code 'B' defined within 300 characters of the table; S012.c2: code 'R' defined within 300 characters of the table; S012.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S012.c1: code 'B' defined within 300 characters of the table; S012.c2: code 'R' defined within 300 characters of the table; S012.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S012.c1: code 'B' defined within 300 characters of the table; S012.c2: code 'R' defined within 300 characters of the table; S012.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S012.c1: code 'B' defined within 300 characters of the table; S012.c2: code 'R' defined within 300 characters of the table; S012.k1: abbreviation 'HR' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S013",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S013.m1/value: required string '47.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S013.m2/value: required string '40.3' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S013.m3/value: required string '42.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S014",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S014.k1: abbreviation 'AA' defined within 300 characters of the table"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S014.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S014.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S014.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S014.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S014.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S015",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": false,
+          "detail": "S015.c1: code 'B' defined within 300 characters of the table; S015.c2: code 'R' defined within 300 characters of the table; S015.c3: code 'A1' defined within 300 characters of the table; S015.k1: abbreviation 'AA' defined within 300 characters of the table"
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S015.m1/value: required string '62.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S015.m2/value: required string '66.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S015.m3/value: required string '69.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S015.m4/value: required string '33.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S015.c1: code 'B' defined within 300 characters of the table; S015.c2: code 'R' defined within 300 characters of the table; S015.c3: code 'A1' defined within 300 characters of the table; S015.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S015.c1: code 'B' defined within 300 characters of the table; S015.c2: code 'R' defined within 300 characters of the table; S015.c3: code 'A1' defined within 300 characters of the table; S015.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S015.c1: code 'B' defined within 300 characters of the table; S015.c2: code 'R' defined within 300 characters of the table; S015.c3: code 'A1' defined within 300 characters of the table; S015.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "level_distributed",
+              "detail": "S015.c1: code 'B' defined within 300 characters of the table; S015.c2: code 'R' defined within 300 characters of the table; S015.c3: code 'A1' defined within 300 characters of the table; S015.k1: abbreviation 'AA' defined within 300 characters of the table"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex, distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S016",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S016.m1/value: required string '10.3' is not_found; S016.m2/value: required string '5.1' is not_found; S016.m3/value: required string '41.2' is not_found; S016.m4/value: required string '30.4' is not_found; S016.a1/claim: required string 'Grounding the generator in retrieved documents leads to fewer hallucinated answers.' is not_found"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S017",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "model_call",
+              "detail": "UnexpectedModelBehavior: Exceeded maximum output retries (1)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S018",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S018.m1/value: required string '20.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S018.m2/value: required string '16.3' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S018.a1/claim: required string 'Retrieval augmentation clearly reduces hallucinated content in the answers.' is not_found"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) complex; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S019",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S019.m1/value: required string '64.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S019.m2/value: required string '63.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S019.m3/value: required string '59.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S019.a1/claim: required string 'Retrieval augmentation does not make the answers measurably more accurate.' is not_found"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S019.a1/claim: required string 'Retrieval augmentation does not make the answers measurably more accurate.' is not_found"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S020",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S020.m1/value: required string '52.3' is not_found; S020.m2/value: required string '64.6' is not_found; S020.m3/value: required string '55.2' is not_found; S020.m4/value: required string '35.7' is not_found; S020.a1/claim: required string 'Grounding the generator in retrieved documents yields more accurate answers.' is not_found"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "S021",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "title_differs",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 1,
+      "history": [],
+      "excluded_reason": "failed fidelity at level(s) complex, contradictory; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S022",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "title_differs",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "model_call",
+              "detail": "UnexpectedModelBehavior: Exceeded maximum output retries (1)"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S022.m1/value: required string '50.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S022.m2/value: required string '57.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S022.m3/value: required string '78.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S022.m4/value: required string '55.8' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) explicit; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S023",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S024",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S004",
+    "S006",
+    "S007",
+    "S008",
+    "S010",
+    "S011",
+    "S012",
+    "S014",
+    "S015",
+    "S018",
+    "S021",
+    "S022"
+  ]
+}

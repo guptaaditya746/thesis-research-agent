@@ -1,0 +1,128 @@
+{
+  "corpus_id": "rag-llm-pilot-v2-4f53cda1",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": false,
+          "detail": "'The primary objective is to assess whether access to retrieved documents improves the correctness of generated answers.' at 941"
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 5,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'In contrast, the retrieval-augmented generator leverages external documents to inform its responses, potentially improving accuracy.' at 466; \"The goal is to determine whether access to retrieved passages enhances the model's ability to produce correct answers.\" at 768"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The primary objective is to assess whether incorporating retrieved passages improves the correctness of generated answers compared to a closed-book baseline.' at 693"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The primary goal is to determine whether access to retrieved documents improves the correctness of generated answers compared to a closed-book baseline.' at 818"
+            }
+          ]
+        },
+        {
+          "attempt": 4,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'A key question is whether providing a language model with access to external documents through retrieval improves the correctness of its responses.' at 287; 'The primary goal is to determine whether access to retrieved documents improves the correctness of generated answers compared to a closed-book baseline.' at 814"
+            }
+          ]
+        },
+        {
+          "attempt": 5,
+          "failed": [
+            {
+              "name": "added_claims",
+              "detail": "'The primary objective is to assess whether access to retrieved documents improves the correctness of generated answers.' at 941"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) explicit; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001"
+  ]
+}

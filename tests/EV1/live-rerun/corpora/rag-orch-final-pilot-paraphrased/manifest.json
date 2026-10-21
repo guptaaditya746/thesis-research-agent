@@ -1,0 +1,10 @@
+{
+  "corpus_id": "rag-orch-final-pilot-12276f4a",
+  "papers": [
+    {
+      "id": "S001",
+      "file": "papers/S001.md",
+      "sha256": "76a2b1a37badeac7596c5bd78e309b6958489cfef0e3dc764d9859208f80f319"
+    }
+  ]
+}

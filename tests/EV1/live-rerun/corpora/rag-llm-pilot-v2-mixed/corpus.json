@@ -1,0 +1,40 @@
+{
+  "corpus_id": "rag-llm-pilot-v2-4f53cda1",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "984d8b41f6c61f1280ab09d921deca33a15afa9b3d7b5205fed3a8a3aeb71be2"
+  },
+  "renderer": "llm",
+  "level": "mixed",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [],
+  "models": {
+    "renderer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+    "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+    "served": [
+      "sub-model-1"
+    ]
+  },
+  "settings": {
+    "name": "rag-llm-pilot-v2",
+    "studies": 1,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  }
+}

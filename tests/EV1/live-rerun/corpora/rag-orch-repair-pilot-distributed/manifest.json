@@ -1,0 +1,10 @@
+{
+  "corpus_id": "rag-orch-repair-pilot-1c610779",
+  "papers": [
+    {
+      "id": "S001",
+      "file": "papers/S001.md",
+      "sha256": "9fd36c99942541ae222551ee4d0ceaf1fdda43dc20e4b3592643561183887eb5"
+    }
+  ]
+}

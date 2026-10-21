@@ -1,0 +1,101 @@
+{
+  "corpus_id": "rag-llm-s1-a2b5bbc1",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "f9f24c4b646a26bf6fe7bebae350de00b298544c7f92fb31611f9a8214cf4a02"
+  },
+  "renderer": "llm",
+  "level": "complex",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "complex"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "complex"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "complex"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "complex"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "complex"
+    },
+    {
+      "id": "S009",
+      "study_id": "S009",
+      "level": "complex"
+    },
+    {
+      "id": "S013",
+      "study_id": "S013",
+      "level": "complex"
+    },
+    {
+      "id": "S014",
+      "study_id": "S014",
+      "level": "complex"
+    },
+    {
+      "id": "S016",
+      "study_id": "S016",
+      "level": "complex"
+    },
+    {
+      "id": "S019",
+      "study_id": "S019",
+      "level": "complex"
+    },
+    {
+      "id": "S020",
+      "study_id": "S020",
+      "level": "complex"
+    }
+  ],
+  "models": {
+    "renderer": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+    "served": [
+      "orch-model",
+      "sub-model-2"
+    ]
+  },
+  "settings": {
+    "name": "rag-llm-s1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  }
+}

@@ -1,0 +1,68 @@
+synth S001/explicit: attempt 1/5 passed
+synth S001/paraphrased: attempt 1/5 passed
+synth S001/distributed: attempt 1/5 failed required_strings
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'synth.rend… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+synth S001/distributed: attempt 2/5 failed added_claims
+synth S001/distributed: attempt 3/5 passed
+synth S001/complex: attempt 1/5 passed
+synth S001/contradictory: attempt 1/5 failed required_strings
+synth S001/contradictory: attempt 2/5 passed
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-repair-pilot-explicit": "rag-orch-repair-pilot-109ea32f",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-repair-pilot-paraphrased": "rag-orch-repair-pilot-12276f4a",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-repair-pilot-distributed": "rag-orch-repair-pilot-1c610779",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-repair-pilot-complex": "rag-orch-repair-pilot-26c8c2bb",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-repair-pilot-contradictory": "rag-orch-repair-pilot-1d41de5c",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster-20261020/corpora/rag-orch-repair-pilot-mixed": "rag-orch-repair-pilot-109ea32f"
+  },
+  "excluded": {},
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-orch-repair-pilot",
+    "studies": 1,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "answer": {
+    "label": "supported",
+    "supporting": [
+      "S001"
+    ],
+    "contradicting": [],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}
