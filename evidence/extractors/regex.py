@@ -58,10 +58,13 @@ class ConditionRegex(RegexExtractor):
 
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         patterns = terms.condition_patterns(self.patterns["conditions"])
-        mentions = [m for a, b in parts for m in terms.find_all(text, patterns, a, b)]
+        enum = self.given.get("field_schema", {}).get("properties", {}).get("role", {}).get("enum")
+        roles = list(enum or self.patterns["conditions"])   # "other" (a qualified ablation) only if the type has it
+        treatment = (self.given.get("compare") or {}).get("treatment")
+        mentions = [m for a, b in parts for m in terms.find_conditions(text, patterns, roles, a, b, treatment)]
         defined = {m: (a, b) for m, _, a, b in terms.aliases(text, mentions)}
         found = []
-        for role in self.patterns["conditions"]:
+        for role in dict.fromkeys([*self.patterns["conditions"], *(["other"] if "other" in roles else [])]):
             mine = [m for m in mentions if m.key == role]
             if not mine:
                 continue
@@ -102,7 +105,8 @@ class MeasurementRegex(RegexExtractor):
     def find(self, task: ExtractionTask, ctx: RunContext, text: str, parts: list[tuple[int, int]]) -> list[Item]:
         # the question metrics come from the protocol's synthesis block (the engine injects them), never from here
         found = measurements(task, text, parts, ctx.context_items(),
-                             {**self.patterns, "question_metrics": self.given.get("question_metrics", [])})
+                             {**self.patterns, "question_metrics": self.given.get("question_metrics", []),
+                              "treatment": (self.given.get("compare") or {}).get("treatment")})
         return base.group("measurement", found)
 
 

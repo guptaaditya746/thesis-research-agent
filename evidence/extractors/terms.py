@@ -7,10 +7,19 @@ only, "accuracy" in any case).
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 
 _NOUNS = r"(?:\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+"
+# "no retrieval failures", "without retrieval errors": the words after the negation are an object, not a system.
+NOT_A_SYSTEM = r"(?!\s+(?:failures?|errors?|calls?|latency|costs?|steps?)\b)"
+
+
+def control_cue(term: str) -> str:
+    """A control term's pattern that does not match where a negated object follows ("no retrieval failures")."""
+    return term + NOT_A_SYSTEM
+
 
 # "RAG with reranking", "RAG without reranking", "retrieval-augmented model without reranking" name other
 # systems (ablations), not the rag condition: the optional parts are possessive so the lookahead cannot be
@@ -22,12 +31,12 @@ CONDITIONS: dict[str, list[str]] = {
         r"(?!\s+(?i:with|without)\b)",
         r"(?i)\b(?:model|LLM|system|variant|generator)\s+with\s+retrieval\b",
     ],
-    "baseline": [
+    "baseline": [control_cue(p) for p in (
         r"(?i)\bclosed[- ]book(?:\s+(?:baseline|model|variant|system|setting|condition|LLM|generation))?",
         r"(?i)\b(?:(?:model|LLM|system|variant|baseline|generation)\s+)?without\s+(?:any\s+)?retrieval\b",
         r"(?i)\bno[- ]retrieval(?:\s+(?:baseline|model|variant|setting|condition))?",
         r"(?i)\bvanilla\s+(?:LLM|model)\b",
-    ],
+    )],
 }
 
 METRICS: list[tuple[str, str, bool]] = [   # pattern, canonical, higher_is_better
@@ -71,6 +80,13 @@ CLAIMS: list[tuple[str, str]] = [
 ]
 
 ALIAS = r"\s*\(\s*([A-Za-z][\w+\-]{0,5})\s*\)"   # a short code in brackets right after a mention: "(R)"
+QUALIFIER = r"\s*\(([^)]{1,40})\)"                 # a bracketed qualifier after a condition: "RAG (no retrieval)"
+NEGATION = r"(?i)\b(?:no|without|w/o)\b"
+# a system noun the condition's own pattern left out, between it and its code: "closed-book baseline (B)"
+_HEAD_NOUNS = r"(?i:model|baseline|system|variant|setting|pipeline|condition|configuration|LLM|approach|generator)"
+_HEAD = r"(?:\s+" + _HEAD_NOUNS + r")?"
+# a mention that is a negated term on its own ("no retrieval"), not one ending in its system ("no-retrieval baseline")
+_BARE_NEGATION = r"(?i)^(?:no|without|w/o)\b(?!.*[\s-]" + _HEAD_NOUNS + r"$)"
 CLAIM_SECTIONS = ("conclusion", "abstract", "discussion", "summary")   # where an author claim is looked for first
 
 
@@ -110,6 +126,43 @@ def condition_patterns(conditions: dict[str, list[str]] | None = None) -> list[t
     return [(p, role, True) for role, ps in (conditions or CONDITIONS).items() for p in ps]
 
 
+def _negated_object(text: str, m: Mention, end: int) -> bool:
+    """A bare negated term followed by an object: "no retrieval failures" names no system ("no-retrieval
+    baseline errors" does: the errors are the baseline's)."""
+    return bool(_compiled(_BARE_NEGATION).match(m.text)) and _compiled(NOT_A_SYSTEM).match(text, m.end, end) is None
+
+
+def find_conditions(text: str, patterns: list[tuple[str, str, bool]], roles: Sequence[str],
+                    start: int = 0, end: int | None = None, treatment: str | None = None) -> list[Mention]:
+    """Condition mentions in text[start:end] as `find_all` finds them, with their local qualifier: a bracketed
+    part right after a mention that names a role ("RAG (no retrieval)": that role) or holds a negation ("RAG
+    (no reranking)": other) belongs to the mention; an alias code ("(B)") does not. Only a treatment head
+    becomes other (an ablation); any other head keeps its role ("the closed-book model (no fine-tuning)"). A
+    negated object ("no retrieval failures") is no mention. `roles`: the role enum; without "other" an "other"
+    mention is dropped. `treatment`: the treatment role (default: the first pattern's)."""
+    end = len(text) if end is None else end
+    treatment = treatment if treatment is not None else (patterns[0][1] if patterns else None)
+    out: list[Mention] = []
+    covered = start
+    for m in find_all(text, patterns, start, end):
+        if m.start < covered or _negated_object(text, m, end):
+            continue
+        covered = m.end
+        q = _compiled(QUALIFIER).match(text, m.end, end)
+        if q and not _compiled(ALIAS).fullmatch(text, m.end, q.end()):
+            inner = [i for i in find_all(text, patterns, q.start(1), q.end(1)) if not _negated_object(text, i, q.end(1))]
+            role = inner[0].key if inner else "other" if _compiled(NEGATION).search(q.group(1)) else None
+            if role == "other" and m.key != treatment:
+                role = None   # a qualified control is still the control
+            if role is not None:
+                covered = q.end()   # an inner mention is part of this one, never reported again
+                if role != "other" or "other" in roles:
+                    out.append(Mention(m.start, q.end(), role, text[m.start:q.end()], m.higher_is_better))
+                continue
+        out.append(m)
+    return out
+
+
 def norm(label: str) -> str:
     """A label for comparison: case folded, dashes and runs of spaces as one space, no leading article."""
     out = re.sub(r"[\s\-‐–—]+", " ", label.casefold()).strip()
@@ -120,7 +173,7 @@ def aliases(text: str, mentions: list[Mention]) -> list[tuple[Mention, str, int,
     """(mention, code, start, end) for each mention followed by a bracketed code, e.g. "variant (R)"."""
     out = []
     for m in mentions:
-        hit = re.match(ALIAS, text[m.end:m.end + 12])
+        hit = re.match(_HEAD + ALIAS, text[m.end:m.end + 30])
         if hit:
             out.append((m, hit.group(1), m.start, m.end + hit.end()))
     return out

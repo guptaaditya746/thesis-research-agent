@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 from pydantic import ValidationError
 from rdflib import Graph, Literal, URIRef
 from rdflib.namespace import PROV, RDF
@@ -190,6 +191,83 @@ def test_a_failed_llm_screen_call_leaves_the_regex_decision_standing(tmp_path: P
     failed = read(root, f"calls/{p1['screen']['calls'][1]}.json")
     assert failed["status"] == "error" and failed["items"] == [] and "sk-secret" not in json.dumps(failed)
     assert read(root, "answer.json")["studies"][0]["direction"] == "supports"   # extraction ran as usual
+
+
+# --- screen.lexical_miss: a keyword miss escalates to the next screen extractor, or is final (default) ----------
+
+EV1 = PROTOCOL.parents[2] / "tests" / "EV1"
+EV1_PROPOSAL = EV1 / "diagnostics" / "proposal" / "protocol.yaml"
+# tests/EV1/diagnostics/review_repro.py: a treatment and a comparator synonym that none of the screen terms name
+SYNONYMS = ("# Retrieval comparison\nThe retrieve-then-read system and the parametric-only model "
+            "answer the same questions. We compare exact match: 75% versus 60%.\n")
+# sha256 of every existing protocol, captured on main before `screen.lexical_miss` existed
+SHA_BEFORE = {
+    PROTOCOL: "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
+    AGENTIC: "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79",
+    EV1_PROPOSAL: "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
+    EV1 / "live-rerun" / "proposals" / "rag-factuality" / "protocol.yaml":
+        "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
+    EV1 / "proposal" / "protocol.yaml": "e40e4902fee172fe9df3e4bb4758f3e888bc1468b73e0ff24cf33eb10303cf91",
+}
+
+
+@pytest.mark.parametrize("path", list(SHA_BEFORE), ids=lambda p: f"{p.parent.name}/{p.name}")
+def test_a_default_lexical_miss_leaves_the_protocol_sha256_unchanged(path: Path) -> None:
+    loaded = protocol.load(path)
+    assert loaded.screen is not None and loaded.screen.lexical_miss == "reject"
+    assert loaded.sha256 == SHA_BEFORE[path]
+
+
+def test_a_non_default_lexical_miss_changes_the_sha256(tmp_path: Path) -> None:
+    assert protocol.DIGEST_OMIT_AT_DEFAULT["screen.lexical_miss"] == "reject"
+    assert protocol.load(escalating(tmp_path)).sha256 != SHA_BEFORE[EV1_PROPOSAL]
+
+
+def escalating(tmp_path: Path) -> Path:
+    """The EV1 proposal's protocol with `screen.lexical_miss: escalate`."""
+    data = yaml.safe_load(EV1_PROPOSAL.read_text(encoding="utf-8"))
+    data["screen"]["lexical_miss"] = "escalate"
+    path = tmp_path / "escalate.yaml"
+    path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+    return path
+
+
+def synonym_run(tmp_path: Path, proto: Path, screen: Any) -> tuple[list[str], dict[str, Any]]:
+    """(the model call kinds, funnel.json's entry) of a `gaps` run over the synonym paper."""
+    seen: list[str] = []
+
+    def reply(kind: str, doc: str, prompt: str) -> dict[str, Any]:
+        seen.append(kind)
+        return screen(prompt) if kind == "screen" else {"items": []}
+
+    root = engine.run(proto, corpus_of(tmp_path / "corpus", {"P": SYNONYMS}), tmp_path / "runs",
+                      cache=tmp_path / "cache", model="offline-scripted",
+                      provider=provider_of(scripted(reply, [])), strategy="gaps")
+    return seen, read(root, "funnel.json")["documents"]["P"]
+
+
+def test_a_keyword_miss_escalates_to_the_llm_screen_when_asked(tmp_path: Path) -> None:
+    call_types, entry = synonym_run(tmp_path, escalating(tmp_path), screen_yes)
+    assert "screen" in call_types and not entry["skipped"]
+    assert entry["screen"]["escalated"] is True and entry["screen"]["relevant"] is True
+    assert entry["screen"]["extractor"].startswith("llm_screen") and entry["screen"]["statuses"] == ["ok", "ok"]
+
+
+def test_a_keyword_miss_is_final_by_default(tmp_path: Path) -> None:
+    call_types, entry = synonym_run(tmp_path, EV1_PROPOSAL, screen_yes)
+    assert call_types == [] and entry["skipped"] is True and "escalated" not in entry["screen"]
+    assert entry["screen"]["relevant"] is False and entry["screen"]["extractor"].startswith("regex_screen")
+    assert len(entry["screen"]["calls"]) == 1
+
+
+def test_an_escalated_call_that_fails_keeps_the_regex_no(tmp_path: Path) -> None:
+    def screen(prompt: str) -> dict[str, Any]:
+        raise RuntimeError("gateway down")
+
+    call_types, entry = synonym_run(tmp_path, escalating(tmp_path), screen)
+    assert call_types == ["screen"] and entry["skipped"] is True and entry["screen"]["escalated"] is True
+    assert entry["screen"]["relevant"] is False and entry["screen"]["extractor"].startswith("regex_screen")
+    assert entry["screen"]["statuses"] == ["ok", "error"] and len(entry["screen"]["calls"]) == 2
 
 
 def test_the_llm_screen_reads_the_head_only(tmp_path: Path) -> None:

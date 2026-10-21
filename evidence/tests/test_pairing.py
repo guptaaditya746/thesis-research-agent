@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from .conftest import regex_run
 
 HEAD = "# T\n\n## Setup\n\nWe compare a closed-book baseline (B) with its retrieval-augmented variant (R).\n\n## Results\n\n"
@@ -37,3 +39,64 @@ def test_a_table_cell_beats_a_decoy_in_the_abstract(tmp_path: Path) -> None:
     answer, _ = regex_run({"D": text}, tmp_path)
     study = answer["studies"][0]
     assert (study["treatment"]["value"], study["control"]["value"], study["direction"]) == (0.6, 0.64, "contradicts")
+
+
+INTRO = "# Comparison\n\nWe compare a RAG model with a closed-book model.\n\n## Results\n\n"
+LAYOUTS = {
+    "simple": ("| System | Factual accuracy (%) |\n|---|---|\n| RAG model | 75 |\n| closed-book model | 60 |\n", None),
+    "transposed": ("| Metric | RAG model | closed-book model |\n|---|---|---|\n| factual accuracy (%) | 75 | 60 |\n", None),
+    "dataset_first": ("| Dataset | System | Factual accuracy (%) |\n|---|---|---|\n| Trivia | RAG model | 75 |\n"
+                      "| Trivia | closed-book model | 60 |\n", "Trivia"),
+    "dataset_last": ("| System | Factual accuracy (%) | Dataset |\n|---|---|---|\n| RAG model | 75 | Trivia |\n"
+                     "| closed-book model | 60 | Trivia |\n", "Trivia"),
+}
+
+
+def _table_measurements(items: dict) -> set:
+    return {(items[i["links"]["condition"]]["fields"]["role"], i["fields"]["value"], i["fields"]["dataset"])
+            for i in items.values() if i["evidence_type"] == "measurement"}
+
+
+@pytest.mark.parametrize("layout", list(LAYOUTS))
+def test_table_layouts_resolve_header_roles(tmp_path: Path, layout: str) -> None:
+    body, dataset = LAYOUTS[layout]
+    _, items = regex_run({"P": INTRO + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, dataset), ("baseline", 0.60, dataset)}
+
+
+def test_a_table_without_condition_or_metric_column_yields_nothing(tmp_path: Path) -> None:
+    _, items = regex_run({"P": INTRO + "| Run | Factual accuracy (%) |\n|---|---|\n| 1 | 75 |\n| 2 | 60 |\n"}, tmp_path)
+    assert _table_measurements(items) == set()
+
+
+@pytest.mark.parametrize("corner", ["Method", "Setting", "Model"])
+def test_a_condition_like_corner_header_over_a_transposed_table(tmp_path: Path, corner: str) -> None:
+    body = f"| {corner} | RAG model | closed-book model |\n|---|---|---|\n| factual accuracy (%) | 75 | 60 |\n"
+    _, items = regex_run({"P": INTRO + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, None), ("baseline", 0.60, None)}
+
+
+CODES = ("# T\n\n## Setup\n\nWe compare a closed-book baseline (B) with its retrieval-augmented variant (R).\n\n"
+         + "Filler paragraph. " * 40 + "\n\n## Results\n\n")
+
+
+@pytest.mark.parametrize("head", ["Model", ""])
+def test_alias_codes_defined_far_above_a_table(tmp_path: Path, head: str) -> None:
+    body = f"| {head} | Factual accuracy (%) |\n|---|---|\n| R | 75 |\n| B | 60 |\n"
+    _, items = regex_run({"P": CODES + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, None), ("baseline", 0.60, None)}
+
+
+def test_a_system_metric_value_table(tmp_path: Path) -> None:
+    body = ("| System | Metric | Value |\n|---|---|---|\n| RAG model | factual accuracy (%) | 75 |\n"
+            "| closed-book model | factual accuracy (%) | 60 |\n")
+    _, items = regex_run({"P": INTRO + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, None), ("baseline", 0.60, None)}
+
+
+def test_a_multi_dataset_table(tmp_path: Path) -> None:
+    body = ("| Dataset | System | Factual accuracy (%) |\n|---|---|---|\n| Trivia | RAG model | 75 |\n"
+            "| Trivia | closed-book model | 60 |\n| Wiki | RAG model | 80 |\n| Wiki | closed-book model | 55 |\n")
+    _, items = regex_run({"P": INTRO + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, "Trivia"), ("baseline", 0.60, "Trivia"),
+                                          ("rag", 0.80, "Wiki"), ("baseline", 0.55, "Wiki")}

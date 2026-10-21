@@ -196,17 +196,22 @@ class Execution:
     def screen(self, state: DocState) -> None:
         """The screening cascade (Part D): an extractor saying "not relevant" stops it; "relevant" passes the
         decision to the next one; a call without an item leaves the earlier decision standing; no decision at
-        all counts as relevant. Recorded as a `screen` event and in funnel.json."""
+        all counts as relevant. With `lexical_miss: escalate` a regex "not relevant" before the last position
+        passes the document on instead (`escalated` in the record; the regex decision stands unless the next
+        extractor returns an item). Recorded as a `screen` event and in funnel.json."""
         if self.protocol.screen is None:
             return
         spec = self.protocol.screen.spec
+        cascade = self.cascades.get(SCREEN_TYPE, [])
+        escalate = self.protocol.screen.lexical_miss == "escalate"
+        escalated: dict[str, Any] = {}    # only an escalated record carries the key: the default record is unchanged
         doc = state.doc
         decision: dict[str, Any] = {"relevant": True, "reason": "no decision: no screening extractor returned an item",
                                     "extractor": None, "status": None}
         context: list[Item] = []
         call_ids: list[str] = []
         statuses: list[str] = []      # one per call, so a failed call after the decision is on record too
-        for position, (ref, extractor) in enumerate(self.cascades.get(SCREEN_TYPE, [])):
+        for position, (ref, extractor) in enumerate(cascade):
             task = ExtractionTask(protocol=self.ref, evidence_type=SCREEN_TYPE, field_schema_sha256=spec.schema_sha256,
                                   document=doc, scope=Scope(), context=tuple(i.item_id for i in context))
             call_id, result = self._call(extractor, task, state.text, state.index, spec, context, position)
@@ -219,10 +224,14 @@ class Execution:
                         "extractor": extractor.spec.extractor_id, "status": result.status}
             context = [item]
             if not decision["relevant"]:
+                if escalate and extractor.spec.kind == "regex" and position < len(cascade) - 1:
+                    escalated = {"escalated": True}   # a keyword miss: the next extractor decides
+                    continue
                 break
-        state.screen = {**decision, "calls": call_ids, "statuses": statuses}
+        state.screen = {**decision, "calls": call_ids, "statuses": statuses, **escalated}
         self.events.add("screen", used=[doc.sha256], generated=[], agent_id=decision["extractor"] or ENGINE,
-                        group_id=doc.id, custom={"document": doc.id, **decision, "calls": call_ids, "statuses": statuses})
+                        group_id=doc.id, custom={"document": doc.id, **decision, "calls": call_ids, "statuses": statuses,
+                                                 **escalated})
 
     def funnel_loop(self, state: DocState) -> None:
         """`gaps`: position 0 of every type, then the next position of each gap type until complete or exhausted."""
