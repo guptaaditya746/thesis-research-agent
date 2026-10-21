@@ -110,8 +110,15 @@ corpora are written by the build anyway and stay unused).
 | LLM extractors, LLM screen, agentic extractor, agent baseline, RAG baseline (answer and mapping calls), proposal flow (frame, critic, cards) | `orch-model` (Qwen3.8-27B, the default everywhere) | the same weights for every system under test, so a difference between the engine and the baselines, or between extractors, is the method's |
 | Paper writer and blind check | none on Slurm: Claude Haiku and Claude Sonnet subagents on the laptop (`docs/claude-writer.md`) | other weights than the readers, so no extractor reads its own writing |
 
-GPU use: `orch-model` is GPU 0; the sub-models (GPUs 1–2) are not used by this runbook any more. Steps 3, 4 (re-execution), 5 and 6 all use `orch-model`, so
-they run one after the other, never two at once.
+GPU use: the stack serves only `orch-model`, on all three GPUs. The profile `orch-3x40` (llm-setup `22dae03`) runs
+three replicas of the same pinned weights behind the one alias, and the gateway sends each call to the least busy
+replica. The model identity and the cache keys are those of `agent-3x40`'s orch. The sub-models are gone.
+
+**Up to three long `orch-model` steps may run at once**: step 3, step 5 and step 6, one of each. Each uses its own
+cache: `$CACHE/engine`, `$CACHE/engine-agentic`, and the baselines' own files. Two processes must never append to
+the same cache file. Step 4's re-execution and step 6.1's RAG oracle also use `orch-model`: start them only when
+fewer than three long steps run, and step 4 only after step 3 has finished, because it uses `$CACHE/engine`. The
+priority order under step 1–2 says what to start first.
 
 ## Order and dependencies
 
@@ -121,9 +128,9 @@ they run one after the other, never two at once.
 | 1–2 copy the frozen corpora from git, check the manifests | CPU | 0 | minutes |
 | 9 proposal flow dry run | orch-model (3 calls) | 0; between two long steps | 15 min |
 | 3 engine regex-only, cascade `all` and `gaps` (and `gaps` with `escalate`) on every corpus | orch-model | 1–2 | hours |
-| 4 replay all, re-execution of two runs | CPU, orch-model | 3, and not while 5 or 6 runs | 1 h |
-| 5 agentic protocol, `all` and `gaps`, on the small set | orch-model | 1, and not while 3 or 6 runs | hours |
-| 6 baselines (RAG, agent) on the LLM corpora and the hard set; oracle diagnostics | orch-model (CPU for the engine oracle) | 1–2, and not while 3, 4 or 5 runs | hours |
+| 4 replay all, re-execution of two runs | CPU, orch-model | 3 finished | 1 h |
+| 5 agentic protocol, `all` and `gaps`, on the small set | orch-model (own cache) | 1–2; may run beside 3 and 6 | hours |
+| 6 baselines (RAG, agent) on the LLM corpora and the hard set; oracle diagnostics | orch-model (CPU for the engine oracle) | 1–2; may run beside 3 and 5 | hours |
 | 7 scores, comparisons, shift, benchmark records | CPU | 3–6 | 30 min |
 | 8 fidelity hand check (**USER**), then its summary | — | 1 | the user's time |
 | 10 proposal review (**USER**) | — | 9 | the user's time |
@@ -154,21 +161,22 @@ commit the regenerated file as one fix commit if it differs.
 
 ### 0.2 Stack (login node)
 
-The `llm-setup` submodule must be at commit `fc842bc` (job-scoped `VLLM_PORT`) or later: EV1's job 7599 died
+The `llm-setup` submodule must be at commit `22dae03` (the orch-only profiles, on top of `fc842bc`'s job-scoped
+`VLLM_PORT`): EV1's job 7599 died
 at startup on a vLLM/PyTorch port collision (`torch.distributed` could not bind its rendezvous port,
 `EADDRINUSE`; `tests/EV1/failures.md`), and that commit gives every job its own port block. Check it before
-submitting; if `git log -1` does not show `fc842bc`, run `git submodule update --init` (step 0.1) and check
+submitting; if `git log -1` does not show `22dae03`, run `git submodule update --init` (step 0.1) and check
 again; if it still differs, **USER** (do not change the submodule yourself).
 
 ```bash
-git -C llm-setup log -1 --oneline                   # expect fc842bc… (job-scoped VLLM_PORT)
+git -C llm-setup log -1 --oneline                   # expect 22dae03 Add orch-only profiles …
 cd llm-setup
-JOB=$(LLM_SETUP_PROFILE=profiles/agent-3x40.yaml sbatch slurm/llm-stack.sbatch)
+JOB=$(LLM_SETUP_PROFILE=profiles/orch-3x40.yaml sbatch slurm/llm-stack.sbatch)
 JOB=${JOB##* }
 export JOB
 cd ..
 echo "Slurm job: $JOB"
-tail -n 20 llm-setup/runtime/slurm-$JOB.out      # repeat until orch, sub-1 and sub-2 say ready (~11 min)
+tail -n 20 llm-setup/runtime/slurm-$JOB.out      # repeat until orch, orch-2 and orch-3 say ready
 ```
 
 ### 0.3 Session environment (login node)
@@ -233,7 +241,7 @@ last line of `$EV/logs/<step>.launch`.
 ### 0.4 Environment check and offline smoke (in the job)
 
 ```bash
-srun --jobid "$JOB" --overlap bash -lc 'cd llm-setup && set -a && source .env && set +a && uv run llm-setup doctor --profile profiles/agent-3x40.yaml' 2>&1 | tail -n 5
+srun --jobid "$JOB" --overlap bash -lc 'cd llm-setup && set -a && source .env && set +a && uv run llm-setup doctor --profile profiles/orch-3x40.yaml' 2>&1 | tail -n 5
 test -f "$AGENT_ROOT/agent-root.sha256" && echo "AGENT_ROOT ok"
 uv run evidence protocol check $P | head -n 6           # id rag-factuality, version 2, its sha256
 uv run evidence protocol check $PA | head -n 6
@@ -335,21 +343,22 @@ Row `EV-synth`:
 This step replaces steps 1.0–1.5 and 2.1–2.3 of earlier versions of this runbook. Step 1.5 (the `--no-statements`
 comparison) is dropped.
 
-## Priority on the GPU (steps 3–6 share one `orch-model`)
+## Priority on the three orch replicas (steps 3, 5, 6 run side by side)
 
-Run in this order and stop when time runs out. Each item is complete before the next starts:
+Three lanes, one per replica. Each lane works through its list in order; stop when time runs out.
 
-1. `rag-claude-s1-mixed`: step 3 (regex-only, cascade `all`, `gaps`, `gaps` escalate), then step 6 (both
-   baselines) and 6.1 (both oracles), then 7.1 and 7.2 for it.
-2. `rag-tpl-hard-complex` and `rag-tpl-hard-mixed`: step 3, then step 6 and 6.1.
-3. The counterfactuals (`cf-llm`, `cf-tpl`): step 3 `all`, then 7.3.
-4. `rag-claude-k1-mixed`: step 3, then step 6.
-5. Step 5 (agentic extractor) on `rag-claude-small-*`.
-6. The per-level corpora (`rag-claude-s1-<level>`, `rag-tpl-s1-<level>`), then step 4.
+| Lane | Step | Order |
+|---|---|---|
+| A | 3, engine | `rag-claude-s1-mixed` → `rag-tpl-hard-complex`, `rag-tpl-hard-mixed` → the counterfactuals (`cf-llm`, `cf-tpl`) → `rag-claude-k1-mixed`, `rag-tpl-k1-mixed` → the per-level corpora (`rag-claude-s1-<level>`, `rag-tpl-s1-<level>`) |
+| B | 6, baselines | the same order as lane A, over step 6's corpora |
+| C | 5, then 6.1 | step 5 on `rag-claude-small-*`, then 6.1 (both oracles) on lane A's first corpora |
 
-The loops in steps 3 and 6 run every corpus. To follow this order, set `CS` to the item's corpora instead of the full
-list, and run the step once per item.
+When lane A has finished, run step 4 there. Run step 7 per corpus as soon as its engine runs, baselines and oracles
+exist: 7.1 and 7.2 for `rag-claude-s1-mixed` first.
 
+The loops in steps 3 and 6 run every corpus. To follow the order, set `CS` to an item's corpora instead of the full
+list, and launch the step once per item in its lane. Give each launch its own step name, for example `3-s1-mixed`, so
+the logs stay apart.
 
 ## 3. Engine on every corpus **(long)**
 
@@ -447,11 +456,11 @@ cat > "$EV/agentic.sh" <<'EOF'
 set -u
 for C in "$CORPORA"/rag-claude-small-paraphrased "$CORPORA"/rag-claude-small-distributed; do
   N=$(basename "$C")
-  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade" --cache "$CACHE/engine" \
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade" --cache "$CACHE/engine-agentic" \
     --extractors cascade --strategy all --model orch-model --run-id "$N" || echo "FAIL cascade $N"
-  uv run evidence run --protocol "$PA" --corpus "$C" --out "$RUNS/agentic" --cache "$CACHE/engine" \
+  uv run evidence run --protocol "$PA" --corpus "$C" --out "$RUNS/agentic" --cache "$CACHE/engine-agentic" \
     --extractors cascade --strategy all --model orch-model --run-id "$N" || echo "FAIL agentic $N"
-  uv run evidence run --protocol "$PA" --corpus "$C" --out "$RUNS/agentic-gaps" --cache "$CACHE/engine" \
+  uv run evidence run --protocol "$PA" --corpus "$C" --out "$RUNS/agentic-gaps" --cache "$CACHE/engine-agentic" \
     --extractors cascade --strategy gaps --model orch-model --run-id "$N" || echo "FAIL agentic-gaps $N"
 done
 EOF
@@ -479,7 +488,7 @@ Row `EV-agentic`: per corpus and strategy the agentic calls (ok / partial / erro
 steps and tokens per call, items it alone found (the score's cascade contribution, step 7), in `gaps` the
 agent calls against `all`, replay result, re-execution summary.
 
-## 6. Baselines on the LLM corpora **(long; orch-model, not while 3, 4 or 5 runs)**
+## 6. Baselines on the LLM corpora **(long; orch-model, may run beside 3 and 5)**
 
 ```bash
 cat > "$EV/baselines.sh" <<'EOF'
@@ -569,7 +578,7 @@ echo $! > "$EV/logs/6-oracle.pid"
 `evaluate oracle` prints `<out>: label=… studies=…` and writes a run directory (`answer.json`, `run.json`,
 `evidence.jsonl`, `locate.json`; `system: oracle-synthesis`, `mode: oracle`); it is CPU and quick. The RAG oracle
 writes `answer.json` with `system: rag-oracle-passages` and `settings.retrieval: oracle_passages`. Run it after
-the RAG baselines (it makes orch-model calls, so not while 3, 4 or 5 runs). Row `EV2-oracle`: per corpus the
+the RAG baselines (it makes orch-model calls: only when fewer than three long steps run). Row `EV2-oracle`: per corpus the
 engine oracle's label and direction accuracy, the RAG oracle's label and stance accuracy, and (from 7.1) the
 `attribution` counts of each oracle's counterpart: the engine against `oracle-synthesis` (from `$SCORES/<selection>/*`),
 the RAG baseline against `rag-oracle-passages` (from `$SCORES/rag-oracle/*`): studies, `system_correct`,
