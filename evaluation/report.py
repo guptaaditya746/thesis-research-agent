@@ -76,8 +76,15 @@ def render_intervals(intervals: dict[str, Any]) -> list[str]:
                  "engine_minus_system": _ci(paired.get(r["system"])) if r["system"] != ENGINE else "-",
                  "paired_method": _method(paired.get(r["system"])) if r["system"] != ENGINE else None}
                 for r in intervals["synthesis"]]
-        out += ["Direction accuracy, and the paired difference engine minus system (per study):", "",
-                table(rows, ["system", "direction_accuracy", "method", "engine_minus_system", "paired_method"]), ""]
+        for row in rows:
+            p = paired.get(row["system"]) or {}
+            row["paired_n"] = p.get("n_rows")
+        out += ["Direction accuracy, and the paired difference engine minus system (per study; paired_n: papers in "
+                "both systems):", "",
+                table(rows, ["system", "direction_accuracy", "method", "engine_minus_system", "paired_method",
+                             "paired_n"]), ""]
+        out += [f"- paired {n}: excluded (not in both systems) {', '.join(p['excluded_ids'])}"
+                for n, p in paired.items() if p.get("excluded_ids")]
     return out
 
 
@@ -131,6 +138,8 @@ def render(report: dict[str, Any]) -> str:
                             "traceability": overall.get("traceability")})
         out += [table(summary, ["system", "label", "expected", "label_correct", "studies", "determined",
                                 "direction_accuracy", "completeness", "accuracy_answered", "traceability"]), "",
+                *[f"- {s['system']}: {e}" for s in report["synthesis"] for e in s.get("errors") or []],
+                *([""] if any(s.get("errors") for s in report["synthesis"]) else []),
                 "direction_accuracy is over all scored studies: a study whose expected direction is undetermined "
                 "(missing information, an irrelevant paper) is right when the system says undetermined or leaves it "
                 "out, a determined study is wrong then. completeness (the supervisor's word: the share of the "

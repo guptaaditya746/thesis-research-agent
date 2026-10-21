@@ -60,9 +60,10 @@ def test_perfect_run_scores_one_everywhere(tmp_path: Path, corpus: Path) -> None
     assert result["stability"] is None
     # F4: intervals of a perfect run are the point value with null bounds (no spread); extractor rows exist
     assert row(result["intervals"]["extraction"], evidence_type="all") == {"evidence_type": "all", "point": 1.0,
-                                                                            "low": None, "high": None, "method": None}
+                                                                            "low": None, "high": None, "method": None,
+                                                                            "n_rows": 2}
     assert result["intervals"]["synthesis"] == [{"system": "evidence-engine", "point": 1.0, "low": None, "high": None,
-                                                 "method": None}]
+                                                 "method": None, "n_rows": 2}]
     assert result["intervals"]["paired"] == [] and engine["flags"] is None
     assert {r["extractor"] for r in result["extractors"]["rows"]} == {fx.REGEX, fx.LLM}
     assert result["extractors"]["cost"] is None   # no calls/ in the hand-written run
@@ -316,3 +317,28 @@ def test_report_shows_accuracy_on_answered_studies(tmp_path: Path, corpus: Path)
     assert "determined" in header and "over the determined studies only" in text
     per_level = next(line for line in text.splitlines() if line.startswith("| level"))
     assert "determined" in per_level
+
+
+def test_missing_gold_label_is_undefined_not_a_match() -> None:
+    """An empty gold answer has no label; None == None must not read as a correct label (EV1 probe)."""
+    from evaluation.score import score_synthesis
+    result = score_synthesis(GroundTruth("empty", "q", [], [], {}), {})
+    assert result["label_correct"] is None
+    assert "gold answer has no label" in result["errors"]
+    labelled = score_synthesis(GroundTruth("c", "q", [], [], {"label": "supported"}), {"label": "supported"})
+    assert labelled["label_correct"] is True and labelled["errors"] == []
+    text = rep.table([{"label_correct": result["label_correct"]}], ["label_correct"])
+    assert "-" in text
+
+
+def test_paired_interval_reports_its_n() -> None:
+    from evaluation.score import score_intervals
+    from evaluation.truth import ENGINE
+    systems = [
+        {"system": ENGINE, "studies": [{"paper": f"S{i}", "correct": True} for i in range(1, 4)]},
+        {"system": "base", "studies": [{"paper": "S1", "correct": False}, {"paper": "S2", "correct": True}]},
+    ]
+    out = score_intervals(None, systems)
+    paired = out["paired"][0]
+    assert paired["n_rows"] == 2 and paired["excluded_ids"] == ["S3"]
+    assert {r["system"]: r["n_rows"] for r in out["synthesis"]} == {ENGINE: 3, "base": 2}

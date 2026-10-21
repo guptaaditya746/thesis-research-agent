@@ -376,8 +376,10 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
                      "citations": None if n is None else n["citations"],
                      "traceability": None if n is None else share(n["traced"], n["citations"])})
     expected_label = truth.answer.get("label")
+    errors = [] if expected_label is not None else ["gold answer has no label"]   # undefined, not a match
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,
-            "label_correct": answer.get("label") == expected_label, "rows": rows, "studies": studies,
+            "label_correct": None if expected_label is None else answer.get("label") == expected_label,
+            "errors": errors, "rows": rows, "studies": studies,
             "confusion": [{"expected": e, "given": g, "n": n} for (e, g), n in sorted(confusion.items())],
             "flags": score_flags(truth, answer)}
 
@@ -441,9 +443,9 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
             for paper in m.papers:
                 cells = [m.cells.get((paper, k), (0, 0, 0, 0)) for k in kinds]
                 rows.append((sum(c[2] for c in cells), sum(c[0] for c in cells), sum(c[1] for c in cells)))
-            extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind))
-    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in system["studies"]), system=system["system"])
-                 for system in systems]
+            extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind, n_rows=len(rows)))
+    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in system["studies"]), system=system["system"],
+                              n_rows=len(system["studies"])) for system in systems]
     engine = next((s for s in systems if s["system"] == ENGINE), None)
     paired = []
     if engine is not None:
@@ -453,7 +455,9 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
                 continue
             diffs = [engine_correct[s["paper"]] - int(s["correct"]) for s in system["studies"]
                      if s["paper"] in engine_correct]
-            paired.append(interval_row(bootstrap_mean(diffs), system=system["system"]))
+            excluded = sorted({s["paper"] for s in system["studies"]} ^ engine_correct.keys())   # in only one system
+            paired.append(interval_row(bootstrap_mean(diffs), system=system["system"], n_rows=len(diffs),
+                                       excluded_ids=excluded))
     return {"extraction": extraction, "synthesis": synthesis, "paired": paired}
 
 
