@@ -19,6 +19,16 @@
    the headers of its kept citations, not the passages' text) into the label and per-paper stances the
    synthesis score (C) compares; an empty answer is `insufficient` without a call.
 
+Oracle passages (`oracle=True`, CLI `--oracle-passages`): a **diagnostic**, not a baseline. It breaks the
+hard rule on purpose: step 2 is replaced by `oracle_passages`, which reads ground_truth.json and gives the
+paragraphs a reader needs to interpret each value: the paragraphs (runs of text between blank lines) holding
+each `value` placement and every `condition_label` / `metric_label` placement of the condition and metric
+its measurement belongs to (on the distributed level a table of codes is defined paragraphs earlier), once
+each, in paper and offset order; steps 3 and 4 are unchanged, and `k`, `mode` and `max_chars` do not apply
+(setting them is an error). It separates retrieval failures from reasoning failures (`evaluate score
+--oracle`); answer.json has `system: rag-oracle-passages`, `settings.retrieval: oracle_passages` and
+`retrieved` without scores.
+
 answer.json has `system: rag-baseline`, the A4 shape from the mapping (`label`, `counts`, `studies`,
 groups, `label_by_rule`), `answer_text` (the model's own answer), `citations` and `retrieved`
 (`[{document, start, end(, score)}]`, raw character offsets into the paper text as agent/anchor.read_text
@@ -38,9 +48,11 @@ from rank_bm25 import BM25Okapi
 from gold.chunks import split
 from modelcall import JsonlCache
 
+from ..truth import GroundTruth
 from .common import DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, cached_reply, map_answer
 
 SYSTEM = "rag-baseline"
+ORACLE_SYSTEM = "rag-oracle-passages"   # the diagnostic that reads ground_truth.json
 MODES = ("global", "per_paper")
 DEFAULT_MODE = "global"
 K = {"global": 8, "per_paper": 2}  # default k per mode
@@ -98,6 +110,38 @@ def retrieve(chunks: list[Passage], question: str, k: int | None = None, mode: s
     return [hit for document in sorted(per) for hit in per[document][:k]]
 
 
+BLANK_LINE = re.compile(r"\r?\n\s*\r?\n")   # a paragraph break: a blank (or whitespace-only) line
+
+
+def paragraph(text: str, start: int, end: int) -> tuple[int, int]:
+    """The run of text between blank lines around [start, end)."""
+    a, b = 0, len(text)
+    for brk in BLANK_LINE.finditer(text):
+        if brk.end() <= start:
+            a = brk.end()
+        elif brk.start() >= end:
+            b = brk.start()
+            break
+    return a, b
+
+
+def oracle_passages(truth: GroundTruth, corpus_dir: Path) -> list[Passage]:
+    """Diagnostic (reads ground_truth.json): the paragraphs a reader needs to interpret each value, i.e. those
+    holding a `value` placement and those holding the `condition_label` and `metric_label` placements of its
+    measurement's condition and metric; once each, in paper and offset order. Paper texts come from
+    SystemCorpus, hash-checked like the baseline's."""
+    texts = {p.id: p.text for p in SystemCorpus(corpus_dir).papers}
+    needed = []
+    for place in (p for p in truth.placements if p["role"] == "value" and p["paper"] in texts):
+        needed.append(place)
+        fact = truth.facts.get(place["fact"])
+        for target, role in (("condition", "condition_label"), ("metric", "metric_label")):
+            linked = fact.data.get(target) if fact else None
+            needed += [p for p in truth.placements_of(linked, role) if p["paper"] == place["paper"]] if linked else []
+    found = {(p["paper"], *paragraph(texts[p["paper"]], p["start"], p["end"])) for p in needed}
+    return [Passage(doc, a, b, texts[doc][a:b]) for doc, a, b in sorted(found)]
+
+
 def header(p: Passage | Citation) -> str:
     return f"[{p.document}, {p.start}-{p.end}]"
 
@@ -136,11 +180,19 @@ def mapping_text(answer: CitedAnswer, kept: list[dict[str, Any]]) -> str:
 
 def rag_baseline(corpus_dir: Path, *, model: Model, question: str = DEFAULT_QUESTION, k: int | None = None,
                  mode: str = DEFAULT_MODE, max_chars: int = MAX_CHARS, cache: JsonlCache | None = None,
-                 model_id: str | None = None, seed: int = 0) -> dict[str, Any]:
-    """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode)."""
+                 model_id: str | None = None, seed: int = 0, oracle: bool = False) -> dict[str, Any]:
+    """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode).
+    `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json)."""
     corpus = SystemCorpus(corpus_dir)
-    hits = retrieve(passages(corpus, max_chars), question, k, mode)
-    k = K[mode] if k is None else k
+    if oracle and (k is not None or mode != DEFAULT_MODE or max_chars != MAX_CHARS):
+        raise ValueError("oracle passages take no k, retrieval mode or max_chars")
+    if oracle:
+        hits = [(p, 0.0) for p in oracle_passages(GroundTruth.load(Path(corpus_dir) / "ground_truth.json"), corpus_dir)]
+        system, settings = ORACLE_SYSTEM, {"retrieval": "oracle_passages", "retriever": "ground_truth value placements"}
+    else:
+        hits = retrieve(passages(corpus, max_chars), question, k, mode)
+        k = K[mode] if k is None else k
+        system, settings = SYSTEM, {"retrieval": mode, "k": k, "max_chars": max_chars, "retriever": "bm25okapi"}
     answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
                                 seed=seed, output_type=CitedAnswer)
     call.pop("cached")  # so a cached rerun writes the same bytes
@@ -150,8 +202,8 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str = DEFAULT_QUES
     else:
         reply, mapping = map_answer(cache, question, corpus.ids, mapping_text(answer, citations), model=model,
                                     model_id=model_id, seed=seed)
-    retrieved = [{"document": p.document, "start": p.start, "end": p.end, "score": round(s, 6)} for p, s in hits]
-    return answer_json(SYSTEM, question, reply, corpus.ids, answer_text=answer.answer_text, citations=citations,
-                       dropped_citations=dropped, retrieved=retrieved, corpus_id=corpus.corpus_id,
-                       settings={"retrieval": mode, "k": k, "max_chars": max_chars, "retriever": "bm25okapi"},
+    retrieved = [{"document": p.document, "start": p.start, "end": p.end} | ({} if oracle else {"score": round(s, 6)})
+                 for p, s in hits]
+    return answer_json(system, question, reply, corpus.ids, answer_text=answer.answer_text, citations=citations,
+                       dropped_citations=dropped, retrieved=retrieved, corpus_id=corpus.corpus_id, settings=settings,
                        model_call=call, mapping_call=mapping, mapped_answer_text=reply.answer_text)
