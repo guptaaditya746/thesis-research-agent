@@ -66,3 +66,27 @@ def test_chunking_is_no_contradiction_for_bm25() -> None:
 
 def test_cards_v1_is_kept() -> None:
     assert (Path(cards.__file__).parent / "prompts" / "cards-v1.md").exists() and cards.PROMPT == "cards-v2.md"
+
+
+def test_cascade_all_effect_admits_until_found() -> None:
+    text = cards.EFFECTS["cascade"]({"extractors": {}, "strategy": "all"})
+    assert "until_found" in text and "on every paper" not in text
+
+
+def test_bm25_effect_says_at_most_and_a_query_match() -> None:
+    value = {"strategy": "bm25", "params": {"chunk_chars": 1500, "top_k": 6}}
+    for text in (cards.EFFECTS["locate"](value),
+                 next(c for c in cards.definitions() if c["id"] == "locate")["options"][1]["effect"]):
+        assert "at most the 6 best-scoring" in text and "match at least one" in text
+
+
+def test_locate_effect_for_agent_and_unknown_strategy() -> None:
+    import pytest
+    assert "Locator" in cards.EFFECTS["locate"]({"strategy": "agent", "params": {}})
+    with pytest.raises(ValueError):
+        cards.EFFECTS["locate"]({"strategy": "other", "params": {}})
+
+
+def test_two_studies_effect_names_the_sides() -> None:
+    effect = next(o for c in cards.definitions() if c["id"] == "label" for o in c["options"] if o["id"] == "two_studies")["effect"]
+    assert "no contradicting study (neutral studies are allowed)" in effect

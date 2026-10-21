@@ -69,7 +69,7 @@
           - {then: insufficient}
     - id: two_studies
       summary: a label needs at least two studies on its side
-      effect: "supported, refuted and no_effect each need more than one study on that side and none on the other sides; more than one on each of supporting and contradicting gives mixed; anything else gives insufficient"
+      effect: "supported needs more than one supporting study and no contradicting study (neutral studies are allowed); refuted needs more than one contradicting study and no supporting study; no_effect needs more than one neutral study and no supporting or contradicting study; more than one on each of supporting and contradicting gives mixed; anything else gives insufficient"
       value:
         rows:
           - {when: {supporting: ">1", contradicting: ">1"}, then: mixed}
@@ -94,5 +94,5 @@
       value: {strategy: exhaustive, params: {}}
     - id: bm25
       summary: the six best passages per type by the type's query terms
-      effect: "per evidence type only the 6 passages (about 1500 characters each) that score best against the type's query terms are read; text outside them is never seen, so a value there is missed"
+      effect: "per evidence type at most the 6 best-scoring passages (about 1500 characters each) that match at least one of the type's query terms are read; text outside them is never seen, so a value there is missed, and a paper with no matching passage is read not at all"
       value: {strategy: bm25, params: {chunk_chars: 1500, top_k: 6}}

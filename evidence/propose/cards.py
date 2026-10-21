@@ -259,13 +259,24 @@ EFFECTS: dict[str, Callable[[dict[str, Any]], str]] = {
                           "then the next on a tie: " + ", ".join(v["prefer"])),
     "label": lambda v: "the label is the first row of this table whose condition the study counts satisfy",
     "cascade": lambda v: ("each evidence type runs its extractors in this order, "
-                          + ("all of them on every paper" if v["strategy"] == "all" else
+                          + ("every extractor of a type runs, except that a type set to `cascade: until_found` stops after "
+                              "the first extractor that finds an item" if v["strategy"] == "all" else
                              "and only a gap (a study without a usable pair) escalates to the next extractor")),
-    "locate": lambda v: ("the whole document; chunk and top_k are ignored" if v["strategy"] == "exhaustive" else
-                         f"per evidence type only the {v['params'].get('top_k', 6)} passages (about "
-                         f"{v['params'].get('chunk_chars', 1500)} characters each) that score best against the type's "
-                         "query terms are read; text outside them is never seen"),
+    "locate": lambda v: _locate_effect(v),
 }
+
+
+def _locate_effect(v: dict[str, Any]) -> str:
+    if v["strategy"] == "exhaustive":
+        return "the whole document; chunk and top_k are ignored"
+    if v["strategy"] == "bm25":
+        return (f"per evidence type at most the {v['params'].get('top_k', 6)} best-scoring passages (about "
+                f"{v['params'].get('chunk_chars', 1500)} characters each) that match at least one of the type's query "
+                "terms are read; text outside them is never seen")
+    if v["strategy"] == "agent":
+        return ("a pluggable agent Locator names where to look; evidence/ builds none, so a run with this strategy "
+                "fails unless one is supplied")
+    raise ValueError(f"unknown locate strategy {v['strategy']!r}")
 
 
 def options(card: dict[str, Any], draft: dict[str, Any], f: Frame) -> list[dict[str, Any]]:

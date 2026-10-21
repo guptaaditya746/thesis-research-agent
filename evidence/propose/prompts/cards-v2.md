@@ -24,7 +24,7 @@ Examples (the shape of a rationale, not the answer to favor).
 
 Normal case, a card whose effect settles it:
   min_effect, option usual, effect "a study whose normalised difference is below 0.01 counts as neutral; this
-  is not a significance test".
+  is a plain cut-off, not a significance test".
   {"default": "usual", "rationale": "Accuracy is a fraction, so 0.01 treats differences under one point as neutral; the vocabulary gives no finer scale."}
 
 Confusing case, a rationale tempted to describe the engine wrongly:
