@@ -32,7 +32,7 @@ from synth.truth import Study
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "render.txt").text
-BLIND_INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "blind.txt").text
+BLIND_INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "blind-v2.txt").text
 
 LEVEL_INSTRUCTIONS = {
     "explicit": "Report each value in its own Results sentence that contains the condition name, the metric name "

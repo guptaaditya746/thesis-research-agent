@@ -228,6 +228,16 @@ def names_condition(reported: str, plan: Plan, cid: str) -> bool:
     return False
 
 
+def names_metric(got: str, plan: Plan, metric_id: str) -> bool:
+    """The reported metric is this metric: its name in the paper, an alias or its abbreviation, any case."""
+    names = (plan.metric_name[metric_id], plan.metric_of(metric_id).abbr, *plan.metric_aliases[metric_id])
+    return _norm(got) in {_norm(n) for n in names}
+
+
+def names_dataset(got: str, dataset: str) -> bool:
+    return _norm(got) == _norm(dataset)
+
+
 def planned_extras(plan: Plan) -> list[tuple[str, float]]:
     """(condition id, value) pairs a blind reader may report besides the measurements: the decoy (a stated
     wrong treatment value) and the relative difference the complex level writes, read as a value."""
@@ -242,11 +252,13 @@ def planned_extras(plan: Plan) -> list[tuple[str, float]]:
 
 
 async def blind_check(text: str, plan: Plan, extract: BlindExtractor) -> list[Check]:
-    """A model that never saw the plan reads the paper; every planned (condition, value) must come back,
-    the value within the evaluation tolerance and attached to the same condition, so a value written next
-    to the wrong condition fails (`blind_reextraction`); and nothing else may come back, except the decoy
-    and the relative difference, which the paper does state (`blind_extra`): an extra measurement is a
-    result the ground truth does not have (docs/evidence-system.md G.2)."""
+    """A model that never saw the plan reads the paper; every planned measurement must come back whole, in
+    one reply: the value within the evaluation tolerance, the condition, the metric and the dataset, so a
+    value written next to the wrong condition, metric or dataset fails (`blind_reextraction`, the detail
+    names the first failing field of the closest reply); and nothing else may come back, except the decoy
+    and the relative difference, which the paper does state (`blind_extra`, condition and value only: they
+    have no metric or dataset): an extra measurement is a result the ground truth does not have
+    (docs/evidence-system.md G.2)."""
     got = (await extract(text)).measurements
 
     def near(v: float, truth: float) -> bool:      # a percent the model did not convert still counts
@@ -255,7 +267,17 @@ async def blind_check(text: str, plan: Plan, extract: BlindExtractor) -> list[Ch
     def matches(g: BlindMeasurement, condition: str, value: float) -> bool:
         return near(g.value, value) and names_condition(g.condition, plan, condition)
 
-    missing = [m.id for m in plan.measurements if not any(matches(g, m.condition, m.value) for g in got)]
+    def first_failure(g: BlindMeasurement, m) -> int:   # index of the first failing field; 4 = none
+        checks = (near(g.value, m.value), names_condition(g.condition, plan, m.condition),
+                  names_metric(g.metric, plan, m.metric), names_dataset(g.dataset, m.dataset))
+        return next((i for i, ok in enumerate(checks) if not ok), 4)
+
+    fields = ("value", "condition", "metric", "dataset")
+    missing = []
+    for m in plan.measurements:
+        best = max((first_failure(g, m) for g in got), default=0)
+        if best < 4:
+            missing.append(f"{m.id} ({fields[best]})")
     allowed = [(m.condition, m.value) for m in plan.measurements] + planned_extras(plan)
     extra = [(g.condition, g.value) for g in got if not any(matches(g, c, v) for c, v in allowed)]
     return [Check("blind_reextraction", not missing, f"missing {missing}" if missing else "all values recovered"),

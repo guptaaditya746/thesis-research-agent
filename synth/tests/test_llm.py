@@ -218,7 +218,7 @@ def test_blind_check_allows_the_decoy_and_the_relative_difference(studies: list[
         return value
 
     def read(plan, text, extra: list[BlindMeasurement]):
-        planned = [BlindMeasurement(condition=plan.cond_name[m.condition], metric="m", dataset=m.dataset, value=m.value)
+        planned = [BlindMeasurement(condition=plan.cond_name[m.condition], metric=plan.metric_name[m.metric], dataset=m.dataset, value=m.value)
                    for m in plan.measurements]
         return asyncio.run(blind_check(text, plan, lambda _t: const(BlindExtraction(measurements=planned + extra))))
 
