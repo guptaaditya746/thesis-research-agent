@@ -82,15 +82,17 @@ def _names(entry: Any) -> Names:
 
 def condition_patterns(roles: list[tuple[str, Names]]) -> tuple[dict[str, list[str]] | None, list[tuple[str, Any]]]:
     """(the regex `conditions` config, or None when the built-ins find every name under its role and know
-    exactly these roles; the names added). `roles`: (role id, its names) for the treatment and the control."""
+    exactly these roles; the names added). `roles`: (role id, its names) for the treatment and the control;
+    the control's added patterns refuse a negated object ("no retrieval failures")."""
     known = all(r in regex_terms.CONDITIONS for r, _ in roles) and len(roles) == len(regex_terms.CONDITIONS)
     base = {r: list(regex_terms.CONDITIONS.get(r, [])) for r, _ in roles}
     added: list[tuple[str, Any]] = []
-    for role, names in roles:
+    for i, (role, names) in enumerate(roles):
         for name, term in names:
             found = regex_terms.find_all(name, regex_terms.condition_patterns(base))
             if not any(m.key == role for m in found):
-                base[role].append(term_pattern(name))
+                pattern = term_pattern(name)
+                base[role].append(regex_terms.control_cue(pattern) if i == 1 else pattern)
                 added.append((f"conditions.{role}", term))
     return (base if added or not known else None), added
 
@@ -197,12 +199,13 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str) -> tuple[dict[st
     field("locate", "protocol")
     p["screen"] = {"question": f.population.screening_question, "terms": [x.term for x in f.population.terms],
                    "extractors": copy.deepcopy(screen_t.get("extractors") or [{"name": "regex_screen"}, {"name": "llm_screen"}]),
-                   "on_fail": screen_t.get("on_fail", "skip")}
+                   "on_fail": screen_t.get("on_fail", "skip"), "lexical_miss": screen_t.get("lexical_miss", "reject")}
     field("screen.question", f.population.source)
     for x in f.population.terms:
         term("screen.terms", x.term, x.source, x.vocab_id)
     field("screen.extractors", "protocol")
     field("screen.on_fail", "protocol")
+    field("screen.lexical_miss", "protocol")   # named so the reader sees it; at its default it leaves the sha256 alone
 
     roles = [t.role, c.role, "other"]
     cond = types["condition"]

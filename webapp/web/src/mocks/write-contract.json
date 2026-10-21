@@ -440,7 +440,7 @@
   "status": 200,
   "response": {
    "written": "/srv/ev/proposals/p-new/decisions.yaml",
-   "sha256": "71920625dba2b58939683f0febc063f7b1d8f029d97a33d2d8e125cb529d3efa",
+   "sha256": "9780bb04b215a860eeb6b885212e54a6887c1dee4ef95ec1959c4327e9a66f3d",
    "problems": [
     "screen: a decision without a reason is refused",
     "min_effect: choice 'strict' is not the model's default ('draft'); set `by` to who decided",

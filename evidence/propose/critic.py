@@ -17,10 +17,18 @@ Deterministic (`checks`, also run by freeze on the frozen protocol):
   pattern; freeze refuses a protocol that fails it;
 - `bounds_cover_rate_metrics` (ours): every rate-like outcome (draft.rate_like) is in the measurement bound, so
   a value outside [0, 1] is rejected;
-- `vocabulary_direction` (ours, beyond Part E): no outcome's direction contradicts its vocabulary term's.
+- `vocabulary_direction` (ours, beyond Part E): no outcome's direction contradicts its vocabulary term's;
+- `metric_rules_collide` (ours): no frame name is matched at the same place by rules of two canonicals;
+- `locate_params_used` (ours): an exhaustive locate names no params (it would ignore them).
+
+Each check has a `severity`. `blocking` (freeze refuses the protocol unless a person waives the check in
+decisions.yaml): `regex_matches_enums`, `bounds_cover_rate_metrics`, `metric_rules_collide`, and
+`terms_cover_synonyms` when the screen drops a paper outright on a keyword miss (`on_fail: skip` with
+`lexical_miss: reject`, so an uncovered synonym loses papers); every other check is `advisory`.
 
 LLM checklist (`ambiguous_roles`, `missing_comparator`, `metric_direction`, `scope`): pass or fail, each
-with a message. `ok` in critic.json is true when every deterministic check passes; the checklist is advice.
+with a message. `ok` in critic.json is true when every blocking check passes; advisory checks and the
+checklist are advice.
 """
 from __future__ import annotations
 
@@ -41,7 +49,10 @@ from .common import CRITIC, DRAFT, FRAME, ask, fresh, model_for, need, now, prom
 from .frame import Frame
 
 PROMPT = "critic-v1.md"
-ADVISORY = ("locate_params_used",)      # reported, but a failure does not stop the draft (severity: docs)
+DETERMINISTIC = ("parses", "outcomes_complete", "terms_cover_synonyms", "regex_matches_enums", "screen_present",
+                 "label_complete", "extractors_registered", "vocabulary_direction", "bounds_cover_rate_metrics",
+                 "metric_rules_collide", "locate_params_used")
+BLOCKING = ("regex_matches_enums", "bounds_cover_rate_metrics", "metric_rules_collide")   # and see `severity`
 LLM_CHECKS = ("ambiguous_roles", "missing_comparator", "metric_direction", "scope")
 
 
@@ -61,6 +72,20 @@ def _check(cid: str, ok: bool, message: str) -> dict[str, Any]:
     return {"id": cid, "kind": "deterministic", "ok": ok, "message": message}
 
 
+def severity(cid: str, p: Protocol | None) -> str:
+    """`blocking` or `advisory` (module docstring); terms_cover_synonyms blocks only under a screen that
+    drops a paper on a keyword miss."""
+    if cid in BLOCKING:
+        return "blocking"
+    if cid == "terms_cover_synonyms" and p is not None and p.screen is not None:
+        return "blocking" if (p.screen.on_fail, p.screen.lexical_miss) == ("skip", "reject") else "advisory"
+    return "advisory"
+
+
+def blocking_failures(found: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [c for c in found if c.get("severity") == "blocking" and not c["ok"]]
+
+
 def _patterns(p: Protocol, name: str, key: str, default: Any) -> Any | None:
     """The effective regex patterns `key` of the regex step `name` of any cascade; None without such a step."""
     for spec in p.evidence_types.values():
@@ -68,6 +93,14 @@ def _patterns(p: Protocol, name: str, key: str, default: Any) -> Any | None:
             if step.name == name:
                 return step.config.get(key, default)
     return None
+
+
+def _extractable(p: Protocol, f: Frame) -> list[Any]:
+    """The frame outcomes the protocol's metric extractors may still emit (the metric enum, else the question
+    metrics): a person may drop one at freeze; outcomes_complete reports that, the metric checks leave it out."""
+    spec = p.evidence_types.get("metric")
+    names = (spec.enum_of("canonical") if spec else None) or p.synthesis.metric_names
+    return [o for o in f.outcomes if o.canonical in names]
 
 
 def _coverage(p: Protocol, f: Frame) -> tuple[bool, str]:
@@ -83,7 +116,7 @@ def _coverage(p: Protocol, f: Frame) -> tuple[bool, str]:
     metrics = _patterns(p, "regex_metric", "metrics", [list(m) for m in regex_terms.METRICS])
     if metrics is not None:
         compiled = [tuple(m) for m in metrics]
-        for o in f.outcomes:
+        for o in _extractable(p, f):
             for name in o.names:
                 if not any(m.key == o.canonical for m in regex_terms.find_all(name, compiled)):  # type: ignore[arg-type]
                     misses.append(f"{o.canonical} name {name!r} (regex_metric)")
@@ -130,7 +163,7 @@ def bounds_cover_rate_metrics(p: Protocol, f: Frame) -> tuple[bool, str]:
     spec = p.evidence_types.get("measurement")
     bounds = [b for b in (spec.bounds if spec else ()) if b.field == "value"]
     covered = {v for b in bounds if b.when for v in b.when.values}
-    missing = [o.canonical for o in f.outcomes if rate_like(o) and o.canonical not in covered
+    missing = [o.canonical for o in _extractable(p, f) if rate_like(o) and o.canonical not in covered
                and not any(b.when is None for b in bounds)]
     if missing:
         return False, f"rate-like outcomes missing from the measurement bound: {missing}"
@@ -220,7 +253,7 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
     out.append(_check("locate_params_used", not ignored,
                       f"the exhaustive locate ignores its params {ignored}" if ignored else
                       "the locate params belong to its strategy"))
-    return out
+    return [{**c, "severity": severity(c["id"], p)} for c in out]
 
 
 def _safe(text: str) -> Any:
@@ -247,5 +280,5 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
                        refresh=refresh)
     llm = [{"id": c, "kind": "llm", "ok": getattr(reply, c).ok, "message": getattr(reply, c).message} for c in LLM_CHECKS]
     return write_json(directory / CRITIC, {"draft_sha256": sha(draft_path), "frame_sha256": sha(frame_path),
-                                           "ok": all(c["ok"] for c in found if c["id"] not in ADVISORY), "checks": found + llm,
+                                           "ok": not blocking_failures(found), "checks": found + llm,
                                            "call": call, "created": now()})
