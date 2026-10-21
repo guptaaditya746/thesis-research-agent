@@ -137,7 +137,7 @@ The operational procedure remains [`slurm-evidence-runbook.md`](slurm-evidence-r
 
 ### Architecture (20 Oct)
 
-A refactor with no change to results; plan in `docs/superpowers/plans/2026-10-20-deepen-architecture.md`.
+A refactor with no change to results; its plan (`docs/superpowers/plans/2026-10-20-deepen-architecture.md`) is finished and removed, see git history.
 
 - `jsonio/`: canonical JSON and atomic writers (were `agent/canonical.py`, `webapp/files.write_json_atomic`, `evjobs.write_text_atomic`).
 - `modelcall/` (was `gold/llm.py`): `pins.py` (model pins, no dependencies), `gateway.py`, `loop.py` (the one model event loop), `cache.py` (`JsonlCache`), `prompt.py` (one prompt loader, CRLF-normalised), `call.py` (`ask`, `ask_sync`, `Answer`, `ModelCallError`, `CachedFailure`, `redact`). The RAG and agent baselines, propose, the judge, the gold calls, the synthetic renderer and the engine's Recorder all call `ask`. Cache keys are unchanged; new lines share one value shape `{output, model, served_model, usage, ...}` and old lines still read. The judge keeps the pinned model identity in `model_id` (`model` is the alias asked). `gold/prompts/**` is pinned LF in `.gitattributes`.
