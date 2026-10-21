@@ -1,22 +1,27 @@
-# Runbook: the evidence-level system on Slurm, first live run
+# Runbook: the evidence-level system on Slurm, second live run (EV2)
 
 The evidence-level system (`evidence/`, `synth/`, `evaluation/`; formats in `docs/evidence-system.md`) is
-built and tested only offline, with scripted models (1338 passed, 1 skipped in WSL after the 20 Oct
-architecture change). This session runs it against the real models for the first time: LLM-written synthetic
-corpora (the five levels, the benchmark
-knobs, a counterfactual variant), the engine in both strategies (`all`, `gaps`) with the LLM extractors and
-the agentic extractor, replay and re-execution, both baselines, the scores with intervals, the shift of the
-variant, the benchmark records per extractor, and a dry run of the proposal flow.
+tested offline with scripted models. EV1 (job 7488/7588, 18-21 Oct; `tests/EV1/`, `docs/ev1-review-diagnosis.md`)
+ran it against the real models and found repairs to make; they are merged (plan
+`docs/superpowers/plans/2026-10-21-ev1-repairs.md`). **This session, EV2, reruns the whole runbook on the repaired
+code** and adds: a 3-study pilot build before the full LLM build (with render-v2 and atomic statements, the new
+default of LLM builds), a second cascade arm with `screen.lexical_miss: escalate`, oracle diagnostics (engine
+synthesis on the true facts, RAG on the true passages), a larger and harder template benchmark, the fidelity
+sample summary, and the proposal flow with its blocking checks and `review.status`. Everything else is the EV1
+procedure: LLM-written synthetic corpora (the five levels, the benchmark knobs, a counterfactual variant), the
+engine in both strategies (`all`, `gaps`) with the LLM extractors and the agentic extractor, replay and
+re-execution, both baselines, the scores with intervals, the shift of the variant, the benchmark records per
+extractor, and a dry run of the proposal flow.
 
 **Failures are expected.** When a step fails, record it and go on with the next step that does not depend on
 it. The point is that every part meets the real models once and the first numbers exist.
 
 ## Rules
 
-- Branch `evidence-cluster`, made from `origin/main`. Never push `main`; push `evidence-cluster` at the end.
+- Branch `evidence-ev2`, made from `origin/main` (which holds the EV1 repairs). Never push `main`; push `evidence-ev2` at the end.
 - **Record every failure** in `$EV/failures.md`: step, exact command, exit code, last 30 lines of its log,
   what you did next (fixed in commit X / skipped / retried). Then continue with the next independent step.
-- **Fixes** are allowed on `evidence-cluster`: one commit per fix, each with a test, and
+- **Fixes** are allowed on `evidence-ev2`: one commit per fix, each with a test, and
   `uv run pytest <package>/tests -q` green for the package you changed. **Never** change, to make something
   pass: the protocols (`evidence/protocols/`), the extractor prompts (`evidence/extractors/prompts/`), the
   regex vocabularies (`evidence/extractors/terms.py`), the synthesis machinery (`evidence/rules.py`,
@@ -32,8 +37,12 @@ it. The point is that every part meets the real models once and the first number
 - **No system under test reads the ground truth.** `ground_truth.json`, `corpus.json`, `fidelity.json`,
   `decoys.json` and `variant.json` are read only by `evaluate score`, `evaluate shift`, `evaluate benchmark`
   and by you when you pick the variant's study (step 1.4). Never pass any of them, or anything derived from
-  them, to `evidence run`, `evidence propose`, `evaluate rag-baseline` or `evaluate agent-baseline`, and never
-  copy one into a corpus's `papers/`.
+  them, to `evidence run`, `evidence propose`, `evaluate rag-baseline` (without `--oracle-passages`) or
+  `evaluate agent-baseline`, and never copy one into a corpus's `papers/`. The exceptions are the **oracle
+  diagnostics** (step 6.2): `evaluate oracle` and `evaluate rag-baseline --oracle-passages` read
+  `ground_truth.json` on purpose; they are not systems under test, write only under `$RUNS/oracle*`, and are
+  labelled "oracle" in every table. The corpus's **`selection`** (requested / retained studies, failed checks
+  per level, excluded studies) is in `corpus.json`, never in `manifest.json`.
 - **One model.** Every extractor (LLM and agentic), both baselines and the proposal flow run on `orch-model`
   (the default of `evidence run --model`, of the `llm` extractors, of `AgentSettings.model`, of `evaluate …
   --model` and of `evidence propose … --model`), so a comparison isolates the method, not the weights (16 Oct
@@ -52,9 +61,9 @@ it. The point is that every part meets the real models once and the first number
 | Name | Value |
 |---|---|
 | `REPO` | `/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent` (the clone of the earlier sessions) |
-| `EV` | `/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster` (new; everything this session writes) |
+| `EV` | `/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2` (new, so no EV1 corpus or cache is reused; everything this session writes) |
 | `AGENT_ROOT` | `/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final-3` (pinned agent toolchain) |
-| `CORPORA` | `$EV/corpora` (synthetic corpora); `RUNS=$EV/runs`, `SCORES=$EV/scores`, `CACHE=$EV/cache`, `PR=$EV/proposals/rag-factuality` |
+| `CORPORA` | `$EV/corpora` (synthetic corpora); `RUNS=$EV/runs`, `SCORES=$EV/scores`, `CACHE=$EV/cache`, `PR=$EV/proposals/rag-factuality`; `PE` = the escalate protocol (step 0.6) |
 | `JOB` | the stack's Slurm job id (step 0.2) |
 
 Commands run inside the stack job:
@@ -68,12 +77,16 @@ Corpus names (all under `$CORPORA`; `<level>` is `explicit`, `paraphrased`, `dis
 
 | Name | What | Step |
 |---|---|---|
-| `rag-llm-s1-<level>` | seed 1, 20 studies, written by `sub-model-1` | 1.1 |
+| `rag-llm-pilot-<level>` | seed 1, 3 studies, same models and pipeline as 1.1; decides `--min-retained` | 1.0 |
+| `rag-llm-s1-<level>` | seed 1, 20 studies, written by `sub-model-1` (render-v2 plus atomic statements) | 1.1 |
 | `rag-llm-k1-<level>` | the same 20 studies plus the four knobs (2 duplicates, 2 missing, 2 outliers, 2 irrelevant papers) | 1.2 |
 | `rag-llm-small-{paraphrased,distributed}` | seed 2, 5 studies, for the agentic extractor (the build writes `rag-llm-small-mixed` too; unused) | 1.3 |
 | `rag-llm-s1-mixed-cf-<S>-contradicts` | the counterfactual variant: study `<S>` of `rag-llm-s1-mixed` flipped to contradicts | 1.4 |
+| `rag-llm-ns-<level>` | the 1.1 studies again with `--no-statements` (the EV1 call pattern), for the prompt-policy comparison | 1.5 |
 | `rag-tpl-s1-<level>`, `rag-tpl-k1-<level>`, `rag-tpl-s1-mixed-cf-<S>-contradicts` | the same three, written by the template | 2 |
+| `rag-tpl-hard-<level>` | template only, seed 1, 100 studies, `--hard` plus 6 duplicates, 6 missing, 6 outliers, 6 irrelevant; run and scored on `complex` and `mixed` | 2.3 |
 
+`$CF_LLM` and `$CF_TPL` below are the two variant corpus directories (`$EV/cf-llm.txt`, `$EV/cf-tpl.txt` hold them).
 Only the `mixed` corpus of a knob build is run and scored (its papers cover every level; the per-level knob
 corpora are written by the build anyway and stay unused).
 
@@ -94,15 +107,16 @@ they run one after the other, never two at once.
 | Step | Uses | Needs | Time (not measured) |
 |---|---|---|---|
 | 0 setup, stack, offline smoke | CPU | — | 1 h |
-| 1 LLM corpora: main, knobs, small set, variant | sub-model-1, sub-model-2 | 0 (1.4 needs 1.1) | hours |
-| 2 template corpora, same seed: main, knobs, variant | CPU | 0 (2.2 needs 1.4's study) | minutes |
+| 1.0 pilot build (3 studies) | sub-model-1, sub-model-2 | 0 | minutes |
+| 1 LLM corpora: main, knobs, small set, variant, no-statements comparison | sub-model-1, sub-model-2 | 0, 1.0 (1.4 needs 1.1) | hours |
+| 2 template corpora, same seed: main, knobs, variant, hard set | CPU | 0 (2.2 needs 1.4's study) | minutes |
 | 9 proposal flow dry run | orch-model (3 calls) | 0; run it while step 1 builds | 15 min |
-| 3 engine regex-only, cascade `all` and `gaps` on every corpus | orch-model | 1, 2 | hours |
+| 3 engine regex-only, cascade `all` and `gaps` (and `gaps` with `escalate`) on every corpus | orch-model | 1, 2 | hours |
 | 4 replay all, re-execution of two runs | CPU, orch-model | 3, and not while 5 or 6 runs | 1 h |
 | 5 agentic protocol, `all` and `gaps`, on the small set | orch-model | 1, and not while 3 or 6 runs | hours |
-| 6 baselines (RAG, agent) on the LLM corpora | orch-model | 1, and not while 3, 4 or 5 runs | hours |
+| 6 baselines (RAG, agent) on the LLM corpora and the hard set; oracle diagnostics | orch-model (CPU for the engine oracle) | 1, 2.3, and not while 3, 4 or 5 runs | hours |
 | 7 scores, comparisons, shift, benchmark records | CPU | 3–6 | 30 min |
-| 8 fidelity hand check (**USER**) | — | 1 | the user's time |
+| 8 fidelity hand check (**USER**), then its summary | — | 1 | the user's time |
 | 10 proposal review (**USER**) | — | 9 | the user's time |
 
 ## 0. Setup
@@ -112,15 +126,22 @@ they run one after the other, never two at once.
 ```bash
 cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
 git status --short                 # nothing tracked changed; otherwise USER
-git fetch origin && git checkout -b evidence-cluster origin/main
+git fetch origin && git checkout -b evidence-ev2 origin/main
 git submodule update --init --recursive
 uv sync --locked --all-groups
 uv run pytest -q -W ignore::SyntaxWarning 2>&1 | tail -n 3
 ```
 
-Expect `1338 passed, 1 skipped` (WSL count; the skip is the "Landlock missing" test, so on a node with
-Landlock the split may differ by one). A failure here: record it; fix only clear test-environment
-differences.
+The new expected count is **not known yet**: the integration branch gives 792 passed, 20 skipped on Windows (plus 3 known Windows-only failures) with the
+offline packages only (platform failures aside). Record the Linux count of this run in `EV-setup` and in this
+paragraph's place in `docs/STATE.md` §6 as the new expected value; do not guess it. The skip is the "Landlock
+missing" test, so on a node with Landlock the split may differ by one. A failure here: record it; fix only clear
+test-environment differences.
+
+The web app's recorded write contract `webapp/web/src/mocks/write-contract.json` had one sha256 patched by hand
+on Windows. Regenerate it on Linux with `uv run python -m webapp.tests.write_contract` (default output is that
+file) and check `uv run pytest webapp/tests -q -k recorded_contract` (that is `test_recorded_contract_is_current`);
+commit the regenerated file as one fix commit if it differs.
 
 ### 0.2 Stack (login node)
 
@@ -137,7 +158,7 @@ tail -n 20 llm-setup/runtime/slurm-$JOB.out      # repeat until orch, sub-1 and 
 ### 0.3 Session environment (login node)
 
 ```bash
-export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-cluster
+export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2
 mkdir -p "$EV/logs" "$EV/corpora" "$EV/runs" "$EV/scores" "$EV/cache" "$EV/agent-work" "$EV/proposals"
 cat > "$EV/in-job.env" <<EOF
 # The evidence session's environment (docs/slurm-evidence-runbook.md). Paths only: the key comes from llm-setup/.env.
@@ -170,6 +191,7 @@ srun --jobid "$JOB" --overlap bash -lc 'cd llm-setup && set -a && source .env &&
 test -f "$AGENT_ROOT/agent-root.sha256" && echo "AGENT_ROOT ok"
 uv run evidence protocol check $P | head -n 6           # id rag-factuality, version 2, its sha256
 uv run evidence protocol check $PA | head -n 6
+command -v jq >/dev/null && echo "jq ok"              # steps 1.4 and 2.2 use it; without it use uv run python -c 'import json,sys; print(json.load(sys.stdin)["out"])'
 for L in explicit distributed; do
   uv run evidence run --protocol $P --corpus synth/examples/rag-demo-$L --out $RUNS/smoke \
     --cache $CACHE/smoke --extractors regex-only --run-id smoke-$L
@@ -209,13 +231,51 @@ Row `EV-setup`, notes: no `Event loop is closed` in any `calls/*.json` error; th
 after the second run equals the count after the first (n1, recorded) and `cmp` printed `answers identical`
 (the rerun made no model call); the cascade run completed.
 
+### 0.6 The escalate protocol (once)
+
+The cascade runs twice (step 3): with `screen.lexical_miss: reject` (the default and EV1's behaviour: a regex
+"not relevant" ends the cascade for that paper) and with `escalate` (the miss passes the paper on, the next
+extractor in the screen decides; the record carries `escalated: true`). The second protocol is a copy with
+that one line added; nothing else differs. This is a copy for the run, not a change of `evidence/protocols/`.
+
+```bash
+PE=$EV/rag-factuality-escalate.yaml
+sed 's/^  on_fail: skip .*$/&\n  lexical_miss: escalate/' $P > "$PE"
+diff $P "$PE"                                           # exactly one added line: "  lexical_miss: escalate"
+uv run evidence protocol check "$PE" | head -n 6        # valid; a different sha256 than $P
+grep -q '^export PE=' "$EV/in-job.env" || echo "export PE=$PE" >> "$EV/in-job.env"
+```
+
 ## 1. LLM-written corpora **(long)**
+
+LLM builds now run the **statement stage** by default (`--statements`: render-v2 paper prompt plus atomic
+statements checked one by one); `--no-statements` reproduces the EV1 call pattern and cache keys exactly. Each
+build's `corpus.json` `models` records `statements` and `paper_prompt` (`render-v2.txt` or `render.txt`);
+`synth variant` follows its base corpus's recorded mode. Every build's `corpus.json` has `selection`.
+
+### 1.0 Pilot build (3 studies; do this first)
+
+```bash
+nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" uv run synth build --name rag-llm-pilot --seed 1 --studies 3 \
+  --renderer llm --levels all --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
+  --cache "$EV/cache/synth-llm.jsonl" > "$EV/logs/1-synth-pilot.log" 2>&1 &
+echo $! > "$EV/logs/1-synth-pilot.pid"
+wait $!; tail -n 3 "$EV/logs/1-synth-pilot.log"
+jq '.selection | {requested_studies, retained_studies, per_level}' "$CORPORA/rag-llm-pilot-mixed/corpus.json"
+```
+
+Retention is `retained_studies / requested_studies`. **Stop** if it is under 0.5: record it, tell the user
+(**USER**) and do not start 1.1; the writer or the level instructions need the user's decision. Otherwise
+`MINR` = the pilot's retention minus 0.1 (e.g. 0.67 gives `0.57`; round down to two decimals), and 1.1 and 1.2
+pass `--min-retained "$MINR"` (the build then exits 1 when fewer studies pass). Row `EV2-pilot`: retention,
+`selection.per_level` (passed, failed checks, mean attempts), statement rounds per level (`fidelity.json`
+`statements.rounds` and `failed` per paper), calls and seconds from the log, `MINR`, and whether you stopped.
 
 ### 1.1 Main set (20 studies, all five levels plus mixed)
 
 ```bash
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" uv run synth build --name rag-llm-s1 --seed 1 --studies 20 \
-  --renderer llm --levels all --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
+  --renderer llm --levels all --min-retained "$MINR" --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
   --cache "$EV/cache/synth-llm.jsonl" > "$EV/logs/1-synth-main.log" 2>&1 &
 echo $! > "$EV/logs/1-synth-main.pid"
 ```
@@ -226,7 +286,7 @@ When 1.1 has finished (one build at a time on the sub-models):
 
 ```bash
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" uv run synth build --name rag-llm-k1 --seed 1 --studies 20 \
-  --renderer llm --levels all --duplicates 2 --missing 2 --outliers 2 --irrelevant 2 \
+  --renderer llm --levels all --min-retained "$MINR" --duplicates 2 --missing 2 --outliers 2 --irrelevant 2 \
   --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
   --cache "$EV/cache/synth-llm.jsonl" > "$EV/logs/1-synth-knobs.log" 2>&1 &
 echo $! > "$EV/logs/1-synth-knobs.pid"
@@ -260,13 +320,19 @@ are the experimenter, not a system under test): the first study in `answer.suppo
 S=$(uv run python -c 'import json, sys; print(json.load(open(sys.argv[1]))["answer"]["supporting"][0])' \
   "$CORPORA/rag-llm-s1-mixed/ground_truth.json")
 echo "$S" > "$EV/variant-study.txt"
-uv run synth variant --corpus "$CORPORA/rag-llm-s1-mixed" --study "$S" --direction contradicts \
-  --model sub-model-1 --verify-model sub-model-2 --cache "$EV/cache/synth-llm.jsonl" 2>&1 | tee "$EV/logs/1-variant.log"
+CF_LLM=$(uv run synth variant --corpus "$CORPORA/rag-llm-s1-mixed" --study "$S" --direction contradicts \
+  --model sub-model-1 --verify-model sub-model-2 --cache "$EV/cache/synth-llm.jsonl" \
+  2> "$EV/logs/1-variant.err" | tee "$EV/logs/1-variant.json" | jq -r .out)
+test -n "$CF_LLM" && test -f "$CF_LLM/variant.json" && echo "$CF_LLM" > "$EV/cf-llm.txt" || echo "FAIL variant"
 ```
 
-It writes `$CORPORA/rag-llm-s1-mixed-cf-$S-contradicts` with `variant.json` (the renderer is the base
-corpus's, `llm`). A fidelity failure of the re-rendered paper is an error: record it, then try once with the
-next study of `answer.supporting` (`[1]`), and use that study in 2.2 too.
+`synth variant` prints a JSON object whose `out` is the variant corpus directory; `$CF_LLM` is that directory
+(`$CORPORA/rag-llm-s1-mixed-cf-$S-contradicts`), with `variant.json`. Steps 3, 6 and 7.3 read it from
+`$EV/cf-llm.txt`, so a retry with another study never leaves two variants in play. The renderer and the
+statement mode are the base corpus's (`llm`, as recorded in its `corpus.json`); `--statements` /
+`--no-statements` would override the mode. A fidelity failure of the re-rendered paper is an error: record it, then try once with the
+next study of `answer.supporting` (`[1]`; rewrite `$EV/variant-study.txt`, `$CF_LLM` and `$EV/cf-llm.txt`), and
+use that study in 2.2 too.
 
 The papers are written by `sub-model-1` and read by `orch-model` (steps 3, 5, 6, 9), different weights.
 
@@ -278,6 +344,23 @@ duplicates, missing, outliers and irrelevant papers (`ground_truth.json` `answer
 `variant.json` (label before and after, `label_changes`). If more than a quarter of the studies of a build
 are excluded, record it and **USER** (the level instructions may be too hard for the writer); still continue
 with what was kept.
+
+### 1.5 Statements against the EV1 call pattern (prompt policy; after 1.1, one build at a time)
+
+Before anyone claims that render-v2 plus statements improves the corpora, compare it with the EV1 pattern on
+the same study ids (`docs/prompt-writing.md`): the same seed and study count with `--no-statements`.
+
+```bash
+nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" uv run synth build --name rag-llm-ns --seed 1 --studies 20 \
+  --renderer llm --levels all --no-statements --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
+  --cache "$EV/cache/synth-llm.jsonl" > "$EV/logs/1-synth-ns.log" 2>&1 &
+echo $! > "$EV/logs/1-synth-ns.pid"
+```
+
+No `--min-retained` here: the point is the retention. Row `EV2-pilot` gets a second part: per level `selection.per_level`
+(passed, failed checks, mean attempts) of `rag-llm-ns-*` next to `rag-llm-s1-*`, the studies each excluded
+(`selection.excluded`), and `corpus.json` `models.statements` and `paper_prompt` of both. Report the difference;
+do not run `rag-llm-ns-*` through the engine unless time allows (then as in step 3, glob `rag-llm-ns-*`).
 
 ## 2. Template corpora, same seed (CPU)
 
@@ -295,8 +378,31 @@ Same studies as step 1, written by the template: the difference between the two 
 ### 2.2 The same variant (after 1.4)
 
 ```bash
-uv run synth variant --corpus "$CORPORA/rag-tpl-s1-mixed" --study "$(cat "$EV/variant-study.txt")" --direction contradicts
+CF_TPL=$(uv run synth variant --corpus "$CORPORA/rag-tpl-s1-mixed" --study "$(cat "$EV/variant-study.txt")" \
+  --direction contradicts | tee "$EV/logs/2-variant.json" | jq -r .out)
+test -n "$CF_TPL" && test -f "$CF_TPL/variant.json" && echo "$CF_TPL" > "$EV/cf-tpl.txt" || echo "FAIL variant tpl"
 ```
+
+### 2.3 Hard template set (a benchmark off the ceiling; CPU, minutes)
+
+The template corpora are easy (EV1 scored near the ceiling on them). `--hard` makes about a third of the studies
+report a further experiment and/or an ablation condition (role `other`, label `<treatment> without
+<component>`), all in the `complex` level's table; the knobs are 6 each, 100 studies. Template renderer only
+(`--hard` with `--renderer llm` exits 2).
+
+```bash
+uv run synth build --name rag-tpl-hard --seed 1 --studies 100 --renderer template --levels all --hard \
+  --duplicates 6 --missing 6 --outliers 6 --irrelevant 6 --out "$CORPORA" --min-retained 1 \
+  | tee "$EV/logs/2-hard.json"
+jq '.selection | {requested_studies, retained_studies}' "$CORPORA/rag-tpl-hard-mixed/corpus.json"   # 100 / 100
+```
+
+It builds with 100 of 100 retained (the template passes fidelity); `--min-retained 1` makes anything less exit
+1. Only `rag-tpl-hard-complex` and `rag-tpl-hard-mixed` are run and scored (steps 3, 6, 7): the engine in `all`
+and `gaps`, both baselines, and `evaluate score --oracle` (7.1). A `SystemExit` naming a knob is the generator
+refusing: record it and build once with that knob at 0. Row `EV2-hard`: the build's selection, the planted
+knobs and the extra experiments/ablations (`ground_truth.json`), and the scores of 7.1 on both corpora next to
+the easy `rag-tpl-s1-complex` / `-mixed` (engine and baselines: direction accuracy, extraction F1, label).
 
 ## 3. Engine on every corpus **(long)**
 
@@ -304,26 +410,41 @@ uv run synth variant --corpus "$CORPORA/rag-tpl-s1-mixed" --study "$(cat "$EV/va
 cat > "$EV/engine.sh" <<'EOF'
 #!/usr/bin/env bash
 # regex-only and the cascade (regex, then the LLM extractor on orch-model) on every main-set corpus, the
-# variants and the knob sets' mixed corpora, the cascade in both strategies: `all` (every extractor on every
-# paper, the screen recorded) and `gaps` (the funnel: screen, then escalate only the gaps;
-# docs/evidence-system.md Part D).
+# variants, the knob sets' mixed corpora and the hard set's complex and mixed corpora; the cascade in both
+# strategies: `all` (every extractor on every paper, the screen recorded) and `gaps` (the funnel: screen,
+# then escalate only the gaps; docs/evidence-system.md Part D); and `gaps` once more under the escalate
+# protocol $PE (screen.lexical_miss: escalate; the only difference to $P).
 set -u
-for C in "$CORPORA"/rag-llm-s1-* "$CORPORA"/rag-tpl-s1-* "$CORPORA"/rag-llm-k1-mixed "$CORPORA"/rag-tpl-k1-mixed; do
-  N=$(basename "$C")
-  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/regex-only" --cache "$CACHE/engine" \
-    --extractors regex-only --model orch-model --run-id "$N" || echo "FAIL engine regex-only $N"
-  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade" --cache "$CACHE/engine" \
-    --extractors cascade --strategy all --model orch-model --run-id "$N" || echo "FAIL engine cascade $N"
-  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade-gaps" --cache "$CACHE/engine" \
-    --extractors cascade --strategy gaps --model orch-model --run-id "$N" || echo "FAIL engine cascade-gaps $N"
+fail=0
+CS=()
+for W in llm tpl; do
+  for L in explicit paraphrased distributed complex contradictory mixed; do CS+=("$CORPORA/rag-$W-s1-$L"); done
 done
+CS+=("$CORPORA"/rag-llm-k1-mixed "$CORPORA"/rag-tpl-k1-mixed "$CORPORA"/rag-tpl-hard-complex "$CORPORA"/rag-tpl-hard-mixed
+     "$(cat "$EV/cf-llm.txt" 2>/dev/null)" "$(cat "$EV/cf-tpl.txt" 2>/dev/null)")
+for C in "${CS[@]}"; do
+  N=$(basename "$C")
+  [ -f "$C/manifest.json" ] || { echo "FAIL engine missing corpus '$C'"; fail=1; continue; }   # excluded or not built
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/regex-only" --cache "$CACHE/engine" \
+    --extractors regex-only --model orch-model --run-id "$N" || { echo "FAIL engine regex-only $N"; fail=1; }
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade" --cache "$CACHE/engine" \
+    --extractors cascade --strategy all --model orch-model --run-id "$N" || { echo "FAIL engine cascade $N"; fail=1; }
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade-gaps" --cache "$CACHE/engine" \
+    --extractors cascade --strategy gaps --model orch-model --run-id "$N" || { echo "FAIL engine cascade-gaps $N"; fail=1; }
+  uv run evidence run --protocol "$PE" --corpus "$C" --out "$RUNS/cascade-gaps-escalate" --cache "$CACHE/engine" \
+    --extractors cascade --strategy gaps --model orch-model --run-id "$N" || { echo "FAIL engine cascade-gaps-escalate $N"; fail=1; }
+done
+exit $fail
 EOF
 chmod +x "$EV/engine.sh"
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/engine.sh" > "$EV/logs/3-engine.log" 2>&1 &
 echo $! > "$EV/logs/3-engine.pid"
 ```
 
-The glob `rag-*-s1-*` takes the variants (`…-mixed-cf-…`) too. `--model orch-model` is the default, written
+The corpus list is explicit (the per-level corpora, the variants named in `$EV/cf-*.txt`, the knob sets' mixed
+corpora, the hard set's `complex` and `mixed`), so a variant left over from a retry is never run. A non-zero exit
+of any run is a `FAIL` line and the script exits 1 (record that; the loop still runs the rest). The hard set is
+100 papers per corpus: the long part of this step. `--model orch-model` is the default, written
 out so the record (`run.json` `settings.model`) is explicit; `--strategy all` is the default too. The `gaps`
 run shares the record cache with the `all` run: a call whose task is byte for byte one the `all` run made
 is a cache hit, which holds for the screen calls and for the position-0 calls of the types without context
@@ -336,10 +457,17 @@ neutral / undetermined / duplicates), the flags (`answer.json` `flags`), model c
 screened-out papers (`funnel.json`; on the knob sets the irrelevant papers should be the screened-out ones),
 and every `FAIL` line.
 
+Row `EV2-escalate`: the escalate arm against the reject arm (`cascade-gaps` against `cascade-gaps-escalate`, same
+corpus, same cache). From each `funnel.json` count the papers whose `screen.escalated` is true and how many of
+those have `screen.relevant` true (the screen's final decision), per corpus; the extra screen calls and tokens of the
+escalate arm over the reject arm (`run.json` `cost`); and from `compare-lexical` (7.2) the accuracies and the
+screen's precision and recall of both. Only a cascade whose `lexical_miss` is `escalate` carries the key; the
+reject arm's records are byte for byte EV1's. Report both; do not pick one.
+
 ## 4. Replay and re-execution
 
 ```bash
-for R in "$RUNS"/regex-only/rag-* "$RUNS"/cascade/rag-* "$RUNS"/cascade-gaps/rag-*; do
+for R in "$RUNS"/regex-only/rag-* "$RUNS"/cascade/rag-* "$RUNS"/cascade-gaps/rag-* "$RUNS"/cascade-gaps-escalate/rag-*; do
   case "$R" in *-replay-*|*-reexec-*) continue;; esac
   [ -f "$R/run.json" ] || continue
   uv run evidence replay "$R" | grep -q '"ok": true' && echo "OK $R" || echo "MISMATCH $R"
@@ -404,20 +532,24 @@ set -u
 shopt -s nullglob
 # The RAG baseline (one retrieval, one call) on every corpus first; then the agent baseline, the costly one,
 # mixed corpora first, so a stopped job still leaves both baselines on the corpora the comparison leans on.
-CS=("$CORPORA"/rag-llm-s1-mixed "$CORPORA"/rag-llm-k1-mixed "$CORPORA"/rag-llm-s1-mixed-cf-*)
-for C in "$CORPORA"/rag-llm-s1-* "$CORPORA"/rag-llm-small-{paraphrased,distributed}; do
-  [[ " ${CS[*]} " == *" $C "* ]] || CS+=("$C")
-done
+fail=0
+CS=("$CORPORA"/rag-llm-s1-mixed "$CORPORA"/rag-llm-k1-mixed "$(cat "$EV/cf-llm.txt" 2>/dev/null)"
+    "$CORPORA"/rag-tpl-hard-complex "$CORPORA"/rag-tpl-hard-mixed)
+for C in "$CORPORA"/rag-llm-s1-{explicit,paraphrased,distributed,complex,contradictory} \
+         "$CORPORA"/rag-llm-small-{paraphrased,distributed}; do CS+=("$C"); done
 for C in "${CS[@]}"; do
   N=$(basename "$C")
+  [ -f "$C/manifest.json" ] || { echo "FAIL baselines missing corpus '$C'"; fail=1; continue; }
   uv run evaluate rag-baseline --corpus "$C" --out "$RUNS/rag-baseline/$N" --cache "$CACHE/rag-baseline.jsonl" \
-    --model orch-model --retrieval global --k 8 || echo "FAIL rag $N"
+    --model orch-model --retrieval global --k 8 || { echo "FAIL rag $N"; fail=1; }
 done
 for C in "${CS[@]}"; do
   N=$(basename "$C")
+  [ -f "$C/manifest.json" ] || continue
   uv run evaluate agent-baseline --corpus "$C" --out "$RUNS/agent-baseline/$N" --cache "$CACHE/agent-baseline.jsonl" \
-    --model orch-model --agent-root "$AGENT_ROOT" --run-id "$N" || echo "FAIL agent $N"
+    --model orch-model --agent-root "$AGENT_ROOT" --run-id "$N" || { echo "FAIL agent $N"; fail=1; }
 done
+exit $fail
 EOF
 chmod +x "$EV/baselines.sh"
 nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/baselines.sh" > "$EV/logs/6-baselines.log" 2>&1 &
@@ -429,31 +561,100 @@ BM25 passages of the whole corpus (`--retrieval global --k 8`, the defaults, wri
 call under the neutral prompt (answer text and citations as `[paper id, start-end]`), then the mapping call
 shared with the agent baseline (label and per-paper stances for score C; it reads the answer text and the
 kept citations' headers, never the passages). `--model orch-model` (the default, written out) is the model
-of both calls and of the agent baseline's agent. The glob `rag-llm-s1-*` takes the variant too, so step 7
-can score the baselines' shift. If time allows, also once with `--retrieval per_paper` ("every paper seen":
+of both calls and of the agent baseline's agent. The list names the variant of `$EV/cf-llm.txt`, so step 7
+can score the baselines' shift; the hard set (2.3) gets both baselines too. If time allows, also once with `--retrieval per_paper` ("every paper seen":
 the top 2 passages of every paper) on `rag-llm-s1-mixed` into `$RUNS/rag-baseline-per-paper/`. Row
 `EV-baselines`: per corpus the label, studies with a stance, citations kept and dropped (`answer.json`
 `citations`, `dropped_citations`), the passages retrieved per paper (`retrieved`), the agent's exit status,
 steps, tokens, seconds.
+
+### 6.1 Oracle diagnostics (CPU for the engine oracle; orch-model for the RAG oracle)
+
+Two diagnostics that read `ground_truth.json` on purpose (Rules; labelled "oracle" in every table; never systems
+under test). They tell a system's upstream errors (extraction or retrieval: the oracle is right) from downstream
+ones (synthesis or reasoning: the oracle is wrong too). The **engine** oracle (`oracle-synthesis`) puts the
+true facts through the protocol's synthesis; it shares `evidence/rules.py` with the generator's truth, so for the
+engine it checks the code path and is not an independent validation of the rules. The **RAG** oracle
+(`rag-oracle-passages`) replaces BM25 by the paragraphs a reader needs to interpret each true value (the value's
+paragraph plus the paragraphs of its condition and metric labels), then answers and maps as the baseline does
+(it takes no `--k`, `--retrieval` or `--max-chars`; they exit with an error).
+
+```bash
+cat > "$EV/oracle.sh" <<'EOF'
+#!/usr/bin/env bash
+set -u
+fail=0
+CS=("$CORPORA"/rag-llm-s1-mixed "$CORPORA"/rag-llm-k1-mixed "$(cat "$EV/cf-llm.txt" 2>/dev/null)"
+    "$CORPORA"/rag-tpl-s1-mixed "$CORPORA"/rag-tpl-k1-mixed "$(cat "$EV/cf-tpl.txt" 2>/dev/null)"
+    "$CORPORA"/rag-tpl-hard-complex "$CORPORA"/rag-tpl-hard-mixed)
+for L in explicit paraphrased distributed complex contradictory; do
+  CS+=("$CORPORA/rag-llm-s1-$L" "$CORPORA/rag-tpl-s1-$L")
+done
+for C in "${CS[@]}"; do
+  N=$(basename "$C")
+  [ -f "$C/manifest.json" ] || { echo "FAIL oracle missing corpus '$C'"; fail=1; continue; }
+  uv run evaluate oracle --protocol "$P" --corpus "$C" --out "$RUNS/oracle/$N" || { echo "FAIL oracle $N"; fail=1; }
+done
+for C in "${CS[@]}"; do      # the RAG oracle, on the corpora that have a RAG baseline
+  N=$(basename "$C")
+  [ -f "$RUNS/rag-baseline/$N/answer.json" ] || continue
+  uv run evaluate rag-baseline --oracle-passages --corpus "$C" --out "$RUNS/rag-oracle-passages/$N" \
+    --cache "$CACHE/rag-oracle.jsonl" --model orch-model || { echo "FAIL rag-oracle $N"; fail=1; }
+done
+exit $fail
+EOF
+chmod +x "$EV/oracle.sh"
+nohup srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$EV/oracle.sh" > "$EV/logs/6-oracle.log" 2>&1 &
+echo $! > "$EV/logs/6-oracle.pid"
+```
+
+`evaluate oracle` prints `<out>: label=… studies=…` and writes a run directory (`answer.json`, `run.json`,
+`evidence.jsonl`, `locate.json`; `system: oracle-synthesis`, `mode: oracle`); it is CPU and quick. The RAG oracle
+writes `answer.json` with `system: rag-oracle-passages` and `settings.retrieval: oracle_passages`. Run it after
+the RAG baselines (it makes orch-model calls, so not while 3, 4 or 5 runs). Row `EV2-oracle`: per corpus the
+engine oracle's label and direction accuracy, the RAG oracle's label and stance accuracy, and (from 7.1) the
+`attribution` counts per system: studies, `system_correct`, `oracle_correct`, `upstream`, `downstream`.
 
 ## 7. Scores, comparisons, shift, benchmark records (CPU)
 
 ### 7.1 Scores
 
 ```bash
-for R in "$RUNS"/{regex-only,cascade,cascade-gaps,agentic,agentic-gaps}/rag-*; do
+( fail=0
+for R in "$RUNS"/{regex-only,cascade,cascade-gaps,cascade-gaps-escalate,agentic,agentic-gaps}/rag-*; do
   case "$R" in *-replay-*|*-reexec-*) continue;; esac
   [ -f "$R/answer.json" ] || continue                  # a selection that did not run leaves the glob as is
   N=$(basename "$R"); S=$(basename "$(dirname "$R")")
   B=(); for b in "$RUNS"/rag-baseline/$N/answer.json "$RUNS"/agent-baseline/$N/answer.json; do
     [ -f "$b" ] && B+=(--baseline "$b"); done
   X=$(ls -d "$R"-reexec-*/reexec.json 2>/dev/null | tail -n 1); [ -n "$X" ] && B+=(--reexec "$X")
-  uv run evaluate score --run "$R" --corpus "$CORPORA/$N" "${B[@]}" --out "$SCORES/$S/$N" || echo "FAIL score $S $N"
-done 2>&1 | tee "$EV/logs/7-score.log"
+  O="$RUNS/oracle/$N/answer.json"; [ -f "$O" ] && B+=(--oracle "$O")      # engine oracle: upstream/downstream errors
+  uv run evaluate score --run "$R" --corpus "$CORPORA/$N" "${B[@]}" --out "$SCORES/$S/$N" || { echo "FAIL score $S $N"; fail=1; }
+done
+# The RAG baseline against the RAG oracle (retrieval errors against reading errors): the two answers, no engine run.
+for A in "$RUNS"/rag-oracle-passages/rag-*/answer.json; do
+  [ -f "$A" ] || continue
+  N=$(basename "$(dirname "$A")")
+  [ -f "$RUNS/rag-baseline/$N/answer.json" ] || continue
+  uv run evaluate score --corpus "$CORPORA/$N" --baseline "$RUNS/rag-baseline/$N/answer.json" --baseline "$A" \
+    --oracle "$A" --out "$SCORES/rag-oracle/$N" || { echo "FAIL score rag-oracle $N"; fail=1; }
+done
+exit $fail ) 2>&1 | tee "$EV/logs/7-score.log"; echo "scores exit ${PIPESTATUS[0]}"      # non-zero: a FAIL line above
 ```
 
+The hard set's `complex` and `mixed` runs are scored by the same loop (`$CORPORA/rag-tpl-hard-*`), and so
+are the escalate arm and every engine run with `--oracle` (the `oracle-synthesis` answer of 6.1), so run 6.1
+first. A report now carries `corpus_name` and a `corpus_dir` relative to the report, and `evaluate compare`
+reads each corpus's `corpus.json` to add the **Selection** and **Matched** tables (template against LLM, on the
+study ids both kept). EV1's `report.json` files predate that: re-score them to get those tables.
+**`traceability` now means strict**: the cited paper has an overlap with one of the study's value, metric-label or
+claim placements (not "same study or condition", not entailment). `overlap` is the old lenient number. EV1's
+traceability is not comparable with EV2's; compare `overlap` to `overlap` if you must compare across the two.
+
 Every `report.json` carries 95 % BCa bootstrap intervals (`intervals`: extraction F1 per evidence type,
-direction accuracy per system, the paired engine-minus-baseline difference; F4), shown as `0.812 [0.74,
+direction accuracy per system, the paired engine-minus-baseline difference; F4; pooled numbers resample whole
+parent studies, `cluster_bootstrap`, so a duplicate or another level's rendering of a study is not independent
+evidence; each interval row in `report.json` carries its sample size: `n_rows`, `unit`, `n_clusters` where clustered; record them), shown as `0.812 [0.74,
 0.88]` in `report.md` and `compare.md`; a degenerate sample gives the point value with empty bounds. The knob
 corpora add flag precision and recall, `counts_correct` and `duplicates_correct`; the `gaps` runs add the
 funnel section (calls per document, stop positions, screen precision and recall).
@@ -461,8 +662,12 @@ funnel section (calls per document, stop positions, screen precision and recall)
 ### 7.2 Comparisons
 
 ```bash
-for S in regex-only cascade cascade-gaps agentic agentic-gaps; do
-  [ -d "$SCORES/$S" ] && uv run evaluate compare --out "$SCORES/compare-$S" "$SCORES/$S"/*
+for S in regex-only cascade cascade-gaps cascade-gaps-escalate agentic agentic-gaps rag-oracle; do
+  [ -d "$SCORES/$S" ] && uv run evaluate compare --corpora "$CORPORA" --out "$SCORES/compare-$S" "$SCORES/$S"/*
+done
+for N in $(ls "$SCORES/cascade-gaps-escalate" 2>/dev/null); do   # the lexical_miss arms: reject against escalate
+  uv run evaluate compare --corpora "$CORPORA" --out "$SCORES/compare-lexical/$N" \
+    "$SCORES/cascade-gaps/$N" "$SCORES/cascade-gaps-escalate/$N"
 done
 for N in $(ls "$SCORES/cascade-gaps"); do   # all against gaps, one corpus per table (Part D)
   uv run evaluate compare --out "$SCORES/compare-funnel/$N" "$SCORES/cascade/$N" "$SCORES/cascade-gaps/$N"
@@ -472,7 +677,10 @@ for N in $(ls "$SCORES/agentic-gaps" 2>/dev/null); do
 done
 ```
 
-`compare-funnel` shows, per corpus, calls and tokens per document and the screen's precision and recall next
+`--corpora "$CORPORA"` tells `compare` where the corpus directories are (for reports copied off the cluster; harmless
+here). `compare-lexical` puts the two `lexical_miss` arms side by side per corpus (read it for `EV2-escalate`);
+`compare-rag-oracle` shows the RAG baseline and `rag-oracle-passages` together, a **diagnostic** row marked as
+such. `compare-funnel` shows, per corpus, calls and tokens per document and the screen's precision and recall next
 to the accuracies (`compare.md` columns `strategy`, `calls_per_document`, `tokens_per_document`,
 `screen_precision`, `screen_recall`). Both reports carry the same baseline answers, so a corpus's baseline rows
 appear twice in a `compare-funnel` table, identical; read them once.
@@ -480,13 +688,17 @@ appear twice in a `compare-funnel` table, identical; read them once.
 ### 7.3 Shift of the variant
 
 ```bash
-for V in "$CORPORA"/rag-*-s1-mixed-cf-*; do
-  N=$(basename "$V"); BASE=${N%%-cf-*}
-  for S in regex-only cascade cascade-gaps; do
-    uv run evaluate shift --base "$SCORES/$S/$BASE" --variant "$SCORES/$S/$N" --variant-json "$V/variant.json" \
-      --out "$SCORES/shift-$S/$N" || echo "FAIL shift $S $N"
+( fail=0
+for F in cf-llm cf-tpl; do
+  CF=$(cat "$EV/$F.txt" 2>/dev/null)                   # the variant corpus of 1.4 / 2.2
+  [ -f "$CF/variant.json" ] || { echo "FAIL shift: no variant in $EV/$F.txt"; fail=1; continue; }
+  N=$(basename "$CF"); BASE=${N%%-cf-*}
+  for S in regex-only cascade cascade-gaps cascade-gaps-escalate; do
+    uv run evaluate shift --base "$SCORES/$S/$BASE" --variant "$SCORES/$S/$N" --variant-json "$CF/variant.json" \
+      --out "$SCORES/shift-$S/$N" || { echo "FAIL shift $S $N"; fail=1; }
   done
-done 2>&1 | tee "$EV/logs/7-shift.log"
+done
+exit $fail ) 2>&1 | tee "$EV/logs/7-shift.log"; echo "shift exit ${PIPESTATUS[0]}"
 ```
 
 Per system in both reports (the engine and, on the LLM variant, both baselines) the changed study's direction
@@ -511,7 +723,7 @@ twice). The agentic runs add the seed-2 papers and the agentic extractor. Templa
 separate records because their levels share names. Stability comes from the reports scored with a
 `reexec.json` (7.1).
 
-Row `EV-scores`: the `compare-cascade`, `compare-cascade-gaps`, `compare-regex-only` and `compare-agentic`
+Row `EV-scores` (EV2: also the `Selection` and `Matched` tables of `compare-cascade`, the traceability note above, `n_rows` / `n_clusters` beside each interval): the `compare-cascade`, `compare-cascade-gaps`, `compare-regex-only` and `compare-agentic`
 tables, and per level for the cascade: extraction F1 per evidence type (with interval), association accuracy,
 true pair, direction accuracy (with interval), completeness, accuracy over the answered studies,
 traceability (baselines only), label correct, the paired engine-minus-baseline difference with interval, for
@@ -530,7 +742,18 @@ uv run synth sample --corpus "$CORPORA/rag-llm-s1-mixed" --n 30 --seed 1
 ```
 
 Tell the user where the review sheet is (`review/review-s1.md` and `.csv` in that corpus); the hand check is
-theirs. Record `NOT RUN (USER)` until they report.
+theirs, and the **filled sheet is a USER deliverable**. In the CSV, per row, the columns `present`,
+`states_truth` and `unambiguous` take `yes` / `y` / `no` / `n`; a row counts only when all three are filled.
+Notes go in the `notes` column. Record `NOT RUN (USER)` until they report. When the user returns the sheet (to
+`$CORPORA/rag-llm-s1-mixed/review/review-s1.csv`), summarise it:
+
+```bash
+uv run evaluate review --csv "$CORPORA/rag-llm-s1-mixed/review/review-s1.csv" | tee "$EV/logs/8-review.log"
+```
+
+It prints `rows`, `reviewed` (rows with all three checks filled), the `yes` count per check, and one line per
+problem (paper, fact, failing check, the user's note). A malformed sheet exits with `evaluate review: ...`;
+record the message and ask the user. Row `EV-fidelity`: those numbers and the sheet's path on Ceph.
 
 ## 9. Proposal flow dry run (orch-model, three calls; while step 1 builds)
 
@@ -554,44 +777,67 @@ uv run python -m evidence.propose.compare "$P" "$PR/protocol.yaml" > "$PR/protoc
 ```
 
 `frame`, `critic` and `cards` make one model call each (cached in `$PR/cache.jsonl`); `draft` and `freeze` are
-deterministic. Do **not** edit `frame.json` or `decisions.yaml`: the dry run freezes the model's defaults.
-A refusal (exit 2) is recorded with its message and the flow stops there (e.g. freeze refusing a failed
-`regex_matches_enums`); a failed model call (exit 1) may be retried once; a cached reply the step cannot use
+deterministic. Do **not** edit `frame.json` or `decisions.yaml`: the dry run freezes the model's defaults. Each option on a
+card now carries an operational `effect` line (what the option does to a run), and `cards.json` has an advisory
+top-level `rationale_contradicts_effect` list (`{card, option, term}`) for model rationales that contradict the
+option's effect; record it (empty is fine), it is for the user's card review.
+A refusal (exit 2) is recorded with its message and the flow stops there. `freeze` now refuses the
+**blocking critic checks** that no person waived: `regex_matches_enums`, `bounds_cover_rate_metrics`,
+`metric_rules_collide`, and `terms_cover_synonyms` (when the screen's `on_fail` is `skip` and `lexical_miss`
+is `reject`); the message names them. **Do not waive one yourself**: a waiver in `decisions.yaml`
+(`waivers: [{check, reason, by}]`) needs a human `by` and a reason, and `by: model` is refused. Record the
+refusal and its check ids and hand it to the user in step 10; the dry run then has no `protocol.yaml`, and the
+steps that need it (`protocol check`, `diff`, `compare`) are `NOT RUN (freeze refused)`. a failed model call (exit 1) may be retried once; a cached reply the step cannot use
 names `--refresh`: rerun that step once with `--refresh`. Row `EV-propose-live`: per step the exit status,
 `call.cached` and tokens if logged; from `frame.json` the roles, outcomes and each entry's source (ontology /
 invented); `critic.json` `ok` and every failed deterministic check, and the four checklist answers; per card
 of `cards.json` the model's default and whether it is `draft`; `proposal.json` `protocol.sha256`,
-`run_settings` and `decided_by`; `protocol-compare.json` `equal` and every differing path; the size of
+`run_settings`, `decided_by` and `review` (`review.status` is `model_defaults` for this dry run, as every decision
+is the model's; it becomes `partly_human` or `human` only after the user's decisions; `review.waivers` lists any); `protocol-compare.json` `equal` and every differing path; the size of
 `protocol.diff` (lines).
 
 ## 10. Proposal review (**USER**)
 
 Tell the user where the proposal is (`$PR`: `cards.json`, `decisions.yaml`, `critic.json`, `protocol.diff`,
 `protocol-compare.json`) and ask, per card: would they keep the model's default, and if not, which option
-and why. Record their answers in the `EV-propose-live` row. Do not edit `decisions.yaml` or freeze again:
-the directory is frozen, and a different decision becomes a new proposal (or an `amend`) in a later session.
-Record `NOT RUN (USER)` until they answer.
+and why; point them at `cards.json`'s `rationale_contradicts_effect` entries and at each option's `effect` line
+when they read the cards. Record their answers in the `EV-propose-live` row. Do not edit `decisions.yaml` or freeze
+again: the directory is frozen, and a different decision becomes a new proposal (or an `amend`) in a later
+session; until the user decides the cards, `proposal.json` `review.status` stays `model_defaults` (say so in the
+row). The one exception: if step 9's freeze **refused** on blocking checks, the user alone may waive a check
+by adding `waivers: [{check: <id>, reason: <why>, by: <their name>}]` to `decisions.yaml`; only on their word
+run `uv run evidence propose freeze "$PR"` once more and record the new `review.status`, `review.waivers` and
+`decided_by`. Record `NOT RUN (USER)` until they answer.
 
 ## Finish
 
 1. `tests/RESULTS.md`: rows `EV-setup`, `EV-synth`, `EV-engine`, `EV-replay`, `EV-agentic`, `EV-baselines`,
-   `EV-scores`, `EV-funnel`, `EV-shift`, `EV-benchmark`, `EV-fidelity`, `EV-propose-live`; date, job id, node,
-   commit, PASS / PARTIAL / FAIL / NOT RUN, the numbers, notes with the Ceph paths.
-2. Copy into `tests/EV1/` only (each under 1 MB; larger stays on Ceph, path in the row): per corpus
+   `EV-scores`, `EV-funnel`, `EV-shift`, `EV-benchmark`, `EV-fidelity`, `EV-propose-live`, and the EV2 rows
+   `EV2-pilot` (1.0, 1.5), `EV2-escalate` (3, 7.2), `EV2-oracle` (6.1, 7.1), `EV2-hard` (2.3); date, job id,
+   node, commit, PASS / PARTIAL / FAIL / NOT RUN, the numbers, notes with the Ceph paths. The EV1 rows stay
+   as they are; say "EV2" in the notes of every row of this run so the two runs are not confused.
+2. Copy into `tests/EV2/` (create it; leave `tests/EV1/` untouched; each file under 1 MB; larger stays on Ceph,
+   path in the row): per corpus
    `corpus.json`, `fidelity.json`, `ground_truth.json`, and for the variants `variant.json`; per run
-   `run.json`, `answer.json`, `locate.json`, and for `gaps` runs `funnel.json`; per score `report.json`,
-   `report.md`; the `compare-*`, `shift-*` and `benchmark-*` directories; `reexec.json` files; the baselines'
+   `run.json`, `answer.json`, `locate.json`, and for `gaps` runs (both `lexical_miss` arms) `funnel.json`; the
+   oracle runs' `answer.json` and `run.json` (`$RUNS/oracle/*`, `$RUNS/rag-oracle-passages/*`); per score
+   `report.json`, `report.md`; the `compare-*`, `shift-*` and `benchmark-*` directories; `reexec.json` files; the baselines'
    `answer.json`; from `$PR` every file (`frame.json`, `draft.yaml`, `draft.sources.json`, `critic.json`,
    `cards.json`, `decisions.yaml`, `protocol.yaml`, `protocol.v1.yaml`, `proposal.json`, `written.json`,
    `cache.jsonl`, `protocol-check.json`, `protocol.diff`, `protocol-compare.json`) into `tests/EV1/proposal/`;
-   `variant-study.txt`, `logs/` and `failures.md`. Not the papers, not the caches under `$CACHE`, not
-   `in-job.env`. Before `git add`: `find tests/EV1 -size +1M` prints nothing and
-   `grep -rlF -f <(printf '%s\n' "$LITELLM_MASTER_KEY") tests/EV1` prints nothing.
-3. `docs/STATE.md`: under §6 add one line per row with the number that matters.
-4. Commit on `evidence-cluster` (results separate from fix commits), `git push -u origin evidence-cluster`.
+   `variant-study.txt`, `cf-llm.txt`, `cf-tpl.txt`, the filled `review-s1.csv` and its summary log, `logs/` and
+   `failures.md`. Not the papers, not the caches under `$CACHE`, not `in-job.env`. Before `git add`:
+   `find tests/EV2 -size +1M` prints nothing and
+   `grep -rlF -f <(printf '%s\n' "$LITELLM_MASTER_KEY") tests/EV2` prints nothing.
+3. `docs/STATE.md`: under §6 add one line per row with the number that matters, and the Linux pytest count
+   (step 0.1) as the new expected value in §6 and in step 0.1 of this runbook.
+4. Commit on `evidence-ev2` (results separate from fix commits), `git push -u origin evidence-ev2`.
 5. `scancel "$JOB"` when everything has finished (**USER** first if they want to look at anything live).
-6. Report: pass / fail per step with the number that matters, the `compare-cascade` table, the
-   `compare-funnel` numbers (calls per document `all` vs `gaps`, accuracies, screen precision and recall),
-   `shifted_as_expected` per system, the frozen proposal's `protocol-compare.json` `equal` and its differing
-   paths, every fix commit (one line each), every failure from `failures.md`, the open **USER** steps, and
+6. Report: pass / fail per step with the number that matters, the `compare-cascade` table, the pilot's
+   retention and `MINR`, statements against `--no-statements` retention, the `compare-lexical` numbers (reject
+   against escalate: escalated papers and how many ended relevant, extra calls and tokens, accuracies), the
+   oracle attribution (upstream against downstream per system), the hard set against the easy one,
+   the `compare-funnel` numbers (calls per document `all` vs `gaps`, accuracies, screen precision and recall),
+   `shifted_as_expected` per system, the frozen proposal's `protocol-compare.json` `equal`, its differing
+   paths and `review.status`, every fix commit (one line each), every failure from `failures.md`, the open **USER** steps, and
    anything surprising.
