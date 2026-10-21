@@ -1,0 +1,633 @@
+{
+  "corpus_id": "rag-tpl-hard-9fa0713f",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "12fc9004df142b45ed0f65d76db148093fd799f81d5294e521662a63385ea35f"
+  },
+  "renderer": "template",
+  "level": "distributed",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "distributed"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "distributed"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "distributed"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "distributed"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "distributed"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "distributed"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "distributed"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "distributed"
+    },
+    {
+      "id": "S009",
+      "study_id": "S009",
+      "level": "distributed"
+    },
+    {
+      "id": "S010",
+      "study_id": "S010",
+      "level": "distributed"
+    },
+    {
+      "id": "S011",
+      "study_id": "S011",
+      "level": "distributed"
+    },
+    {
+      "id": "S012",
+      "study_id": "S012",
+      "level": "distributed"
+    },
+    {
+      "id": "S013",
+      "study_id": "S013",
+      "level": "distributed"
+    },
+    {
+      "id": "S014",
+      "study_id": "S014",
+      "level": "distributed"
+    },
+    {
+      "id": "S015",
+      "study_id": "S015",
+      "level": "distributed"
+    },
+    {
+      "id": "S016",
+      "study_id": "S016",
+      "level": "distributed"
+    },
+    {
+      "id": "S017",
+      "study_id": "S017",
+      "level": "distributed"
+    },
+    {
+      "id": "S018",
+      "study_id": "S018",
+      "level": "distributed"
+    },
+    {
+      "id": "S019",
+      "study_id": "S019",
+      "level": "distributed"
+    },
+    {
+      "id": "S020",
+      "study_id": "S020",
+      "level": "distributed"
+    },
+    {
+      "id": "S021",
+      "study_id": "S021",
+      "level": "distributed"
+    },
+    {
+      "id": "S022",
+      "study_id": "S022",
+      "level": "distributed"
+    },
+    {
+      "id": "S023",
+      "study_id": "S023",
+      "level": "distributed"
+    },
+    {
+      "id": "S024",
+      "study_id": "S024",
+      "level": "distributed"
+    },
+    {
+      "id": "S025",
+      "study_id": "S025",
+      "level": "distributed"
+    },
+    {
+      "id": "S026",
+      "study_id": "S026",
+      "level": "distributed"
+    },
+    {
+      "id": "S027",
+      "study_id": "S027",
+      "level": "distributed"
+    },
+    {
+      "id": "S028",
+      "study_id": "S028",
+      "level": "distributed"
+    },
+    {
+      "id": "S029",
+      "study_id": "S029",
+      "level": "distributed"
+    },
+    {
+      "id": "S030",
+      "study_id": "S030",
+      "level": "distributed"
+    },
+    {
+      "id": "S031",
+      "study_id": "S031",
+      "level": "distributed"
+    },
+    {
+      "id": "S032",
+      "study_id": "S032",
+      "level": "distributed"
+    },
+    {
+      "id": "S033",
+      "study_id": "S033",
+      "level": "distributed"
+    },
+    {
+      "id": "S034",
+      "study_id": "S034",
+      "level": "distributed"
+    },
+    {
+      "id": "S035",
+      "study_id": "S035",
+      "level": "distributed"
+    },
+    {
+      "id": "S036",
+      "study_id": "S036",
+      "level": "distributed"
+    },
+    {
+      "id": "S037",
+      "study_id": "S037",
+      "level": "distributed"
+    },
+    {
+      "id": "S038",
+      "study_id": "S038",
+      "level": "distributed"
+    },
+    {
+      "id": "S039",
+      "study_id": "S039",
+      "level": "distributed"
+    },
+    {
+      "id": "S040",
+      "study_id": "S040",
+      "level": "distributed"
+    },
+    {
+      "id": "S041",
+      "study_id": "S041",
+      "level": "distributed"
+    },
+    {
+      "id": "S042",
+      "study_id": "S042",
+      "level": "distributed"
+    },
+    {
+      "id": "S043",
+      "study_id": "S043",
+      "level": "distributed"
+    },
+    {
+      "id": "S044",
+      "study_id": "S044",
+      "level": "distributed"
+    },
+    {
+      "id": "S045",
+      "study_id": "S045",
+      "level": "distributed"
+    },
+    {
+      "id": "S046",
+      "study_id": "S046",
+      "level": "distributed"
+    },
+    {
+      "id": "S047",
+      "study_id": "S047",
+      "level": "distributed"
+    },
+    {
+      "id": "S048",
+      "study_id": "S048",
+      "level": "distributed"
+    },
+    {
+      "id": "S049",
+      "study_id": "S049",
+      "level": "distributed"
+    },
+    {
+      "id": "S050",
+      "study_id": "S050",
+      "level": "distributed"
+    },
+    {
+      "id": "S051",
+      "study_id": "S051",
+      "level": "distributed"
+    },
+    {
+      "id": "S052",
+      "study_id": "S052",
+      "level": "distributed"
+    },
+    {
+      "id": "S053",
+      "study_id": "S053",
+      "level": "distributed"
+    },
+    {
+      "id": "S054",
+      "study_id": "S054",
+      "level": "distributed"
+    },
+    {
+      "id": "S055",
+      "study_id": "S055",
+      "level": "distributed"
+    },
+    {
+      "id": "S056",
+      "study_id": "S056",
+      "level": "distributed"
+    },
+    {
+      "id": "S057",
+      "study_id": "S057",
+      "level": "distributed"
+    },
+    {
+      "id": "S058",
+      "study_id": "S058",
+      "level": "distributed"
+    },
+    {
+      "id": "S059",
+      "study_id": "S059",
+      "level": "distributed"
+    },
+    {
+      "id": "S060",
+      "study_id": "S060",
+      "level": "distributed"
+    },
+    {
+      "id": "S061",
+      "study_id": "S061",
+      "level": "distributed"
+    },
+    {
+      "id": "S062",
+      "study_id": "S062",
+      "level": "distributed"
+    },
+    {
+      "id": "S063",
+      "study_id": "S063",
+      "level": "distributed"
+    },
+    {
+      "id": "S064",
+      "study_id": "S064",
+      "level": "distributed"
+    },
+    {
+      "id": "S065",
+      "study_id": "S065",
+      "level": "distributed"
+    },
+    {
+      "id": "S066",
+      "study_id": "S066",
+      "level": "distributed"
+    },
+    {
+      "id": "S067",
+      "study_id": "S067",
+      "level": "distributed"
+    },
+    {
+      "id": "S068",
+      "study_id": "S068",
+      "level": "distributed"
+    },
+    {
+      "id": "S069",
+      "study_id": "S069",
+      "level": "distributed"
+    },
+    {
+      "id": "S070",
+      "study_id": "S070",
+      "level": "distributed"
+    },
+    {
+      "id": "S071",
+      "study_id": "S071",
+      "level": "distributed"
+    },
+    {
+      "id": "S072",
+      "study_id": "S072",
+      "level": "distributed"
+    },
+    {
+      "id": "S073",
+      "study_id": "S073",
+      "level": "distributed"
+    },
+    {
+      "id": "S074",
+      "study_id": "S074",
+      "level": "distributed"
+    },
+    {
+      "id": "S075",
+      "study_id": "S075",
+      "level": "distributed"
+    },
+    {
+      "id": "S076",
+      "study_id": "S076",
+      "level": "distributed"
+    },
+    {
+      "id": "S077",
+      "study_id": "S077",
+      "level": "distributed"
+    },
+    {
+      "id": "S078",
+      "study_id": "S078",
+      "level": "distributed"
+    },
+    {
+      "id": "S079",
+      "study_id": "S079",
+      "level": "distributed"
+    },
+    {
+      "id": "S080",
+      "study_id": "S080",
+      "level": "distributed"
+    },
+    {
+      "id": "S081",
+      "study_id": "S081",
+      "level": "distributed"
+    },
+    {
+      "id": "S082",
+      "study_id": "S082",
+      "level": "distributed"
+    },
+    {
+      "id": "S083",
+      "study_id": "S083",
+      "level": "distributed"
+    },
+    {
+      "id": "S084",
+      "study_id": "S084",
+      "level": "distributed"
+    },
+    {
+      "id": "S085",
+      "study_id": "S085",
+      "level": "distributed"
+    },
+    {
+      "id": "S086",
+      "study_id": "S086",
+      "level": "distributed"
+    },
+    {
+      "id": "S087",
+      "study_id": "S087",
+      "level": "distributed"
+    },
+    {
+      "id": "S088",
+      "study_id": "S088",
+      "level": "distributed"
+    },
+    {
+      "id": "S089",
+      "study_id": "S089",
+      "level": "distributed"
+    },
+    {
+      "id": "S090",
+      "study_id": "S090",
+      "level": "distributed"
+    },
+    {
+      "id": "S091",
+      "study_id": "S091",
+      "level": "distributed"
+    },
+    {
+      "id": "S092",
+      "study_id": "S092",
+      "level": "distributed"
+    },
+    {
+      "id": "S093",
+      "study_id": "S093",
+      "level": "distributed"
+    },
+    {
+      "id": "S094",
+      "study_id": "S094",
+      "level": "distributed"
+    },
+    {
+      "id": "S095",
+      "study_id": "S095",
+      "level": "distributed"
+    },
+    {
+      "id": "S096",
+      "study_id": "S096",
+      "level": "distributed"
+    },
+    {
+      "id": "S097",
+      "study_id": "S097",
+      "level": "distributed"
+    },
+    {
+      "id": "S098",
+      "study_id": "S098",
+      "level": "distributed"
+    },
+    {
+      "id": "S099",
+      "study_id": "S099",
+      "level": "distributed"
+    },
+    {
+      "id": "S100",
+      "study_id": "S100",
+      "level": "distributed"
+    },
+    {
+      "id": "S101",
+      "study_id": "S101",
+      "level": "distributed"
+    },
+    {
+      "id": "S102",
+      "study_id": "S102",
+      "level": "distributed"
+    },
+    {
+      "id": "S103",
+      "study_id": "S103",
+      "level": "distributed"
+    },
+    {
+      "id": "S104",
+      "study_id": "S104",
+      "level": "distributed"
+    },
+    {
+      "id": "S105",
+      "study_id": "S105",
+      "level": "distributed"
+    },
+    {
+      "id": "S106",
+      "study_id": "S106",
+      "level": "distributed"
+    },
+    {
+      "id": "S107",
+      "study_id": "S107",
+      "level": "distributed"
+    },
+    {
+      "id": "S108",
+      "study_id": "S108",
+      "level": "distributed"
+    },
+    {
+      "id": "S109",
+      "study_id": "S109",
+      "level": "distributed"
+    },
+    {
+      "id": "S110",
+      "study_id": "S110",
+      "level": "distributed"
+    },
+    {
+      "id": "S111",
+      "study_id": "S111",
+      "level": "distributed"
+    },
+    {
+      "id": "S112",
+      "study_id": "S112",
+      "level": "distributed"
+    }
+  ],
+  "models": null,
+  "settings": {
+    "name": "rag-tpl-hard",
+    "studies": 100,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 6,
+    "missing": 6,
+    "outliers": 6,
+    "irrelevant": 6,
+    "hard": true
+  },
+  "selection": {
+    "requested_studies": 100,
+    "records": 112,
+    "retained_studies": 100,
+    "per_level": {
+      "complex": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "explicit": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
+  }
+}

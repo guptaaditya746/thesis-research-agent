@@ -1,0 +1,7622 @@
+{
+  "corpus_id": "rag-tpl-hard-bc857ab2",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S002",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S003",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S004",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S005",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S006",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S007",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S008",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S009",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S010",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S011",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S012",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S013",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S014",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S015",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S016",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S017",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S018",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S019",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S020",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S021",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S022",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S023",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S024",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S025",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S026",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S027",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S028",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S029",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S030",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S031",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S032",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S033",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S034",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S035",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S036",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S037",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S038",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S039",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S040",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S041",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S042",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S043",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S044",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S045",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S046",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S047",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S048",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S049",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S050",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S051",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S052",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S053",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S054",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S055",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S056",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S057",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S058",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S059",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S060",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S061",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S062",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S063",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S064",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S065",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S066",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S067",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S068",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S069",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S070",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S071",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S072",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S073",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S074",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S075",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S076",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S077",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S078",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S079",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S080",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S081",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S082",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S083",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S084",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S085",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S086",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S087",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S088",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S089",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S090",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S091",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S092",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S093",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S094",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S095",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S096",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S097",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S098",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S099",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S100",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S101",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S102",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S103",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S104",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S105",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S106",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S107",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S108",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S109",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S110",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S111",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S112",
+      "ok": true,
+      "checks": [
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "irrelevant",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    }
+  ],
+  "excluded": []
+}

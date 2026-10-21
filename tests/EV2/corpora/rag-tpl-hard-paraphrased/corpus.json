@@ -1,0 +1,633 @@
+{
+  "corpus_id": "rag-tpl-hard-0b1b26e8",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "12fc9004df142b45ed0f65d76db148093fd799f81d5294e521662a63385ea35f"
+  },
+  "renderer": "template",
+  "level": "paraphrased",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S009",
+      "study_id": "S009",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S010",
+      "study_id": "S010",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S011",
+      "study_id": "S011",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S012",
+      "study_id": "S012",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S013",
+      "study_id": "S013",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S014",
+      "study_id": "S014",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S015",
+      "study_id": "S015",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S016",
+      "study_id": "S016",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S017",
+      "study_id": "S017",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S018",
+      "study_id": "S018",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S019",
+      "study_id": "S019",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S020",
+      "study_id": "S020",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S021",
+      "study_id": "S021",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S022",
+      "study_id": "S022",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S023",
+      "study_id": "S023",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S024",
+      "study_id": "S024",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S025",
+      "study_id": "S025",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S026",
+      "study_id": "S026",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S027",
+      "study_id": "S027",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S028",
+      "study_id": "S028",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S029",
+      "study_id": "S029",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S030",
+      "study_id": "S030",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S031",
+      "study_id": "S031",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S032",
+      "study_id": "S032",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S033",
+      "study_id": "S033",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S034",
+      "study_id": "S034",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S035",
+      "study_id": "S035",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S036",
+      "study_id": "S036",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S037",
+      "study_id": "S037",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S038",
+      "study_id": "S038",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S039",
+      "study_id": "S039",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S040",
+      "study_id": "S040",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S041",
+      "study_id": "S041",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S042",
+      "study_id": "S042",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S043",
+      "study_id": "S043",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S044",
+      "study_id": "S044",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S045",
+      "study_id": "S045",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S046",
+      "study_id": "S046",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S047",
+      "study_id": "S047",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S048",
+      "study_id": "S048",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S049",
+      "study_id": "S049",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S050",
+      "study_id": "S050",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S051",
+      "study_id": "S051",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S052",
+      "study_id": "S052",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S053",
+      "study_id": "S053",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S054",
+      "study_id": "S054",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S055",
+      "study_id": "S055",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S056",
+      "study_id": "S056",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S057",
+      "study_id": "S057",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S058",
+      "study_id": "S058",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S059",
+      "study_id": "S059",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S060",
+      "study_id": "S060",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S061",
+      "study_id": "S061",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S062",
+      "study_id": "S062",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S063",
+      "study_id": "S063",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S064",
+      "study_id": "S064",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S065",
+      "study_id": "S065",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S066",
+      "study_id": "S066",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S067",
+      "study_id": "S067",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S068",
+      "study_id": "S068",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S069",
+      "study_id": "S069",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S070",
+      "study_id": "S070",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S071",
+      "study_id": "S071",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S072",
+      "study_id": "S072",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S073",
+      "study_id": "S073",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S074",
+      "study_id": "S074",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S075",
+      "study_id": "S075",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S076",
+      "study_id": "S076",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S077",
+      "study_id": "S077",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S078",
+      "study_id": "S078",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S079",
+      "study_id": "S079",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S080",
+      "study_id": "S080",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S081",
+      "study_id": "S081",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S082",
+      "study_id": "S082",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S083",
+      "study_id": "S083",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S084",
+      "study_id": "S084",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S085",
+      "study_id": "S085",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S086",
+      "study_id": "S086",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S087",
+      "study_id": "S087",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S088",
+      "study_id": "S088",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S089",
+      "study_id": "S089",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S090",
+      "study_id": "S090",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S091",
+      "study_id": "S091",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S092",
+      "study_id": "S092",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S093",
+      "study_id": "S093",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S094",
+      "study_id": "S094",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S095",
+      "study_id": "S095",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S096",
+      "study_id": "S096",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S097",
+      "study_id": "S097",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S098",
+      "study_id": "S098",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S099",
+      "study_id": "S099",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S100",
+      "study_id": "S100",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S101",
+      "study_id": "S101",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S102",
+      "study_id": "S102",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S103",
+      "study_id": "S103",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S104",
+      "study_id": "S104",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S105",
+      "study_id": "S105",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S106",
+      "study_id": "S106",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S107",
+      "study_id": "S107",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S108",
+      "study_id": "S108",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S109",
+      "study_id": "S109",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S110",
+      "study_id": "S110",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S111",
+      "study_id": "S111",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S112",
+      "study_id": "S112",
+      "level": "paraphrased"
+    }
+  ],
+  "models": null,
+  "settings": {
+    "name": "rag-tpl-hard",
+    "studies": 100,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 6,
+    "missing": 6,
+    "outliers": 6,
+    "irrelevant": 6,
+    "hard": true
+  },
+  "selection": {
+    "requested_studies": 100,
+    "records": 112,
+    "retained_studies": 100,
+    "per_level": {
+      "complex": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "explicit": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 112,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
+  }
+}

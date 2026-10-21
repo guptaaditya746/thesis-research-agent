@@ -61,3 +61,7 @@ synth/prompts/** text eol=lf
 proposals/** text eol=lf
 evidence/propose/** text eol=lf
 evidence/vocab/** text eol=lf
+
+# EV2 corpora built here and run on Slurm: papers are hashed into manifest.json, placements are offsets.
+tests/EV2/corpora/** text eol=lf
+tests/EV2/ui-case/** text eol=lf

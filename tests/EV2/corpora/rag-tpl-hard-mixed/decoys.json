@@ -1,0 +1,92 @@
+[
+  {
+    "paper": "S010",
+    "measurement": "S010.m2",
+    "stated_value": 0.195,
+    "true_value": 0.317,
+    "start": 400,
+    "end": 405,
+    "exact": "19.5%"
+  },
+  {
+    "paper": "S020",
+    "measurement": "S020.m2",
+    "stated_value": 0.389,
+    "true_value": 0.279,
+    "start": 350,
+    "end": 355,
+    "exact": "38.9%"
+  },
+  {
+    "paper": "S030",
+    "measurement": "S030.m2",
+    "stated_value": 0.058,
+    "true_value": 0.187,
+    "start": 362,
+    "end": 366,
+    "exact": "5.8%"
+  },
+  {
+    "paper": "S040",
+    "measurement": "S040.m2",
+    "stated_value": 0.727,
+    "true_value": 0.662,
+    "start": 396,
+    "end": 401,
+    "exact": "72.7%"
+  },
+  {
+    "paper": "S050",
+    "measurement": "S050.m2",
+    "stated_value": 0.187,
+    "true_value": 0.062,
+    "start": 396,
+    "end": 401,
+    "exact": "18.7%"
+  },
+  {
+    "paper": "S060",
+    "measurement": "S060.m2",
+    "stated_value": 0.074,
+    "true_value": 0.279,
+    "start": 379,
+    "end": 383,
+    "exact": "7.4%"
+  },
+  {
+    "paper": "S070",
+    "measurement": "S070.m2",
+    "stated_value": 0.166,
+    "true_value": 0.272,
+    "start": 391,
+    "end": 396,
+    "exact": "16.6%"
+  },
+  {
+    "paper": "S080",
+    "measurement": "S080.m2",
+    "stated_value": 0.382,
+    "true_value": 0.284,
+    "start": 361,
+    "end": 366,
+    "exact": "38.2%"
+  },
+  {
+    "paper": "S100",
+    "measurement": "S100.m2",
+    "stated_value": 0.786,
+    "true_value": 0.819,
+    "start": 390,
+    "end": 395,
+    "exact": "78.6%"
+  },
+  {
+    "paper": "S106",
+    "measurement": "S106.m2",
+    "stated_value": 0.382,
+    "true_value": 0.284,
+    "start": 371,
+    "end": 376,
+    "exact": "38.2%"
+  }
+]
