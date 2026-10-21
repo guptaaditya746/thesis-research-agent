@@ -95,10 +95,12 @@ def _patterns(p: Protocol, name: str, key: str, default: Any) -> Any | None:
     return None
 
 
-def _compared(p: Protocol, f: Frame) -> list[Any]:
-    """The frame outcomes the protocol still compares (a person may drop one at freeze; outcomes_complete
-    reports that, the metric checks then leave it out)."""
-    return [o for o in f.outcomes if o.canonical in p.synthesis.metric_names]
+def _extractable(p: Protocol, f: Frame) -> list[Any]:
+    """The frame outcomes the protocol's metric extractors may still emit (the metric enum, else the question
+    metrics): a person may drop one at freeze; outcomes_complete reports that, the metric checks leave it out."""
+    spec = p.evidence_types.get("metric")
+    names = (spec.enum_of("canonical") if spec else None) or p.synthesis.metric_names
+    return [o for o in f.outcomes if o.canonical in names]
 
 
 def _coverage(p: Protocol, f: Frame) -> tuple[bool, str]:
@@ -114,7 +116,7 @@ def _coverage(p: Protocol, f: Frame) -> tuple[bool, str]:
     metrics = _patterns(p, "regex_metric", "metrics", [list(m) for m in regex_terms.METRICS])
     if metrics is not None:
         compiled = [tuple(m) for m in metrics]
-        for o in _compared(p, f):
+        for o in _extractable(p, f):
             for name in o.names:
                 if not any(m.key == o.canonical for m in regex_terms.find_all(name, compiled)):  # type: ignore[arg-type]
                     misses.append(f"{o.canonical} name {name!r} (regex_metric)")
@@ -161,7 +163,7 @@ def bounds_cover_rate_metrics(p: Protocol, f: Frame) -> tuple[bool, str]:
     spec = p.evidence_types.get("measurement")
     bounds = [b for b in (spec.bounds if spec else ()) if b.field == "value"]
     covered = {v for b in bounds if b.when for v in b.when.values}
-    missing = [o.canonical for o in _compared(p, f) if rate_like(o) and o.canonical not in covered
+    missing = [o.canonical for o in _extractable(p, f) if rate_like(o) and o.canonical not in covered
                and not any(b.when is None for b in bounds)]
     if missing:
         return False, f"rate-like outcomes missing from the measurement bound: {missing}"

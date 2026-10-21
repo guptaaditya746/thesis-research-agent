@@ -396,3 +396,19 @@ def test_a_metric_a_person_dropped_is_no_blocking_failure(tmp_path: Path) -> Non
     found = checks_of(d)
     assert not found["outcomes_complete"]["ok"] and found["outcomes_complete"]["severity"] == "advisory"
     assert found["terms_cover_synonyms"]["ok"] and found["bounds_cover_rate_metrics"]["ok"]
+
+
+def test_a_metric_the_extractors_still_emit_is_checked_though_synthesis_dropped_it(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="draft")
+    f = frame.load(d / "frame.json")
+    draft = yaml.safe_load((d / "draft.yaml").read_text(encoding="utf-8"))
+    draft["synthesis"]["metrics"] = [m for m in draft["synthesis"]["metrics"] if m["canonical"] != "hallucination_rate"]
+    assert "hallucination_rate" in draft["evidence_types"]["metric"]["fields"]["properties"]["canonical"]["enum"]
+    draft["evidence_types"]["measurement"]["bounds"] = []
+    from evidence.extractors import terms
+    step = next(s for s in draft["evidence_types"]["metric"]["extractors"] if s["name"] == "regex_metric")
+    step["config"] = {"metrics": [list(m) for m in terms.METRICS if m[1] != "hallucination_rate"]}   # no rule for it
+    found = {c["id"]: c for c in critic.checks(yaml.safe_dump(draft, sort_keys=False), f)}
+    assert found["parses"]["ok"], found["parses"]["message"]
+    assert not found["bounds_cover_rate_metrics"]["ok"] and "hallucination_rate" in found["bounds_cover_rate_metrics"]["message"]
+    assert not found["terms_cover_synonyms"]["ok"] and "hallucination_rate name" in found["terms_cover_synonyms"]["message"]
