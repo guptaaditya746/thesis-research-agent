@@ -50,11 +50,12 @@ def make_renderer(args: argparse.Namespace, out: Path):
         from synth.render_template import TemplateRenderer
         renderer: corpus.Renderer = TemplateRenderer()
     else:
-        from modelcall import openai_model
+        from modelcall.exchange import model_for
         from synth.render_llm import LlmRenderer
         cache = args.cache or out / ".synth-cache" / "llm.jsonl"
-        renderer = LlmRenderer(openai_model(args.model), cache, attempts=args.attempts,
-                               verify_model=openai_model(args.verify_model) if args.verify_model else None,
+        exchange = args.exchange or out / ".synth-exchange"
+        renderer = LlmRenderer(model_for(args.model, exchange), cache, attempts=args.attempts,
+                               verify_model=model_for(args.verify_model, exchange) if args.verify_model else None,
                                concurrency=args.concurrency, statements=args.statements)
     return renderer
 
@@ -62,14 +63,17 @@ def make_renderer(args: argparse.Namespace, out: Path):
 def add_renderer_options(p: argparse.ArgumentParser, default: str | None = "template",
                          statements: bool | None = True) -> None:
     p.add_argument("--renderer", choices=("template", "llm"), default=default)
-    p.add_argument("--model", default="sub-model-1", help="LiteLLM alias of the writing model (llm renderer)")
-    p.add_argument("--verify-model", default=None, help="LiteLLM alias for the blind re-extraction check")
+    p.add_argument("--model", default="sub-model-1", help="LiteLLM alias of the writing model (llm renderer), or exchange:<name>")
+    p.add_argument("--verify-model", default=None, help="LiteLLM alias for the blind re-extraction check, or exchange:<name>")
     p.add_argument("--attempts", type=int, default=3)
     p.add_argument("--concurrency", type=int, default=4)
     p.add_argument("--statements", action=argparse.BooleanOptionalAction, default=statements,
                    help="llm renderer: write and check each prose Results sentence before the paper (build: "
                         "default on; variant: default the base corpus's recorded mode, off if it records none)")
     p.add_argument("--cache", type=Path, default=None, help="default <out>/.synth-cache/llm.jsonl")
+    p.add_argument("--exchange", type=Path, default=None,
+                   help="for a model given as exchange:<name> (answered through files, modelcall/exchange.py): "
+                        "the folder holding <name>/pending and <name>/replies (default <out>/.synth-exchange)")
 
 
 HARD_LLM = ("--hard needs the template renderer: the LLM renderer's plan shape does not carry the "
