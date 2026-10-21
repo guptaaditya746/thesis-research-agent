@@ -13,7 +13,8 @@ else to the nearest condition named before it, but never across another system n
 from __future__ import annotations
 
 import re
-from typing import Any
+from collections.abc import Callable, Sequence
+from typing import Any, NamedTuple
 
 from ..contract import ExtractionTask, Item, Span
 from . import base, terms
@@ -24,6 +25,7 @@ AFTER = re.compile(r"\s*\)?\s*,?\s*(?:for|with|by|of|from|in|using)\s+(?:the\s+|
 DELTA_BEFORE = re.compile(r"(?i)\b(?:by|of\s+up\s+to|gains?\s+of|improvement\s+of|drop\s+of)\s*$")
 DELTA_AFTER = re.compile(r"(?i)^\s*(?:percentage\s+)?(?:points?|pp)\b")
 DATASET_HEADER = re.compile(r"(?i)^(?:dataset|benchmark|data|task)$")
+CONDITION_HEADER = re.compile(r"(?i)^(?:system|model|method|condition|variant|setting)$")
 SIGNED = re.compile(r"[+±\-−–]\s*$")
 FROM_TO = re.compile(r"(?i)\bfrom\s+\d+(?:\.\d+)?\s*%?\s+to\s+\d+(?:\.\d+)?\s*%?")
 _SYSTEMS = r"(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader|retriever|ablation)s?"
@@ -103,37 +105,62 @@ def measurements(task: ExtractionTask, text: str, parts: list[tuple[int, int]], 
     return found
 
 
+class TableRoles(NamedTuple):
+    """Column roles of a table: where the condition, the metric and the dataset are named; the rest hold values."""
+    condition_col: int | None
+    metric_col: int | None
+    dataset_col: int | None
+
+
+def _table_roles(header: Sequence[base.Cell], rows: Sequence[Sequence[base.Cell]], r: Resolver) -> TableRoles:
+    """A condition column by its header, else the first column (not the dataset's) where half the cells
+    resolve as conditions; a metric column by its cells likewise. Without either, the header cells name them."""
+    dataset = next((n for n, c in enumerate(header) if DATASET_HEADER.match(c.text.strip(" *_"))), None)
+
+    def mostly(col: int, label: Callable[[str], Any]) -> bool:
+        cells = [row[col] for row in rows if col < len(row)]
+        return bool(cells) and 2 * sum(label(c.text) is not None for c in cells) >= len(cells)
+
+    columns = [n for n in range(len(header)) if n != dataset]
+    condition = next((n for n in columns if CONDITION_HEADER.match(header[n].text.strip(" *_"))), None)
+    if condition is None:
+        condition = next((n for n in columns if mostly(n, r.condition_label)), None)
+    metric = next((n for n in columns if n != condition and mostly(n, r.metric_label)), None)
+    return TableRoles(condition, metric, dataset)
+
+
 def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> list[Found]:
     header = table.header
-    dataset_col = next((n for n, c in enumerate(header) if DATASET_HEADER.match(c.text.strip(" *_"))), None)
+    condition_col, metric_col, dataset_col = _table_roles(header, table.rows, r)
+    if condition_col is None and metric_col is None:
+        return []
     percent_table = "%" in table.caption or "percent" in table.caption.casefold()
     out: list[Found] = []
     for row in table.rows:
         if not row:
             continue
         dataset = row[dataset_col].text.strip(" *_") or None if dataset_col is not None and dataset_col < len(row) else None
-        as_condition = r.condition_label(row[0].text)
-        row_metric = None if as_condition else r.metric_label(row[0].text)
-        for n, cell in enumerate(row[1:], 1):
-            if n >= len(header) or n == dataset_col:
+        row_condition = r.condition_label(row[condition_col].text) if condition_col is not None and condition_col < len(row) else None
+        row_metric = r.metric_label(row[metric_col].text) if metric_col is not None and metric_col < len(row) else None
+        if condition_col is not None and row_condition is None or metric_col is not None and row_metric is None:
+            continue
+        for n, cell in enumerate(row):
+            if n >= len(header) or n in (condition_col, metric_col, dataset_col):
                 continue
             hit = CELL.match(cell.text)
             if not hit:
                 continue
             col = header[n]
-            if as_condition is not None:
-                condition, metric = as_condition, r.metric_label(col.text)
-            elif row_metric is not None:
-                condition, metric = r.condition_label(col.text), row_metric
-            else:
-                continue
+            condition = row_condition if condition_col is not None else r.condition_label(col.text)
+            metric = row_metric if metric_col is not None else r.metric_label(col.text)
             if condition is None or metric is None:
                 continue
             item, defined = condition
-            label_cell = row[0] if as_condition is not None else col
-            metric_cell = col if as_condition is not None else row[0]
+            label_cell = row[condition_col] if condition_col is not None else col
+            metric_cell = row[metric_col] if metric_col is not None else col
+            role_cell = row[condition_col if condition_col is not None else metric_col]
             value = base.to_fraction(hit.group(1) + hit.group(2), rate_like=r.rate_like(metric),
-                                     percent=percent_table or "%" in col.text or "%" in row[0].text)
+                                     percent=percent_table or "%" in col.text or "%" in role_cell.text)
             if value is None:
                 continue
             a = cell.start + hit.start(1)
