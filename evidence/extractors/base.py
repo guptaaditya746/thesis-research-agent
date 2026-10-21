@@ -76,6 +76,16 @@ def group(evidence_type: Any, found: list[tuple[dict[str, Any], dict[str, str], 
 
 NUMBER = re.compile(r"(?<![\w.,])(\d{1,3}(?:\.\d+)?|0?\.\d+)(\s?%)?(?![\w.]*\d)")
 
+COUNT = re.compile(r"(?<![\w.,])(\d{1,3}(?:,\d{3})*|\d+)\s+out\s+of\s+(\d{1,3}(?:,\d{3})*|\d+)\b")
+
+
+def count_fraction(num: str, den: str) -> float | None:
+    """"N out of M" as a fraction; None for an empty denominator or more successes than trials."""
+    n, d = int(num.replace(",", "")), int(den.replace(",", ""))
+    if d == 0 or n > d:
+        return None
+    return round(n / d, 6)
+
 
 def to_fraction(raw: str, *, percent: bool, rate_like: bool) -> float | None:
     """A reported number as a fraction: "62%", "0.62" and "62.0" under a % header all give 0.62.

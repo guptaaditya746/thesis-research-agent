@@ -106,3 +106,17 @@ def test_a_negated_qualifier_on_a_control_keeps_the_control(roles: list[str]) ->
     text = "the closed-book model (no fine-tuning) reaches 40%"
     found = terms.find_conditions(text, terms.condition_patterns(), roles)
     assert [(m.key, m.text) for m in found] == [("baseline", "closed-book model")]
+
+
+# "N out of M" counts are fractions, for rate-like metrics only.
+@pytest.mark.parametrize("sentence,expected", [
+    ("RAG answered 75 out of 100 questions correctly (factual accuracy); the closed-book model 60 out of 100.",
+     [("rag", 0.75), ("baseline", 0.60)]),
+    ("The RAG model gave 662 out of 1,000 answers judged factually correct (factual accuracy).", [("rag", 0.662)]),
+    ("The RAG model scored 0 out of 0 on factual accuracy.", []),
+    ("The RAG model scored 120 out of 100 on factual accuracy.", []),
+    ("For the RAG model we sampled 500 out of 1,000 questions.", []),
+])
+def test_count_expressions_become_fractions(sentence: str, expected: list[tuple[str, float]], tmp_path: Path) -> None:
+    _, items = regex_run({"S": ABSTRACT.format(sentence)}, tmp_path)
+    assert measurements(items, "S") == expected

@@ -184,9 +184,12 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         return []
     out: list[Found] = []
     changes = [(m.start(), m.end()) for m in FROM_TO.finditer(text, s, e)]
-    for hit in base.NUMBER.finditer(text, s, e):
-        raw, pct = hit.group(1), bool(hit.group(2))
-        if not pct and not ("." in raw and float(raw) <= 1):
+    counts = list(base.COUNT.finditer(text, s, e))
+    numbers = [h for h in base.NUMBER.finditer(text, s, e) if not any(c.start() <= h.start() < c.end() for c in counts)]
+    for hit in sorted([*numbers, *counts], key=lambda h: h.start()):
+        count = hit.re is base.COUNT
+        raw, pct = hit.group(1), (not count and bool(hit.group(2)))
+        if not count and not pct and not ("." in raw and float(raw) <= 1):
             continue
         before = text[max(s, hit.start() - 20):hit.start()]
         if DELTA_BEFORE.search(before) or DELTA_AFTER.match(text[hit.end():e]) or SIGNED.search(before):
@@ -204,10 +207,13 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         met = before_metrics[-1] if before_metrics else next(((m, i) for m, i in metrics if m.start >= hit.end()), None)
         if cond is None or met is None:
             continue
-        value = base.to_fraction(raw + ("%" if pct else ""), percent=pct, rate_like=r.rate_like(met[1]))
+        if count:
+            value = base.count_fraction(raw, hit.group(2)) if r.rate_like(met[1]) else None
+        else:
+            value = base.to_fraction(raw + ("%" if pct else ""), percent=pct, rate_like=r.rate_like(met[1]))
         if value is None:
             continue
-        end = hit.end(2) if pct else hit.end(1)
+        end = hit.end() if count else hit.end(2) if pct else hit.end(1)
         spans = [base.span(task, text, hit.start(1), end, "value"),
                  base.span(task, text, cond[0].start, cond[0].end, "condition_label"),
                  base.span(task, text, met[0].start, met[0].end, "metric_label")]
