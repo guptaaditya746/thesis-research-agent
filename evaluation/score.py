@@ -847,7 +847,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
     answers = ([run.answer] if run.answer is not None else []) + [read_json(p) for p in baselines]
     systems = [score_synthesis(truth, a) for a in answers]
     return {
-        "corpus_id": truth.corpus_id, "corpus_dir": corpus.resolve().as_posix(), "levels": truth.levels,
+        "corpus_id": truth.corpus_id, "corpus_name": corpus.name, "levels": truth.levels,
         "run_id": (run.run or {}).get("run_id", run.root.name),
         "question": truth.question, "extraction": score_extraction(m),
         "integration": score_integration(m, run.answer), "synthesis": systems,
@@ -865,7 +865,7 @@ def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = N
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
     given = [read_json(p) for p in answers]
     systems = [score_synthesis(truth, a) for a in given]
-    return {"corpus_id": truth.corpus_id, "corpus_dir": Path(corpus).resolve().as_posix(), "levels": truth.levels,
+    return {"corpus_id": truth.corpus_id, "corpus_name": Path(corpus).name, "levels": truth.levels,
             "run_id": None, "question": truth.question,
             "extraction": None, "integration": None, "synthesis": systems,
             "intervals": score_intervals(None, systems), "locate": None, "cascade": None, "extractors": None,

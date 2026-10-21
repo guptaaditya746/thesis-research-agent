@@ -247,9 +247,10 @@ DIAGNOSTICS = ("oracle-synthesis", "rag-oracle-passages")   # E1: read ground_tr
 RENDERERS = re.compile(r"^(?P<prefix>.+?)-(?P<renderer>tpl|llm)-(?P<rest>.+)$")
 
 
-def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
+def compare(reports: list[dict[str, Any]], base: Path | None = None) -> dict[str, Any]:
     """One row per corpus and system: the headline numbers of A, B and C, ordered by difficulty level; the
-    selection of each corpus (corpus.json), and template vs LLM on the study ids both corpora kept."""
+    selection of each corpus (corpus.json, found next to the report or under `base`), and template vs LLM on the
+    study ids both corpora kept; `notes` says what could not be shown."""
     rows = []
     for report in reports:
         level = corpus_level(report)
@@ -279,33 +280,77 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "screen_precision": screen.get("precision") if engine else None,
                          "screen_recall": screen.get("recall") if engine else None})
     rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"], r.get("strategy") or "", r.get("run_id") or ""))
-    matched, matched_extraction = matched_pairs(reports)
-    return {"rows": rows, "intervals": compare_intervals(reports), "selection": selection_rows(reports),
-            "matched": matched, "matched_extraction": matched_extraction}
+    notes: list[str] = []
+    corpora_of = _corpora(reports, base, notes)
+    selection, excluded = selection_rows(reports, corpora_of)
+    matched, matched_extraction = matched_pairs(reports, corpora_of, notes)
+    return {"rows": rows, "intervals": compare_intervals(reports), "selection": selection,
+            "selection_excluded": excluded, "matched": matched, "matched_extraction": matched_extraction,
+            "notes": notes}
 
 
 def _corpus_name(report: dict[str, Any]) -> str:
-    return Path(report["corpus_dir"]).name if report.get("corpus_dir") else report["corpus_id"]
+    """The corpus directory's name: `corpus_name`, else the last part of `corpus_dir`, else the corpus_id."""
+    return report.get("corpus_name") or (Path(report["corpus_dir"]).name if report.get("corpus_dir")
+                                         else report["corpus_id"])
 
 
-def selection_rows(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """One row per corpus and fidelity level from corpus.json `selection` (C3); a corpus without it is left out."""
-    rows, seen = [], set()
-    for report in reports:
-        path = Path(report["corpus_dir"]) / "corpus.json" if report.get("corpus_dir") else None
-        if path is None or not path.is_file() or path in seen:
+def _corpora(reports: list[dict[str, Any]], base: Path | None, notes: list[str]) -> dict[int, dict[str, Any] | None]:
+    """report index -> its corpus.json (parsed), found next to the report (`corpus_dir` is relative to the
+    report file, `_report_dir` set by the CLI) or under `base`/<corpus name>; None where it is not found, which
+    is noted. A corpus.json that is not valid JSON raises, naming the path."""
+    out: dict[int, dict[str, Any] | None] = {}
+    missing = []
+    for i, report in enumerate(reports):
+        candidates = []
+        if report.get("corpus_dir") and report.get("_report_dir"):
+            candidates.append(Path(report["_report_dir"]) / report["corpus_dir"])
+        if base is not None:
+            candidates.append(Path(base) / _corpus_name(report))
+        path = next((c / "corpus.json" for c in candidates if (c / "corpus.json").is_file()), None)
+        if path is None:
+            out[i] = None
+            missing.append(_corpus_name(report))
             continue
-        seen.add(path)
-        sel = json.loads(path.read_text(encoding="utf-8")).get("selection")
-        if not sel:
+        try:
+            out[i] = json.loads(path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            raise ValueError(f"{path}: not valid JSON ({exc})") from None
+    if missing:
+        notes.append(f"{len(set(missing))} corpora not found ({', '.join(sorted(set(missing)))}): Selection and "
+                     "Matched are incomplete; give --corpora DIR (the directory holding the corpus directories), or "
+                     "re-score so the report records where the corpus is")
+    return out
+
+
+def selection_rows(reports: list[dict[str, Any]], corpora: dict[int, dict[str, Any] | None]
+                   ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """One row per corpus and fidelity level from corpus.json `selection` (C3), and per corpus the excluded
+    studies with their levels; a corpus without a selection (built before C3) is left out."""
+    rows, excluded, seen = [], [], set()
+    for i, report in enumerate(reports):
+        sel = (corpora.get(i) or {}).get("selection")
+        if not sel or report["corpus_id"] in seen:
             continue
+        seen.add(report["corpus_id"])
         for level, row in sorted(sel.get("per_level", {}).items(), key=lambda kv: _level_key(kv[0])):
             failed = ", ".join(f"{k}: {v}" for k, v in sorted(row.get("failed_checks", {}).items()))
             rows.append({"corpus_id": report["corpus_id"], "level": level, "requested": sel.get("requested_studies"),
                          "retained": sel.get("retained_studies"), "records": sel.get("records"),
-                         "excluded": sorted(sel.get("excluded", {})), "passed": row.get("passed"),
-                         "failed_checks": failed, "mean_attempts": row.get("mean_attempts")})
-    return rows
+                         "passed": row.get("passed"), "failed_checks": failed or "none",
+                         "mean_attempts": row.get("mean_attempts")})
+        excluded.append({"corpus_id": report["corpus_id"], "excluded": sel.get("excluded", {})})
+    return rows, excluded
+
+
+def _disagreement(tpl: dict[str, Any], llm: dict[str, Any]) -> str | None:
+    """Why two corpora are not the same study set (seed, build settings but the name), else None."""
+    if tpl.get("seed") != llm.get("seed"):
+        return f"seeds differ ({tpl.get('seed')} and {llm.get('seed')})"
+    rest = [{k: v for k, v in (c.get("settings") or {}).items() if k != "name"} for c in (tpl, llm)]
+    if rest[0] != rest[1]:
+        return "build settings differ"
+    return None
 
 
 def _share(num: int, den: int) -> float | None:
@@ -321,22 +366,36 @@ def _accuracies(studies: list[dict[str, Any]]) -> dict[str, float | None]:
             "accuracy_answered": _share(sum(bool(s["correct"]) for s in answered), len(answered))}
 
 
-def matched_pairs(reports: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def matched_pairs(reports: list[dict[str, Any]], corpora: dict[int, dict[str, Any] | None],
+                  notes: list[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Template vs LLM corpora (`<prefix>-tpl-<rest>` and `<prefix>-llm-<rest>`, the same seed and level):
     per system the synthesis metrics, and per extractor the extraction precision and recall, recomputed over
-    the study ids both corpora kept; the ids in only one are listed."""
+    the study ids both corpora kept; the ids in only one are listed. A pair is matched only when both corpus.json
+    are found and agree on the seed and the build settings (all but the name); a key with two different
+    reports on one side is ambiguous, and both it and a pair that does not agree are noted, not matched."""
     by_key: dict[tuple[str, str, str, str | None], dict[str, dict[str, Any]]] = {}
-    for report in reports:
+    ambiguous: set[tuple[str, str, str, str | None]] = set()
+    for i, report in enumerate(reports):
         m = RENDERERS.match(_corpus_name(report))
         if m:
             strategy = (report.get("funnel") or {}).get("strategy")
             for system in report.get("synthesis") or []:
                 key = (m["prefix"], m["rest"], system["system"], strategy if system["system"] == ENGINE else None)
-                by_key.setdefault(key, {})[m["renderer"]] = {"report": report, "system": system}
+                slot = by_key.setdefault(key, {})
+                if m["renderer"] in slot and slot[m["renderer"]]["index"] != i:
+                    ambiguous.add(key)
+                slot[m["renderer"]] = {"report": report, "system": system, "index": i}
+    for prefix, rest, name, strategy in sorted(ambiguous, key=str):
+        notes.append(f"ambiguous: {prefix}-*-{rest} / {name}: two reports for one corpus name on one side; not matched")
     matched, extraction = [], []
     for (prefix, rest, name, strategy), both in sorted(
             by_key.items(), key=lambda kv: (kv[0][0], _level_key(kv[0][1]), kv[0][2], kv[0][3] or "")):
-        if set(both) != {"tpl", "llm"}:
+        if set(both) != {"tpl", "llm"} or (prefix, rest, name, strategy) in ambiguous:
+            continue
+        data = [corpora.get(both[r]["index"]) for r in ("tpl", "llm")]
+        why = _disagreement(*data) if all(d is not None for d in data) else "corpus.json not found"
+        if why:
+            notes.append(f"not matched: {prefix}-(tpl|llm)-{rest} / {name}: {why}")
             continue
         studies = {r: {s["paper"]: s for s in both[r]["system"]["studies"]} for r in both}
         common = sorted(studies["tpl"].keys() & studies["llm"].keys())
@@ -400,9 +459,9 @@ COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "extract
                             "engine_minus_system"]
 
 
-SELECTION_COLUMNS = ["corpus_id", "level", "requested", "retained", "records", "excluded", "passed", "failed_checks",
+SELECTION_COLUMNS = ["corpus_id", "level", "requested", "retained", "records", "passed", "failed_checks",
                      "mean_attempts"]
-MATCHED_COLUMNS = ["pair", "system", "strategy", "n_common", "tpl_direction_accuracy", "llm_direction_accuracy",
+MATCHED_COLUMNS = ["pair", "level", "system", "strategy", "n_common", "tpl_direction_accuracy", "llm_direction_accuracy",
                    "tpl_completeness", "llm_completeness", "tpl_accuracy_answered", "llm_accuracy_answered"]
 MATCHED_EXTRACTION_COLUMNS = ["pair", "extractor", "strategy", "n_common", "tpl_precision", "llm_precision",
                               "tpl_recall", "llm_recall"]
@@ -413,17 +472,25 @@ def _marked(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{**r, "system": f"{r['system']} (diagnostic)"} if r.get("diagnostic") else r for r in rows]
 
 
+def _excluded_text(excluded: dict[str, list[str]]) -> str:
+    return ", ".join(f"{k} ({', '.join(v)})" for k, v in sorted(excluded.items())) or "none"
+
+
 def render_compare(comparison: dict[str, Any]) -> str:
     out = ["# Comparison over corpora", "", table(_marked(comparison["rows"]), COMPARE_COLUMNS), ""]
     if any(r.get("diagnostic") for r in comparison["rows"]):
         out += ["`(diagnostic)`: oracle-synthesis and rag-oracle-passages read the ground truth; they bound what "
                 "extraction or retrieval could give and are not baselines.", ""]
+    if comparison.get("notes"):
+        out += ["**Not shown:**", "", *[f"- {n}" for n in comparison["notes"]], ""]
     if comparison.get("selection"):
-        rows = [{**r, "excluded": ", ".join(r["excluded"]) or None} for r in comparison["selection"]]
+        rows = comparison["selection"]
         out += ["## Selection", "", "Studies requested and retained after the fidelity gate (corpus.json `selection`; "
                 "a corpus built before it is not listed); per level the papers passed, the checks that failed the "
-                "final attempt of the failed ones and the mean attempts; `excluded` studies left every level.", "",
-                table(rows, SELECTION_COLUMNS), ""]
+                "final attempt of the failed ones and the mean attempts.", "", table(rows, SELECTION_COLUMNS), ""]
+        out += [f"- {e['corpus_id']}: excluded {_excluded_text(e['excluded'])}"
+                for e in comparison.get("selection_excluded") or []]
+        out += [""]
     if comparison.get("matched"):
         rows = _marked(comparison["matched"])
         out += ["## Matched", "", "Template vs LLM corpora of one seed and level, recomputed on the study ids "

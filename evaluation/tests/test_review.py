@@ -34,7 +34,7 @@ def test_summarise_counts_and_lists_a_problem(tmp_path: Path) -> None:
 
 def test_an_empty_sheet_is_unreviewed(tmp_path: Path) -> None:
     got = review.summarise(sheet(tmp_path / "r.csv", [row("S001.m1", "", "", ""), row("S001.m2", "yes", "", "")]))
-    assert (got["rows"], got["reviewed"], got["present"], got["problems"]) == (2, 0, 1, [])
+    assert (got["rows"], got["reviewed"], got["present"], got["problems"]) == (2, 0, 0, [])
 
 
 def test_a_value_that_is_not_a_tick_names_the_row(tmp_path: Path) -> None:
@@ -47,3 +47,8 @@ def test_cli_review_prints_the_summary(tmp_path: Path, capsys: pytest.CaptureFix
     assert cli.main(["review", "--csv", str(path)]) == 0
     out = capsys.readouterr().out
     assert "reviewed: 1" in out and "S001.m1" in out
+
+
+def test_yes_totals_count_fully_reviewed_rows_only(tmp_path: Path) -> None:
+    got = review.summarise(sheet(tmp_path / "r.csv", [row("S001.m1"), row("S001.m2", "yes", "", "")]))
+    assert (got["reviewed"], got["present"]) == (1, 1)

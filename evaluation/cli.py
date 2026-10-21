@@ -5,7 +5,7 @@
     evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval global|per_paper] [--k N]
                           [--oracle-passages]
     evaluate agent-baseline --corpus CORPUS --out DIR [--model ALIAS] [--sandbox ...] [--steps N] [--tokens N]
-    evaluate compare REPORT [REPORT ...] --out DIR
+    evaluate compare REPORT [REPORT ...] [--corpora DIR] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
     evaluate review --csv REVIEW.csv
@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -73,6 +74,8 @@ def cmd_score(args: argparse.Namespace) -> int:
         raise SystemExit("evaluate score: give --run and/or --baseline")
     result = (score(args.run, args.corpus, args.baseline, args.reexec, args.oracle) if args.run
               else score_answers(args.corpus, args.baseline, args.oracle))
+    # where corpus.json is, relative to the report, so the pair moves together (compare resolves it from there)
+    result["corpus_dir"] = Path(os.path.relpath(args.corpus.resolve(), args.out.resolve())).as_posix()
     js, md = rep.write_report(result, args.out)
     print(f"wrote {js} and {md}")
     return 0
@@ -131,8 +134,8 @@ def cmd_compare(args: argparse.Namespace) -> int:
     reports = []
     for path in args.reports:
         path = path / "report.json" if path.is_dir() else path
-        reports.append(json.loads(path.read_text(encoding="utf-8")))
-    js, md = rep.write_compare(rep.compare(reports), args.out)
+        reports.append({**json.loads(path.read_text(encoding="utf-8")), "_report_dir": str(path.parent)})
+    js, md = rep.write_compare(rep.compare(reports, args.corpora), args.out)
     print(f"wrote {js} and {md}")
     return 0
 
@@ -234,6 +237,8 @@ def parser() -> argparse.ArgumentParser:
 
     c = sub.add_parser("compare", help="per-level table over several corpora's report.json")
     c.add_argument("reports", type=Path, nargs="+", help="report.json files or directories holding one")
+    c.add_argument("--corpora", type=Path, help="directory holding the corpus directories, where a report's own "
+                   "corpus path is dead (Selection and Matched read corpus.json)")
     c.add_argument("--out", type=Path, required=True)
     c.set_defaults(func=cmd_compare)
 

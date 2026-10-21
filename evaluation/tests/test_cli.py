@@ -111,3 +111,13 @@ def test_agent_baseline_command(tmp_path: Path, scripted: Scripted, monkeypatch:
     assert made[0]["settings"].sandbox_mode == "unsandboxed"
     assert made[0]["settings"].model == "sub-model-2" == answer["mapping_call"]["model"]  # --model reaches the agent
     assert cli.parser().parse_args(["agent-baseline", "--corpus", "c", "--out", "o"]).model == "orch-model"
+
+
+def test_score_records_a_corpus_path_relative_to_the_report(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    fx.dump(tmp_path / "rag.json", fx.baseline_answer("rag-baseline", {"S001": "supports"}, "supported"))
+    out = tmp_path / "scores" / "one"
+    assert cli.main(["score", "--corpus", str(corpus), "--baseline", str(tmp_path / "rag.json"), "--out", str(out)]) == 0
+    report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    assert report["corpus_name"] == corpus.name and not Path(report["corpus_dir"]).is_absolute()
+    assert (out / report["corpus_dir"]).resolve() == corpus.resolve()

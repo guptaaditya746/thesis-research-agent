@@ -15,7 +15,8 @@ YES, NO = {"yes", "y"}, {"no", "n"}
 
 
 def summarise(csv_path: Path) -> dict[str, Any]:
-    """Counts over the sheet: rows, reviewed rows, rows ticked `yes` per check (among filled cells), problems."""
+    """Counts over the sheet: rows, reviewed rows, per check the `yes` count over fully reviewed rows only (a
+    half-filled row adds to no total), and a problem for every `no`, in any row, with the notes."""
     with Path(csv_path).open(encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         missing = [c for c in COLUMNS if c not in (reader.fieldnames or [])]
@@ -25,7 +26,7 @@ def summarise(csv_path: Path) -> dict[str, Any]:
     counts = dict.fromkeys(CHECKS, 0)
     reviewed, problems = 0, []
     for number, row in enumerate(sheet, start=2):       # line 1 is the header
-        filled = 0
+        filled, yes = 0, []
         for check in CHECKS:
             cell = (row[check] or "").strip()
             if not cell:
@@ -35,10 +36,13 @@ def summarise(csv_path: Path) -> dict[str, Any]:
                                  "write yes or no (y or n), or leave it empty")
             filled += 1
             if cell.lower() in YES:
-                counts[check] += 1
+                yes.append(check)
             else:
                 problems.append({"paper": row["paper"], "fact": row["fact"], "check": check, "notes": row["notes"]})
-        reviewed += filled == len(CHECKS)
+        if filled == len(CHECKS):
+            reviewed += 1
+            for check in yes:
+                counts[check] += 1
     return {"rows": len(sheet), "reviewed": reviewed, **counts, "problems": problems}
 
 
