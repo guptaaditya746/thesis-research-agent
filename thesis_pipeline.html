@@ -235,8 +235,8 @@ const SUBTITLE = "The supervisor's proposal of 14 Oct 2026. A research question 
 
 const LLM_LABEL = "LLM call (Qwen)";
 const LLM_ICON_SRC = null;   // e.g. "data:image/png;base64,...."  (null = generic LLM icon)
-const FLAG_LABEL = "STEP 1: START HERE";
-const FLAG_LEGEND = "Where the work starts";
+const FLAG_LABEL = "THE WORK IS HERE NOW";
+const FLAG_LEGEND = "Where the work is now (21 Oct)";
 const OPEN_TAG = "OPTIONAL · IF TIME PERMITS";
 const OPEN_LEGEND = "Optional extension";
 const OPEN_NOTE = "Optional: the supervisor names this as an extension if time permits, not a requirement for the thesis.";
@@ -282,24 +282,28 @@ const LANES = [
 const STAGES = [
   // Question → protocol
   { id: "question",  lane: "protocol", col: 0, name: "Research question", desc: "RAG → factual accuracy?", llm: false },
-  { id: "write",     lane: "protocol", col: 1, name: "Write protocol",    desc: "by hand, step 1",          llm: false, people: true, current: true },
+  { id: "write",     lane: "protocol", col: 1, name: "Write protocol",    desc: "by hand, step 1",          llm: false, people: true },
   { id: "protocol",  lane: "protocol", col: 2, name: "Research protocol", desc: "YAML: evidence → answer",  llm: false, ours: "intermediate representation", oursTitle: "The executable research protocol sits between the natural-language question and the evidence graph, like an intermediate representation in a compiler" },
   // Execution engine
   { id: "engine",    lane: "engine",   col: 1, name: "Engine",            desc: "Python, runs the protocol", llm: false, sources: ["provagent"], ours: "protocol interpreter" },
   { id: "locate",    lane: "engine",   col: 2, name: "Locate",            desc: "exhaustive · BM25 · agent", llm: true, added: true, ours: "flexible search, fixed flow", oursTitle: "The protocol fixes which evidence counts, the order of steps and the synthesis; only how a passage is found is flexible (exhaustive screening, keyword retrieval or an agent), within a budget, with the same output contract" },
-  { id: "evgraph",   lane: "engine",   col: 3, name: "Evidence graph",    desc: "study → experiment → result", llm: false, sources: ["provo", "webanno"], ours: "every node has its passage" },
-  { id: "synth",     lane: "engine",   col: 4, name: "Synthesis",         desc: "explicit rules, pro and contra", llm: false, ours: "deterministic first" },
-  { id: "answer",    lane: "engine",   col: 5, name: "Answer",            desc: "verdict + evidence table", llm: false },
-  { id: "trace",     lane: "engine",   col: 6, name: "Trace back",        desc: "answer → result → passage", llm: false, people: true, added: true, sources: ["laquer", "ledger"] },
+  { id: "escalate",  lane: "engine",   col: 3, name: "Miss → escalate",   desc: "reject | escalate", llm: true, added: true, ours: "recall vs cost as an arm", oursTitle: "A paper the keyword screen misses is either dropped (reject, the default) or sent on to the model screen (escalate); EV2 measures the recall gained against the extra calls" },
+  { id: "evgraph",   lane: "engine",   col: 4, name: "Evidence graph",    desc: "study → experiment → result", llm: false, sources: ["provo", "webanno"], ours: "every node has its passage" },
+  { id: "synth",     lane: "engine",   col: 5, name: "Synthesis",         desc: "explicit rules, pro and contra", llm: false, ours: "deterministic first" },
+  { id: "answer",    lane: "engine",   col: 6, name: "Answer",            desc: "verdict + evidence table", llm: false },
+  { id: "trace",     lane: "engine",   col: 7, name: "Trace back",        desc: "answer → result → passage", llm: false, people: true, added: true, sources: ["laquer", "ledger"] },
   // Extractor library (no arrows: the engine picks the extractor per evidence type)
   { id: "iface",     lane: "extractors", col: 0, name: "Common interface", desc: "the extractor contract", llm: false, ours: "one contract, written" },
   { id: "x_cond",    lane: "extractors", col: 1, name: "Conditions",       desc: "models, with / without RAG", llm: true, sources: ["edc"] },
-  { id: "x_metric",  lane: "extractors", col: 2, name: "Metrics",          desc: "how factuality is measured", llm: true },
-  { id: "x_result",  lane: "extractors", col: 3, name: "Results",          desc: "a number per condition", llm: true },
-  { id: "x_claim",   lane: "extractors", col: 4, name: "Author claims",    desc: "what the authors conclude", llm: true, added: true },
-  { id: "x_agent",   lane: "extractors", col: 5, name: "Agentic extractor", desc: "navigates one paper", llm: true, added: true, ours: "our agent, as an extractor", oursTitle: "The existing research agent (sandbox, shell, claim tool with quote check) as one implementation behind the extractor interface, for distributed and complex evidence" },
-  { id: "x_cascade", lane: "extractors", col: 6, name: "Cascade",          desc: "regex → LLM → agent", llm: false, added: true, ours: "who found what" },
-  { id: "x_bench",   lane: "extractors", col: 7, name: "Benchmarked",      desc: "each version, per difficulty", llm: false, ours: "reusable, measured" },
+  { id: "x_qual",    lane: "extractors", col: 2, name: "Condition qualifiers", desc: "\"(no retrieval)\" → control", llm: false, added: true },
+  { id: "x_metric",  lane: "extractors", col: 3, name: "Metrics",          desc: "how factuality is measured", llm: true },
+  { id: "x_result",  lane: "extractors", col: 4, name: "Results",          desc: "a number per condition", llm: true },
+  { id: "x_headers", lane: "extractors", col: 5, name: "Table header roles", desc: "columns found by header", llm: false, added: true },
+  { id: "x_count",   lane: "extractors", col: 6, name: "Count values",     desc: "\"N out of M\" → a fraction", llm: false, added: true },
+  { id: "x_claim",   lane: "extractors", col: 7, name: "Author claims",    desc: "what the authors conclude", llm: true, added: true },
+  { id: "x_agent",   lane: "extractors", col: 8, name: "Agentic extractor", desc: "navigates one paper", llm: true, added: true, ours: "our agent, as an extractor", oursTitle: "The existing research agent (sandbox, shell, claim tool with quote check) as one implementation behind the extractor interface, for distributed and complex evidence" },
+  { id: "x_cascade", lane: "extractors", col: 9, name: "Cascade",          desc: "regex → LLM → agent", llm: false, added: true, ours: "who found what" },
+  { id: "x_bench",   lane: "extractors", col: 10, name: "Benchmarked",      desc: "each version, per difficulty", llm: false, ours: "reusable, measured" },
   // Provenance and replay (the extractor contract, sections 7 and 8)
   { id: "evlog",     lane: "prov",     col: 1, name: "Event log",         desc: "one event per extractor call", llm: false, added: true, sources: ["provagent"], ours: "hash-chained" },
   { id: "cache",     lane: "prov",     col: 2, name: "Record cache",      desc: "key: extractor id + task", llm: false, added: true },
@@ -310,26 +314,36 @@ const STAGES = [
   { id: "truth",     lane: "bench",    col: 0, name: "Ground truth",      desc: "fictional studies + results", llm: false, ours: "data first, papers second", oursTitle: "The process is reversed: structured ground truth is generated first, and papers are written from it, so the corpus's intended evidence is known exactly" },
   { id: "knobs",     lane: "bench",    col: 1, name: "Difficulty knobs",  desc: "explicit → contradictory", llm: false },
   { id: "gen",       lane: "bench",    col: 2, name: "Paper generator",   desc: "LLM writes each paper", llm: true },
-  { id: "fidelity",  lane: "bench",    col: 3, name: "Fidelity check",    desc: "paper = ground truth?", llm: true, people: true, sources: ["kappa", "judge"] },
-  { id: "corpus",    lane: "bench",    col: 4, name: "Synthetic corpus",  desc: "papers + known evidence", llm: false },
-  { id: "variants",  lane: "bench",    col: 5, name: "Controlled variants", desc: "change one result", llm: false, ours: "predictable answer shift" },
+  { id: "atomic",    lane: "bench",    col: 3, name: "Atomic statements", desc: "one sentence per result", llm: true, added: true, ours: "checked before composition", oursTitle: "The LLM writes each Results sentence alone, it is checked, and the paper must contain it verbatim; the blind verifier then counts a value only when condition, metric, dataset and value all match" },
+  { id: "fidelity",  lane: "bench",    col: 4, name: "Fidelity check",    desc: "paper = ground truth?", llm: true, people: true, current: true, sources: ["kappa", "judge"] },
+  { id: "selection", lane: "bench",    col: 5, name: "Selection counters", desc: "dropped papers reported", llm: false, added: true },
+  { id: "corpus",    lane: "bench",    col: 6, name: "Synthetic corpus",  desc: "papers + known evidence", llm: false },
+  { id: "variants",  lane: "bench",    col: 7, name: "Controlled variants", desc: "change one result", llm: false, ours: "predictable answer shift" },
+  { id: "hard",      lane: "bench",    col: 8, name: "Hard benchmark",    desc: "experiments + ablations", llm: false, added: true },
+  { id: "reviewtab", lane: "bench",    col: 9, name: "Benchmark tables",  desc: "selection · matched · review", llm: false, people: true, added: true },
   // Evaluation
   { id: "evLoc",     lane: "eval",     col: 0, name: "Locate recall",     desc: "passages found vs placed", llm: false, added: true },
   { id: "evA",       lane: "eval",     col: 1, name: "A · Extraction",    desc: "P / R / F1 · provenance", llm: false, sources: ["benchie", "webnlg"] },
   { id: "evB",       lane: "eval",     col: 2, name: "B · Integration",   desc: "links across sections", llm: false },
   { id: "evC",       lane: "eval",     col: 3, name: "C · Synthesis",     desc: "vs answer from ground truth", llm: false },
-  { id: "errors",    lane: "eval",     col: 4, name: "Error attribution", desc: "never found · extracted · linked · rule", llm: false, ours: "why it fails, not only if" },
-  { id: "baseline",  lane: "eval",     col: 5, name: "Answer-level baseline", desc: "retrieve passages → answer", llm: true, sources: ["alce", "rarr"] },
-  { id: "agentbase", lane: "eval",     col: 6, name: "Agent baseline",    desc: "our agent, no protocol", llm: true, added: true, ours: "a stronger baseline" },
-  { id: "compare",   lane: "eval",     col: 7, name: "Comparison",        desc: "correct · complete · traceable", llm: false, sources: ["bootstrap", "goo2026"] },
+  { id: "oracle",    lane: "eval",     col: 4, name: "Oracle runs",       desc: "on perfect evidence", llm: true, added: true, ours: "extraction vs synthesis error", oursTitle: "Synthesis on the ground-truth evidence and RAG on the passages that hold the values: a study only the system gets wrong is an extraction (upstream) error, one the oracle gets wrong too is a synthesis (downstream) error" },
+  { id: "errors",    lane: "eval",     col: 5, name: "Error attribution", desc: "never found · extracted · linked · rule", llm: false, ours: "why it fails, not only if" },
+  { id: "baseline",  lane: "eval",     col: 6, name: "Answer-level baseline", desc: "retrieve passages → answer", llm: true, sources: ["alce", "rarr"] },
+  { id: "agentbase", lane: "eval",     col: 7, name: "Agent baseline",    desc: "our agent, no protocol", llm: true, added: true, ours: "a stronger baseline" },
+  { id: "strict",    lane: "eval",     col: 8, name: "Strict traceability", desc: "cites the value span", llm: false, added: true },
+  { id: "compare",   lane: "eval",     col: 9, name: "Comparison",        desc: "correct · complete · traceable", llm: false, sources: ["bootstrap", "goo2026"] },
+  { id: "cluster",   lane: "eval",     col: 10, name: "Cluster bootstrap", desc: "resample parent studies", llm: false, added: true, sources: ["bootstrap"] },
   // Where it runs
   { id: "slurm",     lane: "infra",    col: 0, name: "Slurm job",         desc: "3×A100 40 GB · 48 h", llm: false, sources: ["llmsetup"] },
   { id: "models",    lane: "infra",    col: 1, name: "Qwen models",       desc: "27B + 2× 30B-A3B", llm: true, sources: ["vllm"] },
   { id: "gateway",   lane: "infra",    col: 2, name: "LiteLLM gateway",   desc: ":4000, JSON-schema output", llm: false, sources: ["litellm"] },
+  { id: "ev2run",    lane: "infra",    col: 3, name: "EV2 live run",      desc: "runbook ready, not run yet", llm: true, current: true },
   // Extensions (optional)
   { id: "protogen",  lane: "optional", col: 1, name: "Protocol generator", desc: "LLM + dialogue with user", llm: true, people: true },
-  { id: "real",      lane: "optional", col: 3, name: "Real papers",       desc: "336 ACL/EMNLP 2025", llm: false, sources: ["docling"] },
-  { id: "realgold",  lane: "optional", col: 4, name: "Real-paper gold",   desc: "built + reviewed in Argilla", llm: true, people: true, added: true, sources: ["argilla"] },
+  { id: "bounds",    lane: "optional", col: 2, name: "Scale → bounds",    desc: "from the metric's scale", llm: false, added: true },
+  { id: "critic",    lane: "optional", col: 3, name: "Proposal critic",   desc: "blocking · waivers · review", llm: false, people: true, added: true, current: true, ours: "a person signs off", oursTitle: "Blocking checks stop freeze unless a person waives them with a reason; advisory checks are shown; the proposal records its review status, and the eight cards are decided by a person" },
+  { id: "real",      lane: "optional", col: 5, name: "Real papers",       desc: "336 ACL/EMNLP 2025", llm: false, sources: ["docling"] },
+  { id: "realgold",  lane: "optional", col: 6, name: "Real-paper gold",   desc: "built + reviewed in Argilla", llm: true, people: true, added: true, sources: ["argilla"] },
 ];
 
 const LINKS = [
@@ -343,7 +357,7 @@ const LINKS = [
   ["corpus",   "baseline", "same papers"],
 ];
 
-const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. A box shows at most two chips; its panel lists every work it uses, and the list below groups all works by role. The flagged box is step 1 of the supervisor's order of work; the table under the diagram gives all seven steps and which existing code each can reuse. Click a box, chip or reference for details (Esc closes); a link ending in #stage=engine opens that panel directly.";
+const FOOTER = "Blue chips: an idea taken from a paper. Grey chips: a tool, dataset or protocol used as is. Green chips: our own contribution. A box shows at most two chips; its panel lists every work it uses, and the list below groups all works by role. The flagged boxes show where the work is now (21 Oct): the EV2 live run on Slurm and the two human reviews (the fidelity sheet, the eight proposal cards); the table under the diagram gives the supervisor's seven steps and which existing code each can reuse. Click a box, chip or reference for details (Esc closes); a link ending in #stage=engine opens that panel directly.";
 
 /* ---- STAGE_DETAILS / SOURCE_DETAILS: what the panel shows when a box, chip or lane is clicked -------------------------
    Every field is optional:
@@ -734,6 +748,66 @@ const STAGE_DETAILS = {
     how: ["The gold builder and the Argilla review built for the previous design (screening, extraction with quote checks, triage, review, answer key, judge) can serve here."],
     code: ["gold/ (build, review, judge)"],
   },
+  // ---------------------------------------------------------------- added 21 Oct (EV1 repairs)
+  escalate: {
+    what: "What happens to a paper the keyword screen misses: `screen.lexical_miss: reject` drops it (the default, as before), `escalate` sends it on to the model screen.",
+    how: ["Both are arms of the EV2 run, so the recall gained can be weighed against the extra model calls."],
+    code: ["evidence/protocol.py (Screen.lexical_miss)", "evidence/engine.py (Execution.screen)"],
+  },
+  x_qual: {
+    what: "A condition mention followed by a parenthetical qualifier takes the qualifier's role: \"RAG (no retrieval)\" is the control, \"RAG (no reranking)\" is another condition.",
+    code: ["evidence/extractors/terms.py (find_conditions)", "evidence/extractors/regex.py"],
+  },
+  x_headers: {
+    what: "Tables find their condition, metric and dataset columns from the headers (or from which column's cells resolve), instead of assuming the first column holds the conditions.",
+    code: ["evidence/extractors/measure.py (_table_roles)"],
+  },
+  x_count: {
+    what: "\"75 out of 100\" becomes 0.75 when the sentence's metric is a rate; counts larger than their total, or without a metric, give nothing.",
+    code: ["evidence/extractors/base.py (COUNT, count_fraction)", "evidence/extractors/measure.py"],
+  },
+  atomic: {
+    what: "The LLM renderer first writes one checked sentence per result placed in prose, then composes the paper, which must contain each sentence verbatim. The blind verifier counts a value as recovered only when condition, metric, dataset and value all match.",
+    code: ["synth/statements.py", "synth/fidelity.py (blind_check)"],
+  },
+  selection: {
+    what: "Each corpus manifest records how many studies were requested and retained, and per level which checks failed; `--min-retained` stops a build that drops too many.",
+    code: ["synth/corpus.py (selection)", "synth/cli.py"],
+  },
+  hard: {
+    what: "A harder template benchmark: some studies have two or three experiments and an ablation condition, which extraction must not mis-pair. Template renderer only.",
+    code: ["synth/truth.py (generate(..., hard=True))", "synth/levels.py"],
+  },
+  reviewtab: {
+    what: "The comparison reports the selection (requested, retained, failed checks), a matched table (template vs LLM on the common studies only, dropped ids listed) and the summary of the human fidelity review sheet.",
+    code: ["evaluation/report.py (compare)", "evaluation/review.py"],
+  },
+  oracle: {
+    what: "Synthesis run on the ground-truth evidence, and RAG run on the passages that hold the values; scoring the system against them tells extraction errors from synthesis errors per study.",
+    differs: ["The engine's oracle shares evidence/rules.py with the ground truth, so it checks the code path, not an independent judgement; the RAG oracle is the more informative split."],
+    code: ["evaluation/oracle.py", "evaluation/baselines/rag.py (--oracle-passages)", "evaluation/score.py (attribute)"],
+  },
+  strict: {
+    what: "A citation counts as traced only when it overlaps the span of a value, metric or claim; the lenient count (any placement, a condition name included) is reported beside it.",
+    code: ["evaluation/score.py (score_citations)"],
+  },
+  cluster: {
+    what: "Pooled numbers resample whole parent studies, not single papers, because the papers of one study across levels are not independent.",
+    code: ["evaluation/stats.py (cluster_bootstrap)", "evaluation/benchmark.py"],
+  },
+  ev2run: {
+    what: "The next live run on the cluster: pilot and LLM corpora, the hard template set, the engine with both lexical_miss arms, both baselines with the oracle passages, scores with the oracle, the counterfactual shift, the fidelity review and the proposal.",
+    how: ["The runbook is ready (docs/slurm-evidence-runbook.md); it has not been run, so there are no EV2 numbers yet."],
+  },
+  bounds: {
+    what: "A proposed protocol takes its value bounds from the metric's scale (fraction or percentage), and the critic checks that the bounds cover the rate metrics.",
+    code: ["evidence/propose/frame.py, draft.py, critic.py"],
+  },
+  critic: {
+    what: "The proposal's critic marks each check blocking or advisory; freeze refuses a blocking failure unless a person waives it with a reason, and the proposal records its review status.",
+    how: ["Now: a person decides the eight cards (decisions.yaml, all still the model's defaults)."],
+    code: ["evidence/propose/critic.py, freeze.py, cards.py"],
+  },
 };
 
 /* ---- ORIGIN: where each box comes from: the supervisor's message of 14 Oct (by section), or our addition.
@@ -781,6 +855,20 @@ const ORIGIN = {
   protogen: "Supervisor §2 and §8: an optional extension, possibly with a dialogue with the user.",
   real:     "Supervisor §8: an optional extension (\"test the system on a small collection of real scientific papers\").",
   realgold: "Our addition: needed only if the real-paper extension is done; the gold pipeline exists from the earlier design.",
+  escalate: "Our addition (21 Oct, EV1 repairs): the EV1 diagnosis asked to measure recall and cost before choosing a screen policy.",
+  x_qual:   "Our addition (21 Oct, EV1 repairs): a repair of the condition extractor found in the EV1 run.",
+  x_headers:"Our addition (21 Oct, EV1 repairs): a repair of the table extractor found in the EV1 run.",
+  x_count:  "Our addition (21 Oct, EV1 repairs): counts in the generated papers were missed in the EV1 run.",
+  atomic:   "Our addition (21 Oct, EV1 repairs) to the supervisor's fidelity check (§6).",
+  selection:"Our addition (21 Oct, EV1 repairs): which papers the fidelity checks dropped is reported, not hidden.",
+  hard:     "Supervisor §6 (difficulty) and §7; built 21 Oct as our addition to get the benchmark off its ceiling.",
+  reviewtab:"Supervisor §6: the generated documents must be checked; the tables are our addition (21 Oct).",
+  oracle:   "Supervisor §5 C: tell extraction errors from synthesis errors. The oracle runs are our addition (21 Oct).",
+  strict:   "Supervisor §7 (traceability); the strict count is our addition (21 Oct).",
+  cluster:  "Our addition (21 Oct): intervals that respect papers from the same study.",
+  ev2run:   "Existing infrastructure (ours); the EV2 runbook of 21 Oct.",
+  bounds:   "Our addition (21 Oct, EV1 repairs) to the protocol generator.",
+  critic:   "Our addition (21 Oct, EV1 repairs) to the protocol generator: a person reviews before freeze.",
 };
 
 const SOURCE_DETAILS = {
