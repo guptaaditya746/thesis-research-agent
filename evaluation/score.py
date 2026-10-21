@@ -95,7 +95,9 @@ Attribution (`attribute`, Tim M2 §5C, our addition; with `evaluate score --orac
 a system's direction is right and whether the oracle's is (evaluation/oracle.py: the synthesis on perfect
 evidence; or the RAG baseline on the passages holding the values). A study the system gets wrong is an
 `upstream` error (extraction or retrieval) when the oracle gets it right, a `downstream` one (synthesis or
-reasoning) when the oracle is wrong too. Counted per level and `all`, for every system but the oracle.
+reasoning) when the oracle is wrong too. Counted per level and `all`, only for the oracle's counterpart
+(`oracle-synthesis` -> the engine, `rag-oracle-passages` -> the RAG baseline); any other system is listed under
+`not_attributed`, since an oracle that is right says nothing about where another system went wrong.
 
 Locate recall: a placement is inside the scope when one `locate.json` entry for its paper and its
 fact's evidence type has a scope that contains it (`evidence.contract.Scope.contains`).
@@ -412,16 +414,26 @@ def attribute(truth: GroundTruth, system_answer: dict[str, Any], oracle_answer: 
     return out
 
 
+# An oracle stands in for one system with its input made perfect; its errors say nothing about another system's.
+COUNTERPARTS = {"oracle-synthesis": (ENGINE,), "rag-oracle-passages": ("rag-baseline",)}
+
+
 def score_attribution(truth: GroundTruth, answers: list[dict[str, Any]], oracle_answer: dict[str, Any] | None
                       ) -> dict[str, Any] | None:
-    """`attribute` for every answer but the oracle's own, with counts per level and `all`; None without an oracle."""
+    """`attribute` for the answers of the oracle's counterpart (COUNTERPARTS), with counts per level and `all`;
+    every other system but the oracle under `not_attributed`; None without an oracle."""
     if oracle_answer is None:
         return None
     oracle_system = oracle_answer.get("system", "oracle")
+    counterparts = COUNTERPARTS.get(oracle_system, ())
     level = {s["study_id"]: s.get("level", "unknown") for s in truth.studies}
-    systems = []
+    systems: list[dict[str, Any]] = []
+    skipped: list[str] = []
     for answer in answers:
         if answer.get("system") == oracle_system:
+            continue
+        if answer.get("system") not in counterparts:
+            skipped.append(answer.get("system", "unknown"))
             continue
         studies = attribute(truth, answer, oracle_answer)
         counts: dict[str, Counter[str]] = defaultdict(Counter)
@@ -432,7 +444,7 @@ def score_attribution(truth: GroundTruth, answers: list[dict[str, Any]], oracle_
         rows = [{"level": lv, **{k: c[k] for k in ("studies", "system_correct", "oracle_correct", "upstream",
                                                    "downstream")}} for lv, c in sorted(counts.items())]
         systems.append({"system": answer.get("system", "unknown"), "studies": studies, "rows": rows})
-    return {"oracle": oracle_system, "systems": systems}
+    return {"oracle": oracle_system, "systems": systems, "not_attributed": skipped}
 
 
 # --- C flags (F4, our addition) --------------------------------------------------------------------

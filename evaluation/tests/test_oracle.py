@@ -11,7 +11,7 @@ import pytest
 from evaluation import cli, oracle
 from evaluation.baselines import rag
 from evaluation.baselines.common import DEFAULT_PROTOCOL
-from evaluation.score import attribute, score, score_synthesis
+from evaluation.score import attribute, score, score_attribution, score_synthesis
 from evaluation.truth import MAIN_ROLE, GroundTruth
 
 from . import fixtures as fx
@@ -67,18 +67,39 @@ def test_attribute_splits_upstream_from_downstream(tmp_path: Path) -> None:
 def test_score_with_oracle_adds_attribution_and_its_table(tmp_path: Path) -> None:
     corpus = fx.write_corpus(tmp_path)
     fx.dump(tmp_path / "rag.json", fx.baseline_answer("rag-baseline", {"S001": "neutral", "S002": "supports"}, "supported"))
-    fx.dump(tmp_path / "oracle.json", fx.baseline_answer("oracle-synthesis", {"S001": "supports"}, "supported"))
+    fx.dump(tmp_path / "oracle.json", fx.baseline_answer("rag-oracle-passages", {"S001": "supports"}, "supported"))
     assert cli.main(["score", "--corpus", str(corpus), "--baseline", str(tmp_path / "rag.json"),
                      "--oracle", str(tmp_path / "oracle.json"), "--out", str(tmp_path / "out")]) == 0
     report = json.loads((tmp_path / "out" / "report.json").read_text(encoding="utf-8"))
     (entry,) = report["attribution"]["systems"]
-    assert report["attribution"]["oracle"] == "oracle-synthesis" and entry["system"] == "rag-baseline"
+    assert report["attribution"]["oracle"] == "rag-oracle-passages" and entry["system"] == "rag-baseline"
     assert [s["error"] for s in entry["studies"]] == ["upstream", "downstream"]
     assert {"level": "all", "studies": 2, "system_correct": 0, "oracle_correct": 1, "upstream": 1,
             "downstream": 1} in entry["rows"]
     assert "## Attribution" in (tmp_path / "out" / "report.md").read_text(encoding="utf-8")
     run = fx.write_run(tmp_path / "runs", list(fx.perfect_items().values()), fx.engine_answer(fx.perfect_items()))
     assert score(run, corpus)["attribution"] is None
+
+
+def test_an_oracle_attributes_only_its_own_counterpart(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    truth = GroundTruth.load(corpus / "ground_truth.json")
+    engine = fx.baseline_answer("evidence-engine", {"S001": "neutral", "S002": "supports"}, "supported")
+    rag_answer = fx.baseline_answer("rag-baseline", {"S001": "neutral", "S002": "supports"}, "supported")
+    agent = fx.baseline_answer("agent-baseline", {"S001": "neutral"}, "supported")
+    synthesis = fx.baseline_answer("oracle-synthesis", {"S001": "supports"}, "supported")
+    passages = fx.baseline_answer("rag-oracle-passages", {"S001": "supports"}, "supported")
+    att = score_attribution(truth, [engine, rag_answer, agent, synthesis], synthesis)
+    assert [s["system"] for s in att["systems"]] == ["evidence-engine"]
+    assert att["not_attributed"] == ["rag-baseline", "agent-baseline"]
+    att = score_attribution(truth, [rag_answer, passages], passages)
+    assert [s["system"] for s in att["systems"]] == ["rag-baseline"] and att["not_attributed"] == []
+    fx.dump(tmp_path / "rag.json", rag_answer)
+    fx.dump(tmp_path / "oracle.json", synthesis)
+    assert cli.main(["score", "--corpus", str(corpus), "--baseline", str(tmp_path / "rag.json"),
+                     "--oracle", str(tmp_path / "oracle.json"), "--out", str(tmp_path / "out")]) == 0
+    text = (tmp_path / "out" / "report.md").read_text(encoding="utf-8")
+    assert "Not attributed (not this oracle's counterpart): rag-baseline" in text
 
 
 def test_oracle_command_writes_a_run(tmp_path: Path) -> None:

@@ -173,6 +173,8 @@ def render(report: dict[str, Any]) -> str:
                 "is right (extraction or retrieval), downstream when it is wrong too (synthesis or reasoning).", "",
                 table(rows, ["system", "level", "studies", "system_correct", "oracle_correct", "upstream",
                              "downstream"]), ""]
+        if att.get("not_attributed"):
+            out += ["Not attributed (not this oracle's counterpart): " + ", ".join(att["not_attributed"]), ""]
     if report.get("intervals"):
         out += render_intervals(report["intervals"])
     if report.get("locate"):
