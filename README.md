@@ -90,6 +90,28 @@ source "$EV/in-job.env" && uv run webapp serve --port 8080
 ssh -L 8080:127.0.0.1:8080 <node>                    # from your machine (via the login node), then http://127.0.0.1:8080
 ```
 
+Or through the Webis gateway with `scripts/omen-tunnels` (service `harness-ui`: laptop 127.0.0.1:25173 → gateway
+127.0.0.1:24173 + offset → the compute end's 127.0.0.1:8080). **Troubleshooting** when the page does not open:
+
+- *Start order.* First the web app, then the compute end **on the node where `webapp serve` runs** (the `-R` hop
+  forwards to port 8080 of the machine it is started on, so a start on the login node reaches nothing):
+  `srun --jobid "$JOB" --overlap --pty bash -l`, then `scripts/omen-tunnels-external compute start harness-ui`
+  (alone it refuses when nothing listens on 127.0.0.1:8080 there, `--no-check` skips that; beside other services it only warns). Then on the laptop
+  `omen-tunnels-external laptop start harness-ui`, and open http://127.0.0.1:25173 (not another name: the app
+  answers only 127.0.0.1, localhost and ::1, `WEBAPP_ALLOWED_HOSTS`).
+- *Same offset on both ends.* Use `omen-tunnels-external` (gateway port 25173) on both, or `omen-tunnels`
+  (24173) on both. Each end prints its gateway port in its "Ready" lines and in `status`; they must match. A stale
+  copy on the laptop's PATH ignored the offset once (tests/RESULTS.md, T2): the wrapper now runs the
+  `omen-tunnels` beside it (install both together; a wrapper copied alone still uses PATH). A laptop hop already running other services refuses a new list: `stop`, then
+  start all services together.
+- *Three checks.* (1) On the node: `curl -s http://127.0.0.1:8080/api/health` (or `omen-tunnels compute check`)
+  answers, so the web app runs there on 8080 and nothing else holds the port. (2) Both ends' `status` say `up` with
+  the same gateway port; "Cannot start compute hop; listener port(s): 25173 on gateway" means another session
+  holds that port on the shared gateway. (3) On the laptop: `omen-tunnels-external laptop check` GETs
+  http://127.0.0.1:25173/ and `/api/health` (5 s) and prints the status, the guard's 400 message, "connection
+  refused" (laptop hop down) or "closed without an answer" (laptop hop up, but the compute end is down, on
+  another node or on another gateway port).
+
 Offline, with no model (template corpora, regex-only runs, scores, the cards and freeze work; model jobs fail
 or record failed calls): `uv run python -m webapp.tests.evidence_world /tmp/ev-world`, then
 `EV=/tmp/ev-world uv run webapp serve`. The directories can be set apart (`CORPORA`, `EV_RUNS`, `SCORES`,
