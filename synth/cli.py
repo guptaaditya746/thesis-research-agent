@@ -55,7 +55,8 @@ def make_renderer(args: argparse.Namespace, out: Path):
         cache = args.cache or out / ".synth-cache" / "llm.jsonl"
         renderer = LlmRenderer(openai_model(args.model), cache, attempts=args.attempts,
                                verify_model=openai_model(args.verify_model) if args.verify_model else None,
-                               concurrency=args.concurrency, statements=args.statements)
+                               concurrency=args.concurrency, statements=args.statements,
+                               assembly=args.assembly or "freeform")
     return renderer
 
 
@@ -66,6 +67,9 @@ def add_renderer_options(p: argparse.ArgumentParser, default: str | None = "temp
     p.add_argument("--verify-model", default=None, help="LiteLLM alias for the blind re-extraction check")
     p.add_argument("--attempts", type=int, default=3)
     p.add_argument("--concurrency", type=int, default=4)
+    p.add_argument("--assembly", choices=("freeform", "protected"), default=None,
+                   help="llm rendering: protected uses code for facts and layout, models for context prose; "
+                        "default freeform for build, recorded mode for variant")
     p.add_argument("--statements", action=argparse.BooleanOptionalAction, default=statements,
                    help="llm renderer: write and check each prose Results sentence before the paper (build: "
                         "default on; variant: default the base corpus's recorded mode, off if it records none)")
@@ -105,6 +109,8 @@ def cmd_variant(args: argparse.Namespace) -> int:
     from synth import variant
     meta_file = args.corpus / "corpus.json"
     meta = json.loads(meta_file.read_text(encoding="utf-8")) if meta_file.is_file() else {}
+    if args.assembly is None:
+        args.assembly = (meta.get("models") or {}).get("assembly", "freeform")
     if args.renderer is None or args.statements is None:
         if args.renderer is None:        # the base corpus's renderer, unless asked otherwise
             args.renderer = meta["renderer"]

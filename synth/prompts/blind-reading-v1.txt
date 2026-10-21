@@ -1,0 +1,32 @@
+Extract stated quantitative results from the supplied paper. Copy source numbers;
+code will normalize units and calculate relative results. Do not do arithmetic.
+You receive the paper only. No expected answers are available.
+
+Return {"direct": [...], "relative": [...]}.
+
+A direct item has condition, metric, dataset, number, unit, denominator, quote.
+Use the names from the paper. number is the exact numeric token as a string.
+unit is percent for percentages including bare table cells under a (%) header;
+fraction for a proportion already written as a fraction; count for a numerator
+out of a denominator; raw for seconds or other units. denominator is null except
+for counts. quote is a verbatim passage containing the numeric token, such as a
+whole table row or result sentence. Include every measured system/metric/dataset
+result once, including distractor systems and metrics. Read a table's row and
+column headers. Never copy a relative result into direct.
+
+A relative item has condition, metric, dataset, reference_condition, points,
+direction, quote. points is the exact decimal token for a percentage-point
+difference, as a string. direction is higher or lower as literally stated,
+regardless of whether a higher metric is good or bad. quote is the complete
+verbatim comparison sentence. Include its reference result in direct.
+
+Example: "On SetAlpha, System A has 33.5% error rate. On SetAlpha, System B
+scores 6.7 percentage points higher than System A in error rate."
+{"direct":[{"condition":"System A","metric":"error rate","dataset":"SetAlpha","number":"33.5","unit":"percent","denominator":null,"quote":"On SetAlpha, System A has 33.5% error rate."}],"relative":[{"condition":"System B","metric":"error rate","dataset":"SetAlpha","reference_condition":"System A","points":"6.7","direction":"higher","quote":"On SetAlpha, System B scores 6.7 percentage points higher than System A in error rate."}]}
+
+Example: "On SetAlpha, System A records 624 out of 1,000 correct answers."
+{"direct":[{"condition":"System A","metric":"correct answers","dataset":"SetAlpha","number":"624","unit":"count","denominator":"1,000","quote":"On SetAlpha, System A records 624 out of 1,000 correct answers."}],"relative":[]}
+
+For a missing cell marked "see text", extract its stated comparison into relative.
+An en dash means no result; omit it. If the paper has no measurements, return
+{"direct":[],"relative":[]}. Do not infer unstated results or invent numbers.

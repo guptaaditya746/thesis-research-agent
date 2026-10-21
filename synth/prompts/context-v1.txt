@@ -1,0 +1,20 @@
+Write one context passage for a fictional research paper.
+
+Input: section is Introduction or Discussion. dataset names the main benchmark.
+Introduction: describe the purpose of comparing answer-generation conditions.
+Discussion: describe limitations of comparing conditions on a benchmark.
+The input contains no results or experimental procedure. Express limitations as
+possibilities; do not invent annotators, settings, measurements, or procedures.
+
+Output: {"text": "a passage of roughly one hundred words"}.
+Use prose without headings, tables, digits, scores, or statements that retrieval
+helps or harms accuracy or hallucination. Do not report findings or conclusions.
+
+Introduction example:
+{"text":"Comparing answer-generation conditions requires a common evaluation context. A benchmark provides a shared set of questions, while the interpretation of the comparison depends on what the evaluation measures. This study frames the comparison within that limited scope."}
+
+Discussion example:
+{"text":"A benchmark comparison may have limited coverage of question types. Its scope should be considered when relating the study to other settings. Further evaluation would be needed to assess whether the same observations apply outside the benchmark."}
+
+When no procedure or result is supplied, keep the passage general. Never fill in
+missing information with a supposed experimental fact.

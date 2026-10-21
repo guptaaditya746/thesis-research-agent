@@ -14,6 +14,7 @@ without it the calls are exactly those of render.txt.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import sys
 from collections.abc import Sequence
@@ -26,6 +27,8 @@ from pydantic_ai.models import Model
 from agent import anchor
 import modelcall
 from synth import levelcheck, statements as statements_module
+from synth import protected
+from synth import blind_reading
 from synth.corpus import Rendered
 from synth.fidelity import BlindExtraction, Check, PaperFidelity, blind_check, check_paper
 from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
@@ -170,7 +173,15 @@ class LlmRenderer:
     name = "llm"
 
     def __init__(self, model: Model, cache: Path | str, *, attempts: int = 3, verify_model: Model | None = None,
-                 concurrency: int = 4, max_tokens: int = 6000, statements: bool = True) -> None:
+                 concurrency: int = 4, max_tokens: int = 6000, statements: bool = True,
+                 assembly: str = "freeform") -> None:
+        if assembly not in ("freeform", "protected"):
+            raise ValueError(f"Unknown assembly mode: {assembly}")
+        if attempts < 1:
+            raise ValueError("attempts must be positive")
+        self.assembly = assembly
+        if assembly == "protected":
+            statements = False
         self.model, self.verify_model, self.statements = model, verify_model, statements
         self.cache = modelcall.JsonlCache(cache)
         self.attempts, self.concurrency, self.max_tokens = attempts, concurrency, max_tokens
@@ -179,29 +190,106 @@ class LlmRenderer:
     def models(self) -> dict[str, Any]:
         """Model identities, and the pipeline: `statements` on or off and the paper prompt file it uses (a
         corpus.json without these keys predates the statement stage: off, render.txt)."""
-        return {"renderer": modelcall.model_identity([self.model]),
+        metadata = {"renderer": modelcall.model_identity([self.model]),
                 "verifier": modelcall.model_identity([self.verify_model]) if self.verify_model else None,
                 "served": sorted(self.served), "statements": self.statements,
                 "paper_prompt": "render-v2.txt" if self.statements else "render.txt"}
+        if self.assembly == "protected":
+            metadata.update(assembly="protected", paper_prompt="context-v1.txt",
+                            factual_renderer="template-v1",
+                            context_prompt_sha256=modelcall.prompt_sha256(
+                                modelcall.load_prompt(PROMPT_DIR / "context-v1.txt").text, protected.ProseReply),
+                            assembly_sha256=hashlib.sha256(
+                                Path(protected.__file__).read_bytes()
+                                + (Path(__file__).parent / "render_template.py").read_bytes()).hexdigest(),
+                            call_settings={"attempts": self.attempts, "max_tokens": self.max_tokens,
+                                           "concurrency": self.concurrency})
+            metadata["blind_prompt"] = "blind-reading-v1.txt"
+            metadata["blind_prompt_sha256"] = modelcall.prompt_sha256(
+                modelcall.load_prompt(PROMPT_DIR / "blind-reading-v1.txt").text, blind_reading.ReadingReply)
+        return metadata
 
     async def _call(self, instructions: str, prompt: str, output: type[BaseModel], model: Model, seed: int) -> dict:
         key = {"prompt_sha256": modelcall.prompt_sha256(instructions, output),
                "model": modelcall.model_identity([model]), "prompt": prompt, "seed": seed}
+        if self.assembly == "protected":
+            key["max_tokens"] = self.max_tokens
         answer = await modelcall.ask(modelcall.Prompt.inline(instructions, output), prompt, model=model,
                                      settings=modelcall.CallSettings(seed=seed, max_tokens=self.max_tokens),
                                      cache=self.cache, key=key)
         self.served.add(answer.served_model or answer.model)
         return answer.output.model_dump()
 
-    async def _blind(self, text: str, seed: int) -> BlindExtraction:
+    async def _blind(self, text: str, seed: int, history: list[dict] | None = None) -> BlindExtraction:
+        if self.assembly == "protected":
+            instructions = modelcall.load_prompt(PROMPT_DIR / "blind-reading-v1.txt").text
+            prompt = "Paper:\n\n" + text
+            for attempt in range(1, self.attempts + 1):
+                out = None
+                try:
+                    out = await self._call(instructions, prompt, blind_reading.ReadingReply,
+                                           self.verify_model, seed + attempt - 1)
+                    return blind_reading.resolve(text, blind_reading.ReadingReply.model_validate(out))
+                except (ValueError, anchor.AnchorError, modelcall.ModelCallError) as exc:
+                    reason = modelcall.redact(str(exc))[:1000]
+                    if history is not None:
+                        history.append({"stage": "blind_reading", "attempt": attempt, "rejected": out,
+                                        "failed": [{"name": "source_reading", "detail": reason}]})
+                    prompt = "Paper:\n\n" + text + "\n\nRepair the rejected source reading:\n" + json.dumps(
+                        {"rejected": out, "failed_checks": [reason]}, ensure_ascii=False)
+            raise modelcall.ModelCallError(reason, None, [])
         out = await self._call(BLIND_INSTRUCTIONS, "Paper:\n\n" + text, BlindExtraction, self.verify_model, seed)
         return BlindExtraction.model_validate(out)
+
+    async def _render_protected(self, plan: Plan, seed: int, avoid_title: str | None) -> Rendered:
+        instructions = modelcall.load_prompt(PROMPT_DIR / "context-v1.txt").text
+        prose, history, prose_checks = {}, [], []
+        rounds = 1
+        for section in ("Introduction", "Discussion"):
+            task = {"section": section, "dataset": plan.datasets[0]}
+            accepted = False
+            for attempt in range(1, self.attempts + 1):
+                rounds = max(rounds, attempt)
+                reply = ""
+                try:
+                    reply = (await self._call(instructions, json.dumps(task, ensure_ascii=False),
+                                             protected.ProseReply, self.model, seed + attempt - 1))["text"]
+                    errors = protected.problems(reply, plan)
+                except modelcall.ModelCallError as exc:
+                    errors = [exc.reason]
+                if not errors:
+                    prose[section] = reply
+                    accepted = True
+                    break
+                history.append({"section": section, "attempt": attempt, "draft": reply,
+                                "failed": [{"name": "context_prose", "detail": "; ".join(errors)}]})
+                task.update(rejected=reply, failed_checks=errors)
+            prose_checks.append(Check(f"context_{section.lower()}", accepted,
+                                      "" if accepted else "; ".join(errors)))
+        text = protected.assemble(plan, seed, prose, avoid_title)
+        ps, decoys, errors = locate(text, plan)
+        checks = prose_checks + [Check("required_strings", not errors, "; ".join(errors))]
+        checks += check_paper(text, plan, ps, decoys)
+        if avoid_title is not None:
+            checks.append(Check("title_differs", title_of(text) != avoid_title))
+        if self.verify_model is not None and all(c.ok for c in checks):
+            try:
+                checks += await blind_check(text, plan, lambda t: self._blind(t, seed, history))
+            except modelcall.ModelCallError as exc:
+                checks.append(Check("model_call", False, exc.reason))
+        ok = all(c.ok for c in checks)
+        print(f"synth {plan.paper}/{plan.level}: protected {'passed' if ok else 'failed'}",
+              file=sys.stderr, flush=True)
+        return Rendered(plan.study, plan, text, ps, decoys,
+                        PaperFidelity(plan.paper, ok, checks, rounds, history))
 
     async def render_one(self, study: Study, level: str, seed: int, avoid_title: str | None = None) -> Rendered:
         """`avoid_title`: for a duplicate, the title its original got at this level (`title_differs` check)."""
         if not study.relevant:          # nothing to place: the fixed template writes it, no model call
             return render_with_template(study, level, seed)
         plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
+        if self.assembly == "protected":
+            return await self._render_protected(plan, seed, avoid_title)
         instructions, accepted, record = INSTRUCTIONS, {}, None
         planned = plan_json(plan, avoid_title)
         if self.statements:
