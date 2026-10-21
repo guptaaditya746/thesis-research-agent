@@ -54,7 +54,7 @@ def test_manifest_has_only_allowed_keys_and_true_hashes(built: Path) -> None:
     for lv in ALL:
         d = built / f"t-{lv}"
         m = load(d, "manifest.json")
-        assert set(m) == {"corpus_id", "papers", "selection"}   # selection: fidelity counters (C3), no truth
+        assert set(m) == {"corpus_id", "papers"}
         assert lv not in m["corpus_id"] and m["corpus_id"].startswith("t-")
         for p in m["papers"]:
             assert set(p) == {"id", "file", "sha256"}

@@ -131,7 +131,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
     """Write one corpus; `papers` maps every study id to its rendering for this corpus. The protocol whose
     synthesis block made the ground truth is recorded (id and sha256), never its file. `extra` goes into
     corpus.json as it is (`variant`, F3); `selection` (the fidelity counters of `selection_of`) goes into
-    manifest.json. The set-level flags are found over the studies actually written
+    corpus.json (never manifest.json: the engine reads that). The set-level flags are found over the studies actually written
     (after the fidelity exclusions), as the engine finds them over the papers it reads."""
     prepare(directory)
     spec = protocol.synthesis
@@ -142,8 +142,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
         (directory / "papers" / f"{s.study_id}.md").write_bytes(data)
         manifest.append({"id": s.study_id, "file": f"papers/{s.study_id}.md", "sha256": hashlib.sha256(data).hexdigest()})
     cid = corpus_id(name, manifest)
-    (directory / "manifest.json").write_bytes(dump({"corpus_id": cid, "papers": manifest,
-                                                      **({"selection": selection} if selection else {})}))
+    (directory / "manifest.json").write_bytes(dump({"corpus_id": cid, "papers": manifest}))
     (directory / "corpus.json").write_bytes(dump({
         "corpus_id": cid, "seed": seed,
         "generator": {"name": GENERATOR, "version": GENERATOR_VERSION, "code_sha256": code_sha256()},
@@ -152,6 +151,7 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
         "papers": [{"id": s.study_id, "study_id": s.study_id, "level": papers[s.study_id].plan.level} for s in kept],
         "models": renderer.models(),
         "settings": settings,
+        **({"selection": selection} if selection else {}),
         **(extra or {}),
     }))
     placements = sorted((p for s in kept for p in papers[s.study_id].placements),

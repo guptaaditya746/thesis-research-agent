@@ -93,8 +93,9 @@ def test_build_records_selection_counters(tmp_path: Path) -> None:
     assert sel["per_level"]["explicit"]["mean_attempts"] >= 1
     assert sel["excluded"] == {"S001": ["explicit"]}
     for lv in ("explicit", "mixed"):
-        manifest = json.loads((tmp_path / f"half-{lv}" / "manifest.json").read_text())
-        assert manifest["selection"] == sel
+        directory = tmp_path / f"half-{lv}"
+        assert json.loads((directory / "corpus.json").read_text())["selection"] == sel
+        assert "selection" not in json.loads((directory / "manifest.json").read_text())
 
 
 def test_cli_min_retained_floor(tmp_path: Path, monkeypatch, capsys) -> None:
@@ -103,6 +104,7 @@ def test_cli_min_retained_floor(tmp_path: Path, monkeypatch, capsys) -> None:
     assert cli.main([*base, "--out", str(tmp_path / "a"), "--min-retained", "0.75"]) == 1
     assert "ERROR: retained 1/2 below --min-retained 0.75" in capsys.readouterr().err
     assert cli.main([*base, "--out", str(tmp_path / "b")]) == 0
+    assert cli.main([*base, "--out", str(tmp_path / "c"), "--min-retained", "0.5"]) == 0   # 1/2 is not below 0.5
 
 
 @pytest.mark.parametrize("bad", [["build", "--name", "x", "--seed", "1", "--levels", "easy"],

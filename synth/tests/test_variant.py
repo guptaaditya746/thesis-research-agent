@@ -168,3 +168,10 @@ def test_variant_cli_keeps_the_base_statement_mode(base: Path, tmp_path: Path, m
     assert asked == ([True, False] if statements else [False])
     rec = next(r for r in load(tmp_path / "cf", "fidelity.json")["papers"] if r["id"] == study)
     assert ("statements" in rec) == statements
+
+
+def test_variant_keeps_the_base_selection(base: Path) -> None:
+    study = load(base, "ground_truth.json")["answer"]["supporting"][0]
+    out = Path(variant.make(corpus_dir=base, study_id=study, direction="neutral", renderer=TemplateRenderer())["out"])
+    assert load(out, "corpus.json")["selection"] == load(base, "corpus.json")["selection"]
+    assert "selection" not in load(out, "manifest.json")
