@@ -307,7 +307,8 @@ def test_compare_orders_corpora_by_level(tmp_path: Path) -> None:
     assert rows[0]["accuracy_answered"] == 1.0 and "accuracy_answered" in rep.render_compare(rep.compare(reports))
     intervals = rep.compare(reports)["intervals"]
     assert [(r["level"], r["system"]) for r in intervals] == [("explicit", "evidence-engine"), ("paraphrased", "evidence-engine")]
-    assert intervals[0]["extraction_f1"] == {"point": 1.0, "low": None, "high": None, "method": None}
+    assert intervals[0]["extraction_f1"] == {"point": 1.0, "low": None, "high": None, "method": None,
+                                             "n_rows": 2, "unit": "row", "n_clusters": None}
     assert intervals[0]["engine_minus_system"] is None
     text = rep.render_compare(rep.compare(reports))
     assert "## Intervals" in text and "1.000 [n/a]" in text
