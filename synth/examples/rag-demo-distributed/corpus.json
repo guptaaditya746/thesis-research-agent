@@ -4,7 +4,7 @@
   "generator": {
     "name": "synth",
     "version": "2",
-    "code_sha256": "f9f24c4b646a26bf6fe7bebae350de00b298544c7f92fb31611f9a8214cf4a02"
+    "code_sha256": "ba46a7ad7a4b69a6279b4880fccf6683464aa6bac217ac32ee0d2de10b6703ba"
   },
   "renderer": "template",
   "level": "distributed",
@@ -65,5 +65,38 @@
     "missing": 0,
     "outliers": 0,
     "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 6,
+    "records": 6,
+    "retained_studies": 6,
+    "per_level": {
+      "complex": {
+        "passed": 6,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 6,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 6,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "explicit": {
+        "passed": 6,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 6,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
   }
 }
