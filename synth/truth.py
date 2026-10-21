@@ -533,7 +533,8 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, *, duplicates: int
                outliers: int = 0, irrelevant: int = 0) -> list[Study]:
     """The benchmark knobs applied to a plain study set, each from its own stream (`synth:<seed>:<knob>`):
     outliers among the supporting studies, duplicates of any study (ids after the set), missing among the
-    studies that are neither outliers nor duplicated (control, treatment, control, ... in turn), then
+    studies that are neither outliers nor duplicated nor --hard studies with further experiments (control,
+    treatment, control, ... in turn), then
     irrelevant papers (ids after the duplicates; survey, other, survey, ...). The result is `flagged`,
     and the planted outliers and duplicates must be exactly what the rules find; otherwise (too few
     studies, a natural large effect next to a planted one, a protocol with duplicate detection off) the
@@ -565,9 +566,12 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, *, duplicates: int
         planted_duplicates[studies[-1].study_id] = original.study_id
     m_rng = random.Random(f"synth:{seed}:missing")
     protected = set(planted_outliers) | set(planted_duplicates.values())
-    eligible = [s.study_id for s in studies[:n] if s.study_id not in protected]
+    # a --hard study with further experiments keeps a complete subset or ablation comparison when its main side
+    # is dropped (`without` drops the main experiment's), so its undetermined gold would be arguable: not eligible
+    eligible = [s.study_id for s in studies[:n] if s.study_id not in protected and len(s.experiments) <= 1]
     if missing > len(eligible):
-        raise SystemExit(f"--missing {missing}: only {len(eligible)} studies are neither outliers nor duplicated")
+        raise SystemExit(f"--missing {missing}: only {len(eligible)} studies are neither outliers nor duplicated "
+                         "nor --hard studies with further experiments")
     for k, sid in enumerate(sorted(m_rng.sample(eligible, missing))):
         i = next(i for i, s in enumerate(studies) if s.study_id == sid)
         studies[i] = without(studies[i], MISSING_SIDES[k % len(MISSING_SIDES)])

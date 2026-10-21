@@ -144,6 +144,18 @@ def test_hard_studies_have_more_experiments_and_ablations() -> None:
         assert all(abs(m.value - rel) > truth.DECOY_GAP for m in s.measurements[len(p.measurements):])
 
 
+@pytest.mark.parametrize("seed, n, missing", [(1, 30, 3), (1, 100, 6), (2, 40, 6), (3, 40, 6)])
+def test_hard_missing_never_leaves_a_complete_comparison_in_another_experiment(seed: int, n: int, missing: int) -> None:
+    """An undetermined (missing) study states no comparison anywhere: --missing picks only studies without
+    further experiments, so no subset or ablation pair can stand in for the main one (review I4: S021)."""
+    studies = truth.generate(seed, n, hard=True, missing=missing)
+    gaps = [s for s in studies if s.missing]
+    assert len(gaps) == missing
+    for s in gaps:
+        assert not s.effect.determined and len(s.experiments) == 1, s.study_id
+        assert {m.experiment for m in s.measurements} == {s.main_experiment}, s.study_id
+
+
 def test_hard_with_every_knob() -> None:
     studies = truth.generate(1, 30, hard=True, duplicates=3, missing=3, outliers=2, irrelevant=2)
     for s in studies:
