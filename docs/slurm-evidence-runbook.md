@@ -717,7 +717,7 @@ accuracy, cost per call and stability.
 
 ## 8. Fidelity hand check (**USER**)
 
-The review sheet was drawn on the laptop (`synth sample --n 30 --seed 1`) and is committed with the corpus:
+The review sheet was drawn on the laptop (`synth sample --n 20 --seed 1`: all 20 papers, 483 rows, the 142 priority-1 rows first in each paper) and is committed with the corpus:
 `tests/EV2/corpora/rag-claude-s1-mixed/review/review-s1.md` and `.csv`. The hand check is the user's, done on the
 laptop, and the **filled sheet is a USER deliverable**. In the CSV, per row, the columns `present`,
 `states_truth` and `unambiguous` take `yes` / `y` / `no` / `n`; a row counts only when all three are filled.

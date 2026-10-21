@@ -66,7 +66,7 @@ The build waits on the pending requests. While it runs, subagents answer them in
 The re-tries were all `level_distributed`, the distance check between the code definitions and the table. Each
 one passed after a single repair.
 
-A human review sheet (30 papers, step 8 of the runbook) is in
+A human review sheet (all 20 papers of the mixed corpus, 483 rows, 142 of them priority 1: numbers and claims; step 8 of the runbook) is in
 `tests/EV2/corpora/rag-claude-s1-mixed/review/`.
 
 One exchange incident: a verifier reply was read while its file was still empty. It was set aside as "not JSON", and

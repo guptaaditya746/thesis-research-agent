@@ -52,3 +52,16 @@ def test_cli_review_prints_the_summary(tmp_path: Path, capsys: pytest.CaptureFix
 def test_yes_totals_count_fully_reviewed_rows_only(tmp_path: Path) -> None:
     got = review.summarise(sheet(tmp_path / "r.csv", [row("S001.m1"), row("S001.m2", "yes", "", "")]))
     assert (got["reviewed"], got["present"]) == (1, 1)
+
+
+def test_a_sheet_saved_by_excel_is_read(tmp_path: Path) -> None:
+    """Excel's "CSV UTF-8" adds a byte-order mark; a ';' list separator and a plain-ANSI save are read too."""
+    plain = sheet(tmp_path / "r.csv", [row("S001.m1", states="no", notes="Zahl falsch: 0,5 – nicht 0.5")])
+    text = plain.read_text(encoding="utf-8")
+    (tmp_path / "bom.csv").write_bytes(b"\xef\xbb\xbf" + text.encode("utf-8"))
+    (tmp_path / "semi.csv").write_text(text.replace(",", ";").replace("0;5", "0,5"), encoding="utf-8")
+    (tmp_path / "ansi.csv").write_bytes(text.encode("cp1252"))
+    for name in ("bom.csv", "semi.csv", "ansi.csv"):
+        got = review.summarise(tmp_path / name)
+        assert (got["rows"], got["reviewed"], got["states_truth"]) == (1, 1, 0), name
+        assert got["problems"][0]["notes"] == "Zahl falsch: 0,5 – nicht 0.5", name

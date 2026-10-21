@@ -43,7 +43,7 @@ def test_cli_build_and_sample(tmp_path: Path, capsys: pytest.CaptureFixture[str]
     assert sorted(p.name for p in tmp_path.iterdir()) == ["c-complex", "c-explicit", "c-mixed"]
     assert cli.main(["sample", "--corpus", str(tmp_path / "c-mixed"), "--n", "2", "--seed", "1"]) == 0
     md = (tmp_path / "c-mixed" / "review" / "review-s1.md").read_text(encoding="utf-8")
-    with (tmp_path / "c-mixed" / "review" / "review-s1.csv").open(encoding="utf-8", newline="") as fh:
+    with (tmp_path / "c-mixed" / "review" / "review-s1.csv").open(encoding="utf-8-sig", newline="") as fh:
         rows = list(csv.DictReader(fh))
     papers = sorted({r["paper"] for r in rows})
     assert len(papers) == 2 and all(f"## {p}" in md for p in papers) and "[ ]" in md
@@ -117,3 +117,23 @@ def test_cli_rejects_bad_arguments(bad: list[str]) -> None:
 def test_sample_on_the_committed_example(tmp_path: Path) -> None:
     md, cs = write_sample(EXAMPLES / "rag-demo-mixed", 3, 2, tmp_path)
     assert md.exists() and cs.read_bytes().count(b"\n") > 3
+
+
+def test_sample_sheet_puts_numbers_and_claims_first_and_names_the_file(tmp_path: Path) -> None:
+    """Per paper the priority-1 rows (measurements, author claims) come first; every row names the paper file,
+    and the check columns sit right after the text so the sheet can be filled left to right."""
+    from synth.review import SHEET_COLUMNS
+    _, cs = write_sample(EXAMPLES / "rag-demo-mixed", 2, 1, tmp_path)
+    with cs.open(encoding="utf-8-sig", newline="") as fh:
+        reader = csv.DictReader(fh)
+        assert tuple(reader.fieldnames or ()) == SHEET_COLUMNS
+        rows = list(reader)
+    assert SHEET_COLUMNS[:10] == ("paper", "priority", "kind", "fact", "truth", "exact", "context",
+                                  "present", "states_truth", "unambiguous")
+    for paper in {r["paper"] for r in rows}:
+        mine = [r for r in rows if r["paper"] == paper]
+        priorities = [r["priority"] for r in mine]
+        assert priorities == sorted(priorities) and set(priorities) == {"1", "2"}
+        assert {r["kind"] for r in mine if r["priority"] == "1"} <= {"measurement", "author_claim"}
+        assert all(r["file"] == f"papers/{paper}.md" for r in mine)
+    assert cs.read_bytes().startswith(b"\xef\xbb\xbf")      # Excel opens it as UTF-8
