@@ -197,7 +197,8 @@ def _apply_cascade(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) ->
 
 def _read_locate(p: dict[str, Any], f: Frame) -> dict[str, Any]:
     loc = p.get("locate") or {}
-    return {"strategy": loc.get("strategy", "exhaustive"), "params": dict(loc.get("params") or {})}
+    strategy = loc.get("strategy", "exhaustive")
+    return {"strategy": strategy, "params": {} if strategy == "exhaustive" else dict(loc.get("params") or {})}   # exhaustive reads none
 
 
 def _apply_locate(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:

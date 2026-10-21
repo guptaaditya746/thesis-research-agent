@@ -41,6 +41,7 @@ from .common import CRITIC, DRAFT, FRAME, ask, fresh, model_for, need, now, prom
 from .frame import Frame
 
 PROMPT = "critic-v1.md"
+ADVISORY = ("locate_params_used",)      # reported, but a failure does not stop the draft (severity: docs)
 LLM_CHECKS = ("ambiguous_roles", "missing_comparator", "metric_direction", "scope")
 
 
@@ -213,6 +214,12 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
                           skipped if collisions is None else
                           f"surfaces claimed by two metrics: {collisions}" if collisions else
                           "no frame name is claimed by two metrics"))
+
+    loc = (raw.get("locate") if isinstance(raw, dict) else None) or {}
+    ignored = sorted(loc.get("params") or {}) if loc.get("strategy", "exhaustive") == "exhaustive" else []
+    out.append(_check("locate_params_used", not ignored,
+                      f"the exhaustive locate ignores its params {ignored}" if ignored else
+                      "the locate params belong to its strategy"))
     return out
 
 
@@ -240,5 +247,5 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
                        refresh=refresh)
     llm = [{"id": c, "kind": "llm", "ok": getattr(reply, c).ok, "message": getattr(reply, c).message} for c in LLM_CHECKS]
     return write_json(directory / CRITIC, {"draft_sha256": sha(draft_path), "frame_sha256": sha(frame_path),
-                                           "ok": all(c["ok"] for c in found), "checks": found + llm,
+                                           "ok": all(c["ok"] for c in found if c["id"] not in ADVISORY), "checks": found + llm,
                                            "call": call, "created": now()})

@@ -29,8 +29,11 @@ def _strip_descriptions(schema: Any) -> Any:
 
 def comparable(p: Protocol) -> dict[str, Any]:
     """The parsed protocol without its id and revision, free text (descriptions, the screening question) and
-    bm25 query lists (checked separately, as a superset); screen terms as a set."""
+    bm25 query lists (checked separately, as a superset); screen terms as a set; the params an exhaustive locate
+    ignores."""
     d = p.model_dump(mode="json", exclude={"id", "revision"})
+    if d["locate"]["strategy"] == "exhaustive":
+        d["locate"]["params"] = {}
     if d.get("screen"):
         d["screen"]["question"] = None
         d["screen"]["terms"] = sorted(d["screen"]["terms"])
