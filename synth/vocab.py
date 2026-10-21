@@ -240,3 +240,14 @@ IRRELEVANT = {
         ),
     },
 }
+
+# Experiments of a `synth build --hard` study (ours; Tim M2 section 6-7): the main comparison (the one the
+# effect is computed from), a further question subset (control and treatment again, main dataset only) and
+# an ablation (the treatment against "<treatment> without <component>", role other). Written in the complex
+# table's Experiment column and in prose; no digits, no dataset name, no claim wording.
+MAIN_EXPERIMENT = "main comparison"
+SUBSET_EXPERIMENTS = ("long questions", "multi-hop questions", "rare-entity questions", "time-sensitive questions",
+                      "adversarial questions")
+ABLATION_EXPERIMENT = "ablation"
+ABLATED = ("reranking", "query expansion", "passage deduplication", "source attribution", "context compression")
+ABLATION_DESCRIPTION = "is identical to the full system except that its {component} step is removed"

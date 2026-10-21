@@ -266,3 +266,80 @@ def test_distributed_abbreviation_defined_far_from_the_table() -> None:
 def test_complex_definition_says_one_table() -> None:
     from synth.levels import DEFINITIONS
     assert "one table per dataset" not in DEFINITIONS["complex"] and "Dataset column" in DEFINITIONS["complex"]
+
+
+# --- --hard: every experiment in one complex table with an Experiment column --------------------------------
+
+def hard_papers(level: str, seeds=range(1, 4), n: int = 30, **knobs):
+    for seed in seeds:
+        for s in truth.generate(seed, n, hard=True, **knobs):
+            yield s, render_study(s, level, seed)
+
+
+@pytest.mark.parametrize("level", LEVELS)
+def test_hard_template_papers_pass_every_check(level: str) -> None:
+    for _, r in hard_papers(level):
+        bad = [c for c in r.fidelity.checks if not c.ok]
+        assert not bad, (r.study.study_id, bad)
+    for _, r in hard_papers(level, range(1, 2), 30, duplicates=3, missing=3, outliers=2, irrelevant=2):
+        bad = [c for c in r.fidelity.checks if not c.ok]
+        assert not bad, (r.study.study_id, bad)
+
+
+def test_hard_complex_renders_every_experiment_in_one_table() -> None:
+    multi = 0
+    for s, r in hard_papers("complex"):
+        table = [ln for ln in r.text.split("\n") if ln.startswith("|")]
+        assert r.text.count("\n|---") == 1 and table[0].startswith("| System | Experiment | Dataset |")
+        assert len(r.plan.measurements) == len(s.measurements)
+        assert {p.fact for p in r.placements if p.role == "value"} == {m.id for m in s.measurements}
+        for e in s.experiments:
+            for d in e.datasets:
+                assert sum(f"| {e.name} | {d} |" in ln for ln in table) == len(e.conditions)
+        rel = [p for p in r.placements if p.fmt == "relative"]
+        assert [p.fact for p in rel] == [s.effect.treatment]
+        multi += len(s.experiments) > 1
+    assert multi >= 5
+
+
+@pytest.mark.parametrize("level", [lv for lv in LEVELS if lv != "complex"])
+def test_hard_other_levels_show_only_the_main_experiment(level: str) -> None:
+    for s, r in hard_papers(level, range(1, 2)):
+        assert {m.experiment for m in r.plan.measurements} <= {s.main_experiment}
+        assert set(r.plan.conditions) == set(s.main_conditions) and not r.plan.experiments
+
+
+def test_cli_hard_builds_are_deterministic_and_recorded(tmp_path) -> None:
+    import json
+    from synth import cli
+    args = ["build", "--name", "h", "--seed", "1", "--studies", "100", "--hard", "--levels", "complex"]
+    assert cli.main(args + ["--out", str(tmp_path / "a")]) == 0
+    assert cli.main(args + ["--out", str(tmp_path / "b")]) == 0
+    a, b = (tmp_path / "a" / "h-complex" / "corpus.json"), (tmp_path / "b" / "h-complex" / "corpus.json")
+    assert a.read_bytes() == b.read_bytes()
+    meta = json.loads(a.read_text(encoding="utf-8"))
+    assert meta["settings"]["hard"] is True and meta["selection"]["retained_studies"] == 100
+    gt = json.loads((tmp_path / "a" / "h-complex" / "ground_truth.json").read_text(encoding="utf-8"))
+    multi = [s for s in gt["studies"] if len(s["experiments"]) > 1]
+    assert multi and all(s["experiments"][0]["synthesis"] and not any(e["synthesis"] for e in s["experiments"][1:])
+                         for s in multi)
+    assert all("experiment" in m for s in multi for m in s["measurements"])
+
+
+def test_cli_hard_refuses_the_llm_renderer(tmp_path, capsys) -> None:
+    from synth import cli
+    assert cli.main(["build", "--name", "h", "--seed", "1", "--hard", "--renderer", "llm", "--out", str(tmp_path)]) == 2
+    assert "--hard" in capsys.readouterr().err and not any(tmp_path.iterdir())
+
+
+def test_variant_of_a_hard_corpus(tmp_path) -> None:
+    import json
+    from synth import cli
+    assert cli.main(["build", "--name", "h", "--seed", "1", "--studies", "12", "--hard", "--levels", "complex",
+                     "--out", str(tmp_path)]) == 0
+    base = tmp_path / "h-complex"
+    gt = json.loads((base / "ground_truth.json").read_text(encoding="utf-8"))
+    study = next(s for s in gt["studies"] if len(s["experiments"]) > 1 and s["effect"]["direction"] == "supports")
+    assert cli.main(["variant", "--corpus", str(base), "--study", study["study_id"], "--direction", "contradicts"]) == 0
+    assert cli.main(["variant", "--corpus", str(base), "--study", study["study_id"], "--direction", "neutral",
+                     "--renderer", "llm"]) == 2

@@ -62,7 +62,10 @@ def renderings(text: str, plan: Plan) -> list[tuple[str, str, int, int, bool]]:
                 if (alias not in codes or any(x <= a < y for x, y in tables)
                         or any(s <= ma and mb <= e for ma, mb in mains)):
                     out.append((fact, role, a, b, False))
-    return out
+    # A name inside another fact's longer main name (a --hard ablation, '<treatment> without <component>')
+    # is part of that rendering, not one of its own.
+    return [r for r in out if not any(f != r[0] and is_main and a <= r[2] and r[3] <= b and b - a > r[3] - r[2]
+                                      for f, _, a, b, is_main in out)]
 
 
 def _explicit(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
@@ -133,6 +136,14 @@ def _complex(text: str, plan: Plan, ps: list[Placement]) -> list[str]:
     if [p.fact for p in rel] != want:
         bad.append(f"expected relative values for {want}, got {[p.fact for p in rel]}")
     rows = [text[a:b] for a, b in table_lines(text)]
+    if plan.experiments:                # --hard: one row per experiment, dataset and condition
+        if not rows or not rows[0].startswith("| System | Experiment | Dataset |"):
+            bad.append("the table has no Experiment column")
+        for e in plan.experiments:
+            for dataset in e.datasets:
+                if sum(f"| {e.name} | {dataset} |" in r for r in rows) != len(e.conditions):
+                    bad.append(f"the table lacks rows for {e.name} on {dataset}")
+        return bad
     for dataset in plan.datasets:
         if sum(f"| {dataset} |" in r for r in rows) != len(plan.conditions):
             bad.append(f"the table lacks rows for {dataset}")

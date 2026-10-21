@@ -14,7 +14,7 @@ from synth.corpus import Rendered
 from synth.fidelity import PaperFidelity, check_paper
 from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
 from synth.text import Decoy, Doc, Placement, Seg
-from synth.truth import Study
+from synth.truth import Experiment, Study
 
 EXPLICIT = (
     "On {dataset}, the {cond} has {value} {metric}.",
@@ -65,6 +65,9 @@ def method(doc: Doc, plan: Plan, rng: random.Random) -> None:
                 f"{plan.datasets[1]}; each has 1,000 questions with reference answers.")
     else:
         doc.add(f"We evaluate on {plan.datasets[0]}, a benchmark of 1,000 questions with reference answers.")
+    if len(plan.experiments) > 1:          # --hard
+        doc.add(f" Besides the {plan.experiments[0].name} on both benchmarks, we report "
+                + " and ".join(f"the {e.name} experiment" for e in plan.experiments[1:]) + f" on {plan.datasets[0]}.")
     for c in plan.conditions:
         if plan.level == "distributed":
             doc.fill(" We include the {c}, which {d}; we denote it by {code}.", c=plan.cond(c.id),
@@ -105,24 +108,37 @@ def prose_results(doc: Doc, plan: Plan, rng: random.Random) -> None:
 
 def table(doc: Doc, plan: Plan, use_codes: bool) -> None:
     """One table; with several datasets, one row per dataset and condition (a single header, so every
-    cell's context is unique)."""
+    cell's context is unique); with --hard experiments, an Experiment column and one row per experiment,
+    dataset and condition."""
     several = len(plan.datasets) > 1
-    doc.add("| System |" + (" Dataset |" if several else ""))
+    doc.add("| System |" + (" Experiment |" if plan.experiments else "") + (" Dataset |" if several else ""))
     for k in plan.metrics:
         doc.fill(" {k} ({u}) |", k=plan.metric(k.id, k.abbr if use_codes else None), u=CELL[k.unit])
-    doc.add("\n|---|" + ("---|" if several else "") + "---:|" * len(plan.metrics) + "\n")
-    for dataset in plan.datasets:
-        for c in plan.conditions:
-            doc.fill("| {c} |", c=plan.code(c.id) if use_codes else plan.cond(c.id))
-            doc.add(f" {dataset} |" if several else "")
-            for k in plan.metrics:
-                m = plan.study.find(c.id, k.id, dataset)
-                if m is None:                   # a --missing measurement: the paper never states it
-                    doc.add(f" {MISSING_CELL} |")
-                    continue
-                v = plan.values[m.id]
-                doc.fill(" {v} |", v="see text" if v.fmt == "relative" else v)
-            doc.add("\n")
+    doc.add("\n|---|" + ("---|" if plan.experiments else "") + ("---|" if several else "")
+            + "---:|" * len(plan.metrics) + "\n")
+    if not plan.experiments:
+        for dataset in plan.datasets:
+            for c in plan.conditions:
+                row(doc, plan, use_codes, c.id, dataset, several)
+        return
+    for e in plan.experiments:
+        for dataset in e.datasets:
+            for cid in e.conditions:
+                row(doc, plan, use_codes, cid, dataset, several, e)
+
+
+def row(doc: Doc, plan: Plan, use_codes: bool, cid: str, dataset: str, several: bool,
+        experiment: Experiment | None = None) -> None:
+    doc.fill("| {c} |", c=plan.code(cid) if use_codes else plan.cond(cid))
+    doc.add((f" {experiment.name} |" if experiment else "") + (f" {dataset} |" if several else ""))
+    for k in plan.metrics:
+        m = plan.study.find(cid, k.id, dataset, experiment.id if experiment else None)
+        if m is None:                   # a --missing measurement: the paper never states it
+            doc.add(f" {MISSING_CELL} |")
+            continue
+        v = plan.values[m.id]
+        doc.fill(" {v} |", v="see text" if v.fmt == "relative" else v)
+    doc.add("\n")
 
 
 def results(doc: Doc, plan: Plan, rng: random.Random) -> None:
@@ -131,13 +147,18 @@ def results(doc: Doc, plan: Plan, rng: random.Random) -> None:
         prose_results(doc, plan, rng)
         return
     if plan.level == "complex":
-        doc.add(f"The table below reports the results on {plan.datasets[0]} and on {plan.datasets[1]}.\n\n")
+        if plan.experiments:                    # --hard
+            doc.add("The table below reports the results of every experiment, the "
+                    f"{plan.experiments[0].name} on {plan.datasets[0]} and on {plan.datasets[1]}.\n\n")
+        else:
+            doc.add(f"The table below reports the results on {plan.datasets[0]} and on {plan.datasets[1]}.\n\n")
         table(doc, plan, use_codes=False)
         doc.add("\n")
         base, rag = plan.study.conditions[0].id, plan.study.conditions[1].id
         rel = next((v for v in plan.values.values() if v.fmt == "relative"), None)
         if rel is not None:                     # absent when the control or the treatment value is missing
-            doc.fill("On {d}, the {r} scores {v} than the {b} in {k}.\n", d=plan.datasets[0], r=plan.cond(rag),
+            where = f"In the {plan.experiments[0].name} on {{d}}" if plan.experiments else "On {d}"
+            doc.fill(where + ", the {r} scores {v} than the {b} in {k}.\n", d=plan.datasets[0], r=plan.cond(rag),
                      k=plan.metric(plan.metrics[0].id), v=rel, b=plan.cond(base))
         return
     doc.add(f"The table below lists the results of all systems on {plan.datasets[0]}.\n\n")
