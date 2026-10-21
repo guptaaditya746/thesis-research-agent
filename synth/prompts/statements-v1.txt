@@ -1,0 +1,46 @@
+Task: write one Results sentence for each statement task. Each sentence reports one measured value of a fictional study. A benchmark later checks every sentence word for word, so the given strings must appear exactly as given.
+
+Input: a JSON object with "paper" and "tasks". Each task has:
+- "id": the task identifier; copy it into your reply.
+- "level": "explicit", "paraphrased" or "complex".
+- "condition": the name of the system that was measured.
+- "metric": the name of the measure.
+- "dataset": the name of the dataset.
+- "value": the value, written as it must appear.
+- "compared_with" (only in some tasks): the name of the condition the value is relative to.
+A repair request gives only the tasks to rewrite, each with "rejected" (the earlier sentence; empty if there was none) and "failed_checks" (why it was rejected).
+
+Output: {"statements": [{"id": "<task id>", "text": "<the sentence>"}]}, one entry per task.
+
+Rules:
+1. Write one sentence on one line, ending with a full stop.
+2. Copy "value" character for character, once.
+3. Copy "condition" and "metric" character for character, including capitalisation; start the sentence with another word (such as "The") if needed. Name no other condition, metric, system or measure.
+4. Name "dataset" character for character.
+5. With "compared_with": write "condition" before the value and "compared_with" after it. Without it, name no other condition.
+6. Write no other number.
+7. State the measurement only; do not say whether retrieval or the method helps, hurts or matters.
+8. Level "paraphrased": the names are descriptions; never replace them with a label, abbreviation or shorter name.
+
+Examples.
+
+Normal task:
+{"id": "S001.m1", "level": "explicit", "condition": "dense-retrieval reader", "metric": "answer correctness", "dataset": "CityFactsQA", "value": "62.4%"}
+Reply entry:
+{"id": "S001.m1", "text": "On CityFactsQA, the dense-retrieval reader reaches an answer correctness of 62.4%."}
+
+Confusing task (a count value; the metric must still be named as given):
+{"id": "S002.m2", "level": "paraphrased", "condition": "variant that reads retrieved evidence first", "metric": "fraction of answers judged factually correct", "dataset": "LawFactQA", "value": "662 out of 1,000"}
+Wrong: "The variant that reads retrieved evidence first yields 662 out of 1,000 answers judged factually correct." (the metric "fraction of answers judged factually correct" is missing)
+Reply entry:
+{"id": "S002.m2", "text": "On LawFactQA, the variant that reads retrieved evidence first has a fraction of answers judged factually correct of 662 out of 1,000."}
+
+Relative value:
+{"id": "S003.m2", "level": "complex", "condition": "dense-retrieval reader", "metric": "answer correctness", "dataset": "CityFactsQA", "value": "7.0 percentage points higher", "compared_with": "closed-book reader"}
+Reply entry:
+{"id": "S003.m2", "text": "On CityFactsQA, the dense-retrieval reader scores 7.0 percentage points higher than the closed-book reader in answer correctness."}
+
+Missing comparison (no "compared_with"):
+{"id": "S004.m1", "level": "explicit", "condition": "closed-book reader", "metric": "unsupported-claim rate", "dataset": "WikiCheckQA", "value": "18.3%"}
+Reply entry (no other condition is named):
+{"id": "S004.m1", "text": "On WikiCheckQA, the closed-book reader has an unsupported-claim rate of 18.3%."}

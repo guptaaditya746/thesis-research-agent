@@ -38,18 +38,21 @@ class Check:
 @dataclass
 class PaperFidelity:
     """One paper's fidelity record (fidelity.json): `attempts` renderings were tried; `history` keeps
-    the failed checks of each attempt that did not pass."""
+    the failed checks of each attempt that did not pass; `statements` (LLM renderer with statements only)
+    is {"rounds": statement calls, "failed": task ids never accepted}."""
     id: str
     ok: bool
     checks: list[Check]
     attempts: int = 1
     history: list[dict] = field(default_factory=list)
     excluded_reason: str | None = None
+    statements: dict | None = None
 
     def json(self) -> dict:
         out = asdict(self)
-        if out["excluded_reason"] is None:
-            del out["excluded_reason"]
+        for key in ("excluded_reason", "statements"):
+            if out[key] is None:
+                del out[key]
         return out
 
 

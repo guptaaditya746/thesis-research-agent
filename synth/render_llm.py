@@ -7,6 +7,9 @@ reasons go into the next prompt, up to `attempts` times. Every call is cached in
 prompt hash, model identity and the full prompt (which holds the plan), so a rebuild costs no call.
 The model is injected: tests pass a FunctionModel, real runs `modelcall.openai_model(alias)`, whose key
 comes only from $LITELLM_MASTER_KEY and is never logged; every call is `modelcall.ask`, whose errors are redacted.
+With `statements` (the default) each value the level writes in prose is first written and checked as one
+sentence (synth/statements.py) and the paper (render-v2.txt) must hold the accepted sentences verbatim;
+without it the calls are exactly those of render.txt.
 """
 from __future__ import annotations
 
@@ -22,7 +25,7 @@ from pydantic_ai.models import Model
 
 from agent import anchor
 import modelcall
-from synth import levelcheck
+from synth import levelcheck, statements as statements_module
 from synth.corpus import Rendered
 from synth.fidelity import BlindExtraction, Check, PaperFidelity, blind_check, check_paper
 from synth.levels import MISSING_CELL, Plan, make_plan, plan_rng
@@ -32,6 +35,8 @@ from synth.truth import Study
 
 PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "render.txt").text
+INSTRUCTIONS_V2 = modelcall.load_prompt(PROMPT_DIR / "render-v2.txt").text
+STATEMENT_INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "statements-v1.txt").text
 BLIND_INSTRUCTIONS = modelcall.load_prompt(PROMPT_DIR / "blind-v2.txt").text
 
 LEVEL_INSTRUCTIONS = {
@@ -165,8 +170,8 @@ class LlmRenderer:
     name = "llm"
 
     def __init__(self, model: Model, cache: Path | str, *, attempts: int = 3, verify_model: Model | None = None,
-                 concurrency: int = 4, max_tokens: int = 6000) -> None:
-        self.model, self.verify_model = model, verify_model
+                 concurrency: int = 4, max_tokens: int = 6000, statements: bool = True) -> None:
+        self.model, self.verify_model, self.statements = model, verify_model, statements
         self.cache = modelcall.JsonlCache(cache)
         self.attempts, self.concurrency, self.max_tokens = attempts, concurrency, max_tokens
         self.served: set[str] = set()
@@ -194,7 +199,19 @@ class LlmRenderer:
         if not study.relevant:          # nothing to place: the fixed template writes it, no model call
             return render_with_template(study, level, seed)
         plan = make_plan(study, level, plan_rng(seed, study.study_id, level))
-        base = json.dumps(plan_json(plan, avoid_title), indent=2, ensure_ascii=False)
+        instructions, accepted, record = INSTRUCTIONS, {}, None
+        planned = plan_json(plan, avoid_title)
+        if self.statements:
+            async def call(prompt: str, s: int) -> dict:
+                reply = statements_module.StatementReply
+                return await self._call(STATEMENT_INSTRUCTIONS, prompt, reply, self.model, s)
+            accepted, record = await statements_module.write(plan, call, self.attempts, seed)
+            print(f"synth {plan.paper}/{level}: statements {record['rounds']} round(s), failed {record['failed']}",
+                  file=sys.stderr, flush=True)
+            instructions = INSTRUCTIONS_V2
+            if accepted:
+                planned["statements"] = list(accepted.values())
+        base = json.dumps(planned, indent=2, ensure_ascii=False)
         history: list[dict] = []
         feedback: list[str] = []
         text, ps, decoys, checks = "", [], [], []
@@ -208,10 +225,11 @@ class LlmRenderer:
             try:
                 # A failed reply can produce identical feedback and therefore an identical prompt. Give
                 # each retry a distinct seed so the content-addressed cache cannot replay that same reply.
-                text = (await self._call(INSTRUCTIONS, prompt, PaperReply, self.model, seed + attempt - 1))["markdown"]
+                text = (await self._call(instructions, prompt, PaperReply, self.model, seed + attempt - 1))["markdown"]
                 text = text.replace("\r\n", "\n").replace("\r", "\n")
                 text = text if text.endswith("\n") else text + "\n"
                 ps, decoys, problems = locate(text, plan)
+                problems += statements_module.missing(text, accepted)
                 checks = [Check("required_strings", not problems, "; ".join(problems))]
                 if avoid_title is not None:
                     same = title_of(text) == avoid_title
@@ -229,11 +247,11 @@ class LlmRenderer:
                   file=sys.stderr, flush=True)
             if not failed:
                 return Rendered(study, plan, text, ps, decoys,
-                                PaperFidelity(study.study_id, True, checks, attempt, history))
+                                PaperFidelity(study.study_id, True, checks, attempt, history, statements=record))
             history.append({"attempt": attempt, "failed": [{"name": c.name, "detail": c.detail} for c in failed]})
             feedback = [f"{c.name}: {c.detail}" for c in failed]
-        return Rendered(study, plan, text, ps, decoys,
-                        PaperFidelity(study.study_id, False, checks, self.attempts, history))
+        return Rendered(study, plan, text, ps, decoys, PaperFidelity(study.study_id, False, checks, self.attempts,
+                                                                     history, statements=record))
 
     def render_all(self, jobs: Sequence[tuple[Study, str]], seed: int) -> dict[tuple[str, str], Rendered]:
         """Originals first, then the duplicates, each told the title its original got at that level."""

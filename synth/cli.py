@@ -55,7 +55,7 @@ def make_renderer(args: argparse.Namespace, out: Path):
         cache = args.cache or out / ".synth-cache" / "llm.jsonl"
         renderer = LlmRenderer(openai_model(args.model), cache, attempts=args.attempts,
                                verify_model=openai_model(args.verify_model) if args.verify_model else None,
-                               concurrency=args.concurrency)
+                               concurrency=args.concurrency, statements=args.statements)
     return renderer
 
 
@@ -65,6 +65,8 @@ def add_renderer_options(p: argparse.ArgumentParser, default: str | None = "temp
     p.add_argument("--verify-model", default=None, help="LiteLLM alias for the blind re-extraction check")
     p.add_argument("--attempts", type=int, default=3)
     p.add_argument("--concurrency", type=int, default=4)
+    p.add_argument("--statements", action=argparse.BooleanOptionalAction, default=True,
+                   help="llm renderer: write and check each prose Results sentence before the paper (default on)")
     p.add_argument("--cache", type=Path, default=None, help="default <out>/.synth-cache/llm.jsonl")
 
 
