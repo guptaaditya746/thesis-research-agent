@@ -124,6 +124,55 @@ def test_both_ends_print_the_same_gateway_port(monkeypatch):
     assert "gateway port 24173" in "\n".join(tunnels.ready_lines("compute", ["harness-ui"]))
 
 
+def test_compute_start_all_without_web_app_warns_and_starts_every_route(monkeypatch, fake_ssh, capsys):
+    monkeypatch.setattr(tunnels, "accepts", lambda *a, **k: False)
+    assert _main(monkeypatch, "compute", "start", "all") == 0
+    assert len(fake_ssh) == 1
+    cmd = fake_ssh[0]
+    assert "127.0.0.1:33004:127.0.0.1:29304" in cmd  # tracing -L still requested
+    assert "127.0.0.1:24173:127.0.0.1:8080" in cmd   # harness-ui -R kept: it answers once the app runs here
+    err = capsys.readouterr().err
+    assert "warning: Nothing accepts connections on 127.0.0.1:8080" in err
+    assert "srun --jobid $JOB --overlap" in err and "Starting the other routes anyway" in err
+
+
+def test_rerun_start_says_already_running_while_the_web_app_is_down(monkeypatch, fake_ssh, capsys):
+    monkeypatch.setattr(tunnels, "accepts", lambda *a, **k: True)
+    assert _main(monkeypatch, "compute", "start", "harness-ui") == 0
+    monkeypatch.setattr(tunnels, "accepts", lambda *a, **k: pytest.fail("no preflight for a running tunnel"))
+    capsys.readouterr()
+    assert _main(monkeypatch, "compute", "start", "harness-ui") == 0
+    assert "Already running: harness-ui" in capsys.readouterr().out
+    assert len(fake_ssh) == 1
+
+
+@pytest.mark.parametrize("offset", [0, 1000])
+def test_old_state_file_without_offset_behaves_as_before(monkeypatch, fake_ssh, tmp_path, capsys, offset):
+    """A state file written before the offset was recorded: no false mismatch, no offset line, no crash."""
+    monkeypatch.setattr(tunnels, "GATEWAY_PORT_OFFSET", offset)
+    (tmp_path / "gateway.sock").touch()
+    (tmp_path / "laptop.json").write_text(json.dumps(
+        {"services": ["harness-ui"], "targets": {"gateway": tunnels.GATEWAY}}) + "\n")
+    assert _main(monkeypatch, "laptop", "start", "harness-ui") == 0
+    assert "Already running: harness-ui" in capsys.readouterr().out
+    assert _main(monkeypatch, "laptop", "status") == 0
+    out = capsys.readouterr().out
+    assert "Services: harness-ui" in out and "gateway: up" in out
+    assert "Gateway port offset" not in out and "Warning" not in out
+    assert _main(monkeypatch, "laptop", "stop") == 0
+    assert not (tmp_path / "laptop.json").exists() and fake_ssh == [
+        [tunnels.SSH, "-S", str(tmp_path / "gateway.sock"), "-O", "exit", tunnels.GATEWAY]]
+
+
+@pytest.mark.parametrize(("machine", "port"), [("laptop", 25173), ("compute", 8080)])
+def test_check_action_probes_the_machines_end(monkeypatch, machine, port):
+    probed = []
+    monkeypatch.setattr(tunnels, "check_ui", lambda p: probed.append(p) or 7)
+    monkeypatch.setattr(tunnels, "runtime_dir", lambda: pytest.fail("check needs no state"))
+    assert _main(monkeypatch, machine, "check") == 7
+    assert probed == [port]
+
+
 def test_start_refuses_running_tunnels_with_another_offset(monkeypatch, fake_ssh):
     monkeypatch.setattr(tunnels, "GATEWAY_PORT_OFFSET", 1000)
     assert _main(monkeypatch, "laptop", "start", "harness-ui") == 0

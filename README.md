@@ -96,13 +96,13 @@ Or through the Webis gateway with `scripts/omen-tunnels` (service `harness-ui`: 
 - *Start order.* First the web app, then the compute end **on the node where `webapp serve` runs** (the `-R` hop
   forwards to port 8080 of the machine it is started on, so a start on the login node reaches nothing):
   `srun --jobid "$JOB" --overlap --pty bash -l`, then `scripts/omen-tunnels-external compute start harness-ui`
-  (it refuses when nothing listens on 127.0.0.1:8080 there; `--no-check` skips that). Then on the laptop
+  (alone it refuses when nothing listens on 127.0.0.1:8080 there, `--no-check` skips that; beside other services it only warns). Then on the laptop
   `omen-tunnels-external laptop start harness-ui`, and open http://127.0.0.1:25173 (not another name: the app
   answers only 127.0.0.1, localhost and ::1, `WEBAPP_ALLOWED_HOSTS`).
 - *Same offset on both ends.* Use `omen-tunnels-external` (gateway port 25173) on both, or `omen-tunnels`
   (24173) on both. Each end prints its gateway port in its "Ready" lines and in `status`; they must match. A stale
   copy on the laptop's PATH ignored the offset once (tests/RESULTS.md, T2): the wrapper now runs the
-  `omen-tunnels` beside it. A laptop hop already running other services refuses a new list: `stop`, then
+  `omen-tunnels` beside it (install both together; a wrapper copied alone still uses PATH). A laptop hop already running other services refuses a new list: `stop`, then
   start all services together.
 - *Three checks.* (1) On the node: `curl -s http://127.0.0.1:8080/api/health` (or `omen-tunnels compute check`)
   answers, so the web app runs there on 8080 and nothing else holds the port. (2) Both ends' `status` say `up` with

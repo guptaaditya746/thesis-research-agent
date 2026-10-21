@@ -133,16 +133,24 @@ def accepts(port: int, host: str = "127.0.0.1", timeout: float = 2.0) -> bool:
 
 
 def check_ui_server(names: list[str]) -> None:
-    """compute start: the harness-ui hop forwards to 127.0.0.1:8080 of this machine, so the web app must listen here."""
+    """compute start: the harness-ui hop forwards to 127.0.0.1:8080 of this machine, so the web app must listen here.
+
+    Only harness-ui is gated: requested alone, a missing web app refuses the start; beside other services it is a
+    warning and every route starts (the harness-ui one answers once the web app runs here).
+    """
     if "harness-ui" not in names:
         return
     port = SERVICES["harness-ui"][3]
-    if not accepts(port):
-        raise RuntimeError(
-            f"Nothing accepts connections on 127.0.0.1:{port} on {socket.gethostname()}. The harness-ui hop "
-            f"forwards to port {port} of the machine it runs on, so start 'webapp serve --port {port}' first and run "
-            f"'compute start harness-ui' on that same node (from the login node: srun --jobid $JOB --overlap --pty "
-            "bash -l). --no-check skips this check.")
+    if accepts(port):
+        return
+    message = (
+        f"Nothing accepts connections on 127.0.0.1:{port} on {socket.gethostname()}. The harness-ui hop "
+        f"forwards to port {port} of the machine it runs on, so start 'webapp serve --port {port}' first and run "
+        f"'compute start harness-ui' on that same node (from the login node: srun --jobid $JOB --overlap --pty "
+        "bash -l).")
+    if names == ["harness-ui"]:
+        raise RuntimeError(f"{message} --no-check skips this check.")
+    print(f"omen-tunnels: warning: {message} Starting the other routes anyway.", file=sys.stderr, flush=True)
 
 
 def fetch(url: str, timeout: float = CHECK_TIMEOUT) -> tuple[int | None, str]:
@@ -288,8 +296,6 @@ def main() -> int:
             for role, _ in roles:
                 print(shlex.join(ssh_command(role, names, folder / f"{role}.sock")))
             return 0
-        if args.machine == "compute" and not args.no_check:
-            check_ui_server(names)
         if state.exists() and all(active(folder / f"{role}.sock", target) for role, target in old_roles):
             offset = recorded.get("gateway_port_offset")
             if offset is not None and offset != GATEWAY_PORT_OFFSET:
@@ -301,6 +307,9 @@ def main() -> int:
                 print(f"Already running: {', '.join(names)}")
                 return 0
             raise RuntimeError("Different services or Omen host are running. Run 'stop' first, then 'start'.")
+        # Only when a hop will start: a running tunnel stays "Already running" while the web app restarts.
+        if args.machine == "compute" and not args.no_check:
+            check_ui_server(names)
         # Recover only this tool's stale control sockets; never touch unrelated SSH sessions.
         for role, target in old_roles:
             sock = folder / f"{role}.sock"
@@ -322,6 +331,8 @@ def main() -> int:
                         "If no old tunnel exists, these gateway ports are held by another session."
                         if role == "gateway" else
                         "Stop the earlier manual tunnel on this machine or choose free ports."
+                        + (" A port 'on gateway' is held there by another session (an earlier harness-ui -R)."
+                           if "harness-ui" in names else "")
                     )
                     raise RuntimeError(f"Cannot start {role} hop; listener port(s): {ports}. {hint}") from exc
                 if not active(sock, target):
