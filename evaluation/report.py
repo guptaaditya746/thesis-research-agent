@@ -164,6 +164,14 @@ def render(report: dict[str, Any]) -> str:
             out += ["Flags (F1; a system without `flags` is not listed):", "",
                     table(rows, ["system", "flag", "tp", "fp", "fn", "precision", "recall"]), "",
                     table(verdicts, ["system", "counts_correct", "duplicates_correct"]), ""]
+    if report.get("attribution"):
+        att = report["attribution"]
+        rows = sorted(({"system": s["system"], **r} for s in att["systems"] for r in s["rows"]),
+                      key=lambda r: (r["system"], _level_key(r["level"])))
+        out += ["## Attribution", "", f"Wrong studies against the oracle `{att['oracle']}`: upstream when the oracle "
+                "is right (extraction or retrieval), downstream when it is wrong too (synthesis or reasoning).", "",
+                table(rows, ["system", "level", "studies", "system_correct", "oracle_correct", "upstream",
+                             "downstream"]), ""]
     if report.get("intervals"):
         out += render_intervals(report["intervals"])
     if report.get("locate"):

@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from agent.anchor import selector_at
+from evaluation import oracle
 from evidence.contract import Item, Span
 
 QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
@@ -193,25 +194,16 @@ def engine_answer(items: dict[str, Item]) -> dict[str, Any]:
 
 def write_run(root: Path, items: list[Item], answer: dict[str, Any] | None, *, locate: Any = "document",
               reexec: Any = None, run_id: str = "run-1", settings: dict[str, Any] | None = None) -> Path:
-    run = Path(root) / run_id
-    run.mkdir(parents=True)
-    ordered = sorted(items, key=lambda i: (i.first_start(), i.evidence_type, i.item_id))
-    (run / "evidence.jsonl").write_text("".join(json.dumps(i.model_dump(mode="json")) + "\n" for i in ordered),
-                                        encoding="utf-8", newline="\n")
-    if answer is not None:
-        dump(run / "answer.json", answer)
     if locate == "document":
         locate = [{"document": p, "evidence_type": t, "strategy": "whole", "scope": {"kind": "document"}}
                   for p in PAPERS for t in ("condition", "metric", "measurement", "author_claim")]
-    if locate is not None:
-        dump(run / "locate.json", locate)
-    if reexec is not None:
-        dump(run / "reexec.json", reexec)
-    dump(run / "run.json", {"run_id": run_id, "mode": "run", "protocol": {"id": "rag-factuality", "sha256": "0" * 64},
-                            "manifest_sha256": "1" * 64, "extractors": [REGEX, LLM], "outputs": {},
-                            "cost": {"calls": 16, "model_calls": 8, "input_tokens": 4000, "output_tokens": 600,
-                                     "seconds": 12.5}, **({"settings": settings} if settings else {})})
-    return run
+    run_json = {"run_id": run_id, "mode": "run", "protocol": {"id": "rag-factuality", "sha256": "0" * 64},
+                "manifest_sha256": "1" * 64, "extractors": [REGEX, LLM], "outputs": {},
+                "cost": {"calls": 16, "model_calls": 8, "input_tokens": 4000, "output_tokens": 600, "seconds": 12.5},
+                **({"settings": settings} if settings else {})}
+    run = Path(root) / run_id
+    run.mkdir(parents=True)
+    return oracle.write_run(run, items, answer, run_json, locate=locate, reexec=reexec)
 
 
 def baseline_answer(system: str, directions: dict[str, str], label: str) -> dict[str, Any]:

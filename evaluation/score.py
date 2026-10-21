@@ -91,6 +91,12 @@ resampling papers (per paper: matched, items, facts; the statistic is the micro 
 direction accuracy per system, resampling studies; and for each baseline the paired difference engine
 correct minus baseline correct per study.
 
+Attribution (`attribute`, Tim M2 §5C, our addition; with `evaluate score --oracle`): per scored study, whether
+a system's direction is right and whether the oracle's is (evaluation/oracle.py: the synthesis on perfect
+evidence; or the RAG baseline on the passages holding the values). A study the system gets wrong is an
+`upstream` error (extraction or retrieval) when the oracle gets it right, a `downstream` one (synthesis or
+reasoning) when the oracle is wrong too. Counted per level and `all`, for every system but the oracle.
+
 Locate recall: a placement is inside the scope when one `locate.json` entry for its paper and its
 fact's evidence type has a scope that contains it (`evidence.contract.Scope.contains`).
 
@@ -390,6 +396,43 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
             "errors": errors, "rows": rows, "studies": studies,
             "confusion": [{"expected": e, "given": g, "n": n} for (e, g), n in sorted(confusion.items())],
             "flags": score_flags(truth, answer)}
+
+
+# --- C attribution (Tim M2 §5C, our addition) -----------------------------------------------------
+
+def attribute(truth: GroundTruth, system_answer: dict[str, Any], oracle_answer: dict[str, Any]) -> list[dict[str, Any]]:
+    """Per scored study: system and oracle correct, and `error` None, `upstream` (only the system wrong) or
+    `downstream` (both wrong)."""
+    oracle_ok = {s["study"]: s["correct"] for s in score_synthesis(truth, oracle_answer)["studies"]}
+    out = []
+    for s in score_synthesis(truth, system_answer)["studies"]:
+        ok = oracle_ok[s["study"]]
+        out.append({"study": s["study"], "system_correct": s["correct"], "oracle_correct": ok,
+                    "error": None if s["correct"] else "upstream" if ok else "downstream"})
+    return out
+
+
+def score_attribution(truth: GroundTruth, answers: list[dict[str, Any]], oracle_answer: dict[str, Any] | None
+                      ) -> dict[str, Any] | None:
+    """`attribute` for every answer but the oracle's own, with counts per level and `all`; None without an oracle."""
+    if oracle_answer is None:
+        return None
+    oracle_system = oracle_answer.get("system", "oracle")
+    level = {s["study_id"]: s.get("level", "unknown") for s in truth.studies}
+    systems = []
+    for answer in answers:
+        if answer.get("system") == oracle_system:
+            continue
+        studies = attribute(truth, answer, oracle_answer)
+        counts: dict[str, Counter[str]] = defaultdict(Counter)
+        for s in studies:
+            for key in (level[s["study"]], ALL):
+                counts[key].update(studies=1, system_correct=s["system_correct"], oracle_correct=s["oracle_correct"],
+                                   upstream=s["error"] == "upstream", downstream=s["error"] == "downstream")
+        rows = [{"level": lv, **{k: c[k] for k in ("studies", "system_correct", "oracle_correct", "upstream",
+                                                   "downstream")}} for lv, c in sorted(counts.items())]
+        systems.append({"system": answer.get("system", "unknown"), "studies": studies, "rows": rows})
+    return {"oracle": oracle_system, "systems": systems}
 
 
 # --- C flags (F4, our addition) --------------------------------------------------------------------
@@ -793,18 +836,16 @@ def score_funnel(truth: GroundTruth, run: Run | None) -> dict[str, Any] | None:
 
 # --- everything ------------------------------------------------------------------------------------
 
-def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: Path | None = None) -> dict[str, Any]:
-    """The report for one run (and any baseline answers) on one corpus."""
+def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: Path | None = None,
+          oracle: Path | None = None) -> dict[str, Any]:
+    """The report for one run (and any baseline answers) on one corpus; `oracle` an oracle's answer.json."""
     corpus = Path(corpus)
     truth = GroundTruth.load(corpus / "ground_truth.json")
     files = paper_ids(read_json(corpus / "manifest.json"))
     run = Run.load(run_dir, reexec)
     m = Matching(run.items, truth, files)
-    systems = []
-    if run.answer is not None:
-        systems.append(score_synthesis(truth, run.answer))
-    for path in baselines:
-        systems.append(score_synthesis(truth, read_json(path)))
+    answers = ([run.answer] if run.answer is not None else []) + [read_json(p) for p in baselines]
+    systems = [score_synthesis(truth, a) for a in answers]
     return {
         "corpus_id": truth.corpus_id, "levels": truth.levels, "run_id": (run.run or {}).get("run_id", run.root.name),
         "question": truth.question, "extraction": score_extraction(m),
@@ -814,14 +855,17 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "extractors": score_extractors(m, run),
         "cost": score_cost(run.run, len(truth.studies)), "stability": score_stability(run.reexec),
         "funnel": score_funnel(truth, run),
+        "attribution": score_attribution(truth, answers, read_json(oracle) if oracle else None),
     }
 
 
-def score_answers(corpus: Path, answers: Iterable[Path]) -> dict[str, Any]:
+def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = None) -> dict[str, Any]:
     """C only, for baseline answers without an engine run."""
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
-    systems = [score_synthesis(truth, read_json(p)) for p in answers]
+    given = [read_json(p) for p in answers]
+    systems = [score_synthesis(truth, a) for a in given]
     return {"corpus_id": truth.corpus_id, "levels": truth.levels, "run_id": None, "question": truth.question,
             "extraction": None, "integration": None, "synthesis": systems,
             "intervals": score_intervals(None, systems), "locate": None, "cascade": None, "extractors": None,
-            "cost": None, "stability": None, "funnel": None}
+            "cost": None, "stability": None, "funnel": None,
+            "attribution": score_attribution(truth, given, read_json(oracle) if oracle else None)}

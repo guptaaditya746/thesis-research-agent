@@ -1,11 +1,17 @@
 """`evaluate` command line: score a run, run the two baselines, compare corpora.
 
-    evaluate score --run RUN --corpus CORPUS [--baseline ANSWER.json ...] [--reexec R.json] --out DIR
+    evaluate score --run RUN --corpus CORPUS [--baseline ANSWER.json ...] [--reexec R.json] [--oracle O.json] --out DIR
+    evaluate oracle --protocol P --corpus CORPUS --out DIR
     evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval global|per_paper] [--k N]
+                          [--oracle-passages]
     evaluate agent-baseline --corpus CORPUS --out DIR [--model ALIAS] [--sandbox ...] [--steps N] [--tokens N]
     evaluate compare REPORT [REPORT ...] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
+
+`oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
+holding the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
+wrong studies to upstream or downstream errors with the oracle's answer.json.
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
@@ -64,20 +70,30 @@ def cmd_score(args: argparse.Namespace) -> int:
 
     if args.run is None and not args.baseline:
         raise SystemExit("evaluate score: give --run and/or --baseline")
-    result = (score(args.run, args.corpus, args.baseline, args.reexec) if args.run
-              else score_answers(args.corpus, args.baseline))
+    result = (score(args.run, args.corpus, args.baseline, args.reexec, args.oracle) if args.run
+              else score_answers(args.corpus, args.baseline, args.oracle))
     js, md = rep.write_report(result, args.out)
     print(f"wrote {js} and {md}")
     return 0
 
 
+def cmd_oracle(args: argparse.Namespace) -> int:
+    from .oracle import run
+
+    out = run(args.protocol, args.corpus, args.out)
+    answer = json.loads((out / "answer.json").read_text(encoding="utf-8"))
+    print(f"{out}: label={answer['label']} studies={len(answer['studies'])}")
+    return 0
+
+
 def cmd_rag(args: argparse.Namespace) -> int:
-    from .baselines.rag import rag_baseline
+    from .baselines.rag import ORACLE_SYSTEM, SYSTEM, rag_baseline
 
     model, model_id = _model(args.model)
+    system = ORACLE_SYSTEM if args.oracle_passages else SYSTEM
     answer = rag_baseline(args.corpus, model=model, model_id=model_id, question=_question(args), k=args.k,
-                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, "rag-baseline"),
-                          seed=args.seed)
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
     print(f"{_write_answer(answer, args.out)}: label={answer['label']} studies={len(answer['studies'])}")
     return 0
 
@@ -157,8 +173,15 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--corpus", type=Path, required=True, help="corpus directory with ground_truth.json")
     s.add_argument("--baseline", type=Path, action="append", default=[], help="a baseline's answer.json (repeatable)")
     s.add_argument("--reexec", type=Path, help="re-execution report (default: <run>/reexec.json if present)")
+    s.add_argument("--oracle", type=Path, help="an oracle's answer.json: attribute wrong studies upstream/downstream")
     s.add_argument("--out", type=Path, required=True)
     s.set_defaults(func=cmd_score)
+
+    o = sub.add_parser("oracle", help="diagnostic: the protocol's synthesis on the ground truth's facts -> a run dir")
+    o.add_argument("--protocol", type=Path, required=True)
+    o.add_argument("--corpus", type=Path, required=True, help="corpus directory with ground_truth.json")
+    o.add_argument("--out", type=Path, required=True, help="the run directory to write")
+    o.set_defaults(func=cmd_oracle)
 
     def common(q: argparse.ArgumentParser) -> None:
         q.add_argument("--corpus", type=Path, required=True, help="reads manifest.json and papers/ only")
@@ -177,6 +200,8 @@ def parser() -> argparse.ArgumentParser:
                         "(every paper seen)")
     r.add_argument("--k", type=int, help="passages in all (global, default 8) or per paper (per_paper, default 2)")
     r.add_argument("--max-chars", type=int, default=1500, help="passage size limit")
+    r.add_argument("--oracle-passages", action="store_true",
+                   help="diagnostic: the paragraphs holding the true values instead of BM25 (reads ground_truth.json)")
     r.set_defaults(func=cmd_rag)
 
     a = sub.add_parser("agent-baseline", help="the research agent with the question only -> answer.json")
