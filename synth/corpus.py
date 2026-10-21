@@ -126,10 +126,12 @@ def settings_of(*, name: str, studies: int, mix: dict[str, float] | None, levels
 
 def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer, protocol: Protocol,
                  studies: list[Study], papers: dict[str, Rendered], failed: dict[str, list[str]],
-                 settings: dict[str, Any], extra: dict[str, Any] | None = None) -> str:
+                 settings: dict[str, Any], extra: dict[str, Any] | None = None,
+                 selection: dict[str, Any] | None = None) -> str:
     """Write one corpus; `papers` maps every study id to its rendering for this corpus. The protocol whose
     synthesis block made the ground truth is recorded (id and sha256), never its file. `extra` goes into
-    corpus.json as it is (`variant`, F3). The set-level flags are found over the studies actually written
+    corpus.json as it is (`variant`, F3); `selection` (the fidelity counters of `selection_of`) goes into
+    manifest.json. The set-level flags are found over the studies actually written
     (after the fidelity exclusions), as the engine finds them over the papers it reads."""
     prepare(directory)
     spec = protocol.synthesis
@@ -140,7 +142,8 @@ def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer:
         (directory / "papers" / f"{s.study_id}.md").write_bytes(data)
         manifest.append({"id": s.study_id, "file": f"papers/{s.study_id}.md", "sha256": hashlib.sha256(data).hexdigest()})
     cid = corpus_id(name, manifest)
-    (directory / "manifest.json").write_bytes(dump({"corpus_id": cid, "papers": manifest}))
+    (directory / "manifest.json").write_bytes(dump({"corpus_id": cid, "papers": manifest,
+                                                      **({"selection": selection} if selection else {})}))
     (directory / "corpus.json").write_bytes(dump({
         "corpus_id": cid, "seed": seed,
         "generator": {"name": GENERATOR, "version": GENERATOR_VERSION, "code_sha256": code_sha256()},
@@ -197,6 +200,28 @@ def exclusions(rendered: dict[tuple[str, str], Rendered], studies: list[Study]) 
     return failed
 
 
+def selection_of(rendered: dict[tuple[str, str], Rendered], study_set: list[Study], requested: int,
+                 failed: dict[str, list[str]]) -> dict[str, Any]:
+    """What fidelity left of the request: study counts (`records` includes the knob papers; the first
+    `requested` studies are the base set), per level the papers passed, the failing check names of the final
+    attempt of each failed paper, and the mean attempts; and the excluded studies with their levels."""
+    per_level: dict[str, dict[str, Any]] = {}
+    for (sid, lv), r in sorted(rendered.items()):
+        row = per_level.setdefault(lv, {"passed": 0, "failed_checks": {}, "mean_attempts": 0.0, "n": 0})
+        row["n"] += 1
+        row["mean_attempts"] += r.fidelity.attempts
+        if r.fidelity.ok:
+            row["passed"] += 1
+        for c in r.fidelity.checks:
+            if not r.fidelity.ok and not c.ok:
+                row["failed_checks"][c.name] = row["failed_checks"].get(c.name, 0) + 1
+    for row in per_level.values():
+        row["mean_attempts"] = round(row["mean_attempts"] / row.pop("n"), 3)
+    return {"requested_studies": requested, "records": len(study_set),
+            "retained_studies": sum(s.study_id not in failed for s in study_set[:requested]),
+            "per_level": per_level, "excluded": dict(failed)}
+
+
 def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
           levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None,
           protocol: Protocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
@@ -215,6 +240,7 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
                                outliers=outliers, irrelevant=irrelevant)
     rendered = renderer.render_all([(s, lv) for lv in levels for s in study_set], seed)
     failed = exclusions(rendered, study_set)
+    selection = selection_of(rendered, study_set, studies, failed)
     written = {}
     for lv in [*levels, "mixed"]:
         assign = {s.study_id: lv if lv != "mixed" else level_of(s, study_set, levels) for s in study_set}
@@ -222,8 +248,8 @@ def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
         directory = out / f"{name}-{lv}"
         written[str(directory)] = write_corpus(directory, name=name, level=lv, seed=seed, renderer=renderer,
                                                protocol=protocol, studies=study_set, papers=papers, failed=failed,
-                                               settings=settings)
+                                               settings=settings, selection=selection)
     kept = truth.flagged([s for s in study_set if s.study_id not in failed], protocol.synthesis)
     flags = {s.study_id: study_flags(papers[s.study_id], protocol.synthesis, s) for s in kept}   # the mixed corpus's
     return {"corpora": written, "excluded": failed, "protocol": {"id": protocol.id, "sha256": protocol.sha256},
-            "settings": settings, "answer": truth.answer(kept, protocol.synthesis, flags)}
+            "settings": settings, "selection": selection, "answer": truth.answer(kept, protocol.synthesis, flags)}

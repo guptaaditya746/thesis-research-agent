@@ -86,6 +86,11 @@ def cmd_build(args: argparse.Namespace) -> int:
                    for directory in result["corpora"]):
             print("ERROR: no papers retained after fidelity checks; see fidelity.json", file=sys.stderr, flush=True)
             return 1
+    sel = result["selection"]
+    if sel["requested_studies"] and sel["retained_studies"] / sel["requested_studies"] < args.min_retained:
+        print(f"ERROR: retained {sel['retained_studies']}/{sel['requested_studies']} below --min-retained "
+              f"{args.min_retained:g}", file=sys.stderr, flush=True)
+        return 1
     return 0
 
 
@@ -124,6 +129,8 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--out", type=Path, default=Path("corpora"))
     b.add_argument("--protocol", type=Path, default=None,
                    help="the protocol whose synthesis block defines the ground truth (default: the RAG protocol)")
+    b.add_argument("--min-retained", type=float, default=0.0, metavar="FRACTION",
+                   help="exit 1 when fewer than this fraction of the requested studies pass fidelity (default 0)")
     b.add_argument("--duplicates", type=count, default=0, help="extra papers that report an existing study again")
     b.add_argument("--missing", type=count, default=0,
                    help="studies whose control (alternately treatment) measurement the paper never states")
