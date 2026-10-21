@@ -11,7 +11,8 @@ shape), `reason`, `by`. Prefilled entries are the model's default with `reason: 
 `by: model`; freeze accepts them as they stand and records `by`, so a model default and a person's decision
 stay apart in proposal.json. `validate` is freeze's check of the file: every card exactly once, a known
 choice, a non-empty reason and `by`, a `value` only with `custom`, and a choice other than the model's
-default made by someone other than `model`.
+default made by someone other than `model`. An optional top-level `waivers` list (checked by `waivers`) is
+where a person accepts a failing blocking critic check, which freeze otherwise refuses.
 """
 from __future__ import annotations
 
@@ -29,7 +30,7 @@ from pydantic_ai.models import Model
 
 from .. import rules
 from ..protocol import LocateStrategy
-from . import frame as frame_module
+from . import critic as critic_module, frame as frame_module
 from .common import (CARDS, CRITIC, DECISIONS, DRAFT, FRAME, ProposalError, ask, dump_yaml, fresh, guard,
                      mark_written, model_for, need, now, prompt, read_json, read_yaml, sha, write_json, write_text)
 from .frame import ID, Frame
@@ -112,7 +113,8 @@ def _read_screen(p: dict[str, Any], f: Frame) -> dict[str, Any]:
 
 
 def _apply_screen(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
-    s = p.setdefault("screen", {"extractors": [{"name": "regex_screen"}, {"name": "llm_screen"}], "on_fail": "skip"})
+    s = p.setdefault("screen", {"extractors": [{"name": "regex_screen"}, {"name": "llm_screen"}], "on_fail": "skip",
+                                "lexical_miss": "reject"})
     s["question"], s["terms"] = v["question"], list(v["terms"])
 
 
@@ -247,8 +249,10 @@ def _canon(value: Any) -> str:
 # cascades, the model's proposal); a fixed option's own `effect` wins where a value equals it.
 EFFECTS: dict[str, Callable[[dict[str, Any]], str]] = {
     "screen": lambda v: ("a paper whose text holds none of the terms is judged not relevant by the keyword screen; "
-                         "under strategy gaps with on_fail skip it is then never read by the LLM screen and gets no "
-                         "extraction (under all, extraction runs anyway)"),
+                         "with screen.lexical_miss reject (the draft's) that ends the screen, so under strategy gaps "
+                         "with on_fail skip it is never read by the LLM screen and gets no extraction (under all, "
+                         "extraction runs anyway); with lexical_miss escalate the paper goes on to the next screen "
+                         "extractor, which decides"),
     "roles": lambda v: (f"conditions with role {v['treatment']['role']} and {v['control']['role']} are compared; "
                         "a condition with any other role does not enter the comparison"),
     "metrics": lambda v: ("only these metrics are compared, "
@@ -374,6 +378,8 @@ HEADER = """# Decisions on the proposal's choice points (docs/evidence-system.md
 # (see the options there); `reason` is required (an empty reason is refused); `by` says who decided. The
 # prefilled entries are the model's defaults (`by: model`, reason "default: ..."): freeze accepts them as they
 # stand and records `by`. A choice other than the default must name who made it in `by`.
+# Freeze refuses a protocol that fails a blocking critic check (severity in critic.json) unless a person waives
+# it here: `waivers: [{check: <check id>, reason: ..., by: <your name>}]` (a waiver by `model` is refused).
 """
 
 
@@ -476,6 +482,36 @@ def validate(cards: list[dict[str, Any]], data: Any) -> list[dict[str, Any]]:
     if problems:
         raise ProposalError("decisions.yaml refused:\n  " + "\n  ".join(problems))
     return [seen[c] for c in by_card]
+
+
+def waivers(data: Any) -> list[dict[str, Any]]:
+    """decisions.yaml's `waivers` checked: each {check, reason, by} names a deterministic critic check, gives a
+    reason and the person who accepts the failure (never `model`); a ProposalError listing every problem
+    otherwise. No `waivers` key: none."""
+    entries = data.get("waivers") if isinstance(data, dict) else None
+    if entries is None:
+        return []
+    if not isinstance(entries, list):
+        raise ProposalError("decisions.yaml: `waivers` must be a list of {check, reason, by}")
+    problems: list[str] = []
+    out: list[dict[str, Any]] = []
+    for n, w in enumerate(entries):
+        if not isinstance(w, dict):
+            problems.append(f"waiver {n} is not a mapping {{check, reason, by}}")
+            continue
+        check, reason, who = w.get("check"), w.get("reason"), w.get("by")
+        label = f"waiver {n} ({check})"
+        if check not in critic_module.DETERMINISTIC:
+            problems.append(f"{label}: unknown check {check!r} (one of {', '.join(critic_module.DETERMINISTIC)})")
+        if not isinstance(reason, str) or not reason.strip():
+            problems.append(f"{label}: a waiver without a reason is refused")
+        if not isinstance(who, str) or not who.strip() or who.strip() == MODEL:
+            problems.append(f"{label}: `by` must name the person who accepts the failure, not {who!r}")
+        out.append({"check": check, "reason": reason.strip() if isinstance(reason, str) else reason,
+                    "by": who.strip() if isinstance(who, str) else who})
+    if problems:
+        raise ProposalError("decisions.yaml refused:\n  " + "\n  ".join(problems))
+    return out
 
 
 def apply(draft: dict[str, Any], decisions: list[dict[str, Any]], f: Frame) -> tuple[dict[str, Any], dict[str, Any]]:

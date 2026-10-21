@@ -269,3 +269,130 @@ def test_ev1_protocols_still_parse_with_the_same_sha256() -> None:
     assert found == set(EV1_SHA256)
     for rel, sha in EV1_SHA256.items():
         assert load(root / rel).sha256 == sha, rel
+
+
+# 7. blocking and advisory checks, human waivers, review status -------------------------------------------------
+
+LIVE_PROPOSAL = Path(__file__).resolve().parents[2] / "tests/EV1/diagnostics/proposal"
+
+
+@pytest.fixture
+def copied_live_proposal(tmp_path: Path) -> Path:
+    """The EV1 proposal before freeze (as tests/EV1/diagnostics/review_repro.py replays it). The files are
+    copied with LF line ends, the bytes the steps hashed (a Windows checkout may hold them with CRLF)."""
+    d = tmp_path / "proposal"
+    d.mkdir()
+    for src in LIVE_PROPOSAL.iterdir():
+        (d / src.name).write_bytes(src.read_bytes().replace(b"\r\n", b"\n"))
+    for name in ("protocol.yaml", "protocol.v1.yaml", "proposal.json"):
+        (d / name).unlink(missing_ok=True)
+    return d
+
+
+def read_proposal(d: Path) -> dict[str, Any]:
+    return json.loads((d / "proposal.json").read_text(encoding="utf-8"))
+
+
+def add_waivers(d: Path, checks: list[str], *, by: str) -> None:
+    data = yaml.safe_load((d / "decisions.yaml").read_text(encoding="utf-8"))
+    data["waivers"] = [{"check": c, "reason": "accepted for the EV1 replay", "by": by} for c in checks]
+    (d / "decisions.yaml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+
+# the live draft predates A1, so its frozen protocol fails bounds_cover_rate_metrics too (metric_rules_collide passes:
+# freeze makes the metric rules again, draft.sync_regex)
+LIVE_BLOCKING = ["terms_cover_synonyms", "bounds_cover_rate_metrics"]
+
+
+def test_freeze_blocks_on_uncovered_synonyms_when_the_screen_rejects_misses(copied_live_proposal: Path) -> None:
+    with pytest.raises(ProposalError, match="terms_cover_synonyms"):
+        freeze.run(copied_live_proposal)
+    assert not (copied_live_proposal / "protocol.yaml").exists()
+
+
+def test_human_waivers_unblock_and_are_recorded(copied_live_proposal: Path) -> None:
+    add_waivers(copied_live_proposal, LIVE_BLOCKING, by="aditya")
+    freeze.run(copied_live_proposal)
+    review = read_proposal(copied_live_proposal)["review"]
+    assert [w["check"] for w in review["waivers"]] == LIVE_BLOCKING
+    assert all(w["by"] == "aditya" and w["reason"] for w in review["waivers"])
+
+
+def test_an_unwaived_blocking_check_is_named(copied_live_proposal: Path) -> None:
+    add_waivers(copied_live_proposal, LIVE_BLOCKING[:1], by="aditya")
+    with pytest.raises(ProposalError, match="bounds_cover_rate_metrics") as refused:
+        freeze.run(copied_live_proposal)
+    assert "terms_cover_synonyms" not in str(refused.value)
+
+
+def test_a_model_authored_waiver_is_refused(copied_live_proposal: Path) -> None:
+    add_waivers(copied_live_proposal, ["terms_cover_synonyms"], by="model")
+    with pytest.raises(ProposalError, match="waiver.*by"):
+        freeze.run(copied_live_proposal)
+
+
+@pytest.mark.parametrize("waiver, problem", [
+    ({"check": "no_such_check", "reason": "r", "by": "aditya"}, "no_such_check"),
+    ({"check": "terms_cover_synonyms", "reason": " ", "by": "aditya"}, "reason"),
+    ({"check": "terms_cover_synonyms", "reason": "r", "by": ""}, "by"),
+    ("terms_cover_synonyms", "mapping"),
+])
+def test_waivers_are_validated(waiver: Any, problem: str) -> None:
+    with pytest.raises(ProposalError, match=problem):
+        cards.waivers({"decisions": [], "waivers": [waiver]})
+    assert cards.waivers({"decisions": []}) == []
+
+
+def test_review_status_counts_who_decided(copied_live_proposal: Path) -> None:
+    add_waivers(copied_live_proposal, LIVE_BLOCKING, by="aditya")
+    freeze.run(copied_live_proposal)
+    record = read_proposal(copied_live_proposal)
+    assert record["review"]["status"] == "model_defaults"
+    assert record["review"]["decided_by"] == record["decided_by"]
+    assert freeze.review_status([{"by": "model"}, {"by": "AG"}]) == "partly_human"
+    assert freeze.review_status([{"by": "AG"}, {"by": "TK"}]) == "human"
+
+
+def test_checks_carry_a_severity(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="draft")
+    text = (d / "draft.yaml").read_text(encoding="utf-8")
+    found = {c["id"]: c["severity"] for c in critic.checks(text, frame.load(d / "frame.json"))}
+    assert {k for k, v in found.items() if v == "blocking"} == {
+        "regex_matches_enums", "bounds_cover_rate_metrics", "metric_rules_collide", "terms_cover_synonyms"}
+    escalate = text.replace("lexical_miss: reject", "lexical_miss: escalate")
+    assert escalate != text
+    found = {c["id"]: c["severity"] for c in critic.checks(escalate, frame.load(d / "frame.json"))}
+    assert found["terms_cover_synonyms"] == "advisory" and found["regex_matches_enums"] == "blocking"
+
+
+def test_critic_ok_counts_only_blocking_checks(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="draft")
+    draft = yaml.safe_load((d / "draft.yaml").read_text(encoding="utf-8"))
+    draft["locate"] = {"strategy": "exhaustive", "params": {"top_k": 6}}          # advisory: locate_params_used
+    (d / "draft.yaml").write_text(yaml.safe_dump(draft, sort_keys=False), encoding="utf-8")
+    critic.run(d, model=Scripted().model)
+    data = json.loads((d / "critic.json").read_text(encoding="utf-8"))
+    assert not {c["id"]: c for c in data["checks"]}["locate_params_used"]["ok"]
+    assert data["ok"] is True
+    draft["evidence_types"]["measurement"]["bounds"] = []                          # blocking: bounds_cover_rate_metrics
+    (d / "draft.yaml").write_text(yaml.safe_dump(draft, sort_keys=False), encoding="utf-8")
+    critic.run(d, model=Scripted().model)
+    assert json.loads((d / "critic.json").read_text(encoding="utf-8"))["ok"] is False
+
+
+def test_the_draft_names_lexical_miss_without_changing_the_sha256(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="draft")
+    text = (d / "draft.yaml").read_text(encoding="utf-8")
+    draft = yaml.safe_load(text)
+    assert draft["screen"]["lexical_miss"] == "reject"
+    del draft["screen"]["lexical_miss"]
+    assert load_text(text).sha256 == load_text(yaml.safe_dump(draft, sort_keys=False)).sha256
+
+
+def test_a_metric_a_person_dropped_is_no_blocking_failure(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    decide(d, "metrics", {"metrics": [{"canonical": "factual_accuracy", "higher_is_better": True}]})
+    freeze.run(d)
+    found = checks_of(d)
+    assert not found["outcomes_complete"]["ok"] and found["outcomes_complete"]["severity"] == "advisory"
+    assert found["terms_cover_synonyms"]["ok"] and found["bounds_cover_rate_metrics"]["ok"]

@@ -42,8 +42,9 @@ def test_critic_flags_a_broken_draft(tmp_path: Path) -> None:
     critic.run(d, model=Scripted().model)
     data = json.loads((d / "critic.json").read_text(encoding="utf-8"))
     checks = by_id(data["checks"])
-    assert data["ok"] is False
-    assert checks["parses"]["ok"]                                   # these still validate as a protocol
+    assert data["ok"] is True                                       # `ok` counts blocking checks; these are advisory
+    assert {c["severity"] for c in data["checks"] if c["kind"] == "deterministic" and not c["ok"]} == {"advisory"}
+    assert checks["parses"]["ok"]                                 # these still validate as a protocol
     assert not checks["screen_present"]["ok"]
     assert not checks["extractors_registered"]["ok"] and "no_such_extractor" in checks["extractors_registered"]["message"]
     assert not checks["outcomes_complete"]["ok"] and "hallucination_rate" in checks["outcomes_complete"]["message"]

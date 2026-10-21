@@ -3,9 +3,10 @@
 Refused (ProposalError, exit 2, nothing written): a missing step; an input changed after a later step read
 it (frame after draft, draft after critic or cards); decisions.yaml failing `cards.validate` (a decision
 without a reason, an unknown choice, ...); a protocol that does not validate as `evidence protocol check`
-validates it; regex steps that can emit a role or metric outside its enum, or have no pattern for an
-enum value (critic check `regex_matches_enums`); a directory already frozen (changes then go through
-`evidence propose amend`).
+validates it; a failing blocking check on the decided protocol (critic.py: `regex_matches_enums`,
+`bounds_cover_rate_metrics`, `metric_rules_collide`, `terms_cover_synonyms` under a screen that rejects on a
+keyword miss) that no person waived in decisions.yaml (`waivers`, cards.waivers); a directory already frozen
+(changes then go through `evidence propose amend`).
 
 protocol.yaml is the draft with every decision applied in card order, the regex patterns made again from
 the decided roles and metrics (draft.sync_regex), and `revision: 1` (`version` stays
@@ -13,7 +14,9 @@ the protocol format, evidence/protocol.py). A copy `protocol.v1.yaml` is the bas
 proposal.json records what the protocol was made from: the frame, the draft's sources, the critic, every
 decision with who made it, the deterministic checks on the frozen protocol, the run settings the cascade
 card chose (`strategy`), the vocabulary `{name, sha256}` or null, the model and prompt hash of every model
-step, the sha256 of the inputs and of the protocol.
+step, the sha256 of the inputs and of the protocol, and `review`: who decided (`status` model_defaults when
+every decision is the model's, human when none is, partly_human otherwise; `decided_by`) and the `waivers`.
+`frozen` (protocol.yaml written) says nothing about review: a protocol of model defaults is frozen too.
 """
 from __future__ import annotations
 
@@ -48,6 +51,12 @@ def ordered(p: dict[str, Any], revision: int) -> dict[str, Any]:
     return out
 
 
+def review_status(decisions: list[dict[str, Any]]) -> str:
+    """model_defaults, partly_human or human: how many decisions someone other than the model made."""
+    human = sum(d["by"] != cards_module.MODEL for d in decisions)
+    return "model_defaults" if human == 0 else "human" if human == len(decisions) else "partly_human"
+
+
 def run(directory: Path | str, *, created: str | None = None) -> Path:
     directory = Path(directory)
     if (directory / PROTOCOL).exists():
@@ -63,7 +72,9 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
     fresh(directory, DRAFT, critic.get("draft_sha256"), "critic")
     fresh(directory, DRAFT, cards.get("draft_sha256"), "cards")
     fresh(directory, CRITIC, cards.get("critic_sha256"), "cards")
-    decisions = cards_module.validate(cards["cards"], cards_module.load_decisions(directory))
+    decisions_file = cards_module.load_decisions(directory)
+    decisions = cards_module.validate(cards["cards"], decisions_file)
+    waivers = cards_module.waivers(decisions_file)
 
     draft = yaml.safe_load(draft_path.read_text(encoding="utf-8"))
     applied, run_settings = cards_module.apply(draft, decisions, f)
@@ -75,12 +86,17 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
         raise ProposalError(f"the decided protocol does not validate: {exc}") from exc
 
     final = critic_module.checks(text, f)
-    broken = next(c for c in final if c["id"] == "regex_matches_enums")
-    if not broken["ok"]:
-        raise ProposalError(f"the decided protocol's regex steps do not match its enums: {broken['message']}")
+    waived = {w["check"] for w in waivers}
+    broken = [c for c in critic_module.blocking_failures(final) if c["id"] not in waived]
+    if broken:
+        raise ProposalError(f"the decided protocol fails blocking checks {[c['id'] for c in broken]} (fix the "
+                            "decisions, or waive a check in decisions.yaml `waivers` with your name):\n  "
+                            + "\n  ".join(f"{c['id']}: {c['message']}" for c in broken))
     calls = {step: data.get("call") for step, data in
              (("frame", read_json(frame_path)), ("critic", critic), ("cards", cards))}
     people = sorted({d["by"] for d in decisions if d["by"] != cards_module.MODEL})
+    decided_by = {"model": [d["card"] for d in decisions if d["by"] == cards_module.MODEL],
+                  **{who: [d["card"] for d in decisions if d["by"] == who] for who in people}}
     record = {
         "proposal": directory.resolve().name,
         "question": f.question,
@@ -94,8 +110,8 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
                    "critic_sha256": sha(directory / CRITIC), "cards_sha256": sha(directory / CARDS),
                    "decisions_sha256": sha(directory / DECISIONS), "template": sources.get("template")},
         "run_settings": run_settings,
-        "decided_by": {"model": [d["card"] for d in decisions if d["by"] == cards_module.MODEL],
-                       **{who: [d["card"] for d in decisions if d["by"] == who] for who in people}},
+        "decided_by": decided_by,
+        "review": {"status": review_status(decisions), "decided_by": decided_by, "waivers": waivers},
         "decisions": decisions,
         "checks": final,
         "frame": read_json(frame_path),
