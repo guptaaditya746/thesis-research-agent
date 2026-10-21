@@ -12,8 +12,19 @@
 - Exact command: `uv run synth variant --corpus "$CORPORA/rag-llm-s1-mixed" --study S002 --direction contradicts --model sub-model-1 --verify-model sub-model-2 --cache "$EV/cache/synth-llm.jsonl"`
 - Exit code: 1 after three generation attempts.
 - Root cause: the paraphrased counterfactual paper did not associate its expected metric with a value. Fidelity reported `values_associated: S002.m2: its sentence names metrics [], not only S002.k1` on the final attempt. This is a renderer/fidelity content mismatch; it is separate from the Slurm step-start socket collision recorded later in this file.
-- Impact: no LLM counterfactual corpus was produced, so LLM shift reports for this variant are unavailable. The template counterfactual and its engine run succeeded.
+- Impact: no LLM counterfactual corpus was produced, so LLM shift reports for this variant are unavailable. The template counterfactual corpus was created, but its engine scores were missing when Step 16 attempted the shift comparison.
 - Follow-up: retain the failed attempt and its log; diagnose the renderer/fidelity mismatch separately without weakening the fidelity check. Do not present the missing variant as a successful shift result.
+
+## Root-cause review and improvements (2026-10-21)
+
+The initial artifact inspection was followed by deterministic replays through the real engine, freeze, and fidelity code. Inputs, outputs, controls, and provenance are preserved in `tests/EV1/diagnostics/`; [the detailed handoff](../../docs/ev1-review-diagnosis.md) separates observed failures, documented policies, and proposed fixes.
+
+1. **Step 10 wording contract:** the failed draft was recoverable from the model cache, correcting the earlier statement that it was unavailable. Its count sentence says `662 out of 1,000 answers judged factually correct` but omits the full required metric phrase `fraction of answers judged factually correct`. Replaying it reproduces the exact S002.m2 association failure. Adding that exact phrase in the same sentence makes every deterministic check pass. The original failed run remains failed; live verifier acceptance of the repair is untested. Generate and verify atomic Results statements before composing a paper, while preserving difficulty and checking the final composition.
+2. **Shared corpus exclusions:** main retention is 11/20 and knob retention 11/24 because one failed level excludes a study everywhere. In the main set, counted directions change from 12 supporting / 4 neutral / 4 contradicting to 5 / 3 / 3. Keep the shared-set invariant, report exclusions and conditional accuracy separately, compare renderers on matched studies, and declare a retention policy before reruns.
+3. **Counterfactual orchestration:** template generation succeeded after the first engine pass, but recovery targeted only an unavailable LLM variant path and omitted the default `-contradicts` suffix. The later template shift therefore lacked score reports. Drive variant → engine → score → shift from returned paths or one manifest and propagate subcommand failures.
+4. **Proposal and verifier defects reproduced:** the proposed protocol accepts 175% factual accuracy while the hand protocol rejects it; synonym-only papers are screened out before semantic screening; critic changes after cards are not refused; `RAG (no retrieval)` matches both roles; the blind checker accepts correct condition/value pairs with wrong metric/dataset labels. Proposed repairs and regression seams are in the handoff. Freeze accepting model defaults and some failed advisory checks is documented policy; it is not human review.
+
+The new writer/verifier workflow and DSPy optimization pilot are proposed, not implemented or run. The user requested that Claude implement changes using atomic prompts, explicit input/output contracts, examples, deterministic validation, and separate generation and verification; `AGENTS.md` points future prompt work to `docs/prompt-writing.md`.
 
 ## Tunnel UI route test loader
 - Step: UI tunnel support implementation (targeted test)

@@ -1,0 +1,87 @@
+{
+ "draft_sha256": "67efbf4ff746b4d55f1e657ede1955b89401529760cb66b5664d75589d0dc69d",
+ "frame_sha256": "2db6c0f7e822ced4abce752ddc4a997393c59b99a699bb3500fb2ee334c3278f",
+ "ok": false,
+ "checks": [
+  {
+   "id": "parses",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "validates: id rag-factuality, sha256 bad07d5f2272a2f663221c822dd7c727be8f52591702efd0e412234fc99d2058"
+  },
+  {
+   "id": "outcomes_complete",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "every outcome is a question metric with its direction"
+  },
+  {
+   "id": "terms_cover_synonyms",
+   "kind": "deterministic",
+   "ok": false,
+   "message": "not found by the regex patterns: treatment name 'retrieval augmented generation' (no screen term in it); treatment name 'retrieval-augmented' (no screen term in it); treatment name 'retrieval-augmented model' (no screen term in it); treatment name 'retrieval-augmented generator' (no screen term in it); treatment name 'retrieve-then-read' (no screen term in it)"
+  },
+  {
+   "id": "regex_matches_enums",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the regex steps emit only enum values and have a pattern for each"
+  },
+  {
+   "id": "screen_present",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the protocol screens on its terms"
+  },
+  {
+   "id": "label_complete",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the last label row is the default and only it"
+  },
+  {
+   "id": "extractors_registered",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "every extractor is registered"
+  },
+  {
+   "id": "vocabulary_direction",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "no outcome's direction contradicts the vocabulary"
+  },
+  {
+   "id": "ambiguous_roles",
+   "kind": "llm",
+   "ok": false,
+   "message": "The regex for the 'rag' role includes the pattern `(?i)\\b(?:model|LLM|system|variant|generator)\\s+with\\s+retrieval\\b`. This pattern can match phrases like 'model with retrieval' which might be used to describe a baseline or a specific component rather than the full RAG system, or conversely, a 'closed-book' model might be described in a context where 'retrieval' is mentioned as something it *lacks* (e.g., 'unlike the model with retrieval, the closed-book model...'). More critically, the term 'retrieval-augmented' is a synonym for RAG, but the regex `(?i)\\bretrieval[- ]augmented...` might match 'retrieval-augmented' in a negative context if not carefully bounded, though the negative lookahead `(?!\\s+without\\b)` helps. However, the biggest issue is that 'closed-book' is defined as 'without accessing external retrieval sources'. If a paper compares 'RAG' vs 'RAG without retrieval' (which is effectively closed-book), the 'RAG without retrieval' condition might be misclassified. The regex for `closed_book` includes `without retrieval`, which is good. But consider a condition labeled 'RAG (no retrieval)'. The `rag` regex `\\bRAG\\b...` would match 'RAG', and the `closed_book` regex `without retrieval` would match 'no retrieval' if present. If a condition is 'RAG w/o retrieval', it matches `rag` (via RAG) and `closed_book` (via w/o retrieval? No, 'w/o' is not 'without'). If it says 'RAG without retrieval', it matches `rag` (RAG) and `closed_book` (without retrieval). This creates ambiguity where a single condition could be tagged as both `rag` and `closed_book` depending on which regex fires first or if both are allowed. The schema allows `role` to be a single enum value, but the extraction logic might produce conflicting signals. The definition of `rag` is 'A system that retrieves...'. A system that does *not* retrieve is not RAG. If a paper reports 'RAG' and 'RAG (ablation: no retrieval)', the latter is functionally closed-book. The regex for `rag` matches 'RAG'. The regex for `closed_book` matches 'no retrieval' (if written as 'no retrieval') or 'without retrieval'. If the label is 'RAG (no retrieval)', the `rag` regex matches 'RAG'. The `closed_book` regex matches 'no retrieval'. This condition is ambiguous: is it the treatment (RAG) or the control (closed-book)? It is actually a control condition (ablation). The protocol does not clearly distinguish between the *name* containing 'RAG' and the *function* of the condition. A condition named 'RAG' but described as 'without retrieval' is a control. The current regexes might tag it as `rag` because of the name, or `closed_book` because of the description. This is a role ambiguity."
+  },
+  {
+   "id": "missing_comparator",
+   "kind": "llm",
+   "ok": true,
+   "message": "The protocol defines a clear control condition ('closed_book') which represents the same system without the treatment (retrieval). This is a valid comparator."
+  },
+  {
+   "id": "metric_direction",
+   "kind": "llm",
+   "ok": true,
+   "message": "The directions for the metrics are correct: factual_accuracy, factscore, and accuracy are higher_is_better: true; hallucination_rate is higher_is_better: false."
+  },
+  {
+   "id": "scope",
+   "kind": "llm",
+   "ok": true,
+   "message": "The screening question and terms are specific to comparing RAG vs closed-book/non-retrieval baselines on factual accuracy. This appropriately admits relevant papers and excludes those comparing other aspects (e.g., latency, fluency) or other treatments (e.g., fine-tuning vs pre-training) without retrieval."
+  }
+ ],
+ "call": {
+  "step": "critic",
+  "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+  "prompt_sha256": "5508b4e53d9f4c639aeea5cef8491c5db4cbba305f9cefa84e6a16aa04e696b2",
+  "cache_key": "62438b183c6d0b899e2b035e2515e13ed676607edbc65da05eaf149800b91ff1",
+  "cached": false
+ },
+ "created": "2026-10-20T21:24:11+00:00"
+}

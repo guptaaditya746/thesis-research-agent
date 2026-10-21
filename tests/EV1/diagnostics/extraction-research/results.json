@@ -1,0 +1,609 @@
+{
+  "scope": "adversarial microcases; not held-out accuracy estimates",
+  "git_head": "3aa868e4158333aeb441968884ba5ef120aa3639",
+  "proposal_fixture_sha256": "16b61bd55cba8a76b998f704cc5b52e78791f907326bdf885d5013fd6d24d83d",
+  "source_sha256": {
+    "evidence/extractors/terms.py": "fe6886085c35c60f018e7dc3acb61d48c0c1a794a0087f92eb14f194b455a522",
+    "evidence/extractors/measure.py": "59326915aab056c41132191d330414ad363f1fd4348ad2a5a4c69f5d3bd1c2df",
+    "evidence/engine.py": "e5d98905210c1cdcfc0b61d30af1a944ab25dd4c97cf3f6681f82459f35c7756"
+  },
+  "results": [
+    {
+      "experiment": "condition_scope",
+      "input": "RAG (no retrieval)",
+      "expected_roles": [
+        "closed_book"
+      ],
+      "actual_mentions": [
+        {
+          "text": "RAG",
+          "role": "rag"
+        },
+        {
+          "text": "no retrieval",
+          "role": "closed_book"
+        }
+      ],
+      "matches_expected": false,
+      "candidate_only_roles": [
+        "closed_book"
+      ]
+    },
+    {
+      "experiment": "condition_scope",
+      "input": "RAG (without retrieval)",
+      "expected_roles": [
+        "closed_book"
+      ],
+      "actual_mentions": [
+        {
+          "text": "RAG",
+          "role": "rag"
+        },
+        {
+          "text": "without retrieval",
+          "role": "closed_book"
+        }
+      ],
+      "matches_expected": false,
+      "candidate_only_roles": [
+        "closed_book"
+      ]
+    },
+    {
+      "experiment": "condition_scope",
+      "input": "RAG (no reranking)",
+      "expected_roles": [
+        "other"
+      ],
+      "actual_mentions": [
+        {
+          "text": "RAG",
+          "role": "rag"
+        }
+      ],
+      "matches_expected": false,
+      "candidate_only_roles": [
+        "other"
+      ]
+    },
+    {
+      "experiment": "condition_scope",
+      "input": "RAG without reranking",
+      "expected_roles": [
+        "other"
+      ],
+      "actual_mentions": [],
+      "matches_expected": false,
+      "candidate_only_roles": [
+        "other"
+      ]
+    },
+    {
+      "experiment": "condition_scope",
+      "input": "RAG model",
+      "expected_roles": [
+        "rag"
+      ],
+      "actual_mentions": [
+        {
+          "text": "RAG model",
+          "role": "rag"
+        }
+      ],
+      "matches_expected": true,
+      "candidate_only_roles": null
+    },
+    {
+      "experiment": "condition_scope",
+      "input": "The RAG model is not worse than the closed-book model.",
+      "expected_roles": [
+        "rag",
+        "closed_book"
+      ],
+      "actual_mentions": [
+        {
+          "text": "RAG model",
+          "role": "rag"
+        },
+        {
+          "text": "closed-book",
+          "role": "closed_book"
+        }
+      ],
+      "matches_expected": true,
+      "candidate_only_roles": null
+    },
+    {
+      "experiment": "condition_scope",
+      "input": "The RAG model has no retrieval failures.",
+      "expected_roles": [
+        "rag"
+      ],
+      "actual_mentions": [
+        {
+          "text": "RAG model",
+          "role": "rag"
+        },
+        {
+          "text": "no retrieval",
+          "role": "closed_book"
+        }
+      ],
+      "matches_expected": false,
+      "candidate_only_roles": null
+    },
+    {
+      "experiment": "condition_scope",
+      "input": "Unlike the RAG model, the baseline uses no retrieval.",
+      "expected_roles": [
+        "rag",
+        "closed_book"
+      ],
+      "actual_mentions": [
+        {
+          "text": "RAG model",
+          "role": "rag"
+        },
+        {
+          "text": "no retrieval",
+          "role": "closed_book"
+        }
+      ],
+      "matches_expected": true,
+      "candidate_only_roles": null
+    },
+    {
+      "experiment": "metric_order",
+      "input": "FActScore",
+      "all_rules_matching": [
+        {
+          "canonical": "factscore",
+          "text": "FActScore"
+        },
+        {
+          "canonical": "factual_accuracy",
+          "text": "FActScore"
+        }
+      ],
+      "forward": [
+        "factscore"
+      ],
+      "reversed": [
+        "factual_accuracy"
+      ]
+    },
+    {
+      "experiment": "metric_order",
+      "input": "factuality score",
+      "all_rules_matching": [
+        {
+          "canonical": "factscore",
+          "text": "factuality score"
+        },
+        {
+          "canonical": "factual_accuracy",
+          "text": "factuality score"
+        }
+      ],
+      "forward": [
+        "factscore"
+      ],
+      "reversed": [
+        "factual_accuracy"
+      ]
+    },
+    {
+      "experiment": "metric_order",
+      "input": "accuracy",
+      "all_rules_matching": [
+        {
+          "canonical": "accuracy",
+          "text": "accuracy"
+        },
+        {
+          "canonical": "factual_accuracy",
+          "text": "accuracy"
+        }
+      ],
+      "forward": [
+        "accuracy"
+      ],
+      "reversed": [
+        "factual_accuracy"
+      ]
+    },
+    {
+      "experiment": "metric_order",
+      "input": "factual accuracy",
+      "all_rules_matching": [
+        {
+          "canonical": "accuracy",
+          "text": "accuracy"
+        },
+        {
+          "canonical": "factual_accuracy",
+          "text": "factual accuracy"
+        },
+        {
+          "canonical": "factual_accuracy",
+          "text": "accuracy"
+        }
+      ],
+      "forward": [
+        "factual_accuracy"
+      ],
+      "reversed": [
+        "factual_accuracy"
+      ]
+    },
+    {
+      "experiment": "measurement_layout",
+      "case": "simple_table",
+      "input": "# Comparison\n\nWe compare a RAG model with a closed-book model.\n\n## Results\n\n| System | Factual accuracy (%) |\n|---|---|\n| RAG model | 75 |\n| closed-book model | 60 |\n",
+      "expected_measurements": [
+        {
+          "role": "rag",
+          "value": 0.75,
+          "dataset": null
+        },
+        {
+          "role": "baseline",
+          "value": 0.6,
+          "dataset": null
+        }
+      ],
+      "actual_measurements": [
+        {
+          "role": "rag",
+          "dataset": null,
+          "value": 0.75
+        },
+        {
+          "role": "baseline",
+          "dataset": null,
+          "value": 0.6
+        }
+      ],
+      "matches_expected": true,
+      "answer": {
+        "contradicting": [],
+        "counts": {
+          "contradicting": 0,
+          "duplicates": 0,
+          "neutral": 0,
+          "supporting": 1,
+          "undetermined": 0
+        },
+        "duplicates": [],
+        "flags": {
+          "claim_disagrees": [],
+          "duplicate": [],
+          "large_effect": []
+        },
+        "label": "supported",
+        "neutral": [],
+        "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+        "studies": [
+          {
+            "author_claim": null,
+            "control": {
+              "condition": "c-400f2efd3c3ef78c",
+              "measurement": "m-49f72da00263e298",
+              "value": 0.6
+            },
+            "delta": 0.15,
+            "direction": "supports",
+            "document": "P",
+            "duplicate_of": null,
+            "flags": [],
+            "funnel": {
+              "screened": false,
+              "stopped_after": null
+            },
+            "metric": "factual_accuracy",
+            "reason": null,
+            "treatment": {
+              "condition": "c-a7c3b5455542ad68",
+              "measurement": "m-19776f08e5bf5dfc",
+              "value": 0.75
+            }
+          }
+        ],
+        "supporting": [
+          "P"
+        ],
+        "system": "evidence-engine",
+        "undetermined": []
+      }
+    },
+    {
+      "experiment": "measurement_layout",
+      "case": "transposed_table",
+      "input": "# Comparison\n\nWe compare a RAG model with a closed-book model.\n\n## Results\n\n| Metric | RAG model | closed-book model |\n|---|---|---|\n| factual accuracy (%) | 75 | 60 |\n",
+      "expected_measurements": [
+        {
+          "role": "rag",
+          "value": 0.75,
+          "dataset": null
+        },
+        {
+          "role": "baseline",
+          "value": 0.6,
+          "dataset": null
+        }
+      ],
+      "actual_measurements": [
+        {
+          "role": "rag",
+          "dataset": null,
+          "value": 0.75
+        },
+        {
+          "role": "baseline",
+          "dataset": null,
+          "value": 0.6
+        }
+      ],
+      "matches_expected": true,
+      "answer": {
+        "contradicting": [],
+        "counts": {
+          "contradicting": 0,
+          "duplicates": 0,
+          "neutral": 0,
+          "supporting": 1,
+          "undetermined": 0
+        },
+        "duplicates": [],
+        "flags": {
+          "claim_disagrees": [],
+          "duplicate": [],
+          "large_effect": []
+        },
+        "label": "supported",
+        "neutral": [],
+        "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+        "studies": [
+          {
+            "author_claim": null,
+            "control": {
+              "condition": "c-400f2efd3c3ef78c",
+              "measurement": "m-a5bd82c674123fee",
+              "value": 0.6
+            },
+            "delta": 0.15,
+            "direction": "supports",
+            "document": "P",
+            "duplicate_of": null,
+            "flags": [],
+            "funnel": {
+              "screened": false,
+              "stopped_after": null
+            },
+            "metric": "factual_accuracy",
+            "reason": null,
+            "treatment": {
+              "condition": "c-0ca96d5bc008422f",
+              "measurement": "m-f790a87c124d579d",
+              "value": 0.75
+            }
+          }
+        ],
+        "supporting": [
+          "P"
+        ],
+        "system": "evidence-engine",
+        "undetermined": []
+      }
+    },
+    {
+      "experiment": "measurement_layout",
+      "case": "dataset_first_table",
+      "input": "# Comparison\n\nWe compare a RAG model with a closed-book model.\n\n## Results\n\n| Dataset | System | Factual accuracy (%) |\n|---|---|---|\n| Trivia | RAG model | 75 |\n| Trivia | closed-book model | 60 |\n",
+      "expected_measurements": [
+        {
+          "role": "rag",
+          "value": 0.75,
+          "dataset": "Trivia"
+        },
+        {
+          "role": "baseline",
+          "value": 0.6,
+          "dataset": "Trivia"
+        }
+      ],
+      "actual_measurements": [],
+      "matches_expected": false,
+      "answer": {
+        "contradicting": [],
+        "counts": {
+          "contradicting": 0,
+          "duplicates": 0,
+          "neutral": 0,
+          "supporting": 0,
+          "undetermined": 1
+        },
+        "duplicates": [],
+        "flags": {
+          "claim_disagrees": [],
+          "duplicate": [],
+          "large_effect": []
+        },
+        "label": "insufficient",
+        "neutral": [],
+        "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+        "studies": [
+          {
+            "author_claim": null,
+            "control": null,
+            "delta": null,
+            "direction": "undetermined",
+            "document": "P",
+            "duplicate_of": null,
+            "flags": [],
+            "funnel": {
+              "screened": false,
+              "stopped_after": null
+            },
+            "metric": null,
+            "reason": {
+              "code": "no_pair",
+              "text": "no rag and baseline measurement on a question metric"
+            },
+            "treatment": null
+          }
+        ],
+        "supporting": [],
+        "system": "evidence-engine",
+        "undetermined": [
+          "P"
+        ]
+      }
+    },
+    {
+      "experiment": "measurement_layout",
+      "case": "dataset_last_table",
+      "input": "# Comparison\n\nWe compare a RAG model with a closed-book model.\n\n## Results\n\n| System | Factual accuracy (%) | Dataset |\n|---|---|---|\n| RAG model | 75 | Trivia |\n| closed-book model | 60 | Trivia |\n",
+      "expected_measurements": [
+        {
+          "role": "rag",
+          "value": 0.75,
+          "dataset": "Trivia"
+        },
+        {
+          "role": "baseline",
+          "value": 0.6,
+          "dataset": "Trivia"
+        }
+      ],
+      "actual_measurements": [
+        {
+          "role": "baseline",
+          "dataset": "Trivia",
+          "value": 0.6
+        },
+        {
+          "role": "rag",
+          "dataset": "Trivia",
+          "value": 0.75
+        }
+      ],
+      "matches_expected": true,
+      "answer": {
+        "contradicting": [],
+        "counts": {
+          "contradicting": 0,
+          "duplicates": 0,
+          "neutral": 0,
+          "supporting": 1,
+          "undetermined": 0
+        },
+        "duplicates": [],
+        "flags": {
+          "claim_disagrees": [],
+          "duplicate": [],
+          "large_effect": []
+        },
+        "label": "supported",
+        "neutral": [],
+        "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+        "studies": [
+          {
+            "author_claim": null,
+            "control": {
+              "condition": "c-400f2efd3c3ef78c",
+              "measurement": "m-4e38d4f2905c2731",
+              "value": 0.6
+            },
+            "delta": 0.15,
+            "direction": "supports",
+            "document": "P",
+            "duplicate_of": null,
+            "flags": [],
+            "funnel": {
+              "screened": false,
+              "stopped_after": null
+            },
+            "metric": "factual_accuracy",
+            "reason": null,
+            "treatment": {
+              "condition": "c-82083e4485c3ab03",
+              "measurement": "m-f6c8e8bf0e802384",
+              "value": 0.75
+            }
+          }
+        ],
+        "supporting": [
+          "P"
+        ],
+        "system": "evidence-engine",
+        "undetermined": []
+      }
+    },
+    {
+      "experiment": "measurement_layout",
+      "case": "denominator_prose",
+      "input": "# Comparison\n\nWe compare a RAG model with a closed-book model.\n\n## Results\n\nThe RAG model has factual accuracy of 75 out of 100 answers. The closed-book model has factual accuracy of 60 out of 100 answers.\n",
+      "expected_measurements": [
+        {
+          "role": "rag",
+          "value": 0.75,
+          "dataset": null
+        },
+        {
+          "role": "baseline",
+          "value": 0.6,
+          "dataset": null
+        }
+      ],
+      "actual_measurements": [],
+      "matches_expected": false,
+      "answer": {
+        "contradicting": [],
+        "counts": {
+          "contradicting": 0,
+          "duplicates": 0,
+          "neutral": 0,
+          "supporting": 0,
+          "undetermined": 1
+        },
+        "duplicates": [],
+        "flags": {
+          "claim_disagrees": [],
+          "duplicate": [],
+          "large_effect": []
+        },
+        "label": "insufficient",
+        "neutral": [],
+        "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+        "studies": [
+          {
+            "author_claim": null,
+            "control": null,
+            "delta": null,
+            "direction": "undetermined",
+            "document": "P",
+            "duplicate_of": null,
+            "flags": [],
+            "funnel": {
+              "screened": false,
+              "stopped_after": null
+            },
+            "metric": null,
+            "reason": {
+              "code": "no_pair",
+              "text": "no rag and baseline measurement on a question metric"
+            },
+            "treatment": null
+          }
+        ],
+        "supporting": [],
+        "system": "evidence-engine",
+        "undetermined": [
+          "P"
+        ]
+      }
+    }
+  ]
+}

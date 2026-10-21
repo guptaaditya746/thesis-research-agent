@@ -1,0 +1,150 @@
+[
+  {
+    "experiment": "condition_scope",
+    "input": "RAG (no retrieval)",
+    "matches_expected": false
+  },
+  {
+    "experiment": "condition_scope",
+    "input": "RAG (without retrieval)",
+    "matches_expected": false
+  },
+  {
+    "experiment": "condition_scope",
+    "input": "RAG (no reranking)",
+    "matches_expected": false
+  },
+  {
+    "experiment": "condition_scope",
+    "input": "RAG without reranking",
+    "matches_expected": false
+  },
+  {
+    "experiment": "condition_scope",
+    "input": "RAG model",
+    "matches_expected": true
+  },
+  {
+    "experiment": "condition_scope",
+    "input": "The RAG model is not worse than the closed-book mo",
+    "matches_expected": true
+  },
+  {
+    "experiment": "condition_scope",
+    "input": "The RAG model has no retrieval failures.",
+    "matches_expected": false
+  },
+  {
+    "experiment": "condition_scope",
+    "input": "Unlike the RAG model, the baseline uses no retriev",
+    "matches_expected": true
+  },
+  {
+    "experiment": "metric_order",
+    "input": "FActScore",
+    "forward": [
+      "factscore"
+    ],
+    "reversed": [
+      "factual_accuracy"
+    ]
+  },
+  {
+    "experiment": "metric_order",
+    "input": "factuality score",
+    "forward": [
+      "factscore"
+    ],
+    "reversed": [
+      "factual_accuracy"
+    ]
+  },
+  {
+    "experiment": "metric_order",
+    "input": "accuracy",
+    "forward": [
+      "accuracy"
+    ],
+    "reversed": [
+      "factual_accuracy"
+    ]
+  },
+  {
+    "experiment": "metric_order",
+    "input": "factual accuracy",
+    "forward": [
+      "factual_accuracy"
+    ],
+    "reversed": [
+      "factual_accuracy"
+    ]
+  },
+  {
+    "experiment": "measurement_layout",
+    "input": "# Comparison\n\nWe compare a RAG model with a closed",
+    "case": "simple_table",
+    "matches_expected": true,
+    "actual_measurements": [
+      {
+        "role": "rag",
+        "dataset": null,
+        "value": 0.75
+      },
+      {
+        "role": "baseline",
+        "dataset": null,
+        "value": 0.6
+      }
+    ]
+  },
+  {
+    "experiment": "measurement_layout",
+    "input": "# Comparison\n\nWe compare a RAG model with a closed",
+    "case": "transposed_table",
+    "matches_expected": true,
+    "actual_measurements": [
+      {
+        "role": "rag",
+        "dataset": null,
+        "value": 0.75
+      },
+      {
+        "role": "baseline",
+        "dataset": null,
+        "value": 0.6
+      }
+    ]
+  },
+  {
+    "experiment": "measurement_layout",
+    "input": "# Comparison\n\nWe compare a RAG model with a closed",
+    "case": "dataset_first_table",
+    "matches_expected": false,
+    "actual_measurements": []
+  },
+  {
+    "experiment": "measurement_layout",
+    "input": "# Comparison\n\nWe compare a RAG model with a closed",
+    "case": "dataset_last_table",
+    "matches_expected": true,
+    "actual_measurements": [
+      {
+        "role": "baseline",
+        "dataset": "Trivia",
+        "value": 0.6
+      },
+      {
+        "role": "rag",
+        "dataset": "Trivia",
+        "value": 0.75
+      }
+    ]
+  },
+  {
+    "experiment": "measurement_layout",
+    "input": "# Comparison\n\nWe compare a RAG model with a closed",
+    "case": "denominator_prose",
+    "matches_expected": false,
+    "actual_measurements": []
+  }
+]

@@ -468,3 +468,12 @@ Status: PARTIAL; failures are retained in the run artifacts. Compact artifacts a
 | Step 18 checks and publication | artifacts copied: 12159 files (67243809 bytes); see commit |
 
 Step 8 completed successfully. The first attempts to launch Steps 9 and 10 encountered a Slurm step-start socket collision; the retries and recovery are recorded under `tests/EV1/live-rerun/logs/` and `failures.md`. The proposal protocol passed validation but differs from the hand-written protocol; the generated proposal remains separate pending review. A human fidelity sample review remains outstanding.
+
+### EV1 diagnosis and research handoff (2026-10-21)
+
+| Item | Status | Observation and evidence |
+| --- | --- | --- |
+| Offline review probes | DIAGNOSTIC ONLY; defects remain | Two identical executions of 15 focused probes; exit 1 intentionally reports findings. The initial pair took 4.92 s after imports; branch replay took 4.88 s. Real engine, freeze and fidelity code; scripted model replies; captured Step 10 draft replay. Inputs, controls, source hashes and outputs: `tests/EV1/diagnostics/`. |
+| Human review | OUTSTANDING | Live mixed sample covers 11 papers and 342 placement rows; zero rows have all three review fields completed. Proposal decisions remain model defaults. Generating or freezing artifacts does not complete these reviews. |
+| Prompt and verification policy | RECORDED; future implementation | `AGENTS.md` points to `docs/prompt-writing.md`; atomic task contracts, examples, typed outputs, code validation and separate model verification. The new three-model pilot and DSPy optimizer remain NOT RUN. |
+| Research and implementation handoff | RECORDED | Two research agents completed primary-source notes under `docs/research/`. Extraction: 17 CPU microcases exposed negation, alias, table-order and count-expression limitations. Evaluation: saved paired intervals reproduced; coverage, parent-study reuse, citation overlap and empty-gold fixtures audited. Inputs/outputs are in `tests/EV1/diagnostics/`; these are diagnostic cases, not broad accuracy estimates. |

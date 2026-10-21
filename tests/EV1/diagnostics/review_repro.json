@@ -1,0 +1,178 @@
+[
+  {
+    "id": "screen_synonym_rescue",
+    "ok": false,
+    "expected": "known synonym reaches semantic screen",
+    "model_calls": [],
+    "skipped": true,
+    "screen": "none of the terms retrieval-augmented generation, RAG, factual accuracy, factuality, closed-book, hallucination occurs in the paper"
+  },
+  {
+    "id": "screen_single_synonym_control",
+    "ok": true,
+    "model_calls": [
+      "screen",
+      "measurement"
+    ],
+    "skipped": false
+  },
+  {
+    "id": "unresolved_deterministic_checks",
+    "ok": false,
+    "classification": "documented policy; missing recommended safeguard",
+    "expected": "blocking checks are resolved or explicitly waived",
+    "failed_checks": [
+      "terms_cover_synonyms"
+    ],
+    "frozen": true,
+    "decided_by": {
+      "model": [
+        "screen",
+        "roles",
+        "metrics",
+        "min_effect",
+        "pairing",
+        "label",
+        "cascade",
+        "locate"
+      ]
+    }
+  },
+  {
+    "id": "coverage_repair_control",
+    "ok": true,
+    "failed_checks": []
+  },
+  {
+    "id": "critic_freshness",
+    "ok": false,
+    "expected": "cards must be regenerated after their critic input changes",
+    "changed_critic_accepted": true
+  },
+  {
+    "id": "accuracy_bounds_proposal",
+    "ok": false,
+    "expected": "normalized accuracy outside [0,1] is rejected",
+    "accepted_values": [
+      1.75,
+      0.6
+    ]
+  },
+  {
+    "id": "accuracy_bounds_hand",
+    "ok": true,
+    "expected": "normalized accuracy outside [0,1] is rejected",
+    "accepted_values": [
+      0.6
+    ]
+  },
+  {
+    "id": "metric_rule_overlap",
+    "ok": false,
+    "classification": "rule-order sensitivity; current order is deterministic",
+    "matching_canonicals": [
+      "factscore",
+      "factual_accuracy"
+    ],
+    "effective": [
+      "factscore"
+    ],
+    "reversed_order": [
+      "factual_accuracy"
+    ]
+  },
+  {
+    "id": "negated_condition",
+    "ok": false,
+    "expected": "one ablation condition is control only",
+    "recognized_roles": [
+      "rag",
+      "closed_book"
+    ]
+  },
+  {
+    "id": "locate_exhaustive_control",
+    "ok": true,
+    "scope": {
+      "kind": "document",
+      "ranges": []
+    },
+    "params_ignored_as_designed": true
+  },
+  {
+    "id": "step10_original",
+    "ok": false,
+    "required_string_problems": [],
+    "failed_checks": [
+      {
+        "name": "values_associated",
+        "detail": "S002.m2: its sentence names metrics [], not only S002.k1"
+      }
+    ],
+    "blind_verifier_run": false
+  },
+  {
+    "id": "step10_wording_control",
+    "ok": true,
+    "required_string_problems": [],
+    "failed_checks": [],
+    "blind_verifier_run": false
+  },
+  {
+    "id": "blind_metric_dataset_validation",
+    "ok": false,
+    "expected": "a verifier assigning every value to the wrong metric/dataset is rejected",
+    "accepted_wrong_metric_and_dataset": true,
+    "classification": "verifier currently checks only condition/value; incomplete semantic coverage"
+  },
+  {
+    "id": "retention_rag-llm-s1",
+    "ok": true,
+    "classification": "selection audit; no unbiasedness verdict",
+    "requested_records": 20,
+    "retained_records": 11,
+    "counted_directions_before": {
+      "supports": 12,
+      "neutral": 4,
+      "contradicts": 4
+    },
+    "counted_directions_kept": {
+      "supports": 5,
+      "neutral": 3,
+      "contradicts": 3
+    },
+    "per_level_local_pass": {
+      "explicit": 19,
+      "paraphrased": 19,
+      "distributed": 14,
+      "complex": 17,
+      "contradictory": 19,
+      "mixed": 19
+    }
+  },
+  {
+    "id": "retention_rag-llm-k1",
+    "ok": true,
+    "classification": "selection audit; no unbiasedness verdict",
+    "requested_records": 24,
+    "retained_records": 11,
+    "counted_directions_before": {
+      "supports": 12,
+      "neutral": 3,
+      "contradicts": 3
+    },
+    "counted_directions_kept": {
+      "supports": 5,
+      "neutral": 2,
+      "contradicts": 2
+    },
+    "per_level_local_pass": {
+      "explicit": 23,
+      "paraphrased": 23,
+      "distributed": 16,
+      "complex": 19,
+      "contradictory": 22,
+      "mixed": 23
+    }
+  }
+]

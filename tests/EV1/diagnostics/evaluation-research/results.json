@@ -1,0 +1,240 @@
+{
+  "evidence_types": {
+    "saved_report": "deterministic replay of saved live output; no fresh model calls",
+    "retained_ids_and_review": "audit of saved live artifacts",
+    "toy_clustering_and_helper_edges": "controlled illustrative fixtures, not EV1 results"
+  },
+  "environment": {
+    "python": "3.13.12",
+    "scipy": "1.18.1"
+  },
+  "report_path": "tests/EV1/live-rerun/scores/cascade/rag-llm-s1-mixed/report.json",
+  "report_sha256": "1c4907bf3b8ea29e71ff2d37ef6ea09596990b2e12322dc4791544d7928c67f9",
+  "saved_intervals_reproduced_at_report_precision": true,
+  "actual_system_coverage": {
+    "evidence-engine": {
+      "rows": 11,
+      "unique_papers": 11,
+      "correct": 11,
+      "undetermined": 0
+    },
+    "rag-baseline": {
+      "rows": 11,
+      "unique_papers": 11,
+      "correct": 6,
+      "undetermined": 5
+    },
+    "agent-baseline": {
+      "rows": 11,
+      "unique_papers": 11,
+      "correct": 9,
+      "undetermined": 0
+    }
+  },
+  "actual_direction_mix": {
+    "template_full_20": {
+      "supports": 12,
+      "neutral": 4,
+      "contradicts": 4
+    },
+    "llm_retained_11": {
+      "supports": 5,
+      "neutral": 3,
+      "contradicts": 3
+    }
+  },
+  "replayed_intervals": {
+    "extraction": [],
+    "synthesis": [
+      {
+        "system": "evidence-engine",
+        "point": 1.0,
+        "low": null,
+        "high": null,
+        "method": null
+      },
+      {
+        "system": "rag-baseline",
+        "point": 0.5454545454545454,
+        "low": 0.2727272727272727,
+        "high": 0.8181818181818182,
+        "method": "BCa"
+      },
+      {
+        "system": "agent-baseline",
+        "point": 0.8181818181818182,
+        "low": 0.5454545454545454,
+        "high": 1.0,
+        "method": "BCa"
+      }
+    ],
+    "paired": [
+      {
+        "system": "rag-baseline",
+        "point": 0.45454545454545453,
+        "low": 0.18181818181818182,
+        "high": 0.7272727272727273,
+        "method": "BCa"
+      },
+      {
+        "system": "agent-baseline",
+        "point": 0.18181818181818182,
+        "low": 0.0,
+        "high": 0.45454545454545453,
+        "method": "BCa"
+      }
+    ]
+  },
+  "review_audit": {
+    "rows": 342,
+    "papers": 11,
+    "completed_marks": {
+      "present": 0,
+      "states_truth": 0,
+      "unambiguous": 0
+    }
+  },
+  "repeated_study_audit": {
+    "rows_per_level": {
+      "explicit": 11,
+      "paraphrased": 11,
+      "distributed": 11,
+      "complex": 11,
+      "contradictory": 11,
+      "mixed": 11
+    },
+    "unique_parent_studies": 11,
+    "total_renderings": 66,
+    "ids_identical_across_levels": true
+  },
+  "illustrative_clustering": {
+    "input_parent_outcomes": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "renderings_per_parent": 6,
+    "naive_rendering_interval": {
+      "point": 0.5454545454545454,
+      "low": 0.42424242424242425,
+      "high": 0.6610748034472876,
+      "method": "BCa"
+    },
+    "parent_cluster_interval": {
+      "point": 0.5454545454545454,
+      "low": 0.2727272727272727,
+      "high": 0.8181818181818181,
+      "method": "BCa"
+    }
+  },
+  "illustrative_perfect_small_sample": {
+    "n": 11,
+    "bootstrap": {
+      "point": 1.0,
+      "low": null,
+      "high": null,
+      "method": null
+    },
+    "iid_exact_binomial_interval": {
+      "low": 0.7150858470818456,
+      "high": 1.0
+    },
+    "assumption": "IID representative Bernoulli sample; not established for EV1"
+  },
+  "missing_prediction_fixture": {
+    "truth_count": 3,
+    "predictions": 1,
+    "scored_rows": 3,
+    "rows": [
+      {
+        "level": "all",
+        "studies": 3,
+        "determined": 3,
+        "direction_accuracy": 0.3333333333333333,
+        "completeness": 0.3333333333333333,
+        "accuracy_answered": 1.0,
+        "citations": null,
+        "traceability": null
+      },
+      {
+        "level": "explicit",
+        "studies": 3,
+        "determined": 3,
+        "direction_accuracy": 0.3333333333333333,
+        "completeness": 0.3333333333333333,
+        "accuracy_answered": 1.0,
+        "citations": null,
+        "traceability": null
+      }
+    ]
+  },
+  "helper_partial_overlap_fixture": {
+    "engine_rows": 3,
+    "baseline_rows": 1,
+    "output": [
+      {
+        "system": "partial-fixture",
+        "point": 1.0,
+        "low": null,
+        "high": null,
+        "method": null
+      }
+    ],
+    "scope": "direct helper input, not normal same-truth score path"
+  },
+  "empty_truth_fixture": {
+    "synthesis": {
+      "system": "unknown",
+      "label": null,
+      "expected_label": null,
+      "label_correct": true,
+      "rows": [],
+      "studies": [],
+      "confusion": [],
+      "flags": null
+    },
+    "intervals": {
+      "extraction": [],
+      "synthesis": [
+        {
+          "system": "unknown",
+          "point": null,
+          "low": null,
+          "high": null,
+          "method": null
+        }
+      ],
+      "paired": []
+    }
+  },
+  "broad_citation_fixture": {
+    "placement_role": "condition_label",
+    "placement_span": [
+      10,
+      20
+    ],
+    "citation_span": [
+      0,
+      1000
+    ],
+    "score": {
+      "explicit": {
+        "citations": 1,
+        "traced": true
+      },
+      "all": {
+        "citations": 1,
+        "traced": true
+      }
+    },
+    "meaning": "overlap succeeds; claim entailment and quote specificity are not tested"
+  }
+}

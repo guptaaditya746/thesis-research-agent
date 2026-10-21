@@ -1,0 +1,106 @@
+{
+  "conditions": {
+    "rag": [
+      "(?i)\\bretrieval[- ]augmented(?:\\s+generation)?+(?:\\s+(?:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\\s+without\\b)",
+      "\\bRAG\\b(?:\\s+(?i:model|variant|system|setting|pipeline|condition|configuration|LLM|approach))?+(?!\\s+(?i:with|without)\\b)",
+      "(?i)\\b(?:model|LLM|system|variant|generator)\\s+with\\s+retrieval\\b",
+      "(?i)(?<!\\w)retrieve\\-then\\-read(?!\\w)"
+    ],
+    "closed_book": [
+      "(?i)(?<!\\w)closed\\-book(?!\\w)",
+      "(?i)(?<!\\w)without\\s+retrieval(?!\\w)",
+      "(?i)(?<!\\w)no\\s+retrieval(?!\\w)",
+      "(?i)(?<!\\w)no\\-retrieval\\s+baseline(?!\\w)",
+      "(?i)(?<!\\w)parametric\\-only\\s+model(?!\\w)",
+      "(?i)(?<!\\w)vanilla\\s+LLM(?!\\w)"
+    ]
+  },
+  "metrics": [
+    [
+      "(?i)(?<!\\w)accuracy(?!\\w)",
+      "accuracy",
+      true
+    ],
+    [
+      "(?i)(?<!\\w)factuality\\s+score(?!\\w)",
+      "factscore",
+      true
+    ],
+    [
+      "(?i)(?<!\\w)FActScore(?!\\w)",
+      "factscore",
+      true
+    ],
+    [
+      "(?i)(?<!\\w)share\\s+of\\s+hallucinated\\s+answers(?!\\w)",
+      "hallucination_rate",
+      false
+    ],
+    [
+      "(?i)(?<!\\w)hallucination\\s+ratio(?!\\w)",
+      "hallucination_rate",
+      false
+    ],
+    [
+      "(?i)(?<!\\w)factual\\s+correctness(?!\\w)",
+      "factual_accuracy",
+      true
+    ],
+    [
+      "(?i)\\bfactual(?:ity)?\\s+accuracy\\b",
+      "factual_accuracy",
+      true
+    ],
+    [
+      "(?i)\\b(?:answer|exact[- ]match|EM|QA)\\s+accuracy\\b",
+      "factual_accuracy",
+      true
+    ],
+    [
+      "(?i)\\baccuracy\\b",
+      "factual_accuracy",
+      true
+    ],
+    [
+      "(?i)\\bexact[- ]match\\b",
+      "factual_accuracy",
+      true
+    ],
+    [
+      "(?i)\\bFActScore\\b|\\bfactuality\\s+score\\b",
+      "factual_accuracy",
+      true
+    ],
+    [
+      "(?i)\\bhallucination[- ]rate\\b|\\brate\\s+of\\s+hallucinat(?:ion|ions|ed\\s+answers)\\b",
+      "hallucination_rate",
+      false
+    ],
+    [
+      "(?i)\\blatency\\b",
+      "other",
+      false
+    ],
+    [
+      "\\bBLEU\\b|\\bROUGE(?:-[12L])?\\b",
+      "other",
+      true
+    ],
+    [
+      "(?i)\\bperplexity\\b",
+      "other",
+      false
+    ],
+    [
+      "(?i)\\bfluency\\b",
+      "other",
+      true
+    ],
+    [
+      "\\bF1\\b",
+      "other",
+      true
+    ]
+  ],
+  "original_proposal_sha256": "16b61bd55cba8a76b998f704cc5b52e78791f907326bdf885d5013fd6d24d83d"
+}

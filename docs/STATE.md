@@ -172,3 +172,7 @@ Not built: the 337-paper check (§5 step 8, §7).
 | [`../synth/README.md`](../synth/README.md) | The synthetic benchmark generator |
 | [`../tests/RESULTS.md`](../tests/RESULTS.md) | Every infrastructure and behaviour test, with the test notes as appendices |
 | [`earlier-work.md`](earlier-work.md) | The system before 14 Oct: what it was, decisions and numbers, package essentials, where the removed documents live in git |
+
+## 21 October: review diagnosis and prompt policy
+
+Offline replays reproduced proposal screening loss, missing accuracy bounds, stale critic acceptance, role ambiguity, incomplete blind verification, and the saved Step 10 wording failure. Proof, limitations and proposed repairs are recorded in `docs/ev1-review-diagnosis.md` and `tests/EV1/diagnostics/`; product fixes remain for Claude. `AGENTS.md` now directs prompt and workflow work to the user's atomic-prompt policy in `docs/prompt-writing.md`. Human fidelity and proposal review remain outstanding; the proposed three-model and DSPy pilots have not run. Extraction and evaluation research notes record additional focused experiments and recommendations.

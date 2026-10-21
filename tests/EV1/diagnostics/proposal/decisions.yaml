@@ -1,0 +1,51 @@
+# Decisions on the proposal's choice points (docs/evidence-system.md Part E). Edit, then `evidence propose freeze DIR`.
+# Per card: `choice` is an option id of cards.json, or `custom` together with a `value` in the card's shape
+# (see the options there); `reason` is required (an empty reason is refused); `by` says who decided. The
+# prefilled entries are the model's defaults (`by: model`, reason "default: ..."): freeze accepts them as they
+# stand and records `by`. A choice other than the default must name who made it in `by`.
+decisions:
+- card: screen
+  choice: draft
+  reason: 'default: The draft terms cover the core concepts (RAG, factual accuracy, closed-book) required by the
+    frame''s population definition. While the critic noted missing synonyms for the regex extractor, the screen
+    terms are sufficient for the initial keyword filter, and the LLM screen will handle semantic variations.'
+  by: model
+- card: roles
+  choice: draft
+  reason: 'default: The definitions for ''rag'' and ''closed_book'' accurately reflect the frame''s treatment and
+    control definitions. The critic''s concern about regex ambiguity is an implementation detail of the extractor,
+    not a flaw in the role definitions themselves, which remain the correct conceptual anchors.'
+  by: model
+- card: metrics
+  choice: draft
+  reason: 'default: The metrics listed (factual_accuracy, hallucination_rate, factscore, accuracy) align perfectly
+    with the frame''s outcomes and their directions (higher_is_better) match the vocabulary entries.'
+  by: model
+- card: min_effect
+  choice: draft
+  reason: 'default: A 1% threshold (0.01) is a standard and reasonable default for determining statistical significance
+    in factual accuracy comparisons, balancing sensitivity against noise.'
+  by: model
+- card: pairing
+  choice: draft
+  reason: 'default: Preferring ''table_cell'' over ''document_order'' is the standard best practice for extracting
+    precise numerical results, as tables are the primary location for structured comparison data in scientific papers.'
+  by: model
+- card: label
+  choice: draft
+  reason: 'default: The ''any_evidence'' logic (draft) is appropriate for a systematic review where a single strong
+    study can support a claim, unless contradicted. Requiring two studies (option ''two_studies'') might be overly
+    conservative for a question about a general trend like RAG''s effectiveness.'
+  by: model
+- card: cascade
+  choice: gaps
+  reason: 'default: The ''gaps'' strategy is more efficient than ''all'' because it only escalates to the LLM extractor
+    for items the regex extractor failed to capture or was uncertain about, reducing cost and latency without sacrificing
+    coverage.'
+  by: model
+- card: locate
+  choice: draft
+  reason: 'default: The ''exhaustive'' strategy with chunking (1500 chars, top 6) is a good balance. It ensures
+    the extractors see the most relevant parts of the paper (likely results sections) without processing the entire
+    document, which is efficient for the ''exhaustive'' intent of the frame.'
+  by: model
