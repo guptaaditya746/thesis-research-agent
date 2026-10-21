@@ -172,7 +172,7 @@ def test_a_question_the_built_in_patterns_do_not_know(tmp_path: Path) -> None:
         "control": {"role": "direct", "label": "direct prompting", "definition": "the same model answering directly",
                     "synonyms": ["standard prompting"]},
         "outcomes": [{"canonical": "answer_accuracy", "label": "answer accuracy", "higher_is_better": True,
-                      "fraction": True, "synonyms": ["solve rate"]}],
+                      "scale": "fraction", "synonyms": ["solve rate"]}],
         "effect_labels": RAG_FRAME["effect_labels"],
     }
     d = flow(tmp_path / "cot-accuracy", Scripted(frame_reply=cot), vocab=None,

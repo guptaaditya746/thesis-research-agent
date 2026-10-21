@@ -8,7 +8,8 @@ the flag thresholds. The frame decides the rest:
 - `screen`: the population's screening question and terms;
 - `condition.role` enum `[treatment, control, other]` and `synthesis.compare`;
 - `metric.canonical` enum `[outcomes..., other]` and `synthesis.metrics` (frame order is priority order);
-- the measurement bound [0, 1] on the outcomes that are fractions;
+- the measurement bound [0, 1] on the outcomes that are rate-like (`rate_like`: a fraction or percent scale, or a
+  rate's name when the scale is unstated);
 - `author_claim.direction` enum and `synthesis.claim_map` from the effect labels;
 - the descriptions (built from the definitions) and the bm25 `query` terms: the frame's names plus a fixed
   list of type words per evidence type (`TYPE_WORDS`, taken from the example protocol's queries);
@@ -47,8 +48,17 @@ TYPE_WORDS: dict[str, list[str]] = {
     "measurement": ["table", "results", "achieves", "reaches", "compared", "%"],
     "author_claim": ["conclusion", "show", "find", "hurts", "effect"],
 }
+RATE_LIKE = re.compile(r"(?i)\b(accuracy|rate|precision|recall|f1|fraction|share|proportion|exact.?match)\b")
 REGEX = {"conditions": ("regex_condition", "regex_measurement"), "metrics": ("regex_metric", "regex_measurement"),
          "subject": ("regex_author_claim",)}
+
+
+def rate_like(o: frame_module.Outcome) -> bool:
+    """Whether the engine normalises this outcome's values to [0, 1]: by its scale, else by its names (the
+    model's yes/no on a fraction is not trusted: it said no for an accuracy)."""
+    if o.scale in ("fraction", "percent"):
+        return True
+    return o.scale == "other" and any(RATE_LIKE.search(n) for n in [o.canonical, *o.names])
 
 
 def _clause(text: str) -> str:
@@ -200,7 +210,7 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str) -> tuple[dict[st
     field("evidence_types.metric.description", "invented")
     field("evidence_types.metric.fields.canonical.enum", "invented")
 
-    fractions = [o.canonical for o in f.outcomes if o.fraction]
+    fractions = [o.canonical for o in f.outcomes if rate_like(o)]
     meas = types["measurement"]
     meas["bounds"] = ([{"field": "value", "min": 0, "max": 1,
                         "when": {"link": "metric", "field": "canonical", "values": fractions}}] if fractions else [])

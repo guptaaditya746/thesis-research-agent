@@ -15,6 +15,8 @@ Deterministic (`checks`, also run by freeze on the frozen protocol):
 - `regex_matches_enums` (ours, beyond Part E): every condition role and metric canonical the regex steps
   can emit (their config, else the built-ins) is in the type's enum, and every enum value but `other` has a
   pattern; freeze refuses a protocol that fails it;
+- `bounds_cover_rate_metrics` (ours): every rate-like outcome (draft.rate_like) is in the measurement bound, so
+  a value outside [0, 1] is rejected;
 - `vocabulary_direction` (ours, beyond Part E): no outcome's direction contradicts its vocabulary term's.
 
 LLM checklist (`ambiguous_roles`, `missing_comparator`, `metric_direction`, `scope`): pass or fail, each
@@ -34,6 +36,7 @@ from ..extractors import terms as regex_terms
 from ..extractors.screen import term_pattern
 from ..protocol import Protocol, parse
 from . import frame as frame_module
+from .draft import rate_like
 from .common import CRITIC, DRAFT, FRAME, ask, fresh, model_for, need, now, prompt, read_json, sha, write_json
 from .frame import Frame
 
@@ -121,6 +124,18 @@ def _regex_enums(p: Protocol) -> tuple[bool, str]:
     return True, "the regex steps emit only enum values and have a pattern for each"
 
 
+def bounds_cover_rate_metrics(p: Protocol, f: Frame) -> tuple[bool, str]:
+    """Every rate-like outcome is named by a bound on the measurement value (or the bound has no `when`)."""
+    spec = p.evidence_types.get("measurement")
+    bounds = [b for b in (spec.bounds if spec else ()) if b.field == "value"]
+    covered = {v for b in bounds if b.when for v in b.when.values}
+    missing = [o.canonical for o in f.outcomes if rate_like(o) and o.canonical not in covered
+               and not any(b.when is None for b in bounds)]
+    if missing:
+        return False, f"rate-like outcomes missing from the measurement bound: {missing}"
+    return True, "every rate-like outcome is bounded in the measurement"
+
+
 def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
     """The deterministic checks of a protocol text (and the frame it was made from, when there is one)."""
     out: list[dict[str, Any]] = []
@@ -175,6 +190,7 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
         out.append(_check("vocabulary_direction", not bad,
                           f"direction differs from the vocabulary for {bad}" if bad else
                           "no outcome's direction contradicts the vocabulary"))
+        out.append(_check("bounds_cover_rate_metrics", *(bounds_cover_rate_metrics(p, f) if p is not None else (False, skipped))))
     return out
 
 

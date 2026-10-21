@@ -2,7 +2,7 @@
 
 The model names the population (which papers, as a screening question and the terms a relevant paper
 contains), the treatment and the control (a role id, a label, a definition, synonyms), the outcomes (a
-canonical id, its direction, whether it is a fraction, synonyms) and the effect labels an author's
+canonical id, its direction, the scale of its values, synonyms) and the effect labels an author's
 conclusion takes (each with the direction it asserts). The *source* of every entry is not the model's
 word: the code looks each name up in the vocabulary snapshot (if one is given) and writes
 `source: ontology` with the term's id when it is there, `invented` otherwise. A matched term's other
@@ -16,15 +16,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 from pydantic_ai.models import Model
 
 from . import vocab as vocab_module
 from .common import (CACHE, FRAME, REDO, ProposalError, ask, guard, mark_written, model_for, now, prompt,
                      write_json)
 
-PROMPT = "frame-v1.md"
+PROMPT = "frame-v2.md"
 Source = Literal["ontology", "invented"]
+Scale = Literal["fraction", "percent", "count", "score", "other"]
 ID = r"^[a-z][a-z0-9_]*$"
 
 
@@ -46,7 +47,8 @@ class OutcomeReply(BaseModel):
     canonical: str = Field(description="a short lower-case id, e.g. factual_accuracy")
     label: str
     higher_is_better: bool
-    fraction: bool = Field(description="true when the values are shares between 0 and 1 (accuracies, rates)")
+    scale: Scale = Field(description="how the values are reported: fraction (a share, 0 to 1), percent (0 to 100), "
+                                     "count, score (another scale) or other")
     synonyms: list[str]
 
 
@@ -99,12 +101,28 @@ class Outcome(Strict):
     canonical: str = Field(pattern=ID)
     label: str = Field(min_length=1)
     higher_is_better: bool
-    fraction: bool = False
+    scale: Scale = "other"
     synonyms: list[FrameTerm] = Field(default_factory=list)
     source: Source = "invented"
     vocab_id: str | None = None
     vocab_synonyms: list[str] = Field(default_factory=list)
     vocab_higher_is_better: bool | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_fraction(cls, data: Any) -> Any:
+        """A frame.json from before `scale` has `fraction: true|false`: true is a fraction, false says nothing."""
+        if isinstance(data, dict) and "fraction" in data:
+            data = dict(data)
+            legacy = data.pop("fraction")
+            data.setdefault("scale", "fraction" if legacy else "other")
+        return data
+
+    @computed_field   # type: ignore[prop-decorator]
+    @property
+    def fraction(self) -> bool:
+        """Values are shares (kept in frame.json for readers of the old key; the bound uses draft.rate_like)."""
+        return self.scale in ("fraction", "percent")
 
     @property
     def names(self) -> list[str]:
@@ -203,7 +221,7 @@ def _outcome(reply: OutcomeReply, vocab: vocab_module.Vocabulary | None) -> Outc
     kinds = ("metric",)
     term = _match_any([reply.label, reply.canonical, *reply.synonyms], vocab, kinds)
     return Outcome(canonical=_slug(reply.canonical), label=reply.label.strip(), higher_is_better=reply.higher_is_better,
-                   fraction=reply.fraction, synonyms=_terms(reply.synonyms, vocab, kinds, skip=reply.label),
+                   scale=reply.scale, synonyms=_terms(reply.synonyms, vocab, kinds, skip=reply.label),
                    source="ontology" if term else "invented", vocab_id=term.id if term else None,
                    vocab_synonyms=[n for n in term.names if n not in (reply.label, *reply.synonyms)] if term else [],
                    vocab_higher_is_better=term.higher_is_better if term else None)
