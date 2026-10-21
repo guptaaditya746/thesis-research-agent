@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 from evidence import cli
+from evidence.extractors import terms as regex_terms
 from evidence.propose import amend, cards, critic, frame, freeze, vocab
 from evidence.propose.common import ProposalError
 from evidence.protocol import load
@@ -72,6 +73,19 @@ def test_renamed_roles_get_patterns(tmp_path: Path) -> None:
     for name in ("regex_condition", "regex_measurement"):
         assert list(regex_steps(p)[name]["conditions"]) == ["retrieval", "closed_book"], name
     assert checks_of(d)["regex_matches_enums"]["ok"]
+
+
+def test_generated_control_pattern_skips_no_retrieval_failures(tmp_path: Path) -> None:
+    frame_reply = {**RAG_FRAME, "control": {**RAG_FRAME["control"], "synonyms": ["no retrieval", "no-retrieval baseline"]}}
+    d = flow(tmp_path / "p", Scripted(frame_reply), until="cards")
+    decide(d, "roles", {"treatment": {"role": "retrieval", "definition": "with retrieval"},
+                        "control": {"role": "closed_book", "definition": "without retrieval"}})
+    freeze.run(d)
+    config = regex_steps(load(d / "protocol.yaml"))["regex_condition"]["conditions"]
+    compiled = regex_terms.condition_patterns(config)
+    keys = lambda text: {m.key for m in regex_terms.find_all(text, compiled)}   # noqa: E731
+    assert "closed_book" not in keys("The RAG model has no retrieval failures.")
+    assert "closed_book" in keys("a closed-book model with no retrieval")
 
 
 def test_freeze_refuses_regex_steps_outside_the_enums(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
