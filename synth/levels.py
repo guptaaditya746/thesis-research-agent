@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 from synth import vocab
 from synth.text import Decoy, Seg
-from synth.truth import Condition, Measurement, Metric, Study
+from synth.truth import Condition, Experiment, Measurement, Metric, Study
 
 LEVELS = ("explicit", "paraphrased", "distributed", "complex", "contradictory")
 # What a table cell shows for a measurement the paper never states (--missing, our addition): an en dash,
@@ -62,6 +62,7 @@ class Plan:
     claim: str                                # claim direction as stated ("" for an irrelevant paper)
     claim_sentences: tuple[str, ...]          # abstract, conclusion (none for an irrelevant paper)
     decoy: Decoy | None
+    experiments: tuple[Experiment, ...] = ()  # --hard, complex level only: every experiment, main first
 
     @property
     def paper(self) -> str:
@@ -139,14 +140,18 @@ def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
     if not study.relevant:
         return irrelevant_plan(study, level)
     q, main = study.primary, study.datasets[0]
+    # A --hard study shows all its experiments (the ablation among the conditions) only at the complex
+    # level, one table with an Experiment column; the other levels show its main experiment alone.
     if level == "complex":
-        metrics, datasets, ms = study.metrics, study.datasets, study.measurements
+        conditions, metrics, datasets, ms = study.conditions, study.metrics, study.datasets, study.measurements
+        experiments = study.experiments
     else:
-        metrics, datasets = (q,), (main,)
-        ms = tuple(m for m in study.measurements if m.metric == q.id and m.dataset == main)
+        conditions, metrics, datasets, experiments = study.main_conditions, (q,), (main,), ()
+        ms = tuple(m for m in study.measurements
+                   if m.metric == q.id and m.dataset == main and m.experiment == study.main_experiment)
     para = level == "paraphrased"
-    cond_name = {c.id: c.synonym if para else c.label for c in study.conditions}
-    cond_aliases = {c.id: (c.code,) if level == "distributed" else () for c in study.conditions}
+    cond_name = {c.id: c.synonym if para else c.label for c in conditions}
+    cond_aliases = {c.id: (c.code,) if level == "distributed" else () for c in conditions}
     metric_name = {m.id: m.description if para else m.name for m in metrics}
     metric_aliases = {m.id: () if para else ((m.abbr,) if level == "distributed" else ()) + (m.description,)
                       for m in metrics}
@@ -173,8 +178,8 @@ def make_plan(study: Study, level: str, rng: random.Random) -> Plan:
     decoy = None
     if level == "contradictory" and study.decoy is not None and treat is not None and base is not None:
         decoy = Decoy(treat.id, study.decoy, write_value(study.decoy, "pct"))
-    return Plan(study, level, study.conditions, metrics, datasets, ms, cond_name, cond_aliases, metric_name,
-                metric_aliases, values, claim, vocab.CLAIMS[(claim, q.canonical)], decoy)
+    return Plan(study, level, conditions, metrics, datasets, ms, cond_name, cond_aliases, metric_name,
+                metric_aliases, values, claim, vocab.CLAIMS[(claim, q.canonical)], decoy, experiments)
 
 
 def plan_rng(seed: int, study_id: str, level: str) -> random.Random:

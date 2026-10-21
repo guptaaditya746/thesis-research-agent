@@ -11,7 +11,10 @@ read the manifest).
 
 Our additions (not the supervisor's design): the benchmark knobs `duplicates`, `missing`, `outliers`,
 `irrelevant` (truth.with_knobs), recorded in corpus.json `settings`; per-study `relevant`, `flags`,
-`duplicate_of`, `missing`; the answer's `undetermined`, `duplicates` and `flags` lists.
+`duplicate_of`, `missing`; the answer's `undetermined`, `duplicates` and `flags` lists. With `hard`
+(truth.hardened; settings `hard: true`) a complex-level study record lists its `experiments` (`synthesis:
+true` for the main one, the only one its effect is computed from; the others are distractors) and each
+measurement its `experiment`; every measurement is a fact, extraction is scored on all of them.
 """
 from __future__ import annotations
 
@@ -100,7 +103,10 @@ def study_truth(r: Rendered, spec: protocol_module.Synthesis, study: Study | Non
         "metrics": [{"id": k.id, "canonical": k.canonical, "name": p.metric_name[k.id],
                      "higher_is_better": k.higher_is_better} for k in p.metrics],
         "measurements": [{"id": m.id, "condition": m.condition, "metric": m.metric, "value": m.value,
-                          "dataset": m.dataset} for m in p.measurements],
+                          "dataset": m.dataset, **({"experiment": m.experiment} if p.experiments else {})}
+                         for m in p.measurements],
+        **({"experiments": [{"id": x.id, "name": x.name, "conditions": list(x.conditions), "datasets": list(x.datasets),
+                             "synthesis": i == 0} for i, x in enumerate(p.experiments)]} if p.experiments else {}),
         "author_claim": {"id": f"{s.study_id}.a1", "direction": p.claim} if s.relevant else None,
         "effect": {"direction": e.direction, "delta": e.delta, "metric": e.metric, "treatment": e.treatment,
                    "control": e.control, **({"reason": e.reason} if e.reason else {})},
@@ -117,11 +123,13 @@ def prepare(directory: Path) -> None:
 
 
 def settings_of(*, name: str, studies: int, mix: dict[str, float] | None, levels: Sequence[str],
-                duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0) -> dict[str, Any]:
+                duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0,
+                hard: bool = False) -> dict[str, Any]:
     """corpus.json `settings`: what `build` was asked, enough to draw the same study set again (`synth
-    variant` does)."""
+    variant` does); `hard` only when set, so a plain build's settings are what they were."""
     return {"name": name, "studies": studies, "mix": dict(mix or truth.DEFAULT_MIX), "levels": list(levels),
-            "duplicates": duplicates, "missing": missing, "outliers": outliers, "irrelevant": irrelevant}
+            "duplicates": duplicates, "missing": missing, "outliers": outliers, "irrelevant": irrelevant,
+            **({"hard": True} if hard else {})}
 
 
 def write_corpus(directory: Path, *, name: str, level: str, seed: int, renderer: Renderer, protocol: Protocol,
@@ -225,19 +233,19 @@ def selection_of(rendered: dict[tuple[str, str], Rendered], study_set: list[Stud
 def build(*, name: str, seed: int, studies: int, renderer: Renderer, out: Path,
           levels: Sequence[str] = LEVELS, mix: dict[str, float] | None = None,
           protocol: Protocol | Path | str | None = None, duplicates: int = 0, missing: int = 0,
-          outliers: int = 0, irrelevant: int = 0) -> dict[str, Any]:
+          outliers: int = 0, irrelevant: int = 0, hard: bool = False) -> dict[str, Any]:
     """Generate the study set for the protocol's question (its synthesis block gives the roles, metrics,
     neutral band, claim vocabulary and label table; default evidence/protocols/rag-factuality.yaml), apply
-    the knobs, render it at every level, write the level corpora and the mixed one."""
+    the knobs (and `hard`), render it at every level, write the level corpora and the mixed one."""
     unknown = [lv for lv in levels if lv not in LEVELS]
     if unknown or not levels:
         raise SystemExit(f"unknown or no levels: {unknown or levels}; choose from {', '.join(LEVELS)}")
     if not isinstance(protocol, Protocol):
         protocol = protocol_module.load(protocol or truth.DEFAULT_PROTOCOL)
     settings = settings_of(name=name, studies=studies, mix=mix, levels=levels, duplicates=duplicates,
-                           missing=missing, outliers=outliers, irrelevant=irrelevant)
+                           missing=missing, outliers=outliers, irrelevant=irrelevant, hard=hard)
     study_set = truth.generate(seed, studies, mix, protocol.synthesis, duplicates=duplicates, missing=missing,
-                               outliers=outliers, irrelevant=irrelevant)
+                               outliers=outliers, irrelevant=irrelevant, hard=hard)
     rendered = renderer.render_all([(s, lv) for lv in levels for s in study_set], seed)
     failed = exclusions(rendered, study_set)
     selection = selection_of(rendered, study_set, studies, failed)

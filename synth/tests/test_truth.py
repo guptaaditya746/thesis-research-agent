@@ -102,3 +102,56 @@ def test_true_values_of_a_study_are_more_than_the_gap_apart(seed: int) -> None:
         values = sorted(m.value for m in s.measurements)
         gaps = [b - a for a, b in zip(values, values[1:])]
         assert min(gaps) > truth.DECOY_GAP, (s.study_id, values)
+
+# --- --hard (Tim M2 section 6-7): more experiments and an ablation per study --------------------------------
+
+PLAIN_DIGEST = "b2ee323b93c0345ee0cd1daabf808143dd674e28e8b059f6aa3f0e41122deb18"   # repr(generate(1, 20)) on main
+
+
+def test_without_hard_the_set_is_byte_identical_to_main() -> None:
+    import hashlib
+    assert hashlib.sha256(repr(truth.generate(1, 20)).encode()).hexdigest() == PLAIN_DIGEST
+    assert truth.generate(1, 20, hard=False) == truth.generate(1, 20)
+
+
+def test_hard_studies_have_more_experiments_and_ablations() -> None:
+    plain, hard = truth.generate(1, 30), truth.generate(1, 30, hard=True)
+    multi = [s for s in hard if len(s.experiments) >= 2]
+    ablations = [c for s in hard for c in s.conditions if c not in s.main_conditions]
+    assert len(multi) >= 5 and len(ablations) >= 3
+    assert all(1 <= len(s.experiments) <= 3 for s in hard)
+    for p, s in zip(plain, hard):
+        # the main experiment is the plain study, unchanged; the effect is computed from it alone
+        assert [(m.id, m.condition, m.metric, m.dataset, m.value) for m in s.measurements[:len(p.measurements)]] == \
+            [(m.id, m.condition, m.metric, m.dataset, m.value) for m in p.measurements]
+        assert (s.effect, s.claim, s.decoy) == (p.effect, p.claim, p.decoy)
+        main = s.experiments[0]
+        assert s.main_experiment == main.id == f"{s.study_id}.e1"
+        assert {m.experiment for m in s.measurements[:len(p.measurements)]} == {main.id}
+        assert s.find(s.condition("rag").id, s.primary.id, s.datasets[0]).id == s.effect.treatment
+        extra = [c for c in s.conditions if c not in s.main_conditions]
+        assert len(extra) <= 1
+        for c in extra:
+            assert c.role == "other" and c.label.startswith(s.condition("rag").label + " without ")
+        for e in s.experiments[1:]:
+            assert e.datasets == (s.datasets[0],)
+            for cid in e.conditions:
+                for k in s.metrics:
+                    assert s.find(cid, k.id, s.datasets[0], e.id) is not None
+        values = sorted([m.value for m in s.measurements] + ([s.decoy] if s.decoy is not None else []))
+        assert min(b - a for a, b in zip(values, values[1:])) > truth.DECOY_GAP, s.study_id
+        rel = abs(round(s.value_of(s.effect.treatment) - s.value_of(s.effect.control), 3))
+        assert all(abs(m.value - rel) > truth.DECOY_GAP for m in s.measurements[len(p.measurements):])
+
+
+def test_hard_with_every_knob() -> None:
+    studies = truth.generate(1, 30, hard=True, duplicates=3, missing=3, outliers=2, irrelevant=2)
+    for s in studies:
+        if s.duplicate_of:
+            original = next(o for o in studies if o.study_id == s.duplicate_of)
+            assert [e.name for e in s.experiments] == [e.name for e in original.experiments]
+            assert all(m.experiment.startswith(s.study_id + ".") for m in s.measurements)
+        if s.missing:
+            assert len(s.experiments) >= 1 and s.pair(s.datasets[0]) is None
+        if not s.relevant:
+            assert s.experiments == ()

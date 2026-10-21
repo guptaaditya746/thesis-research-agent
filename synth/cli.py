@@ -72,11 +72,18 @@ def add_renderer_options(p: argparse.ArgumentParser, default: str | None = "temp
     p.add_argument("--cache", type=Path, default=None, help="default <out>/.synth-cache/llm.jsonl")
 
 
+HARD_LLM = ("--hard needs the template renderer: the LLM renderer's plan shape does not carry the "
+            "experiments yet")
+
+
 def cmd_build(args: argparse.Namespace) -> int:
     from synth import corpus
+    if args.hard and args.renderer == "llm":
+        print(f"ERROR: {HARD_LLM}", file=sys.stderr, flush=True)
+        return 2
     renderer = make_renderer(args, args.out)
     result = corpus.build(name=args.name, seed=args.seed, studies=args.studies, renderer=renderer, out=args.out,
-                          levels=args.levels, mix=args.effects, protocol=args.protocol,
+                          levels=args.levels, mix=args.effects, protocol=args.protocol, hard=args.hard,
                           **{knob: getattr(args, knob) for knob in KNOBS})
     print(json.dumps(result, indent=2))
     if result["excluded"]:
@@ -96,12 +103,16 @@ def cmd_build(args: argparse.Namespace) -> int:
 
 def cmd_variant(args: argparse.Namespace) -> int:
     from synth import variant
+    meta_file = args.corpus / "corpus.json"
+    meta = json.loads(meta_file.read_text(encoding="utf-8")) if meta_file.is_file() else {}
     if args.renderer is None or args.statements is None:
-        meta = json.loads((args.corpus / "corpus.json").read_text(encoding="utf-8"))
         if args.renderer is None:        # the base corpus's renderer, unless asked otherwise
             args.renderer = meta["renderer"]
         if args.statements is None:      # its pipeline too; a corpus from before the statement stage records none: off
             args.statements = bool((meta.get("models") or {}).get("statements", False))
+    if (meta.get("settings") or {}).get("hard") and args.renderer == "llm":
+        print(f"ERROR: a corpus built with {HARD_LLM}", file=sys.stderr, flush=True)
+        return 2
     renderer = make_renderer(args, args.out or args.corpus.parent)
     result = variant.make(corpus_dir=args.corpus, study_id=args.study, direction=args.direction, renderer=renderer,
                           out=args.out, protocol=args.protocol)
@@ -136,6 +147,9 @@ def main(argv: list[str] | None = None) -> int:
                    help="studies whose control (alternately treatment) measurement the paper never states")
     b.add_argument("--outliers", type=count, default=0, help="supporting studies with an effect of 0.30 to 0.45")
     b.add_argument("--irrelevant", type=count, default=0, help="extra papers with no treatment/control experiment")
+    b.add_argument("--hard", action="store_true",
+                   help="about a third of the studies report a further experiment and/or an ablation, all in the "
+                        "complex level's table (template renderer only)")
     add_renderer_options(b)
     b.set_defaults(func=cmd_build)
     v = sub.add_parser("variant", help="change one study's effect and re-render only its paper (counterfactual)")

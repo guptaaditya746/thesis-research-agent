@@ -42,7 +42,8 @@ def base_studies(meta: dict[str, Any], protocol: Protocol) -> list[Study]:
                          f"was built from ({meta['protocol']['id']}, {meta['protocol']['sha256'][:12]}...); pass it "
                          "with --protocol")
     return truth.generate(meta["seed"], st["studies"], st["mix"], protocol.synthesis, duplicates=st["duplicates"],
-                          missing=st["missing"], outliers=st["outliers"], irrelevant=st["irrelevant"])
+                          missing=st["missing"], outliers=st["outliers"], irrelevant=st["irrelevant"],
+                          hard=st.get("hard", False))
 
 
 def counterfactual(seed: int, studies: list[Study], study_id: str, direction: str, spec: protocol_module.Synthesis,

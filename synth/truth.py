@@ -23,6 +23,14 @@ what it was:
 - irrelevant: extra studies with no experiment at all (a survey, or a paper on another topic), which a
   screening step should leave out (`relevant: false`, expected reason `screened_out`).
 
+`hard` (ours; Tim M2 section 6-7, `synth build --hard`, template renderer only) is drawn before the knobs,
+from `random.Random(f"synth:{seed}:hard")`: every study's measurements become its main experiment (`e1`, the
+only one the effect, the claims and the answer are computed from), and about a third of the studies
+(HARD_SHARE) report one or two more experiments on the main dataset: a question subset (control and
+treatment again, any direction) and/or an ablation (the treatment against `<treatment> without
+<component>`, role other; at most one per study). Their values are distractors: ground-truth facts that
+extraction is scored on, never the synthesis pair. Without `hard` the set is byte for byte what it was.
+
 The flags of every study come from `evidence.rules` applied to the set (`flagged`), as the engine applies
 them to what it extracts; the generator then asserts the rules find exactly what it planted. The
 counterfactual variant (F3, `redrawn`) draws one study's pair again with another direction.
@@ -30,7 +38,7 @@ counterfactual variant (F3, `redrawn`) draws one study's pair again with another
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from evidence import protocol, rules
@@ -49,6 +57,8 @@ LARGE_DELTA = (0.30, 0.45)             # an outlier's improvement (--outliers), 
 MISSING_SIDES = ("control", "treatment")   # --missing drops these in turn (the protocol's compare roles)
 IRRELEVANT_TOPICS = ("survey", "other")    # --irrelevant alternates these templates (vocab.IRRELEVANT)
 KNOBS = ("duplicates", "missing", "outliers", "irrelevant")
+HARD_SHARE = 1 / 3                     # --hard: the share of studies that report more than one experiment
+HARD_EXTRAS = (("subset",), ("ablation",), ("subset", "ablation"))   # the further experiments, drawn per study
 
 
 def default_spec() -> Synthesis:
@@ -88,6 +98,18 @@ class Measurement:
     metric: str
     dataset: str
     value: float
+    # --hard only (None otherwise): the experiment id. Left out of repr, so a plain set's repr is unchanged.
+    experiment: str | None = field(default=None, repr=False)
+
+
+@dataclass(frozen=True)
+class Experiment:
+    """One experiment of a --hard study: `e1` is the main comparison, the only one the effect is computed
+    from; the others are distractors on the main dataset."""
+    id: str                        # <study id>.e<n>
+    name: str                      # the complex table's Experiment column
+    conditions: tuple[str, ...]    # condition ids, in table order
+    datasets: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -121,6 +143,8 @@ class Study:
     flags: tuple[str, ...] = ()    # from rules.FLAGS as the rules find them over the set (`flagged`)
     duplicate_of: str | None = None   # the study this one reports again (--duplicates)
     missing: str | None = None     # control | treatment: the measurement the paper never states (--missing)
+    # --hard only (empty otherwise; left out of repr, so a plain set's repr is unchanged): main first
+    experiments: tuple[Experiment, ...] = field(default=(), repr=False)
 
     def condition(self, role: str) -> Condition:
         return next(c for c in self.conditions if c.role == role)
@@ -137,9 +161,23 @@ class Study:
     def control_role(self) -> str:
         return self.conditions[0].role
 
-    def find(self, condition: str, metric: str, dataset: str) -> Measurement | None:
+    @property
+    def main_experiment(self) -> str | None:
+        """The id of the experiment the effect is computed from (None without --hard)."""
+        return self.experiments[0].id if self.experiments else None
+
+    @property
+    def main_conditions(self) -> tuple[Condition, ...]:
+        """The conditions of the main experiment: all but a --hard ablation."""
+        if not self.experiments:
+            return self.conditions
+        return tuple(c for c in self.conditions if c.id in self.experiments[0].conditions)
+
+    def find(self, condition: str, metric: str, dataset: str, experiment: str | None = None) -> Measurement | None:
+        """The measurement in `experiment` (default the main one)."""
+        e = experiment or self.main_experiment
         return next((m for m in self.measurements
-                     if (m.condition, m.metric, m.dataset) == (condition, metric, dataset)), None)
+                     if (m.condition, m.metric, m.dataset, m.experiment) == (condition, metric, dataset, e)), None)
 
     def measurement(self, condition: str, metric: str, dataset: str) -> Measurement:
         found = self.find(condition, metric, dataset)
@@ -343,8 +381,8 @@ def redrawn(rng: random.Random, study: Study, direction: str, spec: Synthesis, *
             break
     measurements = tuple(replace(m, value=new[(m.condition, m.dataset)]) if m.id in pair_ids else m
                          for m in study.measurements)
-    m_control = next(m for m in measurements if (m.condition, m.metric, m.dataset) == (control.id, q.id, main))
-    m_treat = next(m for m in measurements if (m.condition, m.metric, m.dataset) == (treatment.id, q.id, main))
+    m_control, m_treat = (next(m for m in measurements if m.id == study.measurement(c.id, q.id, main).id)
+                          for c in (control, treatment))
     got, delta = rules.effect(m_treat.value, m_control.value, q.higher_is_better, spec.min_effect)
     assert got == direction, (study.study_id, got, direction)
     false_claim = FALSE_CLAIM[direction]
@@ -367,8 +405,10 @@ def duplicate(original: Study, index: int) -> Study:
         original, study_id=sid, index=index,
         conditions=tuple(replace(c, id=renamed(c.id)) for c in original.conditions),
         metrics=tuple(replace(k, id=renamed(k.id)) for k in original.metrics),
-        measurements=tuple(replace(m, id=renamed(m.id), condition=renamed(m.condition), metric=renamed(m.metric))
-                           for m in original.measurements),
+        measurements=tuple(replace(m, id=renamed(m.id), condition=renamed(m.condition), metric=renamed(m.metric),
+                                   experiment=renamed(m.experiment)) for m in original.measurements),
+        experiments=tuple(replace(e, id=renamed(e.id), conditions=tuple(renamed(c) for c in e.conditions))
+                          for e in original.experiments),
         effect=replace(e, metric=renamed(e.metric), treatment=renamed(e.treatment), control=renamed(e.control)),
         flags=(), duplicate_of=original.study_id)
 
@@ -396,6 +436,61 @@ def irrelevant_study(index: int, topic: str) -> Study:
         raise ValueError(f"irrelevant topic must be one of {IRRELEVANT_TOPICS}, not {topic!r}")
     return Study(f"S{index + 1:03d}", index, (), (), (), (), Effect("undetermined", None, None, None, None,
                                                                    "screened_out"), "", "", relevant=False, topic=topic)
+
+
+def with_experiments(rng: random.Random | None, study: Study, spec: Synthesis) -> Study:
+    """`study` (complete, before the knobs) as a --hard study: its measurements become the main experiment;
+    with `rng`, one or two further experiments on the main dataset (HARD_EXTRAS) are drawn: a question subset
+    (control and treatment, a pair of any direction) and/or an ablation (the treatment, which beats it, and
+    `<treatment> without <component>`, role other), every metric for each. As in make_study, every new
+    value lies more than DECOY_GAP from every value of the study, the decoy and the main difference."""
+    sid, q, dataset = study.study_id, study.primary, study.datasets[0]
+    main = Experiment(f"{sid}.e1", vocab.MAIN_EXPERIMENT, tuple(c.id for c in study.conditions), study.datasets)
+    ms = [replace(m, experiment=main.id) for m in study.measurements]
+    if rng is None:
+        return replace(study, measurements=tuple(ms), experiments=(main,))
+    control, treatment = study.conditions[0], study.conditions[1]
+    kinds = rng.choice(HARD_EXTRAS)
+    others = [n for c in study.conditions if c is not treatment for n in (c.label, c.synonym)]
+    others += [n for k in study.metrics for n in (k.name, k.abbr)]
+    while True:                         # the ablation contains the treatment's label, by design; nothing else may
+        subset, component = rng.choice(vocab.SUBSET_EXPERIMENTS), rng.choice(vocab.ABLATED)
+        label = f"{treatment.label} without {component}"
+        new = [vocab.MAIN_EXPERIMENT] + [{"subset": subset, "ablation": label}[k] for k in kinds]
+        if not _names_clash(others + new):
+            break
+    taken = {m.value for m in ms} | {abs(round(study.value_of(study.effect.treatment)
+                                               - study.value_of(study.effect.control), 3))}
+    taken |= {study.decoy} if study.decoy is not None else set()
+    conditions, experiments = list(study.conditions), [main]
+    for kind in kinds:
+        eid = f"{sid}.e{len(experiments) + 1}"
+        if kind == "subset":
+            b, t = _pair(rng, q, rng.choice(DIRECTIONS), taken, spec)
+            e, pair = Experiment(eid, subset, (control.id, treatment.id), (dataset,)), {control.id: b, treatment.id: t}
+        else:
+            ablation = Condition(f"{sid}.c{len(conditions) + 1}", "other", label, label,
+                                 vocab.ABLATION_DESCRIPTION.format(component=component), "")
+            conditions.append(ablation)
+            b, t = _pair(rng, q, "supports", taken, spec)
+            e, pair = (Experiment(eid, vocab.ABLATION_EXPERIMENT, (treatment.id, ablation.id), (dataset,)),
+                       {ablation.id: b, treatment.id: t})
+        taken |= {b, t}
+        experiments.append(e)
+        for metric in study.metrics:
+            for cid in e.conditions:
+                v = pair[cid] if metric.id == q.id else _value(rng, metric, taken)
+                taken.add(v)
+                ms.append(Measurement(f"{sid}.m{len(ms) + 1}", cid, metric.id, dataset, v, eid))
+    return replace(study, conditions=tuple(conditions), measurements=tuple(ms), experiments=tuple(experiments))
+
+
+def hardened(seed: int, studies: list[Study], spec: Synthesis) -> list[Study]:
+    """--hard over a plain set: HARD_SHARE of the studies (from `synth:<seed>:hard`) get further experiments,
+    the rest only their main one (`with_experiments`)."""
+    rng = random.Random(f"synth:{seed}:hard")
+    chosen = set(rng.sample(range(len(studies)), round(len(studies) * HARD_SHARE)))
+    return [with_experiments(rng if i in chosen else None, s, spec) for i, s in enumerate(studies)]
 
 
 def pair_keys(study: Study) -> set[tuple[str, float, float]]:
@@ -493,9 +588,10 @@ def with_knobs(seed: int, base: list[Study], spec: Synthesis, *, duplicates: int
 
 
 def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synthesis | None = None, *,
-             duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0) -> list[Study]:
+             duplicates: int = 0, missing: int = 0, outliers: int = 0, irrelevant: int = 0,
+             hard: bool = False) -> list[Study]:
     """`n` studies for the protocol's synthesis block `spec` (default: the RAG protocol); the share of each
-    true effect direction follows `mix` (default 0.6/0.2/0.2); then the knobs. A study whose
+    true effect direction follows `mix` (default 0.6/0.2/0.2); then `hard` (`hardened`), then the knobs. A study whose
     treatment/control pair equals an earlier study's (on either dataset) is drawn again, so equal pairs
     always mean one study; this never happens for the seeds in use, and the plain set is byte for byte
     what it was."""
@@ -510,6 +606,8 @@ def generate(seed: int, n: int, mix: dict[str, float] | None = None, spec: Synth
         while collides(study, studies):
             study = make_study(rng, i, d, spec)
         studies.append(study)
+    if hard:
+        studies = hardened(seed, studies, spec)
     return with_knobs(seed, studies, spec, duplicates=duplicates, missing=missing, outliers=outliers,
                       irrelevant=irrelevant)
 
