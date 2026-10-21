@@ -59,14 +59,16 @@ def make_renderer(args: argparse.Namespace, out: Path):
     return renderer
 
 
-def add_renderer_options(p: argparse.ArgumentParser, default: str | None = "template") -> None:
+def add_renderer_options(p: argparse.ArgumentParser, default: str | None = "template",
+                         statements: bool | None = True) -> None:
     p.add_argument("--renderer", choices=("template", "llm"), default=default)
     p.add_argument("--model", default="sub-model-1", help="LiteLLM alias of the writing model (llm renderer)")
     p.add_argument("--verify-model", default=None, help="LiteLLM alias for the blind re-extraction check")
     p.add_argument("--attempts", type=int, default=3)
     p.add_argument("--concurrency", type=int, default=4)
-    p.add_argument("--statements", action=argparse.BooleanOptionalAction, default=True,
-                   help="llm renderer: write and check each prose Results sentence before the paper (default on)")
+    p.add_argument("--statements", action=argparse.BooleanOptionalAction, default=statements,
+                   help="llm renderer: write and check each prose Results sentence before the paper (build: "
+                        "default on; variant: default the base corpus's recorded mode, off if it records none)")
     p.add_argument("--cache", type=Path, default=None, help="default <out>/.synth-cache/llm.jsonl")
 
 
@@ -89,9 +91,12 @@ def cmd_build(args: argparse.Namespace) -> int:
 
 def cmd_variant(args: argparse.Namespace) -> int:
     from synth import variant
-    if args.renderer is None:        # the base corpus's renderer, unless asked otherwise
+    if args.renderer is None or args.statements is None:
         meta = json.loads((args.corpus / "corpus.json").read_text(encoding="utf-8"))
-        args.renderer = meta["renderer"]
+        if args.renderer is None:        # the base corpus's renderer, unless asked otherwise
+            args.renderer = meta["renderer"]
+        if args.statements is None:      # its pipeline too; a corpus from before the statement stage records none: off
+            args.statements = bool((meta.get("models") or {}).get("statements", False))
     renderer = make_renderer(args, args.out or args.corpus.parent)
     result = variant.make(corpus_dir=args.corpus, study_id=args.study, direction=args.direction, renderer=renderer,
                           out=args.out, protocol=args.protocol)
@@ -134,7 +139,7 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--protocol", type=Path, default=None,
                    help="the protocol the base corpus was built from (default: the RAG protocol); refused if its "
                         "sha256 differs from the base corpus.json's")
-    add_renderer_options(v, default=None)
+    add_renderer_options(v, default=None, statements=None)
     v.set_defaults(func=cmd_variant)
     s = sub.add_parser("sample", help="write a human fidelity review sheet (Markdown + CSV) for a corpus")
     s.add_argument("--corpus", type=Path, required=True)

@@ -189,3 +189,35 @@ def test_statement_tasks_carry_no_effect_or_answer() -> None:
         plan = make_plan(s, "complex", plan_rng(SEED, s.study_id, "complex"))
         text = statements.prompt(plan, statements.plan_statements(plan))
         assert not re.search(r"supports|contradicts|neutral|improves|worsens|no_effect|\"role\"|\"effect\"", text)
+
+
+def test_a_built_llm_corpus_records_the_statement_mode(tmp_path: Path) -> None:
+    from synth import corpus
+    for on in (True, False):
+        renderer = LlmRenderer(FunctionModel(Writer(truth.generate(SEED, N), fail_first=False), model_name="fake-writer"),
+                               tmp_path / f"cache-{on}.jsonl", attempts=2, statements=on)
+        corpus.build(name="m", seed=SEED, studies=N, renderer=renderer, out=tmp_path / str(on), levels=["explicit"])
+        for lv in ("explicit", "mixed"):
+            models = json.loads((tmp_path / str(on) / f"m-{lv}" / "corpus.json").read_text(encoding="utf-8"))["models"]
+            assert (models["statements"], models["paper_prompt"]) == (on, "render-v2.txt" if on else "render.txt")
+
+
+def test_no_statements_cache_keys_are_unchanged(tmp_path: Path) -> None:
+    """--no-statements sends render.txt (as committed before the statement stage) and the old plan: same keys."""
+    import hashlib
+
+    import modelcall
+    from modelcall.cache import cache_key
+    from synth.render_llm import INSTRUCTIONS, PaperReply, plan_json
+    assert hashlib.sha256((REPO / "synth" / "prompts" / "render.txt").read_bytes()).hexdigest() == \
+        "9e8ff1fedb40b65e2a0e98801e4b8b61605aba1aefe39d45b9f16fa99cc49d9d"
+    s = truth.generate(SEED, N)[0]
+    renderer = LlmRenderer(FunctionModel(Writer([s], fail_first=False), model_name="fake-writer"),
+                           tmp_path / "cache.jsonl", attempts=2, statements=False)
+    renderer.render_all([(s, "explicit")], SEED)
+    plan = make_plan(s, "explicit", plan_rng(SEED, s.study_id, "explicit"))
+    want = cache_key({"prompt_sha256": modelcall.prompt_sha256(INSTRUCTIONS, PaperReply), "model": "fake-writer",
+                      "prompt": "Rendering plan:\n" + json.dumps(plan_json(plan), indent=2, ensure_ascii=False),
+                      "seed": SEED})
+    keys = [json.loads(line)["key"] for line in (tmp_path / "cache.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert keys == [want]

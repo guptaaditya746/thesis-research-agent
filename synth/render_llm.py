@@ -177,9 +177,12 @@ class LlmRenderer:
         self.served: set[str] = set()
 
     def models(self) -> dict[str, Any]:
+        """Model identities, and the pipeline: `statements` on or off and the paper prompt file it uses (a
+        corpus.json without these keys predates the statement stage: off, render.txt)."""
         return {"renderer": modelcall.model_identity([self.model]),
                 "verifier": modelcall.model_identity([self.verify_model]) if self.verify_model else None,
-                "served": sorted(self.served)}
+                "served": sorted(self.served), "statements": self.statements,
+                "paper_prompt": "render-v2.txt" if self.statements else "render.txt"}
 
     async def _call(self, instructions: str, prompt: str, output: type[BaseModel], model: Model, seed: int) -> dict:
         key = {"prompt_sha256": modelcall.prompt_sha256(instructions, output),
