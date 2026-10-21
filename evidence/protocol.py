@@ -14,7 +14,8 @@ hash.
 `version` is the protocol *format* (2 since Part C); `revision` (optional, from 1) counts the frozen and
 amended revisions of one protocol made by the proposal flow (Part E, `evidence propose freeze/amend`). A
 protocol without `revision` hashes exactly as before the field existed, so the hand-written protocols and
-every corpus that records their sha256 are unchanged.
+every corpus that records their sha256 are unchanged. Fields added later do the same: each one listed in
+`DIGEST_OMIT_AT_DEFAULT` is left out of the digest while it holds its default.
 """
 from __future__ import annotations
 
@@ -94,18 +95,25 @@ SCREEN_TYPE: EvidenceType = "screen"
 SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False, "required": ["relevant", "reason"],
                                  "properties": {"relevant": {"type": "boolean", "description": "the paper is one the protocol can use"},
                                                 "reason": {"type": "string", "minLength": 1, "description": "why, in one sentence"}}}
+# Fields added after protocols were hashed (dotted path -> default): left out of `Protocol.sha256` while at
+# their default, so every existing protocol, run and corpus keeps its hash. A new protocol field registers here.
+DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject"}
+
 SCREEN_ROLES = ("evidence",)   # the span: the first matching term (regex) or the model's quote (llm)
 
 
 class Screen(Strict):
     """Per-document screening before any extraction (Part D, the funnel; ours): is the paper one the protocol
     can use at all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest.
+    `lexical_miss`: a regex "not relevant" ends the cascade (`reject`, the default) or passes the document on
+    to the next screen extractor (`escalate`; the keyword list may miss synonyms).
     `spec` is the pseudo evidence type the engine runs the screen calls on, so they are checked, cached and
     replayed exactly like extractor calls."""
     question: str
     terms: tuple[str, ...] = ()
     extractors: tuple[ExtractorRef, ...] = Field(min_length=1)
     on_fail: Literal["skip", "extract_anyway"] = "skip"
+    lexical_miss: Literal["reject", "escalate"] = "reject"
 
     @property
     def spec(self) -> EvidenceTypeSpec:
@@ -254,7 +262,15 @@ class Protocol(Strict):
 
     @property
     def sha256(self) -> str:
-        return digest(self.model_dump(mode="json", exclude={"revision"} if self.revision is None else None))
+        data = self.model_dump(mode="json", exclude={"revision"} if self.revision is None else None)
+        for path, default in DIGEST_OMIT_AT_DEFAULT.items():
+            *parents, name = path.split(".")
+            node: Any = data
+            for key in parents:
+                node = node.get(key) if isinstance(node, dict) else None
+            if isinstance(node, dict) and node.get(name, object()) == default:
+                del node[name]
+        return digest(data)
 
     def phases(self) -> list[EvidenceType]:
         """Evidence types in dependency order; among types that are ready, the order of the file."""
