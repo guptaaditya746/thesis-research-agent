@@ -1,0 +1,121 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'synth.prot… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+synth S001/explicit: protected passed
+synth S002/explicit: protected passed
+synth S003/explicit: protected passed
+synth S001/paraphrased: protected passed
+synth S002/paraphrased: protected passed
+synth S003/paraphrased: protected passed
+synth S001/distributed: protected passed
+synth S002/distributed: protected passed
+synth S003/distributed: protected passed
+synth S001/complex: protected passed
+synth S002/complex: protected failed
+synth S003/complex: protected passed
+synth S001/contradictory: protected passed
+synth S002/contradictory: protected passed
+synth S003/contradictory: protected passed
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-protected-pilot-explicit": "rag-llm-protected-pilot-237b952c",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-protected-pilot-paraphrased": "rag-llm-protected-pilot-e49df557",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-protected-pilot-distributed": "rag-llm-protected-pilot-f3e292c3",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-protected-pilot-complex": "rag-llm-protected-pilot-db0162bb",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-protected-pilot-contradictory": "rag-llm-protected-pilot-5bc1d0d9",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-protected-pilot-mixed": "rag-llm-protected-pilot-494add2f"
+  },
+  "excluded": {
+    "S002": [
+      "complex"
+    ]
+  },
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-llm-protected-pilot",
+    "studies": 3,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 3,
+    "records": 3,
+    "retained_studies": 2,
+    "per_level": {
+      "complex": {
+        "passed": 2,
+        "failed_checks": {
+          "blind_reextraction": 1,
+          "blind_extra": 1
+        },
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "explicit": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {
+      "S002": [
+        "complex"
+      ]
+    }
+  },
+  "answer": {
+    "label": "supported",
+    "supporting": [
+      "S001",
+      "S003"
+    ],
+    "contradicting": [],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}
+WARNING: 1 studies failed fidelity and were left out; see fidelity.json

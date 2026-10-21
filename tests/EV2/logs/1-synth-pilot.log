@@ -1,0 +1,170 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:sub-model-1
+     /   \         output: NativeOutput(outputs=<class 'synth.stat… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+synth S001/explicit: statements 1 round(s), failed []
+synth S002/explicit: statements 1 round(s), failed []
+synth S003/explicit: statements 1 round(s), failed []
+synth S001/paraphrased: statements 1 round(s), failed []
+synth S001/explicit: attempt 1/3 failed added_numbers
+synth S002/explicit: attempt 1/3 failed added_numbers
+synth S003/explicit: attempt 1/3 failed added_numbers
+synth S001/paraphrased: attempt 1/3 failed added_numbers
+synth S001/explicit: attempt 2/3 passed
+synth S002/explicit: attempt 2/3 passed
+synth S002/paraphrased: statements 1 round(s), failed []
+synth S003/paraphrased: statements 1 round(s), failed []
+synth S003/explicit: attempt 2/3 passed
+synth S001/distributed: statements 0 round(s), failed []
+synth S001/paraphrased: attempt 2/3 passed
+synth S002/distributed: statements 0 round(s), failed []
+synth S002/paraphrased: attempt 1/3 failed added_numbers
+synth S003/paraphrased: attempt 1/3 failed added_numbers
+synth S001/distributed: attempt 1/3 failed required_strings
+synth S002/distributed: attempt 1/3 failed required_strings
+synth S002/paraphrased: attempt 2/3 passed
+synth S003/distributed: statements 0 round(s), failed []
+synth S003/paraphrased: attempt 2/3 passed
+synth S001/distributed: attempt 2/3 failed required_strings
+synth S001/complex: statements 1 round(s), failed []
+synth S002/distributed: attempt 2/3 failed required_strings
+synth S003/distributed: attempt 1/3 passed
+synth S001/complex: attempt 1/3 failed added_numbers
+synth S002/complex: statements 1 round(s), failed []
+synth S001/distributed: attempt 3/3 failed required_strings
+synth S002/distributed: attempt 3/3 failed required_strings
+synth S001/contradictory: statements 0 round(s), failed []
+synth S003/complex: statements 1 round(s), failed []
+synth S001/contradictory: attempt 1/3 failed required_strings
+synth S001/complex: attempt 2/3 passed
+synth S002/contradictory: statements 0 round(s), failed []
+synth S002/complex: attempt 1/3 passed
+synth S003/contradictory: statements 0 round(s), failed []
+synth S003/complex: attempt 1/3 failed required_strings
+synth S001/contradictory: attempt 2/3 failed required_strings
+synth S002/contradictory: attempt 1/3 failed required_strings
+synth S003/contradictory: attempt 1/3 failed required_strings
+synth S001/contradictory: attempt 3/3 failed required_strings
+synth S002/contradictory: attempt 2/3 failed required_strings
+synth S003/complex: attempt 2/3 passed
+synth S003/contradictory: attempt 2/3 failed required_strings
+synth S002/contradictory: attempt 3/3 failed required_strings
+synth S003/contradictory: attempt 3/3 failed required_strings
+ERROR: no papers retained after fidelity checks; see fidelity.json
+{
+  "corpora": {
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-pilot-explicit": "rag-llm-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-pilot-paraphrased": "rag-llm-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-pilot-distributed": "rag-llm-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-pilot-complex": "rag-llm-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-pilot-contradictory": "rag-llm-pilot-4f53cda1",
+    "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/corpora/rag-llm-pilot-mixed": "rag-llm-pilot-4f53cda1"
+  },
+  "excluded": {
+    "S001": [
+      "contradictory",
+      "distributed"
+    ],
+    "S002": [
+      "contradictory",
+      "distributed"
+    ],
+    "S003": [
+      "contradictory"
+    ]
+  },
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-llm-pilot",
+    "studies": 3,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 3,
+    "records": 3,
+    "retained_studies": 0,
+    "per_level": {
+      "complex": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.667
+      },
+      "contradictory": {
+        "passed": 0,
+        "failed_checks": {
+          "required_strings": 3
+        },
+        "mean_attempts": 3.0
+      },
+      "distributed": {
+        "passed": 1,
+        "failed_checks": {
+          "required_strings": 2
+        },
+        "mean_attempts": 2.333
+      },
+      "explicit": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 2.0
+      },
+      "paraphrased": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 2.0
+      }
+    },
+    "excluded": {
+      "S001": [
+        "contradictory",
+        "distributed"
+      ],
+      "S002": [
+        "contradictory",
+        "distributed"
+      ],
+      "S003": [
+        "contradictory"
+      ]
+    }
+  },
+  "answer": {
+    "label": "insufficient",
+    "supporting": [],
+    "contradicting": [],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}
+WARNING: 3 studies failed fidelity and were left out; see fidelity.json
+srun: error: gammaweb07: task 0: Exited with exit code 1

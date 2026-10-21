@@ -1,0 +1,304 @@
+{
+  "corpus_id": "rag-llm-pilot-4f53cda1",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'1' at 916: 'Three conditions are tested: (1) the vanilla LLM, which is pr'; '2' at 991: 'e question and nothing else; (2) the retrieve-then-read model'; '3' at 1139: 're generating an answer; and (3) RAG without reranking, which'"
+            }
+          ]
+        }
+      ],
+      "statements": {
+        "rounds": 1,
+        "failed": []
+      },
+      "excluded_reason": "failed fidelity at level(s) contradictory, distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'1' at 1095: 'er four distinct conditions: (1) closed-book model, which gen'; '2' at 1177: ' from pre-trained knowledge; (2) RAG pipeline, which retrieve'; '3' at 1284: 'n before generating answers; (3) RAG with random passages, wh'; '4' at 1411: 'stead of retrieved ones; and (4) chain-of-thought prompting, '"
+            }
+          ]
+        }
+      ],
+      "statements": {
+        "rounds": 1,
+        "failed": []
+      },
+      "excluded_reason": "failed fidelity at level(s) contradictory, distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S003",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 2,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "added_numbers",
+              "detail": "'1' at 1182: 'odel conditions were tested: (1) the parametric-only model, w'; '2' at 1296: 'r accesses external sources; (2) the retrieval-augmented gene'; '3' at 1431: 'ver alongside each question; (3) the chain-of-thought prompti'; '4' at 1573: 'vering the final answer; and (4) the query-rewriting variant,'"
+            }
+          ]
+        }
+      ],
+      "statements": {
+        "rounds": 1,
+        "failed": []
+      },
+      "excluded_reason": "failed fidelity at level(s) contradictory; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S002",
+    "S003"
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "corpus_id": "rag-llm-pilot-4f53cda1",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "7fe5f467b8c56b73b3cc0e4364447e6d61db0797a9d9b294d1645c6b79d5019a"
+  },
+  "renderer": "llm",
+  "level": "complex",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [],
+  "models": {
+    "renderer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+    "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+    "served": [
+      "sub-model-1",
+      "sub-model-2"
+    ],
+    "statements": true,
+    "paper_prompt": "render-v2.txt"
+  },
+  "settings": {
+    "name": "rag-llm-pilot",
+    "studies": 3,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 3,
+    "records": 3,
+    "retained_studies": 0,
+    "per_level": {
+      "complex": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.667
+      },
+      "contradictory": {
+        "passed": 0,
+        "failed_checks": {
+          "required_strings": 3
+        },
+        "mean_attempts": 3.0
+      },
+      "distributed": {
+        "passed": 1,
+        "failed_checks": {
+          "required_strings": 2
+        },
+        "mean_attempts": 2.333
+      },
+      "explicit": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 2.0
+      },
+      "paraphrased": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 2.0
+      }
+    },
+    "excluded": {
+      "S001": [
+        "contradictory",
+        "distributed"
+      ],
+      "S002": [
+        "contradictory",
+        "distributed"
+      ],
+      "S003": [
+        "contradictory"
+      ]
+    }
+  }
+}

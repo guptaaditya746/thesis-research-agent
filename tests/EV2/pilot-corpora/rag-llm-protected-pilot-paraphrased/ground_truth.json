@@ -1,0 +1,488 @@
+{
+  "corpus_id": "rag-llm-protected-pilot-e49df557",
+  "seed": 1,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "studies": [
+    {
+      "study_id": "S001",
+      "paper": "S001",
+      "level": "paraphrased",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S001.c1",
+          "role": "baseline",
+          "label": "plain generator with no lookup step",
+          "aliases": []
+        },
+        {
+          "id": "S001.c2",
+          "role": "rag",
+          "label": "configuration that looks up supporting documents",
+          "aliases": []
+        },
+        {
+          "id": "S001.c3",
+          "role": "other",
+          "label": "retrieval variant that skips the reranker",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S001.k1",
+          "canonical": "hallucination_rate",
+          "name": "fraction of answers judged to contain invented facts",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S001.m1",
+          "condition": "S001.c1",
+          "metric": "S001.k1",
+          "value": 0.299,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S001.m2",
+          "condition": "S001.c2",
+          "metric": "S001.k1",
+          "value": 0.214,
+          "dataset": "MedAnswerSet"
+        },
+        {
+          "id": "S001.m3",
+          "condition": "S001.c3",
+          "metric": "S001.k1",
+          "value": 0.472,
+          "dataset": "MedAnswerSet"
+        }
+      ],
+      "author_claim": {
+        "id": "S001.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.085,
+        "metric": "S001.k1",
+        "treatment": "S001.m2",
+        "control": "S001.m1"
+      }
+    },
+    {
+      "study_id": "S003",
+      "paper": "S003",
+      "level": "paraphrased",
+      "relevant": true,
+      "flags": [],
+      "duplicate_of": null,
+      "missing": null,
+      "conditions": [
+        {
+          "id": "S003.c1",
+          "role": "baseline",
+          "label": "generator without any document access",
+          "aliases": []
+        },
+        {
+          "id": "S003.c2",
+          "role": "rag",
+          "label": "variant that reads retrieved evidence first",
+          "aliases": []
+        },
+        {
+          "id": "S003.c3",
+          "role": "other",
+          "label": "model prompted to reason step by step",
+          "aliases": []
+        },
+        {
+          "id": "S003.c4",
+          "role": "other",
+          "label": "variant that reformulates the question before the search",
+          "aliases": []
+        }
+      ],
+      "metrics": [
+        {
+          "id": "S003.k1",
+          "canonical": "hallucination_rate",
+          "name": "share of answers that contain at least one unsupported statement",
+          "higher_is_better": false
+        }
+      ],
+      "measurements": [
+        {
+          "id": "S003.m1",
+          "condition": "S003.c1",
+          "metric": "S003.k1",
+          "value": 0.301,
+          "dataset": "BioClaimQA"
+        },
+        {
+          "id": "S003.m2",
+          "condition": "S003.c2",
+          "metric": "S003.k1",
+          "value": 0.224,
+          "dataset": "BioClaimQA"
+        },
+        {
+          "id": "S003.m3",
+          "condition": "S003.c3",
+          "metric": "S003.k1",
+          "value": 0.394,
+          "dataset": "BioClaimQA"
+        },
+        {
+          "id": "S003.m4",
+          "condition": "S003.c4",
+          "metric": "S003.k1",
+          "value": 0.383,
+          "dataset": "BioClaimQA"
+        }
+      ],
+      "author_claim": {
+        "id": "S003.a1",
+        "direction": "improves"
+      },
+      "effect": {
+        "direction": "supports",
+        "delta": 0.077,
+        "metric": "S003.k1",
+        "treatment": "S003.m2",
+        "control": "S003.m1"
+      }
+    }
+  ],
+  "placements": [
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 192,
+      "end": 227,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 237,
+      "end": 285,
+      "exact": "configuration that looks up supporting documents"
+    },
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 303,
+      "end": 378,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1176,
+      "end": 1211,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1282,
+      "end": 1330,
+      "exact": "configuration that looks up supporting documents"
+    },
+    {
+      "fact": "S001.c3",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1435,
+      "end": 1476,
+      "exact": "retrieval variant that skips the reranker"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1581,
+      "end": 1633,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 1916,
+      "end": 1968,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.c1",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 1974,
+      "end": 2009,
+      "exact": "plain generator with no lookup step"
+    },
+    {
+      "fact": "S001.m1",
+      "role": "value",
+      "paper": "S001",
+      "start": 2025,
+      "end": 2041,
+      "exact": "299 out of 1,000"
+    },
+    {
+      "fact": "S001.c2",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2074,
+      "end": 2122,
+      "exact": "configuration that looks up supporting documents"
+    },
+    {
+      "fact": "S001.m2",
+      "role": "value",
+      "paper": "S001",
+      "start": 2135,
+      "end": 2140,
+      "exact": "21.4%"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2148,
+      "end": 2200,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.c3",
+      "role": "condition_label",
+      "paper": "S001",
+      "start": 2226,
+      "end": 2267,
+      "exact": "retrieval variant that skips the reranker"
+    },
+    {
+      "fact": "S001.m3",
+      "role": "value",
+      "paper": "S001",
+      "start": 2280,
+      "end": 2285,
+      "exact": "0.472"
+    },
+    {
+      "fact": "S001.k1",
+      "role": "metric_label",
+      "paper": "S001",
+      "start": 2293,
+      "end": 2345,
+      "exact": "fraction of answers judged to contain invented facts"
+    },
+    {
+      "fact": "S001.a1",
+      "role": "claim",
+      "paper": "S001",
+      "start": 3116,
+      "end": 3199,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 180,
+      "end": 217,
+      "exact": "generator without any document access"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 227,
+      "end": 270,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 286,
+      "end": 361,
+      "exact": "Retrieval augmentation clearly reduces hallucinated content in the answers."
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1159,
+      "end": 1196,
+      "exact": "generator without any document access"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1295,
+      "end": 1338,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1436,
+      "end": 1473,
+      "exact": "model prompted to reason step by step"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 1564,
+      "end": 1620,
+      "exact": "variant that reformulates the question before the search"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 1731,
+      "end": 1795,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.c1",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2067,
+      "end": 2104,
+      "exact": "generator without any document access"
+    },
+    {
+      "fact": "S003.m1",
+      "role": "value",
+      "paper": "S003",
+      "start": 2113,
+      "end": 2129,
+      "exact": "301 out of 1,000"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2156,
+      "end": 2220,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2241,
+      "end": 2305,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.c2",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2313,
+      "end": 2356,
+      "exact": "variant that reads retrieved evidence first"
+    },
+    {
+      "fact": "S003.m2",
+      "role": "value",
+      "paper": "S003",
+      "start": 2361,
+      "end": 2366,
+      "exact": "22.4%"
+    },
+    {
+      "fact": "S003.c3",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2377,
+      "end": 2414,
+      "exact": "model prompted to reason step by step"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2420,
+      "end": 2484,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.m3",
+      "role": "value",
+      "paper": "S003",
+      "start": 2507,
+      "end": 2512,
+      "exact": "0.394"
+    },
+    {
+      "fact": "S003.c4",
+      "role": "condition_label",
+      "paper": "S003",
+      "start": 2533,
+      "end": 2589,
+      "exact": "variant that reformulates the question before the search"
+    },
+    {
+      "fact": "S003.m4",
+      "role": "value",
+      "paper": "S003",
+      "start": 2598,
+      "end": 2614,
+      "exact": "383 out of 1,000"
+    },
+    {
+      "fact": "S003.k1",
+      "role": "metric_label",
+      "paper": "S003",
+      "start": 2641,
+      "end": 2705,
+      "exact": "share of answers that contain at least one unsupported statement"
+    },
+    {
+      "fact": "S003.a1",
+      "role": "claim",
+      "paper": "S003",
+      "start": 3350,
+      "end": 3433,
+      "exact": "Grounding the generator in retrieved documents leads to fewer hallucinated answers."
+    }
+  ],
+  "answer": {
+    "label": "supported",
+    "supporting": [
+      "S001",
+      "S003"
+    ],
+    "contradicting": [],
+    "neutral": [],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}

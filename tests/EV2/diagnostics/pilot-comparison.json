@@ -1,0 +1,279 @@
+{
+  "rag-llm-pilot": {
+    "selection": {
+      "requested_studies": 3,
+      "records": 3,
+      "retained_studies": 0,
+      "per_level": {
+        "complex": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.667
+        },
+        "contradictory": {
+          "passed": 0,
+          "failed_checks": {
+            "required_strings": 3
+          },
+          "mean_attempts": 3.0
+        },
+        "distributed": {
+          "passed": 1,
+          "failed_checks": {
+            "required_strings": 2
+          },
+          "mean_attempts": 2.333
+        },
+        "explicit": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 2.0
+        },
+        "paraphrased": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 2.0
+        }
+      },
+      "excluded": {
+        "S001": [
+          "contradictory",
+          "distributed"
+        ],
+        "S002": [
+          "contradictory",
+          "distributed"
+        ],
+        "S003": [
+          "contradictory"
+        ]
+      }
+    },
+    "models": {
+      "renderer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "served": [
+        "sub-model-1",
+        "sub-model-2"
+      ],
+      "statements": true,
+      "paper_prompt": "render-v2.txt"
+    },
+    "generator": {
+      "name": "synth",
+      "version": "2",
+      "code_sha256": "7fe5f467b8c56b73b3cc0e4364447e6d61db0797a9d9b294d1645c6b79d5019a"
+    }
+  },
+  "rag-llm-protected-pilot": {
+    "selection": {
+      "requested_studies": 3,
+      "records": 3,
+      "retained_studies": 2,
+      "per_level": {
+        "complex": {
+          "passed": 2,
+          "failed_checks": {
+            "blind_reextraction": 1,
+            "blind_extra": 1
+          },
+          "mean_attempts": 1.0
+        },
+        "contradictory": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "distributed": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "explicit": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "paraphrased": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        }
+      },
+      "excluded": {
+        "S002": [
+          "complex"
+        ]
+      }
+    },
+    "models": {
+      "renderer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "served": [
+        "sub-model-1",
+        "sub-model-2"
+      ],
+      "statements": false,
+      "paper_prompt": "context-v1.txt",
+      "assembly": "protected",
+      "factual_renderer": "template-v1",
+      "context_prompt_sha256": "99e7ebdb0ddd11c1f66c21d8d781d89bfaaecea7a558701492756f00e360716b",
+      "assembly_sha256": "038c4e812d99446d700e4ae09b388a6c3553cd2ce568ec1c0a9401bd9cafcbdc",
+      "call_settings": {
+        "attempts": 3,
+        "max_tokens": 6000,
+        "concurrency": 1
+      }
+    },
+    "generator": {
+      "name": "synth",
+      "version": "2",
+      "code_sha256": "a3380aee98e77d109828d1c9295ae0452c0eee5d211856a9cefbdb430fa5ba12"
+    }
+  },
+  "rag-llm-protected-reading-pilot": {
+    "selection": {
+      "requested_studies": 3,
+      "records": 3,
+      "retained_studies": 0,
+      "per_level": {
+        "complex": {
+          "passed": 0,
+          "failed_checks": {
+            "model_call": 3
+          },
+          "mean_attempts": 1.0
+        },
+        "contradictory": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "distributed": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "explicit": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "paraphrased": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        }
+      },
+      "excluded": {
+        "S001": [
+          "complex"
+        ],
+        "S002": [
+          "complex"
+        ],
+        "S003": [
+          "complex"
+        ]
+      }
+    },
+    "models": {
+      "renderer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "served": [
+        "sub-model-1",
+        "sub-model-2"
+      ],
+      "statements": false,
+      "paper_prompt": "context-v1.txt",
+      "assembly": "protected",
+      "factual_renderer": "template-v1",
+      "context_prompt_sha256": "99e7ebdb0ddd11c1f66c21d8d781d89bfaaecea7a558701492756f00e360716b",
+      "assembly_sha256": "038c4e812d99446d700e4ae09b388a6c3553cd2ce568ec1c0a9401bd9cafcbdc",
+      "call_settings": {
+        "attempts": 3,
+        "max_tokens": 6000,
+        "concurrency": 1
+      },
+      "blind_prompt": "blind-reading-v1.txt",
+      "blind_prompt_sha256": "016944c27cf82b094cf5b79e1dc41e3923158a1224eb3ec2f52b6a07e5835a87"
+    },
+    "generator": {
+      "name": "synth",
+      "version": "2",
+      "code_sha256": "9baaec2553f31c58678ad4d46e9cc9146bf89df240cec1c96ef395412aec3890"
+    }
+  },
+  "rag-llm-protected-final-pilot": {
+    "selection": {
+      "requested_studies": 3,
+      "records": 3,
+      "retained_studies": 1,
+      "per_level": {
+        "complex": {
+          "passed": 2,
+          "failed_checks": {
+            "blind_extra": 1
+          },
+          "mean_attempts": 1.0
+        },
+        "contradictory": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "distributed": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        },
+        "explicit": {
+          "passed": 2,
+          "failed_checks": {
+            "model_call": 1
+          },
+          "mean_attempts": 1.0
+        },
+        "paraphrased": {
+          "passed": 3,
+          "failed_checks": {},
+          "mean_attempts": 1.0
+        }
+      },
+      "excluded": {
+        "S001": [
+          "complex"
+        ],
+        "S003": [
+          "explicit"
+        ]
+      }
+    },
+    "models": {
+      "renderer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+      "served": [
+        "sub-model-1",
+        "sub-model-2"
+      ],
+      "statements": false,
+      "paper_prompt": "context-v1.txt",
+      "assembly": "protected",
+      "factual_renderer": "template-v1",
+      "context_prompt_sha256": "99e7ebdb0ddd11c1f66c21d8d781d89bfaaecea7a558701492756f00e360716b",
+      "assembly_sha256": "038c4e812d99446d700e4ae09b388a6c3553cd2ce568ec1c0a9401bd9cafcbdc",
+      "call_settings": {
+        "attempts": 3,
+        "max_tokens": 6000,
+        "concurrency": 1
+      },
+      "blind_prompt": "blind-reading-v1.txt",
+      "blind_prompt_sha256": "1edb5880b9b819b2aa0b072d97458280a82fb5d32a733a72cad716b5e37137f1"
+    },
+    "generator": {
+      "name": "synth",
+      "version": "2",
+      "code_sha256": "14fa3fcc57078555940099bedb43dee2c10954b1e597a44effe13aecae9a6f4a"
+    }
+  }
+}

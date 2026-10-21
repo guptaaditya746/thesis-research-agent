@@ -1,0 +1,5 @@
+PASS: live check completed on job 7609.
+RAG baseline cache lines after first and second run: 2 / 2.
+RAG answer files identical: yes.
+Cascade check: 60 call records, 60 status=ok; 42 model calls; 41,708 input tokens; 9,032 output tokens; 235.521 seconds.
+"Event loop is closed" found in cascade calls: no.

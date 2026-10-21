@@ -1,0 +1,523 @@
+{
+  "corpus_id": "rag-llm-protected-final-pilot-325c0b4e",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": true,
+      "checks": [
+        {
+          "name": "context_introduction",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "context_discussion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 1,
+      "history": [],
+      "excluded_reason": "failed fidelity at level(s) complex; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": true,
+      "checks": [
+        {
+          "name": "context_introduction",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "context_discussion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S003",
+      "ok": false,
+      "checks": [
+        {
+          "name": "context_introduction",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "context_discussion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "model_call",
+          "ok": false,
+          "detail": "not_found: the quote does not occur in the file"
+        }
+      ],
+      "attempts": 1,
+      "history": [
+        {
+          "stage": "blind_reading",
+          "attempt": 1,
+          "rejected": {
+            "direct": [
+              {
+                "condition": "parametric-only model",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "30.1",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "On BioClaimQA, the parametric-only model has 30.1% hallucination rate."
+              },
+              {
+                "condition": "retrieval-augmented generator",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "22.4",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA."
+              },
+              {
+                "condition": "chain-of-thought prompting",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "39.4",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA."
+              },
+              {
+                "condition": "query-rewriting variant",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "38.3",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA."
+              }
+            ],
+            "relative": [
+              {
+                "condition": "retrieval-augmented generator",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "7.7",
+                "direction": "lower",
+                "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA, which is 7.7 percentage points lower than the parametric-only model's 30.1%."
+              },
+              {
+                "condition": "chain-of-thought prompting",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "9.3",
+                "direction": "higher",
+                "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA, which is 9.3 percentage points higher than the parametric-only model's 30.1%."
+              },
+              {
+                "condition": "query-rewriting variant",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "8.2",
+                "direction": "higher",
+                "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA, which is 8.2 percentage points higher than the parametric-only model's 30.1%."
+              }
+            ]
+          },
+          "failed": [
+            {
+              "name": "source_reading",
+              "detail": "not_found: the quote does not occur in the file"
+            }
+          ]
+        },
+        {
+          "stage": "blind_reading",
+          "attempt": 2,
+          "rejected": {
+            "direct": [
+              {
+                "condition": "parametric-only model",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "30.1",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "On BioClaimQA, the parametric-only model has 30.1% hallucination rate."
+              },
+              {
+                "condition": "retrieval-augmented generator",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "22.4",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA."
+              },
+              {
+                "condition": "chain-of-thought prompting",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "39.4",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA."
+              },
+              {
+                "condition": "query-rewriting variant",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "38.3",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA."
+              }
+            ],
+            "relative": [
+              {
+                "condition": "retrieval-augmented generator",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "7.7",
+                "direction": "lower",
+                "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA, which is 7.7 percentage points lower than the parametric-only model's 30.1%."
+              },
+              {
+                "condition": "chain-of-thought prompting",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "9.3",
+                "direction": "higher",
+                "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA, which is 9.3 percentage points higher than the parametric-only model's 30.1%."
+              },
+              {
+                "condition": "query-rewriting variant",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "8.2",
+                "direction": "higher",
+                "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA, which is 8.2 percentage points higher than the parametric-only model's 30.1%."
+              }
+            ]
+          },
+          "failed": [
+            {
+              "name": "source_reading",
+              "detail": "not_found: the quote does not occur in the file"
+            }
+          ]
+        },
+        {
+          "stage": "blind_reading",
+          "attempt": 3,
+          "rejected": {
+            "direct": [
+              {
+                "condition": "parametric-only model",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "30.1",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "On BioClaimQA, the parametric-only model has 30.1% hallucination rate."
+              },
+              {
+                "condition": "retrieval-augmented generator",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "22.4",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA."
+              },
+              {
+                "condition": "chain-of-thought prompting",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "39.4",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA."
+              },
+              {
+                "condition": "query-rewriting variant",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "number": "38.3",
+                "unit": "percent",
+                "denominator": null,
+                "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA."
+              }
+            ],
+            "relative": [
+              {
+                "condition": "retrieval-augmented generator",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "7.7",
+                "direction": "lower",
+                "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA, which is 7.7 percentage points lower than the parametric-only model's 30.1%."
+              },
+              {
+                "condition": "chain-of-thought prompting",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "9.3",
+                "direction": "higher",
+                "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA, which is 9.3 percentage points higher than the parametric-only model's 30.1%."
+              },
+              {
+                "condition": "query-rewriting variant",
+                "metric": "hallucination rate",
+                "dataset": "BioClaimQA",
+                "reference_condition": "parametric-only model",
+                "points": "8.2",
+                "direction": "higher",
+                "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA, which is 8.2 percentage points higher than the parametric-only model's 30.1%."
+              }
+            ]
+          },
+          "failed": [
+            {
+              "name": "source_reading",
+              "detail": "not_found: the quote does not occur in the file"
+            }
+          ]
+        }
+      ],
+      "excluded_reason": "failed fidelity at level(s) explicit; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S003"
+  ]
+}

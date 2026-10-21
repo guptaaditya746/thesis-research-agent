@@ -1,0 +1,248 @@
+[
+  {
+    "corpus": "rag-claude-k1-complex",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-k1-contradictory",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-k1-distributed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-k1-explicit",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-k1-mixed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-k1-paraphrased",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-pilot-complex",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-pilot-contradictory",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-pilot-distributed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-pilot-explicit",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-pilot-mixed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-pilot-paraphrased",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-s1-complex",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-s1-contradictory",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-s1-distributed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-s1-explicit",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-s1-mixed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-s1-mixed-cf-S001-contradicts",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-s1-paraphrased",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-small-distributed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-small-mixed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-claude-small-paraphrased",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-hard-complex",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-hard-contradictory",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-hard-distributed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-hard-explicit",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-hard-mixed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-hard-paraphrased",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-k1-complex",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-k1-contradictory",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-k1-distributed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-k1-explicit",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-k1-mixed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-k1-paraphrased",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-s1-complex",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-s1-contradictory",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-s1-distributed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-s1-explicit",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-s1-mixed",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-s1-mixed-cf-S001-contradicts",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  },
+  {
+    "corpus": "rag-tpl-s1-paraphrased",
+    "requested": null,
+    "retained": null,
+    "levels": null
+  }
+]

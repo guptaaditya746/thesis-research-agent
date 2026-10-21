@@ -1,0 +1,290 @@
+{
+  "corpus_id": "rag-llm-protected-final-pilot-af8bf078",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": true,
+      "checks": [
+        {
+          "name": "context_introduction",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "context_discussion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_explicit",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 1,
+      "history": [],
+      "excluded_reason": "failed fidelity at level(s) complex; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": true,
+      "checks": [
+        {
+          "name": "context_introduction",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "context_discussion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_paraphrased",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 1,
+      "history": []
+    },
+    {
+      "id": "S003",
+      "ok": true,
+      "checks": [
+        {
+          "name": "context_introduction",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "context_discussion",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 1,
+      "history": [],
+      "excluded_reason": "failed fidelity at level(s) explicit; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S003"
+  ]
+}

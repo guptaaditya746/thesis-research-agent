@@ -1,0 +1,3309 @@
+[
+  {
+    "cache_key": "df908ed774f6b62051a6292eef7e5fb7fc96c0cbebfea7c2ee26bd2f9ee2d023",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.299
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.214
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.472
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 929,
+      "output_tokens": 116
+    }
+  },
+  {
+    "cache_key": "af04c37c8c646b606d296e17998fd5998424684f1f51d0dd40d07072fd608cca",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.335
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.402
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.364
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.131
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 951,
+      "output_tokens": 142
+    }
+  },
+  {
+    "cache_key": "81f3f43bd2080d91ccb8ffa2b666009fd5bfa3b2b3f761371fa3e821fe0fc4cb",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "Parametric-only model",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.301
+        },
+        {
+          "condition": "Retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.224
+        },
+        {
+          "condition": "Chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.394
+        },
+        {
+          "condition": "Query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.383
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 960,
+      "output_tokens": 155
+    }
+  },
+  {
+    "cache_key": "27385d0ac347d573a70daae58d46ec3379cabed6b720b39c0126ed0730b9dc23",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "Plain generator with no lookup step",
+          "dataset": "MedAnswerSet",
+          "metric": "fraction of answers judged to contain invented facts",
+          "value": 0.299
+        },
+        {
+          "condition": "Configuration that looks up supporting documents",
+          "dataset": "MedAnswerSet",
+          "metric": "fraction of answers judged to contain invented facts",
+          "value": 0.214
+        },
+        {
+          "condition": "Retrieval variant that skips the reranker",
+          "dataset": "MedAnswerSet",
+          "metric": "fraction of answers judged to contain invented facts",
+          "value": 0.472
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 973,
+      "output_tokens": 135
+    }
+  },
+  {
+    "cache_key": "5b03dbeb20d91d11d4826f19ad396314df33fe387d98ca556ec830d29aa14faf",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "Model that answers from its own parameters",
+          "dataset": "HistoryQuest",
+          "metric": "proportion of answers with a statement not backed by any source",
+          "value": 0.335
+        },
+        {
+          "condition": "System grounded in retrieved passages",
+          "dataset": "HistoryQuest",
+          "metric": "proportion of answers with a statement not backed by any source",
+          "value": 0.402
+        },
+        {
+          "condition": "Variant fed with randomly drawn passages",
+          "dataset": "HistoryQuest",
+          "metric": "proportion of answers with a statement not backed by any source",
+          "value": 0.364
+        },
+        {
+          "condition": "Model prompted to reason step by step",
+          "dataset": "HistoryQuest",
+          "metric": "proportion of answers with a statement not backed by any source",
+          "value": 0.131
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1031,
+      "output_tokens": 192
+    }
+  },
+  {
+    "cache_key": "351d90c94e3586eda17dd42d88ea1d67b5e52d31e411fb71f4a3e9ae1a7a519b",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "generator without any document access",
+          "dataset": "BioClaimQA",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "value": 0.301
+        },
+        {
+          "condition": "variant that reads retrieved evidence first",
+          "dataset": "BioClaimQA",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "value": 0.224
+        },
+        {
+          "condition": "model prompted to reason step by step",
+          "dataset": "BioClaimQA",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "value": 0.394
+        },
+        {
+          "condition": "variant that reformulates the question before the search",
+          "dataset": "BioClaimQA",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "value": 0.383
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1024,
+      "output_tokens": 185
+    }
+  },
+  {
+    "cache_key": "8b61fcd3a70994588a6092244a55d335bc337d4c4c904b19e48a38937031417a",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "B",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.299
+        },
+        {
+          "condition": "R",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.214
+        },
+        {
+          "condition": "A1",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.472
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1077,
+      "output_tokens": 106
+    }
+  },
+  {
+    "cache_key": "5c2bd500c2ac442eb4558b03395be84d5784683967be009eb9d38ef6efb58bcf",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "B",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.335
+        },
+        {
+          "condition": "R",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.402
+        },
+        {
+          "condition": "A1",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.364
+        },
+        {
+          "condition": "A2",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.131
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1097,
+      "output_tokens": 132
+    }
+  },
+  {
+    "cache_key": "cfe4509a0ac32a0a480001fd5d7394555ace12dbeb78701af384f948d5d62d8f",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "B",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.301
+        },
+        {
+          "condition": "R",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.224
+        },
+        {
+          "condition": "A1",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.394
+        },
+        {
+          "condition": "A2",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.383
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1108,
+      "output_tokens": 140
+    }
+  },
+  {
+    "cache_key": "2c76c9af483496d514b62d687198fcf7f706d4f78f294c3f79423bcf7e37a88a",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.299
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.214
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.472
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "metric": "BLEU",
+          "value": 0.101
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "metric": "BLEU",
+          "value": 0.456
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "metric": "BLEU",
+          "value": 0.328
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "metric": "latency",
+          "value": 1.76
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "metric": "latency",
+          "value": 1.57
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "metric": "latency",
+          "value": 3.42
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "metric": "hallucination frequency",
+          "value": 0.411
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "metric": "hallucination frequency",
+          "value": 0.284
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "metric": "hallucination frequency",
+          "value": 0.132
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "metric": "BLEU",
+          "value": 0.262
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "metric": "BLEU",
+          "value": 0.115
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "metric": "BLEU",
+          "value": 0.432
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "metric": "latency",
+          "value": 3.17
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "metric": "latency",
+          "value": 0.44
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "metric": "latency",
+          "value": 2.35
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1154,
+      "output_tokens": 655
+    }
+  },
+  {
+    "cache_key": "248c3f2c341971de43640bbc7c47e02a669ed72cc4e06027c938526d24f7492a",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.335
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.268
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.364
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.131
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "metric": "ROUGE-L",
+          "value": 0.422
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "metric": "ROUGE-L",
+          "value": 0.251
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "metric": "ROUGE-L",
+          "value": 0.161
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "metric": "ROUGE-L",
+          "value": 0.469
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "PopCultureQA",
+          "metric": "unsupported-answer rate",
+          "value": 0.111
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "PopCultureQA",
+          "metric": "unsupported-answer rate",
+          "value": 0.194
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "PopCultureQA",
+          "metric": "unsupported-answer rate",
+          "value": 0.444
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "PopCultureQA",
+          "metric": "unsupported-answer rate",
+          "value": 0.296
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "PopCultureQA",
+          "metric": "ROUGE-L",
+          "value": 0.524
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "PopCultureQA",
+          "metric": "ROUGE-L",
+          "value": 0.355
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "PopCultureQA",
+          "metric": "ROUGE-L",
+          "value": 0.533
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "PopCultureQA",
+          "metric": "ROUGE-L",
+          "value": 0.345
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1142,
+      "output_tokens": 575
+    }
+  },
+  {
+    "cache_key": "f6dc7e6aec1c8f4c1b64a71dc681687c2654c48f29c2cfcc98cf264ccf1cd898",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.301
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.224
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.394
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.383
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "metric": "latency",
+          "value": 3.36
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "metric": "latency",
+          "value": 2.41
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "metric": "latency",
+          "value": 1.27
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "metric": "latency",
+          "value": 1.26
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "metric": "BLEU",
+          "value": 0.357
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "metric": "BLEU",
+          "value": 0.216
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "metric": "BLEU",
+          "value": 0.106
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "metric": "BLEU",
+          "value": 0.494
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "metric": "hallucination rate",
+          "value": 0.257
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "metric": "hallucination rate",
+          "value": 0.119
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "metric": "hallucination rate",
+          "value": 0.182
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "metric": "hallucination rate",
+          "value": 0.198
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "metric": "latency",
+          "value": 2.47
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "metric": "latency",
+          "value": 3.03
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "metric": "latency",
+          "value": 2.16
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "metric": "latency",
+          "value": 3.35
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "metric": "BLEU",
+          "value": 0.335
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "metric": "BLEU",
+          "value": 0.237
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "metric": "BLEU",
+          "value": 0.437
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "metric": "BLEU",
+          "value": 0.411
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1230,
+      "output_tokens": 885
+    }
+  },
+  {
+    "cache_key": "40155232fa1d5ffe96208d1f969f05fddbe09227dd12556287b4bb01988a760a",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.299
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.214
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "metric": "hallucination frequency",
+          "value": 0.472
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 941,
+      "output_tokens": 116
+    }
+  },
+  {
+    "cache_key": "d995d3167cbb52c42c4227f36b9d2d967a17c628708c2d180362cc8d89c15dc2",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.335
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.402
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.364
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "metric": "unsupported-answer rate",
+          "value": 0.131
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 983,
+      "output_tokens": 147
+    }
+  },
+  {
+    "cache_key": "282fbaebd7d4fa076c5e1fd010e9b0f35b39910a07af76b1041048743163663c",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "measurements": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.301
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.224
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.394
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "metric": "hallucination rate",
+          "value": 0.383
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 968,
+      "output_tokens": 155
+    }
+  },
+  {
+    "cache_key": "849ed162d1bba3d9eef17aac8938b03b79fc6398c2028484728e4f57759ebb6c",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "29.9",
+          "quote": "On MedAnswerSet, the vanilla LLM has 29.9% hallucination frequency.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "21.4",
+          "quote": "We measure 21.4% hallucination frequency for the retrieve-then-read model on MedAnswerSet.",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "47.2",
+          "quote": "On MedAnswerSet, the RAG without reranking has 47.2% hallucination frequency.",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1139,
+      "output_tokens": 232
+    }
+  },
+  {
+    "cache_key": "19f549a7fe61214fef4f61b5a12b7319c1dac195df95aa532cc726211d2ccdd4",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "33.5",
+          "quote": "On HistoryQuest, the closed-book model has 33.5% unsupported-answer rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "40.2",
+          "quote": "On HistoryQuest, the RAG pipeline has 40.2% unsupported-answer rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "36.4",
+          "quote": "The RAG with random passages shows 36.4% unsupported-answer rate on HistoryQuest.",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "13.1",
+          "quote": "On HistoryQuest, the chain-of-thought prompting has 13.1% unsupported-answer rate.",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1161,
+      "output_tokens": 288
+    }
+  },
+  {
+    "cache_key": "1e65124c701276eac3bfa86a382e737b39b24ac98274d18fa859d06f3c72c8f7",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "On BioClaimQA, the parametric-only model has 30.1% hallucination rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1170,
+      "output_tokens": 308
+    }
+  },
+  {
+    "cache_key": "6dc41a6769099f3d0206eb60b0d9d8920dc2771a90f086509e8234cf20a273b8",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "plain generator with no lookup step",
+          "dataset": "MedAnswerSet",
+          "denominator": "1,000",
+          "metric": "fraction of answers judged to contain invented facts",
+          "number": "299",
+          "quote": "In terms of the fraction of answers judged to contain invented facts, the plain generator with no lookup step corresponds to 299 out of 1,000 MedAnswerSet questions.",
+          "unit": "count"
+        },
+        {
+          "condition": "configuration that looks up supporting documents",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "fraction of answers judged to contain invented facts",
+          "number": "21.4",
+          "quote": "For the configuration that looks up supporting documents, we observe 21.4% as the fraction of answers judged to contain invented facts on MedAnswerSet.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval variant that skips the reranker",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "fraction of answers judged to contain invented facts",
+          "number": "0.472",
+          "quote": "For the retrieval variant that skips the reranker, we observe 0.472 as the fraction of answers judged to contain invented facts on MedAnswerSet.",
+          "unit": "fraction"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1183,
+      "output_tokens": 295
+    }
+  },
+  {
+    "cache_key": "a0c09c0536f4ecd964c5045795124dc7da139fec8894834e8b3e9b9d668b704c",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "model that answers from its own parameters",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "0.335",
+          "quote": "With the model that answers from its own parameters, the proportion of answers with a statement not backed by any source on HistoryQuest came to 0.335.",
+          "unit": "fraction"
+        },
+        {
+          "condition": "system grounded in retrieved passages",
+          "dataset": "HistoryQuest",
+          "denominator": "1,000",
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "402",
+          "quote": "On HistoryQuest, the system grounded in retrieved passages reaches 402 out of 1,000 questions in terms of the proportion of answers with a statement not backed by any source.",
+          "unit": "count"
+        },
+        {
+          "condition": "variant fed with randomly drawn passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "36.4",
+          "quote": "With the variant fed with randomly drawn passages, the proportion of answers with a statement not backed by any source on HistoryQuest came to 36.4%.",
+          "unit": "percent"
+        },
+        {
+          "condition": "model prompted to reason step by step",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "0.131",
+          "quote": "On HistoryQuest, the proportion of answers with a statement not backed by any source of the model prompted to reason step by step was 0.131.",
+          "unit": "fraction"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1241,
+      "output_tokens": 400
+    }
+  },
+  {
+    "cache_key": "235e084de645f6e186d0793384e57249af2e191989eb682627a48b89e16534c6",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "generator without any document access",
+          "dataset": "BioClaimQA",
+          "denominator": "1,000",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "301",
+          "quote": "On BioClaimQA, the generator without any document access reaches 301 out of 1,000 questions in terms of the share of answers that contain at least one unsupported statement.",
+          "unit": "count"
+        },
+        {
+          "condition": "variant that reads retrieved evidence first",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "22.4",
+          "quote": "On BioClaimQA, the share of answers that contain at least one unsupported statement of the variant that reads retrieved evidence first was 22.4%.",
+          "unit": "percent"
+        },
+        {
+          "condition": "model prompted to reason step by step",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "0.394",
+          "quote": "With the model prompted to reason step by step, the share of answers that contain at least one unsupported statement on BioClaimQA came to 0.394.",
+          "unit": "fraction"
+        },
+        {
+          "condition": "variant that reformulates the question before the search",
+          "dataset": "BioClaimQA",
+          "denominator": "1,000",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "383",
+          "quote": "On BioClaimQA, the variant that reformulates the question before the search reaches 383 out of 1,000 questions in terms of the share of answers that contain at least one unsupported statement.",
+          "unit": "count"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1234,
+      "output_tokens": 411
+    }
+  },
+  {
+    "cache_key": "4e57612821539375e79d247b9b4c93a9b9279f4f3686a781c0abadb7709c6843",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "B",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "HF",
+          "number": "29.9",
+          "quote": "B | 29.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "R",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "HF",
+          "number": "21.4",
+          "quote": "R | 21.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A1",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "HF",
+          "number": "47.2",
+          "quote": "A1 | 47.2",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1287,
+      "output_tokens": 171
+    }
+  },
+  {
+    "cache_key": "9b93731d066d910ec13e02f9f5f29d118225359c4733c3a883483258e2ae4e63",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "B",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "33.5",
+          "quote": "B | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "R",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "40.2",
+          "quote": "R | 40.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "A1",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "36.4",
+          "quote": "A1 | 36.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A2",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "13.1",
+          "quote": "A2 | 13.1",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1307,
+      "output_tokens": 172
+    }
+  },
+  {
+    "cache_key": "c2077aad32817bdd4b2de061816e9654ab890b4b77f1e8487bcc95ebbba62bb6",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "B",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "B | 30.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "R",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "R | 22.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A1",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "A1 | 39.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A2",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "A2 | 38.3",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1318,
+      "output_tokens": 184
+    }
+  },
+  {
+    "cache_key": "105901bdd47bea1f8e8662c404b15846741dfdbeb5037f1cc488abedfe08701d",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "29.9",
+          "quote": "vanilla LLM | MedAnswerSet | 29.9 | 10.1 | 1.76",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "see text",
+          "quote": "retrieve-then-read model | MedAnswerSet | see text | 45.6 | 1.57",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "47.2",
+          "quote": "RAG without reranking | MedAnswerSet | 47.2 | 32.8 | 3.42",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "10.1",
+          "quote": "vanilla LLM | MedAnswerSet | 29.9 | 10.1 | 1.76",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "45.6",
+          "quote": "retrieve-then-read model | MedAnswerSet | see text | 45.6 | 1.57",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "32.8",
+          "quote": "RAG without reranking | MedAnswerSet | 47.2 | 32.8 | 3.42",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.76",
+          "quote": "vanilla LLM | MedAnswerSet | 29.9 | 10.1 | 1.76",
+          "unit": "raw"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.57",
+          "quote": "retrieve-then-read model | MedAnswerSet | see text | 45.6 | 1.57",
+          "unit": "raw"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.42",
+          "quote": "RAG without reranking | MedAnswerSet | 47.2 | 32.8 | 3.42",
+          "unit": "raw"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "41.1",
+          "quote": "vanilla LLM | OpenFactQA | 41.1 | 26.2 | 3.17",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "28.4",
+          "quote": "retrieve-then-read model | OpenFactQA | 28.4 | 11.5 | 0.44",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "13.2",
+          "quote": "RAG without reranking | OpenFactQA | 13.2 | 43.2 | 2.35",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "26.2",
+          "quote": "vanilla LLM | OpenFactQA | 41.1 | 26.2 | 3.17",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "11.5",
+          "quote": "retrieve-then-read model | OpenFactQA | 28.4 | 11.5 | 0.44",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "43.2",
+          "quote": "RAG without reranking | OpenFactQA | 13.2 | 43.2 | 2.35",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.17",
+          "quote": "vanilla LLM | OpenFactQA | 41.1 | 26.2 | 3.17",
+          "unit": "raw"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "0.44",
+          "quote": "retrieve-then-read model | OpenFactQA | 28.4 | 11.5 | 0.44",
+          "unit": "raw"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.35",
+          "quote": "RAG without reranking | OpenFactQA | 13.2 | 43.2 | 2.35",
+          "unit": "raw"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "direction": "lower",
+          "metric": "hallucination frequency",
+          "points": "8.5",
+          "quote": "On MedAnswerSet, the retrieve-then-read model scores 8.5 percentage points lower than the vanilla LLM in hallucination frequency.",
+          "reference_condition": "vanilla LLM"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1364,
+      "output_tokens": 1487
+    }
+  },
+  {
+    "cache_key": "47f04cc3863d0d0dc67d3732af1b9c7902c2f78903627ffd5ed2d03bd6b68c7f",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "33.5",
+          "quote": "closed-book model | HistoryQuest | 33.5 | 42.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "see text",
+          "quote": "RAG pipeline | HistoryQuest | see text | 25.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "36.4",
+          "quote": "RAG with random passages | HistoryQuest | 36.4 | 16.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "13.1",
+          "quote": "chain-of-thought prompting | HistoryQuest | 13.1 | 46.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "42.2",
+          "quote": "closed-book model | HistoryQuest | 33.5 | 42.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "25.1",
+          "quote": "RAG pipeline | HistoryQuest | see text | 25.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "16.1",
+          "quote": "RAG with random passages | HistoryQuest | 36.4 | 16.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "46.9",
+          "quote": "chain-of-thought prompting | HistoryQuest | 13.1 | 46.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "11.1",
+          "quote": "closed-book model | PopCultureQA | 11.1 | 52.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "19.4",
+          "quote": "RAG pipeline | PopCultureQA | 19.4 | 35.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "44.4",
+          "quote": "RAG with random passages | PopCultureQA | 44.4 | 53.3",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "29.6",
+          "quote": "chain-of-thought prompting | PopCultureQA | 29.6 | 34.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "52.4",
+          "quote": "closed-book model | PopCultureQA | 11.1 | 52.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "35.5",
+          "quote": "RAG pipeline | PopCultureQA | 19.4 | 35.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "53.3",
+          "quote": "RAG with random passages | PopCultureQA | 44.4 | 53.3",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "34.5",
+          "quote": "chain-of-thought prompting | PopCultureQA | 29.6 | 34.5",
+          "unit": "percent"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "direction": "higher",
+          "metric": "unsupported-answer rate",
+          "points": "6.7",
+          "quote": "On HistoryQuest, the RAG pipeline scores 6.7 percentage points higher than the closed-book model in unsupported-answer rate.",
+          "reference_condition": "closed-book model"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1352,
+      "output_tokens": 1198
+    }
+  },
+  {
+    "cache_key": "3ed5a87b9f0b493b9b6ac2d0afd1407c0c52768ea1144cfd9e3d66084171762e",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "parametric-only model | BioClaimQA | 30.1 | 3.36 | 35.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "see text",
+          "quote": "retrieval-augmented generator | BioClaimQA | see text | 2.41 | 21.6",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "chain-of-thought prompting | BioClaimQA | 39.4 | 1.27 | 10.6",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "query-rewriting variant | BioClaimQA | 38.3 | 1.26 | 49.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "25.7",
+          "quote": "parametric-only model | LawFactQA | 25.7 | 2.47 | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "11.9",
+          "quote": "retrieval-augmented generator | LawFactQA | 11.9 | 3.03 | 23.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "18.2",
+          "quote": "chain-of-thought prompting | LawFactQA | 18.2 | 2.16 | 43.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "19.8",
+          "quote": "query-rewriting variant | LawFactQA | 19.8 | 3.35 | 41.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.36",
+          "quote": "parametric-only model | BioClaimQA | 30.1 | 3.36 | 35.7",
+          "unit": "raw"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.41",
+          "quote": "retrieval-augmented generator | BioClaimQA | see text | 2.41 | 21.6",
+          "unit": "raw"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.27",
+          "quote": "chain-of-thought prompting | BioClaimQA | 39.4 | 1.27 | 10.6",
+          "unit": "raw"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.26",
+          "quote": "query-rewriting variant | BioClaimQA | 38.3 | 1.26 | 49.4",
+          "unit": "raw"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.47",
+          "quote": "parametric-only model | LawFactQA | 25.7 | 2.47 | 33.5",
+          "unit": "raw"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.03",
+          "quote": "retrieval-augmented generator | LawFactQA | 11.9 | 3.03 | 23.7",
+          "unit": "raw"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.16",
+          "quote": "chain-of-thought prompting | LawFactQA | 18.2 | 2.16 | 43.7",
+          "unit": "raw"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.35",
+          "quote": "query-rewriting variant | LawFactQA | 19.8 | 3.35 | 41.1",
+          "unit": "raw"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "35.7",
+          "quote": "parametric-only model | BioClaimQA | 30.1 | 3.36 | 35.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "21.6",
+          "quote": "retrieval-augmented generator | BioClaimQA | see text | 2.41 | 21.6",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "10.6",
+          "quote": "chain-of-thought prompting | BioClaimQA | 39.4 | 1.27 | 10.6",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "49.4",
+          "quote": "query-rewriting variant | BioClaimQA | 38.3 | 1.26 | 49.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "33.5",
+          "quote": "parametric-only model | LawFactQA | 25.7 | 2.47 | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "23.7",
+          "quote": "retrieval-augmented generator | LawFactQA | 11.9 | 3.03 | 23.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "43.7",
+          "quote": "chain-of-thought prompting | LawFactQA | 18.2 | 2.16 | 43.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "41.1",
+          "quote": "query-rewriting variant | LawFactQA | 19.8 | 3.35 | 41.1",
+          "unit": "percent"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "direction": "lower",
+          "metric": "hallucination rate",
+          "points": "7.7",
+          "quote": "On BioClaimQA, the retrieval-augmented generator scores 7.7 percentage points lower than the parametric-only model in hallucination rate.",
+          "reference_condition": "parametric-only model"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1440,
+      "output_tokens": 1986
+    }
+  },
+  {
+    "cache_key": "419070b16d2640ffe7fb7ca8cf9f22dd0b88ab6a7e1239711ffd75096c7d551c",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "29.9",
+          "quote": "vanilla LLM | 29.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "21.4",
+          "quote": "retrieve-then-read model | 21.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "47.2",
+          "quote": "RAG without reranking | 47.2",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1151,
+      "output_tokens": 200
+    }
+  },
+  {
+    "cache_key": "468cc39c461feb3c5526706032142030806763f8d4d1f43383a76666dd60408a",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "33.5",
+          "quote": "closed-book model | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "40.2",
+          "quote": "RAG pipeline | 40.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "36.4",
+          "quote": "RAG with random passages | 36.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "13.1",
+          "quote": "chain-of-thought prompting | 13.1",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1193,
+      "output_tokens": 196
+    }
+  },
+  {
+    "cache_key": "38ef89ebc20da1cc46e7155fba31df1af502b5bcbeffbfdcd378790109637e0b",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "parametric-only model | 30.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "retrieval-augmented generator | 22.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "chain-of-thought prompting | 39.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "query-rewriting variant | 38.3",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1178,
+      "output_tokens": 268
+    }
+  },
+  {
+    "cache_key": "86888c28d43e4acad1806cd1575d4034c0b2a24f3fc5409c618c073f5d074d43",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "29.9",
+          "quote": "On MedAnswerSet, the vanilla LLM has 29.9% hallucination frequency.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "21.4",
+          "quote": "We measure 21.4% hallucination frequency for the retrieve-then-read model on MedAnswerSet.",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "47.2",
+          "quote": "On MedAnswerSet, the RAG without reranking has 47.2% hallucination frequency.",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1139,
+      "output_tokens": 232
+    }
+  },
+  {
+    "cache_key": "0dba773b8f2d9d917620b6c7987fdc9aaf6a30cd59ed71fa5abeaf32ca39debd",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "33.5",
+          "quote": "On HistoryQuest, the closed-book model has 33.5% unsupported-answer rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "40.2",
+          "quote": "On HistoryQuest, the RAG pipeline has 40.2% unsupported-answer rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "36.4",
+          "quote": "The RAG with random passages shows 36.4% unsupported-answer rate on HistoryQuest.",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "13.1",
+          "quote": "On HistoryQuest, the chain-of-thought prompting has 13.1% unsupported-answer rate.",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1161,
+      "output_tokens": 288
+    }
+  },
+  {
+    "cache_key": "cc48164b3c7d631b9bcfad687f4dee7ebd283706e2dd5cbb40bad91392c25ba3",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "On BioClaimQA, the parametric-only model has 30.1% hallucination rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "direction": "lower",
+          "metric": "hallucination rate",
+          "points": "7.7",
+          "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA, which is 7.7 percentage points lower than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "direction": "higher",
+          "metric": "hallucination rate",
+          "points": "9.3",
+          "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA, which is 9.3 percentage points higher than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "direction": "higher",
+          "metric": "hallucination rate",
+          "points": "8.2",
+          "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA, which is 8.2 percentage points higher than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1170,
+      "output_tokens": 611
+    }
+  },
+  {
+    "cache_key": "78a687d17f8ac07aeedd4a092cbac1c5f6e35d85bd9c618d80e09b157340c9f9",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "On BioClaimQA, the parametric-only model has 30.1% hallucination rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "direction": "lower",
+          "metric": "hallucination rate",
+          "points": "7.7",
+          "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA, which is 7.7 percentage points lower than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "direction": "higher",
+          "metric": "hallucination rate",
+          "points": "9.3",
+          "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA, which is 9.3 percentage points higher than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "direction": "higher",
+          "metric": "hallucination rate",
+          "points": "8.2",
+          "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA, which is 8.2 percentage points higher than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1806,
+      "output_tokens": 611
+    }
+  },
+  {
+    "cache_key": "7a5d268e7ebe5c253076d538850568c671ea6b57571e21e2af42dcb56ca8def1",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "On BioClaimQA, the parametric-only model has 30.1% hallucination rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA.",
+          "unit": "percent"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "direction": "lower",
+          "metric": "hallucination rate",
+          "points": "7.7",
+          "quote": "We measure 22.4% hallucination rate for the retrieval-augmented generator on BioClaimQA, which is 7.7 percentage points lower than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "direction": "higher",
+          "metric": "hallucination rate",
+          "points": "9.3",
+          "quote": "The chain-of-thought prompting shows 39.4% hallucination rate on BioClaimQA, which is 9.3 percentage points higher than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "direction": "higher",
+          "metric": "hallucination rate",
+          "points": "8.2",
+          "quote": "The query-rewriting variant shows 38.3% hallucination rate on BioClaimQA, which is 8.2 percentage points higher than the parametric-only model's 30.1%.",
+          "reference_condition": "parametric-only model"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1806,
+      "output_tokens": 611
+    }
+  },
+  {
+    "cache_key": "77045409530fa9bec06502efdcf7d4d04c0edfc359f1360e12448d14a5e8d631",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "plain generator with no lookup step",
+          "dataset": "MedAnswerSet",
+          "denominator": "1,000",
+          "metric": "fraction of answers judged to contain invented facts",
+          "number": "299",
+          "quote": "In terms of the fraction of answers judged to contain invented facts, the plain generator with no lookup step corresponds to 299 out of 1,000 MedAnswerSet questions.",
+          "unit": "count"
+        },
+        {
+          "condition": "configuration that looks up supporting documents",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "fraction of answers judged to contain invented facts",
+          "number": "21.4",
+          "quote": "For the configuration that looks up supporting documents, we observe 21.4% as the fraction of answers judged to contain invented facts on MedAnswerSet.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval variant that skips the reranker",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "fraction of answers judged to contain invented facts",
+          "number": "0.472",
+          "quote": "For the retrieval variant that skips the reranker, we observe 0.472 as the fraction of answers judged to contain invented facts on MedAnswerSet.",
+          "unit": "fraction"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1183,
+      "output_tokens": 295
+    }
+  },
+  {
+    "cache_key": "ee4b70f06cfd72f8e36524c67a26dc60b00a4c9ad1ec477ab63972abf36c589b",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "model that answers from its own parameters",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "0.335",
+          "quote": "With the model that answers from its own parameters, the proportion of answers with a statement not backed by any source on HistoryQuest came to 0.335.",
+          "unit": "fraction"
+        },
+        {
+          "condition": "system grounded in retrieved passages",
+          "dataset": "HistoryQuest",
+          "denominator": "1,000",
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "402",
+          "quote": "On HistoryQuest, the system grounded in retrieved passages reaches 402 out of 1,000 questions in terms of the proportion of answers with a statement not backed by any source.",
+          "unit": "count"
+        },
+        {
+          "condition": "variant fed with randomly drawn passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "36.4",
+          "quote": "With the variant fed with randomly drawn passages, the proportion of answers with a statement not backed by any source on HistoryQuest came to 36.4%.",
+          "unit": "percent"
+        },
+        {
+          "condition": "model prompted to reason step by step",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "proportion of answers with a statement not backed by any source",
+          "number": "0.131",
+          "quote": "On HistoryQuest, the proportion of answers with a statement not backed by any source of the model prompted to reason step by step was 0.131.",
+          "unit": "fraction"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1241,
+      "output_tokens": 400
+    }
+  },
+  {
+    "cache_key": "556eb59a0f209f13ae42f55cffc36763eddfd91a81a4a71ad36a5d03d98d083f",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "generator without any document access",
+          "dataset": "BioClaimQA",
+          "denominator": "1,000",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "301",
+          "quote": "On BioClaimQA, the generator without any document access reaches 301 out of 1,000 questions in terms of the share of answers that contain at least one unsupported statement.",
+          "unit": "count"
+        },
+        {
+          "condition": "variant that reads retrieved evidence first",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "22.4",
+          "quote": "On BioClaimQA, the share of answers that contain at least one unsupported statement of the variant that reads retrieved evidence first was 22.4%.",
+          "unit": "percent"
+        },
+        {
+          "condition": "model prompted to reason step by step",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "0.394",
+          "quote": "With the model prompted to reason step by step, the share of answers that contain at least one unsupported statement on BioClaimQA came to 0.394.",
+          "unit": "fraction"
+        },
+        {
+          "condition": "variant that reformulates the question before the search",
+          "dataset": "BioClaimQA",
+          "denominator": "1,000",
+          "metric": "share of answers that contain at least one unsupported statement",
+          "number": "383",
+          "quote": "On BioClaimQA, the variant that reformulates the question before the search reaches 383 out of 1,000 questions in terms of the share of answers that contain at least one unsupported statement.",
+          "unit": "count"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1234,
+      "output_tokens": 411
+    }
+  },
+  {
+    "cache_key": "70b134c30d09c7c52a12a6ae74ed13a13ca0f6e144edae28c32cb457b2ce86d1",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "B",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "HF",
+          "number": "29.9",
+          "quote": "B | 29.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "R",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "HF",
+          "number": "21.4",
+          "quote": "R | 21.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A1",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "HF",
+          "number": "47.2",
+          "quote": "A1 | 47.2",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1287,
+      "output_tokens": 171
+    }
+  },
+  {
+    "cache_key": "403fdb32c12e7b2a786e6e52ea7a79c46176ad8b6e3b850ce345d4f95e179781",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "B",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "33.5",
+          "quote": "B | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "R",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "40.2",
+          "quote": "R | 40.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "A1",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "36.4",
+          "quote": "A1 | 36.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A2",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "UAR",
+          "number": "13.1",
+          "quote": "A2 | 13.1",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1307,
+      "output_tokens": 172
+    }
+  },
+  {
+    "cache_key": "4b9855f4e7e56743e01a68fc9e1612aff971afa6d23c9f5958c732abfb3594c7",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "B",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "B | 30.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "R",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "R | 22.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A1",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "A1 | 39.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "A2",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "A2 | 38.3",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1318,
+      "output_tokens": 184
+    }
+  },
+  {
+    "cache_key": "291ffc20696abb2b055e205fa92c7697550a64cf9350674a0c6e508597e5da2d",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "29.9",
+          "quote": "vanilla LLM | MedAnswerSet | 29.9 | 10.1 | 1.76",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "47.2",
+          "quote": "RAG without reranking | MedAnswerSet | 47.2 | 32.8 | 3.42",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "47.2",
+          "quote": "RAG without reranking | MedAnswerSet | 47.2 | 32.8 | 3.42",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "10.1",
+          "quote": "vanilla LLM | MedAnswerSet | 29.9 | 10.1 | 1.76",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "45.6",
+          "quote": "retrieve-then-read model | MedAnswerSet | see text | 45.6 | 1.57",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "32.8",
+          "quote": "RAG without reranking | MedAnswerSet | 47.2 | 32.8 | 3.42",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.76",
+          "quote": "vanilla LLM | MedAnswerSet | 29.9 | 10.1 | 1.76",
+          "unit": "raw"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.57",
+          "quote": "retrieve-then-read model | MedAnswerSet | see text | 45.6 | 1.57",
+          "unit": "raw"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.42",
+          "quote": "RAG without reranking | MedAnswerSet | 47.2 | 32.8 | 3.42",
+          "unit": "raw"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "41.1",
+          "quote": "vanilla LLM | OpenFactQA | 41.1 | 26.2 | 3.17",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "28.4",
+          "quote": "retrieve-then-read model | OpenFactQA | 28.4 | 11.5 | 0.44",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "13.2",
+          "quote": "RAG without reranking | OpenFactQA | 13.2 | 43.2 | 2.35",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "26.2",
+          "quote": "vanilla LLM | OpenFactQA | 41.1 | 26.2 | 3.17",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "11.5",
+          "quote": "retrieve-then-read model | OpenFactQA | 28.4 | 11.5 | 0.44",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "43.2",
+          "quote": "RAG without reranking | OpenFactQA | 13.2 | 43.2 | 2.35",
+          "unit": "percent"
+        },
+        {
+          "condition": "vanilla LLM",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.17",
+          "quote": "vanilla LLM | OpenFactQA | 41.1 | 26.2 | 3.17",
+          "unit": "raw"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "0.44",
+          "quote": "retrieve-then-read model | OpenFactQA | 28.4 | 11.5 | 0.44",
+          "unit": "raw"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "OpenFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.35",
+          "quote": "RAG without reranking | OpenFactQA | 13.2 | 43.2 | 2.35",
+          "unit": "raw"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "direction": "lower",
+          "metric": "hallucination frequency",
+          "points": "8.5",
+          "quote": "On MedAnswerSet, the retrieve-then-read model scores 8.5 percentage points lower than the vanilla LLM in hallucination frequency.",
+          "reference_condition": "vanilla LLM"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1364,
+      "output_tokens": 1492
+    }
+  },
+  {
+    "cache_key": "7ed6c0ed3fd103bfd44a5aac5f776daac3f377744f4443287a979495833a55d4",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "33.5",
+          "quote": "closed-book model | HistoryQuest | 33.5 | 42.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "6.7",
+          "quote": "On HistoryQuest, the RAG pipeline scores 6.7 percentage points higher than the closed-book model in unsupported-answer rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "36.4",
+          "quote": "RAG with random passages | HistoryQuest | 36.4 | 16.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "13.1",
+          "quote": "chain-of-thought prompting | HistoryQuest | 13.1 | 46.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "42.2",
+          "quote": "closed-book model | HistoryQuest | 33.5 | 42.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "25.1",
+          "quote": "RAG pipeline | HistoryQuest | see text | 25.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "16.1",
+          "quote": "RAG with random passages | HistoryQuest | 36.4 | 16.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "46.9",
+          "quote": "chain-of-thought prompting | HistoryQuest | 13.1 | 46.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "11.1",
+          "quote": "closed-book model | PopCultureQA | 11.1 | 52.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "19.4",
+          "quote": "RAG pipeline | PopCultureQA | 19.4 | 35.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "44.4",
+          "quote": "RAG with random passages | PopCultureQA | 44.4 | 53.3",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "29.6",
+          "quote": "chain-of-thought prompting | PopCultureQA | 29.6 | 34.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "closed-book model",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "52.4",
+          "quote": "closed-book model | PopCultureQA | 11.1 | 52.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "35.5",
+          "quote": "RAG pipeline | PopCultureQA | 19.4 | 35.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "53.3",
+          "quote": "RAG with random passages | PopCultureQA | 44.4 | 53.3",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "PopCultureQA",
+          "denominator": null,
+          "metric": "ROUGE-L",
+          "number": "34.5",
+          "quote": "chain-of-thought prompting | PopCultureQA | 29.6 | 34.5",
+          "unit": "percent"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "direction": "higher",
+          "metric": "unsupported-answer rate",
+          "points": "6.7",
+          "quote": "On HistoryQuest, the RAG pipeline scores 6.7 percentage points higher than the closed-book model in unsupported-answer rate.",
+          "reference_condition": "closed-book model"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1352,
+      "output_tokens": 1210
+    }
+  },
+  {
+    "cache_key": "467e6617d1e26dd75547ca9ffa21975c4b767cc26c2168da920900f2bcb5d0a9",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "parametric-only model | BioClaimQA | 30.1 | 3.36 | 35.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "7.7",
+          "quote": "On BioClaimQA, the retrieval-augmented generator scores 7.7 percentage points lower than the parametric-only model in hallucination rate.",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.41",
+          "quote": "retrieval-augmented generator | BioClaimQA | see text | 2.41 | 21.6",
+          "unit": "raw"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "chain-of-thought prompting | BioClaimQA | 39.4 | 1.27 | 10.6",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "query-rewriting variant | BioClaimQA | 38.3 | 1.26 | 49.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.36",
+          "quote": "parametric-only model | BioClaimQA | 30.1 | 3.36 | 35.7",
+          "unit": "raw"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.27",
+          "quote": "chain-of-thought prompting | BioClaimQA | 39.4 | 1.27 | 10.6",
+          "unit": "raw"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "1.26",
+          "quote": "query-rewriting variant | BioClaimQA | 38.3 | 1.26 | 49.4",
+          "unit": "raw"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "35.7",
+          "quote": "parametric-only model | BioClaimQA | 30.1 | 3.36 | 35.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "21.6",
+          "quote": "retrieval-augmented generator | BioClaimQA | see text | 2.41 | 21.6",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "10.6",
+          "quote": "chain-of-thought prompting | BioClaimQA | 39.4 | 1.27 | 10.6",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "49.4",
+          "quote": "query-rewriting variant | BioClaimQA | 38.3 | 1.26 | 49.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "25.7",
+          "quote": "parametric-only model | LawFactQA | 25.7 | 2.47 | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "11.9",
+          "quote": "retrieval-augmented generator | LawFactQA | 11.9 | 3.03 | 23.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "18.2",
+          "quote": "chain-of-thought prompting | LawFactQA | 18.2 | 2.16 | 43.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "19.8",
+          "quote": "query-rewriting variant | LawFactQA | 19.8 | 3.35 | 41.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.47",
+          "quote": "parametric-only model | LawFactQA | 25.7 | 2.47 | 33.5",
+          "unit": "raw"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.03",
+          "quote": "retrieval-augmented generator | LawFactQA | 11.9 | 3.03 | 23.7",
+          "unit": "raw"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "2.16",
+          "quote": "chain-of-thought prompting | LawFactQA | 18.2 | 2.16 | 43.7",
+          "unit": "raw"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "latency",
+          "number": "3.35",
+          "quote": "query-rewriting variant | LawFactQA | 19.8 | 3.35 | 41.1",
+          "unit": "raw"
+        },
+        {
+          "condition": "parametric-only model",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "33.5",
+          "quote": "parametric-only model | LawFactQA | 25.7 | 2.47 | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "23.7",
+          "quote": "retrieval-augmented generator | LawFactQA | 11.9 | 3.03 | 23.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "43.7",
+          "quote": "chain-of-thought prompting | LawFactQA | 18.2 | 2.16 | 43.7",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "LawFactQA",
+          "denominator": null,
+          "metric": "BLEU",
+          "number": "41.1",
+          "quote": "query-rewriting variant | LawFactQA | 19.8 | 3.35 | 41.1",
+          "unit": "percent"
+        }
+      ],
+      "relative": [
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "direction": "lower",
+          "metric": "hallucination rate",
+          "points": "7.7",
+          "quote": "On BioClaimQA, the retrieval-augmented generator scores 7.7 percentage points lower than the parametric-only model in hallucination rate.",
+          "reference_condition": "parametric-only model"
+        }
+      ]
+    },
+    "usage": {
+      "input_tokens": 1440,
+      "output_tokens": 1991
+    }
+  },
+  {
+    "cache_key": "69f4ea1f62bd0b10455fea8526824f543d3a8f11101505c84c66d60444bf6dd6",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "vanilla LLM",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "29.9",
+          "quote": "vanilla LLM | 29.9",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieve-then-read model",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "21.4",
+          "quote": "retrieve-then-read model | 21.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG without reranking",
+          "dataset": "MedAnswerSet",
+          "denominator": null,
+          "metric": "hallucination frequency",
+          "number": "47.2",
+          "quote": "RAG without reranking | 47.2",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1151,
+      "output_tokens": 200
+    }
+  },
+  {
+    "cache_key": "c6a674cdf6a892e7b9b53262ce29b5e57069a27c5fb70e15f24078115682d6a0",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "closed-book model",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "33.5",
+          "quote": "closed-book model | 33.5",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG pipeline",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "40.2",
+          "quote": "RAG pipeline | 40.2",
+          "unit": "percent"
+        },
+        {
+          "condition": "RAG with random passages",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "36.4",
+          "quote": "RAG with random passages | 36.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "HistoryQuest",
+          "denominator": null,
+          "metric": "unsupported-answer rate",
+          "number": "13.1",
+          "quote": "chain-of-thought prompting | 13.1",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1193,
+      "output_tokens": 250
+    }
+  },
+  {
+    "cache_key": "ef7b9a998fe019e04055b7c7e705fcf945b80c1260bb313208a6cf4f6f33db3e",
+    "model": "sub-model-2",
+    "served_model": "sub-model-2",
+    "output": {
+      "direct": [
+        {
+          "condition": "parametric-only model",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "30.1",
+          "quote": "parametric-only model | 30.1",
+          "unit": "percent"
+        },
+        {
+          "condition": "retrieval-augmented generator",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "22.4",
+          "quote": "retrieval-augmented generator | 22.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "chain-of-thought prompting",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "39.4",
+          "quote": "chain-of-thought prompting | 39.4",
+          "unit": "percent"
+        },
+        {
+          "condition": "query-rewriting variant",
+          "dataset": "BioClaimQA",
+          "denominator": null,
+          "metric": "hallucination rate",
+          "number": "38.3",
+          "quote": "query-rewriting variant | 38.3",
+          "unit": "percent"
+        }
+      ],
+      "relative": []
+    },
+    "usage": {
+      "input_tokens": 1178,
+      "output_tokens": 268
+    }
+  }
+]

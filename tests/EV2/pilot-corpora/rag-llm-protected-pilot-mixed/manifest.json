@@ -1,0 +1,15 @@
+{
+  "corpus_id": "rag-llm-protected-pilot-494add2f",
+  "papers": [
+    {
+      "id": "S001",
+      "file": "papers/S001.md",
+      "sha256": "1cb67d2922b993510e5d89134ffae93decdec2e47e2f98834576cc84e461c590"
+    },
+    {
+      "id": "S003",
+      "file": "papers/S003.md",
+      "sha256": "c2d4b61f4d0380ee56b0e6ad7dacbd7cc6ee11f2026f0fef4d144d4b93acd8a6"
+    }
+  ]
+}

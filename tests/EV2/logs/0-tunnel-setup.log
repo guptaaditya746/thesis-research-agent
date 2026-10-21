@@ -1,0 +1,4 @@
+Starting compute hop to xepi3167@ssh.webis.de...
+Ready. On the compute node use the same service names.
+  pipeline-map: http://127.0.0.1:28099/thesis_pipeline.html in the laptop browser
+  harness-ui: http://127.0.0.1:25173 in the laptop browser
