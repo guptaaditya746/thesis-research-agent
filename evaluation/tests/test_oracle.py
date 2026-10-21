@@ -3,6 +3,7 @@ per-study attribution of a system's errors to upstream (extraction, retrieval) o
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -87,22 +88,66 @@ def test_oracle_command_writes_a_run(tmp_path: Path) -> None:
     assert (tmp_path / "o" / "evidence.jsonl").is_file() and (tmp_path / "o" / "run.json").is_file()
 
 
-@pytest.mark.parametrize("corpus", [MIXED, None])
-def test_oracle_passages_are_the_paragraphs_holding_the_values(tmp_path: Path, corpus: Path | None) -> None:
+def needed(truth: GroundTruth) -> list[dict]:
+    """The placements a reader needs per value: the value, its condition's and its metric's label placements."""
+    out = []
+    for v in (p for p in truth.placements if p["role"] == "value"):
+        data = truth.facts[v["fact"]].data
+        out += [v, *truth.placements_of(data["condition"], "condition_label"),
+                *truth.placements_of(data["metric"], "metric_label")]
+    return out
+
+
+def covered(place: dict, found: list[rag.Passage]) -> bool:
+    return any(p.document == place["paper"] and p.start <= place["start"] < place["end"] <= p.end for p in found)
+
+
+@pytest.mark.parametrize("corpus", [MIXED, EXAMPLES / "rag-demo-distributed", None])
+def test_oracle_passages_are_the_paragraphs_needed_to_read_the_values(tmp_path: Path, corpus: Path | None) -> None:
     corpus = corpus or fx.write_corpus(tmp_path)
     truth = GroundTruth.load(corpus / "ground_truth.json")
     found = rag.oracle_passages(truth, corpus)
-    texts = {p: (corpus / "papers" / f"{p}.md").read_text(encoding="utf-8") for p in {s["paper"] for s in truth.studies}}
+    texts = {p: (corpus / "papers" / f"{p}.md").read_bytes().decode("utf-8") for p in {s["paper"] for s in truth.studies}}
     assert found == sorted(found, key=lambda p: (p.document, p.start)) and len(set(found)) == len(found)
     for p in found:
         text = texts[p.document]
-        assert p.text == text[p.start:p.end] and "\n\n" not in p.text.strip()
-        assert p.start == 0 or text[:p.start].endswith("\n\n")
-        assert p.end == len(text) or text[p.end:].startswith("\n\n")
-    for place in (p for p in truth.placements if p["role"] == "value"):
-        assert any(p.document == place["paper"] and p.start <= place["start"] < place["end"] <= p.end for p in found)
-    assert all(any(p.start <= v["start"] and v["end"] <= p.end for v in truth.placements
-                   if v["role"] == "value" and v["paper"] == p.document) for p in found)   # nothing else
+        assert p.text == text[p.start:p.end] and not rag.BLANK_LINE.search(p.text)
+        assert p.start == 0 or re.search(r"\r?\n\s*\r?\n$", text[:p.start])
+        assert p.end == len(text) or re.match(r"\r?\n\s*\r?\n", text[p.end:])
+    places = needed(truth)
+    assert all(covered(place, found) for place in places)
+    assert all(any(p.start <= v["start"] and v["end"] <= p.end for v in places if v["paper"] == p.document)
+               for p in found)   # nothing else
+
+
+def test_distributed_oracle_passages_define_the_condition_codes() -> None:
+    """Regression (E1 review): on the distributed level the value paragraph is a bare table of codes (B, R, A1,
+    HF); the paragraphs defining every linked condition (and metric) must come with it."""
+    corpus = EXAMPLES / "rag-demo-distributed"
+    truth = GroundTruth.load(corpus / "ground_truth.json")
+    found = rag.oracle_passages(truth, corpus)
+    for m in (f for f in truth.facts.values() if f.type == "measurement"):
+        condition = truth.facts[m.data["condition"]]
+        for place in truth.placements_of(condition.id, "condition_label"):
+            assert covered(place, found), (m.id, place["exact"])
+        assert any(p.document == m.paper and condition.data["label"] in p.text for p in found), m.id
+    s001 = " ".join(p.text for p in found if p.document == "S001")
+    assert "we denote it by R" in s001 and "abbreviate it as HF" in s001
+
+
+def test_paragraph_breaks_allow_crlf_and_blank_whitespace() -> None:
+    text = "a\r\n\r\nb x\nc\n  \nd"
+    assert rag.paragraph(text, text.index("x"), text.index("x") + 1) == (text.index("b"), text.index("c") + 1)
+    assert rag.paragraph(text, 0, 1) == (0, 1) and rag.paragraph(text, len(text) - 1, len(text)) == (len(text) - 1, len(text))
+
+
+def test_a_fact_without_a_main_placement_is_an_error(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    data = json.loads((corpus / "ground_truth.json").read_text(encoding="utf-8"))
+    data["placements"] = [p for p in data["placements"] if p["fact"] != "S002.c1"]
+    fx.dump(corpus / "ground_truth.json", data)
+    with pytest.raises(ValueError, match="S002.c1: no condition_label placement"):
+        oracle.items_from_truth(GroundTruth.load(corpus / "ground_truth.json"), corpus)
 
 
 def test_rag_baseline_on_oracle_passages(tmp_path: Path) -> None:
@@ -116,6 +161,9 @@ def test_rag_baseline_on_oracle_passages(tmp_path: Path) -> None:
     answering, mapping = model.prompts   # the same two calls as the BM25 baseline
     assert answering == rag.user_prompt(fx.QUESTION, [(p, 0.0) for p in shown])
     assert "Corpus paper ids: S001, S002" in mapping
+    for bad in ({"k": 3}, {"mode": "per_paper"}, {"max_chars": 200}):   # retrieval knobs do not apply
+        with pytest.raises(ValueError, match="oracle passages take no"):
+            rag.rag_baseline(corpus, model=model.model(), oracle=True, **bad)
 
 
 def test_rag_baseline_command_with_oracle_passages(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -127,3 +175,5 @@ def test_rag_baseline_command_with_oracle_passages(tmp_path: Path, monkeypatch: 
     answer = json.loads((tmp_path / "rag" / "answer.json").read_text(encoding="utf-8"))
     assert answer["system"] == "rag-oracle-passages" and answer["label"] == "supported"
     assert (tmp_path / "rag" / "rag-oracle-passages-calls.jsonl").is_file()
+    with pytest.raises(SystemExit, match="takes no --k"):
+        cli.main(["rag-baseline", "--corpus", str(corpus), "--out", str(tmp_path / "r2"), "--oracle-passages", "--k", "2"])

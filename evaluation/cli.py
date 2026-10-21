@@ -10,7 +10,7 @@
     evaluate benchmark REPORT [REPORT ...] --out DIR
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
-holding the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
+needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
 wrong studies to upstream or downstream errors with the oracle's answer.json.
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
@@ -91,6 +91,8 @@ def cmd_rag(args: argparse.Namespace) -> int:
 
     model, model_id = _model(args.model)
     system = ORACLE_SYSTEM if args.oracle_passages else SYSTEM
+    if args.oracle_passages and (args.k is not None or args.retrieval != "global" or args.max_chars != 1500):
+        raise SystemExit("evaluate rag-baseline: --oracle-passages takes no --k, --retrieval or --max-chars")
     answer = rag_baseline(args.corpus, model=model, model_id=model_id, question=_question(args), k=args.k,
                           mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
                           seed=args.seed, oracle=args.oracle_passages)
@@ -201,7 +203,8 @@ def parser() -> argparse.ArgumentParser:
     r.add_argument("--k", type=int, help="passages in all (global, default 8) or per paper (per_paper, default 2)")
     r.add_argument("--max-chars", type=int, default=1500, help="passage size limit")
     r.add_argument("--oracle-passages", action="store_true",
-                   help="diagnostic: the paragraphs holding the true values instead of BM25 (reads ground_truth.json)")
+                   help="diagnostic: the paragraphs needed to interpret the true values instead of BM25 (reads "
+                        "ground_truth.json); --k, --retrieval and --max-chars do not apply and are rejected")
     r.set_defaults(func=cmd_rag)
 
     a = sub.add_parser("agent-baseline", help="the research agent with the question only -> answer.json")

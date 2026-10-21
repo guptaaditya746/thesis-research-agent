@@ -46,7 +46,7 @@ def fields_of(fact_type: str, data: dict[str, Any]) -> dict[str, Any]:
 
 def items_from_truth(truth: GroundTruth, corpus_dir: Path) -> tuple[dict[str, list[Item]], dict[str, str]]:
     """(document -> its items in document order, fact id -> item id). Condition and metric items are built
-    before measurements, which link to them; a fact without a main-role placement gets no item."""
+    before measurements, which link to them; a fact without a main-role placement is a ValueError."""
     corpus = Corpus(corpus_dir)
     papers = {p.id: p for p in corpus.papers}
     texts: dict[str, str] = {}
@@ -60,7 +60,7 @@ def items_from_truth(truth: GroundTruth, corpus_dir: Path) -> tuple[dict[str, li
             spans = [Span.of(role, selector_at(text, p["start"], p["end"], file=paper.file))
                      for p in truth.placements_of(fact.id, role) if p.get("paper", fact.paper) == fact.paper]
             if not spans:
-                continue
+                raise ValueError(f"{fact.id}: no {role} placement")
             links = ({"condition": item_of[fact.data["condition"]], "metric": item_of[fact.data["metric"]]}
                      if kind == "measurement" else None)
             item = Item.build(kind, fields_of(kind, fact.data), spans, links=links)

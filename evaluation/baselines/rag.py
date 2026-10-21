@@ -21,8 +21,11 @@
 
 Oracle passages (`oracle=True`, CLI `--oracle-passages`): a **diagnostic**, not a baseline. It breaks the
 hard rule on purpose: step 2 is replaced by `oracle_passages`, which reads ground_truth.json and gives the
-paragraphs (runs of text between blank lines) that hold each study's `value` placements, in paper and offset
-order; steps 3 and 4 are unchanged. It separates retrieval failures from reasoning failures (`evaluate score
+paragraphs a reader needs to interpret each value: the paragraphs (runs of text between blank lines) holding
+each `value` placement and every `condition_label` / `metric_label` placement of the condition and metric
+its measurement belongs to (on the distributed level a table of codes is defined paragraphs earlier), once
+each, in paper and offset order; steps 3 and 4 are unchanged, and `k`, `mode` and `max_chars` do not apply
+(setting them is an error). It separates retrieval failures from reasoning failures (`evaluate score
 --oracle`); answer.json has `system: rag-oracle-passages`, `settings.retrieval: oracle_passages` and
 `retrieved` without scores.
 
@@ -107,19 +110,35 @@ def retrieve(chunks: list[Passage], question: str, k: int | None = None, mode: s
     return [hit for document in sorted(per) for hit in per[document][:k]]
 
 
+BLANK_LINE = re.compile(r"\r?\n\s*\r?\n")   # a paragraph break: a blank (or whitespace-only) line
+
+
 def paragraph(text: str, start: int, end: int) -> tuple[int, int]:
     """The run of text between blank lines around [start, end)."""
-    a = text.rfind("\n\n", 0, start)
-    b = text.find("\n\n", end)
-    return (0 if a < 0 else a + 2), (len(text) if b < 0 else b)
+    a, b = 0, len(text)
+    for brk in BLANK_LINE.finditer(text):
+        if brk.end() <= start:
+            a = brk.end()
+        elif brk.start() >= end:
+            b = brk.start()
+            break
+    return a, b
 
 
 def oracle_passages(truth: GroundTruth, corpus_dir: Path) -> list[Passage]:
-    """Diagnostic (reads ground_truth.json): the paragraphs holding each study's value placements, once each,
-    in paper and offset order. Paper texts come from SystemCorpus, hash-checked like the baseline's."""
+    """Diagnostic (reads ground_truth.json): the paragraphs a reader needs to interpret each value, i.e. those
+    holding a `value` placement and those holding the `condition_label` and `metric_label` placements of its
+    measurement's condition and metric; once each, in paper and offset order. Paper texts come from
+    SystemCorpus, hash-checked like the baseline's."""
     texts = {p.id: p.text for p in SystemCorpus(corpus_dir).papers}
-    found = {(p["paper"], *paragraph(texts[p["paper"]], p["start"], p["end"]))
-             for p in truth.placements if p["role"] == "value" and p["paper"] in texts}
+    needed = []
+    for place in (p for p in truth.placements if p["role"] == "value" and p["paper"] in texts):
+        needed.append(place)
+        fact = truth.facts.get(place["fact"])
+        for target, role in (("condition", "condition_label"), ("metric", "metric_label")):
+            linked = fact.data.get(target) if fact else None
+            needed += [p for p in truth.placements_of(linked, role) if p["paper"] == place["paper"]] if linked else []
+    found = {(p["paper"], *paragraph(texts[p["paper"]], p["start"], p["end"])) for p in needed}
     return [Passage(doc, a, b, texts[doc][a:b]) for doc, a, b in sorted(found)]
 
 
@@ -165,6 +184,8 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str = DEFAULT_QUES
     """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode).
     `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json)."""
     corpus = SystemCorpus(corpus_dir)
+    if oracle and (k is not None or mode != DEFAULT_MODE or max_chars != MAX_CHARS):
+        raise ValueError("oracle passages take no k, retrieval mode or max_chars")
     if oracle:
         hits = [(p, 0.0) for p in oracle_passages(GroundTruth.load(Path(corpus_dir) / "ground_truth.json"), corpus_dir)]
         system, settings = ORACLE_SYSTEM, {"retrieval": "oracle_passages", "retriever": "ground_truth value placements"}
