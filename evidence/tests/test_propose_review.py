@@ -208,3 +208,34 @@ def test_a_cached_bad_frame_says_how_to_ask_again(tmp_path: Path) -> None:
     frame.run(QUESTION, d, model=model.model)            # the refreshed reply is the cached one now
     assert model.calls == ["frame", "frame"]
     assert json.loads((d / "frame.json").read_text(encoding="utf-8"))["control"]["role"] == "baseline"
+
+
+# 3. metric rules do not map one surface to two canonicals -------------------------------------------------------
+
+def _live_frame() -> frame.Frame:
+    return frame.load(Path(__file__).resolve().parents[2] / "tests/EV1/diagnostics/proposal/frame.json")
+
+
+def test_metric_canonical_is_order_invariant() -> None:
+    from evidence.extractors import terms
+    from evidence.propose import draft
+    f = _live_frame()
+    config, _ = draft.metric_patterns([(o.canonical, o.higher_is_better, draft._names(o)) for o in f.outcomes])
+    assert config is not None
+    rules = [tuple(m) for m in config]
+    for surface in ("FActScore", "factuality score", "accuracy", "factual accuracy"):
+        forward = [m.key for m in terms.find_all(surface, rules)]       # type: ignore[arg-type]
+        reverse = [m.key for m in terms.find_all(surface, list(reversed(rules)))]  # type: ignore[arg-type]
+        assert forward and forward == reverse, surface
+
+
+def test_collisions_are_reported(tmp_path: Path) -> None:
+    reply = json.loads(json.dumps(RAG_FRAME))
+    reply["outcomes"].append({"canonical": "factscore", "label": "fact score", "higher_is_better": True,
+                              "scale": "fraction", "synonyms": ["FActScore"]})
+    reply["outcomes"][0]["synonyms"].append("FActScore")
+    d = flow(tmp_path / "p", Scripted(frame_reply=reply), until="draft")
+    p = load_text((d / "draft.yaml").read_text(encoding="utf-8"))
+    assert critic.metric_collisions(p, frame.load(d / "frame.json")) == ["FActScore: factscore vs factual_accuracy"]
+    assert not {c["id"]: c for c in critic.checks((d / "draft.yaml").read_text(encoding="utf-8"),
+                                                  frame.load(d / "frame.json"))}["metric_rules_collide"]["ok"]

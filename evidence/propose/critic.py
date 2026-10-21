@@ -136,6 +136,23 @@ def bounds_cover_rate_metrics(p: Protocol, f: Frame) -> tuple[bool, str]:
     return True, "every rate-like outcome is bounded in the measurement"
 
 
+def metric_collisions(p: Protocol, f: Frame) -> list[str]:
+    """`"<surface>: <a> vs <b>"` for every frame name that two metric rules of different canonicals match at the
+    same place (the first rule would decide the metric)."""
+    patterns = _patterns(p, "regex_metric", "metrics", [list(m) for m in regex_terms.METRICS])
+    if patterns is None:
+        return []
+    out: list[str] = []
+    for surface in dict.fromkeys(n for o in f.outcomes for n in o.names):
+        canonicals = {key for pattern, key, _ in patterns for m in regex_terms._compiled(pattern).finditer(surface)
+                      if m.end() > m.start() and any(
+                          m.span() == q.span() for p2, k2, _ in patterns if k2 != key
+                          for q in regex_terms._compiled(p2).finditer(surface))}
+        if len(canonicals) > 1:
+            out.append(f"{surface}: " + " vs ".join(sorted(canonicals)))
+    return out
+
+
 def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
     """The deterministic checks of a protocol text (and the frame it was made from, when there is one)."""
     out: list[dict[str, Any]] = []
@@ -191,6 +208,11 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
                           f"direction differs from the vocabulary for {bad}" if bad else
                           "no outcome's direction contradicts the vocabulary"))
         out.append(_check("bounds_cover_rate_metrics", *(bounds_cover_rate_metrics(p, f) if p is not None else (False, skipped))))
+        collisions = metric_collisions(p, f) if p is not None else None
+        out.append(_check("metric_rules_collide", collisions == [],
+                          skipped if collisions is None else
+                          f"surfaces claimed by two metrics: {collisions}" if collisions else
+                          "no frame name is claimed by two metrics"))
     return out
 
 

@@ -95,12 +95,25 @@ def condition_patterns(roles: list[tuple[str, Names]]) -> tuple[dict[str, list[s
     return (base if added or not known else None), added
 
 
+def _same_span(a: str, b: str, surface: str) -> bool:
+    """Whether the patterns `a` and `b` match the same stretch of `surface` (then rule order would decide)."""
+    spans = {m.span() for m in regex_terms._compiled(a).finditer(surface) if m.end() > m.start()}
+    return any(m.span() in spans for m in regex_terms._compiled(b).finditer(surface))
+
+
 def metric_patterns(outcomes: list[tuple[str, bool, Names]]) -> tuple[list[list[Any]] | None, list[tuple[str, Any]]]:
     """(the regex `metrics` config, or None when the built-ins find every name and emit only these metrics;
     the names added). `outcomes`: (canonical, higher_is_better, names). Built-in patterns of a canonical not
-    named here are dropped (their items would fail the enum)."""
+    named here are dropped (their items would fail the enum), and so are those that match the same stretch of
+    a name as the pattern of a name of another canonical: the first rule would decide the metric."""
     names = {c for c, _, _ in outcomes}
-    base = [list(m) for m in regex_terms.METRICS if m[1] in names | {"other"}]
+    frame_rows = [(term_pattern(name), canonical) for canonical, _, entries in outcomes for name, _ in entries]
+    surfaces = [name for _, _, entries in outcomes for name, _ in entries]
+
+    def collides(pattern: str, canonical: str) -> bool:
+        return any(c != canonical and _same_span(pattern, fp, s) for s in surfaces for fp, c in frame_rows)
+
+    base = [list(m) for m in regex_terms.METRICS if m[1] in names | {"other"} and not collides(m[0], m[1])]
     known = len(base) == len(regex_terms.METRICS)
     added: list[tuple[str, Any]] = []
     for canonical, hib, entries in outcomes:
