@@ -1,5 +1,12 @@
 # Failures
 
+## LLM stack startup failed on an ephemeral PyTorch port (job 7599)
+- Step: 0.2 LLM stack startup, submitted with `LLM_SETUP_PROFILE=profiles/agent-3x40.yaml`.
+- Result: the stack exited during `orch` initialization; Slurm then removed the allocation, so later `srun --jobid 7599` reported an invalid job id. This was an application startup failure, not a Slurm time-limit cancellation.
+- Root cause: `torch.distributed` could not bind its rendezvous port `50174` (`EADDRINUSE`). vLLM had selected an ephemeral port by probing and closing a socket before PyTorch bound it, leaving a race with other processes on the shared node.
+- Durable fix: `llm-setup/slurm/llm-stack.sbatch` now sets a deterministic, job-scoped `VLLM_PORT` base in a non-ephemeral port range. vLLM scans forward if a port in that job's block is occupied. The runbook also captures and exports the submitted job id automatically, avoiding an empty `JOB` in the subsequent `srun` command.
+- Job 7600 was submitted before this fix and is unaffected; it is currently loading the model stack. Its later startup result does not verify the new port allocation.
+
 ## Step 10 LLM counterfactual variant rejected by fidelity
 - Step: LLM counterfactual variant for `rag-llm-s1-mixed`; selected study `S002`, direction `contradicts`.
 - Exact command: `uv run synth variant --corpus "$CORPORA/rag-llm-s1-mixed" --study S002 --direction contradicts --model sub-model-1 --verify-model sub-model-2 --cache "$EV/cache/synth-llm.jsonl"`

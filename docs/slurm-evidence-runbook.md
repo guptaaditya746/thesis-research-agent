@@ -125,8 +125,12 @@ differences.
 ### 0.2 Stack (login node)
 
 ```bash
-cd llm-setup && LLM_SETUP_PROFILE=profiles/agent-3x40.yaml sbatch slurm/llm-stack.sbatch; cd ..
-export JOB=<the job id sbatch printed>
+cd llm-setup
+JOB=$(LLM_SETUP_PROFILE=profiles/agent-3x40.yaml sbatch slurm/llm-stack.sbatch)
+JOB=${JOB##* }
+export JOB
+cd ..
+echo "Slurm job: $JOB"
 tail -n 20 llm-setup/runtime/slurm-$JOB.out      # repeat until orch, sub-1 and sub-2 say ready (~11 min)
 ```
 
