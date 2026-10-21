@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from synth import cli, corpus
+from synth.fidelity import Check
 from synth.render_template import TemplateRenderer
 from synth.review import CHECKS, write_sample
 
@@ -69,6 +70,41 @@ def test_cli_fails_when_fidelity_excludes_every_paper(tmp_path: Path, monkeypatc
     fidelity = json.loads((tmp_path / "rejected-explicit" / "fidelity.json").read_text())
     assert fidelity["excluded"] == ["S001"]
     assert json.loads((tmp_path / "rejected-explicit" / "manifest.json").read_text())["papers"] == []
+
+
+class HalfRejectedRenderer(TemplateRenderer):
+    """Fails fidelity for study S001 only."""
+    def render_all(self, jobs, seed):
+        rendered = super().render_all(jobs, seed)
+        for (sid, _), paper in rendered.items():
+            if sid == "S001":
+                paper.fidelity.ok = False
+                paper.fidelity.checks.append(Check("forced", False, "test"))
+        return rendered
+
+
+def test_build_records_selection_counters(tmp_path: Path) -> None:
+    result = corpus.build(name="half", seed=1, studies=2, renderer=HalfRejectedRenderer(), out=tmp_path,
+                          levels=["explicit"])
+    sel = result["selection"]
+    assert (sel["requested_studies"], sel["records"], sel["retained_studies"]) == (2, 2, 1)
+    assert sel["per_level"]["explicit"]["failed_checks"] == {"forced": 1}
+    assert sel["per_level"]["explicit"]["passed"] == 1
+    assert sel["per_level"]["explicit"]["mean_attempts"] >= 1
+    assert sel["excluded"] == {"S001": ["explicit"]}
+    for lv in ("explicit", "mixed"):
+        directory = tmp_path / f"half-{lv}"
+        assert json.loads((directory / "corpus.json").read_text())["selection"] == sel
+        assert "selection" not in json.loads((directory / "manifest.json").read_text())
+
+
+def test_cli_min_retained_floor(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr(cli, "make_renderer", lambda args, out: HalfRejectedRenderer())
+    base = ["build", "--name", "half", "--seed", "1", "--studies", "2", "--levels", "explicit"]
+    assert cli.main([*base, "--out", str(tmp_path / "a"), "--min-retained", "0.75"]) == 1
+    assert "ERROR: retained 1/2 below --min-retained 0.75" in capsys.readouterr().err
+    assert cli.main([*base, "--out", str(tmp_path / "b")]) == 0
+    assert cli.main([*base, "--out", str(tmp_path / "c"), "--min-retained", "0.5"]) == 0   # 1/2 is not below 0.5
 
 
 @pytest.mark.parametrize("bad", [["build", "--name", "x", "--seed", "1", "--levels", "easy"],

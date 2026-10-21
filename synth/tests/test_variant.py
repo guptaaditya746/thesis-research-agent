@@ -1,5 +1,6 @@
 """Counterfactual variants (docs/evidence-system.md F3): unchanged papers identical, the changed paper's
-effect flips, `expected.label_changes`, a protocol mismatch refused. Template renderer only."""
+effect flips, `expected.label_changes`, a protocol mismatch refused. Template renderer, except the check that
+an LLM base corpus is varied with the statement mode it records (scripted writer)."""
 from __future__ import annotations
 
 import hashlib
@@ -135,3 +136,42 @@ def test_variant_cli_defaults_to_the_base_renderer(base: Path, tmp_path: Path, c
     assert load(tmp_path / "cf", "corpus.json")["renderer"] == "template"
     with pytest.raises(SystemExit):
         cli.main(["variant", "--corpus", str(base), "--study", study, "--direction", "up"])
+
+
+@pytest.mark.parametrize("recorded, statements", [({"statements": False, "paper_prompt": "render.txt"}, False),
+                                                   ({}, False),          # a corpus from before the statement stage
+                                                   ({"statements": True, "paper_prompt": "render-v2.txt"}, True)])
+def test_variant_cli_keeps_the_base_statement_mode(base: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                                   recorded: dict, statements: bool) -> None:
+    """An LLM base corpus is varied with the pipeline it records; one that records none had no statement stage."""
+    import shutil
+
+    import modelcall
+    from pydantic_ai.models.function import FunctionModel
+    from synth.tests.test_llm import Writer
+
+    src = base.parent / "v-explicit"
+    copy = tmp_path / "v-explicit"
+    shutil.copytree(src, copy)
+    meta = load(copy, "corpus.json")
+    meta |= {"renderer": "llm", "models": {"renderer": "fake-writer", "verifier": None, "served": [], **recorded}}
+    (copy / "corpus.json").write_text(json.dumps(meta), encoding="utf-8")
+    study = load(copy, "ground_truth.json")["answer"]["supporting"][0]
+    _, _, after = variant.counterfactual(meta["seed"], variant.base_studies(meta, PROTO), study, "contradicts", SPEC)
+    writer = Writer([after], fail_first=False)
+    monkeypatch.setattr(modelcall, "openai_model", lambda alias: FunctionModel(writer, model_name="fake-writer"))
+    assert cli.main(["variant", "--corpus", str(copy), "--study", study, "--direction", "contradicts",
+                     "--out", str(tmp_path / "cf"), "--cache", str(tmp_path / "cache.jsonl")]) == 0
+    models = load(tmp_path / "cf", "corpus.json")["models"]
+    assert (models["statements"], models["paper_prompt"]) == (statements, "render-v2.txt" if statements else "render.txt")
+    asked = [c.startswith("Statement tasks") for c in writer.calls]
+    assert asked == ([True, False] if statements else [False])
+    rec = next(r for r in load(tmp_path / "cf", "fidelity.json")["papers"] if r["id"] == study)
+    assert ("statements" in rec) == statements
+
+
+def test_variant_keeps_the_base_selection(base: Path) -> None:
+    study = load(base, "ground_truth.json")["answer"]["supporting"][0]
+    out = Path(variant.make(corpus_dir=base, study_id=study, direction="neutral", renderer=TemplateRenderer())["out"])
+    assert load(out, "corpus.json")["selection"] == load(base, "corpus.json")["selection"]
+    assert "selection" not in load(out, "manifest.json")

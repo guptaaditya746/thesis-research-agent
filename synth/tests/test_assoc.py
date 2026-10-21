@@ -78,7 +78,7 @@ def test_blind_check_matches_condition_and_value(level: str) -> None:
     assert ok(blind_reader(plan, {}))
     codes = BlindExtraction(measurements=[
         BlindMeasurement(condition=(plan.cond_aliases[m.condition] or ("the " + plan.cond_name[m.condition],))[0],
-                         metric="m", dataset=m.dataset, value=m.value) for m in plan.measurements])
+                         metric=plan.metric_name[m.metric], dataset=m.dataset, value=m.value) for m in plan.measurements])
 
     async def by_code(_: str) -> BlindExtraction:
         return codes
@@ -98,3 +98,30 @@ def test_relative_value_must_name_rag_before_and_baseline_after() -> None:
     ps, decoys, problems = locate(bad, plan)
     assert problems == []
     assert "values_associated" in {c.name for c in check_paper(bad, plan, ps, decoys) if not c.ok}
+
+
+def reader_of(plan: Plan, metric=None, dataset=None):
+    found = [BlindMeasurement(condition=plan.cond_name[m.condition], metric=metric or plan.metric_name[m.metric],
+                              dataset=dataset or m.dataset, value=m.value) for m in plan.measurements]
+
+    async def extract(_: str) -> BlindExtraction:
+        return BlindExtraction(measurements=found)
+    return extract
+
+
+def test_blind_check_rejects_right_values_on_wrong_metric_or_dataset() -> None:
+    plan, text = paper(truth.generate(SEED, 6)[1], "explicit")
+    r = asyncio.run(blind_check(text, plan, reader_of(plan, "wrong metric", "wrong dataset")))[0]
+    assert not r.ok and "(metric)" in r.detail
+
+
+def test_a_metric_abbreviation_counts_as_the_metric() -> None:
+    plan, text = paper(truth.generate(SEED, 6)[1], "distributed")
+    for k in plan.metrics:
+        assert all(c.ok for c in asyncio.run(blind_check(text, plan, reader_of(plan, k.abbr.lower()))))
+
+
+def test_wrong_dataset_alone_fails() -> None:
+    plan, text = paper(truth.generate(SEED, 6)[1], "explicit")
+    r = asyncio.run(blind_check(text, plan, reader_of(plan, dataset="wrong dataset")))[0]
+    assert not r.ok and "(dataset)" in r.detail

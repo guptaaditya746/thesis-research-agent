@@ -2,7 +2,8 @@
 
 The scripted writer answers each plan with the template renderer's paper for that study and level (the
 plan's required strings are the template's), but its first attempt for every paper drops one required
-value, so every paper needs exactly two attempts and records why the first failed.
+value, so every paper needs exactly two attempts and records why the first failed. Asked for Results
+statements, it answers each with the template's sentence that holds the value.
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 
 from agent.anchor import read_text
 from synth import corpus, truth
+from synth.levelcheck import sentence_of
 from synth.levels import make_plan, plan_rng
 from synth.render_llm import LEVEL_INSTRUCTIONS, LlmRenderer, locate, plan_json, title_of
 from synth.render_template import render, render_study
@@ -33,6 +35,13 @@ def respond(info: AgentInfo, args: dict[str, Any]) -> ModelResponse:
     if info.output_tools:
         return ModelResponse(parts=[ToolCallPart(info.output_tools[0].name, args)])
     return ModelResponse(parts=[TextPart(json.dumps(args))])
+
+
+def sentence_with(text: str, value: str) -> str:
+    """The sentence of `text` holding `value`, with its full stop."""
+    i = text.index(value)
+    a, b = sentence_of(text, i, i + len(value))
+    return text[a:b + 1] if text[b:b + 1] == "." else text[a:b]
 
 
 class Writer:
@@ -54,11 +63,21 @@ class Writer:
             text = text.replace(value, "[value missing]")
         return text
 
+    def sentence(self, paper: str, task: dict, repair: bool) -> str:
+        return sentence_with(render_study(self.studies[paper], task["level"], SEED).text, task["value"])
+
+    def statements(self, prompt: str) -> dict:
+        data = json.loads(prompt.split("\n", 1)[1])
+        repair = any("rejected" in t for t in data["tasks"])
+        return {"statements": [{"id": t["id"], "text": self.sentence(data["paper"], t, repair)} for t in data["tasks"]]}
+
     def __call__(self, messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
         prompt = prompt_of(messages)
         self.calls.append(prompt)
         if self.error:
             raise RuntimeError(self.error)
+        if prompt.startswith("Statement tasks"):
+            return respond(info, self.statements(prompt))
         return respond(info, {"markdown": self.paper(prompt)})
 
 
@@ -90,7 +109,10 @@ def test_one_bad_attempt_then_a_good_one(tmp_path: Path, studies: list[truth.Stu
     renderer = LlmRenderer(FunctionModel(writer, model_name="fake-writer"), tmp_path / "cache.jsonl", attempts=3)
     out = corpus.build(name="l", seed=SEED, studies=N, renderer=renderer, out=tmp_path / "c",
                        levels=["explicit", "distributed", "complex", "contradictory"])
-    assert out["excluded"] == {} and len(writer.calls) == 2 * N * 4
+    # one statement call per paper with prose values (explicit, complex; distributed and contradictory
+    # papers hold their values in a table), every statement accepted at once, then two paper attempts
+    statement_calls = [c for c in writer.calls if c.startswith("Statement tasks")]
+    assert out["excluded"] == {} and len(statement_calls) == N * 2 and len(writer.calls) == N * 2 + 2 * N * 4
     progress = capsys.readouterr().err
     assert progress.count("attempt 1/3 failed required_strings") == N * 4
     assert progress.count("attempt 2/3 passed") == N * 4
@@ -99,6 +121,7 @@ def test_one_bad_attempt_then_a_good_one(tmp_path: Path, studies: list[truth.Stu
         fid = json.loads((d / "fidelity.json").read_text(encoding="utf-8"))
         for rec in fid["papers"]:
             assert rec["ok"] and rec["attempts"] == 2
+            assert rec["statements"]["failed"] == [] and rec["statements"]["rounds"] in (0, 1)
             assert rec["history"][0]["attempt"] == 1
             assert rec["history"][0]["failed"][0]["name"] == "required_strings"
             assert "not_found" in rec["history"][0]["failed"][0]["detail"]
@@ -107,7 +130,8 @@ def test_one_bad_attempt_then_a_good_one(tmp_path: Path, studies: list[truth.Stu
             assert read_text(d / "papers" / f"{p['paper']}.md")[p["start"]:p["end"]] == p["exact"]
         meta = json.loads((d / "corpus.json").read_text(encoding="utf-8"))
         assert meta["renderer"] == "llm"
-        assert meta["models"] == {"renderer": "fake-writer", "verifier": None, "served": ["fake-writer"]}
+        assert meta["models"] == {"renderer": "fake-writer", "verifier": None, "served": ["fake-writer"],
+                                  "statements": True, "paper_prompt": "render-v2.txt"}
     # every second prompt carries the reasons the first paper was rejected
     retries = [c for c in writer.calls if "rejected for these reasons" in c]
     assert len(retries) == N * 4 and all("not_found" in c for c in retries)
@@ -178,7 +202,7 @@ def test_duplicate_is_told_the_original_title_and_must_differ(tmp_path: Path) ->
     d = tmp_path / "c" / "d-explicit"
     original = title_of((d / "papers" / f"{dup.duplicate_of}.md").read_text(encoding="utf-8"))
     assert title_of((d / "papers" / f"{dup.study_id}.md").read_text(encoding="utf-8")) != original
-    prompts = [c for c in writer.calls if f'"paper": "{dup.study_id}"' in c]
+    prompts = [c for c in writer.calls if f'"paper": "{dup.study_id}"' in c and c.startswith("Rendering plan")]
     assert len(prompts) == 1 and json.loads(prompts[0].split("Rendering plan:\n", 1)[1])["title"]["must_differ_from"] == original
     assert all('"title"' not in c for c in writer.calls if f'"paper": "{dup.study_id}"' not in c)
     fid = json.loads((d / "fidelity.json").read_text(encoding="utf-8"))
@@ -218,7 +242,7 @@ def test_blind_check_allows_the_decoy_and_the_relative_difference(studies: list[
         return value
 
     def read(plan, text, extra: list[BlindMeasurement]):
-        planned = [BlindMeasurement(condition=plan.cond_name[m.condition], metric="m", dataset=m.dataset, value=m.value)
+        planned = [BlindMeasurement(condition=plan.cond_name[m.condition], metric=plan.metric_name[m.metric], dataset=m.dataset, value=m.value)
                    for m in plan.measurements]
         return asyncio.run(blind_check(text, plan, lambda _t: const(BlindExtraction(measurements=planned + extra))))
 
@@ -267,7 +291,7 @@ def test_each_failed_attempt_uses_a_fresh_seed(studies: list[truth.Study], tmp_p
     value = next(v.text for v in plan.values.values() if v.fmt != "relative")
     text += value
     renderer = LlmRenderer(FunctionModel(lambda *_: ModelResponse(parts=[]), model_name="fake-writer"),
-                           tmp_path / "cache.jsonl", attempts=3)
+                           tmp_path / "cache.jsonl", attempts=3, statements=False)
     seeds: list[int] = []
     prompts: list[str] = []
 
