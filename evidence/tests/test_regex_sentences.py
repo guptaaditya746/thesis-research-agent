@@ -135,3 +135,14 @@ def test_count_sample_sizes_are_no_values(sentence: str, expected: list[tuple[st
     text = f"# P\n\n## {section}\n\nWe compare a closed-book model with a retrieval-augmented model. {sentence}\n"
     _, items = regex_run({"S": text}, tmp_path)
     assert measurements(items, "S") == expected
+
+
+@pytest.mark.parametrize("sentence", [
+    "Evaluated on NQ, the RAG model answers 662 out of 1,000 questions correctly (factual accuracy).",
+    "On evaluation, the RAG model answers 662 out of 1,000 questions correctly (factual accuracy).",
+    "We evaluated the RAG model: it answered 662 out of 1,000 questions correctly (factual accuracy).",
+    "Evaluated on TriviaQA, the RAG model answers 662 out of 1,000 questions correctly (factual accuracy).",
+])
+def test_result_verb_keeps_a_count_near_an_evaluation_word(sentence: str, tmp_path: Path) -> None:
+    _, items = regex_run({"S": ABSTRACT.format(sentence)}, tmp_path)
+    assert measurements(items, "S") == [("rag", 0.662)]

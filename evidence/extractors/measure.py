@@ -26,7 +26,9 @@ DELTA_BEFORE = re.compile(r"(?i)\b(?:by|of\s+up\s+to|gains?\s+of|improvement\s+o
 DELTA_AFTER = re.compile(r"(?i)^\s*(?:percentage\s+)?(?:points?|pp)\b")
 DATASET_HEADER = re.compile(r"(?i)^(?:dataset|benchmark|data|task)$")
 CONDITION_HEADER = re.compile(r"(?i)^(?:system|model|method|condition|variant|setting)$")
-SAMPLE_BEFORE = re.compile(r"(?i)\b(?:sampl\w*|evaluat\w*|subsets?|drawn|test\s+sets?)\b[^.;]{0,40}$")   # a sample size, no outcome
+SAMPLE_BEFORE = re.compile(r"(?i)\b(sampl\w*|evaluat\w*|subsets?|drawn|test\s+sets?)\b[^.;]{0,40}$")   # a sample size, no outcome
+RESULT_VERB = re.compile(r"(?i)\b(?:answer\w*|scor\w*|achiev\w*|obtain\w*|reach\w*|got|gets?|correct\w*)\b")   # an outcome follows
+CORRECT_AFTER = re.compile(r"(?i)^\s*(?:\w+\s+){0,3}correct")
 SAMPLE_AFTER = re.compile(r"(?i)^\s*(?:\w+\s+){0,3}?(?:were|are|was)\s+(?:randomly\s+)?(?:sampled|selected|drawn|chosen|used)\b")
 SIGNED = re.compile(r"[+±\-−–]\s*$")
 FROM_TO = re.compile(r"(?i)\bfrom\s+\d+(?:\.\d+)?\s*%?\s+to\s+\d+(?:\.\d+)?\s*%?")
@@ -177,6 +179,18 @@ def _table(task: ExtractionTask, text: str, table: base.Table, r: Resolver) -> l
     return out
 
 
+def _sample_size(text: str, s: int, e: int, hit: re.Match[str]) -> bool:
+    """A count that sizes a sample, not an outcome: a result verb between the trigger and the count, or
+    "correct(ly)" after it, keeps it a result."""
+    if CORRECT_AFTER.match(text[hit.end():e]):
+        return False
+    window = text[max(s, hit.start() - 40):hit.start()]
+    trigger = SAMPLE_BEFORE.search(window)
+    if trigger and not RESULT_VERB.search(window, trigger.end(1)):
+        return True
+    return bool(SAMPLE_AFTER.match(text[hit.end():e]))
+
+
 def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> list[Found]:
     conditions = [(m, r.condition_for(m)) for m in r.mentions(text, s, e)]
     conditions = [(m, i) for m, i in conditions if i is not None]
@@ -209,7 +223,7 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         met = before_metrics[-1] if before_metrics else next(((m, i) for m, i in metrics if m.start >= hit.end()), None)
         if cond is None or met is None:
             continue
-        if count and (SAMPLE_BEFORE.search(text[max(s, hit.start() - 40):hit.start()]) or SAMPLE_AFTER.match(text[hit.end():e])):
+        if count and _sample_size(text, s, e, hit):
             continue
         if count:
             value = base.count_fraction(raw, hit.group(2)) if r.rate_like(met[1]) else None
