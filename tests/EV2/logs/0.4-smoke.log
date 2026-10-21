@@ -1,0 +1,55 @@
+AGENT_ROOT ok
+{
+ "id": "rag-factuality",
+ "version": 2,
+ "revision": null,
+ "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
+ "phases": [
+{
+ "id": "rag-factuality-agentic",
+ "version": 2,
+ "revision": null,
+ "sha256": "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79",
+ "phases": [
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/runs/smoke/smoke-explicit",
+ "label": "supported",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 1,
+  "undetermined": 5
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 30,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.761
+ }
+}
+ "ok": true,
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/runs/smoke/smoke-distributed",
+ "label": "insufficient",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 0,
+  "undetermined": 6
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 30,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.173
+ }
+}
+ "ok": true,

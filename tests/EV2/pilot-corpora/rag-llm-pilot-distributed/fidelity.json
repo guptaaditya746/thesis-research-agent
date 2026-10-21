@@ -1,0 +1,190 @@
+{
+  "corpus_id": "rag-llm-pilot-4f53cda1",
+  "papers": [
+    {
+      "id": "S001",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S001.m1/value: required string '29.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m2/value: required string '21.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m3/value: required string '47.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m2/value: required string '21.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m3/value: required string '47.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m2/value: required string '21.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m3/value: required string '47.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S001.m1/value: required string '29.9' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m2/value: required string '21.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S001.m3/value: required string '47.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ],
+      "statements": {
+        "rounds": 0,
+        "failed": []
+      },
+      "excluded_reason": "failed fidelity at level(s) contradictory, distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S002",
+      "ok": false,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": false,
+          "detail": "S002.m1/value: required string '33.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '40.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m3/value: required string '36.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m4/value: required string '13.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+        }
+      ],
+      "attempts": 3,
+      "history": [
+        {
+          "attempt": 1,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '33.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '40.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m3/value: required string '36.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m4/value: required string '13.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 2,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '33.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '40.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m3/value: required string '36.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m4/value: required string '13.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        },
+        {
+          "attempt": 3,
+          "failed": [
+            {
+              "name": "required_strings",
+              "detail": "S002.m1/value: required string '33.5' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m2/value: required string '40.2' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m3/value: required string '36.4' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else; S002.m4/value: required string '13.1' is ambiguous: it occurs 2 times (in Method, Results); write it exactly once, where the level instructions put it, and nowhere else"
+            }
+          ]
+        }
+      ],
+      "statements": {
+        "rounds": 0,
+        "failed": []
+      },
+      "excluded_reason": "failed fidelity at level(s) contradictory, distributed; left out of every corpus of the set so the variants keep the same papers"
+    },
+    {
+      "id": "S003",
+      "ok": true,
+      "checks": [
+        {
+          "name": "required_strings",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_apart",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "lf_only",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "facts_rendered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchored",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_match",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_unique",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "values_associated",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "labels_covered",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "stray_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_numbers",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "added_claims",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "level_distributed",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "blind_reextraction",
+          "ok": true,
+          "detail": "all values recovered"
+        },
+        {
+          "name": "blind_extra",
+          "ok": true,
+          "detail": "nothing beyond the plan"
+        }
+      ],
+      "attempts": 1,
+      "history": [],
+      "statements": {
+        "rounds": 0,
+        "failed": []
+      },
+      "excluded_reason": "failed fidelity at level(s) contradictory; left out of every corpus of the set so the variants keep the same papers"
+    }
+  ],
+  "excluded": [
+    "S001",
+    "S002",
+    "S003"
+  ]
+}

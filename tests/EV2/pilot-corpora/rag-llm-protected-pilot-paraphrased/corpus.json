@@ -1,0 +1,107 @@
+{
+  "corpus_id": "rag-llm-protected-pilot-e49df557",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "a3380aee98e77d109828d1c9295ae0452c0eee5d211856a9cefbdb430fa5ba12"
+  },
+  "renderer": "llm",
+  "level": "paraphrased",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "paraphrased"
+    }
+  ],
+  "models": {
+    "renderer": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+    "verifier": "Qwen/Qwen3-30B-A3B-Instruct-2507-FP8@5a5a776",
+    "served": [
+      "sub-model-1",
+      "sub-model-2"
+    ],
+    "statements": false,
+    "paper_prompt": "context-v1.txt",
+    "assembly": "protected",
+    "factual_renderer": "template-v1",
+    "context_prompt_sha256": "99e7ebdb0ddd11c1f66c21d8d781d89bfaaecea7a558701492756f00e360716b",
+    "assembly_sha256": "038c4e812d99446d700e4ae09b388a6c3553cd2ce568ec1c0a9401bd9cafcbdc",
+    "call_settings": {
+      "attempts": 3,
+      "max_tokens": 6000,
+      "concurrency": 1
+    }
+  },
+  "settings": {
+    "name": "rag-llm-protected-pilot",
+    "studies": 3,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 3,
+    "records": 3,
+    "retained_studies": 2,
+    "per_level": {
+      "complex": {
+        "passed": 2,
+        "failed_checks": {
+          "blind_reextraction": 1,
+          "blind_extra": 1
+        },
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "explicit": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 3,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {
+      "S002": [
+        "complex"
+      ]
+    }
+  }
+}

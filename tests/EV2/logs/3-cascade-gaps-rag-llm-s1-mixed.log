@@ -1,0 +1,30 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2/runs/cascade-gaps/rag-llm-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "duplicates": 0,
+  "neutral": 3,
+  "supporting": 4,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 55,
+  "calls": 79,
+  "input_tokens": 47232,
+  "made_model_calls": 24,
+  "model_calls": 35,
+  "output_tokens": 6130,
+  "seconds": 141.757
+ }
+}

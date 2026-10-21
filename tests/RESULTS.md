@@ -477,3 +477,16 @@ Step 8 completed successfully. The first attempts to launch Steps 9 and 10 encou
 | Human review | OUTSTANDING | Live mixed sample covers 11 papers and 342 placement rows; zero rows have all three review fields completed. Proposal decisions remain model defaults. Generating or freezing artifacts does not complete these reviews. |
 | Prompt and verification policy | RECORDED; future implementation | `AGENTS.md` points to `docs/prompt-writing.md`; atomic task contracts, examples, typed outputs, code validation and separate model verification. The new three-model pilot and DSPy optimizer remain NOT RUN. |
 | Research and implementation handoff | RECORDED | Two research agents completed primary-source notes under `docs/research/`. Extraction: 17 CPU microcases exposed negation, alias, table-order and count-expression limitations. Evaluation: saved paired intervals reproduced; coverage, parent-study reuse, citation overlap and empty-gold fixtures audited. Inputs/outputs are in `tests/EV1/diagnostics/`; these are diagnostic cases, not broad accuracy estimates. |
+
+### EV2 partial run and protected-renderer handoff (2026-10-21)
+
+| Item | Status | Observed result |
+| --- | --- | --- |
+| EV-setup (EV2) | PARTIAL | Linux: 1,537 passed, 1 skipped, 1 warning. Job 7609, gammaweb07. Doctor complained about existing unowned listeners; smoke/model calls worked. |
+| EV2-pilot | FAIL (original) | Seed 1, three families, all levels: 0/3 retained. Distributed 1/3; contradictory 0/3. |
+| EV2 protected generation experiments | EXPERIMENTAL; unresolved | Assembly with original verifier: 2/3 retained. First source-reading verifier: 0/3. Final schema/repair experiment: 1/3. No held-out live evaluation. |
+| Synth regression tests | PASS | Final suite: 269 passed in 88.26 s; scripted models, distinct from live retention. |
+| EV-engine (EV2) | PARTIAL | Cascade all and gaps reject completed on the existing 11-paper EV1 corpus. Full run folders and corpus under tests/EV2/ui-case/. |
+| EV2-escalate / EV-baselines / EV2-oracle / EV-scores | NOT RUN | Escalate arm, baseline, both oracles and comparisons remain outstanding at user-requested commit/push handoff. |
+
+Detailed failure diagnosis: `docs/claude-ev2-handoff.md`. Artifacts: `tests/EV2/`; external root: `/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2`. Original EV1 artifacts are untouched.

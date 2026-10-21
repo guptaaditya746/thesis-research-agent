@@ -1,0 +1,4 @@
+Services: pipeline-map, harness-ui
+compute: down
+app=200 bytes=592
+pipeline=200 bytes=116103

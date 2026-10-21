@@ -111,6 +111,8 @@ He wrote no numbered research questions. Read from his text:
 
 ## 6. What exists
 
+EV2 partial handoff (21 Oct 2026): Linux setup recorded 1,537 passed / 1 skipped; this is the pre-fix full-suite count. The changed synth package passes 269 tests. Original live pilot retained 0/3; experimental protected assembly retained 2/3 with the original verifier, while the final new verifier regressed to 1/3. Cascade all and gaps reject completed on EV1; remaining arms, baselines, oracles and scores are pending. See [Claude handoff](claude-ev2-handoff.md) and `tests/EV2/`.
+
 The evidence-level system, built 14–15 Oct on `main`: tested offline with scripted models
 (1338 passed, 1 skipped in WSL, 20 Oct, after the architecture deepening below; 1250 on 18 Oct before it).
 On Windows a few tests fail for platform reasons only: the POSIX signal tests in `agent/`, a CRLF byte-count
