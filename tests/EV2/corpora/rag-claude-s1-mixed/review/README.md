@@ -12,3 +12,17 @@ label `data: contradicts` misread as "the numbers contradict the sentence").
 
 Report the human sample as the human check (`evaluate review --csv review-s1-yours.csv`), and the pre-check
 separately as a model check. The human sheet does not show the pre-check's answers, so they do not steer the review.
+
+## Second model check of the 35 rows (21 Oct 2026)
+
+The user asked Claude to check the 35 rows, since they had no time. `review-s1-opus-check.csv` holds that check:
+Claude Opus 5.5, the session's own model, read each row in its paper and confirmed that every planted value occurs
+exactly once.
+
+- 35 of 35 rows: present, true and unambiguous.
+- It disagrees with the Sonnet pre-check on S010.m2 and S020.m2. Opus judges both table values unambiguous: the text
+  at that place maps to one fact, and the conflicting number in the abstract is the planted decoy.
+
+**This is a model check, not a human one.** `review-s1-yours.csv` stays empty. Until a person fills it, the thesis
+reports the fidelity check as two model checks, the pre-check (483 rows) and this check (35 rows), with the human
+check still to do.
