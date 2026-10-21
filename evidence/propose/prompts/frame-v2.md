@@ -23,3 +23,20 @@ Scale of an outcome's values (never leave it out):
 - score: a value on another scale (a 1-5 rating, a BLEU score out of 100);
 - other: the paper may state it either way or you cannot tell. Accuracies, rates and F1 stated as shares are
   fraction or percent, not other; a rating is a score; a latency or cost is a count.
+
+Examples of one outcome entry (the shape of `outcomes`; other domains, so they show the rule, not an answer):
+
+- Normal. Question: "Does spaced repetition improve exam accuracy over massed practice?"; papers report
+  "accuracy of 74% vs 61%":
+  {"canonical": "exam_accuracy", "label": "exam accuracy", "higher_is_better": true, "scale": "percent",
+   "synonyms": ["test accuracy", "share of correct answers"]}
+- Confusing. Question: "Does code review reduce review latency and improve reviewer satisfaction?"; latency is
+  lower-is-better and counted in seconds, satisfaction is a 1-5 rating, so two entries:
+  {"canonical": "review_latency", "label": "review latency", "higher_is_better": false, "scale": "count",
+   "synonyms": ["time to review", "turnaround time"]}
+  {"canonical": "reviewer_satisfaction", "label": "reviewer satisfaction", "higher_is_better": true,
+   "scale": "score", "synonyms": ["satisfaction rating"]}
+- Missing. Question: "Does pair programming improve code quality?"; the question names no measure and papers
+  may report it in several ways, so keep the question's own words and say what you cannot tell:
+  {"canonical": "code_quality", "label": "code quality", "higher_is_better": true, "scale": "other",
+   "synonyms": []}
