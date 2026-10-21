@@ -122,7 +122,8 @@ def _table_roles(header: Sequence[base.Cell], rows: Sequence[Sequence[base.Cell]
         return bool(cells) and 2 * sum(label(c.text) is not None for c in cells) >= len(cells)
 
     columns = [n for n in range(len(header)) if n != dataset]
-    condition = next((n for n in columns if CONDITION_HEADER.match(header[n].text.strip(" *_"))), None)
+    condition = next((n for n in columns if CONDITION_HEADER.match(header[n].text.strip(" *_"))
+                      and any(n < len(row) and r.condition_label(row[n].text) for row in rows)), None)  # a header alone is not enough
     if condition is None:
         condition = next((n for n in columns if mostly(n, r.condition_label)), None)
     metric = next((n for n in columns if n != condition and mostly(n, r.metric_label)), None)

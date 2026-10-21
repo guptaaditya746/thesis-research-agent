@@ -67,3 +67,36 @@ def test_table_layouts_resolve_header_roles(tmp_path: Path, layout: str) -> None
 def test_a_table_without_condition_or_metric_column_yields_nothing(tmp_path: Path) -> None:
     _, items = regex_run({"P": INTRO + "| Run | Factual accuracy (%) |\n|---|---|\n| 1 | 75 |\n| 2 | 60 |\n"}, tmp_path)
     assert _table_measurements(items) == set()
+
+
+@pytest.mark.parametrize("corner", ["Method", "Setting", "Model"])
+def test_a_condition_like_corner_header_over_a_transposed_table(tmp_path: Path, corner: str) -> None:
+    body = f"| {corner} | RAG model | closed-book model |\n|---|---|---|\n| factual accuracy (%) | 75 | 60 |\n"
+    _, items = regex_run({"P": INTRO + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, None), ("baseline", 0.60, None)}
+
+
+CODES = ("# T\n\n## Setup\n\nWe compare a closed-book baseline (B) with its retrieval-augmented variant (R).\n\n"
+         + "Filler paragraph. " * 40 + "\n\n## Results\n\n")
+
+
+@pytest.mark.parametrize("head", ["Model", ""])
+def test_alias_codes_defined_far_above_a_table(tmp_path: Path, head: str) -> None:
+    body = f"| {head} | Factual accuracy (%) |\n|---|---|\n| R | 75 |\n| B | 60 |\n"
+    _, items = regex_run({"P": CODES + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, None), ("baseline", 0.60, None)}
+
+
+def test_a_system_metric_value_table(tmp_path: Path) -> None:
+    body = ("| System | Metric | Value |\n|---|---|---|\n| RAG model | factual accuracy (%) | 75 |\n"
+            "| closed-book model | factual accuracy (%) | 60 |\n")
+    _, items = regex_run({"P": INTRO + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, None), ("baseline", 0.60, None)}
+
+
+def test_a_multi_dataset_table(tmp_path: Path) -> None:
+    body = ("| Dataset | System | Factual accuracy (%) |\n|---|---|---|\n| Trivia | RAG model | 75 |\n"
+            "| Trivia | closed-book model | 60 |\n| Wiki | RAG model | 80 |\n| Wiki | closed-book model | 55 |\n")
+    _, items = regex_run({"P": INTRO + body}, tmp_path)
+    assert _table_measurements(items) == {("rag", 0.75, "Trivia"), ("baseline", 0.60, "Trivia"),
+                                          ("rag", 0.80, "Wiki"), ("baseline", 0.55, "Wiki")}
