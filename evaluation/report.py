@@ -7,6 +7,7 @@ evaluations of the same inputs give the same bytes. report.md is the same number
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -242,8 +243,13 @@ def _overall(rows: list[dict[str, Any]] | None, **match: str) -> dict[str, Any]:
     return next((r for r in rows or [] if all(r.get(k) == v for k, v in match.items())), {})
 
 
+DIAGNOSTICS = ("oracle-synthesis", "rag-oracle-passages")   # E1: read ground_truth.json, never a baseline
+RENDERERS = re.compile(r"^(?P<prefix>.+?)-(?P<renderer>tpl|llm)-(?P<rest>.+)$")
+
+
 def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
-    """One row per corpus and system: the headline numbers of A, B and C, ordered by difficulty level."""
+    """One row per corpus and system: the headline numbers of A, B and C, ordered by difficulty level; the
+    selection of each corpus (corpus.json), and template vs LLM on the study ids both corpora kept."""
     rows = []
     for report in reports:
         level = corpus_level(report)
@@ -256,6 +262,7 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
             engine = system["system"] == ENGINE
             rows.append({"level": level, "corpus_id": report["corpus_id"], "system": system["system"],
                          "run_id": report.get("run_id") if engine else None,
+                         "diagnostic": system["system"] in DIAGNOSTICS,
                          "strategy": funnel.get("strategy") if engine else None,
                          "extraction_f1": a.get("f1") if engine else None,
                          "span_accuracy": a.get("span_accuracy") if engine else None,
@@ -272,7 +279,91 @@ def compare(reports: list[dict[str, Any]]) -> dict[str, Any]:
                          "screen_precision": screen.get("precision") if engine else None,
                          "screen_recall": screen.get("recall") if engine else None})
     rows.sort(key=lambda r: (_level_key(r["level"]), r["corpus_id"], r["system"], r.get("strategy") or "", r.get("run_id") or ""))
-    return {"rows": rows, "intervals": compare_intervals(reports)}
+    matched, matched_extraction = matched_pairs(reports)
+    return {"rows": rows, "intervals": compare_intervals(reports), "selection": selection_rows(reports),
+            "matched": matched, "matched_extraction": matched_extraction}
+
+
+def _corpus_name(report: dict[str, Any]) -> str:
+    return Path(report["corpus_dir"]).name if report.get("corpus_dir") else report["corpus_id"]
+
+
+def selection_rows(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One row per corpus and fidelity level from corpus.json `selection` (C3); a corpus without it is left out."""
+    rows, seen = [], set()
+    for report in reports:
+        path = Path(report["corpus_dir"]) / "corpus.json" if report.get("corpus_dir") else None
+        if path is None or not path.is_file() or path in seen:
+            continue
+        seen.add(path)
+        sel = json.loads(path.read_text(encoding="utf-8")).get("selection")
+        if not sel:
+            continue
+        for level, row in sorted(sel.get("per_level", {}).items(), key=lambda kv: _level_key(kv[0])):
+            failed = ", ".join(f"{k}: {v}" for k, v in sorted(row.get("failed_checks", {}).items()))
+            rows.append({"corpus_id": report["corpus_id"], "level": level, "requested": sel.get("requested_studies"),
+                         "retained": sel.get("retained_studies"), "records": sel.get("records"),
+                         "excluded": sorted(sel.get("excluded", {})), "passed": row.get("passed"),
+                         "failed_checks": failed, "mean_attempts": row.get("mean_attempts")})
+    return rows
+
+
+def _share(num: int, den: int) -> float | None:
+    return num / den if den else None
+
+
+def _accuracies(studies: list[dict[str, Any]]) -> dict[str, float | None]:
+    """direction_accuracy, completeness and accuracy_answered (score.score_synthesis) over per-study rows."""
+    determined = [s for s in studies if s.get("determined")]
+    answered = [s for s in determined if s.get("given") != "undetermined"]
+    return {"direction_accuracy": _share(sum(bool(s["correct"]) for s in studies), len(studies)),
+            "completeness": _share(len(answered), len(determined)),
+            "accuracy_answered": _share(sum(bool(s["correct"]) for s in answered), len(answered))}
+
+
+def matched_pairs(reports: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Template vs LLM corpora (`<prefix>-tpl-<rest>` and `<prefix>-llm-<rest>`, the same seed and level):
+    per system the synthesis metrics, and per extractor the extraction precision and recall, recomputed over
+    the study ids both corpora kept; the ids in only one are listed."""
+    by_key: dict[tuple[str, str, str, str | None], dict[str, dict[str, Any]]] = {}
+    for report in reports:
+        m = RENDERERS.match(_corpus_name(report))
+        if m:
+            strategy = (report.get("funnel") or {}).get("strategy")
+            for system in report.get("synthesis") or []:
+                key = (m["prefix"], m["rest"], system["system"], strategy if system["system"] == ENGINE else None)
+                by_key.setdefault(key, {})[m["renderer"]] = {"report": report, "system": system}
+    matched, extraction = [], []
+    for (prefix, rest, name, strategy), both in sorted(
+            by_key.items(), key=lambda kv: (kv[0][0], _level_key(kv[0][1]), kv[0][2], kv[0][3] or "")):
+        if set(both) != {"tpl", "llm"}:
+            continue
+        studies = {r: {s["paper"]: s for s in both[r]["system"]["studies"]} for r in both}
+        common = sorted(studies["tpl"].keys() & studies["llm"].keys())
+        row = {"pair": f"{prefix}/{rest}", "level": corpus_level(both["tpl"]["report"]), "system": name,
+               "diagnostic": name in DIAGNOSTICS, "strategy": strategy, "n_common": len(common), "common": common,
+               "tpl_only": sorted(studies["tpl"].keys() - set(common)),
+               "llm_only": sorted(studies["llm"].keys() - set(common))}
+        for r in ("tpl", "llm"):
+            for k, v in _accuracies([studies[r][i] for i in common]).items():
+                row[f"{r}_{k}"] = v
+        matched.append(row)
+        if name != ENGINE:
+            continue
+        papers: dict[str, dict[str, dict[str, Any]]] = {r: {} for r in both}
+        for r in both:
+            for p in (both[r]["report"].get("extractors") or {}).get("papers") or []:
+                papers[r].setdefault(p["extractor"], {})[p["paper"]] = p
+        for extractor in sorted(papers["tpl"].keys() & papers["llm"].keys()):
+            ids = sorted(papers["tpl"][extractor].keys() & papers["llm"][extractor].keys() & set(common))
+            out: dict[str, Any] = {"pair": row["pair"], "level": row["level"], "strategy": strategy,
+                                   "extractor": extractor, "n_common": len(ids)}
+            for r in ("tpl", "llm"):
+                cells = [papers[r][extractor][i] for i in ids]
+                items, hit, facts = (sum(c[k] for c in cells) for k in ("items", "matched", "facts"))
+                out |= {f"{r}_precision": _share(hit, items), f"{r}_recall": _share(hit, facts)}
+            extraction.append(out)
+    return matched, extraction
 
 
 def compare_intervals(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -309,8 +400,41 @@ COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "extract
                             "engine_minus_system"]
 
 
+SELECTION_COLUMNS = ["corpus_id", "level", "requested", "retained", "records", "excluded", "passed", "failed_checks",
+                     "mean_attempts"]
+MATCHED_COLUMNS = ["pair", "system", "strategy", "n_common", "tpl_direction_accuracy", "llm_direction_accuracy",
+                   "tpl_completeness", "llm_completeness", "tpl_accuracy_answered", "llm_accuracy_answered"]
+MATCHED_EXTRACTION_COLUMNS = ["pair", "extractor", "strategy", "n_common", "tpl_precision", "llm_precision",
+                              "tpl_recall", "llm_recall"]
+
+
+def _marked(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rows with ` (diagnostic)` after the system of an oracle (E1), so it is not read as a baseline."""
+    return [{**r, "system": f"{r['system']} (diagnostic)"} if r.get("diagnostic") else r for r in rows]
+
+
 def render_compare(comparison: dict[str, Any]) -> str:
-    out = ["# Comparison over corpora", "", table(comparison["rows"], COMPARE_COLUMNS), ""]
+    out = ["# Comparison over corpora", "", table(_marked(comparison["rows"]), COMPARE_COLUMNS), ""]
+    if any(r.get("diagnostic") for r in comparison["rows"]):
+        out += ["`(diagnostic)`: oracle-synthesis and rag-oracle-passages read the ground truth; they bound what "
+                "extraction or retrieval could give and are not baselines.", ""]
+    if comparison.get("selection"):
+        rows = [{**r, "excluded": ", ".join(r["excluded"]) or None} for r in comparison["selection"]]
+        out += ["## Selection", "", "Studies requested and retained after the fidelity gate (corpus.json `selection`; "
+                "a corpus built before it is not listed); per level the papers passed, the checks that failed the "
+                "final attempt of the failed ones and the mean attempts; `excluded` studies left every level.", "",
+                table(rows, SELECTION_COLUMNS), ""]
+    if comparison.get("matched"):
+        rows = _marked(comparison["matched"])
+        out += ["## Matched", "", "Template vs LLM corpora of one seed and level, recomputed on the study ids "
+                "both kept (the metrics are those of the per-corpus reports, over the common studies only).", "",
+                table(rows, MATCHED_COLUMNS), ""]
+        out += [f"- {r['pair']} / {r['system']}: only in template {', '.join(r['tpl_only']) or 'none'}; only in LLM "
+                f"{', '.join(r['llm_only']) or 'none'}" for r in rows]
+        out += [""]
+        if comparison.get("matched_extraction"):
+            out += ["Extraction on the common studies, per extractor (precision and recall as in A):", "",
+                    table(comparison["matched_extraction"], MATCHED_EXTRACTION_COLUMNS), ""]
     if comparison.get("intervals"):
         rows = [{**r, **{k: _ci(r.get(k)) for k in ("extraction_f1", "direction_accuracy", "engine_minus_system")}}
                 for r in comparison["intervals"]]

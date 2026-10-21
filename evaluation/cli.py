@@ -8,6 +8,7 @@
     evaluate compare REPORT [REPORT ...] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
+    evaluate review --csv REVIEW.csv
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
@@ -166,6 +167,17 @@ def cmd_benchmark(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_review(args: argparse.Namespace) -> int:
+    from .review import render, summarise
+
+    try:
+        summary = summarise(args.csv)
+    except ValueError as exc:
+        raise SystemExit(f"evaluate review: {exc}") from None
+    print(render(summary))
+    return 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="evaluate", description=__doc__.split("\n\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -236,6 +248,10 @@ def parser() -> argparse.ArgumentParser:
     b.add_argument("reports", type=Path, nargs="+", help="report.json files or directories holding one")
     b.add_argument("--out", type=Path, required=True, help="writes <out>/<extractor_id>/benchmark.json and benchmark.md")
     b.set_defaults(func=cmd_benchmark)
+
+    rv = sub.add_parser("review", help="summarise a filled-in fidelity review sheet (synth review CSV)")
+    rv.add_argument("--csv", type=Path, required=True, help="review-s<seed>.csv with the three checks ticked yes/no")
+    rv.set_defaults(func=cmd_review)
     return p
 
 
