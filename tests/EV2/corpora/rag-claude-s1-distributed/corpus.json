@@ -1,0 +1,181 @@
+{
+  "corpus_id": "rag-claude-s1-869ad7e8",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "12fc9004df142b45ed0f65d76db148093fd799f81d5294e521662a63385ea35f"
+  },
+  "renderer": "llm",
+  "level": "distributed",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "distributed"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "distributed"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "distributed"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "distributed"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "distributed"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "distributed"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "distributed"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "distributed"
+    },
+    {
+      "id": "S009",
+      "study_id": "S009",
+      "level": "distributed"
+    },
+    {
+      "id": "S010",
+      "study_id": "S010",
+      "level": "distributed"
+    },
+    {
+      "id": "S011",
+      "study_id": "S011",
+      "level": "distributed"
+    },
+    {
+      "id": "S012",
+      "study_id": "S012",
+      "level": "distributed"
+    },
+    {
+      "id": "S013",
+      "study_id": "S013",
+      "level": "distributed"
+    },
+    {
+      "id": "S014",
+      "study_id": "S014",
+      "level": "distributed"
+    },
+    {
+      "id": "S015",
+      "study_id": "S015",
+      "level": "distributed"
+    },
+    {
+      "id": "S016",
+      "study_id": "S016",
+      "level": "distributed"
+    },
+    {
+      "id": "S017",
+      "study_id": "S017",
+      "level": "distributed"
+    },
+    {
+      "id": "S018",
+      "study_id": "S018",
+      "level": "distributed"
+    },
+    {
+      "id": "S019",
+      "study_id": "S019",
+      "level": "distributed"
+    },
+    {
+      "id": "S020",
+      "study_id": "S020",
+      "level": "distributed"
+    }
+  ],
+  "models": {
+    "renderer": "exchange:claude-haiku-5-5",
+    "verifier": "exchange:claude-sonnet-5-5",
+    "served": [
+      "exchange:claude-haiku-5-5",
+      "exchange:claude-sonnet-5-5"
+    ],
+    "statements": true,
+    "paper_prompt": "render-v2.txt"
+  },
+  "settings": {
+    "name": "rag-claude-s1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 20,
+    "records": 20,
+    "retained_studies": 20,
+    "per_level": {
+      "complex": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.1
+      },
+      "explicit": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
+  }
+}

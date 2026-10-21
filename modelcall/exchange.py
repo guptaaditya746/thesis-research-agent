@@ -9,7 +9,8 @@ answers the requests on disk. Under `root`:
     done/<id>.json      the request once its reply was accepted
 
 The id is the sha256 of the model name, the seed, the instructions and the conversation so far, so a
-rerun asks the same request again and an answered reply is reused. A reply that does not parse or
+rerun asks the same request again and an answered reply is reused. A reply is read only after it has
+not changed for a moment (`settle_s`), so a file still being written is never taken half done. A reply that does not parse or
 does not fit the schema is moved to `replies/<id>.rejected-<n>.json` and the request is rewritten
 with the reason under `rejected`; the call waits for a new reply. The call waits as long as it takes
 (the caller's timeout applies); stopping the process leaves the pending requests for the next run.
@@ -25,6 +26,7 @@ import hashlib
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -83,8 +85,9 @@ def problem(reply_file: Path, schema: dict[str, Any]) -> str | None:
     return None
 
 
-def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0) -> FunctionModel:
-    """A pydantic-ai model named `name` whose calls are answered through files under `root`."""
+def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0, settle_s: float = 2.0) -> FunctionModel:
+    """A pydantic-ai model named `name` whose calls are answered through files under `root`. A reply is read
+    once it has not changed for `settle_s` seconds, so a file still being written is not taken half done."""
     root = Path(root)
 
     async def answer(messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
@@ -100,7 +103,7 @@ def exchange_model(root: Path | str, name: str, *, poll_s: float = 1.0) -> Funct
             _write(pending, request)
         rejected: list[str] = []
         while True:
-            if reply.exists():
+            if reply.exists() and time.time() - reply.stat().st_mtime >= settle_s:
                 why = problem(reply, schema)
                 if why is None:
                     data = json.loads(reply.read_text(encoding="utf-8"))

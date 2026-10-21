@@ -1,0 +1,311 @@
+synth S001/distributed: statements 0 round(s), failed []
+synth S002/distributed: statements 0 round(s), failed []
+synth S003/distributed: statements 0 round(s), failed []
+synth S004/distributed: statements 0 round(s), failed []
+synth S005/distributed: statements 0 round(s), failed []
+synth S006/distributed: statements 0 round(s), failed []
+synth S007/distributed: statements 0 round(s), failed []
+synth S008/distributed: statements 0 round(s), failed []
+synth S009/distributed: statements 0 round(s), failed []
+synth S010/distributed: statements 0 round(s), failed []
+synth S011/distributed: statements 0 round(s), failed []
+synth S012/distributed: statements 0 round(s), failed []
+synth S013/distributed: statements 0 round(s), failed []
+synth S014/distributed: statements 0 round(s), failed []
+synth S015/distributed: statements 0 round(s), failed []
+synth S016/distributed: statements 0 round(s), failed []
+synth S017/distributed: statements 0 round(s), failed []
+synth S018/distributed: statements 0 round(s), failed []
+synth S019/distributed: statements 0 round(s), failed []
+synth S020/distributed: statements 0 round(s), failed []
+synth S001/contradictory: statements 0 round(s), failed []
+synth S002/contradictory: statements 0 round(s), failed []
+synth S003/contradictory: statements 0 round(s), failed []
+synth S004/contradictory: statements 0 round(s), failed []
+synth S005/contradictory: statements 0 round(s), failed []
+synth S006/contradictory: statements 0 round(s), failed []
+synth S007/contradictory: statements 0 round(s), failed []
+synth S008/contradictory: statements 0 round(s), failed []
+synth S009/contradictory: statements 0 round(s), failed []
+synth S010/contradictory: statements 0 round(s), failed []
+synth S011/contradictory: statements 0 round(s), failed []
+synth S012/contradictory: statements 0 round(s), failed []
+synth S013/contradictory: statements 0 round(s), failed []
+synth S014/contradictory: statements 0 round(s), failed []
+synth S015/contradictory: statements 0 round(s), failed []
+synth S016/contradictory: statements 0 round(s), failed []
+synth S017/contradictory: statements 0 round(s), failed []
+synth S018/contradictory: statements 0 round(s), failed []
+synth S019/contradictory: statements 0 round(s), failed []
+synth S020/contradictory: statements 0 round(s), failed []
+synth S007/complex: statements 1 round(s), failed []
+synth S005/explicit: statements 1 round(s), failed []
+synth S017/paraphrased: statements 1 round(s), failed []
+synth S016/explicit: statements 1 round(s), failed []
+synth S012/paraphrased: statements 1 round(s), failed []
+synth S016/complex: statements 1 round(s), failed []
+synth S012/explicit: statements 1 round(s), failed []
+synth S019/paraphrased: statements 1 round(s), failed []
+synth S004/complex: statements 1 round(s), failed []
+synth S015/explicit: statements 1 round(s), failed []
+synth S014/explicit: statements 1 round(s), failed []
+synth S019/explicit: statements 1 round(s), failed []
+synth S004/paraphrased: statements 1 round(s), failed []
+synth S018/explicit: statements 1 round(s), failed []
+synth S006/paraphrased: statements 1 round(s), failed []
+synth S011/paraphrased: statements 1 round(s), failed []
+synth S009/paraphrased: statements 1 round(s), failed []
+synth S002/explicit: statements 1 round(s), failed []
+synth S015/paraphrased: statements 1 round(s), failed []
+synth S010/explicit: statements 1 round(s), failed []
+synth S013/paraphrased: statements 1 round(s), failed []
+synth S013/explicit: statements 1 round(s), failed []
+synth S005/paraphrased: statements 1 round(s), failed []
+synth S007/paraphrased: statements 1 round(s), failed []
+synth S020/complex: statements 1 round(s), failed []
+synth S020/paraphrased: statements 1 round(s), failed []
+synth S018/paraphrased: statements 1 round(s), failed []
+synth S008/paraphrased: statements 1 round(s), failed []
+synth S002/complex: statements 1 round(s), failed []
+synth S007/explicit: statements 1 round(s), failed []
+synth S005/complex: statements 1 round(s), failed []
+synth S008/explicit: statements 1 round(s), failed []
+synth S014/paraphrased: statements 1 round(s), failed []
+synth S011/explicit: statements 1 round(s), failed []
+synth S003/paraphrased: statements 1 round(s), failed []
+synth S006/explicit: statements 1 round(s), failed []
+synth S010/paraphrased: statements 1 round(s), failed []
+synth S002/paraphrased: statements 1 round(s), failed []
+synth S009/complex: statements 1 round(s), failed []
+synth S018/complex: statements 1 round(s), failed []
+synth S009/explicit: statements 1 round(s), failed []
+synth S006/complex: statements 1 round(s), failed []
+synth S013/complex: statements 1 round(s), failed []
+synth S001/complex: statements 1 round(s), failed []
+synth S015/complex: statements 1 round(s), failed []
+synth S004/distributed: attempt 1/3 failed level_distributed
+synth S003/complex: statements 1 round(s), failed []
+synth S001/paraphrased: statements 1 round(s), failed []
+synth S019/complex: statements 1 round(s), failed []
+synth S010/complex: statements 1 round(s), failed []
+synth S003/distributed: attempt 1/3 failed level_distributed
+synth S017/explicit: statements 1 round(s), failed []
+synth S003/explicit: statements 1 round(s), failed []
+synth S020/explicit: statements 1 round(s), failed []
+synth S008/complex: statements 1 round(s), failed []
+synth S011/complex: statements 1 round(s), failed []
+synth S017/complex: statements 1 round(s), failed []
+synth S001/explicit: statements 1 round(s), failed []
+synth S004/explicit: statements 1 round(s), failed []
+synth S014/complex: statements 1 round(s), failed []
+synth S012/complex: statements 1 round(s), failed []
+synth S016/paraphrased: statements 1 round(s), failed []
+synth S002/contradictory: attempt 1/3 passed
+synth S018/distributed: attempt 1/3 passed
+synth S002/distributed: attempt 1/3 passed
+synth S017/distributed: attempt 1/3 passed
+synth S001/contradictory: attempt 1/3 passed
+synth S003/contradictory: attempt 1/3 passed
+synth S005/contradictory: attempt 1/3 passed
+synth S008/contradictory: attempt 1/3 passed
+synth S018/contradictory: attempt 1/3 passed
+synth S015/contradictory: attempt 1/3 passed
+synth S014/contradictory: attempt 1/3 passed
+synth S016/contradictory: attempt 1/3 passed
+synth S017/contradictory: attempt 1/3 passed
+synth S020/distributed: attempt 1/3 passed
+synth S005/distributed: attempt 1/3 passed
+synth S013/distributed: attempt 1/3 passed
+synth S015/distributed: attempt 1/3 passed
+synth S009/distributed: attempt 1/3 passed
+synth S011/distributed: attempt 1/3 passed
+synth S007/contradictory: attempt 1/3 passed
+synth S013/contradictory: attempt 1/3 passed
+synth S019/contradictory: attempt 1/3 passed
+synth S001/distributed: attempt 1/3 passed
+synth S012/distributed: attempt 1/3 passed
+synth S016/distributed: attempt 1/3 passed
+synth S010/contradictory: attempt 1/3 passed
+synth S004/contradictory: attempt 1/3 passed
+synth S010/distributed: attempt 1/3 passed
+synth S020/contradictory: attempt 1/3 passed
+synth S008/distributed: attempt 1/3 passed
+synth S006/contradictory: attempt 1/3 passed
+synth S006/distributed: attempt 1/3 passed
+synth S009/contradictory: attempt 1/3 passed
+synth S019/distributed: attempt 1/3 passed
+synth S014/distributed: attempt 1/3 passed
+synth S007/distributed: attempt 1/3 passed
+synth S011/contradictory: attempt 1/3 passed
+synth S012/contradictory: attempt 1/3 passed
+synth S014/complex: attempt 1/3 passed
+synth S002/explicit: attempt 1/3 passed
+synth S011/paraphrased: attempt 1/3 passed
+synth S007/explicit: attempt 1/3 passed
+synth S008/explicit: attempt 1/3 passed
+synth S017/explicit: attempt 1/3 passed
+synth S004/explicit: attempt 1/3 passed
+synth S018/explicit: attempt 1/3 passed
+synth S007/paraphrased: attempt 1/3 passed
+synth S014/explicit: attempt 1/3 passed
+synth S008/paraphrased: attempt 1/3 passed
+synth S012/complex: attempt 1/3 passed
+synth S004/complex: attempt 1/3 passed
+synth S001/explicit: attempt 1/3 passed
+synth S012/explicit: attempt 1/3 passed
+synth S012/paraphrased: attempt 1/3 passed
+synth S020/explicit: attempt 1/3 passed
+synth S004/distributed: attempt 2/3 passed
+synth S019/complex: attempt 1/3 passed
+synth S003/explicit: attempt 1/3 passed
+synth S003/complex: attempt 1/3 passed
+synth S002/complex: attempt 1/3 passed
+synth S007/complex: attempt 1/3 passed
+synth S008/complex: attempt 1/3 passed
+synth S016/complex: attempt 1/3 passed
+synth S011/complex: attempt 1/3 passed
+synth S017/paraphrased: attempt 1/3 passed
+synth S001/complex: attempt 1/3 passed
+synth S020/complex: attempt 1/3 passed
+synth S003/paraphrased: attempt 1/3 passed
+synth S018/paraphrased: attempt 1/3 passed
+synth S019/explicit: attempt 1/3 passed
+synth S006/paraphrased: attempt 1/3 passed
+synth S018/complex: attempt 1/3 passed
+synth S013/paraphrased: attempt 1/3 passed
+synth S020/paraphrased: attempt 1/3 passed
+synth S016/paraphrased: attempt 1/3 passed
+synth S015/complex: attempt 1/3 passed
+synth S005/paraphrased: attempt 1/3 passed
+synth S001/paraphrased: attempt 1/3 passed
+synth S015/paraphrased: attempt 1/3 passed
+synth S017/complex: attempt 1/3 passed
+synth S006/complex: attempt 1/3 passed
+synth S010/explicit: attempt 1/3 passed
+synth S004/paraphrased: attempt 1/3 passed
+synth S019/paraphrased: attempt 1/3 passed
+synth S011/explicit: attempt 1/3 passed
+synth S013/complex: attempt 1/3 passed
+synth S009/complex: attempt 1/3 passed
+synth S015/explicit: attempt 1/3 passed
+synth S010/complex: attempt 1/3 passed
+synth S003/distributed: attempt 2/3 passed
+synth S006/explicit: attempt 1/3 passed
+synth S009/explicit: attempt 1/3 passed
+synth S016/explicit: attempt 1/3 passed
+synth S005/complex: attempt 1/3 passed
+synth S010/paraphrased: attempt 1/3 passed
+synth S013/explicit: attempt 1/3 passed
+synth S005/explicit: attempt 1/3 passed
+synth S014/paraphrased: attempt 1/3 passed
+synth S009/paraphrased: attempt 1/3 passed
+synth S002/paraphrased: attempt 1/3 passed
+{
+  "corpora": {
+    "C:\\Users\\ADITYA~1\\AppData\\Local\\Temp\\claude\\c--Users-AdityaGuptaFirmway-Documents-repo-thesis-research-agent\\610eea48-e4a8-4a1a-85b9-99cf75c7947b\\scratchpad\\gen\\corpora\\rag-claude-s1-explicit": "rag-claude-s1-eb14377d",
+    "C:\\Users\\ADITYA~1\\AppData\\Local\\Temp\\claude\\c--Users-AdityaGuptaFirmway-Documents-repo-thesis-research-agent\\610eea48-e4a8-4a1a-85b9-99cf75c7947b\\scratchpad\\gen\\corpora\\rag-claude-s1-paraphrased": "rag-claude-s1-c34803f0",
+    "C:\\Users\\ADITYA~1\\AppData\\Local\\Temp\\claude\\c--Users-AdityaGuptaFirmway-Documents-repo-thesis-research-agent\\610eea48-e4a8-4a1a-85b9-99cf75c7947b\\scratchpad\\gen\\corpora\\rag-claude-s1-distributed": "rag-claude-s1-869ad7e8",
+    "C:\\Users\\ADITYA~1\\AppData\\Local\\Temp\\claude\\c--Users-AdityaGuptaFirmway-Documents-repo-thesis-research-agent\\610eea48-e4a8-4a1a-85b9-99cf75c7947b\\scratchpad\\gen\\corpora\\rag-claude-s1-complex": "rag-claude-s1-a5fa1731",
+    "C:\\Users\\ADITYA~1\\AppData\\Local\\Temp\\claude\\c--Users-AdityaGuptaFirmway-Documents-repo-thesis-research-agent\\610eea48-e4a8-4a1a-85b9-99cf75c7947b\\scratchpad\\gen\\corpora\\rag-claude-s1-contradictory": "rag-claude-s1-e4e9d603",
+    "C:\\Users\\ADITYA~1\\AppData\\Local\\Temp\\claude\\c--Users-AdityaGuptaFirmway-Documents-repo-thesis-research-agent\\610eea48-e4a8-4a1a-85b9-99cf75c7947b\\scratchpad\\gen\\corpora\\rag-claude-s1-mixed": "rag-claude-s1-ec928480"
+  },
+  "excluded": {},
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "settings": {
+    "name": "rag-claude-s1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 20,
+    "records": 20,
+    "retained_studies": 20,
+    "per_level": {
+      "complex": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.1
+      },
+      "explicit": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 20,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
+  },
+  "answer": {
+    "label": "mixed",
+    "supporting": [
+      "S001",
+      "S002",
+      "S005",
+      "S006",
+      "S008",
+      "S010",
+      "S011",
+      "S015",
+      "S016",
+      "S017",
+      "S018",
+      "S020"
+    ],
+    "contradicting": [
+      "S009",
+      "S012",
+      "S013",
+      "S014"
+    ],
+    "neutral": [
+      "S003",
+      "S004",
+      "S007",
+      "S019"
+    ],
+    "undetermined": [],
+    "duplicates": [],
+    "flags": {
+      "claim_disagrees": [
+        "S005",
+        "S010",
+        "S015",
+        "S020"
+      ],
+      "duplicate": [],
+      "large_effect": []
+    }
+  }
+}

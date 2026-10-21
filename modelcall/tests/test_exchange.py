@@ -100,3 +100,21 @@ def test_model_for_and_status(tmp_path: Path, capsys) -> None:
     assert json.loads(capsys.readouterr().out)["answered_waiting"] == 1
     assert main(["check", str(tmp_path / "claude-haiku")]) == 1
     assert "'a' is a required property" in capsys.readouterr().out
+
+
+def test_a_reply_still_being_written_is_not_read_half_done(tmp_path: Path) -> None:
+    model = exchange_model(tmp_path, "exchange:writer", poll_s=0.05, settle_s=0.5)
+
+    def answer() -> None:
+        deadline = time.time() + 20
+        while time.time() < deadline and not list((tmp_path / "pending").glob("*.json")):
+            time.sleep(0.02)
+        reply = tmp_path / "replies" / next((tmp_path / "pending").glob("*.json")).name
+        reply.parent.mkdir(parents=True, exist_ok=True)
+        reply.write_text("", encoding="utf-8")          # the writer has opened the file, nothing written yet
+        time.sleep(0.2)
+        reply.write_text(json.dumps({"answer": "a", "n": 2}), encoding="utf-8")
+    threading.Thread(target=answer, daemon=True).start()
+    out = ask_sync(PROMPT, "Q", model=model)
+    assert out.output.n == 2
+    assert not list((tmp_path / "replies").glob("*.rejected-*"))
