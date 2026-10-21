@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from evidence.extractors import terms
+
 from .conftest import PROTOCOL, measurements, regex_run
 
 ABSTRACT = "# P\n\n## Abstract\n\nWe compare a closed-book model with a retrieval-augmented model. {}\n"
@@ -64,6 +66,10 @@ def roles_of(text: str, protocol: Path, tmp: Path) -> list[str]:
     ("RAG without reranking is an ablation.", []),
     ("The RAG model has no retrieval failures.", ["rag"]),
     ("We compare RAG against a closed-book model.", ["rag", "CONTROL"]),
+    # review round 1: a control ending in its system noun is no negated object; a qualified control stays control
+    ("The no-retrieval baseline errors are frequent.", ["CONTROL"]),
+    ("The RAG model reaches 50%, the closed-book model (no fine-tuning) reaches 40%.", ["rag", "CONTROL"]),
+    ("Llama-2 without retrieval (no context) answers from its parameters.", ["CONTROL"]),
 ])
 def test_condition_roles_resolve_local_qualifiers(text: str, roles: list[str], protocol: Path, control: str,
                                                   tmp_path: Path) -> None:
@@ -93,3 +99,10 @@ def test_a_qualified_row_label_resolves_to_its_role(protocol: Path, control: str
             "| RAG | 75 |\n| RAG (no retrieval) | 60 |\n\nRAG (no retrieval) reaches an accuracy of 58%.\n")
     _, items = regex_run({"P": f"# P\n\n{text}"}, tmp_path, protocol)
     assert set(measurements(items, "P")) == {("rag", 0.75), (control, 0.60), (control, 0.58)}
+
+
+@pytest.mark.parametrize("roles", [["rag", "baseline", "other"], ["rag", "baseline"]])
+def test_a_negated_qualifier_on_a_control_keeps_the_control(roles: list[str]) -> None:
+    text = "the closed-book model (no fine-tuning) reaches 40%"
+    found = terms.find_conditions(text, terms.condition_patterns(), roles)
+    assert [(m.key, m.text) for m in found] == [("baseline", "closed-book model")]

@@ -38,6 +38,7 @@ class Resolver:
         self.text = text
         self.cond_patterns = terms.condition_patterns(patterns["conditions"])
         self.roles = [*patterns["conditions"], "other"]   # a mention qualified as other links only to an other item
+        self.treatment = patterns.get("treatment")
         self.metric_patterns = [tuple(m) for m in patterns["metrics"]]
         self.question = set(patterns["question_metrics"])
         self.conditions = [i for i in context if i.evidence_type == "condition"]
@@ -72,7 +73,7 @@ class Resolver:
 
     def mentions(self, text: str, start: int = 0, end: int | None = None) -> list[terms.Mention]:
         """Condition mentions with their qualifiers: "RAG (no retrieval)" is the control, not RAG."""
-        return terms.find_conditions(text, self.cond_patterns, self.roles, start, end)
+        return terms.find_conditions(text, self.cond_patterns, self.roles, start, end, self.treatment)
 
     def metric_for(self, mention: terms.Mention) -> Item | None:
         named = [i for i in self.metrics if terms.norm(str(i.fields.get("name", ""))) == terms.norm(mention.text)]
