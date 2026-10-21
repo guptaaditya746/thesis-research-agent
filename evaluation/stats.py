@@ -6,7 +6,10 @@ Our addition (the supervisor's design names no statistics; STATE.md §7 "Statist
    a numpy generator seeded with `seed`, 0 by default), so the same rows give the same bounds every time.
 2. Resampling is paired over rows: a row is one paper (extraction) or one study (synthesis) with every
    number the statistic needs (matched, items, facts; correct; engine correct minus baseline correct), and
-   one resample draws whole rows, so a ratio's numerator and denominator always come from the same papers.
+   one resample draws whole rows, so a ratio's numerator and denominator always come from the same papers. `cluster_bootstrap` takes the cluster (the parent study, whatever its
+   renderings: levels, duplicates) as the resampling unit instead: rows are summed per cluster and whole
+   clusters are drawn, so renderings of one study are not counted as independent evidence; it is the
+   interval for pooled numbers.
 3. The point value is the statistic over the whole sample, never the mean of the bootstrap distribution.
 4. Degenerate input gives the point value with null bounds: fewer than two rows, every row equal, or a
    bootstrap distribution with no spread (every resample gives the same statistic, e.g. F1 = 1 on every
@@ -21,7 +24,7 @@ Our addition (the supervisor's design names no statistics; STATE.md §7 "Statist
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable, Iterable, Sequence
+from typing import Any, Callable, Hashable, Iterable, Sequence
 
 import numpy as np
 from scipy import stats
@@ -30,7 +33,7 @@ RESAMPLES = 2000
 CONFIDENCE = 0.95
 METHODS = ("BCa", "percentile")
 
-Interval = dict[str, Any]   # {point, low, high: float | None, method: str | None}
+Interval = dict[str, Any]   # {point, low, high: float | None, method: str | None, unit: row | cluster}
 Statistic = Callable[..., float]
 
 
@@ -54,7 +57,7 @@ def _bounds(stat: Statistic, columns: list[np.ndarray], method: str, seed: int, 
 
 def _interval(point: float | None, bounds: tuple[float, float] | None = None, method: str | None = None) -> Interval:
     low, high = bounds if bounds else (None, None)
-    return {"point": point, "low": low, "high": high, "method": method if bounds else None}
+    return {"point": point, "low": low, "high": high, "method": method if bounds else None, "unit": "row"}
 
 
 def bootstrap(stat: Statistic, rows: Iterable[Sequence[float]], *, seed: int = 0, n: int = RESAMPLES) -> Interval:
@@ -71,6 +74,22 @@ def bootstrap(stat: Statistic, rows: Iterable[Sequence[float]], *, seed: int = 0
         if bounds is not None:
             return _interval(point, bounds, method)
     return _interval(point)
+
+
+def cluster_bootstrap(stat: Statistic, rows: Sequence[Sequence[float]], clusters: Sequence[Hashable], *,
+                      seed: int = 0, n: int = RESAMPLES) -> Interval:
+    """`bootstrap` over rows summed per cluster (exact for ratios and micro-F1 built from counts; a mean is
+    a ratio of (value, 1) rows, not a plain mean of cluster sums);
+    the interval carries `unit: "cluster"` and `n_clusters`."""
+    if len(rows) != len(clusters):
+        raise ValueError("cluster_bootstrap: one cluster per row")
+    sums: dict[Hashable, list[float]] = {}
+    for row, cluster in zip(rows, clusters):
+        total = sums.setdefault(cluster, [0.0] * len(row))
+        for i, v in enumerate(row):
+            total[i] += float(v)
+    out = bootstrap(stat, sums.values(), seed=seed, n=n)
+    return {**out, "unit": "cluster", "n_clusters": len(sums)}
 
 
 def mean(values: np.ndarray) -> float:
@@ -105,7 +124,8 @@ def bootstrap_f1(rows: Iterable[tuple[int, int, int]], *, seed: int = 0, n: int 
 
 def interval_row(interval: Interval, **keys: Any) -> dict[str, Any]:
     return {**keys, "point": interval["point"], "low": interval["low"], "high": interval["high"],
-            "method": interval.get("method")}
+            "method": interval.get("method"),
+            **{k: interval[k] for k in ("unit", "n_clusters") if k in interval}}
 
 
 def interval_text(point: float | None, low: float | None, high: float | None) -> str:

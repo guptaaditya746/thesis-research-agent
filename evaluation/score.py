@@ -659,7 +659,33 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
                          "span_accuracy": share(hits, matched), "only": only, "only_matched": only_matched,
                          "associated": associated if kind == "measurement" else None,
                          "association_accuracy": share(associated, matched) if kind == "measurement" else None})
-    return {"rows": rows, "cost": score_extractor_cost(run), "recall_scope": "called" if called else "all_facts"}
+    return {"rows": rows, "cost": score_extractor_cost(run), "recall_scope": "called" if called else "all_facts",
+            "papers": _extractor_papers(m, sums, called, screens)}
+
+
+def _extractor_papers(m: Matching, extractors: Iterable[str], called: dict[str, set[tuple[str, str]]] | None,
+                      screens: Iterable[str]) -> list[dict[str, Any]]:
+    """Per extractor and paper, the all-type counts (items, matched, facts) with the paper's parent-study
+    cluster: what `evaluate benchmark` resamples for its pooled interval. Facts follow `called`."""
+    truth, screens = m.truth, set(screens)
+    out = []
+    for extractor in sorted(set(extractors) - screens):
+        pairs = called.get(extractor) if called else None
+        papers: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
+        for fact in truth.facts.values():
+            if called is None or (pairs and (fact.paper, fact.type) in pairs):
+                papers[fact.paper][2] += 1
+        for document, kind in sorted(pairs or ()):
+            if kind in TYPES:
+                papers[document]
+        for item in m.items.values():
+            if extractor in (item.found_by or ("unknown",)):
+                cell = papers[m.document[item.item_id]]
+                cell[0] += 1
+                cell[1] += m.fact_of.get(item.item_id, "") in truth.facts
+        out += [{"extractor": extractor, "paper": p, "cluster": truth.cluster_of(p), "items": c[0],
+                 "matched": c[1], "facts": c[2]} for p, c in sorted(papers.items())]
+    return out
 
 
 def score_cost(run: dict[str, Any] | None, papers: int) -> dict[str, Any] | None:

@@ -54,12 +54,14 @@ class GroundTruth:
     placements: list[dict[str, Any]]
     answer: dict[str, Any]
     facts: dict[str, Fact] = field(default_factory=dict)
+    seed: Any = None
 
     @classmethod
     def load(cls, path: Path) -> GroundTruth:
         data = read_json(path)
         truth = cls(data["corpus_id"], data.get("question", ""), data["studies"], data.get("placements", []),
                     data.get("answer", {}))
+        truth.seed = data.get("seed")
         for study in truth.studies:
             for kind, key in FACT_LISTS.items():
                 entries = study.get(key) or []
@@ -72,6 +74,13 @@ class GroundTruth:
 
     def level_of(self, paper: str) -> str:
         return next((s["level"] for s in self.studies if s["paper"] == paper), "unknown")
+
+    def cluster_of(self, paper: str) -> str:
+        """`<seed>/<parent study id>`: a duplicate belongs to its parent's cluster, and the same study at
+        another level (same seed, same id) to the same cluster."""
+        study = next((s for s in self.studies if s["paper"] == paper), {})
+        seed = self.seed if self.seed is not None else self.corpus_id
+        return f"{seed}/{study.get('duplicate_of') or study.get('study_id') or paper}"
 
     def placements_of(self, fact_id: str, role: str | None = None) -> list[dict[str, Any]]:
         return [p for p in self.placements if p["fact"] == fact_id and (role is None or p["role"] == role)]

@@ -61,9 +61,9 @@ def test_perfect_run_scores_one_everywhere(tmp_path: Path, corpus: Path) -> None
     # F4: intervals of a perfect run are the point value with null bounds (no spread); extractor rows exist
     assert row(result["intervals"]["extraction"], evidence_type="all") == {"evidence_type": "all", "point": 1.0,
                                                                             "low": None, "high": None, "method": None,
-                                                                            "n_rows": 2}
+                                                                            "unit": "row", "n_rows": 2}
     assert result["intervals"]["synthesis"] == [{"system": "evidence-engine", "point": 1.0, "low": None, "high": None,
-                                                 "method": None, "n_rows": 2}]
+                                                 "method": None, "unit": "row", "n_rows": 2}]
     assert result["intervals"]["paired"] == [] and engine["flags"] is None
     assert {r["extractor"] for r in result["extractors"]["rows"]} == {fx.REGEX, fx.LLM}
     assert result["extractors"]["cost"] is None   # no calls/ in the hand-written run
