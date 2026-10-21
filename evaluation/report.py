@@ -149,8 +149,9 @@ def render(report: dict[str, Any]) -> str:
                 "are over the determined studies only, so a baseline that cites only some papers, or guesses on "
                 "undeterminable ones, is seen in both. traceability is the share of a baseline's cited passages that "
                 "overlap a value, metric-label or claim placement of the paper they cite, dropped citations counted "
-                "as untraced; overlap is the lenient share, over a placement of any role, a condition label included "
-                "(none for the engine: its spans are scored in A).", ""]
+                "as untraced (span overlap only: not \"same study or condition\", not entailment; the passage need "
+                "not support the claim); overlap is the lenient share, over a placement of any role, a condition "
+                "label included (none for the engine: its spans are scored in A).", ""]
         levels = [{"system": s["system"], **r} for s in report["synthesis"] for r in s["rows"] if r["level"] != "all"]
         if levels:
             levels.sort(key=lambda r: (_level_key(r["level"]), r["system"]))

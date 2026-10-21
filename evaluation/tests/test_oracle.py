@@ -198,3 +198,12 @@ def test_rag_baseline_command_with_oracle_passages(tmp_path: Path, monkeypatch: 
     assert (tmp_path / "rag" / "rag-oracle-passages-calls.jsonl").is_file()
     with pytest.raises(SystemExit, match="takes no --k"):
         cli.main(["rag-baseline", "--corpus", str(corpus), "--out", str(tmp_path / "r2"), "--oracle-passages", "--k", "2"])
+
+
+def test_report_md_says_what_traced_means(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    fx.dump(tmp_path / "rag.json", fx.baseline_answer("rag-baseline", {"S001": "supports"}, "supported"))
+    assert cli.main(["score", "--corpus", str(corpus), "--baseline", str(tmp_path / "rag.json"),
+                     "--out", str(tmp_path / "out")]) == 0
+    text = (tmp_path / "out" / "report.md").read_text(encoding="utf-8")
+    assert "not entailment" in text and "same study or condition" in text

@@ -333,7 +333,9 @@ def expected_direction(study: dict[str, Any]) -> str | None:
     return (study.get("effect") or {}).get("direction")
 
 
-TRACED_ROLES = ("value", "metric_label", "claim")   # a passage must touch one of these to trace a fact
+# "traced" (strict traceability): the cited passage overlaps a value, metric-label or claim placement of the cited
+# paper. Span overlap only: not "same study or condition", and not entailment (the passage need not support the claim).
+TRACED_ROLES = ("value", "metric_label", "claim")
 
 
 def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None,

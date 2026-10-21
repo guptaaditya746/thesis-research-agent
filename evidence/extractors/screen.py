@@ -25,7 +25,10 @@ like an extractor call:
 The cascade semantics live in the engine (engine.Execution.screen): an extractor that says "not relevant"
 stops the cascade; "relevant" passes the decision on to the next extractor when there is one; a call without
 an item leaves the earlier decision standing, and a cascade without any decision counts as relevant, so a
-paper is never skipped because a check failed.
+paper is never skipped because a check failed. The protocol's `screen.lexical_miss` sets what a regex "not
+relevant" (a keyword miss) does before the last position: `reject` (the default) stops the cascade like any
+other "not relevant"; `escalate` passes the paper on, the next extractor decides, and the screen record carries
+`escalated: true` (the regex decision stands only when that extractor returns no item).
 """
 from __future__ import annotations
 
