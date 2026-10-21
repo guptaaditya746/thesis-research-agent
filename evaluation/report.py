@@ -401,6 +401,7 @@ def matched_pairs(reports: list[dict[str, Any]], corpora: dict[int, dict[str, An
                 if m["renderer"] in slot and slot[m["renderer"]]["index"] != i:
                     ambiguous.add(key)
                 slot[m["renderer"]] = {"report": report, "system": system, "index": i}
+    ambiguous = {k for k in ambiguous if set(by_key[k]) == {"tpl", "llm"}}   # only a pair that was to be matched
     for prefix, rest, name, strategy in sorted(ambiguous, key=str):
         notes.append(f"ambiguous: {prefix}-*-{rest} / {name}: two reports for one corpus name on one side; not matched")
     matched, extraction = [], []
@@ -456,6 +457,7 @@ def compare_intervals(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
             name = system["system"]
             rows.append({"level": level, "corpus_id": report["corpus_id"], "system": name,
                          "run_id": report.get("run_id") if name == ENGINE else None,
+                         "diagnostic": name in DIAGNOSTICS,
                          "strategy": strategy if name == ENGINE else None,   # Part D: all vs gaps rows
                          **_protocol_columns(report, name == ENGINE),
                          "extraction_f1": _strip(f1) if name == ENGINE else None,
@@ -466,14 +468,21 @@ def compare_intervals(reports: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _strip(row: dict[str, Any] | None) -> dict[str, Any] | None:
-    return {k: row.get(k) for k in ("point", "low", "high", "method")} if row else None
+    return {k: row.get(k) for k in ("point", "low", "high", "method", "n_rows", "unit", "n_clusters")} if row else None
+
+
+def _n(row: dict[str, Any] | None) -> str:
+    """An interval's sample size: `n_rows`, with `(k clusters)` where it was resampled by cluster."""
+    if not row or row.get("n_rows") is None:
+        return "-"
+    return f"{row['n_rows']} ({row['n_clusters']} clusters)" if row.get("n_clusters") is not None else str(row["n_rows"])
 
 
 COMPARE_COLUMNS = ["level", "corpus_id", "system", "strategy", "lexical_miss", "protocol", "extraction_f1", "span_accuracy", "association_accuracy",
                    "true_pair", "direction_accuracy", "completeness", "accuracy_answered", "traceability",
                    "overlap", "label_correct", "calls_per_document", "tokens_per_document", "screen_precision", "screen_recall"]
-COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "lexical_miss", "protocol", "extraction_f1", "direction_accuracy",
-                            "engine_minus_system"]
+COMPARE_INTERVAL_COLUMNS = ["level", "corpus_id", "system", "strategy", "lexical_miss", "protocol", "extraction_f1",
+                            "extraction_n", "direction_accuracy", "direction_n", "engine_minus_system", "paired_n"]
 
 
 SELECTION_COLUMNS = ["corpus_id", "level", "requested", "retained", "records", "passed", "failed_checks",
@@ -520,10 +529,15 @@ def render_compare(comparison: dict[str, Any]) -> str:
             out += ["Extraction on the common studies, per extractor (precision and recall as in A):", "",
                     table(comparison["matched_extraction"], MATCHED_EXTRACTION_COLUMNS), ""]
     if comparison.get("intervals"):
-        rows = [{**r, **{k: _ci(r.get(k)) for k in ("extraction_f1", "direction_accuracy", "engine_minus_system")}}
-                for r in comparison["intervals"]]
-        out += ["## Intervals", "", "95 % bootstrap over papers, `point [low, high]` (BCa, or percentile where BCa is "
-                "undefined: the method is in each report's Intervals section); `[n/a]`: degenerate sample.",
+        rows = [{**r, **{k: _ci(r.get(k)) for k in ("extraction_f1", "direction_accuracy", "engine_minus_system")},
+                 "extraction_n": _n(r.get("extraction_f1")) if r.get("extraction_f1") else "-",
+                 "direction_n": _n(r.get("direction_accuracy")),
+                 "paired_n": _n(r.get("engine_minus_system")) if r.get("engine_minus_system") else "-"}
+                for r in _marked(comparison["intervals"])]
+        out += ["## Intervals", "", "95 % bootstrap, `point [low, high]` (BCa, or percentile where BCa is "
+                "undefined: the method is in each report's Intervals section); `[n/a]`: degenerate sample. "
+                "`extraction_n` papers and `direction_n` studies resampled (`k clusters` where whole parent studies "
+                "were resampled), `paired_n` the studies both systems scored.",
                 "", table(rows, COMPARE_INTERVAL_COLUMNS), ""]
     return "\n".join(out)
 

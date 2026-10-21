@@ -150,3 +150,30 @@ def test_pairs_with_another_seed_or_settings_are_not_matched(tmp_path: Path) -> 
     tpl2 = report(tmp_path, "rag-tpl-s9-explicit", [study("S001", True)], studies_n=20)
     llm2 = report(tmp_path, "rag-llm-s9-explicit", [study("S001", True)], studies_n=30)
     assert rep.compare([tpl2, llm2])["matched"] == []
+
+
+def test_two_reports_of_one_corpus_without_a_pair_are_not_called_ambiguous(tmp_path: Path) -> None:
+    """compare-funnel / compare-lexical: two reports of one LLM corpus and no template one; nothing was to be
+    matched, so there is nothing ambiguous to note."""
+    a = report(tmp_path, "rag-llm-s1-explicit", [study("S001", True)], root="a")
+    b = report(tmp_path, "rag-llm-s1-explicit", [study("S001", False)], root="b")
+    comparison = rep.compare([a, b])
+    assert not any("ambiguous" in n for n in comparison["notes"])
+    assert "ambiguous" not in rep.render_compare(comparison)
+
+
+def test_interval_rows_mark_diagnostics_and_carry_their_sample_size(tmp_path: Path) -> None:
+    rows = []
+    for i, system in enumerate(("rag-baseline", "rag-oracle-passages")):
+        r = report(tmp_path, f"rag-llm-s1-{i}", [study("S001", True)], system=system)
+        r["intervals"] = {"extraction": [], "paired": [],
+                          "synthesis": [{"system": system, "point": 0.5, "low": 0.2, "high": 0.8, "method": "bca",
+                                         "n_rows": 12, "unit": "study", "n_clusters": 9}]}
+        rows.append(r)
+    intervals = rep.compare(rows)["intervals"]
+    assert {r["system"]: r["diagnostic"] for r in intervals} == {"rag-baseline": False, "rag-oracle-passages": True}
+    assert all(r["direction_accuracy"]["n_rows"] == 12 and r["direction_accuracy"]["n_clusters"] == 9
+               for r in intervals)
+    md = rep.render_compare(rep.compare(rows)).split("## Intervals")[1]
+    assert "rag-oracle-passages (diagnostic)" in md and "rag-baseline (diagnostic)" not in md
+    assert "| direction_n" in md and "12 (9 clusters)" in md
