@@ -79,6 +79,13 @@ def test_a_changed_choice_must_name_who_decided(proposal: Path) -> None:
     freeze.run(proposal)
 
 
+@pytest.mark.parametrize("who", ["Model", "MODEL"])
+def test_a_changed_choice_by_the_model_in_any_case_is_refused(proposal: Path, who: str) -> None:
+    edit(proposal, "min_effect", choice="strict", by=who)
+    with pytest.raises(ProposalError, match="not the model's default"):
+        freeze.run(proposal)
+
+
 def test_every_card_needs_one_decision(proposal: Path) -> None:
     data = yaml.safe_load((proposal / "decisions.yaml").read_text(encoding="utf-8"))
     data["decisions"] = [x for x in data["decisions"] if x["card"] != "pairing"] + [data["decisions"][0]]

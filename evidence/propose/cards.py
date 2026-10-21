@@ -40,6 +40,11 @@ CARDS_FILE = Path(__file__).resolve().parent / "cards.yaml"
 CUSTOM, MODEL = "custom", "model"
 
 
+def is_model(who: Any) -> bool:
+    """True when `by` names the model, in any case or spacing (`Model`, ` MODEL `): never a person."""
+    return isinstance(who, str) and who.strip().casefold() == MODEL
+
+
 class Value(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -471,7 +476,7 @@ def validate(cards: list[dict[str, Any]], data: Any) -> list[dict[str, Any]]:
             problems.append(f"{cid}: choice {choice!r} is not an option of the card ({', '.join(options_)}) "
                             f"nor `custom` with a value")
             continue
-        if choice != card["default"] and isinstance(who, str) and who.strip() == MODEL:
+        if choice != card["default"] and is_model(who):
             problems.append(f"{cid}: choice {choice!r} is not the model's default ({card['default']!r}); "
                             "set `by` to who decided")
         seen[cid] = {"card": cid, "choice": choice, "value": value, "default": card["default"],
@@ -505,7 +510,7 @@ def waivers(data: Any) -> list[dict[str, Any]]:
             problems.append(f"{label}: unknown check {check!r} (one of {', '.join(critic_module.DETERMINISTIC)})")
         if not isinstance(reason, str) or not reason.strip():
             problems.append(f"{label}: a waiver without a reason is refused")
-        if not isinstance(who, str) or not who.strip() or who.strip() == MODEL:
+        if not isinstance(who, str) or not who.strip() or is_model(who):
             problems.append(f"{label}: `by` must name the person who accepts the failure, not {who!r}")
         out.append({"check": check, "reason": reason.strip() if isinstance(reason, str) else reason,
                     "by": who.strip() if isinstance(who, str) else who})

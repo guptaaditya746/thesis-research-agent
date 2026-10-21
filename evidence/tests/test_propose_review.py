@@ -367,6 +367,14 @@ def test_review_status_counts_who_decided(copied_live_proposal: Path) -> None:
     assert freeze.review_status([{"by": "AG"}, {"by": "TK"}]) == "human"
 
 
+@pytest.mark.parametrize("who", ["Model", "MODEL", " model "])
+def test_the_model_in_any_case_is_not_a_person(who: str) -> None:
+    with pytest.raises(ProposalError, match="by"):
+        cards.waivers({"decisions": [], "waivers": [{"check": "terms_cover_synonyms", "reason": "r", "by": who}]})
+    assert freeze.review_status([{"by": who}, {"by": "model"}]) == "model_defaults"
+    assert freeze.review_status([{"by": who}, {"by": "AG"}]) == "partly_human"
+
+
 def test_checks_carry_a_severity(tmp_path: Path) -> None:
     d = flow(tmp_path / "p", Scripted(), until="draft")
     text = (d / "draft.yaml").read_text(encoding="utf-8")

@@ -53,7 +53,7 @@ def ordered(p: dict[str, Any], revision: int) -> dict[str, Any]:
 
 def review_status(decisions: list[dict[str, Any]]) -> str:
     """model_defaults, partly_human or human: how many decisions someone other than the model made."""
-    human = sum(d["by"] != cards_module.MODEL for d in decisions)
+    human = sum(not cards_module.is_model(d["by"]) for d in decisions)
     return "model_defaults" if human == 0 else "human" if human == len(decisions) else "partly_human"
 
 
