@@ -26,6 +26,8 @@ DELTA_BEFORE = re.compile(r"(?i)\b(?:by|of\s+up\s+to|gains?\s+of|improvement\s+o
 DELTA_AFTER = re.compile(r"(?i)^\s*(?:percentage\s+)?(?:points?|pp)\b")
 DATASET_HEADER = re.compile(r"(?i)^(?:dataset|benchmark|data|task)$")
 CONDITION_HEADER = re.compile(r"(?i)^(?:system|model|method|condition|variant|setting)$")
+SAMPLE_BEFORE = re.compile(r"(?i)\b(?:sampl\w*|evaluat\w*|subsets?|drawn|test\s+sets?)\b[^.;]{0,40}$")   # a sample size, no outcome
+SAMPLE_AFTER = re.compile(r"(?i)^\s*(?:\w+\s+){0,3}?(?:were|are|was)\s+(?:randomly\s+)?(?:sampled|selected|drawn|chosen|used)\b")
 SIGNED = re.compile(r"[+±\-−–]\s*$")
 FROM_TO = re.compile(r"(?i)\bfrom\s+\d+(?:\.\d+)?\s*%?\s+to\s+\d+(?:\.\d+)?\s*%?")
 _SYSTEMS = r"(?:model|system|variant|baseline|pipeline|generator|approach|method|LLM|reader|retriever|ablation)s?"
@@ -206,6 +208,8 @@ def _sentence(task: ExtractionTask, text: str, s: int, e: int, r: Resolver) -> l
         before_metrics = [(m, i) for m, i in metrics if m.end <= hit.start()]
         met = before_metrics[-1] if before_metrics else next(((m, i) for m, i in metrics if m.start >= hit.end()), None)
         if cond is None or met is None:
+            continue
+        if count and (SAMPLE_BEFORE.search(text[max(s, hit.start() - 40):hit.start()]) or SAMPLE_AFTER.match(text[hit.end():e])):
             continue
         if count:
             value = base.count_fraction(raw, hit.group(2)) if r.rate_like(met[1]) else None

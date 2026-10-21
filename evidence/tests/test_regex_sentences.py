@@ -120,3 +120,18 @@ def test_a_negated_qualifier_on_a_control_keeps_the_control(roles: list[str]) ->
 def test_count_expressions_become_fractions(sentence: str, expected: list[tuple[str, float]], tmp_path: Path) -> None:
     _, items = regex_run({"S": ABSTRACT.format(sentence)}, tmp_path)
     assert measurements(items, "S") == expected
+
+
+@pytest.mark.parametrize("sentence,expected", [
+    ("We evaluate the RAG model on 500 out of 2,000 questions on the factual accuracy benchmark.", []),
+    ("The RAG model was run on a random subset of 200 out of 1,000 questions for factual accuracy.", []),
+    ("500 out of 2,000 questions were sampled for the RAG model's factual accuracy.", []),
+    ("The RAG model answered 662 out of 1,000 questions correctly in terms of factual accuracy.", [("rag", 0.662)]),
+    ("The RAG model answered 75 out of 100 (75%) correctly (factual accuracy).", [("rag", 0.75)]),
+])
+@pytest.mark.parametrize("section", ["Abstract", "Method"])
+def test_count_sample_sizes_are_no_values(sentence: str, expected: list[tuple[str, float]], section: str,
+                                          tmp_path: Path) -> None:
+    text = f"# P\n\n## {section}\n\nWe compare a closed-book model with a retrieval-augmented model. {sentence}\n"
+    _, items = regex_run({"S": text}, tmp_path)
+    assert measurements(items, "S") == expected
