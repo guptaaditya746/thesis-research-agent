@@ -1,0 +1,88 @@
+{
+  "corpus_id": "rag-claude-small-7eb8078c",
+  "seed": 2,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "12fc9004df142b45ed0f65d76db148093fd799f81d5294e521662a63385ea35f"
+  },
+  "renderer": "llm",
+  "level": "paraphrased",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "paraphrased"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "paraphrased"
+    }
+  ],
+  "models": {
+    "renderer": "exchange:claude-haiku-5-5",
+    "verifier": "exchange:claude-sonnet-5-5",
+    "served": [
+      "exchange:claude-haiku-5-5",
+      "exchange:claude-sonnet-5-5"
+    ],
+    "statements": true,
+    "paper_prompt": "render-v2.txt"
+  },
+  "settings": {
+    "name": "rag-claude-small",
+    "studies": 5,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "paraphrased",
+      "distributed"
+    ],
+    "duplicates": 0,
+    "missing": 0,
+    "outliers": 0,
+    "irrelevant": 0
+  },
+  "selection": {
+    "requested_studies": 5,
+    "records": 5,
+    "retained_studies": 5,
+    "per_level": {
+      "distributed": {
+        "passed": 5,
+        "failed_checks": {},
+        "mean_attempts": 2.0
+      },
+      "paraphrased": {
+        "passed": 5,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
+  }
+}

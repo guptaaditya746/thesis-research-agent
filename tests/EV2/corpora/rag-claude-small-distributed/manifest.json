@@ -1,0 +1,30 @@
+{
+  "corpus_id": "rag-claude-small-5cbb2530",
+  "papers": [
+    {
+      "id": "S001",
+      "file": "papers/S001.md",
+      "sha256": "f2a9409028eb71e22603a746de3ea50810b4009a4a1417745b97dfa7f83a2d34"
+    },
+    {
+      "id": "S002",
+      "file": "papers/S002.md",
+      "sha256": "a50fab1d2f7768fdc671d6d20c051b3efb511547e5a2673a871a9e797263e955"
+    },
+    {
+      "id": "S003",
+      "file": "papers/S003.md",
+      "sha256": "91bfda6263f44a51ad7dcacdc3c1865fa89697e7c22165dcf29731e8012bda65"
+    },
+    {
+      "id": "S004",
+      "file": "papers/S004.md",
+      "sha256": "6e4a199fc5a0375a229e184551c48165be148cc0dc8e5062af92f1b7b3ce0d79"
+    },
+    {
+      "id": "S005",
+      "file": "papers/S005.md",
+      "sha256": "b3479bca6bbd4c643a8b03749055afe2333b6339b800ee8cacb5072a6443ccfa"
+    }
+  ]
+}

@@ -18,7 +18,11 @@ it. The point is that every part meets the real models once and the first number
 
 ## Rules
 
-- Branch `evidence-ev2`, made from `origin/main` (which holds the EV1 repairs). Never push `main`; push `evidence-ev2` at the end.
+- Branch `evidence-ev2b`, made from `origin/ev3/claude-writer` (the EV1 repairs, the 21 Oct review fixes and the
+  frozen EV2 corpora). Never push `main`; push `evidence-ev2b` at the end. Leave the earlier `evidence-ev2` as it
+  is and bring over only its results: `git checkout origin/evidence-ev2 -- tests/EV2/logs tests/EV2/failures.md
+  tests/EV2/ui-case tests/EV2/diagnostics tests/EV2/pilot-corpora docs/claude-ev2-handoff.md`. Its experimental
+  `synth/` code stays on that branch.
 - **Record every failure** in `$EV/failures.md`: step, exact command, exit code, last 30 lines of its log,
   what you did next (fixed in commit X / skipped / retried). Then continue with the next independent step.
 - **Fixes** are allowed on `evidence-ev2`: one commit per fix, each with a test, and
@@ -36,7 +40,7 @@ it. The point is that every part meets the real models once and the first number
   threshold or tolerance. Record and continue. Do not change the `llm-setup` submodule.
 - **No system under test reads the ground truth.** `ground_truth.json`, `corpus.json`, `fidelity.json`,
   `decoys.json` and `variant.json` are read only by `evaluate score`, `evaluate shift`, `evaluate benchmark`
-  and by you when you pick the variant's study (step 1.4). Never pass any of them, or anything derived from
+  and by the laptop build that picked the variant's study (S001, the first of `answer.supporting`). Never pass any of them, or anything derived from
   them, to `evidence run`, `evidence propose`, `evaluate rag-baseline` (without `--oracle-passages`) or
   `evaluate agent-baseline`, and never copy one into a corpus's `papers/`. The exceptions are the **oracle
   diagnostics** (step 6.2): `evaluate oracle` and `evaluate rag-baseline --oracle-passages` read
@@ -47,12 +51,12 @@ it. The point is that every part meets the real models once and the first number
   (the default of `evidence run --model`, of the `llm` extractors, of `AgentSettings.model`, of `evaluate …
   --model` and of `evidence propose … --model`), so a comparison isolates the method, not the weights (16 Oct
   decision; `docs/evidence-system.md` Part G.3). Never pass another `--model` to the engine, the baselines or
-  the proposal flow; the only other aliases in this runbook are the paper writer (`sub-model-1`) and the
-  blind check (`sub-model-2`), so the extractors never read their own writing.
+  the proposal flow. The papers were written on the laptop by other models (Claude Haiku, checked by Claude
+  Sonnet), so no extractor reads its own writing.
 - **Secrets.** `LITELLM_MASTER_KEY` is only read from the environment. Never print, `echo`, log or commit it;
   no `set -x`; never pass it on a command line; record only "set" / "not set".
-- **Ceph, not git.** Corpora, runs, caches, proposals, scores and logs live under `$EV` on Ceph. Copy into the
-  repo only the small files named under "Finish".
+- **Ceph, not git.** Runs, caches, proposals, scores and logs live under `$EV` on Ceph. Copy into the repo only
+  the small files named under "Finish". The corpora are the exception: they come from git (`tests/EV2/corpora/`).
 - Steps marked **USER** need the user: stop and ask; without an answer record `NOT RUN (USER)` and go on.
 - Commit messages as in `git log`, ending with your usual attribution line.
 
@@ -63,7 +67,7 @@ it. The point is that every part meets the real models once and the first number
 | `REPO` | `/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent` (the clone of the earlier sessions) |
 | `EV` | `/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2` (new, so no EV1 corpus or cache is reused; everything this session writes) |
 | `AGENT_ROOT` | `/mnt/ceph/storage/data-tmp/2026/xepi3167/agent-root-infra-final-3` (pinned agent toolchain) |
-| `CORPORA` | `$EV/corpora` (synthetic corpora); `RUNS=$EV/runs`, `SCORES=$EV/scores`, `CACHE=$EV/cache`, `PR=$EV/proposals/rag-factuality`; `PE` = the escalate protocol (step 0.6) |
+| `CORPORA` | `$EV/corpora` (a copy of the frozen `tests/EV2/corpora/`, step 1–2); `RUNS=$EV/runs`, `SCORES=$EV/scores`, `CACHE=$EV/cache`, `PR=$EV/proposals/rag-factuality`; `PE` = the escalate protocol (step 0.6) |
 | `JOB` | the stack's Slurm job id (step 0.2) |
 
 Commands run inside the stack job:
@@ -87,14 +91,13 @@ Corpus names (all under `$CORPORA`; `<level>` is `explicit`, `paraphrased`, `dis
 
 | Name | What | Step |
 |---|---|---|
-| `rag-llm-pilot-<level>` | seed 1, 3 studies, same models and pipeline as 1.1; decides `--min-retained` | 1.0 |
-| `rag-llm-s1-<level>` | seed 1, 20 studies, written by `sub-model-1` (render-v2 plus atomic statements) | 1.1 |
-| `rag-llm-k1-<level>` | the same 20 studies plus the four knobs (2 duplicates, 2 missing, 2 outliers, 2 irrelevant papers) | 1.2 |
-| `rag-llm-small-{paraphrased,distributed}` | seed 2, 5 studies, for the agentic extractor (the build writes `rag-llm-small-mixed` too; unused) | 1.3 |
-| `rag-llm-s1-mixed-cf-<S>-contradicts` | the counterfactual variant: study `<S>` of `rag-llm-s1-mixed` flipped to contradicts | 1.4 |
-| `rag-llm-ns-<level>` | the 1.1 studies again with `--no-statements` (the EV1 paper prompt, blind-v2 check), for the prompt-policy comparison | 1.5 |
-| `rag-tpl-s1-<level>`, `rag-tpl-k1-<level>`, `rag-tpl-s1-mixed-cf-<S>-contradicts` | the same three, written by the template | 2 |
-| `rag-tpl-hard-<level>` | template only, seed 1, 100 studies, `--hard` plus 6 duplicates, 6 missing, 6 outliers, 6 irrelevant; run and scored on `complex` and `mixed` | 2.3 |
+| `rag-claude-pilot-<level>` | seed 1, 3 studies (the pilot; not run) | laptop |
+| `rag-claude-s1-<level>` | seed 1, 20 studies; written by Claude Haiku subagents (render-v2 plus atomic statements), blind check by Claude Sonnet | laptop |
+| `rag-claude-k1-<level>` | the same 20 studies plus the four knobs (2 duplicates, 2 missing, 2 outliers, 2 irrelevant papers) | laptop |
+| `rag-claude-small-{paraphrased,distributed}` | seed 2, 5 studies, for the agentic extractor (`rag-claude-small-mixed` exists too; unused) | laptop |
+| `rag-claude-s1-mixed-cf-S001-contradicts` | the counterfactual variant: study S001 of `rag-claude-s1-mixed` flipped to contradicts | laptop |
+| `rag-tpl-s1-<level>`, `rag-tpl-k1-<level>`, `rag-tpl-s1-mixed-cf-S001-contradicts` | the same three, written by the template | laptop |
+| `rag-tpl-hard-<level>` | template only, seed 1, 100 studies, `--hard` plus 6 duplicates, 6 missing, 6 outliers, 6 irrelevant; run and scored on `complex` and `mixed` | laptop |
 
 `$CF_LLM` and `$CF_TPL` below are the two variant corpus directories (`$EV/cf-llm.txt`, `$EV/cf-tpl.txt` hold them).
 Only the `mixed` corpus of a knob build is run and scored (its papers cover every level; the per-level knob
@@ -105,11 +108,9 @@ corpora are written by the build anyway and stay unused).
 | Role | Alias | Why |
 |---|---|---|
 | LLM extractors, LLM screen, agentic extractor, agent baseline, RAG baseline (answer and mapping calls), proposal flow (frame, critic, cards) | `orch-model` (Qwen3.8-27B, the default everywhere) | the same weights for every system under test, so a difference between the engine and the baselines, or between extractors, is the method's |
-| Paper writer (synth `--model`, `build` and `variant`) | `sub-model-1` (Qwen3-30B-A3B) | other weights than the readers, so no extractor reads its own writing |
-| Blind fidelity check (synth `--verify-model`) | `sub-model-2` | an independent re-reading, on the writer's weights but a separate replica |
+| Paper writer and blind check | none on Slurm: Claude Haiku and Claude Sonnet subagents on the laptop (`docs/claude-writer.md`) | other weights than the readers, so no extractor reads its own writing |
 
-GPU use: `orch-model` is GPU 0, the sub-models GPUs 1–2. Step 1 (sub-models) may run next to a CPU step and
-next to step 9 (three short `orch-model` calls); steps 3, 4 (re-execution), 5 and 6 all use `orch-model`, so
+GPU use: `orch-model` is GPU 0; the sub-models (GPUs 1–2) are not used by this runbook any more. Steps 3, 4 (re-execution), 5 and 6 all use `orch-model`, so
 they run one after the other, never two at once.
 
 ## Order and dependencies
@@ -117,14 +118,12 @@ they run one after the other, never two at once.
 | Step | Uses | Needs | Time (not measured) |
 |---|---|---|---|
 | 0 setup, stack, offline smoke | CPU | — | 1 h |
-| 1.0 pilot build (3 studies) | sub-model-1, sub-model-2 | 0 | minutes |
-| 1 LLM corpora: main, knobs, small set, variant, no-statements comparison | sub-model-1, sub-model-2 | 0, 1.0 (1.4 needs 1.1) | hours |
-| 2 template corpora, same seed: main, knobs, variant, hard set | CPU | 0 (2.2 needs 1.4's study) | minutes |
-| 9 proposal flow dry run | orch-model (3 calls) | 0; run it while step 1 builds | 15 min |
-| 3 engine regex-only, cascade `all` and `gaps` (and `gaps` with `escalate`) on every corpus | orch-model | 1, 2 | hours |
+| 1–2 copy the frozen corpora from git, check the manifests | CPU | 0 | minutes |
+| 9 proposal flow dry run | orch-model (3 calls) | 0; between two long steps | 15 min |
+| 3 engine regex-only, cascade `all` and `gaps` (and `gaps` with `escalate`) on every corpus | orch-model | 1–2 | hours |
 | 4 replay all, re-execution of two runs | CPU, orch-model | 3, and not while 5 or 6 runs | 1 h |
 | 5 agentic protocol, `all` and `gaps`, on the small set | orch-model | 1, and not while 3 or 6 runs | hours |
-| 6 baselines (RAG, agent) on the LLM corpora and the hard set; oracle diagnostics | orch-model (CPU for the engine oracle) | 1, 2.3, and not while 3, 4 or 5 runs | hours |
+| 6 baselines (RAG, agent) on the LLM corpora and the hard set; oracle diagnostics | orch-model (CPU for the engine oracle) | 1–2, and not while 3, 4 or 5 runs | hours |
 | 7 scores, comparisons, shift, benchmark records | CPU | 3–6 | 30 min |
 | 8 fidelity hand check (**USER**), then its summary | — | 1 | the user's time |
 | 10 proposal review (**USER**) | — | 9 | the user's time |
@@ -136,7 +135,7 @@ they run one after the other, never two at once.
 ```bash
 cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
 git status --short                 # nothing tracked changed; otherwise USER
-git fetch origin && git checkout -b evidence-ev2 origin/main
+git fetch origin && git checkout -b evidence-ev2b origin/ev3/claude-writer
 git submodule update --init --recursive
 uv sync --locked --all-groups
 uv run pytest -q -W ignore::SyntaxWarning 2>&1 | tail -n 3
@@ -238,7 +237,7 @@ srun --jobid "$JOB" --overlap bash -lc 'cd llm-setup && set -a && source .env &&
 test -f "$AGENT_ROOT/agent-root.sha256" && echo "AGENT_ROOT ok"
 uv run evidence protocol check $P | head -n 6           # id rag-factuality, version 2, its sha256
 uv run evidence protocol check $PA | head -n 6
-command -v jq >/dev/null && echo "jq ok"              # steps 1.4 and 2.2 use it; without it use uv run python -c 'import json,sys; print(json.load(sys.stdin)["out"])'
+command -v jq >/dev/null && echo "jq ok"              # step 1–2 does not need it any more; without it use uv run python -c 'import json,sys; print(json.load(sys.stdin)["out"])'
 for L in explicit distributed; do
   uv run evidence run --protocol $P --corpus synth/examples/rag-demo-$L --out $RUNS/smoke \
     --cache $CACHE/smoke --extractors regex-only --run-id smoke-$L
@@ -249,7 +248,7 @@ done
 Row `EV-setup`: commit, pytest count, doctor result, job id, node, both protocols' sha256, the two `"ok"`
 lines.
 
-### 0.5 Live check after the 20 Oct architecture change (in the job, before step 1; once)
+### 0.5 Live check after the 20 Oct architecture change (in the job, before step 3; once)
 
 Extractor ids hash their source files, several of which moved or changed, so the engine's record cache misses
 once: the next cascade, LLM-extractor or agentic run makes its model calls again (GPU hours). The callers' own
@@ -293,182 +292,64 @@ uv run evidence protocol check "$PE" | head -n 6        # valid; a different sha
 grep -q '^export PE=' "$EV/in-job.env" || echo "export PE=$PE" >> "$EV/in-job.env"
 ```
 
-## 1. LLM-written corpora **(long)**
+## 1–2. Corpora: frozen in git, built on the laptop (no synth on Slurm)
 
-LLM builds now run the **statement stage** by default (`--statements`: render-v2 paper prompt plus atomic
-statements checked one by one); `--no-statements` uses the EV1 paper prompt (`render.txt`) without the
-statement stage. It does not reproduce EV1's cache keys: the blind check is `blind-v2.txt` in both arms (and `$EV`
-is a fresh workspace anyway), so the 1.5 comparison isolates the paper prompt and the statements under the same
-verifier. Each build's `corpus.json` `models` records `statements` and `paper_prompt` (`render-v2.txt` or `render.txt`);
-`synth variant` follows its base corpus's recorded mode. Every build's `corpus.json` has `selection`.
+**Decision of 21 Oct 2026 (user):** no synthetic paper is generated on Slurm. The cluster's writer (`sub-model-1`)
+retained 0 of 3 pilot families (`docs/claude-ev2-handoff.md` on `evidence-ev2`). Every corpus was therefore built on the
+laptop and committed under `tests/EV2/corpora/`:
 
-### 1.0 Pilot build (3 studies; do this first)
+- **LLM-written corpora** were written by Claude subagents through the exchange model: writer `exchange:claude-haiku-5-5`,
+  blind verifier `exchange:claude-sonnet-5-5`. They use the same prompts, statement stage and fidelity checks as before
+  (`docs/claude-writer.md`).
+- **Template corpora** were built with the commands of the old step 2.
 
-```bash
-nohup "$EV/launch.sh" 1-synth-pilot uv run synth build --name rag-llm-pilot --seed 1 --studies 3 \
-  --renderer llm --levels all --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
-  --cache "$EV/cache/synth-llm.jsonl" > /dev/null 2>&1 &
-echo $! > "$EV/logs/1-synth-pilot.pid"
-wait $!; tail -n 3 "$EV/logs/1-synth-pilot.log"; tail -n 1 "$EV/logs/1-synth-pilot.launch"
-jq '.selection | {requested_studies, retained_studies, per_level}' "$CORPORA/rag-llm-pilot-mixed/corpus.json"
-```
+**Do not run `synth build` or `synth variant` here**, and never edit a file under `tests/EV2/corpora/`.
 
-Retention is `retained_studies / requested_studies`. **Stop** if it is under 0.5: record it, tell the user
-(**USER**) and do not start 1.1; the writer or the level instructions need the user's decision. Otherwise
-`MINR` = the pilot's retention minus 0.1 (e.g. 0.67 gives `0.57`; round down to two decimals), and 1.1 and 1.2
-pass `--min-retained "$MINR"` (the build then exits 1 when fewer studies pass). Save it for every later shell:
+Copy the corpora to `$CORPORA` in the job shell. The papers are hashed into `manifest.json`, so the copy checks each one:
 
 ```bash
-MINR=0.57                                            # the value computed above, not this example
-grep -q '^export MINR=' "$EV/in-job.env" || echo "export MINR=$MINR" >> "$EV/in-job.env"
-source "$EV/in-job.env"; echo "MINR=$MINR"
+mkdir -p "$CORPORA" && cp -rn "$REPO"/tests/EV2/corpora/. "$CORPORA"/
+cat > "$EV/check-manifest.py" <<'EOF'
+import hashlib, json, sys, pathlib
+c = pathlib.Path(sys.argv[1]); m = json.loads((c / "manifest.json").read_text())
+bad = [p["file"] for p in m["papers"] if hashlib.sha256((c / p["file"]).read_bytes()).hexdigest() != p["sha256"]]
+sys.exit(f"{c.name}: {bad}" if bad else 0)
+EOF
+for C in "$CORPORA"/*/; do uv run python "$EV/check-manifest.py" "$C" || echo "FAIL manifest $C"; done
+echo "S001" > "$EV/variant-study.txt"
+echo "$CORPORA/rag-claude-s1-mixed-cf-S001-contradicts" > "$EV/cf-llm.txt"
+echo "$CORPORA/rag-tpl-s1-mixed-cf-S001-contradicts" > "$EV/cf-tpl.txt"
+for f in cf-llm cf-tpl; do test -f "$(cat "$EV/$f.txt")/variant.json" && echo "$f ok" || echo "FAIL $f"; done
 ```
 
-If 1.1 or 1.2 then exits 1 (fewer studies retained than `MINR`), the corpora are still written: record it in
-`failures.md`, tell the user (**USER**) and continue with what was kept. Row `EV2-pilot`: retention,
-`selection.per_level` (passed, failed checks, mean attempts), statement rounds per level (`fidelity.json`
-`statements.rounds` and `failed` per paper), calls and seconds from the log, `MINR`, and whether you stopped.
+If the manifest check fails, the checkout changed the line endings (`.gitattributes` keeps `tests/EV2/corpora/**` LF).
+Record it and **USER**.
 
-### 1.1 Main set (20 studies, all five levels plus mixed)
+Row `EV-synth`:
 
-```bash
-nohup "$EV/launch.sh" 1-synth-main uv run synth build --name rag-llm-s1 --seed 1 --studies 20 \
-  --renderer llm --levels all --min-retained "$MINR" --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
-  --cache "$EV/cache/synth-llm.jsonl" > /dev/null 2>&1 &
-echo $! > "$EV/logs/1-synth-main.pid"
-```
+- copy each corpus's `selection` from `corpus.json`: requested and retained studies, and per level the passed papers,
+  failed checks and mean attempts;
+- in the notes, say "built on the laptop, Claude writer";
+- the calls are in `tests/EV2/claude-writer/`.
 
-### 1.2 Knob set (the same studies plus duplicates, missing values, outliers, irrelevant papers)
+This step replaces steps 1.0–1.5 and 2.1–2.3 of earlier versions of this runbook. Step 1.5 (the `--no-statements`
+comparison) is dropped.
 
-When 1.1 has finished (one build at a time on the sub-models):
+## Priority on the GPU (steps 3–6 share one `orch-model`)
 
-```bash
-nohup "$EV/launch.sh" 1-synth-knobs uv run synth build --name rag-llm-k1 --seed 1 --studies 20 \
-  --renderer llm --levels all --min-retained "$MINR" --duplicates 2 --missing 2 --outliers 2 --irrelevant 2 \
-  --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
-  --cache "$EV/cache/synth-llm.jsonl" > /dev/null 2>&1 &
-echo $! > "$EV/logs/1-synth-knobs.pid"
-```
+Run in this order and stop when time runs out. Each item is complete before the next starts:
 
-The knobs (`docs/evidence-system.md` F2, `synth/README.md`) draw from their own random streams, so the
-studies the knobs leave alone get the same rendering plan as in 1.1 and their papers should come from the
-shared cache (expected, not measured: count the model calls in the log against 1.1's). New calls are the
-duplicates and the studies an outlier or a missing value changed, at every level; the irrelevant papers make
-no call. A `SystemExit` naming a knob (e.g. a natural large effect next to a planted one) is the generator
-refusing: record it and build again once with that knob at 0, name unchanged.
+1. `rag-claude-s1-mixed`: step 3 (regex-only, cascade `all`, `gaps`, `gaps` escalate), then step 6 (both
+   baselines) and 6.1 (both oracles), then 7.1 and 7.2 for it.
+2. `rag-tpl-hard-complex` and `rag-tpl-hard-mixed`: step 3, then step 6 and 6.1.
+3. The counterfactuals (`cf-llm`, `cf-tpl`): step 3 `all`, then 7.3.
+4. `rag-claude-k1-mixed`: step 3, then step 6.
+5. Step 5 (agentic extractor) on `rag-claude-small-*`.
+6. The per-level corpora (`rag-claude-s1-<level>`, `rag-tpl-s1-<level>`), then step 4.
 
-### 1.3 Small set for the agentic extractor (5 studies)
+The loops in steps 3 and 6 run every corpus. To follow this order, set `CS` to the item's corpora instead of the full
+list, and run the step once per item.
 
-When 1.2 has finished:
-
-```bash
-nohup "$EV/launch.sh" 1-synth-small uv run synth build --name rag-llm-small --seed 2 --studies 5 \
-  --renderer llm --levels paraphrased,distributed --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
-  --cache "$EV/cache/synth-llm.jsonl" > /dev/null 2>&1 &
-echo $! > "$EV/logs/1-synth-small.pid"
-```
-
-### 1.4 Counterfactual variant (one paper, in the job shell)
-
-The supervisor's controlled variant (§6; `docs/evidence-system.md` F3): flip one supporting study of the
-mixed corpus to `contradicts` and re-render only its paper. You pick the study from the ground truth (you
-are the experimenter, not a system under test): the first study in `answer.supporting`.
-
-```bash
-S=$(uv run python -c 'import json, sys; print(json.load(open(sys.argv[1]))["answer"]["supporting"][0])' \
-  "$CORPORA/rag-llm-s1-mixed/ground_truth.json")
-echo "$S" > "$EV/variant-study.txt"
-CF_LLM=$(uv run synth variant --corpus "$CORPORA/rag-llm-s1-mixed" --study "$S" --direction contradicts \
-  --model sub-model-1 --verify-model sub-model-2 --cache "$EV/cache/synth-llm.jsonl" \
-  2> "$EV/logs/1-variant.err" | tee "$EV/logs/1-variant.json" | jq -r .out)
-test -n "$CF_LLM" && test -f "$CF_LLM/variant.json" && echo "$CF_LLM" > "$EV/cf-llm.txt" || echo "FAIL variant"
-```
-
-`synth variant` prints a JSON object whose `out` is the variant corpus directory; `$CF_LLM` is that directory
-(`$CORPORA/rag-llm-s1-mixed-cf-$S-contradicts`), with `variant.json`. Steps 3, 6 and 7.3 read it from
-`$EV/cf-llm.txt`, so a retry with another study never leaves two variants in play. The renderer and the
-statement mode are the base corpus's (`llm`, as recorded in its `corpus.json`); `--statements` /
-`--no-statements` would override the mode. A fidelity failure of the re-rendered paper is an error: record it, then try once with the
-next study of `answer.supporting` (`[1]`; rewrite `$EV/variant-study.txt`, `$CF_LLM` and `$EV/cf-llm.txt`), and
-use that study in 2.2 too.
-
-The papers are written by `sub-model-1` and read by `orch-model` (steps 3, 5, 6, 9), different weights.
-
-Every build prints a JSON summary and a WARNING line if studies were excluded. Row `EV-synth`: per build
-and level the papers kept, studies excluded (with the failing checks from `fidelity.json`), attempts per
-paper (mean, max), model calls and seconds (log), and the corpus ids; for the knob set the planted
-duplicates, missing, outliers and irrelevant papers (`ground_truth.json` `answer.duplicates`,
-`answer.undetermined`, `answer.flags`); for the variant the study, `changed` and `expected` from
-`variant.json` (label before and after, `label_changes`). If more than a quarter of the studies of a build
-are excluded, record it and **USER** (the level instructions may be too hard for the writer); still continue
-with what was kept.
-
-### 1.5 Statements against the EV1 call pattern (prompt policy; after 1.1, one build at a time)
-
-Before anyone claims that render-v2 plus statements improves the corpora, compare it with the EV1 pattern on
-the same study ids (`docs/prompt-writing.md`): the same seed and study count with `--no-statements`.
-
-```bash
-nohup "$EV/launch.sh" 1-synth-ns uv run synth build --name rag-llm-ns --seed 1 --studies 20 \
-  --renderer llm --levels all --no-statements --model sub-model-1 --verify-model sub-model-2 --out "$CORPORA" \
-  --cache "$EV/cache/synth-llm.jsonl" > /dev/null 2>&1 &
-echo $! > "$EV/logs/1-synth-ns.pid"
-```
-
-No `--min-retained` here: the point is the retention. Row `EV2-pilot` gets a second part: per level `selection.per_level`
-(passed, failed checks, mean attempts) of `rag-llm-ns-*` next to `rag-llm-s1-*`, the studies each excluded
-(`selection.excluded`), and `corpus.json` `models.statements` and `paper_prompt` of both. Report the difference;
-do not run `rag-llm-ns-*` through the engine unless time allows (then as in step 3, glob `rag-llm-ns-*`).
-
-## 2. Template corpora, same seed (CPU)
-
-### 2.1 Main and knob sets
-
-```bash
-uv run synth build --name rag-tpl-s1 --seed 1 --studies 20 --renderer template --levels all --out "$CORPORA"
-uv run synth build --name rag-tpl-k1 --seed 1 --studies 20 --renderer template --levels all \
-  --duplicates 2 --missing 2 --outliers 2 --irrelevant 2 --out "$CORPORA"
-```
-
-Same studies as step 1, written by the template: the difference between the two shows what LLM writing adds.
-(The LLM sets lack the studies fidelity excluded; the template sets keep all 20.)
-
-### 2.2 The same variant (after 1.4)
-
-```bash
-CF_TPL=$(uv run synth variant --corpus "$CORPORA/rag-tpl-s1-mixed" --study "$(cat "$EV/variant-study.txt")" \
-  --direction contradicts | tee "$EV/logs/2-variant.json" | jq -r .out)
-test -n "$CF_TPL" && test -f "$CF_TPL/variant.json" && echo "$CF_TPL" > "$EV/cf-tpl.txt" || echo "FAIL variant tpl"
-```
-
-### 2.3 Hard template set (a benchmark off the ceiling; CPU, minutes)
-
-The template corpora are easy (EV1 scored near the ceiling on them). `--hard` makes about a third of the studies
-report a further experiment and/or an ablation condition (role `other`, label `<treatment> without
-<component>`), all in the `complex` level's table; the knobs are 6 each, 100 studies. Template renderer only
-(`--hard` with `--renderer llm` exits 2).
-
-```bash
-uv run synth build --name rag-tpl-hard --seed 1 --studies 100 --renderer template --levels all --hard \
-  --duplicates 6 --missing 6 --outliers 6 --irrelevant 6 --out "$CORPORA" --min-retained 1 \
-  | tee "$EV/logs/2-hard.json"
-jq '.selection | {requested_studies, retained_studies}' "$CORPORA/rag-tpl-hard-mixed/corpus.json"   # 100 / 100
-```
-
-It builds with 100 of 100 retained (the template passes fidelity); `--min-retained 1` makes anything less exit
-1. Only `rag-tpl-hard-complex` and `rag-tpl-hard-mixed` are run and scored (steps 3, 6, 7): the engine in `all`
-and `gaps`, both baselines, and `evaluate score --oracle` (7.1). A `SystemExit` naming a knob is the generator
-refusing: record it and build once with that knob at 0. Row `EV2-hard`: the build's selection, the planted
-knobs and the extra experiments/ablations (`ground_truth.json`), and the scores of 7.1 on both corpora next to
-the easy `rag-tpl-s1-complex` / `-mixed` (engine and baselines: direction accuracy, extraction F1, label).
-`--missing` never picks a study with further experiments, so an undetermined study states no comparison
-anywhere. Two things to expect and report, not to file as bugs: (1) `oracle-synthesis` can legitimately score
-below 1.0 on `rag-tpl-hard-complex`: the protocol has no experiment field, and the table-first pairing may prefer
-a distractor experiment's table cell when the main treatment value is stated only in the prose (in the final
-review's scratch build 4 of 35 studies); (2) the hard set may not be harder for an extractor (the final review's
-regex-only engine scored the same direction accuracy on hard and easy `complex`; distractor rows come after the
-main rows and pairing prefers document order); it may only be harder for the baselines. Report the hard set's
-numbers as they come, including "no harder" for a system.
 
 ## 3. Engine on every corpus **(long)**
 
@@ -484,10 +365,10 @@ set -u
 : "${PE:?PE is not set: run step 0.6 first}"
 fail=0
 CS=()
-for W in llm tpl; do
+for W in claude tpl; do
   for L in explicit paraphrased distributed complex contradictory mixed; do CS+=("$CORPORA/rag-$W-s1-$L"); done
 done
-CS+=("$CORPORA"/rag-llm-k1-mixed "$CORPORA"/rag-tpl-k1-mixed "$CORPORA"/rag-tpl-hard-complex "$CORPORA"/rag-tpl-hard-mixed
+CS+=("$CORPORA"/rag-claude-k1-mixed "$CORPORA"/rag-tpl-k1-mixed "$CORPORA"/rag-tpl-hard-complex "$CORPORA"/rag-tpl-hard-mixed
      "$(cat "$EV/cf-llm.txt" 2>/dev/null)" "$(cat "$EV/cf-tpl.txt" 2>/dev/null)")
 for C in "${CS[@]}"; do
   N=$(basename "$C")
@@ -548,8 +429,8 @@ for R in "$RUNS"/regex-only/rag-* "$RUNS"/cascade/rag-* "$RUNS"/cascade-gaps/rag
   uv run evidence replay "$R" | grep -q '"ok": true' && echo "OK $R" || echo "MISMATCH $R"
   uv run evidence verify "$R" | grep -q '"ok": true' || echo "CHAIN $R"
 done | tee "$EV/logs/4-replay.log"
-uv run evidence reexec "$RUNS/cascade/rag-llm-s1-explicit" | tee "$EV/logs/4-reexec-explicit.log"
-uv run evidence reexec "$RUNS/cascade/rag-llm-s1-distributed" | tee "$EV/logs/4-reexec-distributed.log"
+uv run evidence reexec "$RUNS/cascade/rag-claude-s1-explicit" | tee "$EV/logs/4-reexec-explicit.log"
+uv run evidence reexec "$RUNS/cascade/rag-claude-s1-distributed" | tee "$EV/logs/4-reexec-distributed.log"
 ```
 
 Every replay must be `OK` and every chain verify clean; a `MISMATCH` is a defect (record, look at
@@ -564,7 +445,7 @@ OK count, and per extractor the re-execution summary (identical / same items, di
 cat > "$EV/agentic.sh" <<'EOF'
 #!/usr/bin/env bash
 set -u
-for C in "$CORPORA"/rag-llm-small-paraphrased "$CORPORA"/rag-llm-small-distributed; do
+for C in "$CORPORA"/rag-claude-small-paraphrased "$CORPORA"/rag-claude-small-distributed; do
   N=$(basename "$C")
   uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/cascade" --cache "$CACHE/engine" \
     --extractors cascade --strategy all --model orch-model --run-id "$N" || echo "FAIL cascade $N"
@@ -591,7 +472,7 @@ for R in "$RUNS"/agentic/rag-* "$RUNS"/agentic-gaps/rag-*; do
   [ -f "$R/run.json" ] || continue
   uv run evidence replay "$R" | grep -q '"ok": true' && echo "OK $R" || echo "MISMATCH $R"
 done | tee "$EV/logs/5-replay.log"
-uv run evidence reexec "$RUNS/agentic/rag-llm-small-distributed" --extractor agentic | tee "$EV/logs/5-reexec.log"
+uv run evidence reexec "$RUNS/agentic/rag-claude-small-distributed" --extractor agentic | tee "$EV/logs/5-reexec.log"
 ```
 
 Row `EV-agentic`: per corpus and strategy the agentic calls (ok / partial / error, with reasons), the agent's
@@ -608,10 +489,10 @@ shopt -s nullglob
 # The RAG baseline (one retrieval, one call) on every corpus first; then the agent baseline, the costly one,
 # mixed corpora first, so a stopped job still leaves both baselines on the corpora the comparison leans on.
 fail=0
-CS=("$CORPORA"/rag-llm-s1-mixed "$CORPORA"/rag-llm-k1-mixed "$(cat "$EV/cf-llm.txt" 2>/dev/null)"
+CS=("$CORPORA"/rag-claude-s1-mixed "$CORPORA"/rag-claude-k1-mixed "$(cat "$EV/cf-llm.txt" 2>/dev/null)"
     "$CORPORA"/rag-tpl-hard-complex "$CORPORA"/rag-tpl-hard-mixed)
-for C in "$CORPORA"/rag-llm-s1-{explicit,paraphrased,distributed,complex,contradictory} \
-         "$CORPORA"/rag-llm-small-{paraphrased,distributed}; do CS+=("$C"); done
+for C in "$CORPORA"/rag-claude-s1-{explicit,paraphrased,distributed,complex,contradictory} \
+         "$CORPORA"/rag-claude-small-{paraphrased,distributed}; do CS+=("$C"); done
 for C in "${CS[@]}"; do
   N=$(basename "$C")
   [ -f "$C/manifest.json" ] || { echo "FAIL baselines missing corpus '$C'"; fail=1; continue; }
@@ -637,8 +518,8 @@ call under the neutral prompt (answer text and citations as `[paper id, start-en
 shared with the agent baseline (label and per-paper stances for score C; it reads the answer text and the
 kept citations' headers, never the passages). `--model orch-model` (the default, written out) is the model
 of both calls and of the agent baseline's agent. The list names the variant of `$EV/cf-llm.txt`, so step 7
-can score the baselines' shift; the hard set (2.3) gets both baselines too. If time allows, also once with `--retrieval per_paper` ("every paper seen":
-the top 2 passages of every paper) on `rag-llm-s1-mixed` into `$RUNS/rag-baseline-per-paper/`. Row
+can score the baselines' shift; the hard set gets both baselines too. If time allows, also once with `--retrieval per_paper` ("every paper seen":
+the top 2 passages of every paper) on `rag-claude-s1-mixed` into `$RUNS/rag-baseline-per-paper/`. Row
 `EV-baselines`: per corpus the label, studies with a stance, citations kept and dropped (`answer.json`
 `citations`, `dropped_citations`), the passages retrieved per paper (`retrieved`), the agent's exit status,
 steps, tokens, seconds.
@@ -661,11 +542,11 @@ cat > "$EV/oracle.sh" <<'EOF'
 #!/usr/bin/env bash
 set -u
 fail=0
-CS=("$CORPORA"/rag-llm-s1-mixed "$CORPORA"/rag-llm-k1-mixed "$(cat "$EV/cf-llm.txt" 2>/dev/null)"
+CS=("$CORPORA"/rag-claude-s1-mixed "$CORPORA"/rag-claude-k1-mixed "$(cat "$EV/cf-llm.txt" 2>/dev/null)"
     "$CORPORA"/rag-tpl-s1-mixed "$CORPORA"/rag-tpl-k1-mixed "$(cat "$EV/cf-tpl.txt" 2>/dev/null)"
     "$CORPORA"/rag-tpl-hard-complex "$CORPORA"/rag-tpl-hard-mixed)
 for L in explicit paraphrased distributed complex contradictory; do
-  CS+=("$CORPORA/rag-llm-s1-$L" "$CORPORA/rag-tpl-s1-$L")
+  CS+=("$CORPORA/rag-claude-s1-$L" "$CORPORA/rag-tpl-s1-$L")
 done
 for C in "${CS[@]}"; do
   N=$(basename "$C")
@@ -779,7 +660,7 @@ marked `(diagnostic)` in the interval table as in the main one.
 ```bash
 ( fail=0
 for F in cf-llm cf-tpl; do
-  CF=$(cat "$EV/$F.txt" 2>/dev/null)                   # the variant corpus of 1.4 / 2.2
+  CF=$(cat "$EV/$F.txt" 2>/dev/null)                   # the variant corpus (step 1–2)
   [ -f "$CF/variant.json" ] || { echo "FAIL shift: no variant in $EV/$F.txt"; fail=1; continue; }
   N=$(basename "$CF"); BASE=${N%%-cf-*}
   for S in regex-only cascade cascade-gaps cascade-gaps-escalate; do
@@ -798,7 +679,7 @@ before and after against `from`/`to`, the label before and after against `expect
 
 ```bash
 L="explicit paraphrased distributed complex contradictory"
-for W in llm tpl; do
+for W in claude tpl; do
   R=(); for d in $(for l in $L; do echo "$SCORES/cascade/rag-$W-s1-$l"; done) "$SCORES"/agentic/rag-$W-small-*; do
     [ -f "$d/report.json" ] && R+=("$d"); done
   uv run evaluate benchmark "${R[@]}" --out "$SCORES/benchmark-$W" || echo "FAIL benchmark $W"
@@ -827,25 +708,22 @@ accuracy, cost per call and stability.
 
 ## 8. Fidelity hand check (**USER**)
 
-```bash
-uv run synth sample --corpus "$CORPORA/rag-llm-s1-mixed" --n 30 --seed 1
-```
-
-Tell the user where the review sheet is (`review/review-s1.md` and `.csv` in that corpus); the hand check is
-theirs, and the **filled sheet is a USER deliverable**. In the CSV, per row, the columns `present`,
+The review sheet was drawn on the laptop (`synth sample --n 30 --seed 1`) and is committed with the corpus:
+`tests/EV2/corpora/rag-claude-s1-mixed/review/review-s1.md` and `.csv`. The hand check is the user's, done on the
+laptop, and the **filled sheet is a USER deliverable**. In the CSV, per row, the columns `present`,
 `states_truth` and `unambiguous` take `yes` / `y` / `no` / `n`; a row counts only when all three are filled.
 Notes go in the `notes` column. Record `NOT RUN (USER)` until they report. When the user returns the sheet (to
-`$CORPORA/rag-llm-s1-mixed/review/review-s1.csv`), summarise it:
+`$CORPORA/rag-claude-s1-mixed/review/review-s1.csv`), summarise it:
 
 ```bash
-uv run evaluate review --csv "$CORPORA/rag-llm-s1-mixed/review/review-s1.csv" | tee "$EV/logs/8-review.log"
+uv run evaluate review --csv "$CORPORA/rag-claude-s1-mixed/review/review-s1.csv" | tee "$EV/logs/8-review.log"
 ```
 
 It prints `rows`, `reviewed` (rows with all three checks filled), the `yes` count per check, and one line per
 problem (paper, fact, failing check, the user's note). A malformed sheet exits with `evaluate review: ...`;
 record the message and ask the user. Row `EV-fidelity`: those numbers and the sheet's path on Ceph.
 
-## 9. Proposal flow dry run (orch-model, three calls; while step 1 builds)
+## 9. Proposal flow dry run (orch-model, three calls; between two long steps)
 
 The proposal flow (`docs/evidence-system.md` Part E) has run only on a scripted model. This runs it once on
 `orch-model` for the RAG question with the committed vocabulary snapshot, every decision left at the model's
@@ -903,12 +781,11 @@ run `uv run evidence propose freeze "$PR"` once more and record the new `review.
 
 1. `tests/RESULTS.md`: rows `EV-setup`, `EV-synth`, `EV-engine`, `EV-replay`, `EV-agentic`, `EV-baselines`,
    `EV-scores`, `EV-funnel`, `EV-shift`, `EV-benchmark`, `EV-fidelity`, `EV-propose-live`, and the EV2 rows
-   `EV2-pilot` (1.0, 1.5), `EV2-escalate` (3, 7.2), `EV2-oracle` (6.1, 7.1), `EV2-hard` (2.3); date, job id,
+   `EV2-escalate` (3, 7.2), `EV2-oracle` (6.1, 7.1), `EV2-hard` (the hard template set); date, job id,
    node, commit, PASS / PARTIAL / FAIL / NOT RUN, the numbers, notes with the Ceph paths. The EV1 rows stay
    as they are; say "EV2" in the notes of every row of this run so the two runs are not confused.
 2. Copy into `tests/EV2/` (create it; leave `tests/EV1/` untouched; each file under 1 MB; larger stays on Ceph,
-   path in the row): per corpus
-   `corpus.json`, `fidelity.json`, `ground_truth.json`, and for the variants `variant.json`; per run
+   path in the row): the corpora are already in `tests/EV2/corpora/` (do not copy them again); per run
    `run.json`, `answer.json`, `locate.json`, and for `gaps` runs (both `lexical_miss` arms) `funnel.json`; the
    oracle runs' `answer.json` and `run.json` (`$RUNS/oracle/*`, `$RUNS/rag-oracle-passages/*`); per score
    `report.json`, `report.md`; the `compare-*`, `shift-*` and `benchmark-*` directories; `reexec.json` files; the baselines'
@@ -921,10 +798,9 @@ run `uv run evidence propose freeze "$PR"` once more and record the new `review.
    `grep -rlF -f <(printf '%s\n' "$LITELLM_MASTER_KEY") tests/EV2` prints nothing.
 3. `docs/STATE.md`: under §6 add one line per row with the number that matters, and the Linux pytest count
    (step 0.1) as the new expected value in §6 and in step 0.1 of this runbook.
-4. Commit on `evidence-ev2` (results separate from fix commits), `git push -u origin evidence-ev2`.
+4. Commit on `evidence-ev2b` (results separate from fix commits), `git push -u origin evidence-ev2b`.
 5. `scancel "$JOB"` when everything has finished (**USER** first if they want to look at anything live).
-6. Report: pass / fail per step with the number that matters, the `compare-cascade` table, the pilot's
-   retention and `MINR`, statements against `--no-statements` retention, the `compare-lexical` numbers (reject
+6. Report: pass / fail per step with the number that matters, the `compare-cascade` table, the `compare-lexical` numbers (reject
    against escalate: escalated papers and how many ended relevant, extra calls and tokens, accuracies), the
    oracle attribution (upstream against downstream per system), the hard set against the easy one,
    the `compare-funnel` numbers (calls per document `all` vs `gaps`, accuracies, screen precision and recall),

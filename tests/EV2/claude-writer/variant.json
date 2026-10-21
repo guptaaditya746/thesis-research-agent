@@ -1,0 +1,54 @@
+{
+  "out": "tests/EV2/corpora/rag-claude-s1-mixed-cf-S001-contradicts",
+  "base_corpus_id": "rag-claude-s1-ec928480",
+  "study": "S001",
+  "from": "supports",
+  "to": "contradicts",
+  "corpus_id": "rag-claude-s1-cf-5893772b",
+  "paper": "S001",
+  "changed": [
+    {
+      "measurement": "S001.m1",
+      "from": 0.295,
+      "to": 0.168
+    },
+    {
+      "measurement": "S001.m2",
+      "from": 0.178,
+      "to": 0.202
+    },
+    {
+      "measurement": "S001.m9",
+      "from": 0.316,
+      "to": 0.229
+    },
+    {
+      "measurement": "S001.m10",
+      "from": 0.194,
+      "to": 0.285
+    }
+  ],
+  "expected": {
+    "before": {
+      "label": "mixed",
+      "counts": {
+        "supporting": 12,
+        "contradicting": 4,
+        "neutral": 4,
+        "undetermined": 0,
+        "duplicates": 0
+      }
+    },
+    "after": {
+      "label": "mixed",
+      "counts": {
+        "supporting": 11,
+        "contradicting": 5,
+        "neutral": 4,
+        "undetermined": 0,
+        "duplicates": 0
+      }
+    },
+    "label_changes": false
+  }
+}

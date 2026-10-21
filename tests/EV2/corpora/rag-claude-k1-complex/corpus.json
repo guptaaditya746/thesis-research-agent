@@ -1,0 +1,201 @@
+{
+  "corpus_id": "rag-claude-k1-127dafc8",
+  "seed": 1,
+  "generator": {
+    "name": "synth",
+    "version": "2",
+    "code_sha256": "12fc9004df142b45ed0f65d76db148093fd799f81d5294e521662a63385ea35f"
+  },
+  "renderer": "llm",
+  "level": "complex",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "papers": [
+    {
+      "id": "S001",
+      "study_id": "S001",
+      "level": "complex"
+    },
+    {
+      "id": "S002",
+      "study_id": "S002",
+      "level": "complex"
+    },
+    {
+      "id": "S003",
+      "study_id": "S003",
+      "level": "complex"
+    },
+    {
+      "id": "S004",
+      "study_id": "S004",
+      "level": "complex"
+    },
+    {
+      "id": "S005",
+      "study_id": "S005",
+      "level": "complex"
+    },
+    {
+      "id": "S006",
+      "study_id": "S006",
+      "level": "complex"
+    },
+    {
+      "id": "S007",
+      "study_id": "S007",
+      "level": "complex"
+    },
+    {
+      "id": "S008",
+      "study_id": "S008",
+      "level": "complex"
+    },
+    {
+      "id": "S009",
+      "study_id": "S009",
+      "level": "complex"
+    },
+    {
+      "id": "S010",
+      "study_id": "S010",
+      "level": "complex"
+    },
+    {
+      "id": "S011",
+      "study_id": "S011",
+      "level": "complex"
+    },
+    {
+      "id": "S012",
+      "study_id": "S012",
+      "level": "complex"
+    },
+    {
+      "id": "S013",
+      "study_id": "S013",
+      "level": "complex"
+    },
+    {
+      "id": "S014",
+      "study_id": "S014",
+      "level": "complex"
+    },
+    {
+      "id": "S015",
+      "study_id": "S015",
+      "level": "complex"
+    },
+    {
+      "id": "S016",
+      "study_id": "S016",
+      "level": "complex"
+    },
+    {
+      "id": "S017",
+      "study_id": "S017",
+      "level": "complex"
+    },
+    {
+      "id": "S018",
+      "study_id": "S018",
+      "level": "complex"
+    },
+    {
+      "id": "S019",
+      "study_id": "S019",
+      "level": "complex"
+    },
+    {
+      "id": "S020",
+      "study_id": "S020",
+      "level": "complex"
+    },
+    {
+      "id": "S021",
+      "study_id": "S021",
+      "level": "complex"
+    },
+    {
+      "id": "S022",
+      "study_id": "S022",
+      "level": "complex"
+    },
+    {
+      "id": "S023",
+      "study_id": "S023",
+      "level": "complex"
+    },
+    {
+      "id": "S024",
+      "study_id": "S024",
+      "level": "complex"
+    }
+  ],
+  "models": {
+    "renderer": "exchange:claude-haiku-5-5",
+    "verifier": "exchange:claude-sonnet-5-5",
+    "served": [
+      "exchange:claude-haiku-5-5",
+      "exchange:claude-sonnet-5-5"
+    ],
+    "statements": true,
+    "paper_prompt": "render-v2.txt"
+  },
+  "settings": {
+    "name": "rag-claude-k1",
+    "studies": 20,
+    "mix": {
+      "supports": 0.6,
+      "contradicts": 0.2,
+      "neutral": 0.2
+    },
+    "levels": [
+      "explicit",
+      "paraphrased",
+      "distributed",
+      "complex",
+      "contradictory"
+    ],
+    "duplicates": 2,
+    "missing": 2,
+    "outliers": 2,
+    "irrelevant": 2
+  },
+  "selection": {
+    "requested_studies": 20,
+    "records": 24,
+    "retained_studies": 20,
+    "per_level": {
+      "complex": {
+        "passed": 24,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "contradictory": {
+        "passed": 24,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "distributed": {
+        "passed": 24,
+        "failed_checks": {},
+        "mean_attempts": 1.083
+      },
+      "explicit": {
+        "passed": 24,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      },
+      "paraphrased": {
+        "passed": 24,
+        "failed_checks": {},
+        "mean_attempts": 1.0
+      }
+    },
+    "excluded": {}
+  }
+}
