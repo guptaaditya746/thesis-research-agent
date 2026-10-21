@@ -4,7 +4,7 @@
   "generator": {
     "name": "synth",
     "version": "2",
-    "code_sha256": "ba46a7ad7a4b69a6279b4880fccf6683464aa6bac217ac32ee0d2de10b6703ba"
+    "code_sha256": "4e9a24595e13c41b8789d17fb6fcf041f70670a4d715df535133e42925e40baf"
   },
   "renderer": "template",
   "level": "distributed",
