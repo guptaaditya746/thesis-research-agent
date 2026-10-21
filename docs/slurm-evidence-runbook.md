@@ -74,8 +74,8 @@ short ones in `srun --jobid "$JOB" --overlap --pty bash -l` after `source "$EV/i
 concurrent `nohup srun --jobid … --overlap` launches failed before the command started ("srun: error: unable to
 initialize step request socket: Address already in use" / "Unable to create step for job …"; `tests/EV1/failures.md`,
 `tests/EV1/live-rerun/logs/*initial-srun-failure.log`), and a plain retry recovered. The helper retries exactly
-that case: when the step fails and the first lines of the log name "Unable to create step" or "step request
-socket", it keeps that log as `<step>.log.srun-failure-<n>`, waits 20–40 s (jittered) and tries again, at most 3
+that case: when the step fails and the first lines of the log name "step request socket: Address
+already in use", it keeps that log as `<step>.log.srun-failure-<n>`, waits 20–40 s (jittered) and tries again, at most 3
 retries, then exits non-zero; its own lines go to `$EV/logs/<step>.launch`. Any other failure is the command's
 and is not retried. Never start a long step from a `--pty` shell. **Start long steps one at a time**: before
 launching the next, wait until the previous step's log has its first line, or until `squeue --steps -j "$JOB"`
@@ -209,7 +209,7 @@ LOG="$EV/logs/$STEP.log"
 for try in 1 2 3 4; do
   srun --jobid "$JOB" --overlap "$EV/in-job.sh" "$@" > "$LOG" 2>&1
   rc=$?
-  if [ "$rc" -ne 0 ] && head -n 5 "$LOG" | grep -qE 'Unable to create step|step request socket'; then
+  if [ "$rc" -ne 0 ] && head -n 5 "$LOG" | grep -q 'step request socket: Address already in use'; then
     cp "$LOG" "$LOG.srun-failure-$try"
     if [ "$try" -lt 4 ]; then
       wait_s=$((20 + RANDOM % 21))
