@@ -205,3 +205,24 @@ def test_report_markdown_has_the_per_extractor_section(tmp_path: Path) -> None:
 
     text = rep.render(scored(tmp_path))
     assert "## Per extractor" in text and "Cost per extractor" in text and fx.LLM in text
+
+
+def test_benchmark_pools_f1_with_a_cluster_interval_over_parent_studies(tmp_path: Path) -> None:
+    a = scored(tmp_path, "a", "explicit")
+    b = scored(tmp_path, "b", "paraphrased")   # same seed and study ids: the same two parent clusters
+    records = bm.benchmark([a, b])
+    llm = records[fx.LLM]["pooled"]["f1"]   # called on S002 and on S001's measurements: two clusters over both levels
+    assert (llm["unit"], llm["n_clusters"]) == ("cluster", 2)
+    assert llm["point"] == pytest.approx(0.875)   # 14 items, all matched, of 18 facts
+    assert records[fx.REGEX]["pooled"]["f1"]["n_clusters"] == 1   # called on S001 alone
+    assert {(r["extractor"], r["cluster"]) for r in a["extractors"]["papers"]} == {
+        (fx.REGEX, "1/S001"), (fx.LLM, "1/S001"), (fx.LLM, "1/S002")}
+
+
+def test_a_duplicate_paper_belongs_to_its_parent_studys_cluster() -> None:
+    from evaluation.truth import GroundTruth
+    truth = GroundTruth("c", "q", [{"study_id": "S001", "paper": "S001", "level": "explicit"},
+                                   {"study_id": "S009", "paper": "S009", "level": "explicit", "duplicate_of": "S001"}],
+                        [], {})
+    truth.seed = 7
+    assert truth.cluster_of("S009") == truth.cluster_of("S001") == "7/S001"

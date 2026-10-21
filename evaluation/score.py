@@ -55,9 +55,10 @@ Correctness, completeness and traceability are the supervisor's three comparison
 expected direction (not `undetermined`) the system gives a direction for, and `accuracy_answered` =
 accuracy over those, so a system that answers everything is not rewarded for guessing on a study nobody
 can determine. **traceability** = share of the cited passages (`answer.citations`, a baseline's
-`[{document, start, end}]`) that overlap (share a character with) a ground-truth placement of any role of
-the study of the paper they cite (lenient by design), over all cited passages, where the citations the
-baseline dropped (`answer.dropped_citations`: ones naming no retrieved passage, the clearest untraceable
+`[{document, start, end}]) that overlap (share a character with) a ground-truth placement of role `value`,
+`metric_label` or `claim` of the paper they cite (strict: a passage touching only a condition label traces
+nothing), over all cited passages; **overlap** is the lenient share, over a placement of any role. The
+citations the baseline dropped (`answer.dropped_citations`: ones naming no retrieved passage, the clearest untraceable
 case) count as untraced; `null` for an answer without citations (the engine's spans are scored in A).
 The confusion counts include expected `undetermined`.
 
@@ -322,24 +323,30 @@ def expected_direction(study: dict[str, Any]) -> str | None:
     return (study.get("effect") or {}).get("direction")
 
 
+TRACED_ROLES = ("value", "metric_label", "claim")   # a passage must touch one of these to trace a fact
+
+
 def score_citations(truth: GroundTruth, citations: list[dict[str, Any]] | None,
                     dropped: list[dict[str, Any]] | None = None) -> dict[str, Counter[str]] | None:
-    """Traceability counts per level (and ALL): cited passages, and those overlapping a placement (of any
-    role) of the cited paper's study. The baseline's dropped citations (naming no retrieved passage) are
-    cited passages that are never traced. A cited paper outside the ground truth counts under ALL only.
+    """Traceability counts per level (and ALL): cited passages, `overlaps_placement` (those overlapping a
+    placement of any role of the cited paper) and `traced` (those overlapping a `value`, `metric_label` or
+    `claim` placement). The baseline's dropped citations (naming no retrieved passage) are cited passages
+    that are never traced. A cited paper outside the ground truth counts under ALL only.
     None without a `citations` list (the engine)."""
     if citations is None:
         return None
-    places: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    places: dict[str, list[tuple[int, int, str]]] = defaultdict(list)
     for p in truth.placements:
-        places[p["paper"]].append((p["start"], p["end"]))
+        places[p["paper"]].append((p["start"], p["end"], p.get("role", "")))
     cited: dict[str, Counter[str]] = defaultdict(Counter)
     for c, kept in [(c, True) for c in citations] + [(c, False) for c in dropped or []]:
         paper = c.get("document")
-        hit = kept and any(overlaps((int(c["start"]), int(c["end"])), p) for p in places.get(paper, []))
+        span = (int(c["start"]), int(c["end"]))
+        hits = [role for a, b, role in places.get(paper, []) if kept and overlaps(span, (a, b))]
         level = truth.level_of(paper)
         for key in ((level, ALL) if level != "unknown" else (ALL,)):
-            cited[key].update(citations=1, traced=hit)
+            cited[key].update(citations=1, overlaps_placement=bool(hits),
+                              traced=any(role in TRACED_ROLES for role in hits))
     return cited
 
 
@@ -374,10 +381,13 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
                      "completeness": share(c["complete"], c["determined"]),
                      "accuracy_answered": share(c["correct_answered"], c["complete"]),
                      "citations": None if n is None else n["citations"],
-                     "traceability": None if n is None else share(n["traced"], n["citations"])})
+                     "traceability": None if n is None else share(n["traced"], n["citations"]),
+                     "overlap": None if n is None else share(n["overlaps_placement"], n["citations"])})
     expected_label = truth.answer.get("label")
+    errors = [] if expected_label is not None else ["gold answer has no label"]   # undefined, not a match
     return {"system": answer.get("system", "unknown"), "label": answer.get("label"), "expected_label": expected_label,
-            "label_correct": answer.get("label") == expected_label, "rows": rows, "studies": studies,
+            "label_correct": None if expected_label is None else answer.get("label") == expected_label,
+            "errors": errors, "rows": rows, "studies": studies,
             "confusion": [{"expected": e, "given": g, "n": n} for (e, g), n in sorted(confusion.items())],
             "flags": score_flags(truth, answer)}
 
@@ -441,9 +451,9 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
             for paper in m.papers:
                 cells = [m.cells.get((paper, k), (0, 0, 0, 0)) for k in kinds]
                 rows.append((sum(c[2] for c in cells), sum(c[0] for c in cells), sum(c[1] for c in cells)))
-            extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind))
-    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in system["studies"]), system=system["system"])
-                 for system in systems]
+            extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind, n_rows=len(rows)))
+    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in system["studies"]), system=system["system"],
+                              n_rows=len(system["studies"])) for system in systems]
     engine = next((s for s in systems if s["system"] == ENGINE), None)
     paired = []
     if engine is not None:
@@ -453,7 +463,9 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
                 continue
             diffs = [engine_correct[s["paper"]] - int(s["correct"]) for s in system["studies"]
                      if s["paper"] in engine_correct]
-            paired.append(interval_row(bootstrap_mean(diffs), system=system["system"]))
+            excluded = sorted({s["paper"] for s in system["studies"]} ^ engine_correct.keys())   # in only one system
+            paired.append(interval_row(bootstrap_mean(diffs), system=system["system"], n_rows=len(diffs),
+                                       excluded_ids=excluded))
     return {"extraction": extraction, "synthesis": synthesis, "paired": paired}
 
 
@@ -655,7 +667,33 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
                          "span_accuracy": share(hits, matched), "only": only, "only_matched": only_matched,
                          "associated": associated if kind == "measurement" else None,
                          "association_accuracy": share(associated, matched) if kind == "measurement" else None})
-    return {"rows": rows, "cost": score_extractor_cost(run), "recall_scope": "called" if called else "all_facts"}
+    return {"rows": rows, "cost": score_extractor_cost(run), "recall_scope": "called" if called else "all_facts",
+            "papers": _extractor_papers(m, sums, called, screens)}
+
+
+def _extractor_papers(m: Matching, extractors: Iterable[str], called: dict[str, set[tuple[str, str]]] | None,
+                      screens: Iterable[str]) -> list[dict[str, Any]]:
+    """Per extractor and paper, the all-type counts (items, matched, facts) with the paper's parent-study
+    cluster: what `evaluate benchmark` resamples for its pooled interval. Facts follow `called`."""
+    truth, screens = m.truth, set(screens)
+    out = []
+    for extractor in sorted(set(extractors) - screens):
+        pairs = called.get(extractor) if called else None
+        papers: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
+        for fact in truth.facts.values():
+            if called is None or (pairs and (fact.paper, fact.type) in pairs):
+                papers[fact.paper][2] += 1
+        for document, kind in sorted(pairs or ()):
+            if kind in TYPES:
+                papers[document]
+        for item in m.items.values():
+            if extractor in (item.found_by or ("unknown",)):
+                cell = papers[m.document[item.item_id]]
+                cell[0] += 1
+                cell[1] += m.fact_of.get(item.item_id, "") in truth.facts
+        out += [{"extractor": extractor, "paper": p, "cluster": truth.cluster_of(p), "items": c[0],
+                 "matched": c[1], "facts": c[2]} for p, c in sorted(papers.items())]
+    return out
 
 
 def score_cost(run: dict[str, Any] | None, papers: int) -> dict[str, Any] | None:

@@ -20,6 +20,10 @@ evidence type and level, an item counting for every extractor in its `found_by`)
   extractor id of that report has that name; when several ids share the name the rows are ambiguous and
   are not counted (the record says so under `stability_ambiguous`, benchmark.md too). Calls, identical
   and item counts summed; null when no report has stability for it;
+- pooled: `{"f1": Interval}`, the micro F1 over every level corpus with a cluster interval: the rows are
+  the per-paper counts of `extractors.papers`, summed per parent study (`<seed>/<study id>`, a duplicate in
+  its parent's cluster) so the same study at several levels is one resampling unit; null for reports
+  without `papers`;
 - corpora: `{corpus_id, run_id, levels}` of every report that mentions the extractor.
 
 Written as `DIR/<extractor_id>/benchmark.json` and one `DIR/benchmark.md`.
@@ -32,6 +36,7 @@ from typing import Any
 
 from .report import _level_key, dumps, table
 from .score import prf, share
+from .stats import cluster_bootstrap, micro_f1
 
 ROW_COLUMNS = ["evidence_type", "level", "items", "facts", "matched", "precision", "recall", "f1", "span_accuracy",
                "association_accuracy", "only", "only_matched"]
@@ -78,6 +83,7 @@ def benchmark(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     outcomes: dict[str, Counter[str]] = defaultdict(Counter)
     ambiguous: dict[str, list[str]] = defaultdict(list)
     scopes: dict[str, list[str]] = defaultdict(list)
+    papers: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for report in reports:
         extractors = report.get("extractors") or {}
         seen: set[str] = set()
@@ -88,6 +94,8 @@ def benchmark(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
             c.update(items=row.get("items") or 0, facts=row.get("facts") or 0, matched=row.get("matched") or 0,
                      span_hits=row.get("span_hits") or 0, only=row.get("only") or 0,
                      only_matched=row.get("only_matched") or 0, associated=row.get("associated") or 0)
+        for row in extractors.get("papers") or []:
+            papers[row["extractor"]].append(row)
         for row in extractors.get("cost") or []:
             e = row["extractor"]
             seen.add(e)
@@ -121,8 +129,16 @@ def benchmark(reports: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         records[e] = {"extractor_id": e, "name": name, "version": version, "corpora": corpora[e], "rows": rows,
                       "levels": sorted({r["level"] for r in rows if r["level"] != "all"}, key=_level_key),
                       "recall_scope": scopes[e], "cost": _cost(cost.get(e), covered.get(e)),
-                      "stability": _stability(stable.get(e), outcomes.get(e)), "stability_ambiguous": ambiguous.get(e, [])}
+                      "stability": _stability(stable.get(e), outcomes.get(e)), "stability_ambiguous": ambiguous.get(e, []),
+                      "pooled": {"f1": _pooled_f1(papers.get(e))}}
     return records
+
+
+def _pooled_f1(rows: list[dict[str, Any]] | None) -> dict[str, Any] | None:
+    if not rows:
+        return None
+    return cluster_bootstrap(micro_f1, [(r["matched"], r["items"], r["facts"]) for r in rows],
+                             [r["cluster"] for r in rows])
 
 
 def _cost(c: Counter[str] | None, covered: Counter[str] | None) -> dict[str, Any] | None:
