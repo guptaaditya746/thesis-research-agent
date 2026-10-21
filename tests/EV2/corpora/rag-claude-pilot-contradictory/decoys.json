@@ -1,0 +1,11 @@
+[
+  {
+    "paper": "S002",
+    "measurement": "S002.m2",
+    "stated_value": 0.274,
+    "true_value": 0.402,
+    "start": 313,
+    "end": 318,
+    "exact": "27.4%"
+  }
+]

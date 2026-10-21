@@ -1,0 +1,20 @@
+{
+  "corpus_id": "rag-claude-pilot-d69436ff",
+  "papers": [
+    {
+      "id": "S001",
+      "file": "papers/S001.md",
+      "sha256": "cb0c73bf05c5284bce1743cec1a0fcc98acc44f23c158bf1865cfd610167dcaa"
+    },
+    {
+      "id": "S002",
+      "file": "papers/S002.md",
+      "sha256": "f546fcd6fdf4b9488348d554e116a63a05edda5175a86d43259b2cacef153a18"
+    },
+    {
+      "id": "S003",
+      "file": "papers/S003.md",
+      "sha256": "3cc654527ecc64208c23a4b12dd7dcdff0e7cab960c02a676738899da8e713cf"
+    }
+  ]
+}
