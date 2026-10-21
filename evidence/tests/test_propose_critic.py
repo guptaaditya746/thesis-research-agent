@@ -26,7 +26,7 @@ def test_critic_passes_the_rag_draft_and_records_the_checklist(tmp_path: Path) -
     assert data["ok"] is True
     assert [c["id"] for c in data["checks"] if c["kind"] == "deterministic"] == [
         "parses", "outcomes_complete", "terms_cover_synonyms", "regex_matches_enums", "screen_present", "label_complete",
-        "extractors_registered", "vocabulary_direction"]
+        "extractors_registered", "vocabulary_direction", "bounds_cover_rate_metrics", "metric_rules_collide", "locate_params_used"]
     assert checks["scope"] == {"id": "scope", "kind": "llm", "ok": False,
                                "message": "the term retrieval admits retrieval-only papers"}
     assert data["call"]["step"] == "critic" and data["call"]["cached"] is False
@@ -79,3 +79,14 @@ def test_vocabulary_direction_is_checked() -> None:
     checks = by_id(critic.checks(text, f))
     assert not checks["vocabulary_direction"]["ok"] and "hallucination_rate" in checks["vocabulary_direction"]["message"]
     assert not checks["outcomes_complete"]["ok"]
+
+
+def test_critic_says_exhaustive_ignores_params() -> None:
+    text = (Path(critic.__file__).parents[1] / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8")
+    check = by_id(critic.checks(text, None))["locate_params_used"]
+    assert not check["ok"] and "chunk_chars" in check["message"] and "top_k" in check["message"]
+    bare = "\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith(("chunk_chars:", "top_k:")))
+    assert bare != text
+    assert by_id(critic.checks(bare, None))["locate_params_used"]["ok"]
+    bm25 = text.replace("strategy: exhaustive", "strategy: bm25")
+    assert by_id(critic.checks(bm25, None))["locate_params_used"]["ok"]

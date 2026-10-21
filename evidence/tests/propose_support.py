@@ -30,10 +30,10 @@ RAG_FRAME: dict[str, Any] = {
     "control": {"role": "baseline", "label": "closed-book",
                 "definition": "the same model answering without retrieval (closed-book).",
                 "synonyms": ["without retrieval", "no-retrieval baseline"]},
-    "outcomes": [{"canonical": "factual_accuracy", "label": "factual accuracy", "higher_is_better": True, "fraction": True,
+    "outcomes": [{"canonical": "factual_accuracy", "label": "factual accuracy", "higher_is_better": True, "scale": "fraction",
                   "synonyms": ["accuracy", "exact match"]},
                  {"canonical": "hallucination_rate", "label": "hallucination rate", "higher_is_better": False,
-                  "fraction": True, "synonyms": ["rate of hallucination"]}],
+                  "scale": "fraction", "synonyms": ["rate of hallucination"]}],
     "effect_labels": [{"value": "improves", "direction": "supports"}, {"value": "no_effect", "direction": "neutral"},
                       {"value": "worsens", "direction": "contradicts"}],
 }

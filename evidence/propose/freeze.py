@@ -62,6 +62,7 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
     fresh(directory, FRAME, sources.get("frame_sha256"), "draft")
     fresh(directory, DRAFT, critic.get("draft_sha256"), "critic")
     fresh(directory, DRAFT, cards.get("draft_sha256"), "cards")
+    fresh(directory, CRITIC, cards.get("critic_sha256"), "cards")
     decisions = cards_module.validate(cards["cards"], cards_module.load_decisions(directory))
 
     draft = yaml.safe_load(draft_path.read_text(encoding="utf-8"))

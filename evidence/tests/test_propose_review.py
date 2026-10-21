@@ -208,3 +208,64 @@ def test_a_cached_bad_frame_says_how_to_ask_again(tmp_path: Path) -> None:
     frame.run(QUESTION, d, model=model.model)            # the refreshed reply is the cached one now
     assert model.calls == ["frame", "frame"]
     assert json.loads((d / "frame.json").read_text(encoding="utf-8"))["control"]["role"] == "baseline"
+
+
+# 3. metric rules do not map one surface to two canonicals -------------------------------------------------------
+
+def _live_frame() -> frame.Frame:
+    return frame.load(Path(__file__).resolve().parents[2] / "tests/EV1/diagnostics/proposal/frame.json")
+
+
+def test_metric_canonical_is_order_invariant() -> None:
+    from evidence.extractors import terms
+    from evidence.propose import draft
+    f = _live_frame()
+    config, _ = draft.metric_patterns([(o.canonical, o.higher_is_better, draft._names(o)) for o in f.outcomes])
+    assert config is not None
+    rules = [tuple(m) for m in config]
+    for surface in ("FActScore", "factuality score", "accuracy", "factual accuracy"):
+        forward = [m.key for m in terms.find_all(surface, rules)]       # type: ignore[arg-type]
+        reverse = [m.key for m in terms.find_all(surface, list(reversed(rules)))]  # type: ignore[arg-type]
+        assert forward and forward == reverse, surface
+
+
+def test_collisions_are_reported(tmp_path: Path) -> None:
+    reply = json.loads(json.dumps(RAG_FRAME))
+    reply["outcomes"].append({"canonical": "factscore", "label": "fact score", "higher_is_better": True,
+                              "scale": "fraction", "synonyms": ["FActScore"]})
+    reply["outcomes"][0]["synonyms"].append("FActScore")
+    d = flow(tmp_path / "p", Scripted(frame_reply=reply), until="draft")
+    p = load_text((d / "draft.yaml").read_text(encoding="utf-8"))
+    assert critic.metric_collisions(p, frame.load(d / "frame.json")) == ["FActScore: factscore vs factual_accuracy"]
+    assert not {c["id"]: c for c in critic.checks((d / "draft.yaml").read_text(encoding="utf-8"),
+                                                  frame.load(d / "frame.json"))}["metric_rules_collide"]["ok"]
+
+
+# 5. locate params match the strategy -------------------------------------------------------------------------
+
+def test_cards_offer_exhaustive_without_params(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    card = next(c for c in json.loads((d / "cards.json").read_text(encoding="utf-8"))["cards"] if c["id"] == "locate")
+    draft = card["options"][0]
+    assert draft["id"] == "draft" and draft["value"] == {"strategy": "exhaustive", "params": {}}
+    assert next(o for o in card["options"] if o["id"] == "bm25")["value"]["params"] == {"chunk_chars": 1500, "top_k": 6}
+
+
+# sha256 of each protocol, computed with the code of main before this change
+EV1_SHA256 = {
+    "evidence/protocols/rag-factuality.yaml": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9",
+    "evidence/protocols/rag-factuality-agentic.yaml": "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79",
+    "tests/EV1/diagnostics/proposal/protocol.yaml": "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
+    "tests/EV1/live-rerun/proposals/rag-factuality/protocol.yaml":
+        "a4dc881623966e553de7f5418e6142c25b09996ce53598896ae289c72ee4e317",
+    "tests/EV1/proposal/protocol.yaml": "e40e4902fee172fe9df3e4bb4758f3e888bc1468b73e0ff24cf33eb10303cf91",
+}
+
+
+def test_ev1_protocols_still_parse_with_the_same_sha256() -> None:
+    root = Path(__file__).parents[2]
+    found = {p.relative_to(root).as_posix() for pattern in ("evidence/protocols/*.yaml", "tests/EV1/**/protocol.yaml")
+             for p in root.glob(pattern)}
+    assert found == set(EV1_SHA256)
+    for rel, sha in EV1_SHA256.items():
+        assert load(root / rel).sha256 == sha, rel

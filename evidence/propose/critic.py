@@ -15,6 +15,8 @@ Deterministic (`checks`, also run by freeze on the frozen protocol):
 - `regex_matches_enums` (ours, beyond Part E): every condition role and metric canonical the regex steps
   can emit (their config, else the built-ins) is in the type's enum, and every enum value but `other` has a
   pattern; freeze refuses a protocol that fails it;
+- `bounds_cover_rate_metrics` (ours): every rate-like outcome (draft.rate_like) is in the measurement bound, so
+  a value outside [0, 1] is rejected;
 - `vocabulary_direction` (ours, beyond Part E): no outcome's direction contradicts its vocabulary term's.
 
 LLM checklist (`ambiguous_roles`, `missing_comparator`, `metric_direction`, `scope`): pass or fail, each
@@ -34,10 +36,12 @@ from ..extractors import terms as regex_terms
 from ..extractors.screen import term_pattern
 from ..protocol import Protocol, parse
 from . import frame as frame_module
+from .draft import rate_like
 from .common import CRITIC, DRAFT, FRAME, ask, fresh, model_for, need, now, prompt, read_json, sha, write_json
 from .frame import Frame
 
 PROMPT = "critic-v1.md"
+ADVISORY = ("locate_params_used",)      # reported, but a failure does not stop the draft (severity: docs)
 LLM_CHECKS = ("ambiguous_roles", "missing_comparator", "metric_direction", "scope")
 
 
@@ -121,6 +125,35 @@ def _regex_enums(p: Protocol) -> tuple[bool, str]:
     return True, "the regex steps emit only enum values and have a pattern for each"
 
 
+def bounds_cover_rate_metrics(p: Protocol, f: Frame) -> tuple[bool, str]:
+    """Every rate-like outcome is named by a bound on the measurement value (or the bound has no `when`)."""
+    spec = p.evidence_types.get("measurement")
+    bounds = [b for b in (spec.bounds if spec else ()) if b.field == "value"]
+    covered = {v for b in bounds if b.when for v in b.when.values}
+    missing = [o.canonical for o in f.outcomes if rate_like(o) and o.canonical not in covered
+               and not any(b.when is None for b in bounds)]
+    if missing:
+        return False, f"rate-like outcomes missing from the measurement bound: {missing}"
+    return True, "every rate-like outcome is bounded in the measurement"
+
+
+def metric_collisions(p: Protocol, f: Frame) -> list[str]:
+    """`"<surface>: <a> vs <b>"` for every frame name that two metric rules of different canonicals match at the
+    same place (the first rule would decide the metric)."""
+    patterns = _patterns(p, "regex_metric", "metrics", [list(m) for m in regex_terms.METRICS])
+    if patterns is None:
+        return []
+    out: list[str] = []
+    for surface in dict.fromkeys(n for o in f.outcomes for n in o.names):
+        canonicals = {key for pattern, key, _ in patterns for m in regex_terms._compiled(pattern).finditer(surface)
+                      if m.end() > m.start() and any(
+                          m.span() == q.span() for p2, k2, _ in patterns if k2 != key
+                          for q in regex_terms._compiled(p2).finditer(surface))}
+        if len(canonicals) > 1:
+            out.append(f"{surface}: " + " vs ".join(sorted(canonicals)))
+    return out
+
+
 def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
     """The deterministic checks of a protocol text (and the frame it was made from, when there is one)."""
     out: list[dict[str, Any]] = []
@@ -175,6 +208,18 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
         out.append(_check("vocabulary_direction", not bad,
                           f"direction differs from the vocabulary for {bad}" if bad else
                           "no outcome's direction contradicts the vocabulary"))
+        out.append(_check("bounds_cover_rate_metrics", *(bounds_cover_rate_metrics(p, f) if p is not None else (False, skipped))))
+        collisions = metric_collisions(p, f) if p is not None else None
+        out.append(_check("metric_rules_collide", collisions == [],
+                          skipped if collisions is None else
+                          f"surfaces claimed by two metrics: {collisions}" if collisions else
+                          "no frame name is claimed by two metrics"))
+
+    loc = (raw.get("locate") if isinstance(raw, dict) else None) or {}
+    ignored = sorted(loc.get("params") or {}) if loc.get("strategy", "exhaustive") == "exhaustive" else []
+    out.append(_check("locate_params_used", not ignored,
+                      f"the exhaustive locate ignores its params {ignored}" if ignored else
+                      "the locate params belong to its strategy"))
     return out
 
 
@@ -202,5 +247,5 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
                        refresh=refresh)
     llm = [{"id": c, "kind": "llm", "ok": getattr(reply, c).ok, "message": getattr(reply, c).message} for c in LLM_CHECKS]
     return write_json(directory / CRITIC, {"draft_sha256": sha(draft_path), "frame_sha256": sha(frame_path),
-                                           "ok": all(c["ok"] for c in found), "checks": found + llm,
+                                           "ok": all(c["ok"] for c in found if c["id"] not in ADVISORY), "checks": found + llm,
                                            "call": call, "created": now()})

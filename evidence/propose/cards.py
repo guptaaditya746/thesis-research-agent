@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,7 +34,7 @@ from .common import (CARDS, CRITIC, DECISIONS, DRAFT, FRAME, ProposalError, ask,
                      mark_written, model_for, need, now, prompt, read_json, read_yaml, sha, write_json, write_text)
 from .frame import ID, Frame
 
-PROMPT = "cards-v1.md"
+PROMPT = "cards-v2.md"
 CARDS_FILE = Path(__file__).resolve().parent / "cards.yaml"
 CUSTOM, MODEL = "custom", "model"
 
@@ -197,7 +198,8 @@ def _apply_cascade(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) ->
 
 def _read_locate(p: dict[str, Any], f: Frame) -> dict[str, Any]:
     loc = p.get("locate") or {}
-    return {"strategy": loc.get("strategy", "exhaustive"), "params": dict(loc.get("params") or {})}
+    strategy = loc.get("strategy", "exhaustive")
+    return {"strategy": strategy, "params": {} if strategy == "exhaustive" else dict(loc.get("params") or {})}   # exhaustive reads none
 
 
 def _apply_locate(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
@@ -232,11 +234,49 @@ def definitions() -> list[dict[str, Any]]:
     for c in cards:
         for o in c.get("options", []):
             HANDLERS[c["id"]].value.model_validate(o["value"])
+            if not str(o.get("effect", "")).strip():
+                raise AssertionError(f"cards.yaml: option {o['id']!r} of {c['id']!r} has no `effect`")
     return cards
 
 
 def _canon(value: Any) -> str:
     return json.dumps(value, sort_keys=True)
+
+
+# What the engine does with a value, for the options cards.yaml does not fix (the draft's, the generated
+# cascades, the model's proposal); a fixed option's own `effect` wins where a value equals it.
+EFFECTS: dict[str, Callable[[dict[str, Any]], str]] = {
+    "screen": lambda v: ("a paper whose text holds none of the terms is judged not relevant by the keyword screen; "
+                         "under strategy gaps with on_fail skip it is then never read by the LLM screen and gets no "
+                         "extraction (under all, extraction runs anyway)"),
+    "roles": lambda v: (f"conditions with role {v['treatment']['role']} and {v['control']['role']} are compared; "
+                        "a condition with any other role does not enter the comparison"),
+    "metrics": lambda v: ("only these metrics are compared, "
+                          + "; ".join(f"{m['canonical']}: {'higher' if m['higher_is_better'] else 'lower'} is better" for m in v["metrics"])),
+    "min_effect": lambda v: (f"a study whose normalised difference is below {v['min_effect']:g} counts as neutral; "
+                             "this is a plain cut-off, not a significance test"),
+    "pairing": lambda v: ("of several values for one condition, metric and dataset the first of these decides, "
+                          "then the next on a tie: " + ", ".join(v["prefer"])),
+    "label": lambda v: "the label is the first row of this table whose condition the study counts satisfy",
+    "cascade": lambda v: ("each evidence type runs its extractors in this order, "
+                          + ("every extractor of a type runs, except that a type set to `cascade: until_found` stops after "
+                              "the first extractor that finds an item" if v["strategy"] == "all" else
+                             "and only a gap (a study without a usable pair) escalates to the next extractor")),
+    "locate": lambda v: _locate_effect(v),
+}
+
+
+def _locate_effect(v: dict[str, Any]) -> str:
+    if v["strategy"] == "exhaustive":
+        return "the whole document; chunk and top_k are ignored"
+    if v["strategy"] == "bm25":
+        return (f"per evidence type at most the {v['params'].get('top_k', 6)} best-scoring passages (about "
+                f"{v['params'].get('chunk_chars', 1500)} characters each) that match at least one of the type's query "
+                "terms are read; text outside them is never seen")
+    if v["strategy"] == "agent":
+        return ("a pluggable agent Locator names where to look; evidence/ builds none, so a run with this strategy "
+                "fails unless one is supplied")
+    raise ValueError(f"unknown locate strategy {v['strategy']!r}")
 
 
 def options(card: dict[str, Any], draft: dict[str, Any], f: Frame) -> list[dict[str, Any]]:
@@ -251,14 +291,16 @@ def options(card: dict[str, Any], draft: dict[str, Any], f: Frame) -> list[dict[
                   {"id": "with_agentic", "summary": "the agentic extractor last in every type's cascade; gaps",
                    "value": {"extractors": {t: (n if t == "screen" or "agentic" in n else [*n, "agentic"])
                                             for t, n in steps.items()}, "strategy": "gaps"}}]
-    out = [{"id": "draft", "value": mine, "summary": "the draft's value"}]
+    out = [{"id": "draft", "value": mine, "summary": "the draft's value", "effect": EFFECTS[card["id"]](mine)}]
     for o in extra:
         value = handler.value.model_validate(o["value"]).model_dump(mode="json")
         same = next((x for x in out if _canon(x["value"]) == _canon(value)), None)
         if same is not None:
             same["summary"] += f" (= {o['id']}: {o['summary']})"
+            same["effect"] = o.get("effect") or same["effect"]   # the fixed option's own line is the better-checked one
         else:
-            out.append({"id": o["id"], "value": value, "summary": o["summary"]})
+            out.append({"id": o["id"], "value": value, "summary": o["summary"],
+                        "effect": o.get("effect") or EFFECTS[card["id"]](value)})
     return out
 
 
@@ -303,10 +345,28 @@ def _user_prompt(f: Frame, draft_text: str, critic: dict[str, Any], cards: list[
              "Critic findings:", *(failed or ["- none"]), "", "Cards:"]
     for c in cards:
         parts += [f"## {c['id']}: {c['title']}", c["ask"]]
-        parts += [f"- option {o['id']}: {json.dumps(o['value'], ensure_ascii=False)} ({o['summary']})" for o in c["options"]]
+        parts += [f"- option {o['id']}: {json.dumps(o['value'], ensure_ascii=False)} ({o['summary']}); effect: {o['effect']}" for o in c["options"]]
         if c["vocabulary"]:
             parts.append("Vocabulary: " + json.dumps(c["vocabulary"], ensure_ascii=False))
     return "\n".join(parts) + "\n"
+
+
+def contradictions(cards: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Advisory: a default's rationale that says what its effect line denies, as {card, option, term}: a
+    significance claim for min_effect (a plain cut-off), chunking or top-k for an exhaustive locate."""
+    out = []
+    for c in cards:
+        option = next((o for o in c["options"] if o["id"] == c.get("default")), None)
+        text = str(c.get("rationale", ""))
+        if c["id"] == "min_effect":
+            hit = re.search(r"significan\w*", text, re.I)
+        elif c["id"] == "locate" and option is not None and option["value"].get("strategy") == "exhaustive":
+            hit = re.search(r"chunk\w*|\btop\b|top_k|top-k", text, re.I)
+        else:
+            hit = None
+        if hit:
+            out.append({"card": c["id"], "option": c["default"], "term": hit.group(0)})
+    return out
 
 
 HEADER = """# Decisions on the proposal's choice points (docs/evidence-system.md Part E). Edit, then `evidence propose freeze DIR`.
@@ -355,7 +415,7 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
     write_text(decisions_path, HEADER + dump_yaml({"decisions": entries}))
     write_json(directory / CARDS, {"draft_sha256": sha(draft_path), "critic_sha256": sha(directory / CRITIC),
                                    "decisions_sha256": sha(decisions_path), "call": call, "created": now(),
-                                   "cards": cards})
+                                   "rationale_contradicts_effect": contradictions(cards), "cards": cards})
     mark_written(directory, DECISIONS)
     return directory / CARDS
 

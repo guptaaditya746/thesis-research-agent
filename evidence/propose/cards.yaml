@@ -1,7 +1,9 @@
 # The fixed choice points of the proposal flow (docs/evidence-system.md Part E). The order and the ids are
 # fixed; evidence/propose/cards.py holds, per id, the value's schema, how the value is read from a protocol
 # and how a decision writes it back. `options` are offered on every proposal next to the draft's own value
-# (option `draft`) and the model's proposal (option `model`, when it makes one).
+# (option `draft`) and the model's proposal (option `model`, when it makes one). Every fixed option needs an `effect`: what the engine does with it,
+# in plain terms, written by us (the model's rationale must not contradict it); the generated options get theirs
+# from cards.py.
 
 - id: screen
   title: Screening question and terms
@@ -23,17 +25,32 @@
   ask: Below which absolute difference is a study neutral?
   sets: [synthesis.min_effect]
   options:
-    - {id: strict, value: {min_effect: 0.005}, summary: half a percentage point}
-    - {id: usual, value: {min_effect: 0.01}, summary: one percentage point}
-    - {id: lenient, value: {min_effect: 0.02}, summary: two percentage points}
+    - id: strict
+      summary: half a percentage point
+      effect: "a study whose normalised difference is below 0.005 counts as neutral; this is a plain cut-off, not a significance test"
+      value: {min_effect: 0.005}
+    - id: usual
+      summary: one percentage point
+      effect: "a study whose normalised difference is below 0.01 counts as neutral; this is a plain cut-off, not a significance test"
+      value: {min_effect: 0.01}
+    - id: lenient
+      summary: two percentage points
+      effect: "a study whose normalised difference is below 0.02 counts as neutral; this is a plain cut-off, not a significance test"
+      value: {min_effect: 0.02}
 
 - id: pairing
   title: Pairing preference
   ask: When one condition has several values for one metric and dataset, which value is the study's?
   sets: [synthesis.pairing.prefer]
   options:
-    - {id: table_first, value: {prefer: [table_cell, document_order]}, summary: a table cell beats prose, then the earlier value}
-    - {id: order_only, value: {prefer: [document_order]}, summary: the earlier value, wherever it stands}
+    - id: table_first
+      summary: a table cell beats prose, then the earlier value
+      effect: "of several values for one condition, metric and dataset the one in a table cell is used, among equals the earlier in the document; prose, such as an abstract restating a result, loses to a table"
+      value: {prefer: [table_cell, document_order]}
+    - id: order_only
+      summary: the earlier value, wherever it stands
+      effect: "of several values for one condition, metric and dataset the earliest in the document is used, in a table or in prose"
+      value: {prefer: [document_order]}
 
 - id: label
   title: Label table
@@ -42,6 +59,7 @@
   options:
     - id: any_evidence
       summary: any supporting study supports, unless some contradicts (mixed)
+      effect: "one supporting study is enough for supported and one contradicting study for refuted; both give mixed; only neutral studies give no_effect; no study gives insufficient"
       value:
         rows:
           - {when: {supporting: ">0", contradicting: ">0"}, then: mixed}
@@ -51,6 +69,7 @@
           - {then: insufficient}
     - id: two_studies
       summary: a label needs at least two studies on its side
+      effect: "supported needs more than one supporting study and no contradicting study (neutral studies are allowed); refuted needs more than one contradicting study and no supporting study; no_effect needs more than one neutral study and no supporting or contradicting study; more than one on each of supporting and contradicting gives mixed; anything else gives insufficient"
       value:
         rows:
           - {when: {supporting: ">1", contradicting: ">1"}, then: mixed}
@@ -69,5 +88,11 @@
   ask: Which parts of a paper do the extractors see?
   sets: [locate]
   options:
-    - {id: exhaustive, value: {strategy: exhaustive, params: {}}, summary: the whole paper}
-    - {id: bm25, value: {strategy: bm25, params: {chunk_chars: 1500, top_k: 6}}, summary: the six best passages per type by the type's query terms}
+    - id: exhaustive
+      summary: the whole paper
+      effect: "the whole document; chunk and top_k are ignored"
+      value: {strategy: exhaustive, params: {}}
+    - id: bm25
+      summary: the six best passages per type by the type's query terms
+      effect: "per evidence type at most the 6 best-scoring passages (about 1500 characters each) that match at least one of the type's query terms are read; text outside them is never seen, so a value there is missed, and a paper with no matching passage is read not at all"
+      value: {strategy: bm25, params: {chunk_chars: 1500, top_k: 6}}

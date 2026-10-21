@@ -160,6 +160,16 @@ def test_freeze_refuses_a_stale_draft_and_a_second_freeze(tmp_path: Path) -> Non
         freeze.run(d)
 
 
+def test_freeze_refuses_cards_built_from_a_changed_critic(tmp_path: Path) -> None:
+    d = flow(tmp_path / "p", Scripted(), until="cards")
+    critic_data = _json(d / "critic.json")
+    critic_data["checks"].append({"id": "changed-after-cards", "kind": "llm", "ok": False, "message": "x"})
+    (d / "critic.json").write_text(json.dumps(critic_data, indent=1, ensure_ascii=False) + "\n", encoding="utf-8",
+                                   newline="\n")
+    with pytest.raises(ProposalError, match="critic.json changed after `evidence propose cards`"):
+        freeze.run(d)
+
+
 def test_a_question_the_built_in_patterns_do_not_know(tmp_path: Path) -> None:
     """Roles the regex extractors have no patterns for: the draft gives the regex steps patterns from the
     frame's names, and the critic's coverage check passes."""
@@ -172,7 +182,7 @@ def test_a_question_the_built_in_patterns_do_not_know(tmp_path: Path) -> None:
         "control": {"role": "direct", "label": "direct prompting", "definition": "the same model answering directly",
                     "synonyms": ["standard prompting"]},
         "outcomes": [{"canonical": "answer_accuracy", "label": "answer accuracy", "higher_is_better": True,
-                      "fraction": True, "synonyms": ["solve rate"]}],
+                      "scale": "fraction", "synonyms": ["solve rate"]}],
         "effect_labels": RAG_FRAME["effect_labels"],
     }
     d = flow(tmp_path / "cot-accuracy", Scripted(frame_reply=cot), vocab=None,
