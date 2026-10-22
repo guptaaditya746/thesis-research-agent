@@ -1,0 +1,487 @@
+{
+ "draft_sha256": "e98effd1b02711b2d421250d2bec77266a432fb6a9d897be6831437cc19f620b",
+ "critic_sha256": "45e2147d4e0725bd435e8a65d12590e1b5e21c03a0a0d70f79b8d06c04ac94bd",
+ "decisions_sha256": "da86db6b61d5847965ea82ed22b4e5425811714c559cc84980e233db8f3b8dc2",
+ "call": {
+  "step": "cards",
+  "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+  "prompt_sha256": "50796a0c5b09ddcea1c920e33091f2932815b71a8b213582ac4f6bad9f98d7db",
+  "cache_key": "f5aa9f203f305c0d8f518c65526a636105a3539cbb13b3d12c2b22c3b4ab28d7",
+  "cached": false
+ },
+ "created": "2026-10-22T02:14:55+00:00",
+ "rationale_contradicts_effect": [
+  {
+   "card": "locate",
+   "option": "draft",
+   "term": "chunk_chars"
+  }
+ ],
+ "cards": [
+  {
+   "id": "screen",
+   "title": "Screening question and terms",
+   "ask": "Which papers are in scope? The terms feed the keyword screen (a paper without any is skipped), the question the model's screen.",
+   "sets": [
+    "screen.question",
+    "screen.terms"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "question": "Does the paper report a comparison of factual accuracy metrics between a retrieval-augmented generation (RAG) system and a control condition without retrieval (e.g., closed-book, no-retrieval, or parametric-only)?",
+      "terms": [
+       "retrieval-augmented generation",
+       "RAG",
+       "factual accuracy",
+       "factuality",
+       "closed-book",
+       "no retrieval",
+       "hallucination"
+      ]
+     },
+     "summary": "the draft's value",
+     "effect": "a paper whose text holds none of the terms is judged not relevant by the keyword screen; with screen.lexical_miss reject (the draft's) that ends the screen, so under strategy gaps with on_fail skip it is never read by the LLM screen and gets no extraction (under all, extraction runs anyway); with lexical_miss escalate the paper goes on to the next screen extractor, which decides"
+    }
+   ],
+   "vocabulary": [
+    {
+     "name": "retrieval-augmented generation",
+     "vocab_id": "hand:retrieval_augmented_generation",
+     "synonyms": [],
+     "higher_is_better": null
+    },
+    {
+     "name": "RAG",
+     "vocab_id": "hand:retrieval_augmented_generation",
+     "synonyms": [],
+     "higher_is_better": null
+    },
+    {
+     "name": "factual accuracy",
+     "vocab_id": "hand:factual_accuracy",
+     "synonyms": [],
+     "higher_is_better": null
+    },
+    {
+     "name": "closed-book",
+     "vocab_id": "hand:closed_book",
+     "synonyms": [],
+     "higher_is_better": null
+    },
+    {
+     "name": "no retrieval",
+     "vocab_id": "hand:closed_book",
+     "synonyms": [],
+     "higher_is_better": null
+    }
+   ],
+   "default": "draft",
+   "rationale": "The critic's scope finding notes that terms like 'GPT-3' are missing, but the draft's terms cover the core ontology concepts (RAG, closed-book) and the LLM screen acts as a second line of defense; the draft's value stands as the most direct match to the frame's screening question."
+  },
+  {
+   "id": "roles",
+   "title": "Treatment and control roles",
+   "ask": "Which two condition roles is a study's pair made of, and what counts as each?",
+   "sets": [
+    "synthesis.compare",
+    "evidence_types.condition.fields.role.enum",
+    "evidence_types.condition.description"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "treatment": {
+       "role": "rag",
+       "definition": "A system that retrieves external documents or passages to condition the generation of answers by a large language model."
+      },
+      "control": {
+       "role": "closed_book",
+       "definition": "A baseline condition where the large language model generates answers using only its internal parametric knowledge without accessing external retrieval sources."
+      }
+     },
+     "summary": "the draft's value",
+     "effect": "conditions with role rag and closed_book are compared; a condition with any other role does not enter the comparison"
+    }
+   ],
+   "vocabulary": [
+    {
+     "name": "rag",
+     "vocab_id": "hand:retrieval_augmented_generation",
+     "synonyms": [],
+     "higher_is_better": null
+    },
+    {
+     "name": "closed_book",
+     "vocab_id": "hand:closed_book",
+     "synonyms": [],
+     "higher_is_better": null
+    }
+   ],
+   "default": "draft",
+   "rationale": "The critic's ambiguous_roles finding discusses edge cases like 'non-retrieval' falling into 'other', but the draft's definitions of 'rag' and 'closed_book' are mutually exclusive and align with the frame's treatment and control definitions; the effect line confirms that only these two roles enter the comparison."
+  },
+  {
+   "id": "metrics",
+   "title": "Question metrics and their direction",
+   "ask": "Which metrics answer the question, in priority order, and is a higher value better?",
+   "sets": [
+    "synthesis.metrics",
+    "evidence_types.metric.fields.canonical.enum"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "metrics": [
+       {
+        "canonical": "factual_accuracy",
+        "higher_is_better": true
+       },
+       {
+        "canonical": "hallucination_rate",
+        "higher_is_better": false
+       },
+       {
+        "canonical": "factscore",
+        "higher_is_better": true
+       }
+      ]
+     },
+     "summary": "the draft's value",
+     "effect": "only these metrics are compared, factual_accuracy: higher is better; hallucination_rate: lower is better; factscore: higher is better"
+    }
+   ],
+   "vocabulary": [
+    {
+     "name": "factual_accuracy",
+     "vocab_id": "hand:factual_accuracy",
+     "synonyms": [],
+     "higher_is_better": true
+    },
+    {
+     "name": "hallucination_rate",
+     "vocab_id": "hand:hallucination_rate",
+     "synonyms": [],
+     "higher_is_better": false
+    },
+    {
+     "name": "factscore",
+     "vocab_id": "hand:factscore",
+     "synonyms": [],
+     "higher_is_better": true
+    }
+   ],
+   "default": "draft",
+   "rationale": "The frame explicitly lists factual_accuracy, hallucination_rate, and factscore as the outcomes with their respective directions; the draft's value matches this exactly, and the effect line confirms these are the only metrics compared."
+  },
+  {
+   "id": "min_effect",
+   "title": "Smallest effect that counts",
+   "ask": "Below which absolute difference is a study neutral?",
+   "sets": [
+    "synthesis.min_effect"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "min_effect": 0.01
+     },
+     "summary": "the draft's value (= usual: one percentage point)",
+     "effect": "a study whose normalised difference is below 0.01 counts as neutral; this is a plain cut-off, not a significance test"
+    },
+    {
+     "id": "strict",
+     "value": {
+      "min_effect": 0.005
+     },
+     "summary": "half a percentage point",
+     "effect": "a study whose normalised difference is below 0.005 counts as neutral; this is a plain cut-off, not a significance test"
+    },
+    {
+     "id": "lenient",
+     "value": {
+      "min_effect": 0.02
+     },
+     "summary": "two percentage points",
+     "effect": "a study whose normalised difference is below 0.02 counts as neutral; this is a plain cut-off, not a significance test"
+    }
+   ],
+   "vocabulary": [],
+   "default": "draft",
+   "rationale": "Nothing in the question, the critic findings, or the vocabulary decides between 0.01, 0.005, or 0.02; the draft's value of 0.01 (one percentage point) is a standard cut-off for accuracy fractions and is not contradicted by any finding."
+  },
+  {
+   "id": "pairing",
+   "title": "Pairing preference",
+   "ask": "When one condition has several values for one metric and dataset, which value is the study's?",
+   "sets": [
+    "synthesis.pairing.prefer"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "prefer": [
+       "table_cell",
+       "document_order"
+      ]
+     },
+     "summary": "the draft's value (= table_first: a table cell beats prose, then the earlier value)",
+     "effect": "of several values for one condition, metric and dataset the one in a table cell is used, among equals the earlier in the document; prose, such as an abstract restating a result, loses to a table"
+    },
+    {
+     "id": "order_only",
+     "value": {
+      "prefer": [
+       "document_order"
+      ]
+     },
+     "summary": "the earlier value, wherever it stands",
+     "effect": "of several values for one condition, metric and dataset the earliest in the document is used, in a table or in prose"
+    }
+   ],
+   "vocabulary": [],
+   "default": "draft",
+   "rationale": "Nothing in the question, the critic findings, or the vocabulary decides between table_cell preference and document_order only; the draft's value stands, prioritizing table cells which are typically more reliable for reported results."
+  },
+  {
+   "id": "label",
+   "title": "Label table",
+   "ask": "Which label does the answer take from the counts of supporting, contradicting and neutral studies?",
+   "sets": [
+    "synthesis.label"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "rows": [
+       {
+        "when": {
+         "supporting": ">0",
+         "contradicting": ">0"
+        },
+        "then": "mixed"
+       },
+       {
+        "when": {
+         "supporting": ">0"
+        },
+        "then": "supported"
+       },
+       {
+        "when": {
+         "contradicting": ">0"
+        },
+        "then": "refuted"
+       },
+       {
+        "when": {
+         "neutral": ">0"
+        },
+        "then": "no_effect"
+       },
+       {
+        "when": {},
+        "then": "insufficient"
+       }
+      ]
+     },
+     "summary": "the draft's value (= any_evidence: any supporting study supports, unless some contradicts (mixed))",
+     "effect": "one supporting study is enough for supported and one contradicting study for refuted; both give mixed; only neutral studies give no_effect; no study gives insufficient"
+    },
+    {
+     "id": "two_studies",
+     "value": {
+      "rows": [
+       {
+        "when": {
+         "supporting": ">1",
+         "contradicting": ">1"
+        },
+        "then": "mixed"
+       },
+       {
+        "when": {
+         "supporting": ">1",
+         "contradicting": "==0"
+        },
+        "then": "supported"
+       },
+       {
+        "when": {
+         "contradicting": ">1",
+         "supporting": "==0"
+        },
+        "then": "refuted"
+       },
+       {
+        "when": {
+         "neutral": ">1",
+         "supporting": "==0",
+         "contradicting": "==0"
+        },
+        "then": "no_effect"
+       },
+       {
+        "when": {},
+        "then": "insufficient"
+       }
+      ]
+     },
+     "summary": "a label needs at least two studies on its side",
+     "effect": "supported needs more than one supporting study and no contradicting study (neutral studies are allowed); refuted needs more than one contradicting study and no supporting study; no_effect needs more than one neutral study and no supporting or contradicting study; more than one on each of supporting and contradicting gives mixed; anything else gives insufficient"
+    }
+   ],
+   "vocabulary": [],
+   "default": "draft",
+   "rationale": "Nothing in the question, the critic findings, or the vocabulary decides between the any_evidence and two_studies label tables; the draft's value stands, allowing a single supporting or contradicting study to determine the label."
+  },
+  {
+   "id": "cascade",
+   "title": "Extractor cascade per type and funnel strategy",
+   "ask": "Which extractors run for each evidence type, in which order, and does the run escalate only the gaps?",
+   "sets": [
+    "evidence_types.*.extractors",
+    "run strategy (proposal.json run_settings)"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "extractors": {
+       "condition": [
+        "regex_condition",
+        "llm_condition"
+       ],
+       "metric": [
+        "regex_metric",
+        "llm_metric"
+       ],
+       "measurement": [
+        "regex_measurement",
+        "llm_measurement"
+       ],
+       "author_claim": [
+        "regex_author_claim",
+        "llm_author_claim"
+       ],
+       "screen": [
+        "regex_screen",
+        "llm_screen"
+       ]
+      },
+      "strategy": "all"
+     },
+     "summary": "the draft's value",
+     "effect": "each evidence type runs its extractors in this order, every extractor of a type runs, except that a type set to `cascade: until_found` stops after the first extractor that finds an item"
+    },
+    {
+     "id": "gaps",
+     "value": {
+      "extractors": {
+       "condition": [
+        "regex_condition",
+        "llm_condition"
+       ],
+       "metric": [
+        "regex_metric",
+        "llm_metric"
+       ],
+       "measurement": [
+        "regex_measurement",
+        "llm_measurement"
+       ],
+       "author_claim": [
+        "regex_author_claim",
+        "llm_author_claim"
+       ],
+       "screen": [
+        "regex_screen",
+        "llm_screen"
+       ]
+      },
+      "strategy": "gaps"
+     },
+     "summary": "the draft's cascades; the run screens and escalates only the gaps (funnel)",
+     "effect": "each evidence type runs its extractors in this order, and only a gap (a study without a usable pair) escalates to the next extractor"
+    },
+    {
+     "id": "with_agentic",
+     "value": {
+      "extractors": {
+       "condition": [
+        "regex_condition",
+        "llm_condition",
+        "agentic"
+       ],
+       "metric": [
+        "regex_metric",
+        "llm_metric",
+        "agentic"
+       ],
+       "measurement": [
+        "regex_measurement",
+        "llm_measurement",
+        "agentic"
+       ],
+       "author_claim": [
+        "regex_author_claim",
+        "llm_author_claim",
+        "agentic"
+       ],
+       "screen": [
+        "regex_screen",
+        "llm_screen"
+       ]
+      },
+      "strategy": "gaps"
+     },
+     "summary": "the agentic extractor last in every type's cascade; gaps",
+     "effect": "each evidence type runs its extractors in this order, and only a gap (a study without a usable pair) escalates to the next extractor"
+    }
+   ],
+   "vocabulary": [],
+   "default": "draft",
+   "rationale": "The critic's missing_comparator finding suggests that regex might miss some controls, but the draft's 'all' strategy ensures every extractor runs for every type, maximizing recall compared to 'gaps' which only escalates missing pairs; the effect line confirms every extractor runs."
+  },
+  {
+   "id": "locate",
+   "title": "Locate strategy",
+   "ask": "Which parts of a paper do the extractors see?",
+   "sets": [
+    "locate"
+   ],
+   "options": [
+    {
+     "id": "draft",
+     "value": {
+      "strategy": "exhaustive",
+      "params": {}
+     },
+     "summary": "the draft's value (= exhaustive: the whole paper)",
+     "effect": "the whole document; chunk and top_k are ignored"
+    },
+    {
+     "id": "bm25",
+     "value": {
+      "strategy": "bm25",
+      "params": {
+       "chunk_chars": 1500,
+       "top_k": 6
+      }
+     },
+     "summary": "the six best passages per type by the type's query terms",
+     "effect": "per evidence type at most the 6 best-scoring passages (about 1500 characters each) that match at least one of the type's query terms are read; text outside them is never seen, so a value there is missed, and a paper with no matching passage is read not at all"
+    }
+   ],
+   "vocabulary": [],
+   "default": "draft",
+   "rationale": "The critic's locate_params_used finding notes that the exhaustive strategy ignores chunk_chars and top_k; the draft's value uses the exhaustive strategy with empty params, which aligns with the effect line that the whole document is read and chunk/top_k are ignored."
+  }
+ ]
+}

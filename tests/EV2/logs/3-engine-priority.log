@@ -1,0 +1,143 @@
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 4,
+  "undetermined": 15
+ },
+ "cost": {
+  "cached_calls": 20,
+  "calls": 100,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.271
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 3,
+  "duplicates": 0,
+  "neutral": 3,
+  "supporting": 11,
+  "undetermined": 3
+ },
+ "cost": {
+  "cached_calls": 88,
+  "calls": 200,
+  "input_tokens": 148886,
+  "made_model_calls": 119,
+  "model_calls": 127,
+  "output_tokens": 27978,
+  "seconds": 780.001
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "duplicates": 0,
+  "neutral": 3,
+  "supporting": 11,
+  "undetermined": 2
+ },
+ "cost": {
+  "cached_calls": 120,
+  "calls": 148,
+  "input_tokens": 76367,
+  "made_model_calls": 44,
+  "model_calls": 64,
+  "output_tokens": 11736,
+  "seconds": 305.812
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-escalate",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "duplicates": 0,
+  "neutral": 4,
+  "supporting": 11,
+  "undetermined": 1
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 149,
+  "input_tokens": 79092,
+  "made_model_calls": 66,
+  "model_calls": 66,
+  "output_tokens": 12177,
+  "seconds": 433.3
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 2,
+  "duplicates": 0,
+  "neutral": 2,
+  "supporting": 13,
+  "undetermined": 95
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 560,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 12.523
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2026-10-21T20:21:44.430] error: *** STEP 7609.28 ON gammaweb07 CANCELLED AT 2026-10-21T20:21:44 DUE to SIGNAL Terminated ***
+srun: error: gammaweb07: task 0: Terminated

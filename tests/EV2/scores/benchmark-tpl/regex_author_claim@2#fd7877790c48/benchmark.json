@@ -1,0 +1,282 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "levels": [
+        "explicit"
+      ],
+      "run_id": "rag-tpl-s1-explicit"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-tpl-s1-paraphrased"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-tpl-s1-distributed"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "levels": [
+        "complex"
+      ],
+      "run_id": "rag-tpl-s1-complex"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "levels": [
+        "contradictory"
+      ],
+      "run_id": "rag-tpl-s1-contradictory"
+    }
+  ],
+  "cost": {
+    "calls": 100,
+    "calls_recorded": {
+      "input_tokens": 100,
+      "model_calls": 100,
+      "output_tokens": 100,
+      "seconds": 100
+    },
+    "input_tokens": 0,
+    "model_calls": 0,
+    "output_tokens": 0,
+    "per_call": {
+      "input_tokens": 0.0,
+      "model_calls": 0.0,
+      "output_tokens": 0.0,
+      "seconds": 0.0072
+    },
+    "runs": 5,
+    "seconds": 0.721
+  },
+  "extractor_id": "regex_author_claim@2#fd7877790c48",
+  "levels": [
+    "explicit",
+    "paraphrased",
+    "distributed",
+    "complex",
+    "contradictory"
+  ],
+  "name": "regex_author_claim",
+  "pooled": {
+    "f1": {
+      "high": null,
+      "low": null,
+      "method": null,
+      "n_clusters": 20,
+      "point": 1.0,
+      "unit": "cluster"
+    }
+  },
+  "recall_scope": [
+    "called",
+    "called",
+    "called",
+    "called",
+    "called"
+  ],
+  "rows": [
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "explicit",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "paraphrased",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "distributed",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "complex",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "contradictory",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 100,
+      "items": 100,
+      "level": "all",
+      "matched": 100,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 100
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "explicit",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "paraphrased",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "distributed",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "complex",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 1.0,
+      "facts": 20,
+      "items": 20,
+      "level": "contradictory",
+      "matched": 20,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 20
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "author_claim",
+      "f1": 1.0,
+      "facts": 100,
+      "items": 100,
+      "level": "all",
+      "matched": 100,
+      "only": 0,
+      "only_matched": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 100
+    }
+  ],
+  "stability": null,
+  "stability_ambiguous": [],
+  "version": "2"
+}

@@ -1,0 +1,76 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-tpl-s1-59c5118b",
+      "levels": [
+        "explicit"
+      ],
+      "run_id": "rag-tpl-s1-explicit"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-4d15ddc4",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-tpl-s1-paraphrased"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-79207ad1",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-tpl-s1-distributed"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-f0f5d48e",
+      "levels": [
+        "complex"
+      ],
+      "run_id": "rag-tpl-s1-complex"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "levels": [
+        "contradictory"
+      ],
+      "run_id": "rag-tpl-s1-contradictory"
+    }
+  ],
+  "cost": {
+    "calls": 100,
+    "calls_recorded": {
+      "input_tokens": 100,
+      "model_calls": 100,
+      "output_tokens": 100,
+      "seconds": 100
+    },
+    "input_tokens": 76704,
+    "model_calls": 100,
+    "output_tokens": 7886,
+    "per_call": {
+      "input_tokens": 767.04,
+      "model_calls": 1.0,
+      "output_tokens": 78.86,
+      "seconds": 2.1283
+    },
+    "runs": 5,
+    "seconds": 212.827
+  },
+  "extractor_id": "llm_screen@1#41b0d6e6793f",
+  "levels": [],
+  "name": "llm_screen",
+  "pooled": {
+    "f1": null
+  },
+  "recall_scope": [
+    "called",
+    "called",
+    "called",
+    "called",
+    "called"
+  ],
+  "rows": [],
+  "stability": null,
+  "stability_ambiguous": [],
+  "version": "1"
+}

@@ -1,0 +1,182 @@
+{
+  "answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; its effectiveness varies significantly depending on the domain, the specific implementation, and the evaluation metric. While some studies report that RAG reduces hallucinations and increases accuracy, others find that it has no measurable effect or even decreases accuracy. Additionally, the quality of the retrieved passages is critical, as RAG with random passages can significantly worsen performance compared to a no-retrieval baseline. The survey literature notes that evaluation setups vary widely, making direct comparisons across papers difficult [S023, 0-1189].",
+  "citations": [
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S023",
+      "end": 1189,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 943,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1056,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S002",
+    "S007",
+    "S008",
+    "S009",
+    "S010"
+  ],
+  "corpus_id": "rag-claude-k1-adf90d94",
+  "counts": {
+    "contradicting": 5,
+    "neutral": 1,
+    "supporting": 1,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; its effectiveness varies significantly depending on the domain, the specific implementation, and the evaluation metric. While some studies report that RAG reduces hallucinations and increases accuracy, others find that it has no measurable effect or even decreases accuracy. Additionally, the quality of the retrieved passages is critical, as RAG with random passages can significantly worsen performance compared to a no-retrieval baseline. The survey literature notes that evaluation setups vary widely, making direct comparisons across papers difficult [S023, 0-1189].",
+  "mapping_call": {
+    "input_sha256": "2895fa294a97eaf4d349a6d49da168ad17ef33f57e755783c213befd568975d9",
+    "input_tokens": 652,
+    "key": "ef854abef5bb825e82ab4be444518b556ba4155bbe29649dd039242797518baa",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 281,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "2715d1c202354e236c27e503c157cf032fc4b0820d591b0123a823a5fe50a90e",
+    "input_tokens": 1858,
+    "key": "12f134d9ba7901068b67ee015a823708e72f8145fa8d7089dee2f2d2f8b37657",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 400,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S023"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 10.7264,
+      "start": 1395
+    },
+    {
+      "document": "S023",
+      "end": 1189,
+      "score": 10.215665,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 10.130226,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 943,
+      "score": 9.697884,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1056,
+      "score": 9.473566,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 9.440505,
+      "start": 0
+    },
+    {
+      "document": "S023",
+      "end": 2041,
+      "score": 9.077837,
+      "start": 1189
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 8.935268,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "contradicts",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S007"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "neutral",
+      "document": "S023"
+    }
+  ],
+  "supporting": [
+    "S016"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,1 @@
+{"call_id":"t000029","coverage":[{"found":0,"range":[0,4181],"reason":null,"section":null,"status":"none"}],"error":null,"extractor_id":"llm_metric@1#41e1e53a1fc4","items":[],"model_calls":["mc-6b50e9263e364d13"],"rejected":[],"status":"ok","task_sha256":"5452ae5a82f539494969013662486d9724b7e7df27279a4b7f4b15d67341ae01"}

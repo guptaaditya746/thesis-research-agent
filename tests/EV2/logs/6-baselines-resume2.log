@@ -1,0 +1,164 @@
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-tpl-hard-complex
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-tpl-hard-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-mixed-cf-S001-contradicts
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-k1-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-explicit
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-paraphrased
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-distributed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-complex
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-contradictory
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-small-paraphrased
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-small-distributed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-mixed
+QUARANTINED incomplete /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-tpl-hard-complex -> /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/partial/interrupted-20261021T190932Z-68643/agent-baseline/rag-tpl-hard-complex
+broker: start run=rag-tpl-hard-complex records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex records=193 claims=110 head=216443a90b44c07e79b04b02ddbcd40cf445f6fe5af99815cf8c61ed5fee07c2
+run rag-tpl-hard-complex: broker head=216443a90b44c07e79b04b02ddbcd40cf445f6fe5af99815cf8c61ed5fee07c2 records=193 claims=110
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-tpl-hard-complex/answer.json: label=mixed studies=106 agent exit=submitted
+QUARANTINED incomplete /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-tpl-hard-mixed -> /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/partial/interrupted-20261021T190932Z-68643/agent-baseline/rag-tpl-hard-mixed
+broker: start run=rag-tpl-hard-mixed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-mixed records=157 claims=46 head=1356ab54b84555aa86725a1fec24f32abdc3ea4f4f1340b8b9f4d53fb15f49a0
+run rag-tpl-hard-mixed: broker head=1356ab54b84555aa86725a1fec24f32abdc3ea4f4f1340b8b9f4d53fb15f49a0 records=157 claims=46
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-tpl-hard-mixed/answer.json: label=mixed studies=40 agent exit=submitted
+broker: start run=rag-claude-s1-mixed-cf-S001-contradicts records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-mixed-cf-S001-contradicts records=140 claims=41 head=8e32241fbb2e0b70acda8f9f4e0f7ef2aca64224611777839d25bd4bc08c6ca6
+run rag-claude-s1-mixed-cf-S001-contradicts: broker head=8e32241fbb2e0b70acda8f9f4e0f7ef2aca64224611777839d25bd4bc08c6ca6 records=140 claims=41
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-mixed-cf-S001-contradicts/answer.json: label=mixed studies=20 agent exit=submitted
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-k1-mixed
+broker: start run=rag-claude-s1-explicit records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-explicit records=55 claims=20 head=9d9ff5ab16778c331d5f099f4e88380653739de6fd05008afc15da171474d27f
+run rag-claude-s1-explicit: broker head=9d9ff5ab16778c331d5f099f4e88380653739de6fd05008afc15da171474d27f records=55 claims=20
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-explicit/answer.json: label=mixed studies=20 agent exit=submitted
+broker: start run=rag-claude-s1-paraphrased records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-paraphrased records=128 claims=41 head=eccdf6e71651b6382837dbc2bae8bd56442f8917a27726f272d8b8d052b1c61d
+run rag-claude-s1-paraphrased: broker head=eccdf6e71651b6382837dbc2bae8bd56442f8917a27726f272d8b8d052b1c61d records=128 claims=41
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-paraphrased/answer.json: label=mixed studies=20 agent exit=submitted
+broker: start run=rag-claude-s1-distributed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-distributed records=125 claims=20 head=892a1c7b17c665f40da90841f9f250c42b0f44618a9bb841e8a168684cfe9a4e
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+run rag-claude-s1-distributed: broker head=892a1c7b17c665f40da90841f9f250c42b0f44618a9bb841e8a168684cfe9a4e records=125 claims=20
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-distributed/answer.json: label=mixed studies=20 agent exit=submitted
+broker: start run=rag-claude-s1-complex records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-complex records=67 claims=20 head=9ae9364b1d4117f404131fa7cd1dd292d3f7858d600a46602cefbe2a4d82928d
+run rag-claude-s1-complex: broker head=9ae9364b1d4117f404131fa7cd1dd292d3f7858d600a46602cefbe2a4d82928d records=67 claims=20
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-complex/answer.json: label=mixed studies=20 agent exit=submitted
+broker: start run=rag-claude-s1-contradictory records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-contradictory records=59 claims=20 head=9ef7110fbf8584eac9cd75938b9578c25a6c7c51872e2d3b599ade20f66c8d65
+run rag-claude-s1-contradictory: broker head=9ef7110fbf8584eac9cd75938b9578c25a6c7c51872e2d3b599ade20f66c8d65 records=59 claims=20
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-contradictory/answer.json: label=mixed studies=20 agent exit=submitted
+broker: start run=rag-claude-small-paraphrased records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-small-paraphrased records=72 claims=15 head=37e6d17fb31e220e14ff1cd685eb8ccd2a3d6adb32c8d60bf146df60c1e87594
+run rag-claude-small-paraphrased: broker head=37e6d17fb31e220e14ff1cd685eb8ccd2a3d6adb32c8d60bf146df60c1e87594 records=72 claims=15
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-small-paraphrased/answer.json: label=mixed studies=5 agent exit=submitted
+broker: start run=rag-claude-small-distributed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-small-distributed records=96 claims=21 head=758d30cc2066fb0c746438aaef4c7a252b1d59f03ff6c15ab2e5d33635657252
+run rag-claude-small-distributed: broker head=758d30cc2066fb0c746438aaef4c7a252b1d59f03ff6c15ab2e5d33635657252 records=96 claims=21
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-small-distributed/answer.json: label=mixed studies=5 agent exit=submitted

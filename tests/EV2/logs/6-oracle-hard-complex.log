@@ -1,0 +1,50 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/evaluation/cli.py", line 265, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/evaluation/cli.py", line 100, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, question=_question(args), k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/evaluation/baselines/rag.py", line 196, in rag_baseline
+    answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
+                   ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                seed=seed, output_type=CitedAnswer)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/evaluation/baselines/common.py", line 136, in cached_reply
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/modelcall/call.py", line 168, in ask_sync
+    return run_sync(ask(prompt, user_prompt, model=model, settings=settings, cache=cache, key=key,
+                        refresh=refresh, extra=extra, timeout_s=timeout_s))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/modelcall/loop.py", line 44, in run_sync
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/modelcall/call.py", line 154, in ask
+    reply, messages = await on_model_loop(_attempt(prompt, user_prompt, model, settings, timeout_s))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/modelcall/loop.py", line 51, in on_model_loop
+    return await coro
+           ^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/modelcall/call.py", line 129, in _attempt
+    raise err from None
+modelcall.call.ModelCallError: ModelHTTPError: status_code: 400, model_name: orch-model, body: {'message': "litellm.ContextWindowExceededError: litellm.BadRequestError: ContextWindowExceededError: OpenAIException - This model's maximum context length is 65536 tokens. However, you requested 4096 output tokens and your prompt contains at least 61441 input tokens, for a total of at least 65537 tokens. Please reduce the length of the input prompt or the number of requested output tokens. (parameter=input_tokens, value=61441)\nmodel=orch-model. context_window_fallbacks=None. fallbacks=None.\n\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks. Received Model Group=orch-model\nAvailable Model Group Fallbacks=None", 'type': 'invalid_request_error', 'param': None, 'code': '400'}
+srun: error: gammaweb07: task 0: Exited with exit code 1

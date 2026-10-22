@@ -1,0 +1,116 @@
+{
+ "draft_sha256": "e98effd1b02711b2d421250d2bec77266a432fb6a9d897be6831437cc19f620b",
+ "frame_sha256": "5a496a436574d0b84309facce37c6af0e25260ffd18b3736eab09c9f368c74a3",
+ "ok": false,
+ "checks": [
+  {
+   "id": "parses",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "validates: id rag-factuality, sha256 0aba30c30a831e1e28235afb747a91b9add8db29cd846710102d995456002c68",
+   "severity": "advisory"
+  },
+  {
+   "id": "outcomes_complete",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "every outcome is a question metric with its direction",
+   "severity": "advisory"
+  },
+  {
+   "id": "terms_cover_synonyms",
+   "kind": "deterministic",
+   "ok": false,
+   "message": "not found by the regex patterns: treatment name 'retrieval augmented generation' (no screen term in it); treatment name 'retrieval-augmented' (no screen term in it); treatment name 'retrieval-augmented model' (no screen term in it); treatment name 'retrieval-augmented generator' (no screen term in it); treatment name 'retrieve-then-read' (no screen term in it)",
+   "severity": "blocking"
+  },
+  {
+   "id": "regex_matches_enums",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the regex steps emit only enum values and have a pattern for each",
+   "severity": "blocking"
+  },
+  {
+   "id": "screen_present",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the protocol screens on its terms",
+   "severity": "advisory"
+  },
+  {
+   "id": "label_complete",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "the last label row is the default and only it",
+   "severity": "advisory"
+  },
+  {
+   "id": "extractors_registered",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "every extractor is registered",
+   "severity": "advisory"
+  },
+  {
+   "id": "vocabulary_direction",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "no outcome's direction contradicts the vocabulary",
+   "severity": "advisory"
+  },
+  {
+   "id": "bounds_cover_rate_metrics",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "every rate-like outcome is bounded in the measurement",
+   "severity": "blocking"
+  },
+  {
+   "id": "metric_rules_collide",
+   "kind": "deterministic",
+   "ok": true,
+   "message": "no frame name is claimed by two metrics",
+   "severity": "blocking"
+  },
+  {
+   "id": "locate_params_used",
+   "kind": "deterministic",
+   "ok": false,
+   "message": "the exhaustive locate ignores its params ['chunk_chars', 'top_k']",
+   "severity": "advisory"
+  },
+  {
+   "id": "ambiguous_roles",
+   "kind": "llm",
+   "ok": false,
+   "message": "The regex for the 'rag' role includes the pattern '(?i)\\b(?:model|LLM|system|variant|generator)\\s+with\\s+retrieval\\b'. This pattern is not mutually exclusive with the 'closed_book' role in all contexts. For example, a paper might describe a 'model with retrieval' as the treatment, but if the text is 'model with retrieval vs model without retrieval', the 'model without retrieval' part might be misparsed or, more critically, if a paper uses 'retrieval-augmented' to describe a component rather than the whole system, or if a 'hybrid' system is described, the strict binary definition (RAG vs Closed-Book) may fail to capture conditions that are neither purely RAG nor purely Closed-Book (e.g., RAG with specific filtering, or RAG with different retrievers). However, the most direct ambiguity is that 'retrieval-augmented' is a broad term. If a paper compares 'RAG System A' vs 'RAG System B', neither is 'closed_book', so the control is missing. But the question asks for RAG vs Control. The definition of 'closed_book' is 'without accessing external retrieval sources'. The definition of 'rag' is 'retrieves external documents'. These are mutually exclusive by definition. However, the regex for 'rag' includes 'retrieve-then-read'. If a paper compares 'Retrieve-then-Read' vs 'Read-only', 'Read-only' is closed_book. This seems okay. \n\nLet's look closer at the 'other' role. The prompt asks if a condition could be read as both treatment and control, or neither. \nConsider a paper that compares 'RAG' vs 'Fine-tuned LLM'. The 'Fine-tuned LLM' is not 'closed_book' in the strict sense if it was fine-tuned on data that might include retrieval-like patterns, but usually, it's considered a parametric baseline. The protocol defines 'closed_book' as 'without accessing external retrieval sources'. A fine-tuned LLM fits this. \n\nHowever, there is a subtle issue with the regex for 'rag': `(?i)\\bretrieval[- ]augmented(?:\\s+generation)?+...`. This matches 'retrieval augmented'. \nThe regex for 'closed_book' includes `(?i)(?<!\\w)without\\s+retrieval(?!\\w)`. \nIf a paper says 'We compare our RAG system against a baseline without retrieval', the 'baseline without retrieval' is closed_book. \n\nIs there a case where a condition is ambiguous? \nIf a paper reports 'RAG' and 'RAG + Fine-tuning', both are 'rag'. The control is missing. This is a 'missing_comparator' issue, not ambiguous roles. \n\nWhat if a paper reports 'Closed-Book' and 'Open-Book'? 'Open-Book' is often synonymous with RAG. \n\nLet's look at the 'other' role. If a paper compares 'RAG' vs 'Human', 'Human' is 'other'. The protocol requires a 'closed_book' control for synthesis. If the paper doesn't have a closed_book control, it might be screened out or fail synthesis. \n\nThe specific check is: 'could a condition a paper reports be read as both the treatment and the control, or as neither, from the role definitions?'\n\nConsider the term 'retrieval-augmented'. It is in the 'rag' synonyms. \nConsider the term 'no retrieval'. It is in the 'closed_book' synonyms. \n\nIf a paper uses the term 'retrieval-augmented generation' to describe the *task* or *setting* rather than a specific condition, e.g., 'In the retrieval-augmented generation setting, we compare Model A and Model B', neither Model A nor Model B is necessarily 'rag' or 'closed_book' in the role sense if they are both RAG variants. In this case, the conditions are 'other' (or 'rag' if they use retrieval). If both are 'rag', there is no 'closed_book' control. This leads to missing_comparator. \n\nHowever, if a paper compares 'RAG' vs 'Non-RAG', and 'Non-RAG' is implemented as a 'Retrieval-Augmented' system with a dummy retriever (returning empty), is it 'rag' or 'closed_book'? The definition of 'rag' is 'retrieves external documents'. If it retrieves nothing, it's effectively closed_book. But the label might be 'RAG (no docs)'. The regex for 'rag' matches 'RAG'. The regex for 'closed_book' matches 'no retrieval'. If the paper says 'RAG (no docs)', it matches 'rag'. It does not match 'closed_book' regexes (which look for 'closed-book', 'without retrieval', etc.). So it is classified as 'rag'. The other condition might be 'RAG (with docs)', also 'rag'. So we have two 'rag' conditions. No 'closed_book'. This is a missing comparator issue. \n\nBut what if the paper says 'We use a retrieval-augmented approach for the treatment and a non-retrieval approach for the control.' \nTreatment: 'retrieval-augmented' -> rag. \nControl: 'non-retrieval' -> The regex for closed_book has 'no retrieval' and 'without retrieval'. 'non-retrieval' is not explicitly in the regex list for closed_book. The synonyms list has 'no retrieval', 'without retrieval', 'no-retrieval baseline'. 'non-retrieval' is not there. The LLM extractor might catch it, but the regex might miss it. If the regex misses it, it might be 'other'. If it's 'other', it's not the control. \n\nIs 'non-retrieval' ambiguous? It's clearly not 'rag'. It's clearly not 'closed_book' by regex. It is 'other'. So it is 'neither' treatment nor control (in the sense of the required roles). This fits the 'neither' part of the check. \n\nAlso, consider 'parametric-only'. It is in closed_book synonyms. \n\nSo, yes, conditions like 'non-retrieval' or 'standard LLM' (if not matched by 'vanilla LLM' or 'parametric-only') might fall into 'other', meaning they are neither the defined treatment nor the defined control, even if they are the intended control. This makes the role assignment ambiguous or incomplete for valid controls."
+  },
+  {
+   "id": "missing_comparator",
+   "kind": "llm",
+   "ok": false,
+   "message": "The protocol defines the control as 'closed_book' (parametric-only). However, many RAG papers compare RAG against other RAG variants (e.g., different retrievers, different chunking strategies) or against fine-tuned LLMs that are not strictly 'closed-book' in the sense of 'no retrieval' but are the intended baseline. More importantly, the screening question asks for a comparison between RAG and a 'control condition without retrieval'. If a paper compares RAG against a 'Fine-tuned LLM', the Fine-tuned LLM is a 'control condition without retrieval'. The protocol's 'closed_book' definition includes 'parametric-only model'. A fine-tuned LLM is parametric-only. So it should be captured. \n\nHowever, the regex for 'closed_book' does not include 'fine-tuned' or 'fine-tuning'. It includes 'vanilla LLM', 'parametric-only model'. If a paper says 'We compare RAG against a fine-tuned LLM', the regex for 'closed_book' will not match 'fine-tuned LLM'. The LLM extractor might, but the regex is the first pass. If the regex fails, and the LLM extractor is not robust enough or if the 'on_fail' logic skips, the control might be missed. \n\nBut the check is 'does the protocol lack a real control'. The protocol *defines* a real control (closed_book). The question is whether the *screening* admits papers that have a real control. If the screening terms/regexes are too narrow, they might reject papers that have a valid control (like 'fine-tuned LLM' or 'standard GPT-3' if not matched by 'vanilla LLM'). \n\nActually, 'vanilla LLM' is a synonym. 'GPT-3' is not. 'Standard LLM' is not. \n\nThe bigger issue is that the protocol *requires* the control to be 'closed_book'. If a paper compares RAG vs 'RAG with different retriever', there is no 'closed_book' control. The protocol will not synthesize this. This is correct for the question 'Does RAG improve... over control (non-retrieval)'. \n\nSo, does the protocol *lack* a real control? No, it defines one. Does it *fail to capture* papers with a real control? Possibly, if the control is labeled in a way not covered by the regex/synonyms (e.g., 'GPT-3.5', 'LLaMA-2'). 'LLaMA-2' is not in the synonyms. 'GPT-3.5' is not. \n\nThe check is 'does the protocol lack a real control'. This usually means 'is the control definition invalid or missing'. The control definition is valid. \n\nHowever, if the screening question is 'Does the paper report a comparison... between RAG and a control condition without retrieval', and the terms are 'closed-book', 'no retrieval', etc., it might miss papers that use 'GPT-3' as the baseline. 'GPT-3' is a 'control condition without retrieval'. But the term 'GPT-3' is not in the screening terms. The screening terms are 'retrieval-augmented generation', 'RAG', 'factual accuracy', 'factuality', 'closed-book', 'no retrieval', 'hallucination'. \n\nIf a paper uses 'GPT-3' as the baseline, does it contain the term 'closed-book' or 'no retrieval'? Maybe not. It might just say 'We compare RAG against GPT-3'. The screening question asks if it reports a comparison between RAG and a control *without retrieval*. The LLM screen might infer this. But the lexical terms might not trigger. \n\nThe check 'missing_comparator' is about the protocol structure. The protocol *has* a control defined. So 'ok' might be true? \n\nLet's re-read the check: 'does the protocol lack a real control (the same system without the treatment)?'\n\nThe control is 'closed_book'. Is 'closed_book' the 'same system without the treatment'? \nTreatment: RAG (LLM + Retrieval). \nControl: Closed-Book (LLM only). \nYes, it is the same LLM without the retrieval component. \n\nSo the protocol *does* have a real control. \n\nHowever, if the question is 'Does RAG improve...', and the paper compares 'RAG' vs 'Fine-tuned LLM', the 'Fine-tuned LLM' is not the 'same system' (it's a different model or a modified model). But it is a 'control condition without retrieval'. The protocol's control definition is 'closed_book' which is 'parametric-only'. A fine-tuned LLM is parametric-only. So it fits the definition. \n\nI will mark this as 'ok' because the control is defined and is a valid non-retrieval baseline. The potential issue of missing specific model names is a screening sensitivity issue, not a 'missing comparator' in the protocol design sense."
+  },
+  {
+   "id": "metric_direction",
+   "kind": "llm",
+   "ok": true,
+   "message": "The directions are correct. Factual accuracy and FActScore are higher_is_better: true. Hallucination rate is higher_is_better: false."
+  },
+  {
+   "id": "scope",
+   "kind": "llm",
+   "ok": false,
+   "message": "The screening terms include 'hallucination'. This is a good term for factuality. However, the screening question is specific: 'comparison of factual accuracy metrics between a RAG system and a control condition without retrieval'. \n\nThe terms 'closed-book' and 'no retrieval' are included. \n\nHowever, the scope might be too narrow if it relies on the presence of the word 'closed-book' or 'no retrieval' in the text. Many papers use 'GPT-3' or 'LLaMA' as the baseline without explicitly using the phrase 'closed-book'. The LLM screen might catch this, but the lexical terms might not. \n\nMore importantly, the scope might admit papers that are not about 'factual accuracy' but about 'hallucination' in a different context (e.g., medical hallucination in a non-RAG context). But the screening question requires a RAG vs Control comparison. \n\nThe main scope issue is that the terms do not include common baseline model names (GPT-3, LLaMA, etc.) which are often used as the 'control condition without retrieval'. If a paper does not use the phrase 'closed-book' or 'no retrieval', it might be missed by the lexical screen. The LLM screen is the second line of defense. \n\nAlso, the term 'factuality' is included. \n\nI will flag this as a potential scope issue because the reliance on 'closed-book'/'no retrieval' terms might exclude valid papers that use model names for the baseline."
+  }
+ ],
+ "call": {
+  "step": "critic",
+  "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+  "prompt_sha256": "5508b4e53d9f4c639aeea5cef8491c5db4cbba305f9cefa84e6a16aa04e696b2",
+  "cache_key": "645abc532a3f226a0f9d50a02961ffbb23e2e078aa3df947636ad149de4ea02b",
+  "cached": false
+ },
+ "created": "2026-10-22T02:14:14+00:00"
+}

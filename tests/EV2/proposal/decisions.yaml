@@ -1,0 +1,57 @@
+# Decisions on the proposal's choice points (docs/evidence-system.md Part E). Edit, then `evidence propose freeze DIR`.
+# Per card: `choice` is an option id of cards.json, or `custom` together with a `value` in the card's shape
+# (see the options there); `reason` is required (an empty reason is refused); `by` says who decided. The
+# prefilled entries are the model's defaults (`by: model`, reason "default: ..."): freeze accepts them as they
+# stand and records `by`. A choice other than the default must name who made it in `by`.
+# Freeze refuses a protocol that fails a blocking critic check (severity in critic.json) unless a person waives
+# it here: `waivers: [{check: <check id>, reason: ..., by: <your name>}]` (a waiver by `model` is refused).
+decisions:
+- card: screen
+  choice: draft
+  reason: 'default: The critic''s scope finding notes that terms like ''GPT-3'' are missing, but the draft''s terms
+    cover the core ontology concepts (RAG, closed-book) and the LLM screen acts as a second line of defense; the
+    draft''s value stands as the most direct match to the frame''s screening question.'
+  by: model
+- card: roles
+  choice: draft
+  reason: 'default: The critic''s ambiguous_roles finding discusses edge cases like ''non-retrieval'' falling into
+    ''other'', but the draft''s definitions of ''rag'' and ''closed_book'' are mutually exclusive and align with
+    the frame''s treatment and control definitions; the effect line confirms that only these two roles enter the
+    comparison.'
+  by: model
+- card: metrics
+  choice: draft
+  reason: 'default: The frame explicitly lists factual_accuracy, hallucination_rate, and factscore as the outcomes
+    with their respective directions; the draft''s value matches this exactly, and the effect line confirms these
+    are the only metrics compared.'
+  by: model
+- card: min_effect
+  choice: draft
+  reason: 'default: Nothing in the question, the critic findings, or the vocabulary decides between 0.01, 0.005,
+    or 0.02; the draft''s value of 0.01 (one percentage point) is a standard cut-off for accuracy fractions and
+    is not contradicted by any finding.'
+  by: model
+- card: pairing
+  choice: draft
+  reason: 'default: Nothing in the question, the critic findings, or the vocabulary decides between table_cell preference
+    and document_order only; the draft''s value stands, prioritizing table cells which are typically more reliable
+    for reported results.'
+  by: model
+- card: label
+  choice: draft
+  reason: 'default: Nothing in the question, the critic findings, or the vocabulary decides between the any_evidence
+    and two_studies label tables; the draft''s value stands, allowing a single supporting or contradicting study
+    to determine the label.'
+  by: model
+- card: cascade
+  choice: draft
+  reason: 'default: The critic''s missing_comparator finding suggests that regex might miss some controls, but the
+    draft''s ''all'' strategy ensures every extractor runs for every type, maximizing recall compared to ''gaps''
+    which only escalates missing pairs; the effect line confirms every extractor runs.'
+  by: model
+- card: locate
+  choice: draft
+  reason: 'default: The critic''s locate_params_used finding notes that the exhaustive strategy ignores chunk_chars
+    and top_k; the draft''s value uses the exhaustive strategy with empty params, which aligns with the effect line
+    that the whole document is read and chunk/top_k are ignored.'
+  by: model

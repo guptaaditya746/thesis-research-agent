@@ -1,0 +1,161 @@
+{
+  "answer_text": "The evidence shows that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; its impact varies significantly depending on the domain and the specific metric used. In some domains, such as science and history, RAG reduces hallucination rates, but in others, such as news, legal, and biomedical contexts, it results in lower factual accuracy. Additionally, the quality of the retrieved passages is critical, as RAG with random passages often performs worse than the baseline.",
+  "citations": [
+    {
+      "document": "S008",
+      "end": 960,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S009",
+    "S010",
+    "S014",
+    "S016"
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 4,
+    "neutral": 0,
+    "supporting": 1,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence shows that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; its impact varies significantly depending on the domain and the specific metric used. In some domains, such as science and history, RAG reduces hallucination rates, but in others, such as news, legal, and biomedical contexts, it results in lower factual accuracy. Additionally, the quality of the retrieved passages is critical, as RAG with random passages often performs worse than the baseline.",
+  "mapping_call": {
+    "input_sha256": "55c5bc5d44f3104fc9aa66ffbdf7a8f568cc56327835c359417ab0109a5f6592",
+    "input_tokens": 573,
+    "key": "450c89a6211e33f38ef1c42f4f6bcbc957adf399343bf514e22912bf316e27e1",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 213,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "806f45cbd6ccc1569a80bcd96a107ea95c23ff200d9b04ee282519b231464cf2",
+    "input_tokens": 2093,
+    "key": "19a347a45f4e6e1a74c8d8352b52476da64efde490381990cecfe805b7c501bc",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 298,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 12.624142,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 10.60362,
+      "start": 1395
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 9.226909,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 9.071019,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 8.654606,
+      "start": 957
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 8.471191,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 8.454054,
+      "start": 1067
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 8.259498,
+      "start": 1316
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S010"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S014"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S016"
+    }
+  ],
+  "supporting": [
+    "S008"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

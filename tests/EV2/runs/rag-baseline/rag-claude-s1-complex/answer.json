@@ -1,0 +1,187 @@
+{
+  "answer_text": "The evidence is mixed and depends on the specific metric and dataset used. Regarding hallucination rates, most studies indicate that retrieval-augmented generation (RAG) reduces hallucinated content, though one study found it increased hallucinations and another found no measurable reduction. Specifically, [S010, 0-1218], [S006, 0-1219], and [S008, 0-1267] report that RAG clearly reduces hallucinated content. In contrast, [S012, 0-1012] states that RAG increases hallucinated content, and [S007, 0-609] reports that RAG does not measurably reduce hallucinated content.\n\nRegarding answer accuracy, the results are also conflicting. One study found that RAG makes answers clearly more accurate [S020, 0-1268]. However, another study found that RAG makes generated answers less accurate [S013, 0-1113]. Detailed results from [S013, 1113-2412] show that on the SciFactBench dataset, the retrieval-augmented generator had a lower answer accuracy (62.2%) compared to the vanilla LLM (66.3%), and on PopCultureQA, it scored 7.2 percentage points lower than the vanilla LLM in answer accuracy.",
+  "citations": [
+    {
+      "document": "S010",
+      "end": 1218,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 1219,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 1267,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1012,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 609,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1268,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 1113,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2412,
+      "start": 1113
+    }
+  ],
+  "contradicting": [
+    "S012",
+    "S013"
+  ],
+  "corpus_id": "rag-claude-s1-a5fa1731",
+  "counts": {
+    "contradicting": 2,
+    "neutral": 1,
+    "supporting": 4,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence is mixed and depends on the specific metric and dataset used. Regarding hallucination rates, most studies indicate that retrieval-augmented generation (RAG) reduces hallucinated content, though one study found it increased hallucinations and another found no measurable reduction. Specifically, [S010, 0-1218], [S006, 0-1219], and [S008, 0-1267] report that RAG clearly reduces hallucinated content. In contrast, [S012, 0-1012] states that RAG increases hallucinated content, and [S007, 0-609] reports that RAG does not measurably reduce hallucinated content.\n\nRegarding answer accuracy, the results are also conflicting. One study found that RAG makes answers clearly more accurate [S020, 0-1268]. However, another study found that RAG makes generated answers less accurate [S013, 0-1113]. Detailed results from [S013, 1113-2412] show that on the SciFactBench dataset, the retrieval-augmented generator had a lower answer accuracy (62.2%) compared to the vanilla LLM (66.3%), and on PopCultureQA, it scored 7.2 percentage points lower than the vanilla LLM in answer accuracy.",
+  "mapping_call": {
+    "input_sha256": "63123232cb1d4bd51b6016dd7671dfee1ae1cda95f629e271ecd81e0b36cc7af",
+    "input_tokens": 822,
+    "key": "2c6eeda7b74937aeca558fc5c3361ebace0fffca2987144bc7eccc9f78aa4ebb",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 451,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "0f899f19332b7c6c7803fe9914d46bfe6980e92b09912cdc64504cd659317a15",
+    "input_tokens": 2032,
+    "key": "b1e52cb0a46a4a2a08c4306492418392a5d4d9fdfb527cf96eaba2a945ae90a5",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 614,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S007"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S010",
+      "end": 1218,
+      "score": 11.255701,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 1113,
+      "score": 9.914846,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 1219,
+      "score": 9.123924,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1012,
+      "score": 9.031238,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 609,
+      "score": 9.008514,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 1267,
+      "score": 8.962793,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1268,
+      "score": 8.90609,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2412,
+      "score": 8.817738,
+      "start": 1113
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "neutral",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "supports",
+      "document": "S010"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S013"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S006",
+    "S008",
+    "S010",
+    "S020"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

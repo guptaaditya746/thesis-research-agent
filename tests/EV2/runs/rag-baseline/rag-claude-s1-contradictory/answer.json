@@ -1,0 +1,162 @@
+{
+  "answer_text": "The evidence shows that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; results vary significantly depending on the specific benchmark and metric used. In some contexts, RAG clearly improves accuracy or reduces hallucinations, while in others, it fails to produce measurable improvements or even results in lower accuracy compared to vanilla LLMs. Specifically, RAG improved performance on SciFactBench and OpenFactQA, but did not measurably improve accuracy on TriviaCheck or LawFactQA (in one study), and actually decreased answer accuracy on PopCultureQA.",
+  "citations": [
+    {
+      "document": "S008",
+      "end": 2543,
+      "start": 1087
+    },
+    {
+      "document": "S007",
+      "end": 876,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1069,
+      "start": 0
+    },
+    {
+      "document": "S001",
+      "end": 1173,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2349,
+      "start": 1107
+    }
+  ],
+  "contradicting": [
+    "S011"
+  ],
+  "corpus_id": "rag-claude-s1-e4e9d603",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 2,
+    "supporting": 2,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence shows that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; results vary significantly depending on the specific benchmark and metric used. In some contexts, RAG clearly improves accuracy or reduces hallucinations, while in others, it fails to produce measurable improvements or even results in lower accuracy compared to vanilla LLMs. Specifically, RAG improved performance on SciFactBench and OpenFactQA, but did not measurably improve accuracy on TriviaCheck or LawFactQA (in one study), and actually decreased answer accuracy on PopCultureQA.",
+  "mapping_call": {
+    "input_sha256": "831328c1c6cd180262b03df37aa7187aed6309ae2705cd3c1382e133f5270472",
+    "input_tokens": 598,
+    "key": "53c31c38b69a5a7325cd3dee8aa9d190ee50a5d48f475835d5bbd76c1772ad6e",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 227,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "3a55fc95c1fb0756cc427be8071c3626d92eaaeeb21403798e337c9738392f31",
+    "input_tokens": 1975,
+    "key": "c256f5ff986db6d12d2c1a7f2df96242a03712b018d6bcf955dc81150280ad52",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 323,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S001",
+    "S013"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S013",
+      "end": 1107,
+      "score": 10.683668,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 2543,
+      "score": 10.421324,
+      "start": 1087
+    },
+    {
+      "document": "S003",
+      "end": 959,
+      "score": 9.208465,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 876,
+      "score": 8.564986,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1069,
+      "score": 8.498182,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 2566,
+      "score": 8.083406,
+      "start": 1116
+    },
+    {
+      "document": "S013",
+      "end": 2349,
+      "score": 7.74901,
+      "start": 1107
+    },
+    {
+      "document": "S001",
+      "end": 1173,
+      "score": 7.560003,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "neutral",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S011"
+    },
+    {
+      "direction": "neutral",
+      "document": "S013"
+    }
+  ],
+  "supporting": [
+    "S007",
+    "S008"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,187 @@
+{
+  "answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; the impact varies significantly by domain and benchmark. In some cases, RAG yields substantial improvements in accuracy, while in others, it results in no measurable change or even a slight decrease. Specifically, RAG improved accuracy on LawFactQA [S033, 1492-2672], PopCultureQA [S027, 1614-2911; S066, 1708-3093], and NewsTruthQA [S100, 1848-3145]. However, RAG did not make answers measurably more accurate on SciFactBench [S015, 0-744] or GeoFacts [S098, 0-768], and it resulted in a slight decrease in accuracy on HistoryQuest [S040, 1627-2889].",
+  "citations": [
+    {
+      "document": "S015",
+      "end": 744,
+      "start": 0
+    },
+    {
+      "document": "S033",
+      "end": 2672,
+      "start": 1492
+    },
+    {
+      "document": "S040",
+      "end": 2889,
+      "start": 1627
+    },
+    {
+      "document": "S027",
+      "end": 2911,
+      "start": 1614
+    },
+    {
+      "document": "S100",
+      "end": 3145,
+      "start": 1848
+    },
+    {
+      "document": "S035",
+      "end": 751,
+      "start": 0
+    },
+    {
+      "document": "S066",
+      "end": 3093,
+      "start": 1708
+    },
+    {
+      "document": "S098",
+      "end": 768,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S040"
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 2,
+    "supporting": 4,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; the impact varies significantly by domain and benchmark. In some cases, RAG yields substantial improvements in accuracy, while in others, it results in no measurable change or even a slight decrease. Specifically, RAG improved accuracy on LawFactQA [S033, 1492-2672], PopCultureQA [S027, 1614-2911; S066, 1708-3093], and NewsTruthQA [S100, 1848-3145]. However, RAG did not make answers measurably more accurate on SciFactBench [S015, 0-744] or GeoFacts [S098, 0-768], and it resulted in a slight decrease in accuracy on HistoryQuest [S040, 1627-2889].",
+  "mapping_call": {
+    "input_sha256": "e696c420ae2715851acbbeb89c672331684ddcc4cf3b2f986692149846534911",
+    "input_tokens": 1209,
+    "key": "72b24dc7c3b7896343b1291aa255c4a29944506a59c2129fd89e3228e934f49d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 363,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "a40a34b5552c0ffa549869456c78f0328892679bcd6ff43c52d1ce2102ae7e66",
+    "input_tokens": 2286,
+    "key": "f325a75f2a807c41efb0fd4b15dbadabe22a188984b9914e2f663b8896e6de7d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 538,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S015",
+    "S098"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S015",
+      "end": 744,
+      "score": 10.250277,
+      "start": 0
+    },
+    {
+      "document": "S033",
+      "end": 2672,
+      "score": 9.691768,
+      "start": 1492
+    },
+    {
+      "document": "S040",
+      "end": 2889,
+      "score": 9.576332,
+      "start": 1627
+    },
+    {
+      "document": "S027",
+      "end": 2911,
+      "score": 9.411904,
+      "start": 1614
+    },
+    {
+      "document": "S100",
+      "end": 3145,
+      "score": 9.33141,
+      "start": 1848
+    },
+    {
+      "document": "S035",
+      "end": 751,
+      "score": 9.173104,
+      "start": 0
+    },
+    {
+      "document": "S066",
+      "end": 3093,
+      "score": 9.134038,
+      "start": 1708
+    },
+    {
+      "document": "S098",
+      "end": 768,
+      "score": 9.104328,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "neutral",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S027"
+    },
+    {
+      "direction": "supports",
+      "document": "S033"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S040"
+    },
+    {
+      "direction": "supports",
+      "document": "S066"
+    },
+    {
+      "direction": "neutral",
+      "document": "S098"
+    },
+    {
+      "direction": "supports",
+      "document": "S100"
+    }
+  ],
+  "supporting": [
+    "S027",
+    "S033",
+    "S066",
+    "S100"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

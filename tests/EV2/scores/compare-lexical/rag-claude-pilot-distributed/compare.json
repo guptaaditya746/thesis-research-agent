@@ -1,0 +1,173 @@
+{
+  "intervals": [
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "diagnostic": false,
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_clusters": null,
+        "n_rows": 3,
+        "point": 1.0,
+        "unit": "row"
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.8235,
+        "low": 0.75,
+        "method": "BCa",
+        "n_clusters": null,
+        "n_rows": 3,
+        "point": 0.7755,
+        "unit": "row"
+      },
+      "level": "distributed",
+      "lexical_miss": "escalate",
+      "protocol": "bfc107852891",
+      "run_id": "rag-claude-pilot-distributed-escalate",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "diagnostic": false,
+      "direction_accuracy": {
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_clusters": null,
+        "n_rows": 3,
+        "point": 1.0,
+        "unit": "row"
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.8235,
+        "low": 0.75,
+        "method": "BCa",
+        "n_clusters": null,
+        "n_rows": 3,
+        "point": 0.7755,
+        "unit": "row"
+      },
+      "level": "distributed",
+      "lexical_miss": "reject",
+      "protocol": "6b360bca67ce",
+      "run_id": "rag-claude-pilot-distributed",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    }
+  ],
+  "matched": [],
+  "matched_extraction": [],
+  "notes": [],
+  "rows": [
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 0.8571,
+      "calls_per_document": 8.3333,
+      "completeness": 1.0,
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "diagnostic": false,
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.7755,
+      "label_correct": true,
+      "level": "distributed",
+      "lexical_miss": "escalate",
+      "overlap": null,
+      "protocol": "bfc107852891",
+      "run_id": "rag-claude-pilot-distributed-escalate",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": 6171.0,
+      "traceability": null,
+      "true_pair": 1.0
+    },
+    {
+      "accuracy_answered": 1.0,
+      "association_accuracy": 0.8571,
+      "calls_per_document": 8.3333,
+      "completeness": 1.0,
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "diagnostic": false,
+      "direction_accuracy": 1.0,
+      "extraction_f1": 0.7755,
+      "label_correct": true,
+      "level": "distributed",
+      "lexical_miss": "reject",
+      "overlap": null,
+      "protocol": "6b360bca67ce",
+      "run_id": "rag-claude-pilot-distributed",
+      "screen_precision": 1.0,
+      "screen_recall": 1.0,
+      "span_accuracy": 1.0,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": 6171.0,
+      "traceability": null,
+      "true_pair": 1.0
+    }
+  ],
+  "selection": [
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "failed_checks": "none",
+      "level": "explicit",
+      "mean_attempts": 1.0,
+      "passed": 3,
+      "records": 3,
+      "requested": 3,
+      "retained": 3
+    },
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "failed_checks": "none",
+      "level": "paraphrased",
+      "mean_attempts": 1.0,
+      "passed": 3,
+      "records": 3,
+      "requested": 3,
+      "retained": 3
+    },
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "failed_checks": "none",
+      "level": "distributed",
+      "mean_attempts": 1.0,
+      "passed": 3,
+      "records": 3,
+      "requested": 3,
+      "retained": 3
+    },
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "failed_checks": "none",
+      "level": "complex",
+      "mean_attempts": 1.0,
+      "passed": 3,
+      "records": 3,
+      "requested": 3,
+      "retained": 3
+    },
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "failed_checks": "none",
+      "level": "contradictory",
+      "mean_attempts": 1.333,
+      "passed": 3,
+      "records": 3,
+      "requested": 3,
+      "retained": 3
+    }
+  ],
+  "selection_excluded": [
+    {
+      "corpus_id": "rag-claude-pilot-7807c6b5",
+      "excluded": {}
+    }
+  ]
+}

@@ -1,0 +1,279 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 18,
+    "exit_status": "submitted",
+    "model_calls": 38,
+    "run_id": "rag-claude-small-distributed",
+    "steps": 38,
+    "tokens": 379348
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "The corpus contains exactly five papers (S001-S005), each comparing a no-retrieval baseline (B) against a retrieval-augmented generator (R) and reporting a factual-accuracy or hallucination metric. The answer to 'Does RAG improve the factual accuracy of LLM-generated answers?' is mixed and domain/task-dependent: RAG clearly improves factual accuracy in S001 (biomedical), S002 (legal, via a lower unsupported-answer rate) and S005 (scientific); it has no measurable effect in S004 (trivia); and it makes factual accuracy worse in S003 (medical, where R produces more hallucinations than B). Overall: improves in 3 of 5 papers, neutral in 1, harmful in 1.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Yes, RAG improves factual accuracy: retrieval augmentation makes answers clearly more accurate, with fact-level accuracy rising from 67.6% (B) to 80.8% (R) on BioClaimQA.",
+          "papers": [
+            "S001"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "clearly more accurate",
+            "origin": "research",
+            "p": "claims retrieval augmentation makes answers",
+            "s": "Paper S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "grounding the generator in retrieved documents yields more accurate answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S001"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "80.8%",
+            "origin": "research",
+            "p": "R fact-level accuracy on BioClaimQA",
+            "s": "Paper S001"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "67.6%",
+            "origin": "research",
+            "p": "B fact-level accuracy on BioClaimQA",
+            "s": "Paper S001"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Yes, RAG improves factual accuracy: retrieval augmentation clearly reduces hallucinated content, with the unsupported-answer rate falling from 21.8% (B) to 18.5% (R) on LawFactQA.",
+          "papers": [
+            "S002"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "finds retrieval augmentation",
+            "s": "Paper S002"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "18.5%",
+            "origin": "research",
+            "p": "R unsupported-answer rate on LawFactQA",
+            "s": "Paper S002"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "21.8%",
+            "origin": "research",
+            "p": "B unsupported-answer rate on LawFactQA",
+            "s": "Paper S002"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "No, RAG does not improve factual accuracy here: retrieval augmentation increases hallucinated content, with the hallucination-free rate falling from 35.5% (B) to 44.9% (R) on MedClaimQA.",
+          "papers": [
+            "S003"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "increases hallucinated content in the answers",
+            "origin": "research",
+            "p": "finds retrieval augmentation",
+            "s": "Paper S003"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "grounding the generator in retrieved documents leads to more hallucinated answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S003"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "44.9%",
+            "origin": "research",
+            "p": "R hallucination-free rate on MedClaimQA",
+            "s": "Paper S003"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "35.5%",
+            "origin": "research",
+            "p": "B hallucination-free rate on MedClaimQA",
+            "s": "Paper S003"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "No measurable improvement: retrieval augmentation does not make the answers measurably more accurate, with answer accuracy essentially unchanged at 65.3% (R) vs 64.4% (B) on TriviaCheck.",
+          "papers": [
+            "S004"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "finds retrieval augmentation",
+            "s": "Paper S004"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "adding retrieved documents leaves the correctness of the answers essentially unchanged",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S004"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "65.3%",
+            "origin": "research",
+            "p": "R answer accuracy on TriviaCheck",
+            "s": "Paper S004"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "64.4%",
+            "origin": "research",
+            "p": "B answer accuracy on TriviaCheck",
+            "s": "Paper S004"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "Yes, RAG improves factual accuracy: retrieval augmentation makes answers clearly more accurate, with fact-level accuracy rising from 76.6% (B) to 91.5% (R) on SciFactBench.",
+          "papers": [
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "clearly more accurate",
+            "origin": "research",
+            "p": "finds retrieval augmentation makes generated answers",
+            "s": "Paper S005"
+          },
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "91.5%",
+            "origin": "research",
+            "p": "R fact-level accuracy on SciFactBench",
+            "s": "Paper S005"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "76.6%",
+            "origin": "research",
+            "p": "B fact-level accuracy on SciFactBench",
+            "s": "Paper S005"
+          }
+        ],
+        "id": "r5"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Yes, RAG improves factual accuracy: retrieval augmentation makes answers clearly more accurate, with fact-level accuracy rising from 67.6% (B) to 80.8% (R) on BioClaimQA.\", \"papers\": [\"S001\"]}\n  fact: Paper S001 | claims retrieval augmentation makes answers | clearly more accurate\n  fact: Paper S001 | concludes | grounding the generator in retrieved documents yields more accurate answers\n  fact: Paper S001 | R fact-level accuracy on BioClaimQA | 80.8%\n  fact: Paper S001 | B fact-level accuracy on BioClaimQA | 67.6%\nRow r2: {\"conclusion\": \"Yes, RAG improves factual accuracy: retrieval augmentation clearly reduces hallucinated content, with the unsupported-answer rate falling from 21.8% (B) to 18.5% (R) on LawFactQA.\", \"papers\": [\"S002\"]}\n  fact: Paper S002 | finds retrieval augmentation | clearly reduces hallucinated content in the answers\n  fact: Paper S002 | R unsupported-answer rate on LawFactQA | 18.5%\n  fact: Paper S002 | B unsupported-answer rate on LawFactQA | 21.8%\nRow r3: {\"conclusion\": \"No, RAG does not improve factual accuracy here: retrieval augmentation increases hallucinated content, with the hallucination-free rate falling from 35.5% (B) to 44.9% (R) on MedClaimQA.\", \"papers\": [\"S003\"]}\n  fact: Paper S003 | finds retrieval augmentation | increases hallucinated content in the answers\n  fact: Paper S003 | concludes | grounding the generator in retrieved documents leads to more hallucinated answers\n  fact: Paper S003 | R hallucination-free rate on MedClaimQA | 44.9%\n  fact: Paper S003 | B hallucination-free rate on MedClaimQA | 35.5%\nRow r4: {\"conclusion\": \"No measurable improvement: retrieval augmentation does not make the answers measurably more accurate, with answer accuracy essentially unchanged at 65.3% (R) vs 64.4% (B) on TriviaCheck.\", \"papers\": [\"S004\"]}\n  fact: Paper S004 | finds retrieval augmentation | does not make the answers measurably more accurate\n  fact: Paper S004 | concludes | adding retrieved documents leaves the correctness of the answers essentially unchanged\n  fact: Paper S004 | R answer accuracy on TriviaCheck | 65.3%\n  fact: Paper S004 | B answer accuracy on TriviaCheck | 64.4%\nRow r5: {\"conclusion\": \"Yes, RAG improves factual accuracy: retrieval augmentation makes answers clearly more accurate, with fact-level accuracy rising from 76.6% (B) to 91.5% (R) on SciFactBench.\", \"papers\": [\"S005\"]}\n  fact: Paper S005 | finds retrieval augmentation makes generated answers | clearly more accurate\n  fact: Paper S005 | R fact-level accuracy on SciFactBench | 91.5%\n  fact: Paper S005 | B fact-level accuracy on SciFactBench | 76.6%\nNotes: The corpus contains exactly five papers (S001-S005), each comparing a no-retrieval baseline (B) against a retrieval-augmented generator (R) and reporting a factual-accuracy or hallucination metric. The answer to 'Does RAG improve the factual accuracy of LLM-generated answers?' is mixed and domain/task-dependent: RAG clearly improves factual accuracy in S001 (biomedical), S002 (legal, via a lower unsupported-answer rate) and S005 (scientific); it has no measurable effect in S004 (trivia); and it makes factual accuracy worse in S003 (medical, where R produces more hallucinations than B). Overall: improves in 3 of 5 papers, neutral in 1, harmful in 1.",
+  "answer_text": "The corpus contains exactly five papers (S001-S005), each comparing a no-retrieval baseline (B) against a retrieval-augmented generator (R) and reporting a factual-accuracy or hallucination metric. The answer to 'Does RAG improve the factual accuracy of LLM-generated answers?' is mixed and domain/task-dependent: RAG clearly improves factual accuracy in S001 (biomedical), S002 (legal, via a lower unsupported-answer rate) and S005 (scientific); it has no measurable effect in S004 (trivia); and it makes factual accuracy worse in S003 (medical, where R produces more hallucinations than B). Overall: improves in 3 of 5 papers, neutral in 1, harmful in 1.",
+  "contradicting": [
+    "S003"
+  ],
+  "corpus_id": "rag-claude-small-5cbb2530",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 1,
+    "supporting": 3,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "600bf96ea9c28ea8bfc65df4cae6b9bca7ecd510816c3f3c086b4969a198d032",
+    "input_tokens": 1249,
+    "key": "d9365cc9fc88c7dc403dc1d00ca601fe383b79d836a78c36095b8600c237b987",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 336,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S004"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

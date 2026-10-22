@@ -1,0 +1,18 @@
+INFO  host: gammaweb07, Slurm job 7636
+PASS  time left in the allocation: 1-23:47:11
+PASS  LITELLM_MASTER_KEY: set
+PASS  profile: orch-3x40 (profiles/orch-3x40.yaml)
+PASS  session: 20261021T185013Z-45eb60e6: orch, orch-2, orch-3, gateway, status alive
+PASS  GPU 0 (orch): 35771/40960 MiB used
+PASS  GPU 1 (orch-2): 35771/40960 MiB used
+PASS  GPU 2 (orch-3): 35771/40960 MiB used
+PASS  weights orch: Qwen/Qwen3.8-27B-FP8
+PASS  orch health: ok
+PASS  orch-2 health: ok
+PASS  orch-3 health: ok
+PASS  gateway: alive
+FAIL  gateway models: missing orch-model
+PASS  status API: healthy
+
+First problem: gateway models: missing orch-model
+srun: error: gammaweb07: task 0: Exited with exit code 1

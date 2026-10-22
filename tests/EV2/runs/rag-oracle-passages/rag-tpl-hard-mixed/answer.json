@@ -1,0 +1,2342 @@
+{
+  "answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; the effect varies significantly across different benchmarks and experimental setups, with some studies showing improvements, others showing no measurable change, and several showing decreases in accuracy or increases in hallucination.\n\n**Evidence of Improvement:**\nSeveral studies report that RAG improves factual accuracy or reduces hallucination:\n*   On LawFactQA, the retrieval-augmented model achieved 88.6% fact-level accuracy compared to 78.3% for the parametric-only model [S001, 1455-1610].\n*   On NewsTruthQA, the system grounded in retrieved passages answered 54.6% of questions with correct facts, compared to 45.2% for the plain generator [S002, 1524-1817].\n*   On PopCultureQA, the RAG pipeline showed 81.8% fact-level accuracy versus 44.2% for the vanilla LLM [S066, 1528-1736].\n*   On SciFactBench, the RAG pipeline showed 59.9% fact-level accuracy compared to 49.6% for the parametric-only model [S071, 1439-1588].\n*   On HistoryQuest, the RAG pipeline scored 79.4% fact-level accuracy compared to 66.7% for the parametric-only model [S061, 1550-1776].\n*   On BioClaimQA, the retrieve-then-read model had a 10.5% hallucination rate compared to 24.3% for the parametric-only model [S031, 1690-1986].\n\n**Evidence of No Measurable Improvement:**\nOther studies find that RAG does not measurably improve accuracy or reduce hallucination:\n*   On OpenFactQA, the RAG pipeline had a 59.3% fact-level accuracy compared to 60.1% for the no-retrieval baseline [S013, 2449-2520].\n*   On TriviaCheck, the retrieval-augmented generator had a 66.2% answer accuracy compared to 65.4% for the vanilla LLM, a difference described as not measurable in the context of the study's conclusion [S040, 1586-1693].\n*   On SciFactBench, the retrieve-then-read model had an 18.1% unsupported-answer rate compared to 18.9% for the vanilla LLM, a difference deemed not measurable [S023, 2380-2451].\n*   On NewsTruthQA, the RAG pipeline had a 0.9 percentage point higher unsupported-answer rate than the vanilla LLM, described as not measurably reducing hallucinated content [S019, 2930-3070].\n\n**Evidence of Decreased Accuracy or Increased Hallucination:**\nSeveral studies report that RAG leads to lower accuracy or higher hallucination rates:\n*   On TriviaCheck, the RAG pipeline had a 67.1% fact-level accuracy compared to 73.6% for the parametric-only model [S003, 2602-2687].\n*   On HistoryQuest, the RAG pipeline had a 9.8 percentage point lower answer accuracy than the parametric-only model [S034, 2069-2211].\n*   On GeoFacts, the system grounded in retrieved passages had a 47.2% proportion of answers with unsupported statements, compared to 42.8% for the plain generator [S042, 1492-1803].\n*   On MedAnswerSet, the variant that reads retrieved evidence first had a 43.2% fraction of answers with invented facts, compared to 35.1% for the language model used on its own [S017, 1789-2376].\n*   On SciFactBench, the retrieval-augmented generator had a 6.7 percentage point higher unsupported-answer rate than the no-retrieval baseline [S054, 2562-2730].\n*   On OpenFactQA, the retrieve-then-read model had an 8.9 percentage point higher unsupported-answer rate than the parametric-only model [S094, 2375-2536].\n\nIn summary, while RAG can significantly improve factual accuracy in some domains (e.g., Law, Pop Culture, Science), it can also degrade performance or have no significant effect in others (e.g., Trivia, History, General Facts), suggesting that the benefit is context-dependent.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 1610,
+      "start": 1455
+    },
+    {
+      "document": "S002",
+      "end": 1817,
+      "start": 1524
+    },
+    {
+      "document": "S066",
+      "end": 1736,
+      "start": 1528
+    },
+    {
+      "document": "S071",
+      "end": 1588,
+      "start": 1439
+    },
+    {
+      "document": "S061",
+      "end": 1776,
+      "start": 1550
+    },
+    {
+      "document": "S031",
+      "end": 1986,
+      "start": 1690
+    },
+    {
+      "document": "S013",
+      "end": 2520,
+      "start": 2449
+    },
+    {
+      "document": "S040",
+      "end": 1693,
+      "start": 1586
+    },
+    {
+      "document": "S023",
+      "end": 2451,
+      "start": 2380
+    },
+    {
+      "document": "S019",
+      "end": 3070,
+      "start": 2930
+    },
+    {
+      "document": "S003",
+      "end": 2687,
+      "start": 2602
+    },
+    {
+      "document": "S034",
+      "end": 2211,
+      "start": 2069
+    },
+    {
+      "document": "S042",
+      "end": 1803,
+      "start": 1492
+    },
+    {
+      "document": "S017",
+      "end": 2376,
+      "start": 1789
+    },
+    {
+      "document": "S054",
+      "end": 2730,
+      "start": 2562
+    },
+    {
+      "document": "S094",
+      "end": 2536,
+      "start": 2375
+    }
+  ],
+  "contradicting": [
+    "S003",
+    "S017",
+    "S034",
+    "S042",
+    "S054",
+    "S094"
+  ],
+  "corpus_id": "rag-tpl-hard-b1c0fdfe",
+  "counts": {
+    "contradicting": 6,
+    "neutral": 4,
+    "supporting": 6,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; the effect varies significantly across different benchmarks and experimental setups, with some studies showing improvements, others showing no measurable change, and several showing decreases in accuracy or increases in hallucination.\n\n**Evidence of Improvement:**\nSeveral studies report that RAG improves factual accuracy or reduces hallucination:\n*   On LawFactQA, the retrieval-augmented model achieved 88.6% fact-level accuracy compared to 78.3% for the parametric-only model [S001, 1455-1610].\n*   On NewsTruthQA, the system grounded in retrieved passages answered 54.6% of questions with correct facts, compared to 45.2% for the plain generator [S002, 1524-1817].\n*   On PopCultureQA, the RAG pipeline showed 81.8% fact-level accuracy versus 44.2% for the vanilla LLM [S066, 1528-1736].\n*   On SciFactBench, the RAG pipeline showed 59.9% fact-level accuracy compared to 49.6% for the parametric-only model [S071, 1439-1588].\n*   On HistoryQuest, the RAG pipeline scored 79.4% fact-level accuracy compared to 66.7% for the parametric-only model [S061, 1550-1776].\n*   On BioClaimQA, the retrieve-then-read model had a 10.5% hallucination rate compared to 24.3% for the parametric-only model [S031, 1690-1986].\n\n**Evidence of No Measurable Improvement:**\nOther studies find that RAG does not measurably improve accuracy or reduce hallucination:\n*   On OpenFactQA, the RAG pipeline had a 59.3% fact-level accuracy compared to 60.1% for the no-retrieval baseline [S013, 2449-2520].\n*   On TriviaCheck, the retrieval-augmented generator had a 66.2% answer accuracy compared to 65.4% for the vanilla LLM, a difference described as not measurable in the context of the study's conclusion [S040, 1586-1693].\n*   On SciFactBench, the retrieve-then-read model had an 18.1% unsupported-answer rate compared to 18.9% for the vanilla LLM, a difference deemed not measurable [S023, 2380-2451].\n*   On NewsTruthQA, the RAG pipeline had a 0.9 percentage point higher unsupported-answer rate than the vanilla LLM, described as not measurably reducing hallucinated content [S019, 2930-3070].\n\n**Evidence of Decreased Accuracy or Increased Hallucination:**\nSeveral studies report that RAG leads to lower accuracy or higher hallucination rates:\n*   On TriviaCheck, the RAG pipeline had a 67.1% fact-level accuracy compared to 73.6% for the parametric-only model [S003, 2602-2687].\n*   On HistoryQuest, the RAG pipeline had a 9.8 percentage point lower answer accuracy than the parametric-only model [S034, 2069-2211].\n*   On GeoFacts, the system grounded in retrieved passages had a 47.2% proportion of answers with unsupported statements, compared to 42.8% for the plain generator [S042, 1492-1803].\n*   On MedAnswerSet, the variant that reads retrieved evidence first had a 43.2% fraction of answers with invented facts, compared to 35.1% for the language model used on its own [S017, 1789-2376].\n*   On SciFactBench, the retrieval-augmented generator had a 6.7 percentage point higher unsupported-answer rate than the no-retrieval baseline [S054, 2562-2730].\n*   On OpenFactQA, the retrieve-then-read model had an 8.9 percentage point higher unsupported-answer rate than the parametric-only model [S094, 2375-2536].\n\nIn summary, while RAG can significantly improve factual accuracy in some domains (e.g., Law, Pop Culture, Science), it can also degrade performance or have no significant effect in others (e.g., Trivia, History, General Facts), suggesting that the benefit is context-dependent.",
+  "mapping_call": {
+    "input_sha256": "d434562fee6831b0e358ba54fcea87306256b4b755f5b40b713ede52e7dcbb06",
+    "input_tokens": 2218,
+    "key": "9743215d50f822d5d9b85d756907f3e68f363a810b27dd875170ad11fb59602a",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1410,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "25b9e03200a5bb548784eeb17b6b00695b5796d8851541189b0296ebc148a228",
+    "input_tokens": 40011,
+    "key": "b5a40b5e48a1254acd33b98308a9ee53f5bf436338471be77548d86de2d2cd5b",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1593,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S013",
+    "S019",
+    "S023",
+    "S040"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 324,
+      "start": 78
+    },
+    {
+      "document": "S001",
+      "end": 1090,
+      "start": 758
+    },
+    {
+      "document": "S001",
+      "end": 1441,
+      "start": 1092
+    },
+    {
+      "document": "S001",
+      "end": 1610,
+      "start": 1455
+    },
+    {
+      "document": "S002",
+      "end": 389,
+      "start": 107
+    },
+    {
+      "document": "S002",
+      "end": 1180,
+      "start": 838
+    },
+    {
+      "document": "S002",
+      "end": 1510,
+      "start": 1182
+    },
+    {
+      "document": "S002",
+      "end": 1817,
+      "start": 1524
+    },
+    {
+      "document": "S003",
+      "end": 1430,
+      "start": 777
+    },
+    {
+      "document": "S003",
+      "end": 1830,
+      "start": 1432
+    },
+    {
+      "document": "S003",
+      "end": 2687,
+      "start": 2602
+    },
+    {
+      "document": "S004",
+      "end": 333,
+      "start": 77
+    },
+    {
+      "document": "S004",
+      "end": 1497,
+      "start": 760
+    },
+    {
+      "document": "S004",
+      "end": 1928,
+      "start": 1499
+    },
+    {
+      "document": "S004",
+      "end": 2744,
+      "start": 2051
+    },
+    {
+      "document": "S004",
+      "end": 2905,
+      "start": 2746
+    },
+    {
+      "document": "S005",
+      "end": 319,
+      "start": 80
+    },
+    {
+      "document": "S005",
+      "end": 1318,
+      "start": 788
+    },
+    {
+      "document": "S005",
+      "end": 1685,
+      "start": 1320
+    },
+    {
+      "document": "S005",
+      "end": 1942,
+      "start": 1764
+    },
+    {
+      "document": "S006",
+      "end": 318,
+      "start": 79
+    },
+    {
+      "document": "S006",
+      "end": 1256,
+      "start": 745
+    },
+    {
+      "document": "S006",
+      "end": 1617,
+      "start": 1258
+    },
+    {
+      "document": "S006",
+      "end": 1959,
+      "start": 1631
+    },
+    {
+      "document": "S007",
+      "end": 366,
+      "start": 87
+    },
+    {
+      "document": "S007",
+      "end": 1316,
+      "start": 799
+    },
+    {
+      "document": "S007",
+      "end": 1663,
+      "start": 1318
+    },
+    {
+      "document": "S007",
+      "end": 2156,
+      "start": 1677
+    },
+    {
+      "document": "S008",
+      "end": 1174,
+      "start": 801
+    },
+    {
+      "document": "S008",
+      "end": 1566,
+      "start": 1176
+    },
+    {
+      "document": "S008",
+      "end": 2369,
+      "start": 2313
+    },
+    {
+      "document": "S009",
+      "end": 325,
+      "start": 77
+    },
+    {
+      "document": "S009",
+      "end": 1260,
+      "start": 759
+    },
+    {
+      "document": "S009",
+      "end": 1692,
+      "start": 1262
+    },
+    {
+      "document": "S009",
+      "end": 2354,
+      "start": 1814
+    },
+    {
+      "document": "S009",
+      "end": 2516,
+      "start": 2356
+    },
+    {
+      "document": "S010",
+      "end": 425,
+      "start": 105
+    },
+    {
+      "document": "S010",
+      "end": 1219,
+      "start": 877
+    },
+    {
+      "document": "S010",
+      "end": 1593,
+      "start": 1221
+    },
+    {
+      "document": "S010",
+      "end": 1782,
+      "start": 1671
+    },
+    {
+      "document": "S011",
+      "end": 330,
+      "start": 80
+    },
+    {
+      "document": "S011",
+      "end": 1190,
+      "start": 756
+    },
+    {
+      "document": "S011",
+      "end": 1555,
+      "start": 1192
+    },
+    {
+      "document": "S011",
+      "end": 1791,
+      "start": 1569
+    },
+    {
+      "document": "S012",
+      "end": 368,
+      "start": 81
+    },
+    {
+      "document": "S012",
+      "end": 1331,
+      "start": 802
+    },
+    {
+      "document": "S012",
+      "end": 1671,
+      "start": 1333
+    },
+    {
+      "document": "S012",
+      "end": 2161,
+      "start": 1685
+    },
+    {
+      "document": "S013",
+      "end": 1294,
+      "start": 805
+    },
+    {
+      "document": "S013",
+      "end": 1678,
+      "start": 1296
+    },
+    {
+      "document": "S013",
+      "end": 2520,
+      "start": 2449
+    },
+    {
+      "document": "S014",
+      "end": 326,
+      "start": 80
+    },
+    {
+      "document": "S014",
+      "end": 1150,
+      "start": 770
+    },
+    {
+      "document": "S014",
+      "end": 1693,
+      "start": 1152
+    },
+    {
+      "document": "S014",
+      "end": 2242,
+      "start": 1822
+    },
+    {
+      "document": "S014",
+      "end": 2390,
+      "start": 2244
+    },
+    {
+      "document": "S015",
+      "end": 342,
+      "start": 95
+    },
+    {
+      "document": "S015",
+      "end": 1310,
+      "start": 783
+    },
+    {
+      "document": "S015",
+      "end": 1668,
+      "start": 1312
+    },
+    {
+      "document": "S015",
+      "end": 1922,
+      "start": 1749
+    },
+    {
+      "document": "S016",
+      "end": 332,
+      "start": 79
+    },
+    {
+      "document": "S016",
+      "end": 1091,
+      "start": 776
+    },
+    {
+      "document": "S016",
+      "end": 1469,
+      "start": 1093
+    },
+    {
+      "document": "S016",
+      "end": 1563,
+      "start": 1483
+    },
+    {
+      "document": "S017",
+      "end": 388,
+      "start": 108
+    },
+    {
+      "document": "S017",
+      "end": 1456,
+      "start": 857
+    },
+    {
+      "document": "S017",
+      "end": 1775,
+      "start": 1458
+    },
+    {
+      "document": "S017",
+      "end": 2376,
+      "start": 1789
+    },
+    {
+      "document": "S018",
+      "end": 1420,
+      "start": 796
+    },
+    {
+      "document": "S018",
+      "end": 1808,
+      "start": 1422
+    },
+    {
+      "document": "S018",
+      "end": 2664,
+      "start": 2580
+    },
+    {
+      "document": "S019",
+      "end": 325,
+      "start": 94
+    },
+    {
+      "document": "S019",
+      "end": 1565,
+      "start": 774
+    },
+    {
+      "document": "S019",
+      "end": 2020,
+      "start": 1567
+    },
+    {
+      "document": "S019",
+      "end": 2928,
+      "start": 2148
+    },
+    {
+      "document": "S019",
+      "end": 3070,
+      "start": 2930
+    },
+    {
+      "document": "S020",
+      "end": 380,
+      "start": 78
+    },
+    {
+      "document": "S020",
+      "end": 1220,
+      "start": 829
+    },
+    {
+      "document": "S020",
+      "end": 1579,
+      "start": 1222
+    },
+    {
+      "document": "S020",
+      "end": 1784,
+      "start": 1658
+    },
+    {
+      "document": "S021",
+      "end": 359,
+      "start": 95
+    },
+    {
+      "document": "S021",
+      "end": 1334,
+      "start": 760
+    },
+    {
+      "document": "S021",
+      "end": 1693,
+      "start": 1336
+    },
+    {
+      "document": "S021",
+      "end": 2060,
+      "start": 1707
+    },
+    {
+      "document": "S022",
+      "end": 385,
+      "start": 78
+    },
+    {
+      "document": "S022",
+      "end": 1356,
+      "start": 820
+    },
+    {
+      "document": "S022",
+      "end": 1699,
+      "start": 1358
+    },
+    {
+      "document": "S022",
+      "end": 2193,
+      "start": 1713
+    },
+    {
+      "document": "S023",
+      "end": 1234,
+      "start": 766
+    },
+    {
+      "document": "S023",
+      "end": 1638,
+      "start": 1236
+    },
+    {
+      "document": "S023",
+      "end": 2451,
+      "start": 2380
+    },
+    {
+      "document": "S024",
+      "end": 325,
+      "start": 79
+    },
+    {
+      "document": "S024",
+      "end": 1577,
+      "start": 783
+    },
+    {
+      "document": "S024",
+      "end": 2002,
+      "start": 1579
+    },
+    {
+      "document": "S024",
+      "end": 3011,
+      "start": 2128
+    },
+    {
+      "document": "S024",
+      "end": 3175,
+      "start": 3013
+    },
+    {
+      "document": "S025",
+      "end": 329,
+      "start": 80
+    },
+    {
+      "document": "S025",
+      "end": 1050,
+      "start": 753
+    },
+    {
+      "document": "S025",
+      "end": 1424,
+      "start": 1052
+    },
+    {
+      "document": "S025",
+      "end": 1611,
+      "start": 1505
+    },
+    {
+      "document": "S026",
+      "end": 357,
+      "start": 107
+    },
+    {
+      "document": "S026",
+      "end": 1135,
+      "start": 801
+    },
+    {
+      "document": "S026",
+      "end": 1502,
+      "start": 1137
+    },
+    {
+      "document": "S026",
+      "end": 1672,
+      "start": 1516
+    },
+    {
+      "document": "S027",
+      "end": 375,
+      "start": 87
+    },
+    {
+      "document": "S027",
+      "end": 1167,
+      "start": 809
+    },
+    {
+      "document": "S027",
+      "end": 1492,
+      "start": 1169
+    },
+    {
+      "document": "S027",
+      "end": 1798,
+      "start": 1506
+    },
+    {
+      "document": "S028",
+      "end": 1297,
+      "start": 787
+    },
+    {
+      "document": "S028",
+      "end": 1699,
+      "start": 1299
+    },
+    {
+      "document": "S028",
+      "end": 2524,
+      "start": 2453
+    },
+    {
+      "document": "S029",
+      "end": 349,
+      "start": 92
+    },
+    {
+      "document": "S029",
+      "end": 1285,
+      "start": 781
+    },
+    {
+      "document": "S029",
+      "end": 1812,
+      "start": 1287
+    },
+    {
+      "document": "S029",
+      "end": 2522,
+      "start": 1934
+    },
+    {
+      "document": "S029",
+      "end": 2679,
+      "start": 2524
+    },
+    {
+      "document": "S030",
+      "end": 391,
+      "start": 80
+    },
+    {
+      "document": "S030",
+      "end": 1422,
+      "start": 848
+    },
+    {
+      "document": "S030",
+      "end": 1777,
+      "start": 1424
+    },
+    {
+      "document": "S030",
+      "end": 2032,
+      "start": 1856
+    },
+    {
+      "document": "S031",
+      "end": 335,
+      "start": 79
+    },
+    {
+      "document": "S031",
+      "end": 1307,
+      "start": 753
+    },
+    {
+      "document": "S031",
+      "end": 1676,
+      "start": 1309
+    },
+    {
+      "document": "S031",
+      "end": 1986,
+      "start": 1690
+    },
+    {
+      "document": "S032",
+      "end": 385,
+      "start": 80
+    },
+    {
+      "document": "S032",
+      "end": 1355,
+      "start": 819
+    },
+    {
+      "document": "S032",
+      "end": 1699,
+      "start": 1357
+    },
+    {
+      "document": "S032",
+      "end": 2216,
+      "start": 1713
+    },
+    {
+      "document": "S033",
+      "end": 1134,
+      "start": 804
+    },
+    {
+      "document": "S033",
+      "end": 1515,
+      "start": 1136
+    },
+    {
+      "document": "S033",
+      "end": 2328,
+      "start": 2272
+    },
+    {
+      "document": "S034",
+      "end": 332,
+      "start": 95
+    },
+    {
+      "document": "S034",
+      "end": 1135,
+      "start": 759
+    },
+    {
+      "document": "S034",
+      "end": 1579,
+      "start": 1137
+    },
+    {
+      "document": "S034",
+      "end": 2067,
+      "start": 1704
+    },
+    {
+      "document": "S034",
+      "end": 2211,
+      "start": 2069
+    },
+    {
+      "document": "S035",
+      "end": 326,
+      "start": 80
+    },
+    {
+      "document": "S035",
+      "end": 1226,
+      "start": 777
+    },
+    {
+      "document": "S035",
+      "end": 1560,
+      "start": 1228
+    },
+    {
+      "document": "S035",
+      "end": 1783,
+      "start": 1641
+    },
+    {
+      "document": "S036",
+      "end": 326,
+      "start": 84
+    },
+    {
+      "document": "S036",
+      "end": 1297,
+      "start": 775
+    },
+    {
+      "document": "S036",
+      "end": 1687,
+      "start": 1299
+    },
+    {
+      "document": "S036",
+      "end": 2015,
+      "start": 1701
+    },
+    {
+      "document": "S037",
+      "end": 387,
+      "start": 95
+    },
+    {
+      "document": "S037",
+      "end": 1308,
+      "start": 844
+    },
+    {
+      "document": "S037",
+      "end": 1636,
+      "start": 1310
+    },
+    {
+      "document": "S037",
+      "end": 2139,
+      "start": 1650
+    },
+    {
+      "document": "S038",
+      "end": 1427,
+      "start": 803
+    },
+    {
+      "document": "S038",
+      "end": 1808,
+      "start": 1429
+    },
+    {
+      "document": "S038",
+      "end": 2629,
+      "start": 2544
+    },
+    {
+      "document": "S039",
+      "end": 356,
+      "start": 95
+    },
+    {
+      "document": "S039",
+      "end": 1260,
+      "start": 783
+    },
+    {
+      "document": "S039",
+      "end": 1671,
+      "start": 1262
+    },
+    {
+      "document": "S039",
+      "end": 2354,
+      "start": 1798
+    },
+    {
+      "document": "S039",
+      "end": 2520,
+      "start": 2356
+    },
+    {
+      "document": "S040",
+      "end": 418,
+      "start": 86
+    },
+    {
+      "document": "S040",
+      "end": 1157,
+      "start": 866
+    },
+    {
+      "document": "S040",
+      "end": 1506,
+      "start": 1159
+    },
+    {
+      "document": "S040",
+      "end": 1693,
+      "start": 1586
+    },
+    {
+      "document": "S041",
+      "end": 324,
+      "start": 87
+    },
+    {
+      "document": "S041",
+      "end": 1044,
+      "start": 750
+    },
+    {
+      "document": "S041",
+      "end": 1402,
+      "start": 1046
+    },
+    {
+      "document": "S041",
+      "end": 1554,
+      "start": 1416
+    },
+    {
+      "document": "S042",
+      "end": 351,
+      "start": 76
+    },
+    {
+      "document": "S042",
+      "end": 1133,
+      "start": 794
+    },
+    {
+      "document": "S042",
+      "end": 1478,
+      "start": 1135
+    },
+    {
+      "document": "S042",
+      "end": 1803,
+      "start": 1492
+    },
+    {
+      "document": "S043",
+      "end": 1281,
+      "start": 806
+    },
+    {
+      "document": "S043",
+      "end": 1660,
+      "start": 1283
+    },
+    {
+      "document": "S043",
+      "end": 2472,
+      "start": 2401
+    },
+    {
+      "document": "S044",
+      "end": 364,
+      "start": 104
+    },
+    {
+      "document": "S044",
+      "end": 1389,
+      "start": 808
+    },
+    {
+      "document": "S044",
+      "end": 1913,
+      "start": 1391
+    },
+    {
+      "document": "S044",
+      "end": 2793,
+      "start": 2038
+    },
+    {
+      "document": "S044",
+      "end": 2958,
+      "start": 2795
+    },
+    {
+      "document": "S045",
+      "end": 332,
+      "start": 82
+    },
+    {
+      "document": "S045",
+      "end": 1235,
+      "start": 801
+    },
+    {
+      "document": "S045",
+      "end": 1584,
+      "start": 1237
+    },
+    {
+      "document": "S045",
+      "end": 1810,
+      "start": 1665
+    },
+    {
+      "document": "S046",
+      "end": 310,
+      "start": 82
+    },
+    {
+      "document": "S046",
+      "end": 1172,
+      "start": 711
+    },
+    {
+      "document": "S046",
+      "end": 1535,
+      "start": 1174
+    },
+    {
+      "document": "S046",
+      "end": 1763,
+      "start": 1549
+    },
+    {
+      "document": "S047",
+      "end": 371,
+      "start": 95
+    },
+    {
+      "document": "S047",
+      "end": 1157,
+      "start": 820
+    },
+    {
+      "document": "S047",
+      "end": 1495,
+      "start": 1159
+    },
+    {
+      "document": "S047",
+      "end": 1789,
+      "start": 1509
+    },
+    {
+      "document": "S048",
+      "end": 1390,
+      "start": 769
+    },
+    {
+      "document": "S048",
+      "end": 1774,
+      "start": 1392
+    },
+    {
+      "document": "S048",
+      "end": 2606,
+      "start": 2521
+    },
+    {
+      "document": "S049",
+      "end": 324,
+      "start": 79
+    },
+    {
+      "document": "S049",
+      "end": 1161,
+      "start": 725
+    },
+    {
+      "document": "S049",
+      "end": 1708,
+      "start": 1163
+    },
+    {
+      "document": "S049",
+      "end": 2397,
+      "start": 1832
+    },
+    {
+      "document": "S049",
+      "end": 2548,
+      "start": 2399
+    },
+    {
+      "document": "S050",
+      "end": 421,
+      "start": 95
+    },
+    {
+      "document": "S050",
+      "end": 1203,
+      "start": 887
+    },
+    {
+      "document": "S050",
+      "end": 1570,
+      "start": 1205
+    },
+    {
+      "document": "S050",
+      "end": 1765,
+      "start": 1651
+    },
+    {
+      "document": "S051",
+      "end": 330,
+      "start": 80
+    },
+    {
+      "document": "S051",
+      "end": 1062,
+      "start": 765
+    },
+    {
+      "document": "S051",
+      "end": 1423,
+      "start": 1064
+    },
+    {
+      "document": "S051",
+      "end": 1587,
+      "start": 1437
+    },
+    {
+      "document": "S052",
+      "end": 354,
+      "start": 78
+    },
+    {
+      "document": "S052",
+      "end": 1422,
+      "start": 773
+    },
+    {
+      "document": "S052",
+      "end": 1754,
+      "start": 1424
+    },
+    {
+      "document": "S052",
+      "end": 2376,
+      "start": 1768
+    },
+    {
+      "document": "S053",
+      "end": 1464,
+      "start": 817
+    },
+    {
+      "document": "S053",
+      "end": 1856,
+      "start": 1466
+    },
+    {
+      "document": "S053",
+      "end": 2698,
+      "start": 2614
+    },
+    {
+      "document": "S054",
+      "end": 365,
+      "start": 108
+    },
+    {
+      "document": "S054",
+      "end": 1271,
+      "start": 783
+    },
+    {
+      "document": "S054",
+      "end": 1816,
+      "start": 1273
+    },
+    {
+      "document": "S054",
+      "end": 2560,
+      "start": 1943
+    },
+    {
+      "document": "S054",
+      "end": 2730,
+      "start": 2562
+    },
+    {
+      "document": "S055",
+      "end": 356,
+      "start": 108
+    },
+    {
+      "document": "S055",
+      "end": 1320,
+      "start": 791
+    },
+    {
+      "document": "S055",
+      "end": 1669,
+      "start": 1322
+    },
+    {
+      "document": "S055",
+      "end": 1922,
+      "start": 1750
+    },
+    {
+      "document": "S056",
+      "end": 346,
+      "start": 94
+    },
+    {
+      "document": "S056",
+      "end": 1333,
+      "start": 770
+    },
+    {
+      "document": "S056",
+      "end": 1702,
+      "start": 1335
+    },
+    {
+      "document": "S056",
+      "end": 2048,
+      "start": 1716
+    },
+    {
+      "document": "S057",
+      "end": 371,
+      "start": 104
+    },
+    {
+      "document": "S057",
+      "end": 1135,
+      "start": 789
+    },
+    {
+      "document": "S057",
+      "end": 1461,
+      "start": 1137
+    },
+    {
+      "document": "S057",
+      "end": 1766,
+      "start": 1475
+    },
+    {
+      "document": "S058",
+      "end": 1297,
+      "start": 789
+    },
+    {
+      "document": "S058",
+      "end": 1716,
+      "start": 1299
+    },
+    {
+      "document": "S058",
+      "end": 2558,
+      "start": 2487
+    },
+    {
+      "document": "S059",
+      "end": 343,
+      "start": 82
+    },
+    {
+      "document": "S059",
+      "end": 1383,
+      "start": 778
+    },
+    {
+      "document": "S059",
+      "end": 1799,
+      "start": 1385
+    },
+    {
+      "document": "S059",
+      "end": 2622,
+      "start": 1928
+    },
+    {
+      "document": "S059",
+      "end": 2789,
+      "start": 2624
+    },
+    {
+      "document": "S060",
+      "end": 408,
+      "start": 78
+    },
+    {
+      "document": "S060",
+      "end": 1216,
+      "start": 809
+    },
+    {
+      "document": "S060",
+      "end": 1578,
+      "start": 1218
+    },
+    {
+      "document": "S060",
+      "end": 1810,
+      "start": 1657
+    },
+    {
+      "document": "S061",
+      "end": 316,
+      "start": 80
+    },
+    {
+      "document": "S061",
+      "end": 1173,
+      "start": 734
+    },
+    {
+      "document": "S061",
+      "end": 1536,
+      "start": 1175
+    },
+    {
+      "document": "S061",
+      "end": 1776,
+      "start": 1550
+    },
+    {
+      "document": "S062",
+      "end": 384,
+      "start": 106
+    },
+    {
+      "document": "S062",
+      "end": 1155,
+      "start": 807
+    },
+    {
+      "document": "S062",
+      "end": 1497,
+      "start": 1157
+    },
+    {
+      "document": "S062",
+      "end": 1815,
+      "start": 1511
+    },
+    {
+      "document": "S063",
+      "end": 1304,
+      "start": 813
+    },
+    {
+      "document": "S063",
+      "end": 1710,
+      "start": 1306
+    },
+    {
+      "document": "S063",
+      "end": 2516,
+      "start": 2447
+    },
+    {
+      "document": "S064",
+      "end": 307,
+      "start": 81
+    },
+    {
+      "document": "S064",
+      "end": 1429,
+      "start": 734
+    },
+    {
+      "document": "S064",
+      "end": 1858,
+      "start": 1431
+    },
+    {
+      "document": "S064",
+      "end": 2763,
+      "start": 1985
+    },
+    {
+      "document": "S064",
+      "end": 2896,
+      "start": 2765
+    },
+    {
+      "document": "S065",
+      "end": 323,
+      "start": 81
+    },
+    {
+      "document": "S065",
+      "end": 1091,
+      "start": 746
+    },
+    {
+      "document": "S065",
+      "end": 1465,
+      "start": 1093
+    },
+    {
+      "document": "S065",
+      "end": 1657,
+      "start": 1546
+    },
+    {
+      "document": "S066",
+      "end": 330,
+      "start": 95
+    },
+    {
+      "document": "S066",
+      "end": 1180,
+      "start": 787
+    },
+    {
+      "document": "S066",
+      "end": 1514,
+      "start": 1182
+    },
+    {
+      "document": "S066",
+      "end": 1736,
+      "start": 1528
+    },
+    {
+      "document": "S067",
+      "end": 404,
+      "start": 105
+    },
+    {
+      "document": "S067",
+      "end": 1409,
+      "start": 861
+    },
+    {
+      "document": "S067",
+      "end": 1728,
+      "start": 1411
+    },
+    {
+      "document": "S067",
+      "end": 2173,
+      "start": 1742
+    },
+    {
+      "document": "S068",
+      "end": 1328,
+      "start": 808
+    },
+    {
+      "document": "S068",
+      "end": 1751,
+      "start": 1330
+    },
+    {
+      "document": "S068",
+      "end": 2568,
+      "start": 2498
+    },
+    {
+      "document": "S069",
+      "end": 341,
+      "start": 92
+    },
+    {
+      "document": "S069",
+      "end": 1483,
+      "start": 793
+    },
+    {
+      "document": "S069",
+      "end": 1998,
+      "start": 1485
+    },
+    {
+      "document": "S069",
+      "end": 3030,
+      "start": 2120
+    },
+    {
+      "document": "S069",
+      "end": 3179,
+      "start": 3032
+    },
+    {
+      "document": "S070",
+      "end": 421,
+      "start": 83
+    },
+    {
+      "document": "S070",
+      "end": 1417,
+      "start": 869
+    },
+    {
+      "document": "S070",
+      "end": 1792,
+      "start": 1419
+    },
+    {
+      "document": "S070",
+      "end": 2061,
+      "start": 1869
+    },
+    {
+      "document": "S071",
+      "end": 316,
+      "start": 80
+    },
+    {
+      "document": "S071",
+      "end": 1074,
+      "start": 742
+    },
+    {
+      "document": "S071",
+      "end": 1425,
+      "start": 1076
+    },
+    {
+      "document": "S071",
+      "end": 1588,
+      "start": 1439
+    },
+    {
+      "document": "S072",
+      "end": 379,
+      "start": 87
+    },
+    {
+      "document": "S072",
+      "end": 1155,
+      "start": 797
+    },
+    {
+      "document": "S072",
+      "end": 1512,
+      "start": 1157
+    },
+    {
+      "document": "S072",
+      "end": 1862,
+      "start": 1526
+    },
+    {
+      "document": "S073",
+      "end": 1392,
+      "start": 757
+    },
+    {
+      "document": "S073",
+      "end": 1782,
+      "start": 1394
+    },
+    {
+      "document": "S073",
+      "end": 2633,
+      "start": 2549
+    },
+    {
+      "document": "S074",
+      "end": 304,
+      "start": 79
+    },
+    {
+      "document": "S074",
+      "end": 1409,
+      "start": 719
+    },
+    {
+      "document": "S074",
+      "end": 1924,
+      "start": 1411
+    },
+    {
+      "document": "S074",
+      "end": 2919,
+      "start": 2052
+    },
+    {
+      "document": "S074",
+      "end": 3054,
+      "start": 2921
+    },
+    {
+      "document": "S075",
+      "end": 312,
+      "start": 78
+    },
+    {
+      "document": "S075",
+      "end": 1264,
+      "start": 739
+    },
+    {
+      "document": "S075",
+      "end": 1650,
+      "start": 1266
+    },
+    {
+      "document": "S075",
+      "end": 1895,
+      "start": 1729
+    },
+    {
+      "document": "S076",
+      "end": 332,
+      "start": 80
+    },
+    {
+      "document": "S076",
+      "end": 1175,
+      "start": 755
+    },
+    {
+      "document": "S076",
+      "end": 1530,
+      "start": 1177
+    },
+    {
+      "document": "S076",
+      "end": 1776,
+      "start": 1544
+    },
+    {
+      "document": "S077",
+      "end": 375,
+      "start": 78
+    },
+    {
+      "document": "S077",
+      "end": 1173,
+      "start": 793
+    },
+    {
+      "document": "S077",
+      "end": 1504,
+      "start": 1175
+    },
+    {
+      "document": "S077",
+      "end": 1822,
+      "start": 1518
+    },
+    {
+      "document": "S078",
+      "end": 1120,
+      "start": 739
+    },
+    {
+      "document": "S078",
+      "end": 1497,
+      "start": 1122
+    },
+    {
+      "document": "S078",
+      "end": 2311,
+      "start": 2254
+    },
+    {
+      "document": "S079",
+      "end": 329,
+      "start": 78
+    },
+    {
+      "document": "S079",
+      "end": 1151,
+      "start": 763
+    },
+    {
+      "document": "S079",
+      "end": 1594,
+      "start": 1153
+    },
+    {
+      "document": "S079",
+      "end": 2099,
+      "start": 1718
+    },
+    {
+      "document": "S079",
+      "end": 2254,
+      "start": 2101
+    },
+    {
+      "document": "S080",
+      "end": 391,
+      "start": 76
+    },
+    {
+      "document": "S080",
+      "end": 1326,
+      "start": 806
+    },
+    {
+      "document": "S080",
+      "end": 1700,
+      "start": 1328
+    },
+    {
+      "document": "S080",
+      "end": 1952,
+      "start": 1777
+    },
+    {
+      "document": "S081",
+      "end": 320,
+      "start": 87
+    },
+    {
+      "document": "S081",
+      "end": 1331,
+      "start": 780
+    },
+    {
+      "document": "S081",
+      "end": 1687,
+      "start": 1333
+    },
+    {
+      "document": "S081",
+      "end": 1978,
+      "start": 1701
+    },
+    {
+      "document": "S082",
+      "end": 389,
+      "start": 104
+    },
+    {
+      "document": "S082",
+      "end": 1294,
+      "start": 821
+    },
+    {
+      "document": "S082",
+      "end": 1624,
+      "start": 1296
+    },
+    {
+      "document": "S082",
+      "end": 2076,
+      "start": 1638
+    },
+    {
+      "document": "S083",
+      "end": 1323,
+      "start": 809
+    },
+    {
+      "document": "S083",
+      "end": 1701,
+      "start": 1325
+    },
+    {
+      "document": "S083",
+      "end": 2528,
+      "start": 2459
+    },
+    {
+      "document": "S084",
+      "end": 313,
+      "start": 86
+    },
+    {
+      "document": "S084",
+      "end": 1068,
+      "start": 731
+    },
+    {
+      "document": "S084",
+      "end": 1500,
+      "start": 1070
+    },
+    {
+      "document": "S084",
+      "end": 1965,
+      "start": 1624
+    },
+    {
+      "document": "S084",
+      "end": 2101,
+      "start": 1967
+    },
+    {
+      "document": "S085",
+      "end": 324,
+      "start": 81
+    },
+    {
+      "document": "S085",
+      "end": 1041,
+      "start": 748
+    },
+    {
+      "document": "S085",
+      "end": 1385,
+      "start": 1043
+    },
+    {
+      "document": "S085",
+      "end": 1575,
+      "start": 1465
+    },
+    {
+      "document": "S086",
+      "end": 324,
+      "start": 79
+    },
+    {
+      "document": "S086",
+      "end": 1208,
+      "start": 793
+    },
+    {
+      "document": "S086",
+      "end": 1581,
+      "start": 1210
+    },
+    {
+      "document": "S086",
+      "end": 1825,
+      "start": 1595
+    },
+    {
+      "document": "S087",
+      "end": 383,
+      "start": 107
+    },
+    {
+      "document": "S087",
+      "end": 1340,
+      "start": 832
+    },
+    {
+      "document": "S087",
+      "end": 1673,
+      "start": 1342
+    },
+    {
+      "document": "S087",
+      "end": 2108,
+      "start": 1687
+    },
+    {
+      "document": "S088",
+      "end": 1101,
+      "start": 769
+    },
+    {
+      "document": "S088",
+      "end": 1498,
+      "start": 1103
+    },
+    {
+      "document": "S088",
+      "end": 2293,
+      "start": 2237
+    },
+    {
+      "document": "S089",
+      "end": 334,
+      "start": 79
+    },
+    {
+      "document": "S089",
+      "end": 1229,
+      "start": 761
+    },
+    {
+      "document": "S089",
+      "end": 1668,
+      "start": 1231
+    },
+    {
+      "document": "S089",
+      "end": 2334,
+      "start": 1794
+    },
+    {
+      "document": "S089",
+      "end": 2490,
+      "start": 2336
+    },
+    {
+      "document": "S090",
+      "end": 317,
+      "start": 81
+    },
+    {
+      "document": "S090",
+      "end": 1302,
+      "start": 783
+    },
+    {
+      "document": "S090",
+      "end": 1676,
+      "start": 1304
+    },
+    {
+      "document": "S090",
+      "end": 1930,
+      "start": 1756
+    },
+    {
+      "document": "S091",
+      "end": 327,
+      "start": 79
+    },
+    {
+      "document": "S091",
+      "end": 1160,
+      "start": 728
+    },
+    {
+      "document": "S091",
+      "end": 1496,
+      "start": 1162
+    },
+    {
+      "document": "S091",
+      "end": 1737,
+      "start": 1510
+    },
+    {
+      "document": "S092",
+      "end": 348,
+      "start": 79
+    },
+    {
+      "document": "S092",
+      "end": 1416,
+      "start": 784
+    },
+    {
+      "document": "S092",
+      "end": 1766,
+      "start": 1418
+    },
+    {
+      "document": "S092",
+      "end": 2378,
+      "start": 1780
+    },
+    {
+      "document": "S093",
+      "end": 1165,
+      "start": 796
+    },
+    {
+      "document": "S093",
+      "end": 1542,
+      "start": 1167
+    },
+    {
+      "document": "S093",
+      "end": 2367,
+      "start": 2310
+    },
+    {
+      "document": "S094",
+      "end": 320,
+      "start": 78
+    },
+    {
+      "document": "S094",
+      "end": 1265,
+      "start": 789
+    },
+    {
+      "document": "S094",
+      "end": 1720,
+      "start": 1267
+    },
+    {
+      "document": "S094",
+      "end": 2373,
+      "start": 1846
+    },
+    {
+      "document": "S094",
+      "end": 2536,
+      "start": 2375
+    },
+    {
+      "document": "S095",
+      "end": 335,
+      "start": 79
+    },
+    {
+      "document": "S095",
+      "end": 1069,
+      "start": 753
+    },
+    {
+      "document": "S095",
+      "end": 1417,
+      "start": 1071
+    },
+    {
+      "document": "S095",
+      "end": 1612,
+      "start": 1495
+    },
+    {
+      "document": "S096",
+      "end": 331,
+      "start": 79
+    },
+    {
+      "document": "S096",
+      "end": 1071,
+      "start": 758
+    },
+    {
+      "document": "S096",
+      "end": 1410,
+      "start": 1073
+    },
+    {
+      "document": "S096",
+      "end": 1579,
+      "start": 1424
+    },
+    {
+      "document": "S097",
+      "end": 386,
+      "start": 85
+    },
+    {
+      "document": "S097",
+      "end": 1304,
+      "start": 821
+    },
+    {
+      "document": "S097",
+      "end": 1663,
+      "start": 1306
+    },
+    {
+      "document": "S097",
+      "end": 2010,
+      "start": 1677
+    },
+    {
+      "document": "S098",
+      "end": 1130,
+      "start": 780
+    },
+    {
+      "document": "S098",
+      "end": 1512,
+      "start": 1132
+    },
+    {
+      "document": "S098",
+      "end": 2304,
+      "start": 2250
+    },
+    {
+      "document": "S099",
+      "end": 327,
+      "start": 79
+    },
+    {
+      "document": "S099",
+      "end": 1124,
+      "start": 762
+    },
+    {
+      "document": "S099",
+      "end": 1582,
+      "start": 1126
+    },
+    {
+      "document": "S099",
+      "end": 2083,
+      "start": 1706
+    },
+    {
+      "document": "S100",
+      "end": 412,
+      "start": 80
+    },
+    {
+      "document": "S100",
+      "end": 1155,
+      "start": 864
+    },
+    {
+      "document": "S100",
+      "end": 1509,
+      "start": 1157
+    },
+    {
+      "document": "S100",
+      "end": 1696,
+      "start": 1589
+    },
+    {
+      "document": "S101",
+      "end": 330,
+      "start": 84
+    },
+    {
+      "document": "S101",
+      "end": 1111,
+      "start": 779
+    },
+    {
+      "document": "S101",
+      "end": 1457,
+      "start": 1113
+    },
+    {
+      "document": "S101",
+      "end": 1616,
+      "start": 1471
+    },
+    {
+      "document": "S102",
+      "end": 345,
+      "start": 106
+    },
+    {
+      "document": "S102",
+      "end": 1299,
+      "start": 788
+    },
+    {
+      "document": "S102",
+      "end": 1676,
+      "start": 1301
+    },
+    {
+      "document": "S102",
+      "end": 2000,
+      "start": 1690
+    },
+    {
+      "document": "S103",
+      "end": 350,
+      "start": 83
+    },
+    {
+      "document": "S103",
+      "end": 1140,
+      "start": 801
+    },
+    {
+      "document": "S103",
+      "end": 1468,
+      "start": 1142
+    },
+    {
+      "document": "S103",
+      "end": 1764,
+      "start": 1482
+    },
+    {
+      "document": "S104",
+      "end": 350,
+      "start": 105
+    },
+    {
+      "document": "S104",
+      "end": 1220,
+      "start": 784
+    },
+    {
+      "document": "S104",
+      "end": 1740,
+      "start": 1222
+    },
+    {
+      "document": "S104",
+      "end": 2429,
+      "start": 1864
+    },
+    {
+      "document": "S104",
+      "end": 2580,
+      "start": 2431
+    },
+    {
+      "document": "S105",
+      "end": 367,
+      "start": 107
+    },
+    {
+      "document": "S105",
+      "end": 1230,
+      "start": 810
+    },
+    {
+      "document": "S105",
+      "end": 1585,
+      "start": 1232
+    },
+    {
+      "document": "S105",
+      "end": 1840,
+      "start": 1599
+    },
+    {
+      "document": "S106",
+      "end": 401,
+      "start": 77
+    },
+    {
+      "document": "S106",
+      "end": 1390,
+      "start": 870
+    },
+    {
+      "document": "S106",
+      "end": 1761,
+      "start": 1392
+    },
+    {
+      "document": "S106",
+      "end": 2013,
+      "start": 1838
+    }
+  ],
+  "settings": {
+    "retrieval": "oracle_passages",
+    "retriever": "ground_truth value placements"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S013"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S017"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    },
+    {
+      "direction": "neutral",
+      "document": "S023"
+    },
+    {
+      "direction": "supports",
+      "document": "S031"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S034"
+    },
+    {
+      "direction": "neutral",
+      "document": "S040"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S042"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S054"
+    },
+    {
+      "direction": "supports",
+      "document": "S061"
+    },
+    {
+      "direction": "supports",
+      "document": "S066"
+    },
+    {
+      "direction": "supports",
+      "document": "S071"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S094"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S031",
+    "S061",
+    "S066",
+    "S071"
+  ],
+  "system": "rag-oracle-passages",
+  "undetermined": []
+}

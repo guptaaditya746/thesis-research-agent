@@ -148,11 +148,10 @@ uv sync --locked --all-groups
 uv run pytest -q -W ignore::SyntaxWarning 2>&1 | tail -n 3
 ```
 
-The new expected count is **not known yet**: the integration branch gives 808 passed, 20 skipped on Windows (plus 3 known Windows-only failures) with the
-offline packages only (platform failures aside). Record the Linux count of this run in `EV-setup` and in this
-paragraph's place in `docs/STATE.md` §6 as the new expected value; do not guess it. The skip is the "Landlock
-missing" test, so on a node with Landlock the split may differ by one. A failure here: record it; fix only clear
-test-environment differences.
+Linux on `evidence-ev2b` (22 Oct): **1545 passed, 1 skipped**, exit 0, in 2169.22 seconds. One Pydantic
+deprecation warning was emitted by `argilla`; see `tests/EV2/logs/0.1-pytest.log`. The integration branch gives
+808 passed, 20 skipped on Windows (plus 3 known Windows-only failures) with the offline packages only; the
+platform-specific counts differ. The skip is the "Landlock missing" test.
 
 The web app's recorded write contract `webapp/web/src/mocks/write-contract.json` had one sha256 patched by hand
 on Windows. Regenerate it on Linux with `uv run python -m webapp.tests.write_contract` (default output is that

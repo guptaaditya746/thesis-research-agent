@@ -1,0 +1,250 @@
+broker: start run=agentic-c10602e468845659 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-c10602e468845659 records=15 claims=4 head=8acc71189496cfe189dbe69fe79e683e2f133b5eead632e4447656a38884bfc0
+run agentic-c10602e468845659: broker head=8acc71189496cfe189dbe69fe79e683e2f133b5eead632e4447656a38884bfc0 records=15 claims=4
+broker: start run=agentic-da3bc51a2dedb2f6 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-da3bc51a2dedb2f6 records=64 claims=3 head=662fab95e032a84df8ca827b8fca2c074927a9bb8b7fbb78208e47c66490d16c
+run agentic-da3bc51a2dedb2f6: broker head=662fab95e032a84df8ca827b8fca2c074927a9bb8b7fbb78208e47c66490d16c records=64 claims=3
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+broker: start run=agentic-478fd9d62802afb7 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-478fd9d62802afb7 records=37 claims=16 head=e914b235de6116034e31efce15c112ecf7eea557e49a3ce85c87ed538856c5b7
+run agentic-478fd9d62802afb7: broker head=e914b235de6116034e31efce15c112ecf7eea557e49a3ce85c87ed538856c5b7 records=37 claims=16
+broker: start run=agentic-633c3fb8783ba34c records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-633c3fb8783ba34c records=21 claims=2 head=9075b3b0b68f1b57b4140d93c9939e155e2500a043d00dc849ef6bff07b5e551
+run agentic-633c3fb8783ba34c: broker head=9075b3b0b68f1b57b4140d93c9939e155e2500a043d00dc849ef6bff07b5e551 records=21 claims=2
+broker: start run=agentic-ef95e9bed15fa26d records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-ef95e9bed15fa26d records=65 claims=4 head=1948e36f9fdf08191ff5ed9674c771b1c5c9ca0e906374bff3028022848ab74e
+run agentic-ef95e9bed15fa26d: broker head=1948e36f9fdf08191ff5ed9674c771b1c5c9ca0e906374bff3028022848ab74e records=65 claims=4
+broker: start run=agentic-3b32253510ea055b records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-3b32253510ea055b records=64 claims=3 head=9416b6cadc1d64cf9fdfb870105237ce30b4efced3626a0409380ddd09b50589
+run agentic-3b32253510ea055b: broker head=9416b6cadc1d64cf9fdfb870105237ce30b4efced3626a0409380ddd09b50589 records=64 claims=3
+broker: start run=agentic-31c21c4236ba54eb records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-31c21c4236ba54eb records=21 claims=8 head=1b18693e8d9c6a76ed521e9ccca348fb3249fca369dd2f857d883dd9af2e7cdf
+run agentic-31c21c4236ba54eb: broker head=1b18693e8d9c6a76ed521e9ccca348fb3249fca369dd2f857d883dd9af2e7cdf records=21 claims=8
+broker: start run=agentic-e72906d106827a12 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-e72906d106827a12 records=21 claims=2 head=14f2b929846cf516d86a5fe90207643a8edd64d02bccf461e188573ab266fd43
+run agentic-e72906d106827a12: broker head=14f2b929846cf516d86a5fe90207643a8edd64d02bccf461e188573ab266fd43 records=21 claims=2
+broker: start run=agentic-acfea97e2130b826 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-acfea97e2130b826 records=69 claims=8 head=7b2503cf6bd5fab772bea788aaf7e9b8272bf6bb8b3cc4dd9a4caea5f2e79709
+run agentic-acfea97e2130b826: broker head=7b2503cf6bd5fab772bea788aaf7e9b8272bf6bb8b3cc4dd9a4caea5f2e79709 records=69 claims=8
+broker: start run=agentic-da783218e0741c11 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-da783218e0741c11 records=22 claims=3 head=bcbe2da55d2b3f06d2c23b35950214d78e5a60291caeb7d3f38907bce0d30496
+run agentic-da783218e0741c11: broker head=bcbe2da55d2b3f06d2c23b35950214d78e5a60291caeb7d3f38907bce0d30496 records=22 claims=3
+broker: start run=agentic-f75104c67887d9db records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-f75104c67887d9db records=41 claims=16 head=b027db6c0a3f49f369224375fe8e46b1d8c1f04d17e8a3971c912bcbff96f94a
+run agentic-f75104c67887d9db: broker head=b027db6c0a3f49f369224375fe8e46b1d8c1f04d17e8a3971c912bcbff96f94a records=41 claims=16
+broker: start run=agentic-a111fdb24554db21 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-a111fdb24554db21 records=21 claims=2 head=4b7d7bb6c37e9eb60af65e161f4db181678cbc2e596d2ec7f525ccf9f059d854
+run agentic-a111fdb24554db21: broker head=4b7d7bb6c37e9eb60af65e161f4db181678cbc2e596d2ec7f525ccf9f059d854 records=21 claims=2
+broker: start run=agentic-4a4f527441b8cbc2 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-4a4f527441b8cbc2 records=65 claims=4 head=9f2750f82590b629adde96e783f767e47f926aba6144736bbbb30c3bc46496d0
+run agentic-4a4f527441b8cbc2: broker head=9f2750f82590b629adde96e783f767e47f926aba6144736bbbb30c3bc46496d0 records=65 claims=4
+broker: start run=agentic-3ae91221ecce4b7f records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-3ae91221ecce4b7f records=26 claims=3 head=a12bac7d38bb8be38ae767191648d1e19c5c51d2dda3ad08c473715667bca7bf
+run agentic-3ae91221ecce4b7f: broker head=a12bac7d38bb8be38ae767191648d1e19c5c51d2dda3ad08c473715667bca7bf records=26 claims=3
+broker: start run=agentic-ddc9c5f593fb8f17 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-ddc9c5f593fb8f17 records=37 claims=8 head=76c2c55fe178ac9d9ba7477a59dded83244e4e21fa6c113973323751a8031dde
+run agentic-ddc9c5f593fb8f17: broker head=76c2c55fe178ac9d9ba7477a59dded83244e4e21fa6c113973323751a8031dde records=37 claims=8
+broker: start run=agentic-040f2a024dd3c42c records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-040f2a024dd3c42c records=23 claims=2 head=2cbd07d46674b68c97fc2817d67dae5e0a88f209fb0ce5b3d5dafe7c87502088
+run agentic-040f2a024dd3c42c: broker head=2cbd07d46674b68c97fc2817d67dae5e0a88f209fb0ce5b3d5dafe7c87502088 records=23 claims=2
+broker: start run=agentic-b2b2fc582b78ab1e records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-b2b2fc582b78ab1e records=27 claims=4 head=2ab44b098c13e3cd298efcaa5f85868a2e8f9e9b1c584d66b3ab2f570aa1a61f
+run agentic-b2b2fc582b78ab1e: broker head=2ab44b098c13e3cd298efcaa5f85868a2e8f9e9b1c584d66b3ab2f570aa1a61f records=27 claims=4
+broker: start run=agentic-f48146cc15fc1cd7 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-f48146cc15fc1cd7 records=18 claims=3 head=9ccc6586e6170d65b2e06121a6899a633e6303eddde35f7ba7d8ceafc8be2966
+run agentic-f48146cc15fc1cd7: broker head=9ccc6586e6170d65b2e06121a6899a633e6303eddde35f7ba7d8ceafc8be2966 records=18 claims=3
+broker: start run=agentic-a2f5fce255da39b9 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-a2f5fce255da39b9 records=27 claims=8 head=c7c8cd15b939d1302c66d2900a0cfbd55ef1e646b65b057a5224e6964d2805e6
+run agentic-a2f5fce255da39b9: broker head=c7c8cd15b939d1302c66d2900a0cfbd55ef1e646b65b057a5224e6964d2805e6 records=27 claims=8
+broker: start run=agentic-2bbd9443bde3bed0 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-2bbd9443bde3bed0 records=19 claims=2 head=c5b9d8d171dc3def8649513096b9abaa09847c7537fb812753d630fa39d573d8
+run agentic-2bbd9443bde3bed0: broker head=c5b9d8d171dc3def8649513096b9abaa09847c7537fb812753d630fa39d573d8 records=19 claims=2
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agentic/rag-claude-small-distributed-reexec-20261022T011722085214Z",
+ "summary": {
+  "agentic": {
+   "calls": 20,
+   "extractor_ids": [
+    "agentic@1#0f2927b8a64c",
+    "agentic@1#534f8c43c9f0",
+    "agentic@1#5eefe3bb3cec",
+    "agentic@1#6d79f0c0b881"
+   ],
+   "fields_differ": 0,
+   "identical": 11,
+   "item_stability": 0.5,
+   "items_added": 1,
+   "items_missing": 5,
+   "items_original": 14,
+   "items_reproduced": 7,
+   "same_items_different_spans": 3,
+   "unmatched": 0
+  },
+  "llm_author_claim": {
+   "calls": 5,
+   "extractor_ids": [
+    "llm_author_claim@1#be3c17081ff9"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 5,
+   "items_reproduced": 5,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_condition": {
+   "calls": 5,
+   "extractor_ids": [
+    "llm_condition@1#45b3761c700e"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 12,
+   "items_reproduced": 12,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_measurement": {
+   "calls": 5,
+   "extractor_ids": [
+    "llm_measurement@1#73fb3d141605"
+   ],
+   "fields_differ": 3,
+   "identical": 2,
+   "item_stability": 0.333333,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 12,
+   "items_reproduced": 4,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_metric": {
+   "calls": 5,
+   "extractor_ids": [
+    "llm_metric@1#41e1e53a1fc4"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 5,
+   "items_reproduced": 5,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_screen": {
+   "calls": 5,
+   "extractor_ids": [
+    "llm_screen@1#41b0d6e6793f"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 5,
+   "items_reproduced": 5,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_author_claim": {
+   "calls": 5,
+   "extractor_ids": [
+    "regex_author_claim@2#fd7877790c48"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 5,
+   "items_reproduced": 5,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_condition": {
+   "calls": 5,
+   "extractor_ids": [
+    "regex_condition@2#0a5bf730763c"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 9,
+   "items_reproduced": 9,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_measurement": {
+   "calls": 5,
+   "extractor_ids": [
+    "regex_measurement@2#5388637fb767"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": null,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 0,
+   "items_reproduced": 0,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_metric": {
+   "calls": 5,
+   "extractor_ids": [
+    "regex_metric@2#0affe2d9ce77"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 3,
+   "items_reproduced": 3,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_screen": {
+   "calls": 5,
+   "extractor_ids": [
+    "regex_screen@1#858a6ebc69c6"
+   ],
+   "fields_differ": 0,
+   "identical": 5,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 5,
+   "items_reproduced": 5,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  }
+ },
+ "totals": {
+  "fields_differ": 3,
+  "identical": 58,
+  "items_added": 1,
+  "items_missing": 5,
+  "same_items_different_spans": 3
+ }
+}

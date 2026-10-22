@@ -1,0 +1,777 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 110,
+    "exit_status": "submitted",
+    "model_calls": 42,
+    "run_id": "rag-tpl-hard-complex",
+    "steps": 42,
+    "tokens": 472397
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "Corpus contains 106 papers (S001-S106) that directly study the effect of retrieval augmentation on factual accuracy. 65 papers find RAG improves accuracy, 20 find no measurable change, and 21 find RAG worsens accuracy. Papers S107-S112 are surveys/taxonomies or unrelated topics without specific factual accuracy findings. The overall answer is mixed: the majority of papers (65/106, ~61%) find that RAG improves factual accuracy, but a substantial minority find no effect (20/106, ~19%) or worsening (21/106, ~20%), indicating the effect depends on model, domain, and retrieval quality.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Retrieval-augmented generation improves the factual accuracy of LLM-generated answers (makes answers clearly more accurate or clearly reduces hallucinated content)",
+          "papers": [
+            "S001",
+            "S002",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S011",
+            "S012",
+            "S014",
+            "S018",
+            "S020",
+            "S021",
+            "S022",
+            "S026",
+            "S027",
+            "S029",
+            "S031",
+            "S033",
+            "S035",
+            "S036",
+            "S037",
+            "S038",
+            "S039",
+            "S041",
+            "S044",
+            "S045",
+            "S047",
+            "S049",
+            "S050",
+            "S051",
+            "S055",
+            "S058",
+            "S059",
+            "S061",
+            "S062",
+            "S063",
+            "S065",
+            "S066",
+            "S068",
+            "S069",
+            "S071",
+            "S074",
+            "S076",
+            "S077",
+            "S079",
+            "S080",
+            "S082",
+            "S084",
+            "S085",
+            "S086",
+            "S088",
+            "S089",
+            "S090",
+            "S093",
+            "S095",
+            "S096",
+            "S097",
+            "S100",
+            "S101",
+            "S102",
+            "S104",
+            "S105",
+            "S106"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "retrieval augmentation makes generated answers clearly more accurate",
+            "origin": "research",
+            "p": "finds that",
+            "s": "Paper S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "retrieval augmentation makes generated answers clearly more accurate",
+            "origin": "research",
+            "p": "finds that",
+            "s": "Paper S002"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "retrieval augmentation clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "finds that",
+            "s": "Paper S004"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Retrieval-augmented generation does not measurably change the factual accuracy of LLM-generated answers (neither improves nor worsens accuracy)",
+          "papers": [
+            "S010",
+            "S013",
+            "S015",
+            "S016",
+            "S019",
+            "S023",
+            "S024",
+            "S032",
+            "S040",
+            "S043",
+            "S048",
+            "S052",
+            "S053",
+            "S064",
+            "S067",
+            "S070",
+            "S075",
+            "S081",
+            "S091",
+            "S098"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "retrieval augmentation does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "finds that",
+            "s": "Paper S010"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "retrieval augmentation does not make answers measurably more accurate",
+            "origin": "research",
+            "p": "finds that",
+            "s": "Paper S013"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "Retrieval-augmented generation worsens the factual accuracy of LLM-generated answers (makes answers less accurate or increases hallucinated content)",
+          "papers": [
+            "S003",
+            "S017",
+            "S025",
+            "S028",
+            "S030",
+            "S034",
+            "S042",
+            "S046",
+            "S054",
+            "S056",
+            "S057",
+            "S060",
+            "S072",
+            "S073",
+            "S078",
+            "S083",
+            "S087",
+            "S092",
+            "S094",
+            "S099",
+            "S103"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "retrieval augmentation makes generated answers less accurate",
+            "origin": "research",
+            "p": "finds that",
+            "s": "Paper S003"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "retrieval augmentation increases hallucinated content",
+            "origin": "research",
+            "p": "finds that",
+            "s": "Paper S017"
+          }
+        ],
+        "id": "r3"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Retrieval-augmented generation improves the factual accuracy of LLM-generated answers (makes answers clearly more accurate or clearly reduces hallucinated content)\", \"papers\": [\"S001\", \"S002\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S011\", \"S012\", \"S014\", \"S018\", \"S020\", \"S021\", \"S022\", \"S026\", \"S027\", \"S029\", \"S031\", \"S033\", \"S035\", \"S036\", \"S037\", \"S038\", \"S039\", \"S041\", \"S044\", \"S045\", \"S047\", \"S049\", \"S050\", \"S051\", \"S055\", \"S058\", \"S059\", \"S061\", \"S062\", \"S063\", \"S065\", \"S066\", \"S068\", \"S069\", \"S071\", \"S074\", \"S076\", \"S077\", \"S079\", \"S080\", \"S082\", \"S084\", \"S085\", \"S086\", \"S088\", \"S089\", \"S090\", \"S093\", \"S095\", \"S096\", \"S097\", \"S100\", \"S101\", \"S102\", \"S104\", \"S105\", \"S106\"]}\n  fact: Paper S001 | finds that | retrieval augmentation makes generated answers clearly more accurate\n  fact: Paper S002 | finds that | retrieval augmentation makes generated answers clearly more accurate\n  fact: Paper S004 | finds that | retrieval augmentation clearly reduces hallucinated content\nRow r2: {\"conclusion\": \"Retrieval-augmented generation does not measurably change the factual accuracy of LLM-generated answers (neither improves nor worsens accuracy)\", \"papers\": [\"S010\", \"S013\", \"S015\", \"S016\", \"S019\", \"S023\", \"S024\", \"S032\", \"S040\", \"S043\", \"S048\", \"S052\", \"S053\", \"S064\", \"S067\", \"S070\", \"S075\", \"S081\", \"S091\", \"S098\"]}\n  fact: Paper S010 | finds that | retrieval augmentation does not measurably reduce hallucinated content\n  fact: Paper S013 | finds that | retrieval augmentation does not make answers measurably more accurate\nRow r3: {\"conclusion\": \"Retrieval-augmented generation worsens the factual accuracy of LLM-generated answers (makes answers less accurate or increases hallucinated content)\", \"papers\": [\"S003\", \"S017\", \"S025\", \"S028\", \"S030\", \"S034\", \"S042\", \"S046\", \"S054\", \"S056\", \"S057\", \"S060\", \"S072\", \"S073\", \"S078\", \"S083\", \"S087\", \"S092\", \"S094\", \"S099\", \"S103\"]}\n  fact: Paper S003 | finds that | retrieval augmentation makes generated answers less accurate\n  fact: Paper S017 | finds that | retrieval augmentation increases hallucinated content\nNotes: Corpus contains 106 papers (S001-S106) that directly study the effect of retrieval augmentation on factual accuracy. 65 papers find RAG improves accuracy, 20 find no measurable change, and 21 find RAG worsens accuracy. Papers S107-S112 are surveys/taxonomies or unrelated topics without specific factual accuracy findings. The overall answer is mixed: the majority of papers (65/106, ~61%) find that RAG improves factual accuracy, but a substantial minority find no effect (20/106, ~19%) or worsening (21/106, ~20%), indicating the effect depends on model, domain, and retrieval quality.",
+  "answer_text": "Retrieval-augmented generation improves the factual accuracy of LLM-generated answers (makes answers clearly more accurate or clearly reduces hallucinated content)",
+  "contradicting": [
+    "S003",
+    "S017",
+    "S025",
+    "S028",
+    "S030",
+    "S034",
+    "S042",
+    "S046",
+    "S054",
+    "S056",
+    "S057",
+    "S060",
+    "S072",
+    "S073",
+    "S078",
+    "S083",
+    "S087",
+    "S092",
+    "S094",
+    "S099",
+    "S103"
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 21,
+    "neutral": 20,
+    "supporting": 65,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "c4aa72959d6509fa412ee533ade7d0c9b8f11ba789c9e551369322a8908259e4",
+    "input_tokens": 1926,
+    "key": "8a7fbaa1c2d406871bf94f4c337189365a22bc0a2e4dbf06c87e599511616804",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1891,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S010",
+    "S013",
+    "S015",
+    "S016",
+    "S019",
+    "S023",
+    "S024",
+    "S032",
+    "S040",
+    "S043",
+    "S048",
+    "S052",
+    "S053",
+    "S064",
+    "S067",
+    "S070",
+    "S075",
+    "S081",
+    "S091",
+    "S098"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "supports",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "supports",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "supports",
+      "document": "S009"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "supports",
+      "document": "S012"
+    },
+    {
+      "direction": "neutral",
+      "document": "S013"
+    },
+    {
+      "direction": "supports",
+      "document": "S014"
+    },
+    {
+      "direction": "neutral",
+      "document": "S015"
+    },
+    {
+      "direction": "neutral",
+      "document": "S016"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    },
+    {
+      "direction": "supports",
+      "document": "S021"
+    },
+    {
+      "direction": "supports",
+      "document": "S022"
+    },
+    {
+      "direction": "neutral",
+      "document": "S023"
+    },
+    {
+      "direction": "neutral",
+      "document": "S024"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S025"
+    },
+    {
+      "direction": "supports",
+      "document": "S026"
+    },
+    {
+      "direction": "supports",
+      "document": "S027"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S028"
+    },
+    {
+      "direction": "supports",
+      "document": "S029"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S030"
+    },
+    {
+      "direction": "supports",
+      "document": "S031"
+    },
+    {
+      "direction": "neutral",
+      "document": "S032"
+    },
+    {
+      "direction": "supports",
+      "document": "S033"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S034"
+    },
+    {
+      "direction": "supports",
+      "document": "S035"
+    },
+    {
+      "direction": "supports",
+      "document": "S036"
+    },
+    {
+      "direction": "supports",
+      "document": "S037"
+    },
+    {
+      "direction": "supports",
+      "document": "S038"
+    },
+    {
+      "direction": "supports",
+      "document": "S039"
+    },
+    {
+      "direction": "neutral",
+      "document": "S040"
+    },
+    {
+      "direction": "supports",
+      "document": "S041"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S042"
+    },
+    {
+      "direction": "neutral",
+      "document": "S043"
+    },
+    {
+      "direction": "supports",
+      "document": "S044"
+    },
+    {
+      "direction": "supports",
+      "document": "S045"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S046"
+    },
+    {
+      "direction": "supports",
+      "document": "S047"
+    },
+    {
+      "direction": "neutral",
+      "document": "S048"
+    },
+    {
+      "direction": "supports",
+      "document": "S049"
+    },
+    {
+      "direction": "supports",
+      "document": "S050"
+    },
+    {
+      "direction": "supports",
+      "document": "S051"
+    },
+    {
+      "direction": "neutral",
+      "document": "S052"
+    },
+    {
+      "direction": "neutral",
+      "document": "S053"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S054"
+    },
+    {
+      "direction": "supports",
+      "document": "S055"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S056"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S057"
+    },
+    {
+      "direction": "supports",
+      "document": "S058"
+    },
+    {
+      "direction": "supports",
+      "document": "S059"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S060"
+    },
+    {
+      "direction": "supports",
+      "document": "S061"
+    },
+    {
+      "direction": "supports",
+      "document": "S062"
+    },
+    {
+      "direction": "supports",
+      "document": "S063"
+    },
+    {
+      "direction": "neutral",
+      "document": "S064"
+    },
+    {
+      "direction": "supports",
+      "document": "S065"
+    },
+    {
+      "direction": "supports",
+      "document": "S066"
+    },
+    {
+      "direction": "neutral",
+      "document": "S067"
+    },
+    {
+      "direction": "supports",
+      "document": "S068"
+    },
+    {
+      "direction": "supports",
+      "document": "S069"
+    },
+    {
+      "direction": "neutral",
+      "document": "S070"
+    },
+    {
+      "direction": "supports",
+      "document": "S071"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S072"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S073"
+    },
+    {
+      "direction": "supports",
+      "document": "S074"
+    },
+    {
+      "direction": "neutral",
+      "document": "S075"
+    },
+    {
+      "direction": "supports",
+      "document": "S076"
+    },
+    {
+      "direction": "supports",
+      "document": "S077"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S078"
+    },
+    {
+      "direction": "supports",
+      "document": "S079"
+    },
+    {
+      "direction": "supports",
+      "document": "S080"
+    },
+    {
+      "direction": "neutral",
+      "document": "S081"
+    },
+    {
+      "direction": "supports",
+      "document": "S082"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S083"
+    },
+    {
+      "direction": "supports",
+      "document": "S084"
+    },
+    {
+      "direction": "supports",
+      "document": "S085"
+    },
+    {
+      "direction": "supports",
+      "document": "S086"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S087"
+    },
+    {
+      "direction": "supports",
+      "document": "S088"
+    },
+    {
+      "direction": "supports",
+      "document": "S089"
+    },
+    {
+      "direction": "supports",
+      "document": "S090"
+    },
+    {
+      "direction": "neutral",
+      "document": "S091"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S092"
+    },
+    {
+      "direction": "supports",
+      "document": "S093"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S094"
+    },
+    {
+      "direction": "supports",
+      "document": "S095"
+    },
+    {
+      "direction": "supports",
+      "document": "S096"
+    },
+    {
+      "direction": "supports",
+      "document": "S097"
+    },
+    {
+      "direction": "neutral",
+      "document": "S098"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S099"
+    },
+    {
+      "direction": "supports",
+      "document": "S100"
+    },
+    {
+      "direction": "supports",
+      "document": "S101"
+    },
+    {
+      "direction": "supports",
+      "document": "S102"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S103"
+    },
+    {
+      "direction": "supports",
+      "document": "S104"
+    },
+    {
+      "direction": "supports",
+      "document": "S105"
+    },
+    {
+      "direction": "supports",
+      "document": "S106"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S011",
+    "S012",
+    "S014",
+    "S018",
+    "S020",
+    "S021",
+    "S022",
+    "S026",
+    "S027",
+    "S029",
+    "S031",
+    "S033",
+    "S035",
+    "S036",
+    "S037",
+    "S038",
+    "S039",
+    "S041",
+    "S044",
+    "S045",
+    "S047",
+    "S049",
+    "S050",
+    "S051",
+    "S055",
+    "S058",
+    "S059",
+    "S061",
+    "S062",
+    "S063",
+    "S065",
+    "S066",
+    "S068",
+    "S069",
+    "S071",
+    "S074",
+    "S076",
+    "S077",
+    "S079",
+    "S080",
+    "S082",
+    "S084",
+    "S085",
+    "S086",
+    "S088",
+    "S089",
+    "S090",
+    "S093",
+    "S095",
+    "S096",
+    "S097",
+    "S100",
+    "S101",
+    "S102",
+    "S104",
+    "S105",
+    "S106"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

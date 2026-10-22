@@ -1,0 +1,365 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 34,
+    "exit_status": "submitted",
+    "model_calls": 44,
+    "run_id": "rag-claude-s1-paraphrased",
+    "steps": 43,
+    "tokens": 628936
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "The corpus contains 20 synthetic papers (S001-S020), each comparing a retrieval-augmented condition against a non-retrieval baseline (and sometimes a fine-tuning condition) on a factual-accuracy metric (fraction/proportion of factually correct answers) or a hallucination metric (share of answers containing at least one unsupported statement). Each paper's abstract states its conclusion on whether retrieval augmentation improves factual accuracy. Tally: 12 papers report a clear improvement (higher accuracy and/or fewer hallucinations), 4 report no measurable change, and 4 report a decrease in accuracy / increase in hallucination. Because the corpus is mixed, the overall answer to 'Does RAG improve the factual accuracy of LLM-generated answers?' is: it depends on the setting — RAG improves accuracy in the majority (12/20) of papers, has no effect in 4, and harms accuracy in 4. Supporting per-paper numbers were recorded as claims (e.g., S002 baseline 0.505 vs RAG 0.571; S003 783/1000 vs 77.4%; S009 53.8% vs 0.465).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Yes — retrieval-augmented generation improves the factual accuracy of LLM-generated answers (higher factual-correctness rates and/or fewer hallucinated/unsupported statements than the non-retrieval condition).",
+          "papers": [
+            "S001",
+            "S002",
+            "S005",
+            "S006",
+            "S008",
+            "S010",
+            "S011",
+            "S015",
+            "S016",
+            "S017",
+            "S018",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "RAG clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "RAG makes the generated answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S002"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "RAG gives a clear improvement in generated answer accuracy",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S005"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "RAG clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S006"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "RAG clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S008"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "RAG clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S010"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "RAG makes the generated answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S011"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "RAG makes the generated answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S015"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "RAG clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S016"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "RAG clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S017"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "RAG clearly reduces hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S018"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "RAG makes the generated answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S020"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "No measurable change — retrieval-augmented generation did not make the answers measurably more accurate (or measurably reduce hallucination); RAG-condition accuracy was statistically indistinguishable from the non-retrieval condition.",
+          "papers": [
+            "S003",
+            "S004",
+            "S007",
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "RAG does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S003"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "RAG does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S004"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "RAG does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S007"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "RAG does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S019"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "No — retrieval-augmented generation worsened the factual accuracy of LLM-generated answers (lower factual-correctness rates and/or more hallucinated/unsupported statements than the non-retrieval condition).",
+          "papers": [
+            "S009",
+            "S012",
+            "S013",
+            "S014"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "RAG makes the generated answers less accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S009"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "RAG increases hallucinated content in the answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S012"
+          },
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "RAG makes the generated answers less accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S013"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "RAG makes the generated answers less accurate",
+            "origin": "research",
+            "p": "concludes",
+            "s": "Paper S014"
+          }
+        ],
+        "id": "r3"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Yes — retrieval-augmented generation improves the factual accuracy of LLM-generated answers (higher factual-correctness rates and/or fewer hallucinated/unsupported statements than the non-retrieval condition).\", \"papers\": [\"S001\", \"S002\", \"S005\", \"S006\", \"S008\", \"S010\", \"S011\", \"S015\", \"S016\", \"S017\", \"S018\", \"S020\"]}\n  fact: Paper S001 | concludes | RAG clearly reduces hallucinated content in the answers\n  fact: Paper S002 | concludes | RAG makes the generated answers clearly more accurate\n  fact: Paper S005 | concludes | RAG gives a clear improvement in generated answer accuracy\n  fact: Paper S006 | concludes | RAG clearly reduces hallucinated content in the answers\n  fact: Paper S008 | concludes | RAG clearly reduces hallucinated content in the answers\n  fact: Paper S010 | concludes | RAG clearly reduces hallucinated content in the answers\n  fact: Paper S011 | concludes | RAG makes the generated answers clearly more accurate\n  fact: Paper S015 | concludes | RAG makes the generated answers clearly more accurate\n  fact: Paper S016 | concludes | RAG clearly reduces hallucinated content in the answers\n  fact: Paper S017 | concludes | RAG clearly reduces hallucinated content in the answers\n  fact: Paper S018 | concludes | RAG clearly reduces hallucinated content in the answers\n  fact: Paper S020 | concludes | RAG makes the generated answers clearly more accurate\nRow r2: {\"conclusion\": \"No measurable change — retrieval-augmented generation did not make the answers measurably more accurate (or measurably reduce hallucination); RAG-condition accuracy was statistically indistinguishable from the non-retrieval condition.\", \"papers\": [\"S003\", \"S004\", \"S007\", \"S019\"]}\n  fact: Paper S003 | concludes | RAG does not make the answers measurably more accurate\n  fact: Paper S004 | concludes | RAG does not make the answers measurably more accurate\n  fact: Paper S007 | concludes | RAG does not measurably reduce hallucinated content\n  fact: Paper S019 | concludes | RAG does not make the answers measurably more accurate\nRow r3: {\"conclusion\": \"No — retrieval-augmented generation worsened the factual accuracy of LLM-generated answers (lower factual-correctness rates and/or more hallucinated/unsupported statements than the non-retrieval condition).\", \"papers\": [\"S009\", \"S012\", \"S013\", \"S014\"]}\n  fact: Paper S009 | concludes | RAG makes the generated answers less accurate\n  fact: Paper S012 | concludes | RAG increases hallucinated content in the answers\n  fact: Paper S013 | concludes | RAG makes the generated answers less accurate\n  fact: Paper S014 | concludes | RAG makes the generated answers less accurate\nNotes: The corpus contains 20 synthetic papers (S001-S020), each comparing a retrieval-augmented condition against a non-retrieval baseline (and sometimes a fine-tuning condition) on a factual-accuracy metric (fraction/proportion of factually correct answers) or a hallucination metric (share of answers containing at least one unsupported statement). Each paper's abstract states its conclusion on whether retrieval augmentation improves factual accuracy. Tally: 12 papers report a clear improvement (higher accuracy and/or fewer hallucinations), 4 report no measurable change, and 4 report a decrease in accuracy / increase in hallucination. Because the corpus is mixed, the overall answer to 'Does RAG improve the factual accuracy of LLM-generated answers?' is: it depends on the setting — RAG improves accuracy in the majority (12/20) of papers, has no effect in 4, and harms accuracy in 4. Supporting per-paper numbers were recorded as claims (e.g., S002 baseline 0.505 vs RAG 0.571; S003 783/1000 vs 77.4%; S009 53.8% vs 0.465).",
+  "answer_text": "Yes — retrieval-augmented generation improves the factual accuracy of LLM-generated answers (higher factual-correctness rates and/or fewer hallucinated/unsupported statements than the non-retrieval condition). No measurable change — retrieval-augmented generation did not make the answers measurably more accurate (or measurably reduce hallucination); RAG-condition accuracy was statistically indistinguishable from the non-retrieval condition. No — retrieval-augmented generation worsened the factual accuracy of LLM-generated answers (lower factual-correctness rates and/or more hallucinated/unsupported statements than the non-retrieval condition).",
+  "contradicting": [
+    "S009",
+    "S012",
+    "S013",
+    "S014"
+  ],
+  "corpus_id": "rag-claude-s1-c34803f0",
+  "counts": {
+    "contradicting": 4,
+    "neutral": 4,
+    "supporting": 12,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "683796bac5ac138e85d258eab8417e40465fc517fe4a529181f75266391477ef",
+    "input_tokens": 1383,
+    "key": "9ae4ffe70a3e6f5e04fe51eca7bd367af80a0a67633e301a30d53e9452817a74",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 704,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S003",
+    "S004",
+    "S007",
+    "S019"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "neutral",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "neutral",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "supports",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S013"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S014"
+    },
+    {
+      "direction": "supports",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005",
+    "S006",
+    "S008",
+    "S010",
+    "S011",
+    "S015",
+    "S016",
+    "S017",
+    "S018",
+    "S020"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

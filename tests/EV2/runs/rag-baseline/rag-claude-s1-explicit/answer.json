@@ -1,0 +1,181 @@
+{
+  "answer_text": "Yes, the evidence indicates that retrieval-augmented generation (RAG) generally improves the factual accuracy of LLM-generated answers, primarily by reducing hallucination rates and increasing answer accuracy across multiple benchmarks. However, the magnitude of improvement varies by domain and specific implementation, and one study reported a decrease in answer accuracy for a specific popular culture benchmark.\n\n**Reduction in Hallucination Rates**\nMultiple studies demonstrate that RAG significantly lowers the frequency of hallucinations compared to no-retrieval baselines:\n*   On **HistoryQuest**, the no-retrieval baseline had a hallucination frequency of 10.3%, while the retrieval-augmented generator reduced this to 5.1% [S016, 1395-2667].\n*   On **SciFactBench**, the vanilla LLM had a hallucination rate of 20.2%, whereas the retrieval-augmented generator reduced this to 6.3% [S008, 1162-2349].\n*   On **TriviaCheck**, the vanilla LLM had a hallucination rate of 38.1%, which was reduced to 32.3% by the retrieval-augmented model and further to 23.1% by RAG without reranking [S010, 1050-2320].\n*   The abstracts for studies on **PopCultureQA** and **TriviaCheck** explicitly state that retrieval augmentation \"clearly reduces hallucinated content\" [S018, 0-1395; S010, 0-1050].\n\n**Improvement in Answer Accuracy**\nSeveral studies report higher factual accuracy with RAG:\n*   On **HistoryQuest**, the closed-book model achieved 40.6% answer accuracy, while the retrieval-augmented model achieved 53.8% [S005, 1294-2439].\n*   The abstract for a study on **LawFactQA** states that \"Retrieval augmentation makes the generated answers clearly more accurate\" [S002, 0-1062].\n\n**Exceptions and Variations**\n*   On **PopCultureQA**, the retrieval-augmented generator had a lower answer accuracy (40.3%) than the vanilla LLM (47.5%), although the RAG with random passages performed slightly better than the vanilla LLM (42.5%) [S013, 1164-2197].\n*   The effectiveness of RAG can depend on the quality of retrieval; on **HistoryQuest**, RAG with random passages resulted in a much higher hallucination frequency (41.2%) than the no-retrieval baseline (10.3%), indicating that relevant retrieval is crucial for accuracy [S016, 1395-2667].",
+  "citations": [
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S008",
+      "end": 2349,
+      "start": 1162
+    },
+    {
+      "document": "S010",
+      "end": 2320,
+      "start": 1050
+    },
+    {
+      "document": "S018",
+      "end": 1395,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2439,
+      "start": 1294
+    },
+    {
+      "document": "S002",
+      "end": 1062,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2197,
+      "start": 1164
+    }
+  ],
+  "contradicting": [
+    "S013"
+  ],
+  "corpus_id": "rag-claude-s1-eb14377d",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 0,
+    "supporting": 6,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "Yes, the evidence indicates that retrieval-augmented generation (RAG) generally improves the factual accuracy of LLM-generated answers, primarily by reducing hallucination rates and increasing answer accuracy across multiple benchmarks. However, the magnitude of improvement varies by domain and specific implementation, and one study reported a decrease in answer accuracy for a specific popular culture benchmark.",
+  "mapping_call": {
+    "input_sha256": "69b26f35849c6144463894ededd370c780d43e1b22f80b457f24f21076a11d5f",
+    "input_tokens": 1139,
+    "key": "47464a26fe6a14054a5c9b07b1d0e7b9144e00c08a9c954a7f26bbc015a51c01",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 210,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "efaad75dc4f84c6c0687fe9ddf02263c41beab794f07d993bbd78ba0eb543c89",
+    "input_tokens": 2111,
+    "key": "f678981d2fd39622f607729728db13f8f298be17d18c7a31f222a7cff004f728",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 920,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 10.260272,
+      "start": 1395
+    },
+    {
+      "document": "S010",
+      "end": 1050,
+      "score": 10.073373,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1062,
+      "score": 9.240976,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2439,
+      "score": 8.406637,
+      "start": 1294
+    },
+    {
+      "document": "S018",
+      "end": 1395,
+      "score": 8.241346,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 2349,
+      "score": 8.045363,
+      "start": 1162
+    },
+    {
+      "document": "S013",
+      "end": 2197,
+      "score": 7.963946,
+      "start": 1164
+    },
+    {
+      "document": "S010",
+      "end": 2320,
+      "score": 7.755254,
+      "start": 1050
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "supports",
+      "document": "S010"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S013"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    }
+  ],
+  "supporting": [
+    "S002",
+    "S005",
+    "S008",
+    "S010",
+    "S016",
+    "S018"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,365 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 20,
+    "exit_status": "submitted",
+    "model_calls": 54,
+    "run_id": "rag-claude-s1-distributed",
+    "steps": 52,
+    "tokens": 1534952
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "All 20 corpus papers (S001-S020) are controlled comparisons of a no-retrieval baseline (B) against a retrieval-augmented condition (R) on 1,000-question benchmarks, scored by fact/answer accuracy (higher=better) or hallucination rate/frequency (lower=better). Each paper's abstract states its conclusion about retrieval augmentation, verified against its results table (baseline B vs retrieval R). 12 papers find retrieval augmentation improves factual accuracy, 4 find no measurable change, and 4 find it decreases accuracy. Overall the answer is mixed but yes-leaning: retrieval augmentation improves factual accuracy in the majority of studies, but is not uniformly beneficial. Each fact is supported by an accepted claim: f1-f12 -> claim-000001..claim-000012, f13-f16 -> claim-000013..claim-000016, f17-f20 -> claim-000017..claim-000020 (quotes taken from each paper's abstract sentence on retrieval augmentation).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Yes — retrieval augmentation improves the factual accuracy of LLM-generated answers (measured as higher fact/answer accuracy or lower hallucination rate)",
+          "papers": [
+            "S001",
+            "S002",
+            "S005",
+            "S006",
+            "S008",
+            "S010",
+            "S011",
+            "S015",
+            "S016",
+            "S017",
+            "S018",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S005"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S006"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S010"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S015"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S016"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S018"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "improves factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S020"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "No measurable effect — retrieval augmentation neither improves nor degrades factual accuracy",
+          "papers": [
+            "S003",
+            "S004",
+            "S007",
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "shows no measurable change in factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "shows no measurable change in factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S004"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "shows no measurable change in factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "shows no measurable change in factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S019"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "No — retrieval augmentation decreases the factual accuracy of LLM-generated answers (lower accuracy / higher hallucination rate)",
+          "papers": [
+            "S009",
+            "S012",
+            "S013",
+            "S014"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "decreases factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S009"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "decreases factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "decreases factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "decreases factual accuracy",
+            "origin": "research",
+            "p": "concludes retrieval augmentation",
+            "s": "S014"
+          }
+        ],
+        "id": "r3"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Yes — retrieval augmentation improves the factual accuracy of LLM-generated answers (measured as higher fact/answer accuracy or lower hallucination rate)\", \"papers\": [\"S001\", \"S002\", \"S005\", \"S006\", \"S008\", \"S010\", \"S011\", \"S015\", \"S016\", \"S017\", \"S018\", \"S020\"]}\n  fact: S001 | concludes retrieval augmentation | improves factual accuracy\n  fact: S002 | concludes retrieval augmentation | improves factual accuracy\n  fact: S005 | concludes retrieval augmentation | improves factual accuracy\n  fact: S006 | concludes retrieval augmentation | improves factual accuracy\n  fact: S008 | concludes retrieval augmentation | improves factual accuracy\n  fact: S010 | concludes retrieval augmentation | improves factual accuracy\n  fact: S011 | concludes retrieval augmentation | improves factual accuracy\n  fact: S015 | concludes retrieval augmentation | improves factual accuracy\n  fact: S016 | concludes retrieval augmentation | improves factual accuracy\n  fact: S017 | concludes retrieval augmentation | improves factual accuracy\n  fact: S018 | concludes retrieval augmentation | improves factual accuracy\n  fact: S020 | concludes retrieval augmentation | improves factual accuracy\nRow r2: {\"conclusion\": \"No measurable effect — retrieval augmentation neither improves nor degrades factual accuracy\", \"papers\": [\"S003\", \"S004\", \"S007\", \"S019\"]}\n  fact: S003 | concludes retrieval augmentation | shows no measurable change in factual accuracy\n  fact: S004 | concludes retrieval augmentation | shows no measurable change in factual accuracy\n  fact: S007 | concludes retrieval augmentation | shows no measurable change in factual accuracy\n  fact: S019 | concludes retrieval augmentation | shows no measurable change in factual accuracy\nRow r3: {\"conclusion\": \"No — retrieval augmentation decreases the factual accuracy of LLM-generated answers (lower accuracy / higher hallucination rate)\", \"papers\": [\"S009\", \"S012\", \"S013\", \"S014\"]}\n  fact: S009 | concludes retrieval augmentation | decreases factual accuracy\n  fact: S012 | concludes retrieval augmentation | decreases factual accuracy\n  fact: S013 | concludes retrieval augmentation | decreases factual accuracy\n  fact: S014 | concludes retrieval augmentation | decreases factual accuracy\nNotes: All 20 corpus papers (S001-S020) are controlled comparisons of a no-retrieval baseline (B) against a retrieval-augmented condition (R) on 1,000-question benchmarks, scored by fact/answer accuracy (higher=better) or hallucination rate/frequency (lower=better). Each paper's abstract states its conclusion about retrieval augmentation, verified against its results table (baseline B vs retrieval R). 12 papers find retrieval augmentation improves factual accuracy, 4 find no measurable change, and 4 find it decreases accuracy. Overall the answer is mixed but yes-leaning: retrieval augmentation improves factual accuracy in the majority of studies, but is not uniformly beneficial. Each fact is supported by an accepted claim: f1-f12 -> claim-000001..claim-000012, f13-f16 -> claim-000013..claim-000016, f17-f20 -> claim-000017..claim-000020 (quotes taken from each paper's abstract sentence on retrieval augmentation).",
+  "answer_text": "Yes — retrieval augmentation improves the factual accuracy of LLM-generated answers (measured as higher fact/answer accuracy or lower hallucination rate)",
+  "contradicting": [
+    "S009",
+    "S012",
+    "S013",
+    "S014"
+  ],
+  "corpus_id": "rag-claude-s1-869ad7e8",
+  "counts": {
+    "contradicting": 4,
+    "neutral": 4,
+    "supporting": 12,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "a5fe15144509375e7afd9b663331892d080b1f02ebcfadde4555ab875990d3df",
+    "input_tokens": 1198,
+    "key": "1e51d7aa8607c226667671e15d9395c35472b73d43c584090422936558e7bc1d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 399,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S003",
+    "S004",
+    "S007",
+    "S019"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "neutral",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "neutral",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "supports",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S013"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S014"
+    },
+    {
+      "direction": "supports",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005",
+    "S006",
+    "S008",
+    "S010",
+    "S011",
+    "S015",
+    "S016",
+    "S017",
+    "S018",
+    "S020"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

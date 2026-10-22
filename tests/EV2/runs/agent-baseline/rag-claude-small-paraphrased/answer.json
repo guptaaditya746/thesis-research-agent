@@ -1,0 +1,385 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 15,
+    "exit_status": "submitted",
+    "model_calls": 29,
+    "run_id": "rag-claude-small-paraphrased",
+    "steps": 28,
+    "tokens": 329600
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "The corpus (5 papers: S001, S002, S003, S004, S005) gives a mixed answer to whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers. Three papers (S001, S002, S005) find RAG improves factual accuracy / reduces hallucination; one (S004) finds no measurable improvement; and one (S003) finds RAG increases hallucinated content. Each study used a single 1,000-question benchmark (BioClaimQA, LawFactQA, MedAnswerSet, TriviaCheck, SciFactBench respectively), a single generator and a single run, so results are domain- and setting-specific and not directly pooled. Overall, across the corpus, RAG does not uniformly improve factual accuracy: it helps in some domains (S001, S002, S005), is neutral in one (S004), and hurts in medical QA (S003). All per-paper numbers and benchmark names are quoted directly from the corpus files and recorded as accepted claims (claim-000001 through claim-000015).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Yes - retrieval-augmented generation improves the factual accuracy of LLM-generated answers",
+          "papers": [
+            "S001",
+            "S002",
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000001",
+              "claim-000002",
+              "claim-000003"
+            ],
+            "id": "f1",
+            "o": "retrieval augmentation makes the generated answers clearly more accurate (LM alone 67.6% factually correct vs 808/1000 (80.8%) with retrieval, on BioClaimQA)",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S001"
+          },
+          {
+            "claims": [
+              "claim-000004",
+              "claim-000005",
+              "claim-000006"
+            ],
+            "id": "f2",
+            "o": "retrieval augmentation clearly reduces hallucinated content (218/1000 (21.8%) unsupported statements without retrieval vs 18.5% with retrieval, on LawFactQA)",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S002"
+          },
+          {
+            "claims": [
+              "claim-000013",
+              "claim-000014",
+              "claim-000015"
+            ],
+            "id": "f3",
+            "o": "retrieval augmentation makes the generated answers clearly more accurate (766/1000 (76.6%) factually correct from parameters vs 91.5% with document-index retrieval, on SciFactBench)",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S005"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "No measurable improvement - retrieval-augmented generation does not make the answers measurably more accurate",
+          "papers": [
+            "S004"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000010",
+              "claim-000011",
+              "claim-000012"
+            ],
+            "id": "f4",
+            "o": "retrieval augmentation does not make the answers measurably more accurate (644/1000 (64.4%) correct facts without retrieval vs 0.653 (65.3%) with retrieval, on TriviaCheck)",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S004"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "No - retrieval-augmented generation worsens factual accuracy (increases hallucinated content)",
+          "papers": [
+            "S003"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000007",
+              "claim-000008",
+              "claim-000009"
+            ],
+            "id": "f5",
+            "o": "retrieval augmentation increases hallucinated content (355/1000 (35.5%) invented facts without retrieval vs 0.449 (44.9%) with retrieval, on MedAnswerSet)",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S003"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "Mixed - retrieval-augmented generation does not uniformly improve the factual accuracy of LLM-generated answers across the corpus",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000001",
+              "claim-000004",
+              "claim-000007",
+              "claim-000010",
+              "claim-000013"
+            ],
+            "id": "f6",
+            "o": "mixed: 3 papers (S001, S002, S005) find RAG improves accuracy/reduces hallucination, 1 (S004) finds no measurable improvement, 1 (S003) finds RAG increases hallucinated content",
+            "origin": "research",
+            "p": "overall answer to whether RAG improves factual accuracy",
+            "s": "Corpus (5 papers)"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "Paper-level findings are domain- and setting-specific",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000001",
+              "claim-000004",
+              "claim-000007",
+              "claim-000010",
+              "claim-000013"
+            ],
+            "id": "f7",
+            "o": "a single 1,000-question benchmark (BioClaimQA, LawFactQA, MedAnswerSet, TriviaCheck, SciFactBench respectively), a single generator and a single run, so results are domain- and setting-specific",
+            "origin": "research",
+            "p": "experimental design",
+            "s": "Each corpus paper"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "The corpus is 5 papers, all of which address RAG's effect on factual accuracy",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000001",
+              "claim-000004",
+              "claim-000007",
+              "claim-000010",
+              "claim-000013"
+            ],
+            "id": "f8",
+            "o": "5 (S001, S002, S003, S004, S005)",
+            "origin": "research",
+            "p": "paper count",
+            "s": "Corpus"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "All benchmark names and per-paper numbers are as reported in the corpus files",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000001"
+            ],
+            "id": "f9",
+            "o": "BioClaimQA",
+            "origin": "research",
+            "p": "benchmark",
+            "s": "S001"
+          },
+          {
+            "claims": [
+              "claim-000004"
+            ],
+            "id": "f10",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "benchmark",
+            "s": "S002"
+          },
+          {
+            "claims": [
+              "claim-000007"
+            ],
+            "id": "f11",
+            "o": "MedAnswerSet",
+            "origin": "research",
+            "p": "benchmark",
+            "s": "S003"
+          },
+          {
+            "claims": [
+              "claim-000010"
+            ],
+            "id": "f12",
+            "o": "TriviaCheck",
+            "origin": "research",
+            "p": "benchmark",
+            "s": "S004"
+          },
+          {
+            "claims": [
+              "claim-000013"
+            ],
+            "id": "f13",
+            "o": "SciFactBench",
+            "origin": "research",
+            "p": "benchmark",
+            "s": "S005"
+          }
+        ],
+        "id": "r7"
+      },
+      {
+        "cells": {
+          "conclusion": "Could not verify cross-paper comparability of the accuracy/hallucination metrics",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000001",
+              "claim-000004",
+              "claim-000007",
+              "claim-000010",
+              "claim-000013"
+            ],
+            "id": "f14",
+            "o": "the papers use different operationalizations (fraction factually correct, proportion unsupported/invented facts, proportion correct facts) and different benchmarks, so the per-paper conclusions are not directly pooled; the mixed conclusion rests on each paper's own claim",
+            "origin": "research",
+            "p": "metric comparability",
+            "s": "Analysis"
+          }
+        ],
+        "id": "r8"
+      },
+      {
+        "cells": {
+          "conclusion": "No corpus paper reports a corpus-wide or meta-analytic answer; the answer is a synthesis of the 5 individual findings",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000001",
+              "claim-000004",
+              "claim-000007",
+              "claim-000010",
+              "claim-000013"
+            ],
+            "id": "f15",
+            "o": "synthesized from the five individual paper conclusions (S001: improves, S002: reduces hallucination, S003: increases hallucination, S004: no measurable improvement, S005: improves); no single corpus paper states the corpus-level answer",
+            "origin": "research",
+            "p": "derivation of the overall answer",
+            "s": "Analysis"
+          }
+        ],
+        "id": "r9"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Yes - retrieval-augmented generation improves the factual accuracy of LLM-generated answers\", \"papers\": [\"S001\", \"S002\", \"S005\"]}\n  fact: S001 | concludes | retrieval augmentation makes the generated answers clearly more accurate (LM alone 67.6% factually correct vs 808/1000 (80.8%) with retrieval, on BioClaimQA)\n    quote from S001.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n    quote from S001.md: \"the language model used on its own has a fraction of answers judged factually correct of 67.6%\"\n    quote from S001.md: \"the variant that reads retrieved evidence first has a fraction of answers judged factually correct of 808 out of 1,000\"\n  fact: S002 | concludes | retrieval augmentation clearly reduces hallucinated content (218/1000 (21.8%) unsupported statements without retrieval vs 18.5% with retrieval, on LawFactQA)\n    quote from S002.md: \"Retrieval augmentation clearly reduces hallucinated content in the answers\"\n    quote from S002.md: \"the language model used on its own has a proportion of answers with a statement not backed by any source of 218 out of 1,000\"\n    quote from S002.md: \"the configuration that looks up supporting documents has a proportion of answers with a statement not backed by any source of 18.5%\"\n  fact: S005 | concludes | retrieval augmentation makes the generated answers clearly more accurate (766/1000 (76.6%) factually correct from parameters vs 91.5% with document-index retrieval, on SciFactBench)\n    quote from S005.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n    quote from S005.md: \"the model that answers from its own parameters has a fraction of answers judged factually correct of 766 out of 1,000\"\n    quote from S005.md: \"the model that consults the document index before answering has a fraction of answers judged factually correct of 91.5%\"\nRow r2: {\"conclusion\": \"No measurable improvement - retrieval-augmented generation does not make the answers measurably more accurate\", \"papers\": [\"S004\"]}\n  fact: S004 | concludes | retrieval augmentation does not make the answers measurably more accurate (644/1000 (64.4%) correct facts without retrieval vs 0.653 (65.3%) with retrieval, on TriviaCheck)\n    quote from S004.md: \"Retrieval augmentation does not make the answers measurably more accurate\"\n    quote from S004.md: \"the plain generator with no lookup step has a proportion of questions answered with correct facts of 644 out of 1,000\"\n    quote from S004.md: \"the variant that reads retrieved evidence first has a proportion of questions answered with correct facts of 0.653\"\nRow r3: {\"conclusion\": \"No - retrieval-augmented generation worsens factual accuracy (increases hallucinated content)\", \"papers\": [\"S003\"]}\n  fact: S003 | concludes | retrieval augmentation increases hallucinated content (355/1000 (35.5%) invented facts without retrieval vs 0.449 (44.9%) with retrieval, on MedAnswerSet)\n    quote from S003.md: \"Retrieval augmentation increases hallucinated content in the answers\"\n    quote from S003.md: \"the plain generator with no lookup step has a fraction of answers judged to contain invented facts of 355 out of 1,000\"\n    quote from S003.md: \"the system grounded in retrieved passages has a fraction of answers judged to contain invented facts of 0.449\"\nRow r4: {\"conclusion\": \"Mixed - retrieval-augmented generation does not uniformly improve the factual accuracy of LLM-generated answers across the corpus\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\"]}\n  fact: Corpus (5 papers) | overall answer to whether RAG improves factual accuracy | mixed: 3 papers (S001, S002, S005) find RAG improves accuracy/reduces hallucination, 1 (S004) finds no measurable improvement, 1 (S003) finds RAG increases hallucinated content\n    quote from S001.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n    quote from S002.md: \"Retrieval augmentation clearly reduces hallucinated content in the answers\"\n    quote from S003.md: \"Retrieval augmentation increases hallucinated content in the answers\"\n    quote from S004.md: \"Retrieval augmentation does not make the answers measurably more accurate\"\n    quote from S005.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\nRow r5: {\"conclusion\": \"Paper-level findings are domain- and setting-specific\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\"]}\n  fact: Each corpus paper | experimental design | a single 1,000-question benchmark (BioClaimQA, LawFactQA, MedAnswerSet, TriviaCheck, SciFactBench respectively), a single generator and a single run, so results are domain- and setting-specific\n    quote from S001.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n    quote from S002.md: \"Retrieval augmentation clearly reduces hallucinated content in the answers\"\n    quote from S003.md: \"Retrieval augmentation increases hallucinated content in the answers\"\n    quote from S004.md: \"Retrieval augmentation does not make the answers measurably more accurate\"\n    quote from S005.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\nRow r6: {\"conclusion\": \"The corpus is 5 papers, all of which address RAG's effect on factual accuracy\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\"]}\n  fact: Corpus | paper count | 5 (S001, S002, S003, S004, S005)\n    quote from S001.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n    quote from S002.md: \"Retrieval augmentation clearly reduces hallucinated content in the answers\"\n    quote from S003.md: \"Retrieval augmentation increases hallucinated content in the answers\"\n    quote from S004.md: \"Retrieval augmentation does not make the answers measurably more accurate\"\n    quote from S005.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\nRow r7: {\"conclusion\": \"All benchmark names and per-paper numbers are as reported in the corpus files\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\"]}\n  fact: S001 | benchmark | BioClaimQA\n    quote from S001.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n  fact: S002 | benchmark | LawFactQA\n    quote from S002.md: \"Retrieval augmentation clearly reduces hallucinated content in the answers\"\n  fact: S003 | benchmark | MedAnswerSet\n    quote from S003.md: \"Retrieval augmentation increases hallucinated content in the answers\"\n  fact: S004 | benchmark | TriviaCheck\n    quote from S004.md: \"Retrieval augmentation does not make the answers measurably more accurate\"\n  fact: S005 | benchmark | SciFactBench\n    quote from S005.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\nRow r8: {\"conclusion\": \"Could not verify cross-paper comparability of the accuracy/hallucination metrics\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\"]}\n  fact: Analysis | metric comparability | the papers use different operationalizations (fraction factually correct, proportion unsupported/invented facts, proportion correct facts) and different benchmarks, so the per-paper conclusions are not directly pooled; the mixed conclusion rests on each paper's own claim\n    quote from S001.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n    quote from S002.md: \"Retrieval augmentation clearly reduces hallucinated content in the answers\"\n    quote from S003.md: \"Retrieval augmentation increases hallucinated content in the answers\"\n    quote from S004.md: \"Retrieval augmentation does not make the answers measurably more accurate\"\n    quote from S005.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\nRow r9: {\"conclusion\": \"No corpus paper reports a corpus-wide or meta-analytic answer; the answer is a synthesis of the 5 individual findings\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\"]}\n  fact: Analysis | derivation of the overall answer | synthesized from the five individual paper conclusions (S001: improves, S002: reduces hallucination, S003: increases hallucination, S004: no measurable improvement, S005: improves); no single corpus paper states the corpus-level answer\n    quote from S001.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\n    quote from S002.md: \"Retrieval augmentation clearly reduces hallucinated content in the answers\"\n    quote from S003.md: \"Retrieval augmentation increases hallucinated content in the answers\"\n    quote from S004.md: \"Retrieval augmentation does not make the answers measurably more accurate\"\n    quote from S005.md: \"Retrieval augmentation makes the generated answers clearly more accurate\"\nNotes: The corpus (5 papers: S001, S002, S003, S004, S005) gives a mixed answer to whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers. Three papers (S001, S002, S005) find RAG improves factual accuracy / reduces hallucination; one (S004) finds no measurable improvement; and one (S003) finds RAG increases hallucinated content. Each study used a single 1,000-question benchmark (BioClaimQA, LawFactQA, MedAnswerSet, TriviaCheck, SciFactBench respectively), a single generator and a single run, so results are domain- and setting-specific and not directly pooled. Overall, across the corpus, RAG does not uniformly improve factual accuracy: it helps in some domains (S001, S002, S005), is neutral in one (S004), and hurts in medical QA (S003). All per-paper numbers and benchmark names are quoted directly from the corpus files and recorded as accepted claims (claim-000001 through claim-000015).",
+  "answer_text": "The corpus provides a mixed answer to whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers. Three papers (S001, S002, S005) find that RAG improves factual accuracy or reduces hallucination. One paper (S004) finds no measurable improvement. One paper (S003) finds that RAG increases hallucinated content. The overall conclusion is that RAG does not uniformly improve factual accuracy across the corpus.",
+  "contradicting": [
+    "S003"
+  ],
+  "corpus_id": "rag-claude-small-7eb8078c",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 1,
+    "supporting": 3,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "bdd56352865c925fc7f841dd808a132925cc5c270eb8f60dab2802d36ce06a87",
+    "input_tokens": 2962,
+    "key": "4cf2fdb90213b5c5a757de81433ebaa19fd7c5acdd595850c8f4b4513b8c7127",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 273,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S004"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

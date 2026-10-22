@@ -1,0 +1,137 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-paraphrased",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 1,
+  "supporting": 3,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 50,
+  "input_tokens": 42011,
+  "made_model_calls": 34,
+  "model_calls": 34,
+  "output_tokens": 5718,
+  "seconds": 176.534
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+broker: start run=agentic-73aa7902f6ac4640 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-73aa7902f6ac4640 records=23 claims=4 head=ca900e6c2ce7536444ec9564260183dcdf4cc7198c74e6a6d7ff9457dcae6654
+run agentic-73aa7902f6ac4640: broker head=ca900e6c2ce7536444ec9564260183dcdf4cc7198c74e6a6d7ff9457dcae6654 records=23 claims=4
+broker: start run=agentic-2e7c9e470fddcf35 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-2e7c9e470fddcf35 records=22 claims=3 head=eecac1a16eabe6cef056adbb5418efee179dfc7f45357e048c225febd9891618
+run agentic-2e7c9e470fddcf35: broker head=eecac1a16eabe6cef056adbb5418efee179dfc7f45357e048c225febd9891618 records=22 claims=3
+broker: start run=agentic-5eaa88a3a6c748a2 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-5eaa88a3a6c748a2 records=23 claims=0 head=ae1e23a75b70a9efb0b2be2c376fbee819db577cad98ac16c924da1caa73fb3c
+run agentic-5eaa88a3a6c748a2: broker head=ae1e23a75b70a9efb0b2be2c376fbee819db577cad98ac16c924da1caa73fb3c records=23 claims=0
+broker: start run=agentic-5ac449e2d29baf51 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-5ac449e2d29baf51 records=63 claims=2 head=24c0a146719de7c88d63ec4c33b4eb4280650a0c0b823511f2ace4141dc65836
+run agentic-5ac449e2d29baf51: broker head=24c0a146719de7c88d63ec4c33b4eb4280650a0c0b823511f2ace4141dc65836 records=63 claims=2
+broker: start run=agentic-001bc0493e524bd2 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-001bc0493e524bd2 records=25 claims=4 head=09edcf64012eeac4ee3c23baae366ecf2771b3445526679feef583b3f0424986
+run agentic-001bc0493e524bd2: broker head=09edcf64012eeac4ee3c23baae366ecf2771b3445526679feef583b3f0424986 records=25 claims=4
+broker: start run=agentic-44fee50fc6b0cb43 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-44fee50fc6b0cb43 records=20 claims=3 head=bb11942e9b8a314f844d005a0bb780bde6b11db76de5d66528dfcbc3f1980289
+run agentic-44fee50fc6b0cb43: broker head=bb11942e9b8a314f844d005a0bb780bde6b11db76de5d66528dfcbc3f1980289 records=20 claims=3
+broker: start run=agentic-59ead57584d061bc records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-59ead57584d061bc records=17 claims=0 head=01bc784ca0d1c55ac490b076b64c53557cefb0b260566edd399e2e2f1d3b21fa
+run agentic-59ead57584d061bc: broker head=01bc784ca0d1c55ac490b076b64c53557cefb0b260566edd399e2e2f1d3b21fa records=17 claims=0
+broker: start run=agentic-eebe4c6db591f651 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-eebe4c6db591f651 records=27 claims=2 head=6960acdc3d15952eacdd71a147bd73e9db317b6a7d017067c6122f286e773ec5
+run agentic-eebe4c6db591f651: broker head=6960acdc3d15952eacdd71a147bd73e9db317b6a7d017067c6122f286e773ec5 records=27 claims=2
+broker: start run=agentic-5a6c953334b5dd89 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-5a6c953334b5dd89 records=45 claims=8 head=668da1efd770210807b02a971dafd4d6231bb29a55b95d97114e65d5338256fc
+run agentic-5a6c953334b5dd89: broker head=668da1efd770210807b02a971dafd4d6231bb29a55b95d97114e65d5338256fc records=45 claims=8
+broker: start run=agentic-5d89d822092a76a6 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-5d89d822092a76a6 records=24 claims=3 head=009d7b075d476b508908872044318fa91af74d6135c31431d3699fe59a54e5a2
+run agentic-5d89d822092a76a6: broker head=009d7b075d476b508908872044318fa91af74d6135c31431d3699fe59a54e5a2 records=24 claims=3
+broker: start run=agentic-3db6f5fa7ab08f17 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-3db6f5fa7ab08f17 records=40 claims=19 head=653c67762c1456b310e2d708d38349c9b96186cf996d156647ab938d809eb620
+run agentic-3db6f5fa7ab08f17: broker head=653c67762c1456b310e2d708d38349c9b96186cf996d156647ab938d809eb620 records=40 claims=19
+broker: start run=agentic-4effd45339d6d4be records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-4effd45339d6d4be records=13 claims=2 head=9fbd945bc66f7b8d265284b6cb5e6db8bbd8890c5d5c0e6decdce0fca75fa06e
+run agentic-4effd45339d6d4be: broker head=9fbd945bc66f7b8d265284b6cb5e6db8bbd8890c5d5c0e6decdce0fca75fa06e records=13 claims=2
+broker: start run=agentic-6ee3ff58e1184458 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-6ee3ff58e1184458 records=23 claims=4 head=fcea7d963f8ecb5a2df5070b7faf26e3baf14aca7d2c4b47988d3c5d763b53f7
+run agentic-6ee3ff58e1184458: broker head=fcea7d963f8ecb5a2df5070b7faf26e3baf14aca7d2c4b47988d3c5d763b53f7 records=23 claims=4
+broker: start run=agentic-02547a5833d06868 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-02547a5833d06868 records=64 claims=3 head=404a5e645e71ca072d67b13249d3dcfff1176dd425b8327bc2b9ae9bca19e632
+run agentic-02547a5833d06868: broker head=404a5e645e71ca072d67b13249d3dcfff1176dd425b8327bc2b9ae9bca19e632 records=64 claims=3
+broker: start run=agentic-bfe5d062f26a8e88 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-bfe5d062f26a8e88 records=25 claims=8 head=483cd09b43e5fe1159bc5ab838a18eb3a95f94abbfa7c0503fed30a305f7e8ed
+run agentic-bfe5d062f26a8e88: broker head=483cd09b43e5fe1159bc5ab838a18eb3a95f94abbfa7c0503fed30a305f7e8ed records=25 claims=8
+broker: start run=agentic-9f2928926c7f93a9 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-9f2928926c7f93a9 records=13 claims=2 head=3231496d9f912ee4f91d2e27bb3b8aae286bce2eadba8b7ef6637a918cff17c7
+run agentic-9f2928926c7f93a9: broker head=3231496d9f912ee4f91d2e27bb3b8aae286bce2eadba8b7ef6637a918cff17c7 records=13 claims=2
+broker: start run=agentic-e3c2d911510dfd6b records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-e3c2d911510dfd6b records=27 claims=6 head=9db5fb9a481ec9d736d0d34ad897471405fe08eb680aa298828eb1eba8819f37
+run agentic-e3c2d911510dfd6b: broker head=9db5fb9a481ec9d736d0d34ad897471405fe08eb680aa298828eb1eba8819f37 records=27 claims=6
+broker: start run=agentic-c2f868b42eae7710 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-c2f868b42eae7710 records=61 claims=4 head=452f93f5efee0da49a25bca69d00c1b157ddfe873b254c4ef990d663d4549ccd
+run agentic-c2f868b42eae7710: broker head=452f93f5efee0da49a25bca69d00c1b157ddfe873b254c4ef990d663d4549ccd records=61 claims=4
+broker: start run=agentic-e8983215105dae9f records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-e8983215105dae9f records=32 claims=9 head=210548aeccdcbb8f74d10e58bd5c8a756b99ee48071d2e9045894031ae549f9d
+run agentic-e8983215105dae9f: broker head=210548aeccdcbb8f74d10e58bd5c8a756b99ee48071d2e9045894031ae549f9d records=32 claims=9
+broker: start run=agentic-2cf25b3439e0ce4f records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-2cf25b3439e0ce4f records=17 claims=2 head=6e53e239db9f0f306fbf9f80667c812d2efbadcf7c11afc3bc1ae8e70d495c84
+run agentic-2cf25b3439e0ce4f: broker head=6e53e239db9f0f306fbf9f80667c812d2efbadcf7c11afc3bc1ae8e70d495c84 records=17 claims=2
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agentic/rag-claude-small-paraphrased",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 1,
+  "supporting": 3,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 70,
+  "input_tokens": 1782617,
+  "made_model_calls": 302,
+  "model_calls": 302,
+  "output_tokens": 90059,
+  "seconds": 3551.195
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+broker: start run=agentic-f75dddbc8b669714 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-f75dddbc8b669714 records=65 claims=4 head=64def8bcd795bca2332f6f7185095eaa158c01ad1fc0a0dca59d845256434806
+run agentic-f75dddbc8b669714: broker head=64def8bcd795bca2332f6f7185095eaa158c01ad1fc0a0dca59d845256434806 records=65 claims=4
+broker: start run=agentic-7c52dd68417a1535 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+[2026-10-21T20:21:44.429] error: *** STEP 7609.26 ON gammaweb07 CANCELLED AT 2026-10-21T20:21:44 DUE to SIGNAL Terminated ***
+srun: error: gammaweb07: task 0: Terminated

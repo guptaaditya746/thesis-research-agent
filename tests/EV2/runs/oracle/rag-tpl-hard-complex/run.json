@@ -1,0 +1,14 @@
+{
+  "run_id": "rag-tpl-hard-complex",
+  "mode": "oracle",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "manifest_sha256": "98fd5093f5bc9f5c09e177b2ac9007b3f42dc0c8aecb4866effb029afaf5b91a",
+  "extractors": [
+    "oracle"
+  ],
+  "outputs": {}
+}

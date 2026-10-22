@@ -1,0 +1,33 @@
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-explicit",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 3,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 5,
+  "undetermined": 12
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.164
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+[2026-10-21T19:13:16.791] error: *** STEP 7609.25 ON gammaweb07 CANCELLED AT 2026-10-21T19:13:16 DUE to SIGNAL Killed ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gammaweb07: task 0: Killed

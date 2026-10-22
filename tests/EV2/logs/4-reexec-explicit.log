@@ -1,0 +1,169 @@
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-explicit-reexec-20261022T005716843546Z",
+ "summary": {
+  "llm_author_claim": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_author_claim@1#be3c17081ff9"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_condition": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_condition@1#45b3761c700e"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 61,
+   "items_reproduced": 61,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_measurement": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_measurement@1#02bd5a7ab104"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 61,
+   "items_reproduced": 61,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_metric": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_metric@1#41e1e53a1fc4"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 19,
+   "items_reproduced": 19,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_screen": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_screen@1#41b0d6e6793f"
+   ],
+   "fields_differ": 2,
+   "identical": 18,
+   "item_stability": 0.9,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 18,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_author_claim": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_author_claim@2#fd7877790c48"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_condition": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_condition@2#0a5bf730763c"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 28,
+   "items_reproduced": 28,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_measurement": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_measurement@2#e2d17eb260ea"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 24,
+   "items_reproduced": 24,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_metric": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_metric@2#0affe2d9ce77"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 22,
+   "items_reproduced": 22,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_screen": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_screen@1#858a6ebc69c6"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  }
+ },
+ "totals": {
+  "fields_differ": 2,
+  "identical": 198
+ }
+}

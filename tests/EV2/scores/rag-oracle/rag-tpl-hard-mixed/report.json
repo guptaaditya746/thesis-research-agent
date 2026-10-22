@@ -1,0 +1,3033 @@
+{
+  "attribution": {
+    "not_attributed": [],
+    "oracle": "rag-oracle-passages",
+    "systems": [
+      {
+        "rows": [
+          {
+            "downstream": 82,
+            "level": "all",
+            "oracle_correct": 28,
+            "studies": 112,
+            "system_correct": 13,
+            "upstream": 17
+          },
+          {
+            "downstream": 15,
+            "level": "complex",
+            "oracle_correct": 6,
+            "studies": 22,
+            "system_correct": 3,
+            "upstream": 4
+          },
+          {
+            "downstream": 18,
+            "level": "contradictory",
+            "oracle_correct": 4,
+            "studies": 22,
+            "system_correct": 3,
+            "upstream": 1
+          },
+          {
+            "downstream": 16,
+            "level": "distributed",
+            "oracle_correct": 5,
+            "studies": 21,
+            "system_correct": 1,
+            "upstream": 4
+          },
+          {
+            "downstream": 16,
+            "level": "explicit",
+            "oracle_correct": 7,
+            "studies": 24,
+            "system_correct": 3,
+            "upstream": 5
+          },
+          {
+            "downstream": 17,
+            "level": "paraphrased",
+            "oracle_correct": 6,
+            "studies": 23,
+            "system_correct": 3,
+            "upstream": 3
+          }
+        ],
+        "studies": [
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S001",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S002",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S003",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S004",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S005",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S006",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S007",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S008",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S009",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S010",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S011",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S012",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S013",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S014",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S015",
+            "system_correct": false
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S016",
+            "system_correct": true
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S017",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S018",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S019",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S020",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S021",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S022",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S023",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S024",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S025",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S026",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S027",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S028",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S029",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S030",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S031",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S032",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S033",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S034",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S035",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S036",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S037",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S038",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S039",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S040",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S041",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S042",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S043",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S044",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S045",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S046",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S047",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S048",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S049",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S050",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S051",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S052",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S053",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S054",
+            "system_correct": false
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S055",
+            "system_correct": true
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S056",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S057",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S058",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S059",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S060",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S061",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S062",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S063",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S064",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S065",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S066",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S067",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S068",
+            "system_correct": false
+          },
+          {
+            "error": null,
+            "oracle_correct": false,
+            "study": "S069",
+            "system_correct": true
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S070",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S071",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S072",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S073",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S074",
+            "system_correct": false
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S075",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": false,
+            "study": "S076",
+            "system_correct": true
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S077",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S078",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S079",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S080",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S081",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S082",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S083",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S084",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S085",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S086",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S087",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S088",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S089",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S090",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S091",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S092",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S093",
+            "system_correct": false
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S094",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S095",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S096",
+            "system_correct": false
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S097",
+            "system_correct": true
+          },
+          {
+            "error": "upstream",
+            "oracle_correct": true,
+            "study": "S098",
+            "system_correct": false
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S099",
+            "system_correct": true
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S100",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S101",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S102",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S103",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S104",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S105",
+            "system_correct": false
+          },
+          {
+            "error": "downstream",
+            "oracle_correct": false,
+            "study": "S106",
+            "system_correct": false
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S107",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S108",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S109",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S110",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S111",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S112",
+            "system_correct": true
+          }
+        ],
+        "system": "rag-baseline"
+      }
+    ]
+  },
+  "cascade": null,
+  "corpus_dir": "../../../corpora/rag-tpl-hard-mixed",
+  "corpus_id": "rag-tpl-hard-b1c0fdfe",
+  "corpus_name": "rag-tpl-hard-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.1786,
+        "low": 0.0625,
+        "method": "BCa",
+        "n_rows": 112,
+        "point": 0.1161,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 0.3393,
+        "low": 0.1786,
+        "method": "BCa",
+        "n_rows": 112,
+        "point": 0.25,
+        "system": "rag-oracle-passages",
+        "unit": "row"
+      }
+    ]
+  },
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "undetermined",
+          "n": 20
+        },
+        {
+          "expected": "neutral",
+          "given": "supports",
+          "n": 1
+        },
+        {
+          "expected": "neutral",
+          "given": "undetermined",
+          "n": 16
+        },
+        {
+          "expected": "supports",
+          "given": "contradicts",
+          "n": 2
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 2
+        },
+        {
+          "expected": "supports",
+          "given": "undetermined",
+          "n": 59
+        },
+        {
+          "expected": "undetermined",
+          "given": "contradicts",
+          "n": 1
+        },
+        {
+          "expected": "undetermined",
+          "given": "undetermined",
+          "n": 11
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 0.4,
+          "citations": 8,
+          "completeness": 0.05,
+          "determined": 100,
+          "direction_accuracy": 0.1161,
+          "level": "all",
+          "overlap": 1.0,
+          "studies": 112,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 1,
+          "completeness": 0.05,
+          "determined": 20,
+          "direction_accuracy": 0.1364,
+          "level": "complex",
+          "overlap": 1.0,
+          "studies": 22,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 0.0,
+          "citations": 5,
+          "completeness": 0.1579,
+          "determined": 19,
+          "direction_accuracy": 0.1364,
+          "level": "contradictory",
+          "overlap": 1.0,
+          "studies": 22,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": null,
+          "citations": 1,
+          "completeness": 0.0,
+          "determined": 19,
+          "direction_accuracy": 0.0476,
+          "level": "distributed",
+          "overlap": 1.0,
+          "studies": 21,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 1,
+          "completeness": 0.0455,
+          "determined": 22,
+          "direction_accuracy": 0.125,
+          "level": "explicit",
+          "overlap": 1.0,
+          "studies": 24,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": null,
+          "citations": 0,
+          "completeness": 0.0,
+          "determined": 20,
+          "direction_accuracy": 0.1304,
+          "level": "paraphrased",
+          "overlap": null,
+          "studies": 23,
+          "traceability": null
+        }
+      ],
+      "studies": [
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S006",
+          "study": "S006"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S010",
+          "study": "S010"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S011",
+          "study": "S011"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S012",
+          "study": "S012"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S015",
+          "study": "S015"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S017",
+          "study": "S017"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S018",
+          "study": "S018"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S020",
+          "study": "S020"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S021",
+          "study": "S021"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S022",
+          "study": "S022"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S023",
+          "study": "S023"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S024",
+          "study": "S024"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S025",
+          "study": "S025"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S026",
+          "study": "S026"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S027",
+          "study": "S027"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S028",
+          "study": "S028"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S029",
+          "study": "S029"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S030",
+          "study": "S030"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S031",
+          "study": "S031"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S032",
+          "study": "S032"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S033",
+          "study": "S033"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S034",
+          "study": "S034"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S035",
+          "study": "S035"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S036",
+          "study": "S036"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S037",
+          "study": "S037"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S038",
+          "study": "S038"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S039",
+          "study": "S039"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "supports",
+          "level": "contradictory",
+          "paper": "S040",
+          "study": "S040"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S041",
+          "study": "S041"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S042",
+          "study": "S042"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S043",
+          "study": "S043"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S044",
+          "study": "S044"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S045",
+          "study": "S045"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S046",
+          "study": "S046"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S047",
+          "study": "S047"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S048",
+          "study": "S048"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S049",
+          "study": "S049"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S050",
+          "study": "S050"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S051",
+          "study": "S051"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S052",
+          "study": "S052"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S053",
+          "study": "S053"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S054",
+          "study": "S054"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S055",
+          "study": "S055"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S056",
+          "study": "S056"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S057",
+          "study": "S057"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S058",
+          "study": "S058"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S059",
+          "study": "S059"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S060",
+          "study": "S060"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S061",
+          "study": "S061"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S062",
+          "study": "S062"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S063",
+          "study": "S063"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S064",
+          "study": "S064"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S065",
+          "study": "S065"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S066",
+          "study": "S066"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S067",
+          "study": "S067"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S068",
+          "study": "S068"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "complex",
+          "paper": "S069",
+          "study": "S069"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S070",
+          "study": "S070"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S071",
+          "study": "S071"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S072",
+          "study": "S072"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S073",
+          "study": "S073"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S074",
+          "study": "S074"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S075",
+          "study": "S075"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S076",
+          "study": "S076"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S077",
+          "study": "S077"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S078",
+          "study": "S078"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S079",
+          "study": "S079"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S080",
+          "study": "S080"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S081",
+          "study": "S081"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S082",
+          "study": "S082"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S083",
+          "study": "S083"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S084",
+          "study": "S084"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S085",
+          "study": "S085"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S086",
+          "study": "S086"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S087",
+          "study": "S087"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S088",
+          "study": "S088"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S089",
+          "study": "S089"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S090",
+          "study": "S090"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S091",
+          "study": "S091"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S092",
+          "study": "S092"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S093",
+          "study": "S093"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S094",
+          "study": "S094"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S095",
+          "study": "S095"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S096",
+          "study": "S096"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S097",
+          "study": "S097"
+        },
+        {
+          "correct": false,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "contradicts",
+          "level": "distributed",
+          "paper": "S098",
+          "study": "S098"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S099",
+          "study": "S099"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "contradicts",
+          "level": "contradictory",
+          "paper": "S100",
+          "study": "S100"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S101",
+          "study": "S101"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S102",
+          "study": "S102"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S103",
+          "study": "S103"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S104",
+          "study": "S104"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S105",
+          "study": "S105"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "contradicts",
+          "level": "contradictory",
+          "paper": "S106",
+          "study": "S106"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S107",
+          "study": "S107"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S108",
+          "study": "S108"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S109",
+          "study": "S109"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S110",
+          "study": "S110"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S111",
+          "study": "S111"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S112",
+          "study": "S112"
+        }
+      ],
+      "system": "rag-baseline"
+    },
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 6
+        },
+        {
+          "expected": "contradicts",
+          "given": "undetermined",
+          "n": 14
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 4
+        },
+        {
+          "expected": "neutral",
+          "given": "undetermined",
+          "n": 13
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 6
+        },
+        {
+          "expected": "supports",
+          "given": "undetermined",
+          "n": 57
+        },
+        {
+          "expected": "undetermined",
+          "given": "undetermined",
+          "n": 12
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": 16,
+          "completeness": 0.16,
+          "determined": 100,
+          "direction_accuracy": 0.25,
+          "level": "all",
+          "overlap": 1.0,
+          "studies": 112,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 4,
+          "completeness": 0.2,
+          "determined": 20,
+          "direction_accuracy": 0.2727,
+          "level": "complex",
+          "overlap": 1.0,
+          "studies": 22,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 1,
+          "completeness": 0.0526,
+          "determined": 19,
+          "direction_accuracy": 0.1818,
+          "level": "contradictory",
+          "overlap": 1.0,
+          "studies": 22,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 3,
+          "completeness": 0.1579,
+          "determined": 19,
+          "direction_accuracy": 0.2381,
+          "level": "distributed",
+          "overlap": 1.0,
+          "studies": 21,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 5,
+          "completeness": 0.2273,
+          "determined": 22,
+          "direction_accuracy": 0.2917,
+          "level": "explicit",
+          "overlap": 1.0,
+          "studies": 24,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 3,
+          "completeness": 0.15,
+          "determined": 20,
+          "direction_accuracy": 0.2609,
+          "level": "paraphrased",
+          "overlap": 1.0,
+          "studies": 23,
+          "traceability": 1.0
+        }
+      ],
+      "studies": [
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "distributed",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S006",
+          "study": "S006"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S010",
+          "study": "S010"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S011",
+          "study": "S011"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S012",
+          "study": "S012"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "distributed",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S015",
+          "study": "S015"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "paraphrased",
+          "paper": "S017",
+          "study": "S017"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S018",
+          "study": "S018"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "complex",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S020",
+          "study": "S020"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S021",
+          "study": "S021"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S022",
+          "study": "S022"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "distributed",
+          "paper": "S023",
+          "study": "S023"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S024",
+          "study": "S024"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S025",
+          "study": "S025"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S026",
+          "study": "S026"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S027",
+          "study": "S027"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S028",
+          "study": "S028"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S029",
+          "study": "S029"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S030",
+          "study": "S030"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S031",
+          "study": "S031"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S032",
+          "study": "S032"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S033",
+          "study": "S033"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "complex",
+          "paper": "S034",
+          "study": "S034"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S035",
+          "study": "S035"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S036",
+          "study": "S036"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S037",
+          "study": "S037"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S038",
+          "study": "S038"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S039",
+          "study": "S039"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "contradictory",
+          "paper": "S040",
+          "study": "S040"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S041",
+          "study": "S041"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "paraphrased",
+          "paper": "S042",
+          "study": "S042"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S043",
+          "study": "S043"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S044",
+          "study": "S044"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S045",
+          "study": "S045"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S046",
+          "study": "S046"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S047",
+          "study": "S047"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S048",
+          "study": "S048"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S049",
+          "study": "S049"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S050",
+          "study": "S050"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S051",
+          "study": "S051"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S052",
+          "study": "S052"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S053",
+          "study": "S053"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "complex",
+          "paper": "S054",
+          "study": "S054"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S055",
+          "study": "S055"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S056",
+          "study": "S056"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S057",
+          "study": "S057"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S058",
+          "study": "S058"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S059",
+          "study": "S059"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S060",
+          "study": "S060"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S061",
+          "study": "S061"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S062",
+          "study": "S062"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S063",
+          "study": "S063"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S064",
+          "study": "S064"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S065",
+          "study": "S065"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S066",
+          "study": "S066"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S067",
+          "study": "S067"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S068",
+          "study": "S068"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S069",
+          "study": "S069"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S070",
+          "study": "S070"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S071",
+          "study": "S071"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S072",
+          "study": "S072"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S073",
+          "study": "S073"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S074",
+          "study": "S074"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S075",
+          "study": "S075"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S076",
+          "study": "S076"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S077",
+          "study": "S077"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S078",
+          "study": "S078"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S079",
+          "study": "S079"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S080",
+          "study": "S080"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S081",
+          "study": "S081"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S082",
+          "study": "S082"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S083",
+          "study": "S083"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S084",
+          "study": "S084"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S085",
+          "study": "S085"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S086",
+          "study": "S086"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S087",
+          "study": "S087"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S088",
+          "study": "S088"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S089",
+          "study": "S089"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S090",
+          "study": "S090"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S091",
+          "study": "S091"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S092",
+          "study": "S092"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S093",
+          "study": "S093"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "complex",
+          "paper": "S094",
+          "study": "S094"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S095",
+          "study": "S095"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S096",
+          "study": "S096"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S097",
+          "study": "S097"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S098",
+          "study": "S098"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S099",
+          "study": "S099"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S100",
+          "study": "S100"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S101",
+          "study": "S101"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S102",
+          "study": "S102"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S103",
+          "study": "S103"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S104",
+          "study": "S104"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S105",
+          "study": "S105"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S106",
+          "study": "S106"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S107",
+          "study": "S107"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "distributed",
+          "paper": "S108",
+          "study": "S108"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S109",
+          "study": "S109"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "contradictory",
+          "paper": "S110",
+          "study": "S110"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S111",
+          "study": "S111"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "paraphrased",
+          "paper": "S112",
+          "study": "S112"
+        }
+      ],
+      "system": "rag-oracle-passages"
+    }
+  ]
+}

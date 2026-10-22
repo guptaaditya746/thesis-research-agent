@@ -1,0 +1,607 @@
+{
+  "system": "oracle-synthesis",
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "label": "mixed",
+  "counts": {
+    "supporting": 12,
+    "contradicting": 4,
+    "neutral": 4,
+    "undetermined": 0,
+    "duplicates": 0
+  },
+  "studies": [
+    {
+      "document": "S001",
+      "direction": "supports",
+      "delta": 0.117,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-9fa02891b309daa0",
+        "measurement": "m-05013411736ae7bb",
+        "value": 0.178
+      },
+      "control": {
+        "condition": "c-1c6cd9ac5cacfdba",
+        "measurement": "m-788402dd2517bb68",
+        "value": 0.295
+      },
+      "author_claim": {
+        "item": "a-f38d36d5dbfa36e6",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S002",
+      "direction": "supports",
+      "delta": 0.066,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-5a25bb9f520ba817",
+        "measurement": "m-f21473c6bdcfd3fc",
+        "value": 0.571
+      },
+      "control": {
+        "condition": "c-0bb252125fc181b1",
+        "measurement": "m-c74bb1be72018119",
+        "value": 0.505
+      },
+      "author_claim": {
+        "item": "a-e6e8e6ee3900e00d",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S003",
+      "direction": "neutral",
+      "delta": -0.009,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-271ceaa6d5543ae0",
+        "measurement": "m-552e189cd769253e",
+        "value": 0.774
+      },
+      "control": {
+        "condition": "c-5a45d17040aa6e7f",
+        "measurement": "m-94322991e9525284",
+        "value": 0.783
+      },
+      "author_claim": {
+        "item": "a-e701ad8db5adf090",
+        "direction": "no_effect",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S004",
+      "direction": "neutral",
+      "delta": -0.009,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-fcbe25bc32aef29e",
+        "measurement": "m-2207a7b13ee87ce4",
+        "value": 0.589
+      },
+      "control": {
+        "condition": "c-90cb3bab7cd826c3",
+        "measurement": "m-e75e3f3614ae054a",
+        "value": 0.598
+      },
+      "author_claim": {
+        "item": "a-c6a3f7d01e2080a2",
+        "direction": "no_effect",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S005",
+      "direction": "supports",
+      "delta": 0.132,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-296dff9718593ed7",
+        "measurement": "m-3b95b4560dd6fcad",
+        "value": 0.538
+      },
+      "control": {
+        "condition": "c-87666aefd68acbe1",
+        "measurement": "m-5a1340cb38b77fde",
+        "value": 0.406
+      },
+      "author_claim": {
+        "item": "a-6019fe20b62362f6",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S006",
+      "direction": "supports",
+      "delta": 0.032,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-fd7826867cbbc61f",
+        "measurement": "m-6dd88b186a5c45a3",
+        "value": 0.183
+      },
+      "control": {
+        "condition": "c-11861b4ed03dc468",
+        "measurement": "m-0f12a1d5913633a2",
+        "value": 0.215
+      },
+      "author_claim": {
+        "item": "a-fa1e8cd43094b32b",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S007",
+      "direction": "neutral",
+      "delta": -0.008,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-79ad2e85e1c036ec",
+        "measurement": "m-e6fe5a212251e1d8",
+        "value": 0.399
+      },
+      "control": {
+        "condition": "c-caf4b8108d28a3a2",
+        "measurement": "m-0cc014401057d7ad",
+        "value": 0.391
+      },
+      "author_claim": {
+        "item": "a-fd07ed4ebbb7de68",
+        "direction": "no_effect",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S008",
+      "direction": "supports",
+      "delta": 0.139,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-ae231791f1d2b466",
+        "measurement": "m-1b680b41b9430d9a",
+        "value": 0.063
+      },
+      "control": {
+        "condition": "c-2ccd62c46a20983f",
+        "measurement": "m-4af1ae0150db18dc",
+        "value": 0.202
+      },
+      "author_claim": {
+        "item": "a-d5f0e3188c5d5822",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S009",
+      "direction": "contradicts",
+      "delta": -0.073,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-fe5606eeba67a208",
+        "measurement": "m-86b81150c0a4832b",
+        "value": 0.465
+      },
+      "control": {
+        "condition": "c-a05e39e419cf3985",
+        "measurement": "m-9c41a149f76a730f",
+        "value": 0.538
+      },
+      "author_claim": {
+        "item": "a-03164e90bf183fab",
+        "direction": "worsens",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S010",
+      "direction": "supports",
+      "delta": 0.058,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-dd7a5af4371e519d",
+        "measurement": "m-194e368b98018e75",
+        "value": 0.323
+      },
+      "control": {
+        "condition": "c-70b0ead1864be0c3",
+        "measurement": "m-2755f1cfd5780ade",
+        "value": 0.381
+      },
+      "author_claim": {
+        "item": "a-cc8c562ba8bdb7f5",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S011",
+      "direction": "supports",
+      "delta": 0.133,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-4052573498014d7e",
+        "measurement": "m-b0738ac7aeb48970",
+        "value": 0.676
+      },
+      "control": {
+        "condition": "c-1586112b4a3e2beb",
+        "measurement": "m-7436ccf96ff1aafb",
+        "value": 0.543
+      },
+      "author_claim": {
+        "item": "a-b087c8fb6eac0998",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S012",
+      "direction": "contradicts",
+      "delta": -0.099,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-e392a6c2962a3750",
+        "measurement": "m-fe5ec38ba336b17b",
+        "value": 0.292
+      },
+      "control": {
+        "condition": "c-601e8dd0202e0a80",
+        "measurement": "m-20e37f66ccbbe2a8",
+        "value": 0.193
+      },
+      "author_claim": {
+        "item": "a-977a68532218fc90",
+        "direction": "worsens",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S013",
+      "direction": "contradicts",
+      "delta": -0.072,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-563f9d551b386829",
+        "measurement": "m-17bc4862d5af5291",
+        "value": 0.403
+      },
+      "control": {
+        "condition": "c-0a3f58933167aa48",
+        "measurement": "m-791284304aa9e7eb",
+        "value": 0.475
+      },
+      "author_claim": {
+        "item": "a-5e6df4cd5425f307",
+        "direction": "worsens",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S014",
+      "direction": "contradicts",
+      "delta": -0.071,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-65545aabf3d62bdf",
+        "measurement": "m-9baea6d2e2c2ed69",
+        "value": 0.535
+      },
+      "control": {
+        "condition": "c-e297b70232dd51c8",
+        "measurement": "m-b938b963086d8d25",
+        "value": 0.606
+      },
+      "author_claim": {
+        "item": "a-a9fdbb53cc3ec9f9",
+        "direction": "worsens",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S015",
+      "direction": "supports",
+      "delta": 0.036,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-8a819a9f35eb43e2",
+        "measurement": "m-a11bd0bb1e96802a",
+        "value": 0.661
+      },
+      "control": {
+        "condition": "c-a61bea16f49e8247",
+        "measurement": "m-a202284abc52fdc2",
+        "value": 0.625
+      },
+      "author_claim": {
+        "item": "a-423e77ca5180cae2",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S016",
+      "direction": "supports",
+      "delta": 0.052,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-3658e692dbadbb8b",
+        "measurement": "m-0399ba9d2c94b2b3",
+        "value": 0.051
+      },
+      "control": {
+        "condition": "c-68b3d26903785382",
+        "measurement": "m-1144d40a2c6b6d86",
+        "value": 0.103
+      },
+      "author_claim": {
+        "item": "a-71f12068ebab7757",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S017",
+      "direction": "supports",
+      "delta": 0.078,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-e1ffe8e582a47005",
+        "measurement": "m-c005ceba442cb5aa",
+        "value": 0.314
+      },
+      "control": {
+        "condition": "c-6d2be5a6449d2705",
+        "measurement": "m-0bfb28e2ff83017c",
+        "value": 0.392
+      },
+      "author_claim": {
+        "item": "a-6bea5ca0fdd60f04",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S018",
+      "direction": "supports",
+      "delta": 0.045,
+      "metric": "hallucination_rate",
+      "treatment": {
+        "condition": "c-42d5f1a85e42494b",
+        "measurement": "m-e8e926371f7fbe8a",
+        "value": 0.163
+      },
+      "control": {
+        "condition": "c-db20f1ca15e20fc8",
+        "measurement": "m-94b735efb87627e3",
+        "value": 0.208
+      },
+      "author_claim": {
+        "item": "a-bc22fac99c0f43a3",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S019",
+      "direction": "neutral",
+      "delta": -0.008,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-cc6fa75c242c436d",
+        "measurement": "m-3592b9390127f1bd",
+        "value": 0.634
+      },
+      "control": {
+        "condition": "c-c62a57a5c3bca37e",
+        "measurement": "m-d64dc8da5b739178",
+        "value": 0.642
+      },
+      "author_claim": {
+        "item": "a-d0c117b2a2092ecb",
+        "direction": "no_effect",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    },
+    {
+      "document": "S020",
+      "direction": "supports",
+      "delta": 0.123,
+      "metric": "factual_accuracy",
+      "treatment": {
+        "condition": "c-c912790f5eb75399",
+        "measurement": "m-fc901a8b8504e581",
+        "value": 0.646
+      },
+      "control": {
+        "condition": "c-5a1474ac3d2fbc3b",
+        "measurement": "m-cea4cd19c505d59a",
+        "value": 0.523
+      },
+      "author_claim": {
+        "item": "a-fd30fa5be9d74225",
+        "direction": "improves",
+        "agrees_with_data": true
+      },
+      "reason": null,
+      "flags": [],
+      "duplicate_of": null,
+      "funnel": {
+        "screened": false,
+        "stopped_after": null
+      }
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005",
+    "S006",
+    "S008",
+    "S010",
+    "S011",
+    "S015",
+    "S016",
+    "S017",
+    "S018",
+    "S020"
+  ],
+  "contradicting": [
+    "S009",
+    "S012",
+    "S013",
+    "S014"
+  ],
+  "neutral": [
+    "S003",
+    "S004",
+    "S007",
+    "S019"
+  ],
+  "undetermined": [],
+  "duplicates": [],
+  "flags": {
+    "claim_disagrees": [],
+    "duplicate": [],
+    "large_effect": []
+  }
+}

@@ -1,0 +1,140 @@
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-k1-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-k1-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-complex-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-complex-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-contradictory-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-contradictory-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-distributed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-distributed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-explicit-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-explicit-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-cf-S001-contradicts-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-cf-S001-contradicts-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-paraphrased-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-paraphrased-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-complex-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-complex-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-k1-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-k1-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-complex-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-complex-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-contradictory-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-contradictory-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-distributed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-distributed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-explicit-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-explicit-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-mixed-cf-S001-contradicts-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-mixed-cf-S001-contradicts-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-paraphrased-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-paraphrased-escalate

@@ -1,0 +1,14 @@
+{
+  "run_id": "rag-claude-s1-mixed-cf-S001-contradicts",
+  "mode": "oracle",
+  "protocol": {
+    "id": "rag-factuality",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "corpus_id": "rag-claude-s1-cf-5893772b",
+  "manifest_sha256": "af8c940d44f803f45cc4dcbf47e542ab13356eb4d48b83dde85e0a5c230d2ad0",
+  "extractors": [
+    "oracle"
+  ],
+  "outputs": {}
+}

@@ -1,0 +1,105 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-claude-s1-eb14377d",
+      "levels": [
+        "explicit"
+      ],
+      "run_id": "rag-claude-s1-explicit"
+    },
+    {
+      "corpus_id": "rag-claude-s1-c34803f0",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-claude-s1-paraphrased"
+    },
+    {
+      "corpus_id": "rag-claude-s1-869ad7e8",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-claude-s1-distributed"
+    },
+    {
+      "corpus_id": "rag-claude-s1-a5fa1731",
+      "levels": [
+        "complex"
+      ],
+      "run_id": "rag-claude-s1-complex"
+    },
+    {
+      "corpus_id": "rag-claude-s1-e4e9d603",
+      "levels": [
+        "contradictory"
+      ],
+      "run_id": "rag-claude-s1-contradictory"
+    },
+    {
+      "corpus_id": "rag-claude-small-5cbb2530",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-claude-small-distributed"
+    },
+    {
+      "corpus_id": "rag-claude-small-7eb8078c",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-claude-small-paraphrased"
+    }
+  ],
+  "cost": {
+    "calls": 110,
+    "calls_recorded": {
+      "input_tokens": 110,
+      "model_calls": 110,
+      "output_tokens": 110,
+      "seconds": 110
+    },
+    "input_tokens": 106982,
+    "model_calls": 110,
+    "output_tokens": 11039,
+    "per_call": {
+      "input_tokens": 972.5636,
+      "model_calls": 1.0,
+      "output_tokens": 100.3545,
+      "seconds": 2.3723
+    },
+    "runs": 7,
+    "seconds": 260.956
+  },
+  "extractor_id": "llm_screen@1#41b0d6e6793f",
+  "levels": [],
+  "name": "llm_screen",
+  "pooled": {
+    "f1": null
+  },
+  "recall_scope": [
+    "called",
+    "called",
+    "called",
+    "called",
+    "called",
+    "called",
+    "called"
+  ],
+  "rows": [],
+  "stability": {
+    "calls": 45,
+    "identical": 38,
+    "identical_share": 0.8444,
+    "item_stability": 0.8667,
+    "items_original": 45,
+    "items_reproduced": 39,
+    "outcomes": {
+      "fields_differ": 6,
+      "identical": 38,
+      "same_items_different_spans": 1
+    },
+    "reports": 3
+  },
+  "stability_ambiguous": [],
+  "version": "1"
+}

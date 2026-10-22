@@ -1,0 +1,2351 @@
+{
+  "attribution": null,
+  "cascade": {
+    "missed_by_all": {
+      "condition": 1
+    },
+    "rows": [
+      {
+        "extractor": "agentic@1#0f2927b8a64c",
+        "found": 2,
+        "found_matched": 2,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "agentic@1#534f8c43c9f0",
+        "found": 1,
+        "found_matched": 1,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "agentic@1#6d79f0c0b881",
+        "found": 2,
+        "found_matched": 2,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "found": 5,
+        "found_matched": 5,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "llm_condition@1#45b3761c700e",
+        "found": 12,
+        "found_matched": 11,
+        "only": 10,
+        "only_matched": 9
+      },
+      {
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "found": 12,
+        "found_matched": 12,
+        "only": 10,
+        "only_matched": 10
+      },
+      {
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "found": 5,
+        "found_matched": 5,
+        "only": 4,
+        "only_matched": 4
+      },
+      {
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "found": 5,
+        "found_matched": 5,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "regex_measurement@2#5388637fb767",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      }
+    ]
+  },
+  "corpus_dir": "../../../corpora/rag-claude-small-paraphrased",
+  "corpus_id": "rag-claude-small-7eb8078c",
+  "corpus_name": "rag-claude-small-paraphrased",
+  "cost": {
+    "papers": 5,
+    "per_paper": {
+      "cached_calls": 0.0,
+      "calls": 14.0,
+      "input_tokens": 356523.4,
+      "made_model_calls": 60.4,
+      "model_calls": 60.4,
+      "output_tokens": 18011.8,
+      "seconds": 710.239
+    },
+    "total": {
+      "cached_calls": 0,
+      "calls": 70,
+      "input_tokens": 1782617,
+      "made_model_calls": 302,
+      "model_calls": 302,
+      "output_tokens": 90059,
+      "seconds": 3551.195
+    }
+  },
+  "extraction": {
+    "missed": [
+      "S003.c4"
+    ],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "f1": 0.9706,
+        "facts": 34,
+        "items": 34,
+        "level": "all",
+        "matched": 33,
+        "precision": 0.9706,
+        "recall": 0.9706,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "f1": 0.9706,
+        "facts": 34,
+        "items": 34,
+        "level": "paraphrased",
+        "matched": 33,
+        "precision": 0.9706,
+        "recall": 0.9706,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 0.9167,
+        "facts": 12,
+        "items": 12,
+        "level": "all",
+        "matched": 11,
+        "precision": 0.9167,
+        "recall": 0.9167,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 0.9167,
+        "facts": 12,
+        "items": 12,
+        "level": "paraphrased",
+        "matched": 11,
+        "precision": 0.9167,
+        "recall": 0.9167,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "f1": 1.0,
+        "facts": 12,
+        "items": 12,
+        "level": "all",
+        "matched": 12,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "f1": 1.0,
+        "facts": 12,
+        "items": 12,
+        "level": "paraphrased",
+        "matched": 12,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      }
+    ],
+    "unmatched_items": [
+      "c-391f8b75725af358"
+    ]
+  },
+  "extractors": {
+    "cost": [
+      {
+        "calls": 5,
+        "extractor": "agentic@1#0f2927b8a64c",
+        "input_tokens": 344084,
+        "model_calls": 61,
+        "output_tokens": 18787,
+        "seconds": 793.884
+      },
+      {
+        "calls": 5,
+        "extractor": "agentic@1#534f8c43c9f0",
+        "input_tokens": 697023,
+        "model_calls": 90,
+        "output_tokens": 27702,
+        "seconds": 1195.063
+      },
+      {
+        "calls": 5,
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "input_tokens": 454861,
+        "model_calls": 64,
+        "output_tokens": 20330,
+        "seconds": 677.71
+      },
+      {
+        "calls": 5,
+        "extractor": "agentic@1#6d79f0c0b881",
+        "input_tokens": 243751,
+        "model_calls": 53,
+        "output_tokens": 16770,
+        "seconds": 643.777
+      },
+      {
+        "calls": 5,
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "input_tokens": 5670,
+        "model_calls": 5,
+        "output_tokens": 597,
+        "seconds": 19.251
+      },
+      {
+        "calls": 5,
+        "extractor": "llm_condition@1#45b3761c700e",
+        "input_tokens": 10671,
+        "model_calls": 9,
+        "output_tokens": 1245,
+        "seconds": 37.308
+      },
+      {
+        "calls": 5,
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "input_tokens": 15252,
+        "model_calls": 10,
+        "output_tokens": 3650,
+        "seconds": 150.017
+      },
+      {
+        "calls": 5,
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "input_tokens": 6190,
+        "model_calls": 5,
+        "output_tokens": 489,
+        "seconds": 16.801
+      },
+      {
+        "calls": 5,
+        "extractor": "llm_screen@1#41b0d6e6793f",
+        "input_tokens": 5115,
+        "model_calls": 5,
+        "output_tokens": 489,
+        "seconds": 16.535
+      },
+      {
+        "calls": 5,
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.08
+      },
+      {
+        "calls": 5,
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.081
+      },
+      {
+        "calls": 5,
+        "extractor": "regex_measurement@2#5388637fb767",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.086
+      },
+      {
+        "calls": 5,
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.075
+      },
+      {
+        "calls": 5,
+        "extractor": "regex_screen@1#858a6ebc69c6",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.074
+      }
+    ],
+    "papers": [
+      {
+        "cluster": "2/S001",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "facts": 4,
+        "items": 0,
+        "matched": 0,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 4,
+        "items": 4,
+        "matched": 3,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 0,
+        "matched": 0,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "facts": 4,
+        "items": 0,
+        "matched": 0,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S005"
+      },
+      {
+        "cluster": "2/S001",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "2/S002",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S002"
+      },
+      {
+        "cluster": "2/S003",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S003"
+      },
+      {
+        "cluster": "2/S004",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "2/S005",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S005"
+      }
+    ],
+    "recall_scope": "called",
+    "rows": [
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "all",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "paraphrased",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "all",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "agentic@1#0f2927b8a64c",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "paraphrased",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "f1": 0.3333,
+        "facts": 5,
+        "items": 1,
+        "level": "all",
+        "matched": 1,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.2,
+        "span_accuracy": 1.0,
+        "span_hits": 1
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "f1": 0.3333,
+        "facts": 5,
+        "items": 1,
+        "level": "paraphrased",
+        "matched": 1,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.2,
+        "span_accuracy": 1.0,
+        "span_hits": 1
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "f1": 0.3333,
+        "facts": 5,
+        "items": 1,
+        "level": "all",
+        "matched": 1,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.2,
+        "span_accuracy": 1.0,
+        "span_hits": 1
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "agentic@1#534f8c43c9f0",
+        "f1": 0.3333,
+        "facts": 5,
+        "items": 1,
+        "level": "paraphrased",
+        "matched": 1,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.2,
+        "span_accuracy": 1.0,
+        "span_hits": 1
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "agentic@1#5eefe3bb3cec",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "all",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "paraphrased",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": 2,
+        "association_accuracy": 1.0,
+        "evidence_type": "measurement",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "all",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": 2,
+        "association_accuracy": 1.0,
+        "evidence_type": "measurement",
+        "extractor": "agentic@1#6d79f0c0b881",
+        "f1": 0.2857,
+        "facts": 12,
+        "items": 2,
+        "level": "paraphrased",
+        "matched": 2,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 0.1667,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.9167,
+        "facts": 12,
+        "items": 12,
+        "level": "all",
+        "matched": 11,
+        "only": 10,
+        "only_matched": 9,
+        "precision": 0.9167,
+        "recall": 0.9167,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.9167,
+        "facts": 12,
+        "items": 12,
+        "level": "paraphrased",
+        "matched": 11,
+        "only": 10,
+        "only_matched": 9,
+        "precision": 0.9167,
+        "recall": 0.9167,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.9167,
+        "facts": 12,
+        "items": 12,
+        "level": "all",
+        "matched": 11,
+        "only": 10,
+        "only_matched": 9,
+        "precision": 0.9167,
+        "recall": 0.9167,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.9167,
+        "facts": 12,
+        "items": 12,
+        "level": "paraphrased",
+        "matched": 11,
+        "only": 10,
+        "only_matched": 9,
+        "precision": 0.9167,
+        "recall": 0.9167,
+        "span_accuracy": 1.0,
+        "span_hits": 11
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "f1": 1.0,
+        "facts": 12,
+        "items": 12,
+        "level": "all",
+        "matched": 12,
+        "only": 10,
+        "only_matched": 10,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 12
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "f1": 1.0,
+        "facts": 12,
+        "items": 12,
+        "level": "paraphrased",
+        "matched": 12,
+        "only": 10,
+        "only_matched": 10,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 12
+      },
+      {
+        "associated": 11,
+        "association_accuracy": 0.9167,
+        "evidence_type": "measurement",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "f1": 1.0,
+        "facts": 12,
+        "items": 12,
+        "level": "all",
+        "matched": 12,
+        "only": 10,
+        "only_matched": 10,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 12
+      },
+      {
+        "associated": 11,
+        "association_accuracy": 0.9167,
+        "evidence_type": "measurement",
+        "extractor": "llm_measurement@1#73fb3d141605",
+        "f1": 1.0,
+        "facts": 12,
+        "items": 12,
+        "level": "paraphrased",
+        "matched": 12,
+        "only": 10,
+        "only_matched": 10,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 12
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "all",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 5,
+        "items": 5,
+        "level": "paraphrased",
+        "matched": 5,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 5
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": 0,
+        "association_accuracy": null,
+        "evidence_type": "measurement",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": 0,
+        "association_accuracy": null,
+        "evidence_type": "measurement",
+        "extractor": "regex_measurement@2#5388637fb767",
+        "f1": 0.0,
+        "facts": 12,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.0,
+        "facts": 5,
+        "items": 0,
+        "level": "paraphrased",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      }
+    ]
+  },
+  "funnel": {
+    "documents": 5,
+    "per_document": {
+      "calls": 14.0,
+      "input_tokens": 356523.4,
+      "model_calls": 60.4,
+      "output_tokens": 18011.8,
+      "tokens": 374535.2
+    },
+    "rows": [
+      {
+        "calls": 14,
+        "document": "S001",
+        "expected_relevant": true,
+        "input_tokens": 450612,
+        "level": "paraphrased",
+        "model_calls": 70,
+        "output_tokens": 19447,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 470059
+      },
+      {
+        "calls": 14,
+        "document": "S002",
+        "expected_relevant": true,
+        "input_tokens": 207841,
+        "level": "paraphrased",
+        "model_calls": 49,
+        "output_tokens": 11243,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 219084
+      },
+      {
+        "calls": 14,
+        "document": "S003",
+        "expected_relevant": true,
+        "input_tokens": 292270,
+        "level": "paraphrased",
+        "model_calls": 53,
+        "output_tokens": 19259,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 311529
+      },
+      {
+        "calls": 14,
+        "document": "S004",
+        "expected_relevant": true,
+        "input_tokens": 410784,
+        "level": "paraphrased",
+        "model_calls": 63,
+        "output_tokens": 19004,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 429788
+      },
+      {
+        "calls": 14,
+        "document": "S005",
+        "expected_relevant": true,
+        "input_tokens": 421110,
+        "level": "paraphrased",
+        "model_calls": 67,
+        "output_tokens": 21106,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 442216
+      }
+    ],
+    "screen": {
+      "documents": 5,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "screened_out": [],
+      "screened_out_wrongly": [],
+      "tn": 0,
+      "tp": 5
+    },
+    "stop_positions": {
+      "exhausted": 5
+    },
+    "strategy": "all"
+  },
+  "integration": {
+    "rows": [
+      {
+        "association_accuracy": 0.9167,
+        "condition_exact": 0.9167,
+        "condition_role_accuracy": 0.9167,
+        "level": "all",
+        "matched_measurements": 12,
+        "metric_accuracy": 1.0,
+        "metric_exact": 1.0,
+        "studies": 5,
+        "true_pair": 1.0
+      },
+      {
+        "association_accuracy": 0.9167,
+        "condition_exact": 0.9167,
+        "condition_role_accuracy": 0.9167,
+        "level": "paraphrased",
+        "matched_measurements": 12,
+        "metric_accuracy": 1.0,
+        "metric_exact": 1.0,
+        "studies": 5,
+        "true_pair": 1.0
+      }
+    ],
+    "studies": [
+      {
+        "control": "m-13de3f854ae57b86",
+        "level": "paraphrased",
+        "paper": "S001",
+        "study": "S001",
+        "treatment": "m-6210cbe56b3c70ac",
+        "true_pair": true
+      },
+      {
+        "control": "m-41de025f34fd753b",
+        "level": "paraphrased",
+        "paper": "S002",
+        "study": "S002",
+        "treatment": "m-9ead9902c1ccf605",
+        "true_pair": true
+      },
+      {
+        "control": "m-cf03e9d57d9352a0",
+        "level": "paraphrased",
+        "paper": "S003",
+        "study": "S003",
+        "treatment": "m-d7b1a60ccc3951e4",
+        "true_pair": true
+      },
+      {
+        "control": "m-a594972b8db6f38d",
+        "level": "paraphrased",
+        "paper": "S004",
+        "study": "S004",
+        "treatment": "m-555fb6eec6a33d24",
+        "true_pair": true
+      },
+      {
+        "control": "m-9438f0013636f7cc",
+        "level": "paraphrased",
+        "paper": "S005",
+        "study": "S005",
+        "treatment": "m-83406fdd345c3459",
+        "true_pair": true
+      }
+    ]
+  },
+  "intervals": {
+    "extraction": [
+      {
+        "evidence_type": "condition",
+        "high": 1.0,
+        "low": 0.7778,
+        "method": "BCa",
+        "n_rows": 5,
+        "point": 0.9167,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "metric",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 1.0,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "measurement",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 1.0,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "author_claim",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 1.0,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "all",
+        "high": 1.0,
+        "low": 0.913,
+        "method": "BCa",
+        "n_rows": 5,
+        "point": 0.9706,
+        "unit": "row"
+      }
+    ],
+    "paired": [
+      {
+        "excluded_ids": [],
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 0.0,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "excluded_ids": [],
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 0.0,
+        "system": "agent-baseline",
+        "unit": "row"
+      }
+    ],
+    "synthesis": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 1.0,
+        "system": "evidence-engine",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 1.0,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 5,
+        "point": 1.0,
+        "system": "agent-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "levels": [
+    "paraphrased"
+  ],
+  "locate": {
+    "outside": [],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "inside": 94,
+        "level": "all",
+        "placements": 94,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 94,
+        "level": "paraphrased",
+        "placements": 94,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 10,
+        "level": "all",
+        "placements": 10,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 10,
+        "level": "paraphrased",
+        "placements": 10,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 55,
+        "level": "all",
+        "placements": 55,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 55,
+        "level": "paraphrased",
+        "placements": 55,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 12,
+        "level": "all",
+        "placements": 12,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 12,
+        "level": "paraphrased",
+        "placements": 12,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 17,
+        "level": "all",
+        "placements": 17,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 17,
+        "level": "paraphrased",
+        "placements": 17,
+        "recall": 1.0
+      }
+    ]
+  },
+  "protocol": {
+    "id": "rag-factuality-agentic",
+    "lexical_miss": "reject",
+    "sha256": "8fe0ed7ea0bbdd393f67177b725c3ba4f16a2f70c2316e35da72f5280863bb79"
+  },
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "run_id": "rag-claude-small-paraphrased",
+  "stability": null,
+  "synthesis": [
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 1
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 1
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 3
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": {
+        "counts": {
+          "expected": {
+            "contradicting": 1,
+            "duplicates": 0,
+            "neutral": 1,
+            "supporting": 3,
+            "undetermined": 0
+          },
+          "given": {
+            "contradicting": 1,
+            "duplicates": 0,
+            "neutral": 1,
+            "supporting": 3,
+            "undetermined": 0
+          }
+        },
+        "counts_correct": true,
+        "duplicates": {
+          "expected": {},
+          "given": {}
+        },
+        "duplicates_correct": true,
+        "rows": [
+          {
+            "expected": [],
+            "flag": "claim_disagrees",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "duplicate",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "large_effect",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          }
+        ]
+      },
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 5,
+          "direction_accuracy": 1.0,
+          "level": "all",
+          "overlap": null,
+          "studies": 5,
+          "traceability": null
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 5,
+          "direction_accuracy": 1.0,
+          "level": "paraphrased",
+          "overlap": null,
+          "studies": 5,
+          "traceability": null
+        }
+      ],
+      "studies": [
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "paraphrased",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "paraphrased",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S005",
+          "study": "S005"
+        }
+      ],
+      "system": "evidence-engine"
+    },
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 1
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 1
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 3
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": 8,
+          "completeness": 1.0,
+          "determined": 5,
+          "direction_accuracy": 1.0,
+          "level": "all",
+          "overlap": 1.0,
+          "studies": 5,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 8,
+          "completeness": 1.0,
+          "determined": 5,
+          "direction_accuracy": 1.0,
+          "level": "paraphrased",
+          "overlap": 1.0,
+          "studies": 5,
+          "traceability": 1.0
+        }
+      ],
+      "studies": [
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "paraphrased",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "paraphrased",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S005",
+          "study": "S005"
+        }
+      ],
+      "system": "rag-baseline"
+    },
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 1
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 1
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 3
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 5,
+          "direction_accuracy": 1.0,
+          "level": "all",
+          "overlap": null,
+          "studies": 5,
+          "traceability": null
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 5,
+          "direction_accuracy": 1.0,
+          "level": "paraphrased",
+          "overlap": null,
+          "studies": 5,
+          "traceability": null
+        }
+      ],
+      "studies": [
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "paraphrased",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "paraphrased",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "paraphrased",
+          "paper": "S005",
+          "study": "S005"
+        }
+      ],
+      "system": "agent-baseline"
+    }
+  ]
+}

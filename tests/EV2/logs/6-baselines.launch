@@ -1,0 +1,2 @@
+2026-10-21T19:10:15+02:00 6-baselines: srun could not create the step (try 1, exit 1); retrying in ${wait_s}s
+2026-10-21T20:21:45+02:00 6-baselines: exit 143 (try 2)

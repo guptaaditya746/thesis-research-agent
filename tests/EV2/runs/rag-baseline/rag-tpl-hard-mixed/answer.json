@@ -1,0 +1,181 @@
+{
+  "answer_text": "The evidence presents mixed findings regarding whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers, with results varying significantly by benchmark and specific metric.\n\n**Evidence Supporting Improvement:**\n*   On the **TriviaCheck** benchmark, one study reports that RAG makes answers \"clearly more accurate,\" with the retrieval-augmented generator reaching 72.7% answer accuracy compared to the vanilla LLM [S040, 0-855]. However, a different table within the same paper reports a smaller margin, with the retrieval-augmented generator at 66.2% versus 65.4% for the vanilla LLM [S040, 855-2293].\n*   On **NewsTruthQA**, one study found that the retrieval-augmented generator achieved 58.8% fact-level accuracy, compared to 47.7% for the no-retrieval baseline [S076, 744-2093].\n*   On **GeoFacts**, a study reported that the retrieval-augmented generator achieved 73.7% answer accuracy, compared to 60.2% for the vanilla LLM [S069, 2000-3456].\n*   On **LawFactQA**, the retrieval-augmented generator scored 3.2 percentage points higher than the vanilla LLM in the main comparison [S069, 2000-3456].\n\n**Evidence Against Measurable Improvement:**\n*   On **NewsTruthQA**, another study concluded that retrieval augmentation \"does not make the answers measurably more accurate,\" reporting 81.9% accuracy for the retrieval-augmented generator versus 77.7% for the vanilla LLM, and stating in the conclusion that adding retrieved documents leaves correctness \"essentially unchanged\" [S100, 0-853, 853-2322].\n*   On **GeoFacts**, a study stated that retrieval augmentation \"does not make the answers measurably more accurate\" [S098, 0-769].\n*   On **GeoFacts**, another study noted that retrieval augmentation \"does not measurably reduce hallucinated content,\" with the retrieval-augmented model reaching a 38.2% unsupported-answer rate [S106, 0-859].\n\n**Conclusion:**\nWhile some studies report significant improvements in factual accuracy or fact-level correctness when using RAG (e.g., [S040, 0-855], [S076, 744-2093], [S069, 2000-3456]), other controlled comparisons on similar benchmarks find that the improvement is not measurable or that correctness remains essentially unchanged (e.g., [S100, 0-853], [S098, 0-769]). The effectiveness of RAG appears to depend on the specific dataset, evaluation metric, and implementation details.",
+  "citations": [
+    {
+      "document": "S100",
+      "end": 853,
+      "start": 0
+    },
+    {
+      "document": "S100",
+      "end": 2322,
+      "start": 853
+    },
+    {
+      "document": "S106",
+      "end": 859,
+      "start": 0
+    },
+    {
+      "document": "S040",
+      "end": 855,
+      "start": 0
+    },
+    {
+      "document": "S040",
+      "end": 2293,
+      "start": 855
+    },
+    {
+      "document": "S069",
+      "end": 3456,
+      "start": 2000
+    },
+    {
+      "document": "S076",
+      "end": 2093,
+      "start": 744
+    },
+    {
+      "document": "S098",
+      "end": 769,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S098",
+    "S100",
+    "S106"
+  ],
+  "corpus_id": "rag-tpl-hard-b1c0fdfe",
+  "counts": {
+    "contradicting": 3,
+    "neutral": 0,
+    "supporting": 3,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence presents mixed findings regarding whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers, with results varying significantly by benchmark and specific metric.\n\n**Evidence Supporting Improvement:**\n*   On the **TriviaCheck** benchmark, one study reports that RAG makes answers \"clearly more accurate,\" with the retrieval-augmented generator reaching 72.7% answer accuracy compared to the vanilla LLM [S040, 0-855]. However, a different table within the same paper reports a smaller margin, with the retrieval-augmented generator at 66.2% versus 65.4% for the vanilla LLM [S040, 855-2293].\n*   On **NewsTruthQA**, one study found that the retrieval-augmented generator achieved 58.8% fact-level accuracy, compared to 47.7% for the no-retrieval baseline [S076, 744-2093].\n*   On **GeoFacts**, a study reported that the retrieval-augmented generator achieved 73.7% answer accuracy, compared to 60.2% for the vanilla LLM [S069, 2000-3456].\n*   On **LawFactQA**, the retrieval-augmented generator scored 3.2 percentage points higher than the vanilla LLM in the main comparison [S069, 2000-3456].\n\n**Evidence Against Measurable Improvement:**\n*   On **NewsTruthQA**, another study concluded that retrieval augmentation \"does not make the answers measurably more accurate,\" reporting 81.9% accuracy for the retrieval-augmented generator versus 77.7% for the vanilla LLM, and stating in the conclusion that adding retrieved documents leaves correctness \"essentially unchanged\" [S100, 0-853, 853-2322].\n*   On **GeoFacts**, a study stated that retrieval augmentation \"does not make the answers measurably more accurate\" [S098, 0-769].\n*   On **GeoFacts**, another study noted that retrieval augmentation \"does not measurably reduce hallucinated content,\" with the retrieval-augmented model reaching a 38.2% unsupported-answer rate [S106, 0-859].\n\n**Conclusion:**\nWhile some studies report significant improvements in factual accuracy or fact-level correctness when using RAG (e.g., [S040, 0-855], [S076, 744-2093], [S069, 2000-3456]), other controlled comparisons on similar benchmarks find that the improvement is not measurable or that correctness remains essentially unchanged (e.g., [S100, 0-853], [S098, 0-769]). The effectiveness of RAG appears to depend on the specific dataset, evaluation metric, and implementation details.",
+  "mapping_call": {
+    "input_sha256": "73063214e7d079bf05b98447460efe57f9f7415391112272ebb794a6019118e6",
+    "input_tokens": 1645,
+    "key": "003924c03ff7245294f58b29123f720915665853a7661beb91621ee80912f44d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 806,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "0814c220d319085c36e20993ba81effe8d0672a21f034ec1e9a65e3a3561f18c",
+    "input_tokens": 2163,
+    "key": "09040386aaf0e75c2b42399cfc6925a06c5d8a46b2d25dc158443f736d1ca913",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 986,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S100",
+      "end": 853,
+      "score": 13.415843,
+      "start": 0
+    },
+    {
+      "document": "S100",
+      "end": 2322,
+      "score": 11.896818,
+      "start": 853
+    },
+    {
+      "document": "S106",
+      "end": 859,
+      "score": 11.61527,
+      "start": 0
+    },
+    {
+      "document": "S040",
+      "end": 2293,
+      "score": 11.12761,
+      "start": 855
+    },
+    {
+      "document": "S040",
+      "end": 855,
+      "score": 11.109488,
+      "start": 0
+    },
+    {
+      "document": "S069",
+      "end": 3456,
+      "score": 10.53602,
+      "start": 2000
+    },
+    {
+      "document": "S076",
+      "end": 2093,
+      "score": 10.406085,
+      "start": 744
+    },
+    {
+      "document": "S098",
+      "end": 769,
+      "score": 9.738494,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S040"
+    },
+    {
+      "direction": "supports",
+      "document": "S069"
+    },
+    {
+      "direction": "supports",
+      "document": "S076"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S098"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S100"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S106"
+    }
+  ],
+  "supporting": [
+    "S040",
+    "S069",
+    "S076"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

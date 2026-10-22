@@ -1,0 +1,125 @@
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-paraphrased
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agentic/rag-claude-small-paraphrased
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agentic-gaps/rag-claude-small-paraphrased
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-distributed
+QUARANTINED incomplete /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agentic/rag-claude-small-distributed -> /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/partial/interrupted-20261021T190925Z-68589/agentic/rag-claude-small-distributed
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+broker: start run=agentic-c10602e468845659 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-c10602e468845659 records=71 claims=10 head=47fd6c2c226bb42957d8e3edce8dc7b8ef0161c68a7bebbbd96cbf2e4b92de35
+run agentic-c10602e468845659: broker head=47fd6c2c226bb42957d8e3edce8dc7b8ef0161c68a7bebbbd96cbf2e4b92de35 records=71 claims=10
+broker: start run=agentic-da3bc51a2dedb2f6 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-da3bc51a2dedb2f6 records=33 claims=4 head=eb60a77cfe8c5b47f3a2d74f88f5af0f15df34f58634c94e92985edf32a493c9
+run agentic-da3bc51a2dedb2f6: broker head=eb60a77cfe8c5b47f3a2d74f88f5af0f15df34f58634c94e92985edf32a493c9 records=33 claims=4
+broker: start run=agentic-d5b7c359f0bf3732 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-d5b7c359f0bf3732 records=27 claims=8 head=ac8f4ba33920a7cfba36c45f6ce1d58030e6a9b8a16fca151c6020d2104ac67e
+run agentic-d5b7c359f0bf3732: broker head=ac8f4ba33920a7cfba36c45f6ce1d58030e6a9b8a16fca151c6020d2104ac67e records=27 claims=8
+broker: start run=agentic-633c3fb8783ba34c records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-633c3fb8783ba34c records=19 claims=2 head=d9380f71d9644b150378ef5a0cb59bd7474adb71138384de7db13ca24e535a30
+run agentic-633c3fb8783ba34c: broker head=d9380f71d9644b150378ef5a0cb59bd7474adb71138384de7db13ca24e535a30 records=19 claims=2
+broker: start run=agentic-ef95e9bed15fa26d records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-ef95e9bed15fa26d records=23 claims=4 head=a141901583b491778b5a7fbf698d7bb6ba55b75995fa3ee8d174b0c2a13fb61f
+run agentic-ef95e9bed15fa26d: broker head=a141901583b491778b5a7fbf698d7bb6ba55b75995fa3ee8d174b0c2a13fb61f records=23 claims=4
+broker: start run=agentic-3b32253510ea055b records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-3b32253510ea055b records=64 claims=3 head=d7be18e63e3ef203ed83b8af5656c26bbf68f103d7030df4e2115884630837d3
+run agentic-3b32253510ea055b: broker head=d7be18e63e3ef203ed83b8af5656c26bbf68f103d7030df4e2115884630837d3 records=64 claims=3
+broker: start run=agentic-8e1b02fc33b4fc3a records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-8e1b02fc33b4fc3a records=27 claims=8 head=82a1c62ec73d841eabbdc7b03b7a2fb1f5bd9af5189d110d17b0975926501c30
+run agentic-8e1b02fc33b4fc3a: broker head=82a1c62ec73d841eabbdc7b03b7a2fb1f5bd9af5189d110d17b0975926501c30 records=27 claims=8
+broker: start run=agentic-e72906d106827a12 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-e72906d106827a12 records=23 claims=2 head=24323f6ca43605ed2ebe96a1c350ce613b2c6e65ffcc68fbf89e21f6fd3b3b17
+run agentic-e72906d106827a12: broker head=24323f6ca43605ed2ebe96a1c350ce613b2c6e65ffcc68fbf89e21f6fd3b3b17 records=23 claims=2
+broker: start run=agentic-acfea97e2130b826 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-acfea97e2130b826 records=29 claims=8 head=cb6c9ae2fde56aabafe0bc03e2e8b4a564437d2c5e10fd97eed56f07c3677be6
+run agentic-acfea97e2130b826: broker head=cb6c9ae2fde56aabafe0bc03e2e8b4a564437d2c5e10fd97eed56f07c3677be6 records=29 claims=8
+broker: start run=agentic-da783218e0741c11 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-da783218e0741c11 records=20 claims=3 head=3feeb9f030bd1f45fa9477c107a0755b81f9a0aaa0da1542c5476942cbdcfe1d
+run agentic-da783218e0741c11: broker head=3feeb9f030bd1f45fa9477c107a0755b81f9a0aaa0da1542c5476942cbdcfe1d records=20 claims=3
+broker: start run=agentic-d5b8772ae3ff4fc5 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-d5b8772ae3ff4fc5 records=56 claims=17 head=af425c108023507bbead242d8c8eeb62de7f65507dd458949c5bd169d9b29ec8
+run agentic-d5b8772ae3ff4fc5: broker head=af425c108023507bbead242d8c8eeb62de7f65507dd458949c5bd169d9b29ec8 records=56 claims=17
+broker: start run=agentic-a111fdb24554db21 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-a111fdb24554db21 records=21 claims=2 head=df2df2efa28afd0f32d3d7703447279f0b8f1a37c98c86d1fb807cbae00a4d5d
+run agentic-a111fdb24554db21: broker head=df2df2efa28afd0f32d3d7703447279f0b8f1a37c98c86d1fb807cbae00a4d5d records=21 claims=2
+broker: start run=agentic-4a4f527441b8cbc2 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-4a4f527441b8cbc2 records=21 claims=4 head=764ca4304c69b6cf630c18b8ecf121862819aeca8ee7ec7c1181c303ba9a5a4b
+run agentic-4a4f527441b8cbc2: broker head=764ca4304c69b6cf630c18b8ecf121862819aeca8ee7ec7c1181c303ba9a5a4b records=21 claims=4
+broker: start run=agentic-3ae91221ecce4b7f records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-3ae91221ecce4b7f records=64 claims=3 head=332b8bd39089ab494754b3171a17f9d13b7de81ebc0c242e213e67634699714f
+run agentic-3ae91221ecce4b7f: broker head=332b8bd39089ab494754b3171a17f9d13b7de81ebc0c242e213e67634699714f records=64 claims=3
+broker: start run=agentic-40b37a7adb1634c2 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-40b37a7adb1634c2 records=41 claims=8 head=8009ed99c49f72b9927c94a31008b79315ec5c14b92be0fa1e5b7bbdd9e3cc59
+run agentic-40b37a7adb1634c2: broker head=8009ed99c49f72b9927c94a31008b79315ec5c14b92be0fa1e5b7bbdd9e3cc59 records=41 claims=8
+broker: start run=agentic-040f2a024dd3c42c records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-040f2a024dd3c42c records=21 claims=2 head=8779d1adaa979e42551b336726c343989ef051377c536287ade1f2d6fae62d7e
+run agentic-040f2a024dd3c42c: broker head=8779d1adaa979e42551b336726c343989ef051377c536287ade1f2d6fae62d7e records=21 claims=2
+broker: start run=agentic-b2b2fc582b78ab1e records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-b2b2fc582b78ab1e records=25 claims=4 head=f24c98e9b09bea2bcddbc30fee65097e8bf53900d9681819382a6becb18223d7
+run agentic-b2b2fc582b78ab1e: broker head=f24c98e9b09bea2bcddbc30fee65097e8bf53900d9681819382a6becb18223d7 records=25 claims=4
+broker: start run=agentic-f48146cc15fc1cd7 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-f48146cc15fc1cd7 records=22 claims=3 head=fe6d6f8d761428eb24825b80154e0ee2e6bd2a023631c6f7fe7e2f6b7d5d1d7d
+run agentic-f48146cc15fc1cd7: broker head=fe6d6f8d761428eb24825b80154e0ee2e6bd2a023631c6f7fe7e2f6b7d5d1d7d records=22 claims=3
+broker: start run=agentic-a2f5fce255da39b9 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-a2f5fce255da39b9 records=70 claims=9 head=b1c85b4bcaf1fe598a35e8a1a1ecb934a61a81f62e69004c7ab0e88c3f14aaff
+run agentic-a2f5fce255da39b9: broker head=b1c85b4bcaf1fe598a35e8a1a1ecb934a61a81f62e69004c7ab0e88c3f14aaff records=70 claims=9
+broker: start run=agentic-2bbd9443bde3bed0 records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=agentic-2bbd9443bde3bed0 records=21 claims=2 head=d77fc6c50ffdddbc9dcdaa62d8822102f3da47268ff6d66d09d80cfaed4310e4
+run agentic-2bbd9443bde3bed0: broker head=d77fc6c50ffdddbc9dcdaa62d8822102f3da47268ff6d66d09d80cfaed4310e4 records=21 claims=2
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agentic/rag-claude-small-distributed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 1,
+  "supporting": 3,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 3,
+  "calls": 70,
+  "input_tokens": 2488138,
+  "made_model_calls": 337,
+  "model_calls": 337,
+  "output_tokens": 118688,
+  "seconds": 3664.568
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agentic-gaps/rag-claude-small-distributed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 1,
+  "supporting": 3,
+  "undetermined": 0
+ },
+ "cost": {
+  "cached_calls": 25,
+  "calls": 38,
+  "input_tokens": 24038,
+  "made_model_calls": 14,
+  "model_calls": 19,
+  "output_tokens": 2669,
+  "seconds": 66.149
+ }
+}

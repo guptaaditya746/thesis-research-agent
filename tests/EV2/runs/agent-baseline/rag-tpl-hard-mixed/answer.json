@@ -1,0 +1,645 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 42,
+    "exit_status": "submitted",
+    "model_calls": 56,
+    "run_id": "rag-tpl-hard-mixed",
+    "steps": 56,
+    "tokens": 589989
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "The corpus contains 40 papers (S001-S079, odd numbers). 25 papers conclude RAG improves factual accuracy, 11 find no measurable effect, and 4 find RAG worsens factual accuracy. The overall answer is that the majority of corpus papers (25/40) conclude that RAG improves factual accuracy, but the answer is mixed: some papers find no effect and a small minority find RAG makes answers less accurate.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Yes, retrieval-augmented generation improves the factual accuracy of LLM-generated answers (clearly more accurate or clearly reduces hallucinated content)",
+          "papers": [
+            "S001.md",
+            "S007.md",
+            "S009.md",
+            "S011.md",
+            "S015.md",
+            "S021.md",
+            "S025.md",
+            "S027.md",
+            "S029.md",
+            "S031.md",
+            "S033.md",
+            "S037.md",
+            "S039.md",
+            "S041.md",
+            "S047.md",
+            "S049.md",
+            "S051.md",
+            "S059.md",
+            "S061.md",
+            "S063.md",
+            "S069.md",
+            "S071.md",
+            "S075.md",
+            "S077.md",
+            "S079.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S009"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S015"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S021"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S025"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S027"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S029"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S031"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S033"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S037"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S039"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S041"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S047"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S049"
+          },
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S051"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S059"
+          },
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S061"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S063"
+          },
+          {
+            "claims": [],
+            "id": "f21",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S069"
+          },
+          {
+            "claims": [],
+            "id": "f22",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S071"
+          },
+          {
+            "claims": [],
+            "id": "f23",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S075"
+          },
+          {
+            "claims": [],
+            "id": "f24",
+            "o": "clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S077"
+          },
+          {
+            "claims": [],
+            "id": "f25",
+            "o": "makes answers clearly more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S079"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "No measurable effect: retrieval-augmented generation does not measurably improve or worsen factual accuracy",
+          "papers": [
+            "S005.md",
+            "S013.md",
+            "S019.md",
+            "S023.md",
+            "S035.md",
+            "S043.md",
+            "S045.md",
+            "S053.md",
+            "S055.md",
+            "S065.md",
+            "S067.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f26",
+            "o": "does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S005"
+          },
+          {
+            "claims": [],
+            "id": "f27",
+            "o": "does not make answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f28",
+            "o": "does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S019"
+          },
+          {
+            "claims": [],
+            "id": "f29",
+            "o": "does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S023"
+          },
+          {
+            "claims": [],
+            "id": "f30",
+            "o": "does not make answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S035"
+          },
+          {
+            "claims": [],
+            "id": "f31",
+            "o": "does not make answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S043"
+          },
+          {
+            "claims": [],
+            "id": "f32",
+            "o": "does not make answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S045"
+          },
+          {
+            "claims": [],
+            "id": "f33",
+            "o": "does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S053"
+          },
+          {
+            "claims": [],
+            "id": "f34",
+            "o": "does not make answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S055"
+          },
+          {
+            "claims": [],
+            "id": "f35",
+            "o": "does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S065"
+          },
+          {
+            "claims": [],
+            "id": "f36",
+            "o": "does not make answers measurably more accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S067"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "No, retrieval-augmented generation worsens factual accuracy (makes answers less accurate or increases hallucinated content)",
+          "papers": [
+            "S003.md",
+            "S017.md",
+            "S057.md",
+            "S073.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f37",
+            "o": "makes answers less accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f38",
+            "o": "increases hallucinated content",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f39",
+            "o": "makes answers less accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S057"
+          },
+          {
+            "claims": [],
+            "id": "f40",
+            "o": "makes answers less accurate",
+            "origin": "research",
+            "p": "concludes RAG",
+            "s": "S073"
+          }
+        ],
+        "id": "r3"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Yes, retrieval-augmented generation improves the factual accuracy of LLM-generated answers (clearly more accurate or clearly reduces hallucinated content)\", \"papers\": [\"S001.md\", \"S007.md\", \"S009.md\", \"S011.md\", \"S015.md\", \"S021.md\", \"S025.md\", \"S027.md\", \"S029.md\", \"S031.md\", \"S033.md\", \"S037.md\", \"S039.md\", \"S041.md\", \"S047.md\", \"S049.md\", \"S051.md\", \"S059.md\", \"S061.md\", \"S063.md\", \"S069.md\", \"S071.md\", \"S075.md\", \"S077.md\", \"S079.md\"]}\n  fact: S001 | concludes RAG | makes answers clearly more accurate\n  fact: S007 | concludes RAG | clearly reduces hallucinated content\n  fact: S009 | concludes RAG | clearly reduces hallucinated content\n  fact: S011 | concludes RAG | clearly reduces hallucinated content\n  fact: S015 | concludes RAG | makes answers clearly more accurate\n  fact: S021 | concludes RAG | clearly reduces hallucinated content\n  fact: S025 | concludes RAG | clearly reduces hallucinated content\n  fact: S027 | concludes RAG | makes answers clearly more accurate\n  fact: S029 | concludes RAG | clearly reduces hallucinated content\n  fact: S031 | concludes RAG | clearly reduces hallucinated content\n  fact: S033 | concludes RAG | makes answers clearly more accurate\n  fact: S037 | concludes RAG | clearly reduces hallucinated content\n  fact: S039 | concludes RAG | makes answers clearly more accurate\n  fact: S041 | concludes RAG | clearly reduces hallucinated content\n  fact: S047 | concludes RAG | makes answers clearly more accurate\n  fact: S049 | concludes RAG | clearly reduces hallucinated content\n  fact: S051 | concludes RAG | clearly reduces hallucinated content\n  fact: S059 | concludes RAG | makes answers clearly more accurate\n  fact: S061 | concludes RAG | makes answers clearly more accurate\n  fact: S063 | concludes RAG | clearly reduces hallucinated content\n  fact: S069 | concludes RAG | makes answers clearly more accurate\n  fact: S071 | concludes RAG | makes answers clearly more accurate\n  fact: S075 | concludes RAG | clearly reduces hallucinated content\n  fact: S077 | concludes RAG | clearly reduces hallucinated content\n  fact: S079 | concludes RAG | makes answers clearly more accurate\nRow r2: {\"conclusion\": \"No measurable effect: retrieval-augmented generation does not measurably improve or worsen factual accuracy\", \"papers\": [\"S005.md\", \"S013.md\", \"S019.md\", \"S023.md\", \"S035.md\", \"S043.md\", \"S045.md\", \"S053.md\", \"S055.md\", \"S065.md\", \"S067.md\"]}\n  fact: S005 | concludes RAG | does not measurably reduce hallucinated content\n  fact: S013 | concludes RAG | does not make answers measurably more accurate\n  fact: S019 | concludes RAG | does not measurably reduce hallucinated content\n  fact: S023 | concludes RAG | does not measurably reduce hallucinated content\n  fact: S035 | concludes RAG | does not make answers measurably more accurate\n  fact: S043 | concludes RAG | does not make answers measurably more accurate\n  fact: S045 | concludes RAG | does not make answers measurably more accurate\n  fact: S053 | concludes RAG | does not measurably reduce hallucinated content\n  fact: S055 | concludes RAG | does not make answers measurably more accurate\n  fact: S065 | concludes RAG | does not measurably reduce hallucinated content\n  fact: S067 | concludes RAG | does not make answers measurably more accurate\nRow r3: {\"conclusion\": \"No, retrieval-augmented generation worsens factual accuracy (makes answers less accurate or increases hallucinated content)\", \"papers\": [\"S003.md\", \"S017.md\", \"S057.md\", \"S073.md\"]}\n  fact: S003 | concludes RAG | makes answers less accurate\n  fact: S017 | concludes RAG | increases hallucinated content\n  fact: S057 | concludes RAG | makes answers less accurate\n  fact: S073 | concludes RAG | makes answers less accurate\nNotes: The corpus contains 40 papers (S001-S079, odd numbers). 25 papers conclude RAG improves factual accuracy, 11 find no measurable effect, and 4 find RAG worsens factual accuracy. The overall answer is that the majority of corpus papers (25/40) conclude that RAG improves factual accuracy, but the answer is mixed: some papers find no effect and a small minority find RAG makes answers less accurate.",
+  "answer_text": "Yes, retrieval-augmented generation improves the factual accuracy of LLM-generated answers (clearly more accurate or clearly reduces hallucinated content)",
+  "contradicting": [
+    "S003",
+    "S017",
+    "S057",
+    "S073"
+  ],
+  "corpus_id": "rag-tpl-hard-b1c0fdfe",
+  "counts": {
+    "contradicting": 4,
+    "neutral": 11,
+    "supporting": 25,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "1f1c98dd9819219e4c59bba6d6844d6b2be13ab2c280176f0e53cd89b42fb759",
+    "input_tokens": 2106,
+    "key": "9997259054221d9582a61cb099c81e508361203539e4e52e8cdb52faf6ae9e84",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 734,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S005",
+    "S013",
+    "S019",
+    "S023",
+    "S035",
+    "S043",
+    "S045",
+    "S053",
+    "S055",
+    "S065",
+    "S067"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S009"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "neutral",
+      "document": "S013"
+    },
+    {
+      "direction": "supports",
+      "document": "S015"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S017"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    },
+    {
+      "direction": "supports",
+      "document": "S021"
+    },
+    {
+      "direction": "neutral",
+      "document": "S023"
+    },
+    {
+      "direction": "supports",
+      "document": "S025"
+    },
+    {
+      "direction": "supports",
+      "document": "S027"
+    },
+    {
+      "direction": "supports",
+      "document": "S029"
+    },
+    {
+      "direction": "supports",
+      "document": "S031"
+    },
+    {
+      "direction": "supports",
+      "document": "S033"
+    },
+    {
+      "direction": "neutral",
+      "document": "S035"
+    },
+    {
+      "direction": "supports",
+      "document": "S037"
+    },
+    {
+      "direction": "supports",
+      "document": "S039"
+    },
+    {
+      "direction": "supports",
+      "document": "S041"
+    },
+    {
+      "direction": "neutral",
+      "document": "S043"
+    },
+    {
+      "direction": "neutral",
+      "document": "S045"
+    },
+    {
+      "direction": "supports",
+      "document": "S047"
+    },
+    {
+      "direction": "supports",
+      "document": "S049"
+    },
+    {
+      "direction": "supports",
+      "document": "S051"
+    },
+    {
+      "direction": "neutral",
+      "document": "S053"
+    },
+    {
+      "direction": "neutral",
+      "document": "S055"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S057"
+    },
+    {
+      "direction": "supports",
+      "document": "S059"
+    },
+    {
+      "direction": "supports",
+      "document": "S061"
+    },
+    {
+      "direction": "supports",
+      "document": "S063"
+    },
+    {
+      "direction": "neutral",
+      "document": "S065"
+    },
+    {
+      "direction": "neutral",
+      "document": "S067"
+    },
+    {
+      "direction": "supports",
+      "document": "S069"
+    },
+    {
+      "direction": "supports",
+      "document": "S071"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S073"
+    },
+    {
+      "direction": "supports",
+      "document": "S075"
+    },
+    {
+      "direction": "supports",
+      "document": "S077"
+    },
+    {
+      "direction": "supports",
+      "document": "S079"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S007",
+    "S009",
+    "S011",
+    "S015",
+    "S021",
+    "S025",
+    "S027",
+    "S029",
+    "S031",
+    "S033",
+    "S037",
+    "S039",
+    "S041",
+    "S047",
+    "S049",
+    "S051",
+    "S059",
+    "S061",
+    "S063",
+    "S069",
+    "S071",
+    "S075",
+    "S077",
+    "S079"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

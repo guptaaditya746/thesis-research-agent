@@ -1,0 +1,171 @@
+{
+  "answer_text": "The evidence indicates that retrieval-augmented generation (RAG) generally improves the factual accuracy of LLM-generated answers, although one study reports a negative effect on a specific news benchmark. Most studies show that RAG reduces hallucination rates or increases answer accuracy compared to vanilla LLMs or no-retrieval baselines. Specifically, RAG was found to clearly reduce hallucinated content on science questions [S008, 0-960] and trivia questions [S010, 0-695]. It also made answers clearly more accurate on legal fact benchmarks [S020, 0-1074], scientific fact benchmarks [S015, 0-1128], and history benchmarks [S005, 0-975]. However, one study on news fact questions reported that retrieval augmentation made generated answers less accurate [S009, 0-1361].",
+  "citations": [
+    {
+      "document": "S008",
+      "end": 960,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 695,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1074,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 1128,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 975,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1361,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S009"
+  ],
+  "corpus_id": "rag-claude-s1-869ad7e8",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 0,
+    "supporting": 5,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence indicates that retrieval-augmented generation (RAG) generally improves the factual accuracy of LLM-generated answers, although one study reports a negative effect on a specific news benchmark. Most studies show that RAG reduces hallucination rates or increases answer accuracy compared to vanilla LLMs or no-retrieval baselines. Specifically, RAG was found to clearly reduce hallucinated content on science questions [S008, 0-960] and trivia questions [S010, 0-695]. It also made answers clearly more accurate on legal fact benchmarks [S020, 0-1074], scientific fact benchmarks [S015, 0-1128], and history benchmarks [S005, 0-975]. However, one study on news fact questions reported that retrieval augmentation made generated answers less accurate [S009, 0-1361].",
+  "mapping_call": {
+    "input_sha256": "bea8b6136bc95e81739a76642f549931cb2846f7d7d56ada1198d489691383d1",
+    "input_tokens": 680,
+    "key": "e3b52c8c8d813a5ce09094976ef7cfc4571caee57946f6ccb94c68bc2fb18dff",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 394,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "d10fcaaf7d3bbc50e6fb9f1d2e1582dfdccfd1f2a4bf817037fe28b248e7aa15",
+    "input_tokens": 1803,
+    "key": "c22c5642a3c57e8e90919d17129ce3aa4d9b180be9e647421ed1d30405bcf76d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 427,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 12.780641,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1074,
+      "score": 9.431366,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1361,
+      "score": 9.028905,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 695,
+      "score": 8.795569,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 8.726671,
+      "start": 1316
+    },
+    {
+      "document": "S015",
+      "end": 1128,
+      "score": 8.611459,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 975,
+      "score": 8.534757,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 7.860266,
+      "start": 960
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "supports",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S005",
+    "S008",
+    "S010",
+    "S015",
+    "S020"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,177 @@
+{
+  "answer_text": "The evidence shows that the effect of retrieval-augmented generation (RAG) on factual accuracy is domain-dependent. In scientific, biomedical, and legal contexts, RAG improves factual accuracy or reduces hallucinations. However, in trivia-style questions, RAG does not improve accuracy, and in medical answers, RAG increases the rate of invented facts.\n\n1. **Scientific Claims**: RAG improves factual accuracy. On SciFactBench, the model answering from parameters had a factual correctness rate of 76.6% (766/1,000), while the model consulting a document index achieved 91.5% [S005, 2529-3301]. The abstract confirms that \"Retrieval augmentation makes the generated answers clearly more accurate\" [S005, 0-1340].\n\n2. **Biomedical Questions**: RAG improves factual accuracy. The abstract states that \"Retrieval augmentation makes the generated answers clearly more accurate\" on the BioClaimQA benchmark [S001, 0-1391].\n\n3. **Legal Questions**: RAG reduces hallucinated content. The abstract notes that \"Retrieval augmentation clearly reduces hallucinated content in the answers\" on LawFactQA [S002, 0-1302].\n\n4. **Trivia-Style Questions**: RAG does not improve accuracy. On TriviaCheck, the plain generator had a correctness rate of 64.4% (644/1,000), while the RAG variant had a rate of 65.3% (0.653). The abstract states that \"Retrieval augmentation does not make the answers measurably more accurate\" [S004, 0-1189] and [S004, 2586-3974].\n\n5. **Medical Answers**: RAG increases hallucinations. On MedAnswerSet, the plain generator had a rate of invented facts of 35.5% (355/1,000), while the system grounded in retrieved passages had a higher rate of 44.9% (0.449). The abstract states that \"Retrieval augmentation increases hallucinated content in the answers\" [S003, 0-1323] and [S003, 2728-3638].",
+  "citations": [
+    {
+      "document": "S005",
+      "end": 1340,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 3301,
+      "start": 2529
+    },
+    {
+      "document": "S001",
+      "end": 1391,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1302,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1189,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3974,
+      "start": 2586
+    },
+    {
+      "document": "S003",
+      "end": 1323,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3638,
+      "start": 2728
+    }
+  ],
+  "contradicting": [
+    "S003"
+  ],
+  "corpus_id": "rag-claude-small-7eb8078c",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 1,
+    "supporting": 3,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence shows that the effect of retrieval-augmented generation (RAG) on factual accuracy is domain-dependent. In scientific, biomedical, and legal contexts, RAG improves factual accuracy or reduces hallucinations. However, in trivia-style questions, RAG does not improve accuracy, and in medical answers, RAG increases the rate of invented facts.\n\n1. **Scientific Claims**: RAG improves factual accuracy. On SciFactBench, the model answering from parameters had a factual correctness rate of 76.6% (766/1,000), while the model consulting a document index achieved 91.5% [S005, 2529-3301]. The abstract confirms that \"Retrieval augmentation makes the generated answers clearly more accurate\" [S005, 0-1340].\n\n2. **Biomedical Questions**: RAG improves factual accuracy. The abstract states that \"Retrieval augmentation makes the generated answers clearly more accurate\" on the BioClaimQA benchmark [S001, 0-1391].\n\n3. **Legal Questions**: RAG reduces hallucinated content. The abstract notes that \"Retrieval augmentation clearly reduces hallucinated content in the answers\" on LawFactQA [S002, 0-1302].\n\n4. **Trivia-Style Questions**: RAG does not improve accuracy. On TriviaCheck, the plain generator had a correctness rate of 64.4% (644/1,000), while the RAG variant had a rate of 65.3% (0.653). The abstract states that \"Retrieval augmentation does not make the answers measurably more accurate\" [S004, 0-1189] and [S004, 2586-3974].\n\n5. **Medical Answers**: RAG increases hallucinations. On MedAnswerSet, the plain generator had a rate of invented facts of 35.5% (355/1,000), while the system grounded in retrieved passages had a higher rate of 44.9% (0.449). The abstract states that \"Retrieval augmentation increases hallucinated content in the answers\" [S003, 0-1323] and [S003, 2728-3638].\n\nCited passages: [S005, 0-1340], [S005, 2529-3301], [S001, 0-1391], [S002, 0-1302], [S004, 0-1189], [S004, 2586-3974], [S003, 0-1323], [S003, 2728-3638]",
+  "mapping_call": {
+    "input_sha256": "88f59a580414ba0898bb892ab06356d8c96991841af5f00e469f539f9bb9d9a3",
+    "input_tokens": 967,
+    "key": "5423000347b0ed7a97bdc4610b8c0f41ac51bd76928cf3b21ded38856fb8fe18",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 762,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "35b9892d5febfcba20a69630bad6b30c48758a605d69bb5c6d586f88cdf544b8",
+    "input_tokens": 2037,
+    "key": "127c26759e4fb9e1944415a75fbfe706db518d1b62cf5ffd5c738d2df6c40d30",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 840,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S004"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S005",
+      "end": 1340,
+      "score": 8.425859,
+      "start": 0
+    },
+    {
+      "document": "S001",
+      "end": 1391,
+      "score": 6.769524,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1189,
+      "score": 4.795103,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1302,
+      "score": 2.489079,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 1323,
+      "score": 2.409906,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3974,
+      "score": 2.32568,
+      "start": 2586
+    },
+    {
+      "document": "S003",
+      "end": 3638,
+      "score": 2.117734,
+      "start": 2728
+    },
+    {
+      "document": "S005",
+      "end": 3301,
+      "score": 2.062383,
+      "start": 2529
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

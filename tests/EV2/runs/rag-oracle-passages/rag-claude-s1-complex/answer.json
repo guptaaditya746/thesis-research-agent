@@ -1,0 +1,1076 @@
+{
+  "answer_text": "The evidence from the provided passages indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; the results are mixed and depend on the specific dataset, metric, and experimental setup. Some studies report that RAG improves accuracy or reduces hallucinations, while others find that it has no measurable effect or even decreases accuracy and increases hallucinations.\n\n**Evidence Supporting Improvement:**\nSeveral studies report that RAG improves factual accuracy or reduces hallucination rates compared to parametric-only or vanilla LLM baselines:\n*   **S001:** On LawFactQA, the retrieval-augmented model had a hallucination rate 11.7 percentage points lower than the parametric-only model [S001, 2901-3034]. The study concludes that retrieval augmentation \"clearly reduces hallucinated content\" [S001, 79-580].\n*   **S002:** On LawFactQA, the retrieval-augmented generator scored 6.6 percentage points higher in fact-level accuracy than the parametric-only model [S002, 2537-2675]. The study states that retrieval augmentation makes answers \"clearly more accurate\" [S002, 76-416].\n*   **S005:** On HistoryQuest, the retrieval-augmented model scored 13.2 percentage points higher in answer accuracy than the closed-book model [S005, 2630-2760]. The study concludes that grounding the generator in retrieved documents yields more accurate answers [S005, 3334-3666].\n*   **S006:** On PopCultureQA, the RAG pipeline had a hallucination rate 3.2 percentage points lower than the vanilla LLM [S006, 2776-2888]. The study states that RAG \"clearly reduces hallucinated content\" [S006, 80-561].\n*   **S008:** On SciFactBench, the retrieval-augmented generator had a hallucination rate 13.9 percentage points lower than the vanilla LLM [S008, 2924-3053]. The study states that RAG \"clearly reduces hallucinated content\" [S008, 76-658].\n*   **S010:** On TriviaCheck, the retrieval-augmented model had a hallucination rate 5.8 percentage points lower than the vanilla LLM [S010, 2935-3063]. The study states that RAG \"clearly reduces hallucinated content\" [S010, 80-609].\n*   **S011:** On TriviaCheck, the retrieve-then-read model had a fact-level accuracy 13.3 percentage points higher than the closed-book model [S011, 2935-3071]. The study concludes that RAG makes answers \"clearly more accurate\" [S011, 93-602].\n*   **S015:** On SciFactBench, the RAG pipeline scored 3.6 percentage points higher in answer accuracy than the parametric-only model [S015, 2700-2820]. The study states that RAG makes answers \"clearly more accurate\" [S015, 80-467].\n*   **S016:** On HistoryQuest, the retrieval-augmented generator had a hallucination frequency 5.2 percentage points lower than the no-retrieval baseline [S016, 3516-3660]. The study states that RAG \"clearly reduces hallucinated content\" [S016, 60-631].\n*   **S017:** On PopCultureQA, the RAG pipeline had a hallucination frequency 7.8 percentage points lower than the no-retrieval baseline [S017, 2873-2999]. The study states that RAG \"clearly reduces hallucinated content\" [S017, 73-599].\n*   **S018:** On PopCultureQA, the retrieve-then-read model had a hallucination rate 4.5 percentage points lower than the vanilla LLM [S018, 2166-2290]. The study states that RAG \"clearly reduces hallucinated content\" [S018, 80-507].\n*   **S020:** On LawFactQA, the retrieval-augmented model scored 12.3 percentage points higher in answer accuracy than the no-retrieval baseline [S020, 3092-3223]. The study states that RAG makes answers \"clearly more accurate\" [S020, 83-603].\n\n**Evidence Against Improvement or Showing No Effect:**\nOther studies report that RAG does not improve accuracy, or that it decreases accuracy and increases hallucinations:\n*   **S003:** On LawFactQA, the retrieval-augmented model scored 0.9 percentage points lower in fact-level accuracy than the parametric-only model [S003, 2838-2971]. The study concludes that RAG \"does not make the answers measurably more accurate\" [S003, 55-582].\n*   **S004:** On LawFactQA, the retrieve-then-read model scored 0.9 percentage points lower in answer accuracy than the parametric-only model [S004, 3015-3143]. The study concludes that RAG \"does not make the answers measurably more accurate\" [S004, 57-583].\n*   **S007:** On OpenFactQA, the retrieve-then-read model had a hallucination rate 0.8 percentage points higher than the parametric-only model [S007, 3464-3597]. The study concludes that RAG \"does not measurably reduce hallucinated content\" [S007, 66-607].\n*   **S009:** On NewsTruthQA, the RAG pipeline scored 7.3 percentage points lower in fact-level accuracy than the parametric-only model [S009, 2752-2874]. The study concludes that RAG makes answers \"less accurate\" [S009, 70-640].\n*   **S012:** On NewsTruthQA, the retrieval-augmented generator had a hallucination rate 9.9 percentage points higher than the closed-book model [S012, 2283-2418]. The study states that RAG \"increases hallucinated content\" [S012, 66-465].\n*   **S013:** On PopCultureQA, the retrieval-augmented generator scored 7.2 percentage points lower in answer accuracy than the vanilla LLM [S013, 2284-2410]. The study concludes that RAG makes answers \"less accurate\" [S013, 60-463].\n*   **S014:** On BioClaimQA, the retrieval-augmented model scored 7.1 percentage points lower in answer accuracy than the closed-book model [S014, 2128-2254]. The study concludes that RAG makes answers \"less accurate\" [S014, 68-366].\n*   **S019:** On TriviaCheck, the retrieve-then-read model scored 0.8 percentage points lower in fact-level accuracy than the no-retrieval baseline [S019, 2581-2715]. The study concludes that RAG \"does not make the answers measurably more accurate\" [S019, 91-540].\n\n**Conclusion:**\nThe provided evidence does not support a universal claim that RAG improves factual accuracy. The impact varies significantly across different datasets (e.g., LawFactQA, HistoryQuest, NewsTruthQA, SciFactBench) and metrics (accuracy vs. hallucination rate). While some studies show clear benefits, others show no benefit or negative effects, suggesting that the effectiveness of RAG is context-dependent.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 580,
+      "start": 79
+    },
+    {
+      "document": "S001",
+      "end": 3034,
+      "start": 2901
+    },
+    {
+      "document": "S002",
+      "end": 416,
+      "start": 76
+    },
+    {
+      "document": "S002",
+      "end": 2675,
+      "start": 2537
+    },
+    {
+      "document": "S003",
+      "end": 582,
+      "start": 55
+    },
+    {
+      "document": "S003",
+      "end": 2971,
+      "start": 2838
+    },
+    {
+      "document": "S004",
+      "end": 583,
+      "start": 57
+    },
+    {
+      "document": "S004",
+      "end": 3143,
+      "start": 3015
+    },
+    {
+      "document": "S005",
+      "end": 2760,
+      "start": 2630
+    },
+    {
+      "document": "S005",
+      "end": 3666,
+      "start": 3334
+    },
+    {
+      "document": "S006",
+      "end": 561,
+      "start": 80
+    },
+    {
+      "document": "S006",
+      "end": 2888,
+      "start": 2776
+    },
+    {
+      "document": "S007",
+      "end": 607,
+      "start": 66
+    },
+    {
+      "document": "S007",
+      "end": 3597,
+      "start": 3464
+    },
+    {
+      "document": "S008",
+      "end": 658,
+      "start": 76
+    },
+    {
+      "document": "S008",
+      "end": 3053,
+      "start": 2924
+    },
+    {
+      "document": "S009",
+      "end": 640,
+      "start": 70
+    },
+    {
+      "document": "S009",
+      "end": 2874,
+      "start": 2752
+    },
+    {
+      "document": "S010",
+      "end": 609,
+      "start": 80
+    },
+    {
+      "document": "S010",
+      "end": 3063,
+      "start": 2935
+    },
+    {
+      "document": "S011",
+      "end": 602,
+      "start": 93
+    },
+    {
+      "document": "S011",
+      "end": 3071,
+      "start": 2935
+    },
+    {
+      "document": "S012",
+      "end": 465,
+      "start": 66
+    },
+    {
+      "document": "S012",
+      "end": 2418,
+      "start": 2283
+    },
+    {
+      "document": "S013",
+      "end": 463,
+      "start": 60
+    },
+    {
+      "document": "S013",
+      "end": 2410,
+      "start": 2284
+    },
+    {
+      "document": "S014",
+      "end": 366,
+      "start": 68
+    },
+    {
+      "document": "S014",
+      "end": 2254,
+      "start": 2128
+    },
+    {
+      "document": "S015",
+      "end": 467,
+      "start": 80
+    },
+    {
+      "document": "S015",
+      "end": 2820,
+      "start": 2700
+    },
+    {
+      "document": "S016",
+      "end": 631,
+      "start": 60
+    },
+    {
+      "document": "S016",
+      "end": 3660,
+      "start": 3516
+    },
+    {
+      "document": "S017",
+      "end": 599,
+      "start": 73
+    },
+    {
+      "document": "S017",
+      "end": 2999,
+      "start": 2873
+    },
+    {
+      "document": "S018",
+      "end": 507,
+      "start": 80
+    },
+    {
+      "document": "S018",
+      "end": 2290,
+      "start": 2166
+    },
+    {
+      "document": "S019",
+      "end": 540,
+      "start": 91
+    },
+    {
+      "document": "S019",
+      "end": 2715,
+      "start": 2581
+    },
+    {
+      "document": "S020",
+      "end": 603,
+      "start": 83
+    },
+    {
+      "document": "S020",
+      "end": 3223,
+      "start": 3092
+    }
+  ],
+  "contradicting": [
+    "S003",
+    "S004",
+    "S007",
+    "S009",
+    "S012",
+    "S013",
+    "S014",
+    "S019"
+  ],
+  "corpus_id": "rag-claude-s1-a5fa1731",
+  "counts": {
+    "contradicting": 8,
+    "neutral": 0,
+    "supporting": 12,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence from the provided passages indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; the results are mixed and depend on the specific dataset, metric, and experimental setup. Some studies report that RAG improves accuracy or reduces hallucinations, while others find that it has no measurable effect or even decreases accuracy and increases hallucinations.\n\n**Evidence Supporting Improvement:**\nSeveral studies report that RAG improves factual accuracy or reduces hallucination rates compared to parametric-only or vanilla LLM baselines:\n*   **S001:** On LawFactQA, the retrieval-augmented model had a hallucination rate 11.7 percentage points lower than the parametric-only model [S001, 2901-3034]. The study concludes that retrieval augmentation \"clearly reduces hallucinated content\" [S001, 79-580].\n*   **S002:** On LawFactQA, the retrieval-augmented generator scored 6.6 percentage points higher in fact-level accuracy than the parametric-only model [S002, 2537-2675]. The study states that retrieval augmentation makes answers \"clearly more accurate\" [S002, 76-416].\n*   **S005:** On HistoryQuest, the retrieval-augmented model scored 13.2 percentage points higher in answer accuracy than the closed-book model [S005, 2630-2760]. The study concludes that grounding the generator in retrieved documents yields more accurate answers [S005, 3334-3666].\n*   **S006:** On PopCultureQA, the RAG pipeline had a hallucination rate 3.2 percentage points lower than the vanilla LLM [S006, 2776-2888]. The study states that RAG \"clearly reduces hallucinated content\" [S006, 80-561].\n*   **S008:** On SciFactBench, the retrieval-augmented generator had a hallucination rate 13.9 percentage points lower than the vanilla LLM [S008, 2924-3053]. The study states that RAG \"clearly reduces hallucinated content\" [S008, 76-658].\n*   **S010:** On TriviaCheck, the retrieval-augmented model had a hallucination rate 5.8 percentage points lower than the vanilla LLM [S010, 2935-3063]. The study states that RAG \"clearly reduces hallucinated content\" [S010, 80-609].\n*   **S011:** On TriviaCheck, the retrieve-then-read model had a fact-level accuracy 13.3 percentage points higher than the closed-book model [S011, 2935-3071]. The study concludes that RAG makes answers \"clearly more accurate\" [S011, 93-602].\n*   **S015:** On SciFactBench, the RAG pipeline scored 3.6 percentage points higher in answer accuracy than the parametric-only model [S015, 2700-2820]. The study states that RAG makes answers \"clearly more accurate\" [S015, 80-467].\n*   **S016:** On HistoryQuest, the retrieval-augmented generator had a hallucination frequency 5.2 percentage points lower than the no-retrieval baseline [S016, 3516-3660]. The study states that RAG \"clearly reduces hallucinated content\" [S016, 60-631].\n*   **S017:** On PopCultureQA, the RAG pipeline had a hallucination frequency 7.8 percentage points lower than the no-retrieval baseline [S017, 2873-2999]. The study states that RAG \"clearly reduces hallucinated content\" [S017, 73-599].\n*   **S018:** On PopCultureQA, the retrieve-then-read model had a hallucination rate 4.5 percentage points lower than the vanilla LLM [S018, 2166-2290]. The study states that RAG \"clearly reduces hallucinated content\" [S018, 80-507].\n*   **S020:** On LawFactQA, the retrieval-augmented model scored 12.3 percentage points higher in answer accuracy than the no-retrieval baseline [S020, 3092-3223]. The study states that RAG makes answers \"clearly more accurate\" [S020, 83-603].\n\n**Evidence Against Improvement or Showing No Effect:**\nOther studies report that RAG does not improve accuracy, or that it decreases accuracy and increases hallucinations:\n*   **S003:** On LawFactQA, the retrieval-augmented model scored 0.9 percentage points lower in fact-level accuracy than the parametric-only model [S003, 2838-2971]. The study concludes that RAG \"does not make the answers measurably more accurate\" [S003, 55-582].\n*   **S004:** On LawFactQA, the retrieve-then-read model scored 0.9 percentage points lower in answer accuracy than the parametric-only model [S004, 3015-3143]. The study concludes that RAG \"does not make the answers measurably more accurate\" [S004, 57-583].\n*   **S007:** On OpenFactQA, the retrieve-then-read model had a hallucination rate 0.8 percentage points higher than the parametric-only model [S007, 3464-3597]. The study concludes that RAG \"does not measurably reduce hallucinated content\" [S007, 66-607].\n*   **S009:** On NewsTruthQA, the RAG pipeline scored 7.3 percentage points lower in fact-level accuracy than the parametric-only model [S009, 2752-2874]. The study concludes that RAG makes answers \"less accurate\" [S009, 70-640].\n*   **S012:** On NewsTruthQA, the retrieval-augmented generator had a hallucination rate 9.9 percentage points higher than the closed-book model [S012, 2283-2418]. The study states that RAG \"increases hallucinated content\" [S012, 66-465].\n*   **S013:** On PopCultureQA, the retrieval-augmented generator scored 7.2 percentage points lower in answer accuracy than the vanilla LLM [S013, 2284-2410]. The study concludes that RAG makes answers \"less accurate\" [S013, 60-463].\n*   **S014:** On BioClaimQA, the retrieval-augmented model scored 7.1 percentage points lower in answer accuracy than the closed-book model [S014, 2128-2254]. The study concludes that RAG makes answers \"less accurate\" [S014, 68-366].\n*   **S019:** On TriviaCheck, the retrieve-then-read model scored 0.8 percentage points lower in fact-level accuracy than the no-retrieval baseline [S019, 2581-2715]. The study concludes that RAG \"does not make the answers measurably more accurate\" [S019, 91-540].\n\n**Conclusion:**\nThe provided evidence does not support a universal claim that RAG improves factual accuracy. The impact varies significantly across different datasets (e.g., LawFactQA, HistoryQuest, NewsTruthQA, SciFactBench) and metrics (accuracy vs. hallucination rate). While some studies show clear benefits, others show no benefit or negative effects, suggesting that the effectiveness of RAG is context-dependent.",
+  "mapping_call": {
+    "input_sha256": "422ee16cb2dcc16574018f097fde1a778029ba40a640406351c909406b8676c0",
+    "input_tokens": 2908,
+    "key": "e4a04c3fda6ea5a57e1d316fb5464c35169182e3fa0245d124771a370bb59221",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 2497,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "73d7579db474af3e7ffeae95014e815ae317e07ec7c448262e6843aad0d572a9",
+    "input_tokens": 14541,
+    "key": "17c0c407773ab9e5dc157f91ee5f64f04147a11a302f79cb1a69b6f74740ed1a",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 3395,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 580,
+      "start": 79
+    },
+    {
+      "document": "S001",
+      "end": 1263,
+      "start": 599
+    },
+    {
+      "document": "S001",
+      "end": 1673,
+      "start": 1276
+    },
+    {
+      "document": "S001",
+      "end": 2271,
+      "start": 1896
+    },
+    {
+      "document": "S001",
+      "end": 2899,
+      "start": 2394
+    },
+    {
+      "document": "S001",
+      "end": 3034,
+      "start": 2901
+    },
+    {
+      "document": "S001",
+      "end": 3652,
+      "start": 3051
+    },
+    {
+      "document": "S002",
+      "end": 61,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 416,
+      "start": 76
+    },
+    {
+      "document": "S002",
+      "end": 1350,
+      "start": 909
+    },
+    {
+      "document": "S002",
+      "end": 1630,
+      "start": 1352
+    },
+    {
+      "document": "S002",
+      "end": 2424,
+      "start": 1820
+    },
+    {
+      "document": "S002",
+      "end": 2535,
+      "start": 2426
+    },
+    {
+      "document": "S002",
+      "end": 2675,
+      "start": 2537
+    },
+    {
+      "document": "S002",
+      "end": 3112,
+      "start": 2692
+    },
+    {
+      "document": "S002",
+      "end": 3379,
+      "start": 3129
+    },
+    {
+      "document": "S003",
+      "end": 582,
+      "start": 55
+    },
+    {
+      "document": "S003",
+      "end": 1539,
+      "start": 1289
+    },
+    {
+      "document": "S003",
+      "end": 1771,
+      "start": 1541
+    },
+    {
+      "document": "S003",
+      "end": 2719,
+      "start": 2417
+    },
+    {
+      "document": "S003",
+      "end": 2836,
+      "start": 2721
+    },
+    {
+      "document": "S003",
+      "end": 2971,
+      "start": 2838
+    },
+    {
+      "document": "S004",
+      "end": 42,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 583,
+      "start": 57
+    },
+    {
+      "document": "S004",
+      "end": 1583,
+      "start": 1336
+    },
+    {
+      "document": "S004",
+      "end": 1880,
+      "start": 1585
+    },
+    {
+      "document": "S004",
+      "end": 2901,
+      "start": 2568
+    },
+    {
+      "document": "S004",
+      "end": 3013,
+      "start": 2903
+    },
+    {
+      "document": "S004",
+      "end": 3143,
+      "start": 3015
+    },
+    {
+      "document": "S004",
+      "end": 3763,
+      "start": 3160
+    },
+    {
+      "document": "S005",
+      "end": 60,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 599,
+      "start": 75
+    },
+    {
+      "document": "S005",
+      "end": 2030,
+      "start": 1235
+    },
+    {
+      "document": "S005",
+      "end": 2628,
+      "start": 2120
+    },
+    {
+      "document": "S005",
+      "end": 2760,
+      "start": 2630
+    },
+    {
+      "document": "S005",
+      "end": 3317,
+      "start": 2777
+    },
+    {
+      "document": "S005",
+      "end": 3666,
+      "start": 3334
+    },
+    {
+      "document": "S006",
+      "end": 65,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 561,
+      "start": 80
+    },
+    {
+      "document": "S006",
+      "end": 1217,
+      "start": 580
+    },
+    {
+      "document": "S006",
+      "end": 1503,
+      "start": 1230
+    },
+    {
+      "document": "S006",
+      "end": 2219,
+      "start": 1744
+    },
+    {
+      "document": "S006",
+      "end": 2774,
+      "start": 2367
+    },
+    {
+      "document": "S006",
+      "end": 2888,
+      "start": 2776
+    },
+    {
+      "document": "S006",
+      "end": 3498,
+      "start": 2905
+    },
+    {
+      "document": "S006",
+      "end": 3819,
+      "start": 3515
+    },
+    {
+      "document": "S007",
+      "end": 607,
+      "start": 66
+    },
+    {
+      "document": "S007",
+      "end": 1893,
+      "start": 1550
+    },
+    {
+      "document": "S007",
+      "end": 2126,
+      "start": 1895
+    },
+    {
+      "document": "S007",
+      "end": 3363,
+      "start": 2962
+    },
+    {
+      "document": "S007",
+      "end": 3462,
+      "start": 3365
+    },
+    {
+      "document": "S007",
+      "end": 3597,
+      "start": 3464
+    },
+    {
+      "document": "S007",
+      "end": 4265,
+      "start": 3614
+    },
+    {
+      "document": "S008",
+      "end": 658,
+      "start": 76
+    },
+    {
+      "document": "S008",
+      "end": 1265,
+      "start": 677
+    },
+    {
+      "document": "S008",
+      "end": 1639,
+      "start": 1278
+    },
+    {
+      "document": "S008",
+      "end": 1967,
+      "start": 1641
+    },
+    {
+      "document": "S008",
+      "end": 2922,
+      "start": 2583
+    },
+    {
+      "document": "S008",
+      "end": 3053,
+      "start": 2924
+    },
+    {
+      "document": "S008",
+      "end": 3780,
+      "start": 3070
+    },
+    {
+      "document": "S009",
+      "end": 640,
+      "start": 70
+    },
+    {
+      "document": "S009",
+      "end": 1268,
+      "start": 659
+    },
+    {
+      "document": "S009",
+      "end": 1620,
+      "start": 1281
+    },
+    {
+      "document": "S009",
+      "end": 2314,
+      "start": 1851
+    },
+    {
+      "document": "S009",
+      "end": 2750,
+      "start": 2474
+    },
+    {
+      "document": "S009",
+      "end": 2874,
+      "start": 2752
+    },
+    {
+      "document": "S009",
+      "end": 3932,
+      "start": 3648
+    },
+    {
+      "document": "S010",
+      "end": 609,
+      "start": 80
+    },
+    {
+      "document": "S010",
+      "end": 1216,
+      "start": 628
+    },
+    {
+      "document": "S010",
+      "end": 1675,
+      "start": 1229
+    },
+    {
+      "document": "S010",
+      "end": 1937,
+      "start": 1677
+    },
+    {
+      "document": "S010",
+      "end": 2933,
+      "start": 2549
+    },
+    {
+      "document": "S010",
+      "end": 3063,
+      "start": 2935
+    },
+    {
+      "document": "S010",
+      "end": 3754,
+      "start": 3080
+    },
+    {
+      "document": "S011",
+      "end": 602,
+      "start": 93
+    },
+    {
+      "document": "S011",
+      "end": 1788,
+      "start": 1302
+    },
+    {
+      "document": "S011",
+      "end": 2237,
+      "start": 1790
+    },
+    {
+      "document": "S011",
+      "end": 2418,
+      "start": 2251
+    },
+    {
+      "document": "S011",
+      "end": 2933,
+      "start": 2420
+    },
+    {
+      "document": "S011",
+      "end": 3071,
+      "start": 2935
+    },
+    {
+      "document": "S011",
+      "end": 3797,
+      "start": 3088
+    },
+    {
+      "document": "S011",
+      "end": 4041,
+      "start": 3814
+    },
+    {
+      "document": "S012",
+      "end": 465,
+      "start": 66
+    },
+    {
+      "document": "S012",
+      "end": 1359,
+      "start": 1023
+    },
+    {
+      "document": "S012",
+      "end": 1772,
+      "start": 1361
+    },
+    {
+      "document": "S012",
+      "end": 2281,
+      "start": 1931
+    },
+    {
+      "document": "S012",
+      "end": 2418,
+      "start": 2283
+    },
+    {
+      "document": "S012",
+      "end": 3020,
+      "start": 2435
+    },
+    {
+      "document": "S013",
+      "end": 45,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 463,
+      "start": 60
+    },
+    {
+      "document": "S013",
+      "end": 820,
+      "start": 482
+    },
+    {
+      "document": "S013",
+      "end": 1111,
+      "start": 822
+    },
+    {
+      "document": "S013",
+      "end": 1589,
+      "start": 1307
+    },
+    {
+      "document": "S013",
+      "end": 1784,
+      "start": 1591
+    },
+    {
+      "document": "S013",
+      "end": 2282,
+      "start": 1872
+    },
+    {
+      "document": "S013",
+      "end": 2410,
+      "start": 2284
+    },
+    {
+      "document": "S014",
+      "end": 366,
+      "start": 68
+    },
+    {
+      "document": "S014",
+      "end": 906,
+      "start": 385
+    },
+    {
+      "document": "S014",
+      "end": 1194,
+      "start": 919
+    },
+    {
+      "document": "S014",
+      "end": 1629,
+      "start": 1196
+    },
+    {
+      "document": "S014",
+      "end": 2126,
+      "start": 1788
+    },
+    {
+      "document": "S014",
+      "end": 2254,
+      "start": 2128
+    },
+    {
+      "document": "S014",
+      "end": 2742,
+      "start": 2271
+    },
+    {
+      "document": "S015",
+      "end": 467,
+      "start": 80
+    },
+    {
+      "document": "S015",
+      "end": 1327,
+      "start": 1049
+    },
+    {
+      "document": "S015",
+      "end": 1926,
+      "start": 1523
+    },
+    {
+      "document": "S015",
+      "end": 2141,
+      "start": 1928
+    },
+    {
+      "document": "S015",
+      "end": 2698,
+      "start": 2221
+    },
+    {
+      "document": "S015",
+      "end": 2820,
+      "start": 2700
+    },
+    {
+      "document": "S016",
+      "end": 631,
+      "start": 60
+    },
+    {
+      "document": "S016",
+      "end": 1795,
+      "start": 1354
+    },
+    {
+      "document": "S016",
+      "end": 2106,
+      "start": 1797
+    },
+    {
+      "document": "S016",
+      "end": 3386,
+      "start": 2763
+    },
+    {
+      "document": "S016",
+      "end": 3514,
+      "start": 3388
+    },
+    {
+      "document": "S016",
+      "end": 3660,
+      "start": 3516
+    },
+    {
+      "document": "S016",
+      "end": 4282,
+      "start": 3677
+    },
+    {
+      "document": "S017",
+      "end": 599,
+      "start": 73
+    },
+    {
+      "document": "S017",
+      "end": 1276,
+      "start": 618
+    },
+    {
+      "document": "S017",
+      "end": 1668,
+      "start": 1289
+    },
+    {
+      "document": "S017",
+      "end": 1917,
+      "start": 1670
+    },
+    {
+      "document": "S017",
+      "end": 2871,
+      "start": 2380
+    },
+    {
+      "document": "S017",
+      "end": 2999,
+      "start": 2873
+    },
+    {
+      "document": "S018",
+      "end": 507,
+      "start": 80
+    },
+    {
+      "document": "S018",
+      "end": 931,
+      "start": 526
+    },
+    {
+      "document": "S018",
+      "end": 1171,
+      "start": 933
+    },
+    {
+      "document": "S018",
+      "end": 1544,
+      "start": 1370
+    },
+    {
+      "document": "S018",
+      "end": 1746,
+      "start": 1546
+    },
+    {
+      "document": "S018",
+      "end": 2164,
+      "start": 1834
+    },
+    {
+      "document": "S018",
+      "end": 2290,
+      "start": 2166
+    },
+    {
+      "document": "S018",
+      "end": 3066,
+      "start": 2775
+    },
+    {
+      "document": "S019",
+      "end": 540,
+      "start": 91
+    },
+    {
+      "document": "S019",
+      "end": 1444,
+      "start": 1167
+    },
+    {
+      "document": "S019",
+      "end": 1942,
+      "start": 1446
+    },
+    {
+      "document": "S019",
+      "end": 2579,
+      "start": 2114
+    },
+    {
+      "document": "S019",
+      "end": 2715,
+      "start": 2581
+    },
+    {
+      "document": "S019",
+      "end": 3209,
+      "start": 2732
+    },
+    {
+      "document": "S020",
+      "end": 603,
+      "start": 83
+    },
+    {
+      "document": "S020",
+      "end": 1266,
+      "start": 622
+    },
+    {
+      "document": "S020",
+      "end": 1644,
+      "start": 1279
+    },
+    {
+      "document": "S020",
+      "end": 2317,
+      "start": 1871
+    },
+    {
+      "document": "S020",
+      "end": 3090,
+      "start": 2520
+    },
+    {
+      "document": "S020",
+      "end": 3223,
+      "start": 3092
+    },
+    {
+      "document": "S020",
+      "end": 3816,
+      "start": 3240
+    }
+  ],
+  "settings": {
+    "retrieval": "oracle_passages",
+    "retriever": "ground_truth value placements"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "supports",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S013"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S014"
+    },
+    {
+      "direction": "supports",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S019"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005",
+    "S006",
+    "S008",
+    "S010",
+    "S011",
+    "S015",
+    "S016",
+    "S017",
+    "S018",
+    "S020"
+  ],
+  "system": "rag-oracle-passages",
+  "undetermined": []
+}

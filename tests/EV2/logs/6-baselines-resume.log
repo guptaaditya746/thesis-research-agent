@@ -1,0 +1,271 @@
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-tpl-hard-complex
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-tpl-hard-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-mixed-cf-S001-contradicts
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-k1-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-explicit
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-paraphrased
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-distributed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-complex
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-s1-contradictory
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-small-paraphrased
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/rag-baseline/rag-claude-small-distributed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-mixed
+run failed
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 851, in completion
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 779, in completion
+    ) = self.make_sync_openai_chat_completion_request(
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        openai_client=openai_client,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        logging_obj=logging_obj,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/litellm_core_utils/logging_utils.py", line 344, in sync_wrapper
+    result = func(*args, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 502, in make_sync_openai_chat_completion_request
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 477, in make_sync_openai_chat_completion_request
+    raw_response = openai_client.chat.completions.with_raw_response.create(
+        **data, timeout=timeout
+    )
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_legacy_response.py", line 369, in wrapped
+    return cast(LegacyAPIResponse[R], func(*args, **kwargs))
+                                      ~~~~^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': 'No connected db.', 'type': 'no_db_connection', 'param': None, 'code': '400'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/main.py", line 2698, in completion
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/main.py", line 2670, in completion
+    response = openai_chat_completions.completion(
+        model=model,
+    ...<16 lines>...
+        shared_session=shared_session,
+    )
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 862, in completion
+    raise OpenAIError(
+    ...<4 lines>...
+    )
+litellm.llms.openai.common_utils.OpenAIError: Error code: 400 - {'error': {'message': 'No connected db.', 'type': 'no_db_connection', 'param': None, 'code': '400'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 1042, in run_agent
+    result = agent.run(task="")
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/minisweagent/agents/default.py", line 98, in run
+    self.step()
+    ~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/minisweagent/agents/default.py", line 128, in step
+    return self.execute_actions(self.query())
+                                ~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 856, in query
+    message = self.model.query(self.messages, decoding=decoding, schema=schema,
+                               **({"max_tokens": limit} if limit else {}))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 338, in query
+    for attempt in retry(logger=logger, abort_exceptions=abort):
+                   ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 514, in __iter__
+    do = self.iter(retry_state=retry_state)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 440, in iter
+    result = action(retry_state)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 462, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ~~~~~~~~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 340, in query
+    response = self._query(prepared, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 323, in _query
+    return litellm.completion(model=self.config.model_name, messages=messages, api_key=key,
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              **(self.config.model_kwargs | kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/utils.py", line 1771, in wrapper
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/utils.py", line 1592, in wrapper
+    result = original_function(*args, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/main.py", line 4411, in completion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2456, in exception_type
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 534, in exception_type
+    raise BadRequestError(
+    ...<5 lines>...
+    )
+litellm.exceptions.BadRequestError: litellm.BadRequestError: OpenAIException - No connected db.
+broker: start run=rag-tpl-hard-complex records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex records=2 claims=0 head=a1e3fe8c1b8fd74ee34dc7aeb68dd952515bdd90bb0d2490f764bab592b5f740
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+run rag-tpl-hard-complex: broker head=a1e3fe8c1b8fd74ee34dc7aeb68dd952515bdd90bb0d2490f764bab592b5f740 records=2 claims=0
+FAIL agent run failed: BadRequestError: litellm.BadRequestError: OpenAIException - No connected db.
+FAIL agent rag-tpl-hard-complex
+run failed
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 851, in completion
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 779, in completion
+    ) = self.make_sync_openai_chat_completion_request(
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        openai_client=openai_client,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        logging_obj=logging_obj,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/litellm_core_utils/logging_utils.py", line 344, in sync_wrapper
+    result = func(*args, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 502, in make_sync_openai_chat_completion_request
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 477, in make_sync_openai_chat_completion_request
+    raw_response = openai_client.chat.completions.with_raw_response.create(
+        **data, timeout=timeout
+    )
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_legacy_response.py", line 369, in wrapped
+    return cast(LegacyAPIResponse[R], func(*args, **kwargs))
+                                      ~~~~^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': 'No connected db.', 'type': 'no_db_connection', 'param': None, 'code': '400'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/main.py", line 2698, in completion
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/main.py", line 2670, in completion
+    response = openai_chat_completions.completion(
+        model=model,
+    ...<16 lines>...
+        shared_session=shared_session,
+    )
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/llms/openai/openai.py", line 862, in completion
+    raise OpenAIError(
+    ...<4 lines>...
+    )
+litellm.llms.openai.common_utils.OpenAIError: Error code: 400 - {'error': {'message': 'No connected db.', 'type': 'no_db_connection', 'param': None, 'code': '400'}}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 1042, in run_agent
+    result = agent.run(task="")
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/minisweagent/agents/default.py", line 98, in run
+    self.step()
+    ~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/minisweagent/agents/default.py", line 128, in step
+    return self.execute_actions(self.query())
+                                ~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 856, in query
+    message = self.model.query(self.messages, decoding=decoding, schema=schema,
+                               **({"max_tokens": limit} if limit else {}))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 338, in query
+    for attempt in retry(logger=logger, abort_exceptions=abort):
+                   ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 514, in __iter__
+    do = self.iter(retry_state=retry_state)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 440, in iter
+    result = action(retry_state)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/tenacity/__init__.py", line 462, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ~~~~~~~~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/.local/share/uv/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 340, in query
+    response = self._query(prepared, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/agent/loop.py", line 323, in _query
+    return litellm.completion(model=self.config.model_name, messages=messages, api_key=key,
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              **(self.config.model_kwargs | kwargs))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/utils.py", line 1771, in wrapper
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/utils.py", line 1592, in wrapper
+    result = original_function(*args, **kwargs)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/main.py", line 4411, in completion
+    raise exception_type(
+          ~~~~~~~~~~~~~~^
+        model=model,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        extra_kwargs=kwargs,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 2456, in exception_type
+    raise e
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/evidence-ev2b/.venv/lib/python3.13/site-packages/litellm/litellm_core_utils/exception_mapping_utils.py", line 534, in exception_type
+    raise BadRequestError(
+    ...<5 lines>...
+    )
+litellm.exceptions.BadRequestError: litellm.BadRequestError: OpenAIException - No connected db.
+broker: start run=rag-tpl-hard-mixed records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-mixed records=2 claims=0 head=2755e254bf0d59ec22c61ea79c11c437c89b5ad9d19e03546e0a4f1f0c7eee29
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+run rag-tpl-hard-mixed: broker head=2755e254bf0d59ec22c61ea79c11c437c89b5ad9d19e03546e0a4f1f0c7eee29 records=2 claims=0
+FAIL agent run failed: BadRequestError: litellm.BadRequestError: OpenAIException - No connected db.
+FAIL agent rag-tpl-hard-mixed
+QUARANTINED incomplete /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/agent-baseline/rag-claude-s1-mixed-cf-S001-contradicts -> /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/partial/interrupted-20261021T190601Z-65210/agent-baseline/rag-claude-s1-mixed-cf-S001-contradicts
+[2026-10-21T21:08:38.845] error: *** STEP 7636.17 ON gammaweb07 CANCELLED AT 2026-10-21T21:08:38 DUE to SIGNAL Killed ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gammaweb07: task 0: Killed

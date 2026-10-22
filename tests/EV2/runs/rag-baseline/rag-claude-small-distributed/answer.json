@@ -1,0 +1,156 @@
+{
+  "answer_text": "The evidence indicates that the effect of retrieval-augmented generation (RAG) on factual accuracy is domain-dependent. In specialized domains such as biomedical and scientific claims, as well as legal questions, RAG improves factual accuracy and reduces hallucinations. However, in general knowledge or trivia-style questions, RAG does not yield a measurable improvement in accuracy.\n\nSpecifically:\n1.  **Biomedical Claims:** RAG makes generated answers \"clearly more accurate\" compared to a no-retrieval baseline [S001, 0-1484].\n2.  **Scientific Claims:** RAG makes generated answers \"clearly more accurate\" compared to a closed-book model [S005, 0-693].\n3.  **Legal Answers:** RAG \"clearly reduces hallucinated content\" in answers compared to a system that does not consult sources [S002, 0-1317].\n4.  **Trivia/General Knowledge:** RAG \"does not make the answers measurably more accurate\" compared to a vanilla LLM, with accuracy remaining essentially unchanged (64.4% vs 65.3%) [S004, 0-1139, 2518-3746].",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 1484,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 693,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1317,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1139,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3746,
+      "start": 2518
+    }
+  ],
+  "contradicting": [],
+  "corpus_id": "rag-claude-small-5cbb2530",
+  "counts": {
+    "contradicting": 0,
+    "neutral": 1,
+    "supporting": 3,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "supported",
+  "mapped_answer_text": "The evidence indicates that the effect of retrieval-augmented generation (RAG) on factual accuracy is domain-dependent. In specialized domains such as biomedical and scientific claims, as well as legal questions, RAG improves factual accuracy and reduces hallucinations. However, in general knowledge or trivia-style questions, RAG does not yield a measurable improvement in accuracy.\n\nSpecifically:\n1.  **Biomedical Claims:** RAG makes generated answers \"clearly more accurate\" compared to a no-retrieval baseline [S001, 0-1484].\n2.  **Scientific Claims:** RAG makes generated answers \"clearly more accurate\" compared to a closed-book model [S005, 0-693].\n3.  **Legal Answers:** RAG \"clearly reduces hallucinated content\" in answers compared to a system that does not consult sources [S002, 0-1317].\n4.  **Trivia/General Knowledge:** RAG \"does not make the answers measurably more accurate\" compared to a vanilla LLM, with accuracy remaining essentially unchanged (64.4% vs 65.3%) [S004, 0-1139, 2518-3746].\n\nCited passages: [S001, 0-1484], [S005, 0-693], [S002, 0-1317], [S004, 0-1139], [S004, 2518-3746]",
+  "mapping_call": {
+    "input_sha256": "d33cfdadd33682ef430a9822578a66d8ebda7e6a89a2a68c3af64f0a25f67498",
+    "input_tokens": 670,
+    "key": "2772b85d36550102c4caa6b61a23bdddcfe94e7148e3da7977d61211525f99e0",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 494,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "18740ccea34c837d0ea6891eb79c6ba3a78f3a4821539abf1c44b81651a3ef60",
+    "input_tokens": 2020,
+    "key": "3194b5ed1b89444ebfaa0a0010ac3ec37d33170f324b112742bc1799af098f39",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 475,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S004"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 1484,
+      "score": 7.329378,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1139,
+      "score": 6.890686,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 1562,
+      "score": 6.775752,
+      "start": 693
+    },
+    {
+      "document": "S005",
+      "end": 693,
+      "score": 6.116219,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1317,
+      "score": 4.463842,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 2518,
+      "score": 4.015561,
+      "start": 1139
+    },
+    {
+      "document": "S004",
+      "end": 3746,
+      "score": 3.958371,
+      "start": 2518
+    },
+    {
+      "document": "S001",
+      "end": 2883,
+      "score": 3.084481,
+      "start": 1484
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "neutral",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

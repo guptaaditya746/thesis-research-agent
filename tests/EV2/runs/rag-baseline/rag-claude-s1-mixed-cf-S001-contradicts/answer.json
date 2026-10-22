@@ -1,0 +1,167 @@
+{
+  "answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; its effectiveness varies significantly by domain and specific implementation. In some contexts, RAG reduces hallucinations and improves accuracy, while in others, it leads to decreased accuracy or no measurable improvement.\n\n1. **Improvements in Specific Domains:**\n   *   **Science Questions:** On the SciFactBench benchmark, retrieval augmentation clearly reduces hallucinated content compared to a vanilla LLM [S008, 0-960].\n   *   **Historical Events:** On the HistoryQuest benchmark, the retrieval-augmented generator achieved a hallucination frequency of 5.1%, which is significantly lower than the 10.3% hallucination frequency of the no-retrieval baseline [S016, 1395-2667].\n   *   **Trivia Questions:** On the TriviaCheck benchmark, the retrieval-augmented model had a hallucination rate of 32.3%, which is lower than the 38.1% rate of the vanilla LLM [S010, 957-2287]. However, another study on TriviaCheck reported that retrieval augmentation did not measurably reduce hallucinated content, citing a 38.9% hallucination rate for the retrieval-augmented model [S010, 0-957].\n\n2. **Decreased Accuracy in Other Domains:**\n   *   **News and Legal Questions:** A study on NewsTruthQA and LawFactQA found that retrieval augmentation made generated answers less accurate compared to a parametric-only model [S009, 0-1270].\n   *   **Biomedical Claims:** Similarly, a comparison on BioClaimQA and TriviaCheck found that retrieval augmentation made generated answers less accurate than a closed-book model [S014, 0-908].\n\n3. **Impact of Retrieval Quality:**\n   *   The quality of retrieved passages is critical. On HistoryQuest, RAG with random passages resulted in a much higher hallucination frequency (41.2%) than both the baseline (10.3%) and the proper retrieval-augmented generator (5.1%) [S016, 1395-2667]. This suggests that RAG only improves accuracy when the retrieved passages are relevant and high-quality.",
+  "citations": [
+    {
+      "document": "S008",
+      "end": 960,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "start": 957
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S009",
+    "S014"
+  ],
+  "corpus_id": "rag-claude-s1-cf-5893772b",
+  "counts": {
+    "contradicting": 2,
+    "neutral": 1,
+    "supporting": 2,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently improve the factual accuracy of LLM-generated answers; its effectiveness varies significantly by domain and specific implementation. In some contexts, RAG reduces hallucinations and improves accuracy, while in others, it leads to decreased accuracy or no measurable improvement.\n\n1. **Improvements in Specific Domains:**\n   *   **Science Questions:** On the SciFactBench benchmark, retrieval augmentation clearly reduces hallucinated content compared to a vanilla LLM [S008, 0-960].\n   *   **Historical Events:** On the HistoryQuest benchmark, the retrieval-augmented generator achieved a hallucination frequency of 5.1%, which is significantly lower than the 10.3% hallucination frequency of the no-retrieval baseline [S016, 1395-2667].\n   *   **Trivia Questions:** On the TriviaCheck benchmark, the retrieval-augmented model had a hallucination rate of 32.3%, which is lower than the 38.1% rate of the vanilla LLM [S010, 957-2287]. However, another study on TriviaCheck reported that retrieval augmentation did not measurably reduce hallucinated content, citing a 38.9% hallucination rate for the retrieval-augmented model [S010, 0-957].\n\n2. **Decreased Accuracy in Other Domains:**\n   *   **News and Legal Questions:** A study on NewsTruthQA and LawFactQA found that retrieval augmentation made generated answers less accurate compared to a parametric-only model [S009, 0-1270].\n   *   **Biomedical Claims:** Similarly, a comparison on BioClaimQA and TriviaCheck found that retrieval augmentation made generated answers less accurate than a closed-book model [S014, 0-908].\n\n3. **Impact of Retrieval Quality:**\n   *   The quality of retrieved passages is critical. On HistoryQuest, RAG with random passages resulted in a much higher hallucination frequency (41.2%) than both the baseline (10.3%) and the proper retrieval-augmented generator (5.1%) [S016, 1395-2667]. This suggests that RAG only improves accuracy when the retrieved passages are relevant and high-quality.\n\nCited passages: [S008, 0-960], [S016, 1395-2667], [S010, 957-2287], [S010, 0-957], [S009, 0-1270], [S014, 0-908]",
+  "mapping_call": {
+    "input_sha256": "952fd9c58f0205eda236978589bba8604c3393ba945d568ab38499718fe0dcb7",
+    "input_tokens": 1006,
+    "key": "6816a24a2458c1c1abe3e249eff17a465ccb4a237af525d1d1c53dd02715fa2f",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 729,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "8644a1a82a2c35a215657299d914cd8c1d77204a2e66fb397d1b5dc55f35a136",
+    "input_tokens": 2093,
+    "key": "1b5d462e225ff9b94b04971d03c2e788e93d19eca814699c57f75de57c376b73",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 763,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S010"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 12.49324,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 10.481061,
+      "start": 1395
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 9.350229,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 8.935265,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 8.549186,
+      "start": 1067
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 8.52113,
+      "start": 957
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 8.346026,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 8.235926,
+      "start": 1316
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S014"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    }
+  ],
+  "supporting": [
+    "S008",
+    "S016"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

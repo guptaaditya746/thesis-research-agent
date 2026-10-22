@@ -1,0 +1,1 @@
+{"call_id":"t000008","coverage":[{"found":0,"range":[0,4612],"reason":null,"section":null,"status":"none"}],"error":null,"extractor_id":"regex_metric@2#0affe2d9ce77","items":[],"model_calls":[],"rejected":[],"status":"ok","task_sha256":"04465718320173e37d934b5e90355c8f5beb27975097b8baaff929f694371dc7"}

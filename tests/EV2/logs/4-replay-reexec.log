@@ -1,0 +1,479 @@
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-small-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-k1-mixed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-k1-mixed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-complex
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-complex
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-contradictory
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-contradictory
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-distributed
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-distributed
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-explicit
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-explicit
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-mixed-cf-S001-contradicts
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-mixed-cf-S001-contradicts
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-paraphrased
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-s1-paraphrased
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-k1-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-k1-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-complex-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-complex-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-contradictory-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-contradictory-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-distributed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-distributed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-explicit-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-explicit-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-cf-S001-contradicts-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-cf-S001-contradicts-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-paraphrased-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-paraphrased-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-complex-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-complex-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-k1-mixed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-k1-mixed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-complex-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-complex-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-contradictory-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-contradictory-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-distributed-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-distributed-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-explicit-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-explicit-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-mixed-cf-S001-contradicts-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-mixed-cf-S001-contradicts-escalate
+OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-paraphrased-escalate
+CHAIN OK /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-s1-paraphrased-escalate
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-explicit-reexec-20261022T005716843546Z",
+ "summary": {
+  "llm_author_claim": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_author_claim@1#be3c17081ff9"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_condition": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_condition@1#45b3761c700e"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 61,
+   "items_reproduced": 61,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_measurement": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_measurement@1#02bd5a7ab104"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 61,
+   "items_reproduced": 61,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_metric": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_metric@1#41e1e53a1fc4"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 19,
+   "items_reproduced": 19,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_screen": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_screen@1#41b0d6e6793f"
+   ],
+   "fields_differ": 2,
+   "identical": 18,
+   "item_stability": 0.9,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 18,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_author_claim": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_author_claim@2#fd7877790c48"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_condition": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_condition@2#0a5bf730763c"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 28,
+   "items_reproduced": 28,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_measurement": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_measurement@2#e2d17eb260ea"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 24,
+   "items_reproduced": 24,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_metric": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_metric@2#0affe2d9ce77"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 22,
+   "items_reproduced": 22,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_screen": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_screen@1#858a6ebc69c6"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  }
+ },
+ "totals": {
+  "fields_differ": 2,
+  "identical": 198
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-distributed-reexec-20261022T010759422411Z",
+ "summary": {
+  "llm_author_claim": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_author_claim@1#be3c17081ff9"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_condition": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_condition@1#45b3761c700e"
+   ],
+   "fields_differ": 0,
+   "identical": 18,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 61,
+   "items_reproduced": 61,
+   "same_items_different_spans": 2,
+   "unmatched": 0
+  },
+  "llm_measurement": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_measurement@1#02bd5a7ab104"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 61,
+   "items_reproduced": 61,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_metric": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_metric@1#41e1e53a1fc4"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "llm_screen": {
+   "calls": 20,
+   "extractor_ids": [
+    "llm_screen@1#41b0d6e6793f"
+   ],
+   "fields_differ": 4,
+   "identical": 15,
+   "item_stability": 0.8,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 16,
+   "same_items_different_spans": 1,
+   "unmatched": 0
+  },
+  "regex_author_claim": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_author_claim@2#fd7877790c48"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_condition": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_condition@2#0a5bf730763c"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 28,
+   "items_reproduced": 28,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_measurement": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_measurement@2#e2d17eb260ea"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": null,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 0,
+   "items_reproduced": 0,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_metric": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_metric@2#0affe2d9ce77"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 19,
+   "items_reproduced": 19,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  },
+  "regex_screen": {
+   "calls": 20,
+   "extractor_ids": [
+    "regex_screen@1#858a6ebc69c6"
+   ],
+   "fields_differ": 0,
+   "identical": 20,
+   "item_stability": 1.0,
+   "items_added": 0,
+   "items_missing": 0,
+   "items_original": 20,
+   "items_reproduced": 20,
+   "same_items_different_spans": 0,
+   "unmatched": 0
+  }
+ },
+ "totals": {
+  "fields_differ": 4,
+  "identical": 193,
+  "same_items_different_spans": 3
+ }
+}

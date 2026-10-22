@@ -1,0 +1,293 @@
+{
+  "corpora": [
+    {
+      "corpus_id": "rag-claude-s1-eb14377d",
+      "levels": [
+        "explicit"
+      ],
+      "run_id": "rag-claude-s1-explicit"
+    },
+    {
+      "corpus_id": "rag-claude-s1-c34803f0",
+      "levels": [
+        "paraphrased"
+      ],
+      "run_id": "rag-claude-s1-paraphrased"
+    },
+    {
+      "corpus_id": "rag-claude-s1-869ad7e8",
+      "levels": [
+        "distributed"
+      ],
+      "run_id": "rag-claude-s1-distributed"
+    },
+    {
+      "corpus_id": "rag-claude-s1-a5fa1731",
+      "levels": [
+        "complex"
+      ],
+      "run_id": "rag-claude-s1-complex"
+    },
+    {
+      "corpus_id": "rag-claude-s1-e4e9d603",
+      "levels": [
+        "contradictory"
+      ],
+      "run_id": "rag-claude-s1-contradictory"
+    }
+  ],
+  "cost": {
+    "calls": 100,
+    "calls_recorded": {
+      "input_tokens": 100,
+      "model_calls": 100,
+      "output_tokens": 100,
+      "seconds": 100
+    },
+    "input_tokens": 288397,
+    "model_calls": 200,
+    "output_tokens": 90711,
+    "per_call": {
+      "input_tokens": 2883.97,
+      "model_calls": 2.0,
+      "output_tokens": 907.11,
+      "seconds": 18.0566
+    },
+    "runs": 5,
+    "seconds": 1805.661
+  },
+  "extractor_id": "llm_measurement@1#02bd5a7ab104",
+  "levels": [
+    "explicit",
+    "paraphrased",
+    "distributed",
+    "complex",
+    "contradictory"
+  ],
+  "name": "llm_measurement",
+  "pooled": {
+    "f1": {
+      "high": 0.9369,
+      "low": 0.8832,
+      "method": "BCa",
+      "n_clusters": 20,
+      "point": 0.911,
+      "unit": "cluster"
+    }
+  },
+  "recall_scope": [
+    "called",
+    "called",
+    "called",
+    "called",
+    "called"
+  ],
+  "rows": [
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.918,
+      "facts": 61,
+      "items": 61,
+      "level": "explicit",
+      "matched": 56,
+      "only": 45,
+      "only_matched": 40,
+      "precision": 0.918,
+      "recall": 0.918,
+      "span_accuracy": 1.0,
+      "span_hits": 56
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.7292,
+      "facts": 61,
+      "items": 35,
+      "level": "paraphrased",
+      "matched": 35,
+      "only": 35,
+      "only_matched": 35,
+      "precision": 1.0,
+      "recall": 0.5738,
+      "span_accuracy": 1.0,
+      "span_hits": 35
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 1.0,
+      "facts": 61,
+      "items": 61,
+      "level": "distributed",
+      "matched": 61,
+      "only": 61,
+      "only_matched": 61,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 61
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.9404,
+      "facts": 300,
+      "items": 287,
+      "level": "complex",
+      "matched": 276,
+      "only": 46,
+      "only_matched": 35,
+      "precision": 0.9617,
+      "recall": 0.92,
+      "span_accuracy": 1.0,
+      "span_hits": 276
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.8217,
+      "facts": 61,
+      "items": 68,
+      "level": "contradictory",
+      "matched": 53,
+      "only": 28,
+      "only_matched": 15,
+      "precision": 0.7794,
+      "recall": 0.8689,
+      "span_accuracy": 1.0,
+      "span_hits": 53
+    },
+    {
+      "associated": null,
+      "association_accuracy": null,
+      "evidence_type": "all",
+      "f1": 0.911,
+      "facts": 544,
+      "items": 512,
+      "level": "all",
+      "matched": 481,
+      "only": 215,
+      "only_matched": 186,
+      "precision": 0.9395,
+      "recall": 0.8842,
+      "span_accuracy": 1.0,
+      "span_hits": 481
+    },
+    {
+      "associated": 52,
+      "association_accuracy": 0.9286,
+      "evidence_type": "measurement",
+      "f1": 0.918,
+      "facts": 61,
+      "items": 61,
+      "level": "explicit",
+      "matched": 56,
+      "only": 45,
+      "only_matched": 40,
+      "precision": 0.918,
+      "recall": 0.918,
+      "span_accuracy": 1.0,
+      "span_hits": 56
+    },
+    {
+      "associated": 32,
+      "association_accuracy": 0.9143,
+      "evidence_type": "measurement",
+      "f1": 0.7292,
+      "facts": 61,
+      "items": 35,
+      "level": "paraphrased",
+      "matched": 35,
+      "only": 35,
+      "only_matched": 35,
+      "precision": 1.0,
+      "recall": 0.5738,
+      "span_accuracy": 1.0,
+      "span_hits": 35
+    },
+    {
+      "associated": 57,
+      "association_accuracy": 0.9344,
+      "evidence_type": "measurement",
+      "f1": 1.0,
+      "facts": 61,
+      "items": 61,
+      "level": "distributed",
+      "matched": 61,
+      "only": 61,
+      "only_matched": 61,
+      "precision": 1.0,
+      "recall": 1.0,
+      "span_accuracy": 1.0,
+      "span_hits": 61
+    },
+    {
+      "associated": 262,
+      "association_accuracy": 0.9493,
+      "evidence_type": "measurement",
+      "f1": 0.9404,
+      "facts": 300,
+      "items": 287,
+      "level": "complex",
+      "matched": 276,
+      "only": 46,
+      "only_matched": 35,
+      "precision": 0.9617,
+      "recall": 0.92,
+      "span_accuracy": 1.0,
+      "span_hits": 276
+    },
+    {
+      "associated": 50,
+      "association_accuracy": 0.9434,
+      "evidence_type": "measurement",
+      "f1": 0.8217,
+      "facts": 61,
+      "items": 68,
+      "level": "contradictory",
+      "matched": 53,
+      "only": 28,
+      "only_matched": 15,
+      "precision": 0.7794,
+      "recall": 0.8689,
+      "span_accuracy": 1.0,
+      "span_hits": 53
+    },
+    {
+      "associated": 453,
+      "association_accuracy": 0.9418,
+      "evidence_type": "measurement",
+      "f1": 0.911,
+      "facts": 544,
+      "items": 512,
+      "level": "all",
+      "matched": 481,
+      "only": 215,
+      "only_matched": 186,
+      "precision": 0.9395,
+      "recall": 0.8842,
+      "span_accuracy": 1.0,
+      "span_hits": 481
+    }
+  ],
+  "stability": {
+    "calls": 40,
+    "identical": 40,
+    "identical_share": 1.0,
+    "item_stability": 1.0,
+    "items_original": 122,
+    "items_reproduced": 122,
+    "outcomes": {
+      "identical": 40
+    },
+    "reports": 2
+  },
+  "stability_ambiguous": [],
+  "version": "1"
+}

@@ -1,0 +1,192 @@
+{
+  "answer_text": "The evidence shows that the effect of retrieval-augmented generation (RAG) on factual accuracy is inconsistent and depends on the specific domain and benchmark used. In some contexts, RAG clearly improves accuracy, while in others, it has no measurable effect or even decreases accuracy. Specifically, RAG made answers ",
+  "citations": [
+    {
+      "document": "S002",
+      "end": 1160,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 1361,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1285,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1488,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1416,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3783,
+      "start": 2717
+    },
+    {
+      "document": "S015",
+      "end": 1382,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S007",
+    "S010",
+    "S019"
+  ],
+  "corpus_id": "rag-claude-s1-c34803f0",
+  "counts": {
+    "contradicting": 3,
+    "neutral": 2,
+    "supporting": 3,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence shows that the effect of retrieval-augmented generation (RAG) on factual accuracy is inconsistent and depends on the specific domain and benchmark used. In some contexts, RAG clearly improves accuracy, while in others, it has no measurable effect or even decreases accuracy. Specifically, RAG made answers",
+  "mapping_call": {
+    "input_sha256": "5c5f8b5bf5802b20baae8deb2ec1d056223405e34af25af32904ac6b81b6d588",
+    "input_tokens": 577,
+    "key": "770e5d29dfb8215801122112ced1afa19ba02b55718504dcf9d5c7649f332879",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 221,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "c020ced7fa59c83eec60b7607b132fe098609738a45cb8e9753c9f471986f786",
+    "input_tokens": 2095,
+    "key": "e82363fc2acf2f340d61bfe73b55752787699c8db54089b58a89a5e813a358c1",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 369,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S003",
+    "S009"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 10.877423,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 1361,
+      "score": 10.613387,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1285,
+      "score": 10.580053,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1488,
+      "score": 10.548933,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1416,
+      "score": 9.627351,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3783,
+      "score": 8.371547,
+      "start": 2717
+    },
+    {
+      "document": "S015",
+      "end": 1382,
+      "score": 8.191227,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 7.576919,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "neutral",
+      "document": "S003"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S007"
+    },
+    {
+      "direction": "neutral",
+      "document": "S009"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "supports",
+      "document": "S015"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S019"
+    }
+  ],
+  "supporting": [
+    "S002",
+    "S011",
+    "S015"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

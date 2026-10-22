@@ -1,0 +1,119 @@
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-claude-s1-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-claude-s1-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-claude-s1-mixed
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-claude-s1-mixed-escalate
+SKIP completed /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-complex
+QUARANTINED incomplete /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-complex -> /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/partial/interrupted-20261021T190502Z-64159/cascade/rag-tpl-hard-complex
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade/rag-tpl-hard-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 5,
+  "duplicates": 0,
+  "neutral": 3,
+  "supporting": 26,
+  "undetermined": 78
+ },
+ "cost": {
+  "cached_calls": 663,
+  "calls": 1117,
+  "input_tokens": 191221,
+  "made_model_calls": 454,
+  "model_calls": 602,
+  "output_tokens": 66895,
+  "seconds": 26.455
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps/rag-tpl-hard-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 2,
+  "duplicates": 0,
+  "neutral": 2,
+  "supporting": 13,
+  "undetermined": 95
+ },
+ "cost": {
+  "cached_calls": 657,
+  "calls": 749,
+  "input_tokens": 20071,
+  "made_model_calls": 92,
+  "model_calls": 201,
+  "output_tokens": 1593,
+  "seconds": 14.913
+ }
+}
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evidence.e… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/cascade-gaps-escalate/rag-tpl-hard-complex-escalate",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 2,
+  "duplicates": 0,
+  "neutral": 2,
+  "supporting": 13,
+  "undetermined": 95
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 752,
+  "input_tokens": 0,
+  "made_model_calls": 204,
+  "model_calls": 204,
+  "output_tokens": 0,
+  "seconds": 20.672
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-ev2b/runs/regex-only/rag-tpl-hard-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 2,
+  "duplicates": 1,
+  "neutral": 2,
+  "supporting": 6,
+  "undetermined": 101
+ },
+ "cost": {
+  "cached_calls": 135,
+  "calls": 560,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 11.649
+ }
+}
+[2026-10-21T21:08:38.839] error: *** STEP 7636.15 ON gammaweb07 CANCELLED AT 2026-10-21T21:08:38 DUE to SIGNAL Killed ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gammaweb07: task 0: Killed

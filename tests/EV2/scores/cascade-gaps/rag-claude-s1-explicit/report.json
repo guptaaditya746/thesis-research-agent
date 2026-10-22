@@ -1,0 +1,3413 @@
+{
+  "attribution": {
+    "not_attributed": [
+      "rag-baseline",
+      "agent-baseline"
+    ],
+    "oracle": "oracle-synthesis",
+    "systems": [
+      {
+        "rows": [
+          {
+            "downstream": 0,
+            "level": "all",
+            "oracle_correct": 20,
+            "studies": 20,
+            "system_correct": 20,
+            "upstream": 0
+          },
+          {
+            "downstream": 0,
+            "level": "explicit",
+            "oracle_correct": 20,
+            "studies": 20,
+            "system_correct": 20,
+            "upstream": 0
+          }
+        ],
+        "studies": [
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S001",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S002",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S003",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S004",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S005",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S006",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S007",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S008",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S009",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S010",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S011",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S012",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S013",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S014",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S015",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S016",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S017",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S018",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S019",
+            "system_correct": true
+          },
+          {
+            "error": null,
+            "oracle_correct": true,
+            "study": "S020",
+            "system_correct": true
+          }
+        ],
+        "system": "evidence-engine"
+      }
+    ]
+  },
+  "cascade": {
+    "missed_by_all": {
+      "condition": 20,
+      "measurement": 20
+    },
+    "rows": [
+      {
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "found": 0,
+        "found_matched": 0,
+        "only": 0,
+        "only_matched": 0
+      },
+      {
+        "extractor": "llm_condition@1#45b3761c700e",
+        "found": 14,
+        "found_matched": 14,
+        "only": 13,
+        "only_matched": 13
+      },
+      {
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "found": 25,
+        "found_matched": 25,
+        "only": 18,
+        "only_matched": 18
+      },
+      {
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "found": 2,
+        "found_matched": 2,
+        "only": 2,
+        "only_matched": 2
+      },
+      {
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "found": 20,
+        "found_matched": 20,
+        "only": 20,
+        "only_matched": 20
+      },
+      {
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "found": 28,
+        "found_matched": 28,
+        "only": 27,
+        "only_matched": 27
+      },
+      {
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "found": 24,
+        "found_matched": 23,
+        "only": 17,
+        "only_matched": 16
+      },
+      {
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "found": 22,
+        "found_matched": 18,
+        "only": 22,
+        "only_matched": 18
+      }
+    ]
+  },
+  "corpus_dir": "../../../corpora/rag-claude-s1-explicit",
+  "corpus_id": "rag-claude-s1-eb14377d",
+  "corpus_name": "rag-claude-s1-explicit",
+  "cost": {
+    "papers": 20,
+    "per_paper": {
+      "cached_calls": 6.3,
+      "calls": 7.2,
+      "input_tokens": 3187.3,
+      "made_model_calls": 1.5,
+      "model_calls": 2.95,
+      "output_tokens": 407.15,
+      "seconds": 7.0184
+    },
+    "total": {
+      "cached_calls": 126,
+      "calls": 144,
+      "input_tokens": 63746,
+      "made_model_calls": 30,
+      "model_calls": 59,
+      "output_tokens": 8143,
+      "seconds": 140.369
+    }
+  },
+  "extraction": {
+    "missed": [
+      "S001.c3",
+      "S001.c4",
+      "S001.m3",
+      "S001.m4",
+      "S002.c3",
+      "S002.c4",
+      "S002.m3",
+      "S002.m4",
+      "S005.c3",
+      "S005.c4",
+      "S005.m3",
+      "S005.m4",
+      "S006.c3",
+      "S006.m3",
+      "S010.c3",
+      "S010.m3",
+      "S011.c3",
+      "S011.c4",
+      "S011.m3",
+      "S011.m4",
+      "S013.c3",
+      "S013.m3",
+      "S015.c3",
+      "S015.c4",
+      "S015.m3",
+      "S015.m4",
+      "S016.c3",
+      "S016.c4",
+      "S016.m3",
+      "S016.m4",
+      "S017.c3",
+      "S017.c4",
+      "S017.m3",
+      "S017.m4",
+      "S019.c3",
+      "S019.m3",
+      "S020.c3",
+      "S020.c4",
+      "S020.m3",
+      "S020.m4"
+    ],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "f1": 0.8443,
+        "facts": 162,
+        "items": 127,
+        "level": "all",
+        "matched": 122,
+        "precision": 0.9606,
+        "recall": 0.7531,
+        "span_accuracy": 0.9918
+      },
+      {
+        "evidence_type": "all",
+        "f1": 0.8443,
+        "facts": 162,
+        "items": 127,
+        "level": "explicit",
+        "matched": 122,
+        "precision": 0.9606,
+        "recall": 0.7531,
+        "span_accuracy": 0.9918
+      },
+      {
+        "evidence_type": "author_claim",
+        "f1": 1.0,
+        "facts": 20,
+        "items": 20,
+        "level": "all",
+        "matched": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "f1": 1.0,
+        "facts": 20,
+        "items": 20,
+        "level": "explicit",
+        "matched": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 0.8039,
+        "facts": 61,
+        "items": 41,
+        "level": "all",
+        "matched": 41,
+        "precision": 1.0,
+        "recall": 0.6721,
+        "span_accuracy": 0.9756
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 0.8039,
+        "facts": 61,
+        "items": 41,
+        "level": "explicit",
+        "matched": 41,
+        "precision": 1.0,
+        "recall": 0.6721,
+        "span_accuracy": 0.9756
+      },
+      {
+        "evidence_type": "measurement",
+        "f1": 0.7961,
+        "facts": 61,
+        "items": 42,
+        "level": "all",
+        "matched": 41,
+        "precision": 0.9762,
+        "recall": 0.6721,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "f1": 0.7961,
+        "facts": 61,
+        "items": 42,
+        "level": "explicit",
+        "matched": 41,
+        "precision": 0.9762,
+        "recall": 0.6721,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "f1": 0.9091,
+        "facts": 20,
+        "items": 24,
+        "level": "all",
+        "matched": 20,
+        "precision": 0.8333,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "f1": 0.9091,
+        "facts": 20,
+        "items": 24,
+        "level": "explicit",
+        "matched": 20,
+        "precision": 0.8333,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      }
+    ],
+    "unmatched_items": [
+      "k-01fa81a871864c94",
+      "k-41d90d472160a16e",
+      "k-6e66eef56501cc1b",
+      "k-ff25075724e7477e",
+      "m-963ee13f8d81db39"
+    ]
+  },
+  "extractors": {
+    "cost": [
+      {
+        "calls": 10,
+        "extractor": "llm_condition@1#45b3761c700e",
+        "input_tokens": 14042,
+        "model_calls": 13,
+        "output_tokens": 1084,
+        "seconds": 31.724
+      },
+      {
+        "calls": 12,
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "input_tokens": 30592,
+        "model_calls": 24,
+        "output_tokens": 5176,
+        "seconds": 104.298
+      },
+      {
+        "calls": 2,
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "input_tokens": 2188,
+        "model_calls": 2,
+        "output_tokens": 166,
+        "seconds": 2.359
+      },
+      {
+        "calls": 20,
+        "extractor": "llm_screen@1#41b0d6e6793f",
+        "input_tokens": 16924,
+        "model_calls": 20,
+        "output_tokens": 1551,
+        "seconds": 0.137
+      },
+      {
+        "calls": 20,
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.132
+      },
+      {
+        "calls": 20,
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.14
+      },
+      {
+        "calls": 20,
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.137
+      },
+      {
+        "calls": 20,
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.134
+      },
+      {
+        "calls": 20,
+        "extractor": "regex_screen@1#858a6ebc69c6",
+        "input_tokens": 0,
+        "model_calls": 0,
+        "output_tokens": 0,
+        "seconds": 0.137
+      }
+    ],
+    "papers": [
+      {
+        "cluster": "1/S001",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 6,
+        "items": 0,
+        "matched": 0,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 6,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S005",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S005"
+      },
+      {
+        "cluster": "1/S006",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 8,
+        "items": 0,
+        "matched": 0,
+        "paper": "S006"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 8,
+        "items": 0,
+        "matched": 0,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S008",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 6,
+        "items": 0,
+        "matched": 0,
+        "paper": "S008"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 6,
+        "items": 0,
+        "matched": 0,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S010",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 8,
+        "items": 0,
+        "matched": 0,
+        "paper": "S010"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S012",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 6,
+        "items": 0,
+        "matched": 0,
+        "paper": "S012"
+      },
+      {
+        "cluster": "1/S013",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 8,
+        "items": 0,
+        "matched": 0,
+        "paper": "S013"
+      },
+      {
+        "cluster": "1/S014",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 6,
+        "items": 0,
+        "matched": 0,
+        "paper": "S014"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 6,
+        "items": 0,
+        "matched": 0,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 8,
+        "items": 0,
+        "matched": 0,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S020",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "facts": 10,
+        "items": 0,
+        "matched": 0,
+        "paper": "S020"
+      },
+      {
+        "cluster": "1/S001",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 3,
+        "items": 3,
+        "matched": 3,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 1,
+        "matched": 1,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "facts": 3,
+        "items": 1,
+        "matched": 1,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S001",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 3,
+        "items": 3,
+        "matched": 3,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "facts": 3,
+        "items": 2,
+        "matched": 2,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S001",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S005",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S005"
+      },
+      {
+        "cluster": "1/S006",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S006"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S008",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S008"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S010",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S010"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S012",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S012"
+      },
+      {
+        "cluster": "1/S013",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S013"
+      },
+      {
+        "cluster": "1/S014",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S014"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S020",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S020"
+      },
+      {
+        "cluster": "1/S001",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S005",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S005"
+      },
+      {
+        "cluster": "1/S006",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 3,
+        "items": 2,
+        "matched": 2,
+        "paper": "S006"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 3,
+        "items": 0,
+        "matched": 0,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S008",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S008"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 1,
+        "matched": 1,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S010",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 3,
+        "items": 2,
+        "matched": 2,
+        "paper": "S010"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S012",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S012"
+      },
+      {
+        "cluster": "1/S013",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 3,
+        "items": 2,
+        "matched": 2,
+        "paper": "S013"
+      },
+      {
+        "cluster": "1/S014",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S014"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 2,
+        "items": 1,
+        "matched": 1,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 3,
+        "items": 1,
+        "matched": 1,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S020",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S020"
+      },
+      {
+        "cluster": "1/S001",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 2,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 2,
+        "items": 0,
+        "matched": 0,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S005",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S005"
+      },
+      {
+        "cluster": "1/S006",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 3,
+        "items": 2,
+        "matched": 2,
+        "paper": "S006"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 3,
+        "items": 0,
+        "matched": 0,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S008",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S008"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 2,
+        "items": 1,
+        "matched": 1,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S010",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 3,
+        "items": 2,
+        "matched": 2,
+        "paper": "S010"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S012",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S012"
+      },
+      {
+        "cluster": "1/S013",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 3,
+        "items": 2,
+        "matched": 2,
+        "paper": "S013"
+      },
+      {
+        "cluster": "1/S014",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S014"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 1,
+        "matched": 1,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 0,
+        "matched": 0,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 0,
+        "matched": 0,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 2,
+        "items": 1,
+        "matched": 0,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 3,
+        "items": 1,
+        "matched": 1,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S020",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "facts": 4,
+        "items": 2,
+        "matched": 2,
+        "paper": "S020"
+      },
+      {
+        "cluster": "1/S001",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 2,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S005",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 2,
+        "matched": 1,
+        "paper": "S005"
+      },
+      {
+        "cluster": "1/S006",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S006"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S008",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S008"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S010",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S010"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S012",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S012"
+      },
+      {
+        "cluster": "1/S013",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S013"
+      },
+      {
+        "cluster": "1/S014",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S014"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 0,
+        "matched": 0,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 0,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 2,
+        "matched": 1,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S020",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S020"
+      }
+    ],
+    "recall_scope": "called",
+    "rows": [
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_author_claim@1#be3c17081ff9",
+        "f1": 0.0,
+        "facts": 162,
+        "items": 0,
+        "level": "all",
+        "matched": 0,
+        "only": 0,
+        "only_matched": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.6364,
+        "facts": 30,
+        "items": 14,
+        "level": "all",
+        "matched": 14,
+        "only": 13,
+        "only_matched": 13,
+        "precision": 1.0,
+        "recall": 0.4667,
+        "span_accuracy": 1.0,
+        "span_hits": 14
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.6364,
+        "facts": 30,
+        "items": 14,
+        "level": "explicit",
+        "matched": 14,
+        "only": 13,
+        "only_matched": 13,
+        "precision": 1.0,
+        "recall": 0.4667,
+        "span_accuracy": 1.0,
+        "span_hits": 14
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.6364,
+        "facts": 30,
+        "items": 14,
+        "level": "all",
+        "matched": 14,
+        "only": 13,
+        "only_matched": 13,
+        "precision": 1.0,
+        "recall": 0.4667,
+        "span_accuracy": 1.0,
+        "span_hits": 14
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#45b3761c700e",
+        "f1": 0.6364,
+        "facts": 30,
+        "items": 14,
+        "level": "explicit",
+        "matched": 14,
+        "only": 13,
+        "only_matched": 13,
+        "precision": 1.0,
+        "recall": 0.4667,
+        "span_accuracy": 1.0,
+        "span_hits": 14
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "f1": 0.7937,
+        "facts": 38,
+        "items": 25,
+        "level": "all",
+        "matched": 25,
+        "only": 18,
+        "only_matched": 18,
+        "precision": 1.0,
+        "recall": 0.6579,
+        "span_accuracy": 1.0,
+        "span_hits": 25
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "f1": 0.7937,
+        "facts": 38,
+        "items": 25,
+        "level": "explicit",
+        "matched": 25,
+        "only": 18,
+        "only_matched": 18,
+        "precision": 1.0,
+        "recall": 0.6579,
+        "span_accuracy": 1.0,
+        "span_hits": 25
+      },
+      {
+        "associated": 25,
+        "association_accuracy": 1.0,
+        "evidence_type": "measurement",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "f1": 0.7937,
+        "facts": 38,
+        "items": 25,
+        "level": "all",
+        "matched": 25,
+        "only": 18,
+        "only_matched": 18,
+        "precision": 1.0,
+        "recall": 0.6579,
+        "span_accuracy": 1.0,
+        "span_hits": 25
+      },
+      {
+        "associated": 25,
+        "association_accuracy": 1.0,
+        "evidence_type": "measurement",
+        "extractor": "llm_measurement@1#02bd5a7ab104",
+        "f1": 0.7937,
+        "facts": 38,
+        "items": 25,
+        "level": "explicit",
+        "matched": 25,
+        "only": 18,
+        "only_matched": 18,
+        "precision": 1.0,
+        "recall": 0.6579,
+        "span_accuracy": 1.0,
+        "span_hits": 25
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 2,
+        "items": 2,
+        "level": "all",
+        "matched": 2,
+        "only": 2,
+        "only_matched": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 2,
+        "items": 2,
+        "level": "explicit",
+        "matched": 2,
+        "only": 2,
+        "only_matched": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 2,
+        "items": 2,
+        "level": "all",
+        "matched": 2,
+        "only": 2,
+        "only_matched": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "llm_metric@1#41e1e53a1fc4",
+        "f1": 1.0,
+        "facts": 2,
+        "items": 2,
+        "level": "explicit",
+        "matched": 2,
+        "only": 2,
+        "only_matched": 2,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 2
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 20,
+        "items": 20,
+        "level": "all",
+        "matched": 20,
+        "only": 20,
+        "only_matched": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 20
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 20,
+        "items": 20,
+        "level": "explicit",
+        "matched": 20,
+        "only": 20,
+        "only_matched": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 20
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 20,
+        "items": 20,
+        "level": "all",
+        "matched": 20,
+        "only": 20,
+        "only_matched": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 20
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "author_claim",
+        "extractor": "regex_author_claim@2#fd7877790c48",
+        "f1": 1.0,
+        "facts": 20,
+        "items": 20,
+        "level": "explicit",
+        "matched": 20,
+        "only": 20,
+        "only_matched": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 20
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.6292,
+        "facts": 61,
+        "items": 28,
+        "level": "all",
+        "matched": 28,
+        "only": 27,
+        "only_matched": 27,
+        "precision": 1.0,
+        "recall": 0.459,
+        "span_accuracy": 0.9643,
+        "span_hits": 27
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.6292,
+        "facts": 61,
+        "items": 28,
+        "level": "explicit",
+        "matched": 28,
+        "only": 27,
+        "only_matched": 27,
+        "precision": 1.0,
+        "recall": 0.459,
+        "span_accuracy": 0.9643,
+        "span_hits": 27
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.6292,
+        "facts": 61,
+        "items": 28,
+        "level": "all",
+        "matched": 28,
+        "only": 27,
+        "only_matched": 27,
+        "precision": 1.0,
+        "recall": 0.459,
+        "span_accuracy": 0.9643,
+        "span_hits": 27
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "regex_condition@2#0a5bf730763c",
+        "f1": 0.6292,
+        "facts": 61,
+        "items": 28,
+        "level": "explicit",
+        "matched": 28,
+        "only": 27,
+        "only_matched": 27,
+        "precision": 1.0,
+        "recall": 0.459,
+        "span_accuracy": 0.9643,
+        "span_hits": 27
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "f1": 0.5412,
+        "facts": 61,
+        "items": 24,
+        "level": "all",
+        "matched": 23,
+        "only": 17,
+        "only_matched": 16,
+        "precision": 0.9583,
+        "recall": 0.377,
+        "span_accuracy": 1.0,
+        "span_hits": 23
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "f1": 0.5412,
+        "facts": 61,
+        "items": 24,
+        "level": "explicit",
+        "matched": 23,
+        "only": 17,
+        "only_matched": 16,
+        "precision": 0.9583,
+        "recall": 0.377,
+        "span_accuracy": 1.0,
+        "span_hits": 23
+      },
+      {
+        "associated": 23,
+        "association_accuracy": 1.0,
+        "evidence_type": "measurement",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "f1": 0.5412,
+        "facts": 61,
+        "items": 24,
+        "level": "all",
+        "matched": 23,
+        "only": 17,
+        "only_matched": 16,
+        "precision": 0.9583,
+        "recall": 0.377,
+        "span_accuracy": 1.0,
+        "span_hits": 23
+      },
+      {
+        "associated": 23,
+        "association_accuracy": 1.0,
+        "evidence_type": "measurement",
+        "extractor": "regex_measurement@2#e2d17eb260ea",
+        "f1": 0.5412,
+        "facts": 61,
+        "items": 24,
+        "level": "explicit",
+        "matched": 23,
+        "only": 17,
+        "only_matched": 16,
+        "precision": 0.9583,
+        "recall": 0.377,
+        "span_accuracy": 1.0,
+        "span_hits": 23
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.8571,
+        "facts": 20,
+        "items": 22,
+        "level": "all",
+        "matched": 18,
+        "only": 22,
+        "only_matched": 18,
+        "precision": 0.8182,
+        "recall": 0.9,
+        "span_accuracy": 1.0,
+        "span_hits": 18
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.8571,
+        "facts": 20,
+        "items": 22,
+        "level": "explicit",
+        "matched": 18,
+        "only": 22,
+        "only_matched": 18,
+        "precision": 0.8182,
+        "recall": 0.9,
+        "span_accuracy": 1.0,
+        "span_hits": 18
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.8571,
+        "facts": 20,
+        "items": 22,
+        "level": "all",
+        "matched": 18,
+        "only": 22,
+        "only_matched": 18,
+        "precision": 0.8182,
+        "recall": 0.9,
+        "span_accuracy": 1.0,
+        "span_hits": 18
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "metric",
+        "extractor": "regex_metric@2#0affe2d9ce77",
+        "f1": 0.8571,
+        "facts": 20,
+        "items": 22,
+        "level": "explicit",
+        "matched": 18,
+        "only": 22,
+        "only_matched": 18,
+        "precision": 0.8182,
+        "recall": 0.9,
+        "span_accuracy": 1.0,
+        "span_hits": 18
+      }
+    ]
+  },
+  "funnel": {
+    "documents": 20,
+    "per_document": {
+      "calls": 7.2,
+      "input_tokens": 3187.3,
+      "model_calls": 2.95,
+      "output_tokens": 398.85,
+      "tokens": 3586.15
+    },
+    "rows": [
+      {
+        "calls": 8,
+        "document": "S001",
+        "expected_relevant": true,
+        "input_tokens": 4408,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 583,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 4991
+      },
+      {
+        "calls": 8,
+        "document": "S002",
+        "expected_relevant": true,
+        "input_tokens": 4620,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 518,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 5138
+      },
+      {
+        "calls": 8,
+        "document": "S003",
+        "expected_relevant": true,
+        "input_tokens": 5792,
+        "level": "explicit",
+        "model_calls": 5,
+        "output_tokens": 626,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 6418
+      },
+      {
+        "calls": 8,
+        "document": "S004",
+        "expected_relevant": true,
+        "input_tokens": 5855,
+        "level": "explicit",
+        "model_calls": 5,
+        "output_tokens": 738,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 6593
+      },
+      {
+        "calls": 6,
+        "document": "S005",
+        "expected_relevant": true,
+        "input_tokens": 845,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 84,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 929
+      },
+      {
+        "calls": 6,
+        "document": "S006",
+        "expected_relevant": true,
+        "input_tokens": 860,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 76,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 936
+      },
+      {
+        "calls": 8,
+        "document": "S007",
+        "expected_relevant": true,
+        "input_tokens": 4871,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 833,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 5704
+      },
+      {
+        "calls": 6,
+        "document": "S008",
+        "expected_relevant": true,
+        "input_tokens": 849,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 88,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 937
+      },
+      {
+        "calls": 8,
+        "document": "S009",
+        "expected_relevant": true,
+        "input_tokens": 4177,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 575,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 4752
+      },
+      {
+        "calls": 6,
+        "document": "S010",
+        "expected_relevant": true,
+        "input_tokens": 850,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 73,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 923
+      },
+      {
+        "calls": 8,
+        "document": "S011",
+        "expected_relevant": true,
+        "input_tokens": 4359,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 505,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 4864
+      },
+      {
+        "calls": 6,
+        "document": "S012",
+        "expected_relevant": true,
+        "input_tokens": 887,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 88,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 975
+      },
+      {
+        "calls": 6,
+        "document": "S013",
+        "expected_relevant": true,
+        "input_tokens": 802,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 67,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 869
+      },
+      {
+        "calls": 6,
+        "document": "S014",
+        "expected_relevant": true,
+        "input_tokens": 823,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 86,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 909
+      },
+      {
+        "calls": 8,
+        "document": "S015",
+        "expected_relevant": true,
+        "input_tokens": 4312,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 480,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 4792
+      },
+      {
+        "calls": 8,
+        "document": "S016",
+        "expected_relevant": true,
+        "input_tokens": 4687,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 597,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 5284
+      },
+      {
+        "calls": 8,
+        "document": "S017",
+        "expected_relevant": true,
+        "input_tokens": 4197,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 575,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 4772
+      },
+      {
+        "calls": 8,
+        "document": "S018",
+        "expected_relevant": true,
+        "input_tokens": 4804,
+        "level": "explicit",
+        "model_calls": 4,
+        "output_tokens": 669,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 5473
+      },
+      {
+        "calls": 8,
+        "document": "S019",
+        "expected_relevant": true,
+        "input_tokens": 4996,
+        "level": "explicit",
+        "model_calls": 5,
+        "output_tokens": 649,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "1",
+        "tokens": 5645
+      },
+      {
+        "calls": 6,
+        "document": "S020",
+        "expected_relevant": true,
+        "input_tokens": 752,
+        "level": "explicit",
+        "model_calls": 1,
+        "output_tokens": 67,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "0",
+        "tokens": 819
+      }
+    ],
+    "screen": {
+      "documents": 20,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "screened_out": [],
+      "screened_out_wrongly": [],
+      "tn": 0,
+      "tp": 20
+    },
+    "stop_positions": {
+      "0": 8,
+      "1": 12
+    },
+    "strategy": "gaps"
+  },
+  "integration": {
+    "rows": [
+      {
+        "association_accuracy": 1.0,
+        "condition_exact": 1.0,
+        "condition_role_accuracy": 1.0,
+        "level": "all",
+        "matched_measurements": 41,
+        "metric_accuracy": 1.0,
+        "metric_exact": 1.0,
+        "studies": 20,
+        "true_pair": 1.0
+      },
+      {
+        "association_accuracy": 1.0,
+        "condition_exact": 1.0,
+        "condition_role_accuracy": 1.0,
+        "level": "explicit",
+        "matched_measurements": 41,
+        "metric_accuracy": 1.0,
+        "metric_exact": 1.0,
+        "studies": 20,
+        "true_pair": 1.0
+      }
+    ],
+    "studies": [
+      {
+        "control": "m-01108a79feff2b42",
+        "level": "explicit",
+        "paper": "S001",
+        "study": "S001",
+        "treatment": "m-a93ba561b8ce809c",
+        "true_pair": true
+      },
+      {
+        "control": "m-d49e8758174a1377",
+        "level": "explicit",
+        "paper": "S002",
+        "study": "S002",
+        "treatment": "m-5e36779841588ee9",
+        "true_pair": true
+      },
+      {
+        "control": "m-96bc15d72dcda872",
+        "level": "explicit",
+        "paper": "S003",
+        "study": "S003",
+        "treatment": "m-4471c78474d91f1d",
+        "true_pair": true
+      },
+      {
+        "control": "m-85ab1e1ef4539232",
+        "level": "explicit",
+        "paper": "S004",
+        "study": "S004",
+        "treatment": "m-5b8c7b16ac3a2fc5",
+        "true_pair": true
+      },
+      {
+        "control": "m-ece26b3e52ad1616",
+        "level": "explicit",
+        "paper": "S005",
+        "study": "S005",
+        "treatment": "m-6938327d35c2af38",
+        "true_pair": true
+      },
+      {
+        "control": "m-3ba2cd80e5e35fc5",
+        "level": "explicit",
+        "paper": "S006",
+        "study": "S006",
+        "treatment": "m-e574e215e8054592",
+        "true_pair": true
+      },
+      {
+        "control": "m-c7b841b4272be523",
+        "level": "explicit",
+        "paper": "S007",
+        "study": "S007",
+        "treatment": "m-152626f6af1db122",
+        "true_pair": true
+      },
+      {
+        "control": "m-02e356c1fcb5afaa",
+        "level": "explicit",
+        "paper": "S008",
+        "study": "S008",
+        "treatment": "m-bdee382ca2811571",
+        "true_pair": true
+      },
+      {
+        "control": "m-b285626725cd1f78",
+        "level": "explicit",
+        "paper": "S009",
+        "study": "S009",
+        "treatment": "m-549e4baf73256310",
+        "true_pair": true
+      },
+      {
+        "control": "m-76f64a612bee9464",
+        "level": "explicit",
+        "paper": "S010",
+        "study": "S010",
+        "treatment": "m-20a1646e572369ea",
+        "true_pair": true
+      },
+      {
+        "control": "m-1ddcfc0982c6fefb",
+        "level": "explicit",
+        "paper": "S011",
+        "study": "S011",
+        "treatment": "m-4289dc2e62bb205f",
+        "true_pair": true
+      },
+      {
+        "control": "m-eccf5e32650ff017",
+        "level": "explicit",
+        "paper": "S012",
+        "study": "S012",
+        "treatment": "m-1a6d246bb1298730",
+        "true_pair": true
+      },
+      {
+        "control": "m-9cb04c29e04217ee",
+        "level": "explicit",
+        "paper": "S013",
+        "study": "S013",
+        "treatment": "m-4530979b992f61cb",
+        "true_pair": true
+      },
+      {
+        "control": "m-8998c473e771101b",
+        "level": "explicit",
+        "paper": "S014",
+        "study": "S014",
+        "treatment": "m-58efe308d90dcec1",
+        "true_pair": true
+      },
+      {
+        "control": "m-5f2ea420acdbc8fa",
+        "level": "explicit",
+        "paper": "S015",
+        "study": "S015",
+        "treatment": "m-07c2f6ffe9a563aa",
+        "true_pair": true
+      },
+      {
+        "control": "m-7370b45e8f3ebfe0",
+        "level": "explicit",
+        "paper": "S016",
+        "study": "S016",
+        "treatment": "m-fa76c382b477fba8",
+        "true_pair": true
+      },
+      {
+        "control": "m-d4d39a8522c3c19a",
+        "level": "explicit",
+        "paper": "S017",
+        "study": "S017",
+        "treatment": "m-3dcee0e47b37b68c",
+        "true_pair": true
+      },
+      {
+        "control": "m-4f7fd31cfa2c2d24",
+        "level": "explicit",
+        "paper": "S018",
+        "study": "S018",
+        "treatment": "m-b1c03f943625977e",
+        "true_pair": true
+      },
+      {
+        "control": "m-b3fbacd89660a8f8",
+        "level": "explicit",
+        "paper": "S019",
+        "study": "S019",
+        "treatment": "m-a89ddc3cc4ead7a9",
+        "true_pair": true
+      },
+      {
+        "control": "m-beec26b8374b51a3",
+        "level": "explicit",
+        "paper": "S020",
+        "study": "S020",
+        "treatment": "m-88cb493deb4886a4",
+        "true_pair": true
+      }
+    ]
+  },
+  "intervals": {
+    "extraction": [
+      {
+        "evidence_type": "condition",
+        "high": 0.8736,
+        "low": 0.7407,
+        "method": "BCa",
+        "n_rows": 20,
+        "point": 0.8039,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "metric",
+        "high": 0.9756,
+        "low": 0.8163,
+        "method": "BCa",
+        "n_rows": 20,
+        "point": 0.9091,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "measurement",
+        "high": 0.866,
+        "low": 0.7407,
+        "method": "BCa",
+        "n_rows": 20,
+        "point": 0.7961,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "author_claim",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 1.0,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "all",
+        "high": 0.8986,
+        "low": 0.7961,
+        "method": "BCa",
+        "n_rows": 20,
+        "point": 0.8443,
+        "unit": "row"
+      }
+    ],
+    "paired": [
+      {
+        "excluded_ids": [],
+        "high": 0.85,
+        "low": 0.4,
+        "method": "BCa",
+        "n_rows": 20,
+        "point": 0.65,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "excluded_ids": [],
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 0.0,
+        "system": "agent-baseline",
+        "unit": "row"
+      }
+    ],
+    "synthesis": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 1.0,
+        "system": "evidence-engine",
+        "unit": "row"
+      },
+      {
+        "high": 0.6,
+        "low": 0.15,
+        "method": "BCa",
+        "n_rows": 20,
+        "point": 0.35,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 1.0,
+        "system": "agent-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "levels": [
+    "explicit"
+  ],
+  "locate": {
+    "outside": [],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "inside": 417,
+        "level": "all",
+        "placements": 417,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 417,
+        "level": "explicit",
+        "placements": 417,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 40,
+        "level": "all",
+        "placements": 40,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 40,
+        "level": "explicit",
+        "placements": 40,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 172,
+        "level": "all",
+        "placements": 172,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 172,
+        "level": "explicit",
+        "placements": 172,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 61,
+        "level": "all",
+        "placements": 61,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 61,
+        "level": "explicit",
+        "placements": 61,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 144,
+        "level": "all",
+        "placements": 144,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 144,
+        "level": "explicit",
+        "placements": 144,
+        "recall": 1.0
+      }
+    ]
+  },
+  "protocol": {
+    "id": "rag-factuality",
+    "lexical_miss": "reject",
+    "sha256": "6b360bca67ce74025cea4ee857de1a7089c3ecc110cbfc2f8e4da1a32b1751d9"
+  },
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "run_id": "rag-claude-s1-explicit",
+  "stability": null,
+  "synthesis": [
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 4
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 4
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 12
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": {
+        "counts": {
+          "expected": {
+            "contradicting": 4,
+            "duplicates": 0,
+            "neutral": 4,
+            "supporting": 12,
+            "undetermined": 0
+          },
+          "given": {
+            "contradicting": 4,
+            "duplicates": 0,
+            "neutral": 4,
+            "supporting": 12,
+            "undetermined": 0
+          }
+        },
+        "counts_correct": true,
+        "duplicates": {
+          "expected": {},
+          "given": {}
+        },
+        "duplicates_correct": true,
+        "rows": [
+          {
+            "expected": [],
+            "flag": "claim_disagrees",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "duplicate",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          },
+          {
+            "expected": [],
+            "flag": "large_effect",
+            "fn": 0,
+            "fp": 0,
+            "given": [],
+            "precision": null,
+            "recall": null,
+            "tp": 0
+          }
+        ]
+      },
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 20,
+          "direction_accuracy": 1.0,
+          "level": "all",
+          "overlap": null,
+          "studies": 20,
+          "traceability": null
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 20,
+          "direction_accuracy": 1.0,
+          "level": "explicit",
+          "overlap": null,
+          "studies": 20,
+          "traceability": null
+        }
+      ],
+      "studies": [
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S006",
+          "study": "S006"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S010",
+          "study": "S010"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S011",
+          "study": "S011"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S012",
+          "study": "S012"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S015",
+          "study": "S015"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S017",
+          "study": "S017"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S018",
+          "study": "S018"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S020",
+          "study": "S020"
+        }
+      ],
+      "system": "evidence-engine"
+    },
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 1
+        },
+        {
+          "expected": "contradicts",
+          "given": "undetermined",
+          "n": 3
+        },
+        {
+          "expected": "neutral",
+          "given": "undetermined",
+          "n": 4
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 6
+        },
+        {
+          "expected": "supports",
+          "given": "undetermined",
+          "n": 6
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": 7,
+          "completeness": 0.35,
+          "determined": 20,
+          "direction_accuracy": 0.35,
+          "level": "all",
+          "overlap": 1.0,
+          "studies": 20,
+          "traceability": 1.0
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 7,
+          "completeness": 0.35,
+          "determined": 20,
+          "direction_accuracy": 0.35,
+          "level": "explicit",
+          "overlap": 1.0,
+          "studies": 20,
+          "traceability": 1.0
+        }
+      ],
+      "studies": [
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S006",
+          "study": "S006"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S010",
+          "study": "S010"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S011",
+          "study": "S011"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S012",
+          "study": "S012"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S015",
+          "study": "S015"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S017",
+          "study": "S017"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S018",
+          "study": "S018"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "explicit",
+          "paper": "S020",
+          "study": "S020"
+        }
+      ],
+      "system": "rag-baseline"
+    },
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 4
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 4
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 12
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 20,
+          "direction_accuracy": 1.0,
+          "level": "all",
+          "overlap": null,
+          "studies": 20,
+          "traceability": null
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": null,
+          "completeness": 1.0,
+          "determined": 20,
+          "direction_accuracy": 1.0,
+          "level": "explicit",
+          "overlap": null,
+          "studies": 20,
+          "traceability": null
+        }
+      ],
+      "studies": [
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S006",
+          "study": "S006"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S010",
+          "study": "S010"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S011",
+          "study": "S011"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S012",
+          "study": "S012"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "explicit",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S015",
+          "study": "S015"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S017",
+          "study": "S017"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S018",
+          "study": "S018"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "explicit",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "explicit",
+          "paper": "S020",
+          "study": "S020"
+        }
+      ],
+      "system": "agent-baseline"
+    }
+  ]
+}

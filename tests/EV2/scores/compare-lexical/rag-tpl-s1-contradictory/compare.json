@@ -1,0 +1,173 @@
+{
+  "intervals": [
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "diagnostic": false,
+      "direction_accuracy": {
+        "high": 0.9,
+        "low": 0.5,
+        "method": "BCa",
+        "n_clusters": null,
+        "n_rows": 20,
+        "point": 0.75,
+        "unit": "row"
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.8506,
+        "low": 0.7,
+        "method": "BCa",
+        "n_clusters": null,
+        "n_rows": 20,
+        "point": 0.793,
+        "unit": "row"
+      },
+      "level": "contradictory",
+      "lexical_miss": "escalate",
+      "protocol": "bfc107852891",
+      "run_id": "rag-tpl-s1-contradictory-escalate",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "diagnostic": false,
+      "direction_accuracy": {
+        "high": 0.95,
+        "low": 0.55,
+        "method": "BCa",
+        "n_clusters": null,
+        "n_rows": 20,
+        "point": 0.8,
+        "unit": "row"
+      },
+      "engine_minus_system": null,
+      "extraction_f1": {
+        "high": 0.8561,
+        "low": 0.7277,
+        "method": "BCa",
+        "n_clusters": null,
+        "n_rows": 20,
+        "point": 0.8042,
+        "unit": "row"
+      },
+      "level": "contradictory",
+      "lexical_miss": "reject",
+      "protocol": "6b360bca67ce",
+      "run_id": "rag-tpl-s1-contradictory",
+      "strategy": "gaps",
+      "system": "evidence-engine"
+    }
+  ],
+  "matched": [],
+  "matched_extraction": [],
+  "notes": [],
+  "rows": [
+    {
+      "accuracy_answered": 0.8824,
+      "association_accuracy": 0.973,
+      "calls_per_document": 6.65,
+      "completeness": 0.85,
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "diagnostic": false,
+      "direction_accuracy": 0.75,
+      "extraction_f1": 0.793,
+      "label_correct": true,
+      "level": "contradictory",
+      "lexical_miss": "escalate",
+      "overlap": null,
+      "protocol": "bfc107852891",
+      "run_id": "rag-tpl-s1-contradictory-escalate",
+      "screen_precision": 1.0,
+      "screen_recall": 0.9,
+      "span_accuracy": 1.0,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": 3223.75,
+      "traceability": null,
+      "true_pair": 0.7
+    },
+    {
+      "accuracy_answered": 0.8889,
+      "association_accuracy": 1.0,
+      "calls_per_document": 6.95,
+      "completeness": 0.9,
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "diagnostic": false,
+      "direction_accuracy": 0.8,
+      "extraction_f1": 0.8042,
+      "label_correct": true,
+      "level": "contradictory",
+      "lexical_miss": "reject",
+      "overlap": null,
+      "protocol": "6b360bca67ce",
+      "run_id": "rag-tpl-s1-contradictory",
+      "screen_precision": 1.0,
+      "screen_recall": 0.95,
+      "span_accuracy": 1.0,
+      "strategy": "gaps",
+      "system": "evidence-engine",
+      "tokens_per_document": 3384.75,
+      "traceability": null,
+      "true_pair": 0.8
+    }
+  ],
+  "selection": [
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "failed_checks": "none",
+      "level": "explicit",
+      "mean_attempts": 1.0,
+      "passed": 20,
+      "records": 20,
+      "requested": 20,
+      "retained": 20
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "failed_checks": "none",
+      "level": "paraphrased",
+      "mean_attempts": 1.0,
+      "passed": 20,
+      "records": 20,
+      "requested": 20,
+      "retained": 20
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "failed_checks": "none",
+      "level": "distributed",
+      "mean_attempts": 1.0,
+      "passed": 20,
+      "records": 20,
+      "requested": 20,
+      "retained": 20
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "failed_checks": "none",
+      "level": "complex",
+      "mean_attempts": 1.0,
+      "passed": 20,
+      "records": 20,
+      "requested": 20,
+      "retained": 20
+    },
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "failed_checks": "none",
+      "level": "contradictory",
+      "mean_attempts": 1.0,
+      "passed": 20,
+      "records": 20,
+      "requested": 20,
+      "retained": 20
+    }
+  ],
+  "selection_excluded": [
+    {
+      "corpus_id": "rag-tpl-s1-56b0bc02",
+      "excluded": {}
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 20,
+    "exit_status": "submitted",
+    "model_calls": 20,
+    "run_id": "rag-claude-s1-contradictory",
+    "steps": 20,
+    "tokens": 147253
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "Each of the 20 corpus papers is a short controlled study comparing a retrieval-augmented answering condition against a parametric-only condition on a single benchmark (e.g. LawFactQA, CodeRAG-Bench, MedRAG-Bench), measured with a factual-accuracy or hallucination metric. They split into two groups with opposite stated conclusions: 8 papers (S003, S004, S007, S009, S012, S013, S014, S019) conclude retrieval augmentation improves factual accuracy, while 12 papers (S001, S002, S005, S006, S008, S010, S011, S015, S016, S017, S018, S020) conclude it does not. The corpus as a whole is therefore mixed/inconclusive. One internal inconsistency: S001's abstract states 'Retrieval augmentation does not measurably reduce hallucinated content' but its results table shows the retrieval-augmented model at 17.8% hallucinated content versus 29.5% for the parametric-only model. Recorded claims: one per paper quoting its abstract conclusion sentence; S00N maps to claim-00000N (S001->claim-000001 ... S020->claim-000020).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "No - retrieval-augmented generation does not improve the factual accuracy of LLM-generated answers",
+          "papers": [
+            "S001",
+            "S002",
+            "S005",
+            "S006",
+            "S008",
+            "S010",
+            "S011",
+            "S015",
+            "S016",
+            "S017",
+            "S018",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "RAG does not improve factual accuracy",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S001"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Yes - retrieval-augmented generation improves the factual accuracy of LLM-generated answers",
+          "papers": [
+            "S003",
+            "S004",
+            "S007",
+            "S009",
+            "S012",
+            "S013",
+            "S014",
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "RAG improves factual accuracy",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S003"
+          }
+        ],
+        "id": "r2"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"No - retrieval-augmented generation does not improve the factual accuracy of LLM-generated answers\", \"papers\": [\"S001\", \"S002\", \"S005\", \"S006\", \"S008\", \"S010\", \"S011\", \"S015\", \"S016\", \"S017\", \"S018\", \"S020\"]}\n  fact: S001 | concludes | RAG does not improve factual accuracy\nRow r2: {\"conclusion\": \"Yes - retrieval-augmented generation improves the factual accuracy of LLM-generated answers\", \"papers\": [\"S003\", \"S004\", \"S007\", \"S009\", \"S012\", \"S013\", \"S014\", \"S019\"]}\n  fact: S003 | concludes | RAG improves factual accuracy\nNotes: Each of the 20 corpus papers is a short controlled study comparing a retrieval-augmented answering condition against a parametric-only condition on a single benchmark (e.g. LawFactQA, CodeRAG-Bench, MedRAG-Bench), measured with a factual-accuracy or hallucination metric. They split into two groups with opposite stated conclusions: 8 papers (S003, S004, S007, S009, S012, S013, S014, S019) conclude retrieval augmentation improves factual accuracy, while 12 papers (S001, S002, S005, S006, S008, S010, S011, S015, S016, S017, S018, S020) conclude it does not. The corpus as a whole is therefore mixed/inconclusive. One internal inconsistency: S001's abstract states 'Retrieval augmentation does not measurably reduce hallucinated content' but its results table shows the retrieval-augmented model at 17.8% hallucinated content versus 29.5% for the parametric-only model. Recorded claims: one per paper quoting its abstract conclusion sentence; S00N maps to claim-00000N (S001->claim-000001 ... S020->claim-000020).",
+  "answer_text": "The corpus presents mixed evidence regarding whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers. \n\nAccording to the provided answer, 8 papers (S003, S004, S007, S009, S012, S013, S014, S019) conclude that RAG improves factual accuracy. Conversely, 12 papers (S001, S002, S005, S006, S008, S010, S011, S015, S016, S017, S018, S020) conclude that RAG does not improve factual accuracy. \n\nThe notes indicate that these are short controlled studies comparing retrieval-augmented conditions against parametric-only conditions on various benchmarks. The overall conclusion from the corpus is described as mixed or inconclusive. Additionally, an internal inconsistency is noted in S001, where the abstract states no measurable reduction in hallucination, but the results table shows a lower hallucination rate for the retrieval-augmented model (17.8%) compared to the parametric-only model (29.5%).",
+  "contradicting": [
+    "S001",
+    "S002",
+    "S005",
+    "S006",
+    "S008",
+    "S010",
+    "S011",
+    "S015",
+    "S016",
+    "S017",
+    "S018",
+    "S020"
+  ],
+  "corpus_id": "rag-claude-s1-e4e9d603",
+  "counts": {
+    "contradicting": 12,
+    "neutral": 0,
+    "supporting": 8,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "749329d92f6b880e9a7dc32d27a2a2bdb5e160c3ac8c297d2d17f116df599cac",
+    "input_tokens": 936,
+    "key": "f10c7f8efc446fab9ab86508fa950304c0c58e0973e525d553c3cfd25f4b4e88",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 862,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "contradicts",
+      "document": "S001"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S002"
+    },
+    {
+      "direction": "supports",
+      "document": "S003"
+    },
+    {
+      "direction": "supports",
+      "document": "S004"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S005"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S006"
+    },
+    {
+      "direction": "supports",
+      "document": "S007"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S008"
+    },
+    {
+      "direction": "supports",
+      "document": "S009"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S010"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S011"
+    },
+    {
+      "direction": "supports",
+      "document": "S012"
+    },
+    {
+      "direction": "supports",
+      "document": "S013"
+    },
+    {
+      "direction": "supports",
+      "document": "S014"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S015"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S016"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S017"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S018"
+    },
+    {
+      "direction": "supports",
+      "document": "S019"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S003",
+    "S004",
+    "S007",
+    "S009",
+    "S012",
+    "S013",
+    "S014",
+    "S019"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,151 @@
+{
+  "answer_text": "The evidence is mixed and depends on the specific dataset and system configuration. In some cases, retrieval-augmented generation (RAG) improves factual accuracy by reducing hallucinations, while in others it does not or even worsens them.\n\n1. **Improvements in Factual Accuracy:**\n   - On the **OpenFactQA** dataset, the \"RAG without reranking\" system reduced the hallucination frequency to **13.2%**, compared to **41.1%** for the vanilla LLM [S001, 1216-2564].\n   - On the **LawFactQA** dataset, the \"retrieval-augmented generator\" reduced the hallucination rate to **11.9%**, compared to **25.7%** for the parametric-only model [S003, 1788-3117].\n   - On the **BioClaimQA** dataset, the \"retrieval-augmented generator\" scored **7.7 percentage points lower** in hallucination rate than the parametric-only model (which was 30.1%), implying a hallucination rate of approximately **22.4%** [S003, 1788-3117].\n   - The abstracts for [S001] and [S003] explicitly state that retrieval augmentation \"clearly reduces hallucinated content\" in their respective contexts [S001, 0-1216; S003, 0-909].\n\n2. **No Improvement or Worsened Accuracy:**\n   - On the **MedAnswerSet** dataset, the \"retrieve-then-read model\" had a hallucination frequency that was **8.5 percentage points lower** than the vanilla LLM (29.9%), suggesting an improvement to approximately **21.4%** [S001, 1216-2564]. However, the \"RAG without reranking\" system on MedAnswerSet had a hallucination frequency of **47.2%**, which is significantly **higher** than the vanilla LLM's 29.9% [S001, 1216-2564].\n   - The abstract for [S002] states that \"Retrieval augmentation increases hallucinated content in the answers\" for the HistoryQuest and PopCultureQA datasets, although specific numerical values for the RAG condition are not provided in the excerpt [S002, 0-830].\n\nIn summary, RAG improves factual accuracy (measured by reduced hallucination rates) on OpenFactQA, LawFactQA, and BioClaimQA, but results are inconsistent on MedAnswerSet (where one RAG variant performed worse than the baseline) and potentially negative on HistoryQuest/PopCultureQA.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 2564,
+      "start": 1216
+    },
+    {
+      "document": "S003",
+      "end": 3117,
+      "start": 1788
+    },
+    {
+      "document": "S001",
+      "end": 1216,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 909,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 830,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S002"
+  ],
+  "corpus_id": "rag-claude-pilot-d04573ee",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 0,
+    "supporting": 2,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence is mixed and depends on the specific dataset and system configuration. In some cases, retrieval-augmented generation (RAG) improves factual accuracy by reducing hallucinations, while in others it does not or even worsens them.\n\n1. **Improvements in Factual Accuracy:**\n   - On the **OpenFactQA** dataset, the \"RAG without reranking\" system reduced the hallucination frequency to **13.2%**, compared to **41.1%** for the vanilla LLM [S001, 1216-2564].\n   - On the **LawFactQA** dataset, the \"retrieval-augmented generator\" reduced the hallucination rate to **11.9%**, compared to **25.7%** for the parametric-only model [S003, 1788-3117].\n   - On the **BioClaimQA** dataset, the \"retrieval-augmented generator\" scored **7.7 percentage points lower** in hallucination rate than the parametric-only model (which was 30.1%), implying a hallucination rate of approximately **22.4%** [S003, 1788-3117].\n   - The abstracts for [S001] and [S003] explicitly state that retrieval augmentation \"clearly reduces hallucinated content\" in their respective contexts [S001, 0-1216; S003, 0-909].\n\n2. **No Improvement or Worsened Accuracy:**\n   - On the **MedAnswerSet** dataset, the \"retrieve-then-read model\" had a hallucination frequency that was **8.5 percentage points lower** than the vanilla LLM (29.9%), suggesting an improvement to approximately **21.4%** [S001, 1216-2564]. However, the \"RAG without reranking\" system on MedAnswerSet had a hallucination frequency of **47.2%**, which is significantly **higher** than the vanilla LLM's 29.9% [S001, 1216-2564].\n   - The abstract for [S002] states that \"Retrieval augmentation increases hallucinated content in the answers\" for the HistoryQuest and PopCultureQA datasets, although specific numerical values for the RAG condition are not provided in the excerpt [S002, 0-830].\n\nIn summary, RAG improves factual accuracy (measured by reduced hallucination rates) on OpenFactQA, LawFactQA, and BioClaimQA, but results are inconsistent on MedAnswerSet (where one RAG variant performed worse than the baseline) and potentially negative on HistoryQuest/PopCultureQA.",
+  "mapping_call": {
+    "input_sha256": "8d252256dfc330418e78b7bb7134660324b2efc89ab3afc7675fc5b4b2d14fab",
+    "input_tokens": 998,
+    "key": "0919ffa908ba69eff59b5c5dfe75552d5adcbc96af11e7776fcc544a986f9d2e",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 690,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "15732f8c317ea21efda7019c80e524441be058159753396c541b1d1df50dc3c9",
+    "input_tokens": 2127,
+    "key": "8bc47d73fbb17f222c471337605b1b450503ed5af9b993b827df0037521c24af",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 819,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2564,
+      "score": 4.710668,
+      "start": 1216
+    },
+    {
+      "document": "S003",
+      "end": 3117,
+      "score": 3.730197,
+      "start": 1788
+    },
+    {
+      "document": "S001",
+      "end": 3677,
+      "score": 3.218724,
+      "start": 2564
+    },
+    {
+      "document": "S003",
+      "end": 1788,
+      "score": 3.059421,
+      "start": 909
+    },
+    {
+      "document": "S001",
+      "end": 1216,
+      "score": 1.885439,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1786,
+      "score": 1.719423,
+      "start": 830
+    },
+    {
+      "document": "S002",
+      "end": 830,
+      "score": 1.628611,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 909,
+      "score": 1.160866,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S002"
+    },
+    {
+      "direction": "supports",
+      "document": "S003"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S003"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

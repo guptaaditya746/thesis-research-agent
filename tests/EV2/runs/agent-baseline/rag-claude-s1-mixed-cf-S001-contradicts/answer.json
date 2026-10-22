@@ -1,0 +1,524 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 41,
+    "exit_status": "submitted",
+    "model_calls": 50,
+    "run_id": "rag-claude-s1-mixed-cf-S001-contradicts",
+    "steps": 50,
+    "tokens": 761003
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "All 20 corpus papers (S001-S020) directly compare a retrieval-augmented generation condition against a no-retrieval/closed-book condition on a factual benchmark and state a conclusion about whether retrieval improves factual accuracy. The papers disagree, so the answer to the question is mixed/conditional: RAG does not universally improve factual accuracy; its effect depends on the model, benchmark and query type. Distribution: 7 papers find RAG improves accuracy (S002, S006, S008, S011, S016, S017, S018); 8 find no measurable change (S003, S004, S005, S007, S009, S015, S019, S020); 4 find RAG decreases accuracy (S001, S012, S013, S014). Note on internal inconsistencies in two papers: S020's own results table shows RAG 64.6% vs no-retrieval 52.3%, yet its abstract/conclusion states no measurable improvement; S009's table shows lower RAG accuracy on both datasets, yet its conclusion states no measurable improvement. In both cases the paper's own stated conclusion was used for classification. Claims recorded: claim-000001 through claim-000041.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Retrieval-augmented generation improves the factual accuracy of LLM-generated answers.",
+          "papers": [
+            "S002",
+            "S006",
+            "S008",
+            "S011",
+            "S016",
+            "S017",
+            "S018"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "retrieval augmentation makes the generated answers clearly more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "0.505",
+            "origin": "research",
+            "p": "reports closed-book factual accuracy (LawFactQA)",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "0.571 (571/1000)",
+            "origin": "research",
+            "p": "reports retrieval-augmented factual accuracy (LawFactQA)",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "retrieval augmentation makes the generated answers clearly more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "54.3%",
+            "origin": "research",
+            "p": "reports closed-book fact-level accuracy (TriviaCheck)",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "67.6%",
+            "origin": "research",
+            "p": "reports retrieval-augmented fact-level accuracy (TriviaCheck)",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "retrieval augmentation clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "20.2%",
+            "origin": "research",
+            "p": "reports closed-book hallucination rate (SciFactBench)",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "6.3%",
+            "origin": "research",
+            "p": "reports RAG hallucination rate (SciFactBench)",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "retrieval augmentation reduces the hallucination rate",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S006"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "21.5%",
+            "origin": "research",
+            "p": "reports vanilla LLM hallucination rate (PopCultureQA)",
+            "s": "S006"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "18.3%",
+            "origin": "research",
+            "p": "reports RAG hallucination rate (PopCultureQA)",
+            "s": "S006"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "retrieval augmentation clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S016"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "10.3%",
+            "origin": "research",
+            "p": "reports no-retrieval hallucination rate (HistoryQuest)",
+            "s": "S016"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "5.1%",
+            "origin": "research",
+            "p": "reports RAG hallucination rate (HistoryQuest)",
+            "s": "S016"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "retrieval augmentation clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "0.392 (392/1000)",
+            "origin": "research",
+            "p": "reports LM-alone hallucination rate (PopCultureQA)",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "0.314 (314/1000)",
+            "origin": "research",
+            "p": "reports RAG hallucination rate (PopCultureQA)",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "retrieval augmentation clearly reduces hallucinated content",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S018"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "20.8%",
+            "origin": "research",
+            "p": "reports closed-book hallucination rate (PopCultureQA)",
+            "s": "S018"
+          },
+          {
+            "claims": [],
+            "id": "f21",
+            "o": "16.3%",
+            "origin": "research",
+            "p": "reports RAG hallucination rate (PopCultureQA)",
+            "s": "S018"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Retrieval-augmented generation does not measurably change the factual accuracy of LLM-generated answers.",
+          "papers": [
+            "S003",
+            "S004",
+            "S005",
+            "S007",
+            "S009",
+            "S015",
+            "S019",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f22",
+            "o": "retrieval augmentation does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f23",
+            "o": "retrieval augmentation does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S004"
+          },
+          {
+            "claims": [],
+            "id": "f24",
+            "o": "retrieval augmentation does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S005"
+          },
+          {
+            "claims": [],
+            "id": "f25",
+            "o": "retrieval augmentation does not measurably reduce hallucinated content",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f26",
+            "o": "retrieval augmentation does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S009"
+          },
+          {
+            "claims": [],
+            "id": "f27",
+            "o": "retrieval augmentation does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S015"
+          },
+          {
+            "claims": [],
+            "id": "f28",
+            "o": "retrieval augmentation does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S019"
+          },
+          {
+            "claims": [],
+            "id": "f29",
+            "o": "retrieval augmentation does not make the answers measurably more accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S020"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "Retrieval-augmented generation decreases the factual accuracy of LLM-generated answers.",
+          "papers": [
+            "S001",
+            "S012",
+            "S013",
+            "S014"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f30",
+            "o": "retrieval augmentation increases hallucinated content in the answers",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f31",
+            "o": "16.8%",
+            "origin": "research",
+            "p": "reports closed-book hallucination rate (LawFactQA)",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f32",
+            "o": "20.2%",
+            "origin": "research",
+            "p": "reports RAG hallucination rate (LawFactQA)",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f33",
+            "o": "retrieval augmentation increases hallucinated content in the answers",
+            "origin": "research",
+            "p": "states RAG effect on hallucination",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f34",
+            "o": "0.193 (19.3%)",
+            "origin": "research",
+            "p": "reports closed-book hallucination rate (NewsTruthQA)",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f35",
+            "o": "29.2%",
+            "origin": "research",
+            "p": "reports RAG hallucination rate (NewsTruthQA)",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f36",
+            "o": "retrieval augmentation makes the generated answers less accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f37",
+            "o": "47.5%",
+            "origin": "research",
+            "p": "reports closed-book answer accuracy (PopCultureQA)",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f38",
+            "o": "40.3%",
+            "origin": "research",
+            "p": "reports RAG answer accuracy (PopCultureQA)",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f39",
+            "o": "retrieval augmentation makes the generated answers less accurate",
+            "origin": "research",
+            "p": "states RAG effect on factual accuracy",
+            "s": "S014"
+          },
+          {
+            "claims": [],
+            "id": "f40",
+            "o": "RAG 7.1pp lower than closed-book",
+            "origin": "research",
+            "p": "reports RAG vs closed-book gap (BioClaimQA)",
+            "s": "S014"
+          }
+        ],
+        "id": "r3"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Retrieval-augmented generation improves the factual accuracy of LLM-generated answers.\", \"papers\": [\"S002\", \"S006\", \"S008\", \"S011\", \"S016\", \"S017\", \"S018\"]}\n  fact: S002 | states RAG effect on factual accuracy | retrieval augmentation makes the generated answers clearly more accurate\n  fact: S002 | reports closed-book factual accuracy (LawFactQA) | 0.505\n  fact: S002 | reports retrieval-augmented factual accuracy (LawFactQA) | 0.571 (571/1000)\n  fact: S011 | states RAG effect on factual accuracy | retrieval augmentation makes the generated answers clearly more accurate\n  fact: S011 | reports closed-book fact-level accuracy (TriviaCheck) | 54.3%\n  fact: S011 | reports retrieval-augmented fact-level accuracy (TriviaCheck) | 67.6%\n  fact: S008 | states RAG effect on hallucination | retrieval augmentation clearly reduces hallucinated content\n  fact: S008 | reports closed-book hallucination rate (SciFactBench) | 20.2%\n  fact: S008 | reports RAG hallucination rate (SciFactBench) | 6.3%\n  fact: S006 | states RAG effect on hallucination | retrieval augmentation reduces the hallucination rate\n  fact: S006 | reports vanilla LLM hallucination rate (PopCultureQA) | 21.5%\n  fact: S006 | reports RAG hallucination rate (PopCultureQA) | 18.3%\n  fact: S016 | states RAG effect on hallucination | retrieval augmentation clearly reduces hallucinated content\n  fact: S016 | reports no-retrieval hallucination rate (HistoryQuest) | 10.3%\n  fact: S016 | reports RAG hallucination rate (HistoryQuest) | 5.1%\n  fact: S017 | states RAG effect on hallucination | retrieval augmentation clearly reduces hallucinated content\n  fact: S017 | reports LM-alone hallucination rate (PopCultureQA) | 0.392 (392/1000)\n  fact: S017 | reports RAG hallucination rate (PopCultureQA) | 0.314 (314/1000)\n  fact: S018 | states RAG effect on hallucination | retrieval augmentation clearly reduces hallucinated content\n  fact: S018 | reports closed-book hallucination rate (PopCultureQA) | 20.8%\n  fact: S018 | reports RAG hallucination rate (PopCultureQA) | 16.3%\nRow r2: {\"conclusion\": \"Retrieval-augmented generation does not measurably change the factual accuracy of LLM-generated answers.\", \"papers\": [\"S003\", \"S004\", \"S005\", \"S007\", \"S009\", \"S015\", \"S019\", \"S020\"]}\n  fact: S003 | states RAG effect on factual accuracy | retrieval augmentation does not make the answers measurably more accurate\n  fact: S004 | states RAG effect on factual accuracy | retrieval augmentation does not make the answers measurably more accurate\n  fact: S005 | states RAG effect on factual accuracy | retrieval augmentation does not make the answers measurably more accurate\n  fact: S007 | states RAG effect on hallucination | retrieval augmentation does not measurably reduce hallucinated content\n  fact: S009 | states RAG effect on factual accuracy | retrieval augmentation does not make the answers measurably more accurate\n  fact: S015 | states RAG effect on factual accuracy | retrieval augmentation does not make the answers measurably more accurate\n  fact: S019 | states RAG effect on factual accuracy | retrieval augmentation does not make the answers measurably more accurate\n  fact: S020 | states RAG effect on factual accuracy | retrieval augmentation does not make the answers measurably more accurate\nRow r3: {\"conclusion\": \"Retrieval-augmented generation decreases the factual accuracy of LLM-generated answers.\", \"papers\": [\"S001\", \"S012\", \"S013\", \"S014\"]}\n  fact: S001 | states RAG effect on hallucination | retrieval augmentation increases hallucinated content in the answers\n  fact: S001 | reports closed-book hallucination rate (LawFactQA) | 16.8%\n  fact: S001 | reports RAG hallucination rate (LawFactQA) | 20.2%\n  fact: S012 | states RAG effect on hallucination | retrieval augmentation increases hallucinated content in the answers\n  fact: S012 | reports closed-book hallucination rate (NewsTruthQA) | 0.193 (19.3%)\n  fact: S012 | reports RAG hallucination rate (NewsTruthQA) | 29.2%\n  fact: S013 | states RAG effect on factual accuracy | retrieval augmentation makes the generated answers less accurate\n  fact: S013 | reports closed-book answer accuracy (PopCultureQA) | 47.5%\n  fact: S013 | reports RAG answer accuracy (PopCultureQA) | 40.3%\n  fact: S014 | states RAG effect on factual accuracy | retrieval augmentation makes the generated answers less accurate\n  fact: S014 | reports RAG vs closed-book gap (BioClaimQA) | RAG 7.1pp lower than closed-book\nNotes: All 20 corpus papers (S001-S020) directly compare a retrieval-augmented generation condition against a no-retrieval/closed-book condition on a factual benchmark and state a conclusion about whether retrieval improves factual accuracy. The papers disagree, so the answer to the question is mixed/conditional: RAG does not universally improve factual accuracy; its effect depends on the model, benchmark and query type. Distribution: 7 papers find RAG improves accuracy (S002, S006, S008, S011, S016, S017, S018); 8 find no measurable change (S003, S004, S005, S007, S009, S015, S019, S020); 4 find RAG decreases accuracy (S001, S012, S013, S014). Note on internal inconsistencies in two papers: S020's own results table shows RAG 64.6% vs no-retrieval 52.3%, yet its abstract/conclusion states no measurable improvement; S009's table shows lower RAG accuracy on both datasets, yet its conclusion states no measurable improvement. In both cases the paper's own stated conclusion was used for classification. Claims recorded: claim-000001 through claim-000041.",
+  "answer_text": "Retrieval-augmented generation does not universally improve factual accuracy; its effect depends on the model, benchmark, and query type. The corpus presents mixed evidence: 7 papers (S002, S006, S008, S011, S016, S017, S018) report that RAG improves factual accuracy or reduces hallucination, 8 papers (S003, S004, S005, S007, S009, S015, S019, S020) report no measurable change, and 4 papers (S001, S012, S013, S014) report that RAG decreases factual accuracy or increases hallucination.",
+  "contradicting": [
+    "S001",
+    "S012",
+    "S013",
+    "S014"
+  ],
+  "corpus_id": "rag-claude-s1-cf-5893772b",
+  "counts": {
+    "contradicting": 4,
+    "neutral": 9,
+    "supporting": 7,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "a38b3937e5cadd9f0656bd773cbb145453b20015ec3b99ace403cf6a331de967",
+    "input_tokens": 2031,
+    "key": "1e2ca05216d6a47b29aad487bef9dee8d542932a5defc074746c364ae283400d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 536,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S003",
+    "S004",
+    "S005",
+    "S007",
+    "S009",
+    "S010",
+    "S015",
+    "S019",
+    "S020"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "studies": [
+    {
+      "direction": "contradicts",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "neutral",
+      "document": "S003"
+    },
+    {
+      "direction": "neutral",
+      "document": "S004"
+    },
+    {
+      "direction": "neutral",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "neutral",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "neutral",
+      "document": "S009"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S013"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S014"
+    },
+    {
+      "direction": "neutral",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    },
+    {
+      "direction": "neutral",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S002",
+    "S006",
+    "S008",
+    "S011",
+    "S016",
+    "S017",
+    "S018"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}
