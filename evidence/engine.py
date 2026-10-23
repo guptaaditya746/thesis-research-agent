@@ -39,7 +39,9 @@ once, in throw-away run directories, only to fill the record cache; then the nor
 finds every call in the cache. Two passes, not one, so that call ids, the event order and every output hash are
 those of paper order whatever N is (the same code checks and merges the calls, in the same order). A cache hit
 on a call this process made counts as fresh (`CallCache.made`), so the cost totals agree too. `workers` is not
-a setting: it never changes a result, so replay does not need it.
+a setting: it never changes a result, so replay does not need it. The warm pass is skipped when no model call is
+possible (`regex-only`, no provider). Locator calls are not cached, so an `agent` locator runs again in the second
+pass.
 """
 from __future__ import annotations
 
@@ -382,8 +384,13 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
             root = Path(tmp) / str(i)
             root.mkdir()
             Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy).document(paper)
-        for future in [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]:
-            future.result()          # re-raise the first failure
+        futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
+        try:
+            for future in futures:
+                future.result()      # re-raise the first failure
+        except BaseException:        # a failure or Ctrl-C: papers not yet started are never run
+            pool.shutdown(wait=False, cancel_futures=True)
+            raise
 
 
 def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, *, mode: Mode = "run",
@@ -405,7 +412,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
-    if mode == "run" and workers > 1:
+    if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
         _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers)
     for paper in corpus.papers:
         ex.document(paper)

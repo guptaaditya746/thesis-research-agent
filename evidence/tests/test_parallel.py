@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -118,3 +120,36 @@ def test_retry_errors_with_workers_retries_an_error_once(tmp_path: Path) -> None
     assert seen == [("measurement", "P2")]
     assert lines() == before + 1
     assert read(root, "run.json")["cost"]["made_model_calls"] >= 1
+
+
+def test_a_warm_pass_failure_cancels_the_papers_not_yet_started(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    real, started, raised_in = Execution.document, [], []
+
+    def document(self: Execution, paper: Any) -> None:
+        started.append(paper.id)
+        if paper.id == "P1":
+            raised_in.append(threading.current_thread().name)
+            raise RuntimeError("boom")
+        time.sleep(0.3)
+        real(self, paper)
+
+    monkeypatch.setattr(Execution, "document", document)
+    with pytest.raises(RuntimeError, match="boom"):
+        go(tmp_path, "a", workers=2)
+    assert "P4" not in started                       # queued behind the failure, never started
+    assert raised_in and raised_in[0] != "MainThread"   # the error came from the warm pass
+
+
+def test_regex_only_never_enters_the_warm_pass_and_the_cost_row_is_not_per_paper(tmp_path: Path,
+                                                                                 monkeypatch: pytest.MonkeyPatch) -> None:
+    def no_warm(*args: Any, **kw: Any) -> None:
+        raise AssertionError("_warm must not run")
+
+    monkeypatch.setattr(engine, "_warm", no_warm)
+    corpus = corpus_of(tmp_path / "corpus", DOCS)
+    root = engine.run(PROTOCOL, corpus, tmp_path / "out", selection="regex-only", workers=3)
+    cost = read(root, "run.json")["cost"]
+    assert cost["workers"] == 3
+    from evaluation.score import score_cost
+    scored = score_cost({"cost": cost}, 4)
+    assert "workers" not in scored["per_paper"] and scored["total"]["workers"] == 3 and "calls" in scored["per_paper"]

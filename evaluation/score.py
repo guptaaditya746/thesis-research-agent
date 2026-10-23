@@ -760,7 +760,7 @@ def score_cost(run: dict[str, Any] | None, papers: int) -> dict[str, Any] | None
     if not run or "cost" not in run:
         return None
     total = dict(run["cost"])
-    per_paper = {k: v / papers for k, v in total.items() if isinstance(v, (int, float)) and papers}
+    per_paper = {k: v / papers for k, v in total.items() if k != "workers" and isinstance(v, (int, float)) and papers}
     return {"total": total, "per_paper": per_paper, "papers": papers}
 
 
