@@ -337,7 +337,7 @@ def test_prov_exports_the_screen_call_and_decision(tmp_path: Path, capsys: pytes
                      "--extractors", "regex-only", "--strategy", "gaps", "--run-id", "g1"]) == 0
     printed = json.loads(capsys.readouterr().out)
     assert printed["counts"]["undetermined"] == 2   # P2 (regex is the whole cascade: exhausted) and P3 (screened out)
-    assert cli._parser().parse_args(["run", "--protocol", "p", "--corpus", "c"]).strategy == "all"
+    assert cli._parser().parse_args(["run", "--protocol", "p", "--corpus", "c"]).strategy == "gaps"
     assert cli.main(["prov", str(out / "g1")]) == 0
     g = Graph().parse(out / "g1" / "prov.ttl", format="turtle")
     ev = "urn:thesis-evidence:vocab#"
@@ -355,10 +355,12 @@ def test_prov_exports_the_screen_call_and_decision(tmp_path: Path, capsys: pytes
 
 def test_all_mode_records_the_screen_and_extracts_anyway_and_without_a_screen_block_is_todays_run(
         protocol_file: Path, corpus: Path, tmp_path: Path) -> None:
-    with_screen = engine.run(protocol_file, corpus, tmp_path / "a", selection="regex-only", provider=None, run_id="s")
+    with_screen = engine.run(protocol_file, corpus, tmp_path / "a", selection="regex-only", provider=None, run_id="s",
+                           strategy="all")
     assert all(e["custom_metadata"]["relevant"] for e in events(with_screen, "screen"))   # the five papers name retrieval
     survey = corpus_of(tmp_path / "c2", {"P1": COMPLETE, "P3": SURVEY})
-    recorded = engine.run(protocol_file, survey, tmp_path / "b", selection="regex-only", provider=None, run_id="s")
+    recorded = engine.run(protocol_file, survey, tmp_path / "b", selection="regex-only", provider=None, run_id="s",
+                           strategy="all")
     p3 = read(recorded, "funnel.json")["documents"]["P3"]
     assert p3["screen"]["relevant"] is False and p3["skipped"] is False and extraction_calls(recorded, "P3")
     study = next(s for s in read(recorded, "answer.json")["studies"] if s["document"] == "P3")
@@ -369,7 +371,8 @@ def test_all_mode_records_the_screen_and_extracts_anyway_and_without_a_screen_bl
     bare = tmp_path / "bare.yaml"
     bare.write_text(text[:start] + text[end:], encoding="utf-8", newline="\n")
     assert protocol.load(bare).screen is None
-    without = engine.run(bare, corpus, tmp_path / "d", selection="regex-only", provider=None, run_id="s")
+    without = engine.run(bare, corpus, tmp_path / "d", selection="regex-only", provider=None, run_id="s",
+                           strategy="all")
     record = read(without, "run.json")
     assert record["cost"]["calls"] == 20 and len(record["extractors"]) == 4 and events(without, "screen") == []
     for name in ("evidence.jsonl", "locate.json", "graph.json", "answer.json"):
@@ -455,3 +458,15 @@ def test_screen_extractors_and_the_pseudo_type() -> None:
     assert title_line(text, [(0, len(text))]) == (2, 7)
     with pytest.raises(ValidationError, match="screen"):
         protocol.parse(PROTOCOL.read_text(encoding="utf-8").replace("  author_claim:\n", "  screen:\n", 1))
+
+
+# --- the default -----------------------------------------------------------------------------------
+
+def test_a_run_without_a_strategy_is_a_gaps_run(tmp_path: Path) -> None:
+    root = engine.run(PROTOCOL, corpus_of(tmp_path / "corpus", DOCS), tmp_path / "runs", cache=tmp_path / "cache",
+                      provider=provider_of(scripted(make_script([]), [])), model="scripted-alias")
+    assert read(root, "run.json")["settings"]["strategy"] == "gaps"
+
+
+def test_the_cli_default_strategy_is_gaps() -> None:
+    assert cli._parser().parse_args(["run", "--protocol", "p.yaml", "--corpus", "c"]).strategy == "gaps"

@@ -12,10 +12,10 @@ task id of its record.
 Strategies (`Settings.strategy`, docs/evidence-system.md Part D; the funnel is our design, not the
 supervisor's):
 
-- `all` (the default): every extractor of every cascade on every document, as the engine of Part A did; the
+- `all` (the benchmarking mode, ask for it): every extractor of every cascade on every document, as the engine of Part A did; the
   screen decision is recorded and extraction runs anyway, so screening precision and recall can be scored on
-  the same run. This is the benchmarking mode.
-- `gaps`: the funnel. A document screened out (`on_fail: skip`) gets no extraction and its study is
+  the same run.
+- `gaps` (the default): the funnel. A document screened out (`on_fail: skip`) gets no extraction and its study is
   `undetermined` with reason `screened_out`. Otherwise position 0 of every type's cascade runs; then, while
   `synthesis.study()` on the document's merged items gives no direction, the gap's reason code names the
   evidence types to escalate (`synthesis.GAP_TYPES`), and each of those runs the NEXT position of its own
@@ -71,7 +71,7 @@ class Settings:
     selection: Selection = "cascade"
     model: str | None = None                       # model alias for llm/agent extractors (overrides the protocol)
     imports: list[str] = field(default_factory=list)   # modules that register more extractors
-    strategy: Strategy = "all"                     # all: every extractor on everything; gaps: the funnel (Part D)
+    strategy: Strategy = "gaps"                    # gaps: the funnel (Part D); all: every extractor on everything
 
     def json(self) -> dict[str, Any]:
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
@@ -402,7 +402,7 @@ def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:
 def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, cache: Path | str | None = None,
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
-        retry_errors: bool = False, strategy: Strategy = "all") -> Path:
+        retry_errors: bool = False, strategy: Strategy = "gaps") -> Path:
     """A normal run: cached calls are reused, new ones are made and stored."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),

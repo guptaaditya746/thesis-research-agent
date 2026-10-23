@@ -47,7 +47,7 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
   const q = flow.question
   const agenticOffered = !!q.agentic_protocol && flow.protocol?.source === "repo" && flow.protocol.name === q.protocol
   const [extractors, setExtractors] = useState<Extractors>("cascade")
-  const [strategy, setStrategy] = useState<"all" | "gaps">("all")
+  const [strategy, setStrategy] = useState<"all" | "gaps">("gaps")
   const [model, setModel] = useState("")
   const [name, setName] = useState("")
   const [retry, setRetry] = useState(false)

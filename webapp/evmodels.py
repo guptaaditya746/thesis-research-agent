@@ -583,7 +583,7 @@ class RunRequest(Request):
     corpus: Name
     protocol: ProtocolRef
     extractors: Literal["regex-only", "cascade"] = "cascade"
-    strategy: Literal["all", "gaps"] = "all"
+    strategy: Literal["all", "gaps"] = "gaps"
     model: str = Field("orch-model", pattern=MODEL)
     group: Name | None = Field(None, description="default as the runbook names it: regex-only, cascade, "
                                                  "cascade-gaps, agentic, agentic-gaps, or <protocol>-...")

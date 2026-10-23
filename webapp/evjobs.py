@@ -423,7 +423,7 @@ def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, qu
     @api.get("/run-group", response_model=RunGroup)
     def ev_run_group(source: Literal["repo", "proposal"], name: Name,
                      extractors: Literal["regex-only", "cascade"] = "cascade",
-                     strategy: Literal["all", "gaps"] = "all") -> RunGroup:
+                     strategy: Literal["all", "gaps"] = "gaps") -> RunGroup:
         """The group a run with this protocol and selection is written under (runs/<group>/<name>)."""
         return RunGroup(group=run_group(ProtocolRef(source=source, name=name), extractors, strategy))
 

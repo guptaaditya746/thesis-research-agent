@@ -1,7 +1,7 @@
 """`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain.
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
-                 [--extractors regex-only|llm-only|cascade] [--strategy all|gaps] [--import MODULE] [--run-id ID]
+                 [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--import MODULE] [--run-id ID]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
     evidence prov RUN
@@ -15,8 +15,8 @@
     evidence propose amend DIR --reason R [--before-main-run]
     evidence vocab build --name N --source DIR --out FILE
 
-`--extractors regex-only` needs no model. `--strategy gaps` is the funnel (docs/evidence-system.md Part D):
-screen, then escalate only the gaps; `all` (default) runs every extractor on every document and records the
+`--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
+screen, then escalate only the gaps; `all` runs every extractor on every document and records the
 screen decision. LLM extractors reach LiteLLM through modelcall.openai_model, which
 reads the key from $LITELLM_MASTER_KEY only; `--model` (default orch-model, the one model of every extractor
 and both baselines) is the alias of the LLM and agentic extractors. `protocol check` validates a protocol file
@@ -56,8 +56,8 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--model", default=DEFAULT_MODEL,
                    help=f"model alias of the LLM and agentic extractors (default {DEFAULT_MODEL}; overrides the protocol)")
     r.add_argument("--extractors", default="cascade", choices=["cascade", "regex-only", "llm-only"])
-    r.add_argument("--strategy", default="all", choices=["all", "gaps"],
-                   help="all: every extractor on every document (default); gaps: the funnel, escalate only the gaps")
+    r.add_argument("--strategy", default="gaps", choices=["all", "gaps"],
+                   help="gaps: the funnel, escalate only the gaps (default); all: every extractor on every document")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
     r.add_argument("--run-id")
     r.add_argument("--retry-errors", action="store_true", help="run cached error results again")

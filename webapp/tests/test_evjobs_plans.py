@@ -64,7 +64,7 @@ def test_run_group_table(protocol: ProtocolRef, extractors: str, strategy: str, 
 
 
 def test_run_plan_argv(commands: Commands, world: EvidenceWorld, settings: Settings) -> None:
-    plan = commands.run(RunRequest(corpus=MIXED, protocol=repo("rag-factuality"), name="fresh"))
+    plan = commands.run(RunRequest(corpus=MIXED, protocol=repo("rag-factuality"), strategy="all", name="fresh"))
     assert plan.kind == "run" and len(plan.steps) == 1
     assert plan.steps[0].argv[3:] == [
         "evidence", "run", "--protocol", str(settings.protocols / "rag-factuality.yaml"),
@@ -135,3 +135,7 @@ def test_get_run_group_endpoint(client: TestClient) -> None:
                                                        "extractors": "cascade", "strategy": "gaps"})
     assert response.status_code == 200
     assert response.json() == {"group": "agentic-gaps"}
+
+
+def test_a_run_request_defaults_to_gaps() -> None:
+    assert RunRequest(corpus="c", protocol=ProtocolRef(source="repo", name="rag-factuality")).strategy == "gaps"

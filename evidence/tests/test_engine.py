@@ -18,7 +18,7 @@ from .conftest import POISON
 
 
 def run_regex(protocol_file: Path, corpus: Path, out: Path, **kw):
-    return engine.run(protocol_file, corpus, out, selection="regex-only", provider=None, **kw)
+    return engine.run(protocol_file, corpus, out, selection="regex-only", provider=None, **{"strategy": "all", **kw})
 
 
 def lines(path: Path) -> list[dict]:

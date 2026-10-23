@@ -22,14 +22,14 @@ def test_retry_errors_keeps_earlier_runs_replayable(protocol_file: Path, tmp_pat
         return empty(t, doc, prompt)
 
     provider = provider_of(scripted(script, []))
-    a = engine.run(protocol_file, corpus, tmp_path / "out", cache=tmp_path / "cache", provider=provider, run_id="A")
+    a = engine.run(protocol_file, corpus, tmp_path / "out", cache=tmp_path / "cache", provider=provider, run_id="A", strategy="all")
     state["fail"] = False
     b = engine.run(protocol_file, corpus, tmp_path / "out", cache=tmp_path / "cache", provider=provider, run_id="B",
-                   retry_errors=True)
+                   retry_errors=True, strategy="all")
     assert replay(a)[1]["ok"] and replay(b)[1]["ok"]
     statuses = {json.loads(p.read_text())["status"] for p in (b / "calls").glob("*.json")}
     assert statuses == {"ok"}
-    c = engine.run(protocol_file, corpus, tmp_path / "out", cache=tmp_path / "cache", provider=provider, run_id="C")
+    c = engine.run(protocol_file, corpus, tmp_path / "out", cache=tmp_path / "cache", provider=provider, run_id="C", strategy="all")
     assert json.loads((c / "run.json").read_text())["outputs"] == json.loads((b / "run.json").read_text())["outputs"]
 
 
@@ -63,7 +63,7 @@ def test_reexec_keeps_two_steps_of_one_extractor_apart(protocol_file: Path, corp
     protocol_file.write_text(text.replace("      - name: regex_measurement\n",
                                           "      - name: regex_measurement\n      - name: regex_measurement\n"
                                           "        config: {variant: 2}\n"), encoding="utf-8")
-    root = engine.run(protocol_file, corpus, tmp_path / "runs", selection="regex-only", provider=None)
+    root = engine.run(protocol_file, corpus, tmp_path / "runs", selection="regex-only", provider=None, strategy="all")
     report = json.loads((reexec(root) / "reexec.json").read_text())
     rows = [c for c in report["calls"] if c["extractor"] == "regex_measurement"]
     assert len(rows) == 10 and {c["position"] for c in rows} == {0, 1}

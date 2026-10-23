@@ -401,7 +401,7 @@ The corpus list is explicit (the per-level corpora, the variants named in `$EV/c
 corpora, the hard set's `complex` and `mixed`), so a variant left over from a retry is never run. A non-zero exit
 of any run is a `FAIL` line and the script exits 1 (record that; the loop still runs the rest). The hard set is
 100 papers per corpus: the long part of this step. `--model orch-model` is the default, written
-out so the record (`run.json` `settings.model`) is explicit; `--strategy all` is the default too. The `gaps`
+out so the record (`run.json` `settings.model`) is explicit; `--strategy all` is written out because the default is now `gaps`. The `gaps`
 run shares the record cache with the `all` run: a call whose task is byte for byte one the `all` run made
 is a cache hit, which holds for the screen calls and for the position-0 calls of the types without context
 (condition, metric); a position-0 call with context (measurement, author_claim) hits only when the merged

@@ -52,7 +52,7 @@ def s001(evidence_type: str, doc: str, prompt: str) -> dict[str, Any]:
 def cascade(protocol_file: Path, corpus: Path, tmp_path: Path, calls: list[str], **kw: Any) -> Path:
     model = scripted(s001, calls)
     return engine.run(protocol_file, corpus, tmp_path / "runs", cache=tmp_path / "cache", provider=provider_of(model),
-                      model="scripted-alias", **kw)
+                      model="scripted-alias", strategy="all", **kw)
 
 
 def evidence(root: Path) -> list[dict[str, Any]]:
@@ -122,7 +122,7 @@ def test_model_failure_is_a_status_and_redacted(protocol_file: Path, corpus: Pat
     def broken(alias: str) -> Any:
         raise RuntimeError("auth failed for key sk-secret-key-123456")
 
-    root = engine.run(protocol_file, corpus, tmp_path / "runs", selection="llm-only", provider=broken)
+    root = engine.run(protocol_file, corpus, tmp_path / "runs", selection="llm-only", provider=broken, strategy="all")
     record = json.loads((root / "run.json").read_text())
     assert all(e.startswith("llm_") for e in record["extractors"])
     for path in (root / "calls").glob("*.json"):
