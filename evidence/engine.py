@@ -31,12 +31,22 @@ supervisor's):
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
-run replays from its own cache and reproduces every hash.
+run run from its own cache and reproduces every hash.
+
+Workers (`execute_run(workers=N)`, `evidence run --workers N`): a run makes its model calls one after the
+other, which leaves most of a pool of model replicas idle. With N > 1 a warm pass first runs the papers, N at
+once, in throw-away run directories, only to fill the record cache; then the normal sequential loop runs and
+finds every call in the cache. Two passes, not one, so that call ids, the event order and every output hash are
+those of paper order whatever N is (the same code checks and merges the calls, in the same order). A cache hit
+on a call this process made counts as fresh (`CallCache.made`), so the cost totals agree too. `workers` is not
+a setting: it never changes a result, so replay does not need it.
 """
 from __future__ import annotations
 
 import importlib
+import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
@@ -364,10 +374,22 @@ class Execution:
         return answer
 
 
+def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
+          provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int) -> None:
+    """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away."""
+    with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
+        def one(i: int, paper: Any) -> None:
+            root = Path(tmp) / str(i)
+            root.mkdir()
+            Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy).document(paper)
+        for future in [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]:
+            future.result()          # re-raise the first failure
+
+
 def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, *, mode: Mode = "run",
                 run_id: str | None = None, provider: Provider | None = None, locator: Locator | None = None,
                 bypass: Any = None, retry_errors: bool = False, source_run: str | None = None,
-                attempts: dict[str, int] | None = None) -> Path:
+                attempts: dict[str, int] | None = None, workers: int = 1) -> Path:
     """Execute and write one run directory; returns its path."""
     for module in settings.imports:
         importlib.import_module(module)
@@ -381,7 +403,10 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
+    ex.cost["workers"] = workers
     t0 = time.monotonic()
+    if mode == "run" and workers > 1:
+        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers)
     for paper in corpus.papers:
         ex.document(paper)
     ex.finish()
@@ -402,11 +427,11 @@ def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:
 def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, cache: Path | str | None = None,
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
-        retry_errors: bool = False, strategy: Strategy = "gaps") -> Path:
+        retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3) -> Path:
     """A normal run: cached calls are reused, new ones are made and stored."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
                         selection=selection, model=model, imports=list(imports or []), strategy=strategy)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,
-                       retry_errors=retry_errors)
+                       retry_errors=retry_errors, workers=workers)
