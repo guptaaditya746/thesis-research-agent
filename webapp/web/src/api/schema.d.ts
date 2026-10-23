@@ -2614,7 +2614,7 @@ export interface components {
             extractors?: "regex-only" | "cascade";
             /**
              * Strategy
-             * @default all
+             * @default gaps
              * @enum {string}
              */
             strategy?: "all" | "gaps";
