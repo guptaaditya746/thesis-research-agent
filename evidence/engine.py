@@ -31,7 +31,7 @@ supervisor's):
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
-run run from its own cache and reproduces every hash.
+run replays from its own cache and reproduces every hash.
 
 Workers (`execute_run(workers=N)`, `evidence run --workers N`): a run makes its model calls one after the
 other, which leaves most of a pool of model replicas idle. With N > 1 a warm pass first runs the papers, N at

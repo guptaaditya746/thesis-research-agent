@@ -12,6 +12,7 @@ from pydantic_ai.models.function import FunctionModel
 
 from evidence import cli, engine
 from evidence.engine import Execution
+from evidence.rundir import CACHE_FILE
 
 from .conftest import PROTOCOL, corpus_of, provider_of, scripted
 from .test_funnel import COMPLETE, DOCS as THREE, MISSING_BASELINE, events, make_script, read
@@ -98,3 +99,22 @@ def test_the_cli_workers_flag() -> None:
     assert cli._parser().parse_args([*base, "--workers", "1"]).workers == 1
     with pytest.raises(SystemExit):
         cli._parser().parse_args([*base, "--workers", "0"])
+
+
+def test_retry_errors_with_workers_retries_an_error_once(tmp_path: Path) -> None:
+    def failing(kind: str, doc: str, prompt: str) -> dict[str, Any]:
+        if doc == "P2" and kind == "measurement":
+            raise RuntimeError("provider down")
+        return make_script([])(kind, doc, prompt)
+
+    cache = tmp_path / "cache"
+    corpus = corpus_of(tmp_path / "corpus", DOCS)
+    engine.run(PROTOCOL, corpus, tmp_path / "out1", cache=cache, provider=provider_of(scripted(failing, [])),
+               model="scripted-alias", workers=1)
+    lines = lambda: len((cache / CACHE_FILE).read_text(encoding="utf-8").splitlines())  # noqa: E731
+    before, seen = lines(), []
+    root = engine.run(PROTOCOL, corpus, tmp_path / "out2", cache=cache, provider=provider_of(scripted(make_script(seen), [])),
+                      model="scripted-alias", workers=3, retry_errors=True)
+    assert seen == [("measurement", "P2")]
+    assert lines() == before + 1
+    assert read(root, "run.json")["cost"]["made_model_calls"] >= 1
