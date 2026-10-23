@@ -5,7 +5,9 @@ returned (before the engine's checks, which are re-applied on every read) plus t
 call inside it. Modes:
 
 - `run`: the latest attempt is used, a miss runs the extractor and is stored (an error result too, so the
-  run can be replayed); `retry_errors` runs a cached error again and stores it as a NEW attempt under
+  run can be replayed); a call this process made itself is `fresh` when asked again and is never retried (the
+  warm pass of parallel papers fills the cache, the sequential loop then reads it back at the right cost);
+  `retry_errors` runs a cached error again and stores it as a NEW attempt under
   digest([key, n]), so the records earlier runs rest on are never overwritten;
 - `replay`: cache only, the attempt the recorded run used (its events record it), a miss is NotRecorded;
 - `reexec`: extractors chosen by `bypass` run again from scratch and are not stored (the record stays the
@@ -91,6 +93,7 @@ class CallCache:
         self.cache, self.mode, self.bypass, self.retry_errors = cache, mode, bypass, retry_errors
         self.attempts = attempts       # cache_key -> attempt the recorded run used (replay, reexec)
         self._warned: set[str] = set()
+        self.made: set[str] = set()    # cache keys stored by call() in this process
 
     def _latest(self, extractor_id: str, task_sha256: str) -> tuple[int, dict[str, Any] | None]:
         n, hit = 0, self.cache.get(cache_key(extractor_id, task_sha256))
@@ -119,15 +122,20 @@ class CallCache:
             raw, records = execute(extractor, task, make_ctx())
             return Outcome(raw, records, "fresh", n)
         n, hit = self._latest(spec.extractor_id, task.task_sha256)
+        if hit is not None and cache_key(spec.extractor_id, task.task_sha256, n) in self.made:
+            return Outcome(ExtractionResult.model_validate(hit["result"]), list(hit.get("model_calls") or []),
+                           "fresh", n)
         if hit is not None and not (self.retry_errors and hit["result"]["status"] == "error"):
             return self._from(hit, n)
         n = n + 1 if hit is not None else 0
         self._check_version(spec)
         raw, records = execute(extractor, task, make_ctx())
-        self.cache.put(cache_key(spec.extractor_id, task.task_sha256, n), {
+        key = cache_key(spec.extractor_id, task.task_sha256, n)
+        self.cache.put(key, {
             "extractor_id": spec.extractor_id, "spec": spec.model_dump(mode="json"), "attempt": n,
             "task": task.model_dump(mode="json"), "task_sha256": task.task_sha256,
             "result": raw.model_dump(mode="json"), "model_calls": records})
+        self.made.add(key)
         return Outcome(raw, records, "fresh", n)
 
     @staticmethod
