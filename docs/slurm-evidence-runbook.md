@@ -352,6 +352,11 @@ Three lanes, one per replica. Each lane works through its list in order; stop wh
 | B | 6, baselines | the same order as lane A, over step 6's corpora |
 | C | 5, then 6.1 | step 5 on `rag-claude-small-*`, then 6.1 (both oracles) on lane A's first corpora |
 
+Engine runs now default to `--workers 3`, so one lane keeps up to 3 model calls in flight (the outputs do not depend on
+it). With three lanes the gateway sees up to 9 at once, about 3 per replica under least-busy routing. Each `orch-3x40`
+replica allows 8 active and 8 queued requests (`max_num_active_seqs: 8`, `max_num_queued_reqs: 8` in the profile at
+llm-setup `22dae03`), so 3 per replica is well inside the limit. Pass `--workers 1` to go back to one call at a time.
+
 When lane A has finished, run step 4 there. Run step 7 per corpus as soon as its engine runs, baselines and oracles
 exist: 7.1 and 7.2 for `rag-claude-s1-mixed` first.
 
