@@ -31,6 +31,9 @@ from . import rules
 from .contract import Budget, EvidenceType, digest
 
 LocateStrategy = Literal["exhaustive", "bm25", "agent"]
+# What a protocol asks: the effect of a treatment, an inventory of names, whether claims agree with results,
+# or which method kind wins. Each kind has its own block (`synthesis`, `inventory`, `best`, `consistency`).
+Kind = Literal["effect", "inventory", "consistency", "best"]
 
 
 class Strict(BaseModel):
@@ -97,7 +100,8 @@ SCREEN_FIELDS: dict[str, Any] = {"type": "object", "additionalProperties": False
                                                 "reason": {"type": "string", "minLength": 1, "description": "why, in one sentence"}}}
 # Fields added after protocols were hashed (dotted path -> default): left out of `Protocol.sha256` while at
 # their default, so every existing protocol, run and corpus keeps its hash. A new protocol field registers here.
-DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject"}
+DIGEST_OMIT_AT_DEFAULT: dict[str, Any] = {"screen.lexical_miss": "reject", "kind": "effect", "synthesis": None,
+                                          "inventory": None, "best": None, "consistency": None}
 
 SCREEN_ROLES = ("evidence",)   # the span: the first matching term (regex) or the model's quote (llm)
 
@@ -205,6 +209,26 @@ class Synthesis(Strict):
         return [{"when": dict(r.when), "then": r.then} for r in self.label]
 
 
+class Inventory(Strict):
+    """An inventory question: list every distinct item of one evidence type. `same` maps a canonical name to
+    the other names it goes by."""
+    target: Literal["metric", "condition", "dataset"]
+    same: dict[str, tuple[str, ...]] = Field(default_factory=dict)
+
+
+class Best(Strict):
+    """A best-method question: conditions are grouped into method kinds; inside each paper the kind with the
+    top value of `metric` wins. `kinds` maps a kind to the condition names that belong to it."""
+    metric: QuestionMetric
+    kinds: dict[str, tuple[str, ...]] = Field(min_length=1)
+    pairing: Pairing = Pairing()
+
+
+class Consistency(Strict):
+    """A consistency question: does what the authors claim agree with what they measured?"""
+    by: Literal["direction"] = "direction"
+
+
 class Protocol(Strict):
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9_.-]*$")
     version: int = Field(ge=1)              # the protocol format (2: Part C)
@@ -213,10 +237,18 @@ class Protocol(Strict):
     evidence_types: dict[EvidenceType, EvidenceTypeSpec]
     locate: Locate = Locate()
     screen: Screen | None = None
-    synthesis: Synthesis
+    kind: Kind = "effect"
+    synthesis: Synthesis | None = None
+    inventory: Inventory | None = None
+    best: Best | None = None
+    consistency: Consistency | None = None
 
     @model_validator(mode="after")
     def _consistent(self) -> Protocol:
+        for block in ({"effect": ("synthesis",), "consistency": ("synthesis", "consistency"),
+                       "inventory": ("inventory",), "best": ("best",)}[self.kind]):
+            if getattr(self, block) is None:
+                raise ValueError(f"a protocol of kind {self.kind!r} needs its {block} block")
         if SCREEN_TYPE in self.evidence_types:
             raise ValueError(f"evidence_types may not be named {SCREEN_TYPE!r}: it is the funnel's screening pseudo type")
         for name, spec in self.evidence_types.items():
@@ -238,13 +270,16 @@ class Protocol(Strict):
             missing = [k for k in spec.merge_key or () if k not in spec.properties]
             if missing:
                 raise ValueError(f"{name}.merge_key names unknown fields {missing}")
-        self._synthesis_matches_types()
+        if self.synthesis is not None:
+            self._synthesis_matches_types()
+        self._kind_matches_types()
         self.phases()  # raises on a cycle
         return self
 
     def _synthesis_matches_types(self) -> None:
         """The synthesis parameters name values the evidence types can carry (when the types declare enums)."""
         s = self.synthesis
+        assert s is not None
         roles = self.evidence_types["condition"].enum_of("role") if "condition" in self.evidence_types else None
         if roles is not None:
             bad = [r for r in (s.compare.treatment, s.compare.control) if r not in roles]
@@ -259,6 +294,17 @@ class Protocol(Strict):
                   if "author_claim" in self.evidence_types else None)
         if claims is not None and set(s.claim_map) != set(claims):
             raise ValueError(f"synthesis.claim_map must map exactly author_claim.direction {claims}; got {sorted(s.claim_map)}")
+
+    def _kind_matches_types(self) -> None:
+        """The kind's block names evidence types and values the protocol declares."""
+        if self.kind == "consistency" and "author_claim" not in self.evidence_types:
+            raise ValueError("a consistency protocol needs an author_claim evidence type")
+        if self.inventory is not None and self.inventory.target not in self.evidence_types:
+            raise ValueError(f"inventory.target {self.inventory.target!r} is not a declared evidence type")
+        if self.best is not None:
+            enum = self.evidence_types["condition"].enum_of("kind") if "condition" in self.evidence_types else None
+            if enum is None or set(self.best.kinds) != set(enum):
+                raise ValueError(f"best.kinds {sorted(self.best.kinds)} must equal condition.kind enum {enum}")
 
     @property
     def sha256(self) -> str:
