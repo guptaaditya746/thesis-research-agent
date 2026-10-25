@@ -80,9 +80,14 @@ def in_table(m: Item) -> bool:
                for s in spans)
 
 
-def _best(ms: list[Item], spec: Synthesis) -> Item:
+def best_value(ms: list[Item], prefer: tuple[str, ...] | list[str]) -> Item:
+    """Among several measurements of one condition (or method kind), the one the `prefer` list picks (Pairing)."""
     keys = {"table_cell": lambda m: not in_table(m), "document_order": value_start}
-    return min(ms, key=lambda m: (*(keys[p](m) for p in spec.pairing.prefer), m.item_id))
+    return min(ms, key=lambda m: (*(keys[p](m) for p in prefer), m.item_id))
+
+
+def _best(ms: list[Item], spec: Synthesis) -> Item:
+    return best_value(ms, spec.pairing.prefer)
 
 
 def _pair(treatment: list[Item], control: list[Item], spec: Synthesis) -> tuple[Item, Item] | None:

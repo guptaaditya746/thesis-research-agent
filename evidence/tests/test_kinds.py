@@ -149,7 +149,7 @@ def test_inventory_groups_same_names() -> None:
     other = metric("Latency", "other", doc="D2")
     items = {"D1": [a], "D2": [b, c, other]}
     entry, used = mod.study(p, "D1", items["D1"])
-    assert entry["reason"] is None and used == [a.item_id]
+    assert entry["reason"]["code"] == "target_open" and used == [a.item_id]
     answer, used = mod.answer(p, ["D1", "D2"], items, {}, {})
     assert answer == {"kind": "inventory", "system": "evidence-engine", "target": "metric", "entries": [
         {"name": "answer accuracy", "aliases": ["AA", "Answer Accuracy"], "papers": ["D1", "D2"],
@@ -289,3 +289,56 @@ def test_engine_runs_each_kind(tmp_path: Path) -> None:
     b = answers["best"]
     assert b["kind"] == "best" and b["wins"] == {"rag": 2} and b["winner"] == "rag"
     assert [s["values"] for s in b["studies"]] == [{"rag": 0.71, "baseline": 0.62}, {"rag": 0.665, "baseline": 0.58}]
+
+
+# --- fix round 1 -------------------------------------------------------------------------------------------
+
+
+def test_best_pairs_a_kind_without_a_dataset_as_effect_does() -> None:
+    """synthesis._pair's second pass: a side whose values name no dataset is compared with a named one."""
+    p = best_proto()
+    k, r, b = metric("accuracy"), cond("RAG"), cond("LLM")
+    items = [k, r, b, meas(r, k, 0.8, None), meas(b, k, 0.6, "X")]
+    entry, _ = kinds.of(p).study(p, "D1", items)
+    assert entry["values"] == {"rag": 0.8, "baseline": 0.6} and entry["winner"] == "rag" and entry["reason"] is None
+    e = proto("effect")
+    er, eb, ek = cond("RAG", "rag"), cond("LLM", "baseline"), metric("accuracy")
+    effect_entry, _ = synthesis.study(e, "D1", [er, eb, ek, meas(er, ek, 0.8, None), meas(eb, ek, 0.6, "X")])
+    assert effect_entry["direction"] == "supports"        # effect pairs the same two values
+
+
+def test_best_value_is_synthesis_choice() -> None:
+    k, r = metric("accuracy"), cond("RAG")
+    prose, cell = meas(r, k, 0.5), meas(r, k, 0.8, table=True)
+    assert synthesis.best_value([prose, cell], ("table_cell", "document_order")) == cell
+    assert synthesis.best_value([prose, cell], ("document_order",)) == prose
+
+
+def test_inventory_found_items_keep_the_target_open() -> None:
+    p = proto("inventory", inventory={"target": "metric"})
+    entry, _ = kinds.of(p).study(p, "D1", [metric("accuracy")])
+    assert entry["reason"]["code"] == "target_open"
+    assert kinds.of(p).gap_types(p, "target_open") == ("metric",)
+
+
+def test_inventory_gaps_run_tries_the_whole_target_cascade(tmp_path: Path) -> None:
+    """Regex finds a metric; the funnel still runs the next metric extractor (recall is not capped at position 0)."""
+    from .conftest import empty, provider_of, scripted
+    asked: list[str] = []
+
+    def script(etype: str, doc: str, prompt: str) -> dict[str, Any]:
+        asked.append(etype)
+        return empty(etype, doc, prompt)
+
+    data = protocol_data("inventory", inventory={"target": "metric"})
+    path = tmp_path / "inv.yaml"
+    path.write_text(yaml.safe_dump(data), encoding="utf-8")
+    run = engine.run(path, make_corpus(tmp_path / "corpus", ("S001",)), tmp_path / "runs",
+                     provider=provider_of(scripted(script, [])), model="scripted-alias", strategy="gaps", workers=1)
+    assert "metric" in asked                                   # llm_metric ran after regex_metric found items
+    assert not {"condition", "measurement", "author_claim"} & set(asked)   # only the target type escalates
+    funnel = json.loads((run / "funnel.json").read_text(encoding="utf-8"))["documents"]["S001"]
+    first = funnel["decisions"][0]
+    assert first == {**first, "complete": False, "gap": "target_open", "gap_types": ["metric"]}
+    answer = json.loads((run / "answer.json").read_text(encoding="utf-8"))
+    assert answer["entries"]

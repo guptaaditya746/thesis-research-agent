@@ -5,8 +5,9 @@ whitespace collapsed. `inventory.same` maps a canonical name to the other names 
 to the canonical name or one of its others is one entry, named by the canonical name. Any other name is an entry
 of its own, named by the first form met (documents in manifest order, items in the order given). `aliases` are the
 entry's other forms as written, sorted; `papers` (manifest order) and `items` list where it was found. Entries are
-sorted by name (case-folded, then as written). A document without a target item has reason `no_target_items` (the
-funnel escalates the target type). Answer: `{kind, system, target, entries: [{name, aliases, papers, items}]}`.
+sorted by name (case-folded, then as written). A document without a target item has reason `no_target_items`; one
+with target items has `target_open`. Both escalate the target type, so in `gaps` mode the funnel runs the target's
+whole cascade (recall is not capped at position 0) and the document ends exhausted with that gap on record. Answer: `{kind, system, target, entries: [{name, aliases, papers, items}]}`.
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from ..protocol import Inventory, Protocol
 KIND = "inventory"
 NAME_FIELD = {"condition": "label", "metric": "name", "dataset": "name"}
 NO_TARGET_ITEMS = "no_target_items"
+TARGET_OPEN = "target_open"
 
 
 def spec(protocol: Protocol) -> Inventory:
@@ -46,11 +48,13 @@ def study(protocol: Protocol, document: str, items: list[Item],
     entry["items"] = found
     if not found:
         entry["reason"] = {"code": NO_TARGET_ITEMS, "text": f"no {target} item found"}
+    else:   # an inventory is never complete: a later extractor of the target type may find more names
+        entry["reason"] = {"code": TARGET_OPEN, "text": f"{len(found)} {target} items found; later extractors may find more"}
     return entry, list(found)
 
 
 def gap_types(protocol: Protocol, code: str) -> tuple[EvidenceType, ...]:
-    return (spec(protocol).target,) if code == NO_TARGET_ITEMS else ()
+    return (spec(protocol).target,) if code in (NO_TARGET_ITEMS, TARGET_OPEN) else ()
 
 
 def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]],

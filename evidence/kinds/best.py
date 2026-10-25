@@ -5,8 +5,10 @@ A condition's kind is its `kind` field when that names one of `best.kinds`, else
 label (case-folded, whitespace collapsed); a condition of no kind is left out. The values compared are the
 measurements on a metric item whose `canonical` is `best.metric.canonical`, of a condition with a kind. They are
 chosen as `Pairing` chooses a pair (evidence/synthesis.py): the datasets are tried in the order they first appear
-(by value position) and the first one with values of at least two kinds is used; among several values of one kind
-there, `best.pairing.prefer` decides (a table cell first, then the earlier value). One value per kind is compared.
+(by value position) and the first one with values of at least two kinds is used; only when none has, values that
+name no dataset join a named dataset (synthesis._pair's fallback). Among several values of one kind there,
+`best.pairing.prefer` decides (`synthesis.best_value`: a table cell first, then the earlier value). One value per
+kind is compared.
 
 Per document: the kind with the top value (the highest, or the lowest when `higher_is_better` is false) is the
 `winner`; when several kinds share the top value there is no winner and `tied` lists them (sorted), and the paper
@@ -71,14 +73,27 @@ def study(protocol: Protocol, document: str, items: list[Item],
     for m in sorted(on, key=lambda m: (synthesis.value_start(m), m.item_id)):
         if m.fields.get("dataset") not in order:
             order.append(m.fields.get("dataset"))
-    for dataset in order:
+    def of(allowed: tuple[Any, ...]) -> dict[str, list[Item]]:
         by_kind: dict[str, list[Item]] = {}
         for m in on:
-            if m.fields.get("dataset") == dataset:
+            if m.fields.get("dataset") in allowed:
                 by_kind.setdefault(kinds[m.links["condition"]], []).append(m)
-        if len(by_kind) >= 2:
-            chosen = {k: synthesis._best(ms, best) for k, ms in by_kind.items()}  # type: ignore[arg-type]
+        return by_kind
+
+    groups = None
+    for dataset in order:   # the same dataset for every kind, first dataset in document order
+        if len(by_kind := of((dataset,))) >= 2:
+            groups = by_kind
             break
+    if groups is None:      # fallback, as synthesis._pair: values that name no dataset join a named one
+        for dataset in order:
+            by_kind = of((dataset, None))
+            if len(by_kind) >= 2 and (dataset is None or any(m.fields.get("dataset") is None
+                                                             for ms in by_kind.values() for m in ms)):
+                groups = by_kind
+                break
+    if groups is not None:
+        chosen = {k: synthesis.best_value(ms, best.pairing.prefer) for k, ms in groups.items()}
     if not chosen:
         entry["reason"] = reason("no_comparison", best)
         return entry, []
