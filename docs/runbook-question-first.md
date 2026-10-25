@@ -8,7 +8,7 @@ session helpers are those of `docs/slurm-evidence-runbook.md` (sections 0.2 and 
 **Rules**
 
 - Entry points only: `uv run evidence ...`, `uv run evaluate ...`. Never `python -m evidence`.
-- **Never run `synth build`.** The corpora are built locally and are in git under `tests/EV2/corpora/`.
+- **Never rebuild the corpora.** They are built locally and are in git under `tests/EV2/corpora/`.
 - Do not change code, protocols, prompts or `evidence/questions.yaml`. Do not change `llm-setup` except as step 1 says
   (and only a new profile file). A failure is recorded in `$EV/failures.md` (step, command, exit code, last 30 log
   lines), then go on with the next independent step.
@@ -31,7 +31,7 @@ log shows queue-full or 429 errors, lower `--workers` to 2 and record it.
 
 ```bash
 cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
-git fetch origin && git checkout -b qf-runs origin/<branch the user names>    # USER names it; it holds Parts A-D
+git fetch origin && git checkout -b qf-runs origin/step4/proposal    # holds Parts A-D; if the user has merged it into main first, use origin/main instead
 git submodule update --init --recursive
 uv sync --locked --all-groups
 uv run evidence --help | head -n 3        # the entry points exist
@@ -77,7 +77,9 @@ and every run still finishes; say so in the report.
      `profiles/orch-3x40-gliner.yaml` with `gpu_memory_utilization: 0.88` and the `gliner` block enabled, and
      start that one instead. This new file is the only llm-setup change you may make, and it is not committed to
      any branch except one the user names.
-4. Start the stack with that profile (otherwise the plain `orch-3x40` as in the EV2 runbook 0.2):
+4. Start the stack. Use `orch-3x40-gliner.yaml` only if you made that low-memory copy in step 3; otherwise start
+   `profiles/orch-3x40.yaml` with the `gliner:` block enabled as the user's branch has it (never edit `orch-3x40.yaml`
+   yourself; if the block is still commented out there, say so and ask the user). Shown with the copy:
 
 ```bash
 cd llm-setup
@@ -141,6 +143,9 @@ Claude, not for you to fix).
 
 ## 4. The grid: question x corpus x system
 
+The two scripts below have not been run as whole scripts. Run `one.sh` once on one question (for example `inv-datasets`
+on `$C_MAIN`) and check its output before starting `grid.sh`.
+
 One script runs the three systems for one question and one corpus, then scores. Names are
 `$EV/runs/<system>/<corpus>/<question>`; each system has its own cache file, because two processes must never
 append to the same cache file.
@@ -203,11 +208,19 @@ the hard corpus as partial.
 
 ## 6. The deliverable table
 
-Read `report.json` / `report.md` of each score dir. A, B, C are the sections of the report:
-A is `extraction` (the `all` / `all` row: precision, recall, f1), B is `integration` (inventory: `clean_share`;
-consistency, best, effect: the kind's own B numbers in that section), C is `synthesis`, one row per system
-(`evidence-engine`, `rag-baseline`, `agent-baseline`; for lists precision, recall, f1; otherwise whether the answer
-matches the expected one). A is the same for every kind and only the engine has it; the baselines have B and C.
+Read `report.json` / `report.md` of each score dir. A and B exist for the engine run only (`extraction`,
+`integration`); the baselines are scored on C only (`synthesis`, one row per system: `evidence-engine`,
+`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1) and is the same for
+every kind. B and C by kind, with the field names as they are in `report.json`:
+
+| kind | B (engine only) | C (every system) |
+|---|---|---|
+| effect | `integration.rows`: `association_accuracy` | `synthesis`: `label_correct`, `direction_accuracy` |
+| inventory | `integration`: `clean_share` | `synthesis`: `precision`, `recall`, `f1` |
+| consistency | `integration`: `claim_accuracy` | `synthesis`: `per_study_accuracy` |
+| best | `integration`: `kind_accuracy` | `synthesis`: `winner_correct`, `per_study_accuracy` |
+
+`report.md` shows the same numbers under "B." and "C." headings; copy from there if a field is nested.
 
 Write `reports/question-first/summary.md` with:
 
@@ -216,7 +229,8 @@ Write `reports/question-first/summary.md` with:
    | corpus | question | system | A (f1) | B | C |
    |---|---|---|---|---|---|
 
-   Engine rows have A, B and C; the baseline rows have B and C only, and `-` for A.
+   Engine rows have A, B and C; the baseline rows have C only, and `-` for A and B. Write B and C as the fields of
+   the table above (for example `label_correct / direction_accuracy`).
 2. **Per-extractor A**, for each corpus: from `report.json`'s `extractors.rows`, the rows with `level = all`, one
    line per extractor id with precision, recall, f1, for the regex, abbreviation, GLiNER, number and LLM
    extractors (`regex_*`, `abbrev_*`, `gliner_*`, `number_*`, `llm_*`), per question. A GLiNER line that says
