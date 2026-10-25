@@ -15,7 +15,7 @@ PROTOCOLS = REPO / "evidence" / "protocols"
 
 
 def test_the_committed_file_offers_the_rag_question() -> None:
-    [q] = load(REPO / "evidence" / "questions.yaml", PROTOCOLS)
+    q = load(REPO / "evidence" / "questions.yaml", PROTOCOLS)[0]
     assert (q.id, q.question, q.protocol, q.agentic_protocol, q.vocab) == (
         "rag-factuality", QUESTION, "rag-factuality", "rag-factuality-agentic", "rag-factuality")
 
@@ -62,7 +62,7 @@ def test_a_protocol_that_does_not_parse_is_refused(tmp_path: Path) -> None:
 
 def test_the_api_lists_questions_with_their_proposals(ev_world, tmp_path: Path) -> None:  # noqa: ANN001
     with TestClient(create_app(Settings(EV=ev_world.root))) as c:  # type: ignore[call-arg]
-        [q] = c.get("/api/ev/questions").json()
+        q = c.get("/api/ev/questions").json()[0]
         assert q["id"] == "rag-factuality" and q["protocol"] == "rag-factuality"
         assert q["proposals"] == ["rag-factuality"]   # the world's proposal asks the same question
         assert c.get("/api/ev/questions/rag-factuality").json() == q

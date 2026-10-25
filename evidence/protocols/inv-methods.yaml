@@ -1,0 +1,45 @@
+# Research protocol: which methods or system variants do the papers compare? (question-first redesign, 25 Oct 2026). An inventory: every
+# distinct condition the papers report (evidence/kinds/inventory.py). Only the condition evidence type is declared;
+# `inventory.same` is left empty, so merging names that mean the same thing is the answer's job, not the protocol's.
+# Written by hand; its sha256 is the digest of the parsed content (evidence/protocol.py).
+
+id: inv-methods
+version: 2
+kind: inventory
+question: Which methods or system variants do the papers compare?
+
+locate:
+  strategy: exhaustive        # exhaustive | bm25 | agent
+  params:
+    chunk_chars: 1500         # bm25: size of the ranked passages
+    top_k: 6                  # bm25: passages kept per document and evidence type
+
+screen:                       # per document, before any extraction (the funnel engine, Part D)
+  question: >-
+    Does the paper report an experiment that compares a retrieval-augmented system with the same model
+    answering without retrieval?
+  terms: [retrieval-augmented, retrieval augmented, RAG, retrieval, closed-book, without retrieval]
+  extractors:
+    - name: regex_screen      # no term in the paper: not relevant
+    - name: llm_screen        # otherwise the model answers the question
+  on_fail: skip               # skip | extract_anyway
+
+evidence_types:
+  condition:
+    description: >-
+      An experimental condition the paper compares: a system variant or method whose results are reported
+      (the retrieval-augmented system, the model without retrieval, ablations, other methods).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label]
+      properties:
+        label: {type: string, minLength: 1, description: the condition's name as the paper gives it}
+    roles: [condition_label]
+    merge_key: [label]
+    query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare, method]
+    extractors:               # regex_condition writes a role, which this type has not: the LLM extractor only
+      - name: llm_condition
+
+inventory:
+  target: condition

@@ -1459,7 +1459,7 @@
                 "gaps"
               ],
               "type": "string",
-              "default": "all",
+              "default": "gaps",
               "title": "Strategy"
             }
           }
@@ -1771,6 +1771,42 @@
           "markdown"
         ],
         "title": "BenchmarkView"
+      },
+      "Best": {
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/QuestionMetric"
+          },
+          "kinds": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "minProperties": 1,
+            "title": "Kinds"
+          },
+          "pairing": {
+            "$ref": "#/components/schemas/Pairing",
+            "default": {
+              "rule": "same_dataset",
+              "prefer": [
+                "table_cell",
+                "document_order"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "metric",
+          "kinds"
+        ],
+        "title": "Best",
+        "description": "A best-method question: conditions are grouped into method kinds; inside each paper the kind with the\ntop value of `metric` wins. `kinds` maps a kind to the condition names that belong to it."
       },
       "Bound": {
         "properties": {
@@ -2526,6 +2562,20 @@
           "markdown"
         ],
         "title": "CompareTable"
+      },
+      "Consistency": {
+        "properties": {
+          "by": {
+            "type": "string",
+            "const": "direction",
+            "title": "By",
+            "default": "direction"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Consistency",
+        "description": "A consistency question: does what the authors claim agree with what they measured?"
       },
       "CorpusDetail": {
         "properties": {
@@ -4253,6 +4303,7 @@
                 "metric",
                 "measurement",
                 "author_claim",
+                "dataset",
                 "screen"
               ]
             },
@@ -4267,6 +4318,7 @@
                 "metric",
                 "measurement",
                 "author_claim",
+                "dataset",
                 "screen"
               ]
             },
@@ -4495,6 +4547,7 @@
                 "metric",
                 "measurement",
                 "author_claim",
+                "dataset",
                 "screen"
               ]
             },
@@ -4750,6 +4803,36 @@
         ],
         "title": "Health"
       },
+      "Inventory": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "metric",
+              "condition",
+              "dataset"
+            ],
+            "title": "Target"
+          },
+          "same": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "object",
+            "title": "Same"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "target"
+        ],
+        "title": "Inventory",
+        "description": "An inventory question: list every distinct item of one evidence type. `same` maps a canonical name to\nthe other names it goes by."
+      },
       "Item": {
         "properties": {
           "item_id": {
@@ -4763,6 +4846,7 @@
               "metric",
               "measurement",
               "author_claim",
+              "dataset",
               "screen"
             ],
             "title": "Evidence Type"
@@ -5782,6 +5866,7 @@
                 "metric",
                 "measurement",
                 "author_claim",
+                "dataset",
                 "screen"
               ]
             },
@@ -5805,8 +5890,56 @@
               }
             ]
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "effect",
+              "inventory",
+              "consistency",
+              "best"
+            ],
+            "title": "Kind",
+            "default": "effect"
+          },
           "synthesis": {
-            "$ref": "#/components/schemas/Synthesis"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Synthesis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "inventory": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Inventory"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "best": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Best"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "consistency": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Consistency"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -5815,8 +5948,7 @@
           "id",
           "version",
           "question",
-          "evidence_types",
-          "synthesis"
+          "evidence_types"
         ],
         "title": "Protocol"
       },
@@ -6006,6 +6138,18 @@
             "type": "string",
             "title": "Question"
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "effect",
+              "inventory",
+              "consistency",
+              "best"
+            ],
+            "title": "Kind",
+            "description": "what the question asks: an effect, an inventory, whether claims agree with results (consistency), or which method kind is best",
+            "default": "effect"
+          },
           "protocol": {
             "anyOf": [
               {
@@ -6056,6 +6200,7 @@
         "required": [
           "id",
           "question",
+          "kind",
           "protocol",
           "agentic_protocol",
           "vocab",
@@ -6129,6 +6274,7 @@
               "metric",
               "measurement",
               "author_claim",
+              "dataset",
               "screen"
             ],
             "title": "Evidence Type"
@@ -6523,7 +6669,7 @@
               "gaps"
             ],
             "title": "Strategy",
-            "default": "all"
+            "default": "gaps"
           },
           "model": {
             "type": "string",
@@ -6748,6 +6894,15 @@
             ],
             "title": "On Fail",
             "default": "skip"
+          },
+          "lexical_miss": {
+            "type": "string",
+            "enum": [
+              "reject",
+              "escalate"
+            ],
+            "title": "Lexical Miss",
+            "default": "reject"
           }
         },
         "additionalProperties": false,
@@ -6757,7 +6912,7 @@
           "extractors"
         ],
         "title": "Screen",
-        "description": "Per-document screening before any extraction (Part D, the funnel; ours): is the paper one the protocol\ncan use at all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest.\n`spec` is the pseudo evidence type the engine runs the screen calls on, so they are checked, cached and\nreplayed exactly like extractor calls."
+        "description": "Per-document screening before any extraction (Part D, the funnel; ours): is the paper one the protocol\ncan use at all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest.\n`lexical_miss`: a regex \"not relevant\" ends the cascade (`reject`, the default) or passes the document on\nto the next screen extractor (`escalate`; the keyword list may miss synonyms).\n`spec` is the pseudo evidence type the engine runs the screen calls on, so they are checked, cached and\nreplayed exactly like extractor calls."
       },
       "Segment": {
         "properties": {

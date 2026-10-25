@@ -1,11 +1,61 @@
-# The questions the web app offers (webapp/evquestions.py; README "Web app"): the user selects one, never types it.
-# Per question: `id` (a plain name), `question` (exactly as its hand-written protocol asks it), `protocol` (the
-# hand-written protocol, a path from the repository root into evidence/protocols/; leave it out and the question
-# gets its protocol through the proposal flow, docs/evidence-system.md Part E), `agentic_protocol` (its variant
-# with the agentic extractor) and `vocab` (the proposal flow's vocabulary snapshot under evidence/vocab/).
+# The questions the system answers (evidence/questions.py; the web app's list, webapp/evquestions.py): the user
+# selects one, never types it. Per question: `id` (a plain name), `question` (exactly as its hand-written protocol
+# asks it), `kind` (effect | inventory | consistency | best; the protocol's kind), `truth` (the parameters the
+# expected answer is computed with, fixed here and never taken from a user's protocol: effect and consistency
+# take `metric` and `min_effect`, inventory takes `target`, best takes `metric`), `protocol` (the hand-written
+# protocol, a path from the repository root into evidence/protocols/; leave it out and the question gets its
+# protocol through the proposal flow, docs/evidence-system.md Part E), `agentic_protocol` (its variant with the
+# agentic extractor) and `vocab` (the proposal flow's vocabulary snapshot under evidence/vocab/).
 questions:
   - id: rag-factuality
     question: Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?
+    kind: effect
+    truth: {metric: factual_accuracy, min_effect: 0.01}
     protocol: evidence/protocols/rag-factuality.yaml
     agentic_protocol: evidence/protocols/rag-factuality-agentic.yaml
     vocab: rag-factuality
+  - id: rag-hallucination
+    question: Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?
+    kind: effect
+    truth: {metric: hallucination_rate, min_effect: 0.01}
+    protocol: evidence/protocols/rag-hallucination.yaml
+  - id: rag-latency
+    question: Does retrieval-augmented generation change the latency of LLM-generated answers?
+    kind: effect
+    truth: {metric: latency, min_effect: 0.05}       # seconds
+    protocol: evidence/protocols/rag-latency.yaml
+  - id: inv-metrics
+    question: Which evaluation metrics do the papers report?
+    kind: inventory
+    truth: {target: metric}
+    protocol: evidence/protocols/inv-metrics.yaml
+  - id: inv-methods
+    question: Which methods or system variants do the papers compare?
+    kind: inventory
+    truth: {target: condition}
+    protocol: evidence/protocols/inv-methods.yaml
+  - id: inv-datasets
+    question: Which datasets do the papers evaluate on?
+    kind: inventory
+    truth: {target: dataset}
+    protocol: evidence/protocols/inv-datasets.yaml
+  - id: cons-accuracy
+    question: Do the authors' conclusions about factual accuracy agree with their reported results?
+    kind: consistency
+    truth: {metric: factual_accuracy, min_effect: 0.01}
+    protocol: evidence/protocols/cons-accuracy.yaml
+  - id: cons-hallucination
+    question: Do the authors' conclusions about hallucination agree with their reported results?
+    kind: consistency
+    truth: {metric: hallucination_rate, min_effect: 0.01}
+    protocol: evidence/protocols/cons-hallucination.yaml
+  - id: best-accuracy
+    question: Which method achieves the highest factual accuracy within each paper?
+    kind: best
+    truth: {metric: factual_accuracy}
+    protocol: evidence/protocols/best-accuracy.yaml
+  - id: best-hallucination
+    question: Which method achieves the lowest hallucination rate within each paper?
+    kind: best
+    truth: {metric: hallucination_rate}
+    protocol: evidence/protocols/best-hallucination.yaml

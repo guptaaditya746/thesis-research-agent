@@ -1,0 +1,45 @@
+# Research protocol: which datasets do the papers evaluate on? (question-first redesign, 25 Oct 2026). An inventory: every
+# distinct dataset the papers report (evidence/kinds/inventory.py). Only the dataset evidence type is declared;
+# `inventory.same` is left empty, so merging names that mean the same thing is the answer's job, not the protocol's.
+# Written by hand; its sha256 is the digest of the parsed content (evidence/protocol.py).
+
+id: inv-datasets
+version: 2
+kind: inventory
+question: Which datasets do the papers evaluate on?
+
+locate:
+  strategy: exhaustive        # exhaustive | bm25 | agent
+  params:
+    chunk_chars: 1500         # bm25: size of the ranked passages
+    top_k: 6                  # bm25: passages kept per document and evidence type
+
+screen:                       # per document, before any extraction (the funnel engine, Part D)
+  question: >-
+    Does the paper report an experiment that compares a retrieval-augmented system with the same model
+    answering without retrieval?
+  terms: [retrieval-augmented, retrieval augmented, RAG, retrieval, closed-book, without retrieval]
+  extractors:
+    - name: regex_screen      # no term in the paper: not relevant
+    - name: llm_screen        # otherwise the model answers the question
+  on_fail: skip               # skip | extract_anyway
+
+evidence_types:
+  dataset:
+    description: >-
+      A dataset or benchmark the paper evaluates on. name is the dataset's name as the paper gives it.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name: {type: string, minLength: 1, description: the dataset's name as the paper gives it}
+    roles: [dataset_label]
+    merge_key: [name]
+    query: [dataset, benchmark, evaluate, test, split, questions, corpus]
+    extractors:
+      - name: regex_dataset
+      - name: llm_dataset
+
+inventory:
+  target: dataset

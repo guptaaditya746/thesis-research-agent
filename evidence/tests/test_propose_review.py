@@ -280,7 +280,7 @@ def test_ev1_protocols_still_parse_with_the_same_sha256() -> None:
     root = Path(__file__).parents[2]
     found = {p.relative_to(root).as_posix() for pattern in ("evidence/protocols/*.yaml", "tests/EV1/**/protocol.yaml")
              for p in root.glob(pattern)}
-    assert found == set(EV1_SHA256)
+    assert set(EV1_SHA256) <= found   # protocols added later (the ten questions) are checked in test_ten_protocols.py
     for rel, sha in EV1_SHA256.items():
         assert load(root / rel).sha256 == sha, rel
 

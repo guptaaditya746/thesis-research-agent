@@ -13,7 +13,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from evidence.contract import ExtractionResult, ExtractorSpec, Item
-from evidence.protocol import Protocol
+from evidence.protocol import Kind, Protocol
 
 from .models import Claim, Step
 
@@ -535,6 +535,8 @@ class BenchmarkView(Base):
 class Question(Base):
     id: str
     question: str
+    kind: Kind = Field("effect", description="what the question asks: an effect, an inventory, whether claims "
+                                            "agree with results (consistency), or which method kind is best")
     protocol: str | None = Field(None, description="the hand-written protocol's name under the protocols directory "
                                                    "(`/api/ev/protocols/{name}`), or null: the question needs a "
                                                    "proposal")

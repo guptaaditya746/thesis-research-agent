@@ -1,0 +1,120 @@
+# Research protocol: does retrieval augmentation reduce hallucination? (question-first redesign, 25 Oct 2026)
+# rag-factuality.yaml with the hallucination rate as the only question metric and the author claim about
+# hallucination. Written by hand; its sha256 is the digest of the parsed content (evidence/protocol.py).
+
+id: rag-hallucination
+version: 2
+question: Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?
+
+locate:
+  strategy: exhaustive        # exhaustive | bm25 | agent
+  params:
+    chunk_chars: 1500         # bm25: size of the ranked passages
+    top_k: 6                  # bm25: passages kept per document and evidence type
+
+screen:                       # per document, before any extraction (the funnel engine, Part D)
+  question: >-
+    Does the paper report an experiment that compares a retrieval-augmented system with the same model
+    answering without retrieval?
+  terms: [retrieval-augmented, retrieval augmented, RAG, retrieval, closed-book, without retrieval]
+  extractors:
+    - name: regex_screen      # no term in the paper: not relevant
+    - name: llm_screen        # otherwise the model answers the question
+  on_fail: skip               # skip | extract_anyway
+
+evidence_types:
+  condition:
+    description: >-
+      An experimental condition the paper compares: a system variant whose results are reported. role is
+      rag for the retrieval-augmented system, baseline for the same model answering without retrieval
+      (closed-book), other for anything else (ablations, other systems).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label, role]
+      properties:
+        label: {type: string, minLength: 1, description: the condition's name as the paper gives it}
+        role: {type: string, enum: [rag, baseline, other], description: "rag, baseline or other"}
+    roles: [condition_label]
+    merge_key: [label, role]
+    query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare]
+    extractors:
+      - name: regex_condition
+      - name: llm_condition
+
+  metric:
+    description: >-
+      An evaluation metric the paper reports results on. canonical is factual_accuracy for accuracy of the
+      answers (accuracy, exact match, factual accuracy), hallucination_rate for the rate of hallucinated or
+      unsupported answers, other for anything else (latency, BLEU, fluency).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [name, canonical, higher_is_better]
+      properties:
+        name: {type: string, minLength: 1, description: the metric's name as the paper gives it}
+        canonical: {type: string, enum: [factual_accuracy, hallucination_rate, other]}
+        higher_is_better: {type: boolean}
+    roles: [metric_label]
+    merge_key: [name, canonical]
+    query: [accuracy, factual, hallucination, rate, metric, measure, evaluate, score, exact, match]
+    extractors:
+      - name: regex_metric
+      - name: llm_metric
+
+  measurement:
+    description: >-
+      One reported result: the value of one metric for one condition. value is normalised to a fraction
+      (62% and 62.0 under a % header are 0.62). dataset is the dataset it was measured on, or null.
+    fields:
+      type: object
+      additionalProperties: false
+      required: [value, dataset]
+      properties:
+        value: {type: number, description: the value as a fraction for accuracies and rates}
+        dataset: {type: [string, "null"], description: "the dataset, or null when the paper does not say"}
+    links: {condition: condition, metric: metric}
+    bounds:                   # accuracies and rates are fractions; a value outside [0, 1] is rejected (schema)
+      - {field: value, min: 0, max: 1, when: {link: metric, field: canonical, values: [factual_accuracy, hallucination_rate]}}
+    context: [condition, metric]
+    roles: [value, condition_label, metric_label]
+    merge_key: [value]
+    query: [table, results, accuracy, rate, achieves, reaches, compared, "%"]
+    extractors:
+      - name: regex_measurement
+      - name: llm_measurement
+
+  author_claim:
+    description: >-
+      The authors' own conclusion about whether retrieval augmentation reduces hallucination in the answers:
+      improves (fewer hallucinated answers), no_effect or worsens (more hallucinated answers).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [direction]
+      properties:
+        direction: {type: string, enum: [improves, no_effect, worsens]}
+    roles: [claim]
+    query: [conclusion, reduces, show, find, retrieval, hallucination, effect, unsupported]
+    extractors:
+      - name: regex_author_claim
+      - name: llm_author_claim
+
+synthesis:                    # every rule parameter; the machinery is evidence/rules.py and evidence/synthesis.py
+  compare: {treatment: rag, control: baseline}   # condition roles a study's pair is made of
+  metrics:                    # the one question metric: a lower rate is better
+    - {canonical: hallucination_rate, higher_is_better: false}
+  min_effect: 0.01            # |delta| below this (fractions) is neutral
+  pairing:                    # treatment and control on the same dataset (first dataset in document order
+    rule: same_dataset        # that has both); among several values of one condition, metric and dataset
+    prefer: [table_cell, document_order]   # a table cell beats prose, then the earlier value wins
+  claim_map: {improves: supports, worsens: contradicts, no_effect: neutral}   # author claim -> direction it asserts
+  label:                      # the answer from the counts: the first row whose conditions all hold
+    - {when: {supporting: ">0", contradicting: ">0"}, then: mixed}
+    - {when: {supporting: ">0"}, then: supported}
+    - {when: {contradicting: ">0"}, then: refuted}
+    - {when: {neutral: ">0"}, then: no_effect}
+    - {then: insufficient}
+  flags:                      # reported in answer.json (Part F); only duplicates change the counts
+    duplicates: true
+    large_effect: {factor: 3.0, min_studies: 3}
