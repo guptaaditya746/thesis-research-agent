@@ -108,15 +108,18 @@ def test_seconds_not_normalised() -> None:
     assert found(run(header, context)) == [("baseline", "lat", 0.41, None)]
     caption = ("# P\n\nTable 1: Accuracy in percent and latency.\n\n| System | Accuracy | Latency |\n|---|---|---|\n"
                "| closed-book model | 62.0 | 1.21 |\n")   # the % caption is for the accuracy column only
-    assert found(run(caption, [RAG, CB, ACC, LAT])) == [("baseline", "acc", 0.62, None), ("baseline", "lat", 1.21, None)]
+    assert found(run(caption, [RAG, CB, ACC, LAT])) == [("baseline", "acc", 0.62, None),
+                                                         ("baseline", "lat", 1.21, None)]
 
 
 # --- guards -------------------------------------------------------------------------------------------------
 
 def test_deltas_are_not_values() -> None:
     assert run(sentence("The retrieval-augmented model improves accuracy by 4% over the closed-book model.")) == []
-    assert run(sentence("The retrieval-augmented model gains +3.2 points of accuracy over the closed-book model.")) == []
-    assert run(sentence("The retrieval-augmented model is 9% higher in accuracy than the closed-book model.")) == []
+    assert run(sentence("The retrieval-augmented model gains +3.2 points of accuracy over the closed-book "
+                        "model.")) == []
+    assert run(sentence("The retrieval-augmented model is 9% higher in accuracy than the closed-book "
+                        "model.")) == []
     assert run(sentence("The retrieval-augmented model is 0.45 s slower in latency than the closed-book model."),
                [RAG, CB, LAT]) == []
     text = sentence("The retrieval-augmented model reaches an accuracy of 71% (+9%) over the closed-book model.")
@@ -150,9 +153,71 @@ def test_ranges_sections_and_shares_are_not_values() -> None:
 
 def test_percent_only_normalised_for_fraction_metrics() -> None:
     # a bare 1 < x <= 100 is a percentage only for a [0, 1] metric; for latency it stays as written
-    assert found(run(sentence("The closed-book model reaches an accuracy of 62.5."))) == [("baseline", "acc", 0.625, None)]
+    text = sentence("The closed-book model reaches an accuracy of 62.5.")
+    assert found(run(text)) == [("baseline", "acc", 0.625, None)]
     assert found(run(sentence("The closed-book model has a latency of 2.5."), [RAG, CB, LAT])) == [
         ("baseline", "lat", 2.5, None)]
+
+
+# --- surface forms: codes and abbreviations of the context items (fix round 1) ---------------------------
+
+def spanned(item: Item, *forms: str) -> Item:
+    """The context item with spans whose exact texts are `forms` (as an abbrev or LLM item would carry)."""
+    role = "condition_label" if item.evidence_type == "condition" else "metric_label"
+    spans = [Span(role=role, selector={"file": "papers/P.md", "start": n, "end": n + len(f), "exact": f})
+             for n, f in enumerate(forms)]
+    return Item.build(item.evidence_type, dict(item.fields), spans)
+
+
+def roles(items: list[Item], context: list[Item]) -> list[tuple[str, float]]:
+    """(condition role, value) by value position."""
+    role = {i.item_id: i.fields.get("role") for i in context}
+    def start(i: Item) -> int:
+        return min(s.selector["start"] for s in i.spans if s.role == "value")
+    return [(role[i.links["condition"]], i.fields["value"]) for i in sorted(items, key=start)]
+
+
+VERSUS = "Accuracy was 71% (RAG) versus 62% (CB)."
+
+
+def test_versus_with_codes_defined_in_the_text() -> None:
+    text = ("# P\n\nWe compare a closed-book model (CB) with a retrieval-augmented model (RAG).\n\n" + VERSUS + "\n")
+    assert roles(run(text), [RAG, CB]) == [("rag", 0.71), ("baseline", 0.62)]
+
+
+def test_versus_with_codes_from_context_spans() -> None:
+    text = "# P\n\nWe compare a closed-book model with a retrieval-augmented model.\n\n" + VERSUS + "\n"
+    context = [RAG, spanned(CB, "closed-book model", "CB"), ACC]
+    assert roles(run(text, context), context) == [("rag", 0.71), ("baseline", 0.62)]
+
+
+def test_a_preceding_condition_is_not_taken_across_versus() -> None:
+    text = sentence("Accuracy was 71% for the retrieval-augmented model versus 62%.")
+    assert found(run(text)) == [("rag", "acc", 0.71, None)]
+
+
+def test_preceding_condition_beats_a_later_one() -> None:
+    text = ("# P\n\nWe compare a closed-book baseline (B) with its retrieval-augmented variant (R).\n\n"
+            "On accuracy, R reaches 0.71 and B reaches 0.62.\n")
+    assert roles(run(text), [RAG, CB]) == [("rag", 0.71), ("baseline", 0.62)]
+
+
+def test_abbreviated_metric_resolves_by_its_span_text() -> None:
+    hr = spanned(Item.build("metric", {"name": "hallucination rate", "canonical": "hallucination_rate",
+                                       "higher_is_better": False}, [SPAN]), "HR")
+    context = [RAG, CB, hr]
+    table = "# P\n\n| Model | HR (%) |\n|---|---|\n| closed-book model | 20.2 |\n| retrieval-augmented model | 6.3 |\n"
+    items = run(table, context)
+    assert roles(items, context) == [("baseline", 0.202), ("rag", 0.063)]
+    assert {i.links["metric"] for i in items} == {hr.item_id}
+    prose = run(sentence("The closed-book model has an HR of 20%."), context)
+    assert roles(prose, context) == [("baseline", 0.2)] and prose[0].links["metric"] == hr.item_id
+
+
+def test_condition_code_in_a_table_row_from_context_spans() -> None:
+    context = [spanned(RAG, "R"), spanned(CB, "B"), ACC]
+    table = "# P\n\n| System | Accuracy (%) |\n|---|---|\n| B | 60.0 |\n| R | 70.0 |\n"
+    assert roles(run(table, context), context) == [("baseline", 0.6), ("rag", 0.7)]
 
 
 # --- identity ----------------------------------------------------------------------------------------------
