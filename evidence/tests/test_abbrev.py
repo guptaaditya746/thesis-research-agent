@@ -77,7 +77,8 @@ def test_short_form_in_table_becomes_metric_item() -> None:
     assert item.fields == {"name": "fact-level accuracy", "canonical": "factual_accuracy", "higher_is_better": True}
     assert [(s.role, s.selector["exact"]) for s in item.spans] == [("metric_label", "FLA"), ("metric_label", "FLA")]
     assert [s.selector["start"] for s in item.spans][1] == TEXT.index("| FLA |") + 2
-    assert list(by_name) == ["fact-level accuracy"]   # "unsupported-answer rate" holds no metric term
+    assert by_name["unsupported-answer rate"].fields["canonical"] == "hallucination_rate"
+    assert not by_name["unsupported-answer rate"].fields["higher_is_better"]
 
 
 def test_long_form_without_a_term_gives_no_item() -> None:
@@ -102,7 +103,7 @@ def test_scope_limits_uses_not_definitions() -> None:
     assert [s.selector["start"] for s in item.spans] == [text.index("FLA is high")]
 
 
-def test_engine_merges_abbrev_items_with_regex(tmp_path: Path) -> None:
+def test_engine_keeps_abbrev_and_regex_metric_items_with_one_canonical(tmp_path: Path) -> None:
     text = PROTOCOL.read_text(encoding="utf-8")
     text = text.replace("      - name: regex_metric\n", "      - name: regex_metric\n      - name: abbrev_metric\n", 1)
     variant = tmp_path / "abbrev.yaml"
@@ -115,5 +116,22 @@ def test_engine_merges_abbrev_items_with_regex(tmp_path: Path) -> None:
     items = [json.loads(x) for x in (run / "evidence.jsonl").read_text(encoding="utf-8").splitlines()]
     metrics = [i for i in items if i["evidence_type"] == "metric"]
     mine = [m for m in metrics if m["fields"]["name"] == "fact-level accuracy"]   # next to the regex "accuracy" item
-    assert len(mine) == 1 and mine[0]["fields"]["canonical"] == "factual_accuracy"
+    assert len(mine) == 1 and mine[0]["spans"] and {s["role"] for s in mine[0]["spans"]} == {"metric_label"}
+    plain = [m for m in metrics if m["fields"]["name"] == "accuracy"]   # both passed the engine checks (schema, roles)
+    assert len(plain) == 1 and plain[0]["fields"]["canonical"] == mine[0]["fields"]["canonical"] == "factual_accuracy"
     assert len(mine[0]["found_by"]) == 1   # only the abbrev extractor found it
+
+
+def test_every_synthetic_metric_abbreviation_yields_an_item_with_its_canonical() -> None:
+    for canonical, metrics in QUESTION_METRICS.items():
+        for name, short, _ in metrics:
+            [item] = extract("abbrev_metric", f"We measure the {name} ({short}) here. Table: {short} is high.",
+                             "metric").items
+            assert (item.fields["name"], item.fields["canonical"]) == (name, canonical), name
+
+
+def test_measure_noun_falls_back_to_other_only_when_the_enum_allows() -> None:
+    text = "We report the throughput rate (TR) of the system. TR is stable."
+    assert [i.fields["canonical"] for i in extract("abbrev_metric", text, "metric").items] == ["other"]
+    schema = {"properties": {"canonical": {"enum": ["factual_accuracy", "hallucination_rate"]}}}
+    assert extract("abbrev_metric", text, "metric", {"field_schema": schema}).items == ()

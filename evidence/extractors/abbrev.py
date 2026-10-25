@@ -18,7 +18,7 @@ from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, Ru
 from . import base, regex, terms
 
 VERSION = 1
-SOURCES = (base.HERE / "abbrev.py", base.HERE / "terms.py", *base.SHARED_SOURCES)
+SOURCES = (base.HERE / "abbrev.py", base.HERE / "regex.py", base.HERE / "terms.py", *base.SHARED_SOURCES)   # regex.py: INJECTED
 CODE_SHA256 = base.source_sha256(*SOURCES)
 
 STOP = frozenset({"of", "the", "and", "for", "in", "on", "to", "a", "an", "with"})
@@ -28,6 +28,13 @@ AFTER_LONG = re.compile(r"\(\s*(" + SHORT + r")\s*\)")                        # 
 BEFORE_LONG = re.compile(r"(?<![\w-])(" + SHORT + r")\s*\(([^()\n]{3,80})\)")  # "LF (long form)"
 BREAK = re.compile(r"[.;:!?\n|()]")
 MAX_WORDS = 8
+# Wording for the question canonicals that terms.METRICS lacks, consulted after it ("unsupported-answer rate").
+SUPPLEMENT: list[tuple[str, str, bool]] = [
+    (r"(?i)\bhallucinat\w*|\bunsupported\b|\binvented\b|\bfabricat\w*", "hallucination_rate", False),
+    (r"(?i)\baccura\w*|\bcorrect\w*", "factual_accuracy", True),
+]
+# a long form that ends in a measure noun, and names no known term, is an "other" metric
+METRIC_NOUN = re.compile(r"(?i)\b(?:rate|score|ratio|frequency|error|accuracy|latency|time)\s*$")
 
 
 @dataclass(frozen=True)
@@ -142,11 +149,20 @@ class AbbrevMetric(Abbrev):
     evidence_type, name = "metric", "abbrev_metric"
 
     def default_patterns(self) -> dict[str, Any]:
-        return super().default_patterns() | {"metrics": [list(m) for m in terms.METRICS]}
+        return super().default_patterns() | {"metrics": [list(m) for m in terms.METRICS],
+                                             "supplement": [list(m) for m in SUPPLEMENT]}
 
     def term(self, long: str) -> terms.Mention | None:
         found = terms.find_all(long, [tuple(m) for m in self.patterns["metrics"]])  # type: ignore[misc]
-        return found[0] if found else None
+        if found:
+            return found[0]
+        for pattern, canonical, higher in self.patterns["supplement"]:   # wording terms.METRICS lacks
+            if re.search(pattern, long):
+                return terms.Mention(0, len(long), canonical, long, higher)
+        enum = self.given.get("field_schema", {}).get("properties", {}).get("canonical", {}).get("enum")
+        if METRIC_NOUN.search(long) and (enum is None or "other" in enum):
+            return terms.Mention(0, len(long), "other", long, True)
+        return None
 
     def fields(self, long: str, mention: terms.Mention) -> dict[str, Any]:
         return {"name": long, "canonical": mention.key, "higher_is_better": mention.higher_is_better}
