@@ -43,6 +43,11 @@ on a call this process made counts as fresh (`CallCache.made`), so the cost tota
 a setting: it never changes a result, so replay does not need it. The warm pass is skipped when no model call is
 possible (`regex-only`, no provider). Locator calls are not cached, so an `agent` locator runs again in the second
 pass.
+
+A `run` (not replay or reexec) also keeps its own calls.jsonl (rundir.RunCalls): one row per model-backed extractor
+or screen call with its full model-call records, written as each call completes, by the warm pass (phase `warm`)
+or, for calls it did not write, by the sequential loop (phase `run`). It is not an output and not in the hash
+chain, so it changes no hash; its row order may vary with workers.
 """
 from __future__ import annotations
 
@@ -60,13 +65,14 @@ from agent.rundir import utc_now
 from modelcall import JsonlCache
 
 from . import checks, extractors, graph, kinds, merge
-from .calls import CallCache, EngineContext, Mode, NotRecorded
+from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
 from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
 from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .recording import Provider, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
-                     LOCATE_FILE, PROTOCOL_FILE, RUN_FILE, Corpus, Events, new_run_id, write_lines)
+                     LOCATE_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, new_run_id,
+                     write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
@@ -181,8 +187,10 @@ class Execution:
 
     def __init__(self, protocol: Protocol, corpus: Corpus, root: Path, run_id: str, calls: CallCache,
                  cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], provider: Provider | None,
-                 locator: Locator | None, strategy: Strategy = "all") -> None:
+                 locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
+                 phase: Literal["warm", "run"] = "run") -> None:
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
+        self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
         self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
         self.events = Events(root / EVENTS_FILE, run_id)
         self.ref = ProtocolRef(id=protocol.id, sha256=protocol.sha256)
@@ -346,6 +354,14 @@ class Execution:
         result = checks.check(outcome.raw, task, index, spec, {i.item_id: i for i in context})
         call_id = self.events.next_id()
         result = result.model_copy(update={"call_id": call_id})
+        if self.run_calls is not None and outcome.model_calls:
+            self.run_calls.add({
+                "key": cache_key(extractor.spec.extractor_id, task.task_sha256, outcome.attempt), "phase": self.phase,
+                "document": task.document.id, "evidence_type": task.evidence_type,
+                "extractor_id": extractor.spec.extractor_id, "attempt": outcome.attempt, "status": result.status,
+                "source": outcome.source, "started_at": started, "ended_at": utc_now(),
+                "task": task.model_dump(mode="json"), "result": outcome.raw.model_dump(mode="json"),
+                "model_calls": outcome.model_calls})
         self.outputs[f"{CALLS_DIR}/{call_id}.json"] = write_json(self.root / CALLS_DIR / f"{call_id}.json",
                                                                        result.model_dump(mode="json"))
         tokens_in, tokens_out = usage(outcome.model_calls)
@@ -392,13 +408,16 @@ class Execution:
 
 
 def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
-          provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int) -> None:
-    """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away."""
+          provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int,
+          run_calls: RunCalls | None = None) -> None:
+    """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away,
+    except the rows each call adds to the run's calls.jsonl (`run_calls`, phase `warm`) as it completes."""
     with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
         def one(i: int, paper: Any) -> None:
             root = Path(tmp) / str(i)
             root.mkdir()
-            Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy).document(paper)
+            Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy,
+                      run_calls, "warm").document(paper)
         futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
         try:
             for future in futures:
@@ -423,12 +442,13 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
     cascades = build_extractors(protocol, settings.selection, settings.model)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
-    ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy)
+    run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
+    ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
     if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
-        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers)
+        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls)
     for paper in corpus.papers:
         ex.document(paper)
     ex.finish()

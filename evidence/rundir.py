@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,6 +30,7 @@ LOCATE_FILE, EVIDENCE_FILE, GRAPH_FILE, ANSWER_FILE = "locate.json", "evidence.j
 CALLS_DIR, REEXEC_FILE, PROV_FILE = "calls", "reexec.json", "prov.ttl"
 FUNNEL_FILE = "funnel.json"   # the funnel's steps and decisions per document (Part D)
 CACHE_FILE = "extractor_calls.jsonl"
+RUN_CALLS_FILE = "calls.jsonl"   # the run's own copy of every model-backed call (RunCalls); not an output
 ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR)   # what only the engine writes in a run dir
 REEXEC_GLOB = "{name}-reexec-*"   # sibling directories `evidence reexec` writes next to a run
 
@@ -106,6 +108,27 @@ class Events:
             fh.write(line(sealed))
         self.head = sealed["hash"]
         return sealed["task_id"]
+
+
+class RunCalls:
+    """The run's calls.jsonl: one row per model-backed extractor or screen call, with the call's full model-call
+    records (evidence/recording.py), so the run's trace keeps its prompts and replies when the shared record
+    cache is moved or deleted. Rows are appended as calls complete (the warm pass's threads too, under the
+    lock), so a reader sees progress; a row whose `key` (the cache key) was already written is skipped. Not
+    in the hash chain nor in run.json `outputs`, and the row order may vary with workers."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        self.lock = threading.Lock()
+        self.keys: set[str] = set()
+
+    def add(self, row: dict[str, Any]) -> None:
+        with self.lock:
+            if row["key"] in self.keys:
+                return
+            with self.path.open("ab") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False, sort_keys=True).encode("utf-8") + b"\n")
+            self.keys.add(row["key"])
 
 
 def write_lines(path: Path, rows: list[Any]) -> str:
