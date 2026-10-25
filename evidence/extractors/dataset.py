@@ -15,7 +15,7 @@ from ..contract import ExtractionResult, ExtractionTask, ExtractorSpec, Item, Ru
 from . import base, llm, regex
 
 VERSION = 1
-SOURCES = (base.HERE / "dataset.py", *base.SHARED_SOURCES)
+SOURCES = (base.HERE / "dataset.py", base.ROOT / "evidence" / "evidence_types.py", *base.SHARED_SOURCES)
 CODE_SHA256 = base.source_sha256(*SOURCES)
 DEFAULT_PATTERN = r"\b[A-Z][A-Za-z]+(?:QA|Bench|Set|Facts|Check|Quest)\b"
 

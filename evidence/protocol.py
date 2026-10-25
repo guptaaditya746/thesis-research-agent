@@ -28,7 +28,8 @@ from jsonschema.exceptions import SchemaError
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from . import rules
-from .contract import Budget, EvidenceType, digest
+from .contract import Budget, digest
+from .evidence_types import EvidenceType
 
 LocateStrategy = Literal["exhaustive", "bm25", "agent"]
 # What a protocol asks: the effect of a treatment, an inventory of names, whether claims agree with results,

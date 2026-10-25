@@ -38,7 +38,7 @@ from . import base, regex, terms
 
 VERSION = 1
 SOURCES = (base.HERE / "gliner.py", base.HERE / "terms.py", base.HERE / "regex.py", base.ROOT / "gold" / "chunks.py",
-           *base.SHARED_SOURCES)   # regex.py: INJECTED
+           base.ROOT / "evidence" / "evidence_types.py", *base.SHARED_SOURCES)   # regex.py: INJECTED
 CODE_SHA256 = base.source_sha256(*SOURCES)
 
 LABELS = {"condition": ["method", "system variant", "baseline model"], "metric": ["evaluation metric"],

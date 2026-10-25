@@ -17,13 +17,13 @@ Kind = Literal["regex", "model", "llm", "agent"]
 Determinism = Literal["exact", "near_exact", "variable"]
 # `screen` is the pseudo evidence type of the funnel's screening calls (docs/evidence-system.md Part D, ours):
 # one item {relevant, reason} per call, checked, cached and replayed like any call; never an evidence item.
-EvidenceType = Literal["condition", "metric", "measurement", "author_claim", "dataset", "screen"]
+EvidenceType = Literal["condition", "metric", "measurement", "author_claim", "screen"]
 Status = Literal["ok", "partial", "error"]
 RejectReason = Literal["empty_quote", "not_found", "ambiguous", "partial_number", "schema", "out_of_scope",
                        "dangling_link"]
 CoverageStatus = Literal["found", "none", "skipped", "error"]
 
-ITEM_PREFIX = {"condition": "c", "metric": "k", "measurement": "m", "author_claim": "a", "dataset": "d", "screen": "s"}
+ITEM_PREFIX = {"condition": "c", "metric": "k", "measurement": "m", "author_claim": "a", "screen": "s"}
 
 
 def digest(obj: Any) -> str:

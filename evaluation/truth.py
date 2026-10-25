@@ -18,7 +18,8 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from evidence.contract import EvidenceType, Item
+from evidence.contract import Item
+from evidence.evidence_types import EvidenceType
 from evidence.rundir import ANSWER_FILE, FUNNEL_FILE, LOCATE_FILE, REEXEC_FILE, RUN_FILE, RunDir
 from evidence.synthesis import SYSTEM as ENGINE  # the engine's `system` name in answer.json; baselines differ
 

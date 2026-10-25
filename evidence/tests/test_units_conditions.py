@@ -15,16 +15,17 @@ from .conftest import PROTOCOL, make_corpus, regex_run
 
 PROTO = protocol.load(PROTOCOL)
 LATENCY = Path(__file__).resolve().parents[1] / "protocols" / "rag-latency.yaml"
-# code_sha256 of the extractors that existed before these two modules (main at A3): unchanged
-EXISTING = {"regex_condition": "5e6604c2dd98dd7cdc57c102931b5649e6d128f5b93eeb4686e0743ea92fa810",
-            "regex_metric": "5e6604c2dd98dd7cdc57c102931b5649e6d128f5b93eeb4686e0743ea92fa810",
-            "regex_measurement": "5e6604c2dd98dd7cdc57c102931b5649e6d128f5b93eeb4686e0743ea92fa810",
-            "regex_author_claim": "5e6604c2dd98dd7cdc57c102931b5649e6d128f5b93eeb4686e0743ea92fa810",
-            "regex_dataset": "5c3a469f71ee2d9c8344c26bace17fcc92d7296af7adcf57c7a9d4d8f1ce7182",
-            "llm_condition": "9cc9ce6fd7157a115e25516d4e1814361863741694c8f353cdde22bc55bc4dca",
-            "llm_measurement": "9cc9ce6fd7157a115e25516d4e1814361863741694c8f353cdde22bc55bc4dca",
-            "regex_screen": "3b0dba02d36f5ce22702a141072ba105a89f2f47136b368d820b8ce885a55dbd",
-            "llm_screen": "6879495f24e0398a67ed4c2bfd60b92ffd5b47c159c452df3d54894c174fa6ec"}
+# code_sha256 of the extractors that existed before these two modules: unchanged, the EV2 runs' own (the regex and
+# LLM ones as at 946b138, test_old_extractor_ids); regex_dataset hashes evidence/evidence_types.py too
+EXISTING = {"regex_condition": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
+            "regex_metric": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
+            "regex_measurement": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
+            "regex_author_claim": "f1647847fdf98880a01a8f29125f982b3d7c4c5d04ad9e006c221ce69ae45d38",
+            "regex_dataset": "013a36366b4edba5c1f55628db9ddeeb2584cb4e806fc90c6808da41df767d74",
+            "llm_condition": "1d83b14e028cfd528e61d308ab058a0d9305d0f6164ace19a7c97658517f6e26",
+            "llm_measurement": "1d83b14e028cfd528e61d308ab058a0d9305d0f6164ace19a7c97658517f6e26",
+            "regex_screen": "023d920f90d2d58196b825fc6a5b767cb5167df0b74d32a725a07a34e1b90b66",
+            "llm_screen": "28fe652e63d2c056b1b257ddefa1c7d435074cafda562ce66a576c7d65afafc6"}
 
 
 class Ctx:

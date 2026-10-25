@@ -135,7 +135,8 @@ from typing import Any, Iterable
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
-from evidence.contract import EvidenceType, Item, Scope
+from evidence.contract import Item, Scope
+from evidence.evidence_types import EvidenceType
 from evidence.kinds import best as best_rules
 from evidence.protocol import Protocol
 from evidence.protocol import load as load_protocol

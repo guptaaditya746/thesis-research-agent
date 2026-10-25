@@ -4,7 +4,8 @@ from __future__ import annotations
 from typing import Any
 
 from .. import synthesis
-from ..contract import EvidenceType, Item
+from ..contract import Item
+from ..evidence_types import EvidenceType
 from ..protocol import Protocol, Synthesis
 
 
