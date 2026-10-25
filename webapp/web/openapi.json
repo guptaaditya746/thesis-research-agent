@@ -1808,6 +1808,133 @@
         "title": "Best",
         "description": "A best-method question: conditions are grouped into method kinds; inside each paper the kind with the\ntop value of `metric` wins. `kinds` maps a kind to the condition names that belong to it."
       },
+      "BestAnswer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "best",
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "studies": {
+            "items": {
+              "$ref": "#/components/schemas/BestStudy"
+            },
+            "type": "array",
+            "title": "Studies",
+            "default": []
+          },
+          "wins": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Wins",
+            "default": {}
+          },
+          "winner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winner"
+          },
+          "tied": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tied",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "system",
+          "metric",
+          "studies",
+          "wins",
+          "winner",
+          "tied"
+        ],
+        "title": "BestAnswer",
+        "description": "evidence/kinds/best.py: which method kind has the top value inside each paper, and wins most papers."
+      },
+      "BestStudy": {
+        "properties": {
+          "document": {
+            "type": "string",
+            "title": "Document"
+          },
+          "winner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winner"
+          },
+          "tied": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tied",
+            "default": []
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Values",
+            "default": {}
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StudyReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "document",
+          "winner",
+          "tied",
+          "values",
+          "reason"
+        ],
+        "title": "BestStudy"
+      },
       "Bound": {
         "properties": {
           "field": {
@@ -2576,6 +2703,148 @@
         "type": "object",
         "title": "Consistency",
         "description": "A consistency question: does what the authors claim agree with what they measured?"
+      },
+      "ConsistencyAnswer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "consistency",
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "studies": {
+            "items": {
+              "$ref": "#/components/schemas/ConsistencyStudy"
+            },
+            "type": "array",
+            "title": "Studies",
+            "default": []
+          },
+          "agreeing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Agreeing",
+            "default": []
+          },
+          "disagreeing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Disagreeing",
+            "default": []
+          },
+          "undetermined": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Undetermined",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "system",
+          "metric",
+          "studies",
+          "agreeing",
+          "disagreeing",
+          "undetermined"
+        ],
+        "title": "ConsistencyAnswer",
+        "description": "evidence/kinds/consistency.py: does what the authors claim agree with what they measured?"
+      },
+      "ConsistencyStudy": {
+        "properties": {
+          "document": {
+            "type": "string",
+            "title": "Document"
+          },
+          "claim": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "supports",
+                  "contradicts",
+                  "neutral",
+                  "undetermined"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claim"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "supports",
+                  "contradicts",
+                  "neutral",
+                  "undetermined"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "agrees": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agrees"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StudyReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "document",
+          "claim",
+          "direction",
+          "agrees",
+          "reason"
+        ],
+        "title": "ConsistencyStudy"
       },
       "CorpusDetail": {
         "properties": {
@@ -3405,8 +3674,14 @@
         ],
         "title": "DecisionsResult"
       },
-      "EvAnswer": {
+      "EffectAnswer": {
         "properties": {
+          "kind": {
+            "type": "string",
+            "const": "effect",
+            "title": "Kind",
+            "default": "effect"
+          },
           "system": {
             "type": "string",
             "title": "System"
@@ -3564,6 +3839,7 @@
         "additionalProperties": true,
         "type": "object",
         "required": [
+          "kind",
           "system",
           "question",
           "label",
@@ -3581,7 +3857,8 @@
           "retrieved",
           "agent"
         ],
-        "title": "EvAnswer"
+        "title": "EffectAnswer",
+        "description": "An effect answer: today's shape, no `kind` key (old answer.json files have none)."
       },
       "EvConfig": {
         "properties": {
@@ -4006,12 +4283,26 @@
           "answer": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EvAnswer"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/EffectAnswer"
+                  },
+                  {
+                    "$ref": "#/components/schemas/InventoryAnswer"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ConsistencyAnswer"
+                  },
+                  {
+                    "$ref": "#/components/schemas/BestAnswer"
+                  }
+                ]
               },
               {
                 "type": "null"
               }
-            ]
+            ],
+            "title": "Answer"
           },
           "funnel": {
             "anyOf": [
@@ -4832,6 +5123,89 @@
         ],
         "title": "Inventory",
         "description": "An inventory question: list every distinct item of one evidence type. `same` maps a canonical name to\nthe other names it goes by."
+      },
+      "InventoryAnswer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "inventory",
+            "title": "Kind"
+          },
+          "system": {
+            "type": "string",
+            "title": "System"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/InventoryEntry"
+            },
+            "type": "array",
+            "title": "Entries",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "system",
+          "target",
+          "entries"
+        ],
+        "title": "InventoryAnswer",
+        "description": "evidence/kinds/inventory.py: every distinct item of one type the papers report."
+      },
+      "InventoryEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Aliases",
+            "default": []
+          },
+          "papers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Papers",
+            "default": []
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "name",
+          "aliases",
+          "papers",
+          "items"
+        ],
+        "title": "InventoryEntry"
       },
       "Item": {
         "properties": {

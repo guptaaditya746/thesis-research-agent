@@ -1,6 +1,6 @@
 /**
  * A question's guided flow `/flow/:qid/:step` (the supervisor's order, STATE.md §1, §4): the selected question,
- * then protocol → corpus → run → evidence graph → answer → scores, the baselines beside the engine. Each step
+ * then protocol → corpus → run → evidence graph → answer, the baselines beside the engine. Each step
  * shows what is on disk and starts what is missing as a job (webapp/evjobs.py); the choices live in the URL
  * (components/flow/flow.ts). A step whose input is not chosen yet says which one.
  */
@@ -12,7 +12,7 @@ import { QueryPage } from "@/components/ev/bits"
 import { CorpusStep } from "@/components/flow/CorpusStep"
 import { isStep, STEPS, useFlow, type Flow, type StepId } from "@/components/flow/flow"
 import { ProtocolStep } from "@/components/flow/ProtocolStep"
-import { AnswerStep, GraphStep, ScoresStep } from "@/components/flow/ResultSteps"
+import { AnswerStep, GraphStep } from "@/components/flow/ResultSteps"
 import { RunStep } from "@/components/flow/RunStep"
 import { PageHeader } from "@/components/layout/PageHeader"
 import type { Question } from "@/api/ev"
@@ -65,14 +65,13 @@ function FlowView({ question, step }: { question: Question; step: StepId }) {
   const flow = useFlow(question)
   return (
     <div className="space-y-6">
-      <PageHeader title={<span className="text-balance">{question.question}</span>} docTitle={question.id} description={<>Question <span className="font-mono">{question.id}</span>: choose its protocol, a corpus, run the engine and the baselines, then read the evidence graph, the answer and the scores.</>} />
+      <PageHeader title={<span className="text-balance">{question.question}</span>} docTitle={question.id} description={<>Question <span className="font-mono">{question.id}</span>: choose its protocol, a corpus, run the engine and the baselines, then read the evidence graph and the answer.</>} />
       <Stepper flow={flow} current={step} />
       {step === "protocol" && <ProtocolStep flow={flow} />}
       {step === "corpus" && <CorpusStep flow={flow} />}
       {step === "run" && <RunStep flow={flow} />}
       {step === "graph" && <GraphStep flow={flow} />}
       {step === "answer" && <AnswerStep flow={flow} />}
-      {step === "scores" && <ScoresStep flow={flow} />}
     </div>
   )
 }

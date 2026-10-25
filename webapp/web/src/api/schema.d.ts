@@ -768,6 +768,64 @@ export interface components {
             pairing?: components["schemas"]["Pairing"];
         };
         /**
+         * BestAnswer
+         * @description evidence/kinds/best.py: which method kind has the top value inside each paper, and wins most papers.
+         */
+        BestAnswer: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "best";
+            /** System */
+            system: string;
+            /** Metric */
+            metric: string | null;
+            /**
+             * Studies
+             * @default []
+             */
+            studies: components["schemas"]["BestStudy"][];
+            /**
+             * Wins
+             * @default {}
+             */
+            wins: {
+                [key: string]: number;
+            };
+            /** Winner */
+            winner: string | null;
+            /**
+             * Tied
+             * @default []
+             */
+            tied: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /** BestStudy */
+        BestStudy: {
+            /** Document */
+            document: string;
+            /** Winner */
+            winner: string | null;
+            /**
+             * Tied
+             * @default []
+             */
+            tied: string[];
+            /**
+             * Values
+             * @default {}
+             */
+            values: {
+                [key: string]: number;
+            };
+            reason: components["schemas"]["StudyReason"] | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
          * Bound
          * @description A range a numeric field must lie in, checked by the engine (rejected with reason schema otherwise);
          *     e.g. a measurement of an accuracy or a rate is a fraction in [0, 1].
@@ -1069,6 +1127,57 @@ export interface components {
              * @constant
              */
             by?: "direction";
+        };
+        /**
+         * ConsistencyAnswer
+         * @description evidence/kinds/consistency.py: does what the authors claim agree with what they measured?
+         */
+        ConsistencyAnswer: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "consistency";
+            /** System */
+            system: string;
+            /** Metric */
+            metric: string | null;
+            /**
+             * Studies
+             * @default []
+             */
+            studies: components["schemas"]["ConsistencyStudy"][];
+            /**
+             * Agreeing
+             * @default []
+             */
+            agreeing: string[];
+            /**
+             * Disagreeing
+             * @default []
+             */
+            disagreeing: string[];
+            /**
+             * Undetermined
+             * @default []
+             */
+            undetermined: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /** ConsistencyStudy */
+        ConsistencyStudy: {
+            /** Document */
+            document: string;
+            /** Claim */
+            claim: ("supports" | "contradicts" | "neutral" | "undetermined") | null;
+            /** Direction */
+            direction: ("supports" | "contradicts" | "neutral" | "undetermined") | null;
+            /** Agrees */
+            agrees: boolean | null;
+            reason: components["schemas"]["StudyReason"] | null;
+        } & {
+            [key: string]: unknown;
         };
         /** CorpusDetail */
         CorpusDetail: {
@@ -1372,8 +1481,17 @@ export interface components {
              */
             problems: string[];
         };
-        /** EvAnswer */
-        EvAnswer: {
+        /**
+         * EffectAnswer
+         * @description An effect answer: today's shape, no `kind` key (old answer.json files have none).
+         */
+        EffectAnswer: {
+            /**
+             * Kind
+             * @default effect
+             * @constant
+             */
+            kind: "effect";
             /** System */
             system: string;
             /** Question */
@@ -1613,7 +1731,8 @@ export interface components {
             chain_head: string | null;
             /** Source Run */
             source_run: string | null;
-            answer: components["schemas"]["EvAnswer"] | null;
+            /** Answer */
+            answer: (components["schemas"]["EffectAnswer"] | components["schemas"]["InventoryAnswer"] | components["schemas"]["ConsistencyAnswer"] | components["schemas"]["BestAnswer"]) | null;
             /**
              * Funnel
              * @description funnel.json documents
@@ -1950,6 +2069,50 @@ export interface components {
             same?: {
                 [key: string]: string[];
             };
+        };
+        /**
+         * InventoryAnswer
+         * @description evidence/kinds/inventory.py: every distinct item of one type the papers report.
+         */
+        InventoryAnswer: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "inventory";
+            /** System */
+            system: string;
+            /** Target */
+            target: string | null;
+            /**
+             * Entries
+             * @default []
+             */
+            entries: components["schemas"]["InventoryEntry"][];
+        } & {
+            [key: string]: unknown;
+        };
+        /** InventoryEntry */
+        InventoryEntry: {
+            /** Name */
+            name: string;
+            /**
+             * Aliases
+             * @default []
+             */
+            aliases: string[];
+            /**
+             * Papers
+             * @default []
+             */
+            papers: string[];
+            /**
+             * Items
+             * @default []
+             */
+            items: string[];
+        } & {
+            [key: string]: unknown;
         };
         /**
          * Item

@@ -4,8 +4,9 @@ import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { beforeAll, describe, expect, it } from "vitest"
 
-import type { CallDetail, CorpusDetail, EvRunDetail, ProposalDetail } from "@/api/ev"
+import type { CallDetail, CorpusDetail, EvRunDetail, ProposalDetail, Question } from "@/api/ev"
 import { routes } from "@/app/routes"
+import { effectAnswer } from "@/lib/ev"
 import { evFixture } from "@/mocks/ev"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
@@ -35,6 +36,19 @@ describe("home", () => {
     expect(screen.getByText("hand-written protocol rag-factuality")).toBeInTheDocument()
     expect(screen.getByText("/srv/ev")).toBeInTheDocument()
     expect(screen.queryByText(/earlier work/i)).toBeNull()
+  })
+})
+
+describe("home kinds", () => {
+  it("question list shows kind chips", async () => {
+    const base = evFixture<Question[]>("/api/ev/questions")[0]
+    const kinds = ["effect", "inventory", "consistency", "best"] as const
+    server.use(http.get("/api/ev/questions", () => HttpResponse.json(kinds.map((kind) => ({ ...base, id: `q-${kind}`, question: `A ${kind} question?`, kind })))))
+    renderRoutes(routes, "/")
+    for (const kind of kinds) {
+      const link = await screen.findByRole("link", { name: `A ${kind} question?` }, T)
+      expect(within(link.closest("[data-slot=card]") as HTMLElement).getByText(kind)).toBeInTheDocument()
+    }
   })
 })
 
@@ -138,7 +152,7 @@ describe("runs", () => {
     const detail = evFixture<EvRunDetail>(`/api/ev/runs/cascade-gaps~${MIXED}`)
     renderRoutes(routes, run(`cascade-gaps~${MIXED}`))
     const studies = await screen.findByRole("table", { name: "Studies" }, T)
-    expect(within(studies).getAllByRole("row")).toHaveLength(detail.answer!.studies.length + 1)
+    expect(within(studies).getAllByRole("row")).toHaveLength(effectAnswer(detail.answer)!.studies.length + 1)
     expect(within(studies).getByRole("link", { name: "S001" })).toHaveAttribute("href", `${run(`cascade-gaps~${MIXED}`)}/papers/S001`)
     expect(screen.getByRole("link", { name: `rag-baseline~${MIXED}` })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: `cascade-gaps~${MIXED}` })).toHaveAttribute("href", `/scores/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)

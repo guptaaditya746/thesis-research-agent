@@ -1,6 +1,6 @@
 /**
  * Home `/`: select a question (evidence/questions.yaml; never typed) to open its guided flow, the supervisor's
- * order (STATE.md §1, §4): question → protocol → corpus → run → evidence graph → answer → scores, the
+ * order (STATE.md §1, §4): question → protocol → corpus → run → evidence graph → answer, the
  * baselines beside the engine. Below: what is on disk, the active jobs, and the directories the app reads and
  * its jobs write.
  */
@@ -26,7 +26,7 @@ export default function HomePage() {
   const active = (jobs.data ?? []).filter(isActiveJob)
   return (
     <div className="space-y-6">
-      <PageHeader title="Evidence-level synthesis" description="Select a question. Its flow goes question → protocol → corpus → run → evidence graph → answer → scores, the baselines beside the engine, and starts each missing step as a job." />
+      <PageHeader title="Evidence-level synthesis" description="Select a question. Its flow goes question → protocol → corpus → run → evidence graph → answer, the baselines beside the engine, and starts each missing step as a job." />
       <section aria-label="Questions" className="space-y-3">
         {questions.isPending ? <CardsSkeleton count={1} /> : questions.isError ? <ErrorState error={questions.error} title="The questions file does not validate" /> : questions.data.length === 0 ? (
           <EmptyState icon={<ListOrderedIcon />} title="No questions" description={`Add one to ${config.data?.questions.path ?? "evidence/questions.yaml"}.`} />
@@ -39,6 +39,7 @@ export default function HomePage() {
               </CardTitle>
               <CardDescription className="flex flex-wrap items-center gap-2">
                 <span className="font-mono">{q.id}</span>
+                <Badge variant="outline">{q.kind}</Badge>
                 {q.protocol ? <Badge variant="secondary">hand-written protocol {q.protocol}</Badge> : <Badge variant="outline">no protocol yet: propose one</Badge>}
                 {q.agentic_protocol && <Badge variant="outline">agentic variant</Badge>}
                 {q.proposals.length > 0 && <Badge variant="outline">{q.proposals.length} proposal(s)</Badge>}

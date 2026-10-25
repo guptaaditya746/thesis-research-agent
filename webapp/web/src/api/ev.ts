@@ -37,7 +37,14 @@ export type Amendment = S["Amendment"]
 export type Check = S["Check"]
 export type EvRunSummary = S["EvRunSummary"]
 export type EvRunDetail = S["EvRunDetail"]
-export type EvAnswer = S["EvAnswer"]
+export type EffectAnswer = S["EffectAnswer"]
+export type InventoryAnswer = S["InventoryAnswer"]
+export type ConsistencyAnswer = S["ConsistencyAnswer"]
+export type BestAnswer = S["BestAnswer"]
+/** answer.json of any question kind (a `kind` key; effect when it is absent in an old file). */
+export type RunAnswer = NonNullable<S["EvRunDetail"]["answer"]>
+export type EvAnswer = EffectAnswer
+export type QuestionKind = Question["kind"]
 export type Study = S["Study"]
 export type Counts = S["Counts"]
 export type FunnelDoc = S["FunnelDoc"]

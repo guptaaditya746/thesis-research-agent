@@ -61,7 +61,7 @@ from .evmodels import (
     CorpusPaperDetail,
     CorpusSummary,
     Decision,
-    EvAnswer,
+    EV_ANSWER,
     EvConfig,
     EvGraph,
     EvRunDetail,
@@ -581,7 +581,7 @@ class EvidenceFiles:
                  for spec in (run.get("extractor_specs") or {}).values()]
         return EvRunDetail(**summary.model_dump(), extractors=specs, settings=run.get("settings"),
                            chain_head=run.get("chain_head"), source_run=run.get("source_run"),
-                           answer=EvAnswer.model_validate(answer) if isinstance(answer, dict) else None,
+                           answer=EV_ANSWER.validate_python(answer) if isinstance(answer, dict) else None,
                            funnel={d: FunnelDoc.model_validate(v) for d, v in (funnel.get("documents") or {}).items()}
                            if isinstance(funnel, dict) else None,
                            documents=documents, baselines=same, reports=reports,

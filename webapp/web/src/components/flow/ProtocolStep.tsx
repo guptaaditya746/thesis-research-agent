@@ -167,7 +167,7 @@ export function ProtocolStep({ flow }: { flow: Flow }) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Protocol for the run</CardTitle>
+          <CardTitle className="flex flex-wrap items-center gap-2 text-base">Protocol for the run <Badge variant="outline" title="what the question asks">{q.kind}</Badge></CardTitle>
           <CardDescription>Chosen: {protocolLabel(flow.protocol)}. {q.protocol ? "" : "This question has no hand-written protocol: propose one below."}</CardDescription>
         </CardHeader>
         <CardContent>

@@ -11,7 +11,7 @@ import { Link, useParams, useSearchParams } from "react-router"
 
 import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
 import { AgentTraceView } from "@/components/ev/AgentTraceView"
-import { AnswerSummary, BaselineEvidence, StudiesTable } from "@/components/ev/AnswerPanel"
+import { AnswerPanel } from "@/components/ev/AnswerPanel"
 import { ErrorCallsBadge } from "@/components/badges"
 import { KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { funnelStop } from "@/lib/ev"
+import { effectAnswer, funnelStop } from "@/lib/ev"
 import { duration, tokens } from "@/lib/format"
 
 const runHref = (id: string) => `/runs/${encodeURIComponent(id)}`
@@ -49,7 +49,7 @@ function TraceTab({ runId }: { runId: string }) {
 }
 
 function PapersTab({ run }: { run: EvRunDetail }) {
-  const studies = new Map((run.answer?.studies ?? []).map((s) => [s.document, s]))
+  const studies = new Map((effectAnswer(run.answer)?.studies ?? []).map((s) => [s.document, s]))
   return (
     <div className="overflow-auto rounded-md border">
       <Table aria-label="Papers">
@@ -129,11 +129,8 @@ function RunView({ run }: { run: EvRunDetail }) {
         <TabsList className="flex-wrap">{tabs.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}</TabsList>
         <TabsContent value="answer" className="space-y-4">
           {run.answer ? (
-            <>
-              <AnswerSummary answer={run.answer} expected={corpus.data?.answer?.label} />
-              <StudiesTable answer={run.answer} paperHref={paperHref} funnel={run.funnel} strategy={run.strategy} />
-              {!engine && run.answer.retrieved && <BaselineEvidence answer={run.answer} paperHref={paperHref} />}
-            </>
+            <AnswerPanel answer={run.answer} paperHref={paperHref} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null}
+              funnel={run.funnel} strategy={run.strategy} />
           ) : <p className="text-sm text-muted-foreground">No answer.json.</p>}
         </TabsContent>
         <TabsContent value="papers"><PapersTab run={run} /></TabsContent>

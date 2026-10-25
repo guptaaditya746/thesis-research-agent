@@ -35,6 +35,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { answerHeadline, effectAnswer } from "@/lib/ev"
 import { isName } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
 
@@ -167,7 +168,7 @@ function SelectedRun({ id, live }: { id: string; live: boolean }) {
     <KeyValues items={[
       ["state", r.complete ? "complete" : live ? "running: events and calls so far" : "incomplete (crashed, or still running elsewhere)"],
       ["papers", String(r.documents.length)],
-      ["label", r.answer ? <LabelBadge key="l" label={r.answer.label} /> : "—"],
+      ["answer", r.answer ? (effectAnswer(r.answer) ? <LabelBadge key="l" label={effectAnswer(r.answer)!.label} /> : answerHeadline(r.answer)) : "—"],
       ["open", <Link key="o" to={`/runs/${encodeURIComponent(id)}`} className="underline">the run page</Link>],
     ]} />
   )

@@ -1,20 +1,18 @@
 /**
- * The flow's last three steps, on the chosen engine run, built from the viewer's own parts and linked to its
- * pages: the evidence graph, the answer (with the baselines' answers on the same corpus beside it) and the
- * scores A/B/C (the run's report, the baselines beside the engine; comparisons on the corpus).
+ * The flow's last two steps, on the chosen engine run, built from the viewer's own parts and linked to its
+ * pages: the evidence graph and the answer, in the form of the question's kind (with the baselines' answers on
+ * the same corpus beside it). The scores are not a step: they stay on their own pages (/scores).
  */
 import type { ReactNode } from "react"
-import { Link, useNavigate } from "react-router"
+import { Link } from "react-router"
 
-import { isActiveJob, useCorpus, useEvRun, useEvRuns, useJobs, useReport, useRunGraph, useScores, useStartJob, type EvRunDetail } from "@/api/ev"
-import { AnswerSummary, StudiesTable } from "@/components/ev/AnswerPanel"
-import { LabelBadge, RowsTable, SystemBadge } from "@/components/ev/bits"
+import { isActiveJob, useCorpus, useEvRun, useEvRuns, useJobs, useRunGraph, type EvRunDetail } from "@/api/ev"
+import { AnswerPanel } from "@/components/ev/AnswerPanel"
+import { LabelBadge, SystemBadge } from "@/components/ev/bits"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
 import { CardsSkeleton, ErrorState } from "@/components/states"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { evCell, synthesisSummary } from "@/lib/ev"
-import { announceError, announceJob } from "@/lib/toasts"
+import { effectAnswer } from "@/lib/ev"
 
 import type { Flow } from "./flow"
 
@@ -102,10 +100,8 @@ function Answer({ run }: { run: EvRunDetail }) {
   if (!run.answer) return <p className="text-sm text-muted-foreground">No answer.json yet: the engine writes it when the run finishes.</p>
   const paperHref = (d: string) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`
   return (
-    <div className="space-y-4">
-      <AnswerSummary answer={run.answer} expected={corpus.data?.answer?.label} />
-      <StudiesTable answer={run.answer} paperHref={paperHref} funnel={run.funnel} strategy={run.strategy} />
-    </div>
+    <AnswerPanel answer={run.answer} paperHref={paperHref} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null}
+      funnel={run.funnel} strategy={run.strategy} />
   )
 }
 
@@ -115,65 +111,11 @@ export function AnswerStep({ flow }: { flow: Flow }) {
       {(run) => (
         <section className="space-y-4" aria-label="Answer">
           <p className="text-sm text-muted-foreground">
-            The answer of <span className="font-mono">{run.id}</span>: the label from the protocol's decision table, each study's direction
-            and reason. <Link to={runHref(run.id, "answer")} className="underline">Open in the run page</Link>
+            The answer of <span className="font-mono">{run.id}</span>, in the form of the question's kind: the label and each study's
+            direction, the names found, the claims against the data, or the best method kind. <Link to={runHref(run.id, "answer")} className="underline">Open in the run page</Link>
           </p>
           <Answer run={run} />
           <BaselineAnswers corpus={run.corpus} />
-        </section>
-      )}
-    </WithRun>
-  )
-}
-
-const C_COLUMNS = ["system", "label", "expected", "label_correct", "direction_accuracy", "completeness", "traceability"]
-
-function Scores({ run }: { run: EvRunDetail }) {
-  const scores = useScores()
-  const has = (scores.data?.reports ?? []).some((r) => r.id === run.id)
-  const report = useReport(has ? run.id : "")
-  const score = useStartJob("score")
-  const navigate = useNavigate()
-  const compares = (scores.data?.compares ?? []).filter((c) => run.corpus && (c.id === `compare-${run.corpus}` || c.name === run.corpus))
-  if (scores.isPending) return <CardsSkeleton count={1} />
-  return (
-    <div className="space-y-4">
-      {!has ? (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Not scored yet.</span>
-          <Button size="sm" disabled={!run.complete || score.isPending}
-            onClick={() => score.mutate({ run: run.id }, { onSuccess: (job) => announceJob(job, navigate), onError: (e) => announceError("The score did not start", e) })}>
-            Score this run
-          </Button>
-          {!run.complete && <span className="text-xs text-muted-foreground">once it has finished</span>}
-        </div>
-      ) : report.isPending ? <CardsSkeleton count={1} /> : report.isError ? <ErrorState error={report.error} /> : (
-        <>
-          <RowsTable caption="C. Synthesis per system" rows={synthesisSummary(report.data.report)} columns={C_COLUMNS}
-            render={(c, v, row) => c === "system" ? <SystemBadge system={String(v)} />
-              : c === "label" ? <LabelBadge label={String(v ?? "")} correct={row.label_correct as boolean | undefined} /> : evCell(v)} />
-          <p className="text-sm">
-            <Link to={`/scores/reports/${encodeURIComponent(run.id)}`} className="underline">The full report</Link>: A extraction per evidence type and level,
-            B integration, C synthesis per level with 95 % intervals and the paired engine-minus-baseline difference.
-          </p>
-        </>
-      )}
-      {compares.length > 0 && (
-        <p className="text-sm">Comparisons on this corpus: {compares.map((c) => <Link key={c.id} to={`/scores/compares/${encodeURIComponent(c.id)}`} className="mr-2 font-mono text-xs underline">{c.id}</Link>)}</p>
-      )}
-    </div>
-  )
-}
-
-export function ScoresStep({ flow }: { flow: Flow }) {
-  return (
-    <WithRun flow={flow}>
-      {(run) => (
-        <section className="space-y-4" aria-label="Scores">
-          <p className="text-sm text-muted-foreground">
-            The scores of <span className="font-mono">{run.id}</span> against the corpus's ground truth, the baselines beside the engine.
-          </p>
-          {run.kind === "engine" ? <Scores run={run} /> : <p className="text-sm text-muted-foreground">A baseline is scored beside its engine run.</p>}
         </section>
       )}
     </WithRun>

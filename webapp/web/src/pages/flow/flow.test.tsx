@@ -37,14 +37,23 @@ async function choose(user: ReturnType<typeof userEvent.setup>, label: string, o
 }
 
 describe("the stepper", () => {
-  it("goes question → protocol → corpus → run → graph → answer → scores, keeping the choices in the URL", async () => {
+  it("flow has no scores step", async () => {
+    renderRoutes(routes, "/flow/rag-factuality/scores")
+    expect(await screen.findByRole("heading", { name: QUESTION }, T)).toBeInTheDocument()
+    const steps = screen.getByRole("navigation", { name: "Steps" })
+    expect(within(steps).queryByRole("link", { name: /Scores/ })).toBeNull()
+    // an old link to the step lands on the first step
+    expect(await screen.findByText(/Chosen: hand-written rag-factuality./, {}, T)).toBeInTheDocument()
+  })
+
+  it("goes question → protocol → corpus → run → graph → answer, keeping the choices in the URL", async () => {
     const user = userEvent.setup()
     const { router } = renderRoutes(routes, "/flow/rag-factuality")
     expect(await screen.findByRole("heading", { name: QUESTION }, T)).toBeInTheDocument()
     const steps = screen.getByRole("navigation", { name: "Steps" })
     expect(within(steps).getAllByRole("link").map((a) => a.textContent)).toEqual([
       "Question", expect.stringContaining("Protocol"), expect.stringContaining("Corpus"), expect.stringContaining("Run"),
-      expect.stringContaining("Evidence graph"), expect.stringContaining("Answer"), expect.stringContaining("Scores")])
+      expect.stringContaining("Evidence graph"), expect.stringContaining("Answer")])
     // the hand-written protocol is the default; the agentic variant and the frozen proposal can be chosen
     expect(await screen.findByText(/Chosen: hand-written rag-factuality./, {}, T)).toBeInTheDocument()
     await user.click(await screen.findByRole("button", { name: "Use protocol rag-factuality-agentic" }, T))
@@ -66,9 +75,6 @@ describe("the stepper", () => {
     await waitFor(() => expect(new URLSearchParams(router.state.location.search).get("run")).toBe(`cascade-gaps~${MIXED}`))
     await user.click(within(steps).getByRole("link", { name: /Answer/ }))
     expect(await screen.findByText(/Beside it: the baselines on/, {}, T)).toBeInTheDocument()
-    await user.click(within(steps).getByRole("link", { name: /Scores/ }))
-    expect(await screen.findByRole("table", { name: "C. Synthesis per system" }, T)).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "The full report" })).toHaveAttribute("href", `/scores/reports/cascade-gaps~${MIXED}`)
     await user.click(within(steps).getByRole("link", { name: /Evidence graph/ }))
     expect(await screen.findByText(/Open in the run page/, {}, T)).toBeInTheDocument()
   })

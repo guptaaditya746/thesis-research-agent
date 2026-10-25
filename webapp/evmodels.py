@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, TypeAdapter
 
 from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.protocol import Kind, Protocol
@@ -290,7 +290,9 @@ class Citation(Open):
     score: float | None = None
 
 
-class EvAnswer(Open):
+class EffectAnswer(Open):
+    """An effect answer: today's shape, no `kind` key (old answer.json files have none)."""
+    kind: Literal["effect"] = "effect"
     system: str
     question: str | None = None
     label: str
@@ -307,6 +309,73 @@ class EvAnswer(Open):
     dropped_citations: list[Citation] | None = None
     retrieved: list[Citation] | None = None
     agent: dict[str, Any] | None = None
+
+
+class InventoryEntry(Open):
+    name: str
+    aliases: list[str] = []
+    papers: list[str] = []
+    items: list[str] = []
+
+
+class InventoryAnswer(Open):
+    """evidence/kinds/inventory.py: every distinct item of one type the papers report."""
+    kind: Literal["inventory"]
+    system: str
+    target: str | None = None
+    entries: list[InventoryEntry] = []
+
+
+class ConsistencyStudy(Open):
+    document: str
+    claim: Direction | None = None
+    direction: Direction | None = None
+    agrees: bool | None = None
+    reason: StudyReason | None = None
+
+
+class ConsistencyAnswer(Open):
+    """evidence/kinds/consistency.py: does what the authors claim agree with what they measured?"""
+    kind: Literal["consistency"]
+    system: str
+    metric: str | None = None
+    studies: list[ConsistencyStudy] = []
+    agreeing: list[str] = []
+    disagreeing: list[str] = []
+    undetermined: list[str] = []
+
+
+class BestStudy(Open):
+    document: str
+    winner: str | None = None
+    tied: list[str] = []
+    values: dict[str, float] = {}
+    reason: StudyReason | None = None
+
+
+class BestAnswer(Open):
+    """evidence/kinds/best.py: which method kind has the top value inside each paper, and wins most papers."""
+    kind: Literal["best"]
+    system: str
+    metric: str | None = None
+    studies: list[BestStudy] = []
+    wins: dict[str, int] = {}
+    winner: str | None = None
+    tied: list[str] = []
+
+
+def _answer_kind(value: Any) -> str:
+    """The union's tag: the `kind` key, effect when there is none (answer.json before the question kinds)."""
+    kind = value.get("kind") if isinstance(value, dict) else getattr(value, "kind", None)
+    return kind if isinstance(kind, str) else "effect"
+
+
+EvAnswer = Annotated[
+    Annotated[EffectAnswer, Tag("effect")] | Annotated[InventoryAnswer, Tag("inventory")]
+    | Annotated[ConsistencyAnswer, Tag("consistency")] | Annotated[BestAnswer, Tag("best")],
+    Discriminator(_answer_kind),
+]
+EV_ANSWER: TypeAdapter[Any] = TypeAdapter(EvAnswer)
 
 
 class EvRunSummary(Base):

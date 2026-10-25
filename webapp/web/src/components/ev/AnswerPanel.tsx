@@ -7,13 +7,14 @@
  */
 import { Link } from "react-router"
 
-import type { EvAnswer, FunnelDoc, Study } from "@/api/ev"
+import type { EvAnswer, FunnelDoc, RunAnswer, Study } from "@/api/ev"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ENGINE, funnelStop } from "@/lib/ev"
 import { DASH, num } from "@/lib/format"
 
+import { BestPanel, ConsistencyPanel, InventoryPanel } from "./AnswerKinds"
 import { DirectionBadge, KeyValues, LabelBadge, SystemBadge } from "./bits"
 
 const COUNT_KEYS = ["supporting", "contradicting", "neutral", "undetermined", "duplicates"] as const
@@ -143,4 +144,29 @@ export function BaselineEvidence({ answer, paperHref }: { answer: EvAnswer; pape
       </CardContent>
     </Card>
   )
+}
+
+/**
+ * A run's answer by the question's kind: effect as always (label, counts, studies, a baseline's passages), the
+ * other kinds in AnswerKinds. `expected` is the corpus's expected label (an effect corpus only).
+ */
+export function AnswerPanel({ answer, paperHref, expected, funnel, strategy }: {
+  answer: RunAnswer
+  paperHref: (doc: string) => string
+  expected?: string | null
+  funnel?: Record<string, FunnelDoc> | null
+  strategy?: string | null
+}) {
+  switch (answer.kind) {
+    case "inventory": return <InventoryPanel answer={answer} paperHref={paperHref} />
+    case "consistency": return <ConsistencyPanel answer={answer} paperHref={paperHref} />
+    case "best": return <BestPanel answer={answer} paperHref={paperHref} />
+    default: return (
+      <div className="space-y-4">
+        <AnswerSummary answer={answer} expected={expected} />
+        <StudiesTable answer={answer} paperHref={paperHref} funnel={funnel} strategy={strategy} />
+        {answer.system !== ENGINE && answer.retrieved && <BaselineEvidence answer={answer} paperHref={paperHref} />}
+      </div>
+    )
+  }
 }

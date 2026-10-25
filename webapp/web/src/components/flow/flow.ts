@@ -14,7 +14,6 @@ export const STEPS = [
   { id: "run", label: "Run" },
   { id: "graph", label: "Evidence graph" },
   { id: "answer", label: "Answer" },
-  { id: "scores", label: "Scores" },
 ] as const
 export type StepId = (typeof STEPS)[number]["id"]
 
