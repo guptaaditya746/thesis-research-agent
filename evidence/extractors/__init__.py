@@ -42,10 +42,10 @@ def names() -> list[str]:
 
 
 def _builtins() -> None:
-    from . import abbrev, conditions, dataset, llm, numbers, regex, screen, units
+    from . import abbrev, conditions, dataset, gliner, llm, numbers, regex, screen, units
     # screen: the funnel's regex_screen and llm_screen (Part D); conditions, units: kind-aware regex (A4); abbrev:
-    # self-defined names (C1); numbers: number-first measurements (C2)
-    for module in (regex, llm, screen, dataset, conditions, units, abbrev, numbers):
+    # self-defined names (C1); numbers: number-first measurements (C2); gliner: the GLiNER service (C3)
+    for module in (regex, llm, screen, dataset, conditions, units, abbrev, numbers, gliner):
         for name, factory in module.FACTORIES.items():
             register(name, factory)
 

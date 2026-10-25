@@ -52,6 +52,7 @@ chain, so it changes no hash; its row order may vary with workers.
 from __future__ import annotations
 
 import importlib
+import os
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -65,6 +66,7 @@ from agent.rundir import utc_now
 from modelcall import JsonlCache
 
 from . import checks, extractors, graph, kinds, merge
+from .extractors import gliner
 from .calls import CallCache, EngineContext, Mode, NotRecorded, cache_key
 from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
@@ -91,10 +93,12 @@ class Settings:
     model: str | None = None                       # model alias for llm/agent extractors (overrides the protocol)
     imports: list[str] = field(default_factory=list)   # modules that register more extractors
     strategy: Strategy = "gaps"                    # gaps: the funnel (Part D); all: every extractor on everything
+    # the GLiNER service of the gliner_* extractors ($GLINER_URL; None disables them); not part of any id
+    gliner_url: str | None = field(default_factory=lambda: os.environ.get("GLINER_URL") or None)
 
     def json(self) -> dict[str, Any]:
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
-                "imports": list(self.imports), "strategy": self.strategy}
+                "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url}
 
 
 def default_provider(alias: str) -> Any:
@@ -102,11 +106,12 @@ def default_provider(alias: str) -> Any:
     return openai_model(alias)
 
 
-def build_extractors(protocol: Protocol, selection: Selection = "cascade",
-                     model: str | None = None) -> dict[str, list[tuple[ExtractorRef, Extractor]]]:
+def build_extractors(protocol: Protocol, selection: Selection = "cascade", model: str | None = None,
+                     gliner_url: str | None = None) -> dict[str, list[tuple[ExtractorRef, Extractor]]]:
     """The cascade per evidence type, built from the registry with the type's schema added to each config;
     under the key `screen` the screening cascade of the protocol's `screen` block (Part D), whose extractors
-    get the same injected configuration plus the block's `terms` and `question`."""
+    get the same injected configuration plus the block's `terms` and `question`. The gliner_* extractors also
+    get `gliner_url` (None: unavailable); only they, so no other extractor's config (and id) changes."""
     out: dict[str, list[tuple[ExtractorRef, Extractor]]] = {}
     specs: dict[str, tuple[EvidenceTypeSpec, dict[str, Any]]] = {etype: (spec, {}) for etype, spec in protocol.evidence_types.items()}
     question = kinds.of(protocol).extractor_config(protocol)   # the kind's part (effect: question_metrics, compare)
@@ -117,6 +122,8 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade",
         for ref in spec.extractors:
             config = {**ref.config, "evidence_type": etype, "field_schema": spec.fields, "links": dict(spec.links),
                       "roles": list(spec.roles), "description": spec.description, **question, **extra}
+            if ref.name in gliner.FACTORIES:
+                config[gliner.URL_KEY] = gliner_url
             extractor = extractors.get(ref.name, config)
             if model and extractor.spec.kind in ("llm", "agent"):
                 extractor = extractors.get(ref.name, {**config, "model": model})
@@ -440,7 +447,7 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     root = Path(out_dir) / run_id
     root.mkdir(parents=True, exist_ok=False)
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
-    cascades = build_extractors(protocol, settings.selection, settings.model)
+    cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls)
