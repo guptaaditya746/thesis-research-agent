@@ -12,7 +12,9 @@ from evaluation import canon
 from evaluation import report as rep
 from evaluation.cli import main as evaluate
 from evaluation.expected import expected
-from evaluation.score import Matching, integration_kind, score, score_answers, score_extraction, score_kind
+from evaluation import shift as sh
+from evaluation.score import (Matching, integration_kind, same_metric, score, score_answers, score_extraction,
+                              score_kind)
 from evaluation.truth import GroundTruth, paper_ids, read_json
 from evidence import protocol as protocol_module
 from evidence.contract import Item
@@ -132,6 +134,7 @@ def test_best_duplicates_are_not_counted_and_engine_duplicates_are_not_hidden() 
     truth = GroundTruth.load(HARD)
     exp = _expected(truth, "best-accuracy")
     dups = {s["paper"] for s in truth.studies if s.get("duplicate_of")}
+    assert dups, "the hard corpus has duplicates"
     c = _c(truth, "best-accuracy", exp)
     assert not dups & {s["paper"] for s in c["studies"]}
 
@@ -328,3 +331,65 @@ def test_compare_leaves_out_reports_of_other_kinds(tmp_path: Path, hard: GroundT
     report = score_answers(HARD.parent, [path], question_id="inv-metrics")
     comparison = rep.compare([report])
     assert comparison["rows"] == [] and any("inventory" in n for n in comparison["notes"])
+
+
+# --- fix round 1 ----------------------------------------------------------------------------------------------
+
+def test_consistency_document_left_out_is_wrong_even_when_truth_is_undetermined(hard: GroundTruth) -> None:
+    exp = _expected(hard, "cons-accuracy")
+    assert exp["undetermined"], "the hard corpus has undetermined consistency studies"
+    left_out = exp["undetermined"][0]
+    answer = copy.deepcopy(exp)
+    answer["studies"] = [s for s in answer["studies"] if s["document"] != left_out]
+    answer["undetermined"].remove(left_out)
+    c = _c(hard, "cons-accuracy", answer)
+    n = len(exp["studies"])
+    assert c["per_study_accuracy"] == pytest.approx((n - 1) / n)
+    row = next(s for s in c["studies"] if s["paper"] == left_out)
+    assert (row["answered"], row["correct"]) == (False, False)
+    # listed as undetermined without a studies entry: answered, and right
+    answer["undetermined"].append(left_out)
+    assert _c(hard, "cons-accuracy", answer)["per_study_accuracy"] == 1.0
+
+
+def test_consistency_integration_counts_a_claim_item_once(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    truth = fx.ground_truth()
+    second = copy.deepcopy(truth["studies"][1])       # a second study in paper S001 whose claim overlaps S001.a1's
+    second.update(study_id="S003", paper="S001", conditions=[], metrics=[], measurements=[],
+                  author_claim={"id": "S003.a1", "direction": "no_effect"}, effect=None)
+    truth["studies"].append(second)
+    start = fx.S001.index("Retrieval clearly")
+    truth["placements"].append({"fact": "S003.a1", "role": "claim", "paper": "S001", "start": start,
+                                "end": start + len("Retrieval clearly"), "exact": "Retrieval clearly"})
+    fx.dump(corpus / "ground_truth.json", truth)
+    item = Item.build("author_claim", {"direction": "improves"}, fx.fact_spans("S001.a1"))
+    b = integration_kind(_matching([item], corpus), "consistency", {"kind": "consistency", "studies": []})
+    assert (b["claims"], b["claim_correct"], b["claim_accuracy"]) == (1, 1, 1.0)   # on S001.a1, the larger overlap
+
+
+def test_metric_canon_fallback_only_for_facts_outside_the_question_metrics() -> None:
+    assert same_metric({"canonical": "latency"}, {"canonical": "other", "name": "latency"})
+    assert not same_metric({"canonical": "latency"}, {"canonical": "factual_accuracy", "name": "latency"})
+    assert not same_metric({"canonical": "latency"}, {"canonical": "hallucination_rate", "name": "Lat."})
+    assert same_metric({"canonical": "factual_accuracy"}, {"canonical": "factual_accuracy", "name": "x"})
+
+
+def test_cli_refuses_an_unknown_question_id(tmp_path: Path, hard: GroundTruth) -> None:
+    path = tmp_path / "answer.json"
+    path.write_text(json.dumps(_expected(hard, "inv-metrics", "rag-baseline")), encoding="utf-8")
+    with pytest.raises(SystemExit, match="no-such-question"):
+        evaluate(["score", "--corpus", str(HARD.parent), "--baseline", str(path), "--question-id", "no-such-question",
+                  "--out", str(tmp_path / "out")])
+
+
+def test_shift_skips_reports_of_other_kinds(tmp_path: Path, hard: GroundTruth) -> None:
+    path = tmp_path / "answer.json"
+    path.write_text(json.dumps(_expected(hard, "cons-accuracy", "rag-baseline")), encoding="utf-8")
+    report = score_answers(HARD.parent, [path], question_id="cons-accuracy")
+    spec = {"base_corpus_id": report["corpus_id"], "corpus_id": report["corpus_id"], "study": "S001",
+            "from": "supports", "to": "contradicts", "expected": {}}
+    result = sh.shift(report, report, spec)
+    assert result["systems"] == [] and result["unmatched_systems"] == []
+    assert any("consistency" in n for n in result["notes"])
+    assert "Not compared" in sh.render(result)

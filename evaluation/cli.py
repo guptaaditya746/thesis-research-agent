@@ -34,7 +34,6 @@ from pathlib import Path
 from typing import Any
 
 from agent.rundir import ORCHESTRATOR
-from evidence.questions import load as load_questions
 
 from . import report as rep
 
@@ -79,7 +78,7 @@ def cmd_score(args: argparse.Namespace) -> int:
     try:
         result = (score(args.run, args.corpus, args.baseline, args.reexec, args.oracle, args.question_id) if args.run
                   else score_answers(args.corpus, args.baseline, args.oracle, args.question_id))
-    except ValueError as exc:   # a run of another kind than the question's
+    except ValueError as exc:   # an unknown question id, or a run of another kind than the question's
         raise SystemExit(f"evaluate score: {exc}") from None
     # where corpus.json is, relative to the report, so the pair moves together (compare resolves it from there)
     result["corpus_dir"] = Path(os.path.relpath(args.corpus.resolve(), args.out.resolve())).as_posix()
@@ -198,9 +197,9 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--baseline", type=Path, action="append", default=[], help="a baseline's answer.json (repeatable)")
     s.add_argument("--reexec", type=Path, help="re-execution report (default: <run>/reexec.json if present)")
     s.add_argument("--oracle", type=Path, help="an oracle's answer.json: attribute wrong studies upstream/downstream")
-    s.add_argument("--question-id", default="rag-factuality", choices=[q.id for q in load_questions()],
-                   help="the question (evidence/questions.yaml) the run and the answers answer; its kind picks B and C "
-                        "(default rag-factuality)")
+    s.add_argument("--question-id", default="rag-factuality",
+                   help="the question id (evidence/questions.yaml) the run and the answers answer; its kind picks B "
+                        "and C (default rag-factuality; an unknown id is refused)")
     s.add_argument("--out", type=Path, required=True)
     s.set_defaults(func=cmd_score)
 

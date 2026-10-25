@@ -13,7 +13,8 @@ variant corpus's report.json and that file, and per system that both reports sco
 - `shifted_as_expected`: all four comparisons hold (direction before and after, label before and after).
 
 The base report's corpus must be `base_corpus_id` and the variant report's `corpus_id`; anything else
-is an error, never a silent comparison of the wrong corpora.
+is an error, never a silent comparison of the wrong corpora. A report of a question kind other than effect
+(report.json `kind`) has no directions to shift: no system is compared and `notes` says why.
 """
 from __future__ import annotations
 
@@ -44,9 +45,14 @@ def shift(base: dict[str, Any], variant: dict[str, Any], spec: dict[str, Any]) -
     label_changes = expected.get("label_changes")
     if label_changes is None and before_label is not None and after_label is not None:
         label_changes = before_label != after_label
-    after_systems = {s["system"]: s for s in variant.get("synthesis") or []}
+    notes: list[str] = []
+    other = sorted({r.get("kind", "effect") for r in (base, variant)} - {"effect"})
+    if other:
+        notes.append(f"a report of question kind {', '.join(other)} has no directions to shift: no system compared "
+                     "(shift is over effect questions)")
+    after_systems = {s["system"]: s for s in variant.get("synthesis") or []} if not other else {}
     systems, unmatched = [], []
-    for b in base.get("synthesis") or []:
+    for b in (base.get("synthesis") or []) if not other else []:
         a = after_systems.get(b["system"])
         if a is None:
             unmatched.append(b["system"])
@@ -65,7 +71,7 @@ def shift(base: dict[str, Any], variant: dict[str, Any], spec: dict[str, Any]) -
     return {"base_corpus_id": base.get("corpus_id"), "corpus_id": variant.get("corpus_id"), "study": spec.get("study"),
             "paper": paper, "from": spec.get("from"), "to": spec.get("to"), "changed": spec.get("changed") or [],
             "expected": expected, "label_changes": label_changes, "systems": systems,
-            "unmatched_systems": sorted(set(unmatched))}
+            "unmatched_systems": sorted(set(unmatched)), "notes": notes}
 
 
 def render(result: dict[str, Any]) -> str:
@@ -84,6 +90,8 @@ def render(result: dict[str, Any]) -> str:
                   for s in result["systems"]], LABEL_COLUMNS), "",
            "shifted_as_expected: the direction before and after and the label before and after are all as "
            "predicted.", ""]
+    if result.get("notes"):
+        out += [f"Not compared: {n}" for n in result["notes"]] + [""]
     if result["unmatched_systems"]:
         out += ["Scored in only one of the reports: " + ", ".join(result["unmatched_systems"]), ""]
     return "\n".join(line.rstrip() for line in out)

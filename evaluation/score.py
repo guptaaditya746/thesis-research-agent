@@ -143,6 +143,7 @@ from evidence.questions import QuestionEntry, QuestionTruth
 from evidence.questions import load as load_questions
 from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS
+from synth import vocab
 
 from . import canon
 from .expected import expected as expected_answer
@@ -202,11 +203,17 @@ def link(item: Item, name: str) -> str | None:
 
 # --- A: matching -----------------------------------------------------------------------------------
 
+QUESTION_CANONICALS = frozenset(vocab.QUESTION_METRICS)   # factual_accuracy, hallucination_rate: compared as they are
+
+
 def same_metric(fields: dict[str, Any], data: dict[str, Any]) -> bool:
-    """A metric item names the true metric: equal `canonical`, or (a question-specific canonical such as
-    `latency`, which truth files under `other`) the item's canonical and the fact's name have one `canon.key`."""
+    """A metric item names the true metric: equal `canonical`, or, only for a fact truth files under `other` (or
+    another canonical that is not a question metric's), a question-specific item canonical such as `latency` that
+    has the `canon.key` of the fact's name. A fact with a question metric's canonical needs the equal canonical."""
     if fields.get("canonical") == data.get("canonical"):
         return True
+    if data.get("canonical") in QUESTION_CANONICALS:
+        return False
     k = canon.key("metric", str(fields.get("canonical") or ""))
     return k is not None and canon.key("metric", str(data.get("name") or "")) == k
 
@@ -248,6 +255,13 @@ def main_spans(item: Item) -> list[tuple[int, int]]:
 def placed(fact: Fact, truth: GroundTruth) -> bool:
     """The fact has a main-role placement (dataset facts have none: span accuracy leaves them out)."""
     return any(p.get("paper", fact.paper) == fact.paper for p in truth.placements_of(fact.id, MAIN_ROLE[fact.type]))
+
+
+def overlap_size(item: Item, fact: Fact, truth: GroundTruth) -> int:
+    """Characters the item's main-role spans share with the fact's main-role placements (summed over pairs)."""
+    places = [(p["start"], p["end"]) for p in truth.placements_of(fact.id, MAIN_ROLE[fact.type])
+              if p.get("paper", fact.paper) == fact.paper]
+    return sum(max(0, min(a[1], b[1]) - max(a[0], b[0])) for a in main_spans(item) for b in places)
 
 
 def span_hit(item: Item, fact: Fact, truth: GroundTruth) -> bool:
@@ -1009,9 +1023,10 @@ def score_inventory(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, An
 
 
 def _agrees(answer: dict[str, Any]) -> dict[str, bool | None]:
-    """document -> the answer's `agrees`: its studies entry, else its `agreeing` / `disagreeing` lists."""
+    """document -> the answer's `agrees`: its studies entry, else its `agreeing` / `disagreeing` / `undetermined`
+    lists; a document in none of them is absent."""
     out: dict[str, bool | None] = {}
-    for name, value in (("agreeing", True), ("disagreeing", False)):
+    for name, value in (("undetermined", None), ("agreeing", True), ("disagreeing", False)):
         for d in answer.get(name) or []:
             out[str(d)] = value
     for s in answer.get("studies") or []:
@@ -1021,12 +1036,15 @@ def _agrees(answer: dict[str, Any]) -> dict[str, bool | None]:
 
 
 def score_consistency(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
-    """C, consistency: per-study accuracy of `agrees` (null = undetermined, right when truth's is null too) and
+    """C, consistency: per-study accuracy of `agrees` (null = undetermined, right when truth's is null too and the
+    answer has an entry or list membership for the document; a document it leaves out is wrong) and
     precision/recall of the agreeing and disagreeing sets, over the studies truth lists (those on the claim metric;
     the engine lists every document, the others are left out)."""
     given = _agrees(answer)
+    # a document the answer leaves out is wrong, even where truth's `agrees` is null: undetermined must be said
     studies = [{"paper": e["document"], "expected": e["agrees"], "given": given.get(e["document"]),
-                "correct": given.get(e["document"]) == e["agrees"]} for e in exp["studies"]]
+                "answered": e["document"] in given,
+                "correct": e["document"] in given and given[e["document"]] == e["agrees"]} for e in exp["studies"]]
     out: dict[str, Any] = {"kind": "consistency", "system": answer.get("system", "unknown"), "metric": exp["metric"],
                            "studies_scored": len(studies),
                            "per_study_accuracy": share(sum(s["correct"] for s in studies), len(studies)),
@@ -1123,19 +1141,24 @@ def integration_best(m: Matching, protocol: Protocol | None) -> dict[str, Any]:
 
 
 def integration_consistency(m: Matching) -> dict[str, Any]:
-    """B, consistency (claim to result): every author-claim item whose claim span overlaps a claim placement of its
-    paper is located on that claim (A matches claims only when the direction is equal, so A's pairs cannot show a
-    wrong direction); `claim_accuracy` is the share of located pairs with the claim's direction. `rows` is the
+    """B, consistency (claim to result): an author-claim item whose claim span overlaps a claim placement of its
+    paper is located on the claim it overlaps most (each item counted once; A matches claims only when the
+    direction is equal, so A's pairs cannot show a wrong direction); `claim_accuracy` is the share of located items
+    with that claim's direction. `rows` is the
     measurement linkage of score_integration; its pair check needs the treatment and control measurements an
     effect answer names, which a consistency answer does not, so `studies` and `true_pair` are null."""
     n = ok = 0
     for item in m.items.values():
         if item.evidence_type != "author_claim":
             continue
+        best: tuple[int, str, Fact] | None = None
         for fact in m.truth.of(m.document[item.item_id], "author_claim"):
-            if span_hit(item, fact, m.truth):
-                n += 1
-                ok += item.fields.get("direction") == fact.data.get("direction")
+            size = overlap_size(item, fact, m.truth)
+            if size and (best is None or (size, fact.id) > best[:2]):   # ties: the larger fact id, deterministic
+                best = (size, fact.id, fact)
+        if best is not None:
+            n += 1
+            ok += item.fields.get("direction") == best[2].data.get("direction")
     rows = [{**r, "studies": None, "true_pair": None} for r in score_integration(m, None)["rows"]]
     return {"kind": "consistency", "claims": n, "claim_correct": ok, "claim_accuracy": share(ok, n), "rows": rows}
 
