@@ -96,6 +96,8 @@ def _propose_parser(sub: argparse._SubParsersAction) -> None:
     f.add_argument("--vocab", help="vocabulary snapshot: a path or a name under evidence/vocab/")
     f.add_argument("--out", required=True, type=Path, help="the proposal directory, e.g. proposals/<slug>")
     f.add_argument("--model", default=DEFAULT_MODEL, help=model_help)
+    f.add_argument("--kind", choices=("effect", "inventory", "consistency", "best"),
+                   help="the question's kind, instead of the model's guess")
     f.add_argument("--force", action="store_true", help="overwrite a frame.json that was edited")
     f.add_argument("--refresh", action="store_true", help="ask the model again instead of using its cached reply")
     d = pro.add_parser("draft", help="frame.json + the example protocol -> draft.yaml, draft.sources.json")
@@ -128,7 +130,7 @@ def _propose(args: argparse.Namespace) -> int:
     try:
         if args.propose_command == "frame":
             out = frame.run(args.question, args.out, vocab=args.vocab, alias=args.model, force=args.force,
-                            refresh=args.refresh)
+                            refresh=args.refresh, kind=args.kind)
         elif args.propose_command == "draft":
             out = draft.run(args.dir, template=args.template)
         elif args.propose_command == "critic":

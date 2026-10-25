@@ -100,6 +100,8 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
     record = {
         "proposal": directory.resolve().name,
         "question": f.question,
+        "kind": f.kind,
+        "kind_by": f.kind_by,
         "created": created,
         "protocol": {"file": PROTOCOL, "id": protocol.id, "version": protocol.version, "revision": protocol.revision,
                      "sha256": protocol.sha256},

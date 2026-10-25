@@ -99,15 +99,16 @@ def _extractable(p: Protocol, f: Frame) -> list[Any]:
     """The frame outcomes the protocol's metric extractors may still emit (the metric enum, else the question
     metrics): a person may drop one at freeze; outcomes_complete reports that, the metric checks leave it out."""
     spec = p.evidence_types.get("metric")
-    names = (spec.enum_of("canonical") if spec else None) or p.synthesis.metric_names
+    names = (spec.enum_of("canonical") if spec else None) or (p.synthesis.metric_names if p.synthesis else [])
     return [o for o in f.outcomes if o.canonical in names]
 
 
 def _coverage(p: Protocol, f: Frame) -> tuple[bool, str]:
     misses: list[str] = []
-    roles = {f.treatment.role: p.synthesis.compare.treatment, f.control.role: p.synthesis.compare.control}
+    roles = ({f.treatment.role: p.synthesis.compare.treatment, f.control.role: p.synthesis.compare.control}
+             if p.synthesis else {})   # an inventory or best protocol compares no two roles
     conditions = _patterns(p, "regex_condition", "conditions", regex_terms.CONDITIONS)
-    if conditions is not None:
+    if conditions is not None and roles:
         compiled = regex_terms.condition_patterns(conditions)
         for r in (f.treatment, f.control):
             for name in r.names:
@@ -201,6 +202,8 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
 
     if p is None or f is None:
         out.append(_check("outcomes_complete", False, skipped if p is None else "not checked: no frame"))
+    elif p.synthesis is None:
+        out.append(_check("outcomes_complete", True, f"not applicable: a {p.kind} protocol has no question metrics list"))
     else:
         directions = {m.canonical: m.higher_is_better for m in p.synthesis.metrics}
         bad = [o.canonical for o in f.outcomes if directions.get(o.canonical) != o.higher_is_better]
@@ -221,8 +224,8 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
                       "no screen with terms: every paper would be extracted"))
 
     rows = (((raw or {}).get("synthesis") or {}).get("label") or []) if isinstance(raw, dict) else []
-    complete = bool(rows) and not (rows[-1] or {}).get("when") and all((r or {}).get("when") for r in rows[:-1])
-    out.append(_check("label_complete", complete, "the last label row is the default and only it" if complete else
+    complete = (p is not None and p.synthesis is None) or bool(rows) and not (rows[-1] or {}).get("when") and all((r or {}).get("when") for r in rows[:-1])
+    out.append(_check("label_complete", complete, "the last label row is the default and only it (or the kind has no label table)" if complete else
                       "the label table needs exactly one row without `when`, the last"))
 
     named = []

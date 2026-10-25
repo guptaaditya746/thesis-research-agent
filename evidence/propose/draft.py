@@ -36,7 +36,7 @@ from ..extractors import terms as regex_terms
 from ..extractors.screen import term_pattern
 from ..protocol import parse
 from . import frame as frame_module
-from .common import (DRAFT, EXAMPLE_PROTOCOL, FRAME, SOURCES, ProposalError, dump_yaml, need, read_yaml, sha,
+from .common import (DRAFT, FRAME, KIND_TEMPLATES, SOURCES, ProposalError, dump_yaml, need, read_yaml, sha,
                      slug_id, write_json, write_text)
 from .frame import Frame, FrameTerm
 
@@ -180,8 +180,13 @@ def _source(term: FrameTerm | str, owner: Any) -> dict[str, Any]:
     return {"source": owner.source, "vocab_id": owner.vocab_id}
 
 
-def build(f: Frame, template: dict[str, Any], proposal_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(the draft protocol as a mapping, its sources {fields, terms})."""
+def build(f: Frame, template: dict[str, Any], proposal_id: str,
+          kind: str | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+    """(the draft protocol as a mapping, its sources {fields, terms}) for a question of `kind` (the frame's),
+    made from that kind's template (common.KIND_TEMPLATES). Only the fields the kind's cards set come from the
+    frame: an effect or consistency draft takes roles, metrics, claims and the screen; an inventory or best
+    draft takes the screen and keeps the template's evidence types and kind block."""
+    kind = kind or f.kind
     t, c = f.treatment, f.control
     fields: list[dict[str, Any]] = []
     terms: list[dict[str, Any]] = []
@@ -206,6 +211,14 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str) -> tuple[dict[st
     field("screen.extractors", "protocol")
     field("screen.on_fail", "protocol")
     field("screen.lexical_miss", "protocol")   # named so the reader sees it; at its default it leaves the sha256 alone
+
+    if kind in ("inventory", "best"):
+        p["kind"] = kind
+        p["evidence_types"] = types
+        p[kind] = copy.deepcopy(template[kind])
+        field("evidence_types", "protocol")
+        field(kind, "protocol")
+        return p, {"fields": fields, "terms": terms}
 
     roles = [t.role, c.role, "other"]
     cond = types["condition"]
@@ -266,6 +279,10 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str) -> tuple[dict[st
     for path, x in sync_regex(p, f):
         owner = owners.get(path.split(".", 1)[-1], t)
         term(f"regex.{path}", x.term if isinstance(x, FrameTerm) else x, **_source(x, owner))
+    if kind == "consistency":
+        p["kind"] = kind
+        p["consistency"] = copy.deepcopy(template["consistency"])
+        field("consistency", "protocol")
     field("synthesis.compare.treatment", t.source, t.vocab_id)
     field("synthesis.compare.control", c.source, c.vocab_id)
     for n, o in enumerate(f.outcomes):
@@ -290,10 +307,10 @@ def run(directory: Path | str, *, template: Path | str | None = None) -> Path:
     directory = Path(directory)
     frame_path = need(directory, FRAME, "frame")
     f = frame_module.load(frame_path)
-    template_path = Path(template) if template else EXAMPLE_PROTOCOL
+    template_path = Path(template) if template else KIND_TEMPLATES[f.kind]
     template_data = read_yaml(template_path)
     proposal_id = slug_id(directory.resolve().name)
-    protocol, sources = build(f, template_data, proposal_id)
+    protocol, sources = build(f, template_data, proposal_id, f.kind)
     text = HEADER.format(template=template_path.name) + dump_yaml(protocol)
     try:
         parse(text)

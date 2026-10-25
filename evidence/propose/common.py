@@ -16,7 +16,12 @@ from jsonio import file_sha256, sha256_hex
 import modelcall
 
 HERE = Path(__file__).resolve().parent
-EXAMPLE_PROTOCOL = HERE.parent / "protocols" / "rag-factuality.yaml"   # the draft's template
+EXAMPLE_PROTOCOL = HERE.parent / "protocols" / "rag-factuality.yaml"   # the draft's template for an effect question
+# The draft starts from the hand-written protocol of the question's kind.
+KIND_TEMPLATES = {"effect": EXAMPLE_PROTOCOL,
+                  "consistency": HERE.parent / "protocols" / "cons-accuracy.yaml",
+                  "inventory": HERE.parent / "protocols" / "inv-metrics.yaml",
+                  "best": HERE.parent / "protocols" / "best-accuracy.yaml"}
 DEFAULT_MODEL = "orch-model"   # the one model of every extractor and both baselines (Part G.3)
 
 FRAME, DRAFT, SOURCES, CRITIC = "frame.json", "draft.yaml", "draft.sources.json", "critic.json"

@@ -19,11 +19,12 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 from pydantic_ai.models import Model
 
+from ..protocol import Kind
 from . import vocab as vocab_module
 from .common import (CACHE, FRAME, REDO, ProposalError, ask, guard, mark_written, model_for, now, prompt,
                      write_json)
 
-PROMPT = "frame-v2.md"
+PROMPT = "frame-v3.md"
 Source = Literal["ontology", "invented"]
 Scale = Literal["fraction", "percent", "count", "score", "other"]
 ID = r"^[a-z][a-z0-9_]*$"
@@ -58,6 +59,8 @@ class EffectLabelReply(BaseModel):
 
 
 class FrameReply(BaseModel):
+    kind: Kind = Field("effect", description="effect, inventory, consistency or best: what kind of answer the question asks for")
+    kind_reason: str = Field("", description="one sentence: the words of the question that decide the kind")
     population: PopulationReply
     treatment: RoleReply
     control: RoleReply
@@ -137,6 +140,9 @@ class EffectLabel(Strict):
 
 class Frame(Strict):
     question: str = Field(min_length=1)
+    kind: Kind = "effect"                        # no kind in a frame.json from before the kinds: an effect question
+    kind_reason: str = ""
+    kind_by: str = "model"                       # "model" (the guess) or "user" (`--kind`, the kind endpoint)
     vocabulary: dict[str, str] | None = None     # {name, sha256, path} of the snapshot used, or null
     call: dict[str, Any] | None = None           # the model call that made it
     created: str | None = None
@@ -232,15 +238,16 @@ def annotate(question: str, reply: FrameReply, vocab: vocab_module.Vocabulary | 
     population = Population(description=reply.population.description.strip(),
                             screening_question=reply.population.screening_question.strip(),
                             terms=_terms(reply.population.terms, vocab, ("condition", "method", "metric")))
-    return Frame(question=question, population=population, treatment=_role(reply.treatment, vocab),
+    return Frame(question=question, kind=reply.kind, kind_reason=reply.kind_reason.strip(), population=population, treatment=_role(reply.treatment, vocab),
                  control=_role(reply.control, vocab), outcomes=[_outcome(o, vocab) for o in reply.outcomes],
                  effect_labels=[EffectLabel(value=_slug(e.value), direction=e.direction) for e in reply.effect_labels])
 
 
 def run(question: str, out: Path | str, *, vocab: str | Path | None = None, model: Model | None = None,
-        alias: str | None = None, force: bool = False, refresh: bool = False) -> Path:
+        alias: str | None = None, force: bool = False, refresh: bool = False, kind: str | None = None) -> Path:
     """Write OUT/frame.json for `question` (one cached model call). An existing frame.json the person edited
-    is kept unless `force`; `refresh` asks the model again instead of using its cached reply."""
+    is kept unless `force`; `refresh` asks the model again instead of using its cached reply. `kind` overrides
+    the model's guess of the question kind (recorded as `kind_by: user`)."""
     directory = Path(out)
     directory.mkdir(parents=True, exist_ok=True)
     guard(directory, FRAME, force)
@@ -253,6 +260,8 @@ def run(question: str, out: Path | str, *, vocab: str | Path | None = None, mode
     except ValueError as exc:   # an id the model made that the frame cannot take
         raise ProposalError(f"the frame the model returned does not validate: {exc}; "
                             + REDO.format(cache=directory / CACHE, key=call["cache_key"])) from exc
+    if kind is not None:
+        frame = frame.model_copy(update={"kind": kind, "kind_by": "user"})
     ref = {**snapshot.ref(), "path": Path(vocab).as_posix()} if snapshot else None   # as given: a name or a path
     data = frame.model_copy(update={"vocabulary": ref, "call": call, "created": now()}).model_dump(mode="json")
     write_json(directory / FRAME, data)

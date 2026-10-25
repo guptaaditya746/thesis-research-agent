@@ -1415,6 +1415,58 @@
         }
       }
     },
+    "/api/ev/proposals/{name}/kind": {
+      "put": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Put Kind",
+        "operationId": "ev_put_kind",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KindRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ev/jobs/freeze": {
       "post": {
         "tags": [
@@ -5600,6 +5652,33 @@
           "pid_start"
         ],
         "title": "JobStep"
+      },
+      "KindRequest": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "effect",
+              "inventory",
+              "consistency",
+              "best"
+            ],
+            "title": "Kind"
+          },
+          "model": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$",
+            "title": "Model",
+            "default": "orch-model"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "title": "KindRequest",
+        "description": "Say which kind of question a proposal asks, instead of the model's guess: the draft, critic and cards\nsteps run again from that kind's template (the cards and decisions made so far are dropped)."
       },
       "LabelRow": {
         "properties": {

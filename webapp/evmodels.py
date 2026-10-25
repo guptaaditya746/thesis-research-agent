@@ -733,6 +733,13 @@ class FreezeRequest(Request):
     proposal: Name
 
 
+class KindRequest(Request):
+    """Say which kind of question a proposal asks, instead of the model's guess: the draft, critic and cards
+    steps run again from that kind's template (the cards and decisions made so far are dropped)."""
+    kind: Literal["effect", "inventory", "consistency", "best"]
+    model: str = Field("orch-model", pattern=MODEL)
+
+
 class DecisionEntry(Request):
     card: Name
     choice: Name = Field(description="an option id of the card, or custom (with a value)")

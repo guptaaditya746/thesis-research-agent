@@ -14,6 +14,7 @@ from webapp.app import create_app
 from webapp.evfiles import EvidenceFiles
 from webapp.evjobs import Commands, run_group
 from webapp.evmodels import (
+    KindRequest,
     ProposeRequest,
     ProtocolRef,
     RunRequest,
@@ -115,6 +116,20 @@ def test_propose_plan_resumes_after_existing_frame(commands: Commands, world: Ev
                                              [str(directory / CRITIC)]]
     assert plan.steps[-1].argv[3:6] == ["evidence", "propose", "cards"]
     assert plan.refs == {"proposal": "fresh"} and plan.lane == "model" and plan.needs_gateway
+
+
+def test_kind_plan_redrafts_from_the_new_kind(commands: Commands, world: EvidenceWorld) -> None:
+    directory = world.root / "proposals" / "kinded"
+    directory.mkdir(parents=True)
+    (directory / FRAME).write_text(json.dumps({"question": "q?", "kind": "effect"}), encoding="utf-8")
+    for name in (DRAFT, CRITIC, "cards.json", "decisions.yaml", "draft.sources.json"):
+        (directory / name).write_text("old", encoding="utf-8")
+    plan = commands.set_kind("kinded", KindRequest(kind="best"))
+    frame = json.loads((directory / FRAME).read_text(encoding="utf-8"))
+    assert (frame["kind"], frame["kind_by"]) == ("best", "user")
+    assert not any((directory / n).exists() for n in (DRAFT, CRITIC, "cards.json", "decisions.yaml", "draft.sources.json"))
+    assert [s.name for s in plan.steps] == ["propose draft", "propose critic", "propose cards"]
+    assert plan.refs == {"proposal": "kinded"} and plan.lane == "model" and plan.needs_gateway
 
 
 def test_synth_plan_refs(commands: Commands) -> None:

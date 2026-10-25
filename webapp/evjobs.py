@@ -22,6 +22,7 @@ LLM-rendered corpus is not offered: it takes hours on two GPUs and runs on Slurm
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import urllib.error
 import urllib.request
@@ -32,7 +33,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 
-from evidence.propose.common import CARDS, CRITIC, DECISIONS, DRAFT, FRAME, PROTOCOL
+from evidence.propose.common import CARDS, CRITIC, DECISIONS, DRAFT, FRAME, PROTOCOL, SOURCES
 from evidence.rundir import RunDir
 from jsonio import file_sha256, write_text_atomic
 
@@ -43,6 +44,7 @@ from .evmodels import (
     DecisionsRequest,
     DecisionsResult,
     FreezeRequest,
+    KindRequest,
     Name,
     ProposeRequest,
     ProtocolRef,
@@ -296,6 +298,24 @@ class Commands:
             steps.append(step(f"propose {name}", argv[name], needs=needs))
         return JobPlan("propose", steps, {"proposal": r.proposal}, "model", True)
 
+    def set_kind(self, name: str, r: KindRequest) -> JobPlan:
+        """The person's kind for a proposal: written into frame.json (`kind_by: user`), the steps that came
+        after it dropped, and draft, critic and cards run again from that kind's template."""
+        directory = inside(self.proposals(), check_id(name, "proposal"))
+        frame = read_json(directory / FRAME)
+        if not isinstance(frame, dict):
+            raise NotFound(f"proposal {name} has no frame yet (run the proposal flow first)")
+        if (directory / PROTOCOL).exists():
+            raise Conflict(f"proposal {name} is frozen; change it with `evidence propose amend` (command line)")
+        self.free("proposal", name)
+        write_text_atomic(directory / FRAME, json.dumps({**frame, "kind": r.kind, "kind_by": "user"}, indent=1) + "\n")
+        for file in (DRAFT, SOURCES, CRITIC, CARDS, DECISIONS):
+            (directory / file).unlink(missing_ok=True)
+        steps = [step(f"propose {n}", self.tool("evidence", "propose", n, directory, *(["--model", r.model] if n != "draft" else [])),
+                      needs=directory / PROPOSE_STEPS[i][1])
+                 for i, (n, _) in enumerate(PROPOSE_STEPS[1:])]
+        return JobPlan("propose", steps, {"proposal": name}, "model", True)
+
     def proposal_dir(self, name: str) -> Path:
         directory = inside(self.proposals(), check_id(name, "proposal"))
         if not (directory / CARDS).is_file():
@@ -415,6 +435,10 @@ def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, qu
     @api.post("/jobs/propose", response_model=Job, status_code=202)
     async def ev_start_propose(request: ProposeRequest) -> Job:
         return await _start(c.propose(request), request)
+
+    @api.put("/proposals/{name}/kind", response_model=Job, status_code=202)
+    async def ev_put_kind(name: str, request: KindRequest) -> Job:
+        return await _start(c.set_kind(name, request), request)
 
     @api.post("/jobs/freeze", response_model=Job, status_code=202)
     async def ev_start_freeze(request: FreezeRequest) -> Job:
