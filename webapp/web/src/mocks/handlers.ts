@@ -29,7 +29,7 @@ import type {
   ProposalSummary,
   Question,
 } from "@/api/ev"
-import { isName } from "@/lib/jobs"
+import { baselineName, isName } from "@/lib/jobs"
 
 import { EV_FIXTURES, evHandlers } from "./ev"
 
@@ -149,8 +149,9 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
     case "agent-baseline": {
       const b = body as JobRequests["rag-baseline"]
       if (!db.corpora.has(b.corpus)) return notFound(`no such corpus: '${b.corpus}'`)
-      const id = `${kind}~${b.corpus}`
-      if (db.runs.has(id)) return conflict(`${kind}/${b.corpus} has an answer.json; move it away to run the baseline again`)
+      const name = baselineName(b.corpus, b.question)
+      const id = `${kind}~${name}`
+      if (db.runs.has(id)) return conflict(`${kind}/${name} has an answer.json; move it away to run the baseline again`)
       return { run: id, corpus: b.corpus }
     }
     case "score": return { score: (body as JobRequests["score"]).run }

@@ -14,14 +14,17 @@ from webapp.app import create_app
 from webapp.evfiles import EvidenceFiles
 from webapp.evjobs import Commands, run_group
 from webapp.evmodels import (
+    AgentBaselineRequest,
     KindRequest,
     ProposeRequest,
     ProtocolRef,
+    RagBaselineRequest,
     RunRequest,
     ScoreRequest,
     SynthRequest,
 )
 from webapp.evquestions import Questions
+from webapp.files import Conflict, NotFound
 from webapp.jobs import JobManager
 from webapp.settings import Settings
 
@@ -88,14 +91,16 @@ def test_score_plan_takes_latest_reexec_and_both_baselines(commands: Commands, w
         again = run.parent / f"{MIXED}-reexec-{stamp}"
         again.mkdir()
         (again / "reexec.json").write_text("{}", encoding="utf-8")
+    factuality = next(q for q in Questions(commands.s).list() if q.id == "rag-factuality")
     for system in ("rag-baseline", "agent-baseline"):
         answer = world.runs / system / MIXED / "answer.json"
         answer.parent.mkdir(parents=True, exist_ok=True)
         if not answer.exists():
-            answer.write_text("{}", encoding="utf-8")
+            answer.write_text(json.dumps({"question": factuality.question}), encoding="utf-8")
     plan = commands.score(ScoreRequest(run=f"cascade-gaps~{MIXED}"))
     argv = plan.steps[0].argv
     assert argv[3:6] == ["evaluate", "score", "--run"]
+    assert argv[argv.index("--question-id") + 1] == "rag-factuality"
     assert argv.count("--baseline") == 2
     assert [argv[i + 1] for i, a in enumerate(argv) if a == "--baseline"] == [
         str(world.runs / "rag-baseline" / MIXED / "answer.json"),
@@ -103,6 +108,55 @@ def test_score_plan_takes_latest_reexec_and_both_baselines(commands: Commands, w
     assert argv[argv.index("--reexec") + 1] == str(run.parent / f"{MIXED}-reexec-20260102T000000" / "reexec.json")
     assert plan.refs == {"score": f"cascade-gaps~{MIXED}"}
     assert plan.lane == "cpu" and not plan.needs_gateway
+
+
+def _engine_run(world: EvidenceWorld, group: str, protocol: Path) -> str:
+    """A copy of the world's regex-only run on the mixed corpus whose frozen protocol is `protocol`."""
+    import shutil
+    run = world.runs / group / MIXED
+    shutil.copytree(world.runs / "regex-only" / MIXED, run)
+    (run / "protocol.yaml").write_bytes(protocol.read_bytes())
+    return f"{group}~{MIXED}"
+
+
+def test_score_plan_scores_the_runs_question_with_its_baselines_only(commands: Commands, world: EvidenceWorld,
+                                                                     settings: Settings) -> None:
+    run = _engine_run(world, "rag-hallucination-regex-only", settings.protocols / "rag-hallucination.yaml")
+    for name, qid in ((MIXED, "rag-factuality"), (f"{MIXED}.rag-hallucination", "rag-hallucination"),
+                      (f"{MIXED}.inv-metrics", "inv-metrics")):
+        path = world.runs / "rag-baseline" / name / "answer.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"system": "rag-baseline", "question_id": qid}), encoding="utf-8")
+    argv = commands.score(ScoreRequest(run=run)).steps[0].argv
+    assert argv[argv.index("--question-id") + 1] == "rag-hallucination"
+    assert [argv[i + 1] for i, a in enumerate(argv) if a == "--baseline"] == [
+        str(world.runs / "rag-baseline" / f"{MIXED}.rag-hallucination" / "answer.json")]
+
+
+def test_score_plan_refuses_a_run_of_no_listed_question(commands: Commands, world: EvidenceWorld,
+                                                        settings: Settings, tmp_path: Path) -> None:
+    typed = tmp_path / "typed.yaml"
+    text = (settings.protocols / "rag-factuality.yaml").read_text(encoding="utf-8")
+    question = next(q for q in Questions(settings).list() if q.id == "rag-factuality").question
+    typed.write_text(text.replace(question, "Does anything help at all?"), encoding="utf-8")
+    run = _engine_run(world, "proposal-typed-regex-only", typed)
+    with pytest.raises(Conflict, match="cannot tell which question"):
+        commands.score(ScoreRequest(run=run))
+
+
+def test_baseline_plans_answer_the_question_asked(commands: Commands, world: EvidenceWorld) -> None:
+    corpus = f"{NAME}-paraphrased"
+    rag = commands.rag_baseline(RagBaselineRequest(corpus=corpus, question="inv-metrics"))
+    argv = rag.steps[0].argv
+    assert argv[argv.index("--question-id") + 1] == "inv-metrics"
+    assert argv[argv.index("--out") + 1] == str(world.runs / "rag-baseline" / f"{corpus}.inv-metrics")
+    assert rag.refs == {"run": f"rag-baseline~{corpus}.inv-metrics", "corpus": corpus}
+    agent = commands.agent_baseline(AgentBaselineRequest(corpus=corpus, question="rag-factuality"))
+    argv = agent.steps[0].argv
+    assert argv[argv.index("--out") + 1] == str(world.runs / "agent-baseline" / corpus)   # the runbook's layout
+    assert argv[argv.index("--run-id") + 1] == corpus and argv[argv.index("--question-id") + 1] == "rag-factuality"
+    with pytest.raises(NotFound, match="no such question"):
+        commands.rag_baseline(RagBaselineRequest(corpus=corpus, question="no-such-question"))
 
 
 def test_propose_plan_resumes_after_existing_frame(commands: Commands, world: EvidenceWorld, settings: Settings) -> None:

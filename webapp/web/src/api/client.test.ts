@@ -20,11 +20,11 @@ describe("API client", () => {
   })
 
   it("starts a job with a JSON body, lists it, tails its log and cancels it", async () => {
-    const job = await evApi.startJob("rag-baseline", { corpus: "rag-tpl-w1-paraphrased", model: "orch-model", retrieval: "global", k: 8 })
+    const job = await evApi.startJob("rag-baseline", { corpus: "rag-tpl-w1-paraphrased", question: "rag-factuality", model: "orch-model", retrieval: "global", k: 8 })
     expect(job).toMatchObject({ kind: "rag-baseline", lane: "model", state: "running", refs: { run: "rag-baseline~rag-tpl-w1-paraphrased" } })
     expect((await evApi.jobs())[0].id).toBe(job.id)
     expect(await evApi.jobLog(job.id)).toContain("$ python -m webapp.tool rag-baseline")
-    const again = await evApi.startJob("rag-baseline", { corpus: "rag-tpl-w1-paraphrased" }).catch((e: unknown) => e)
+    const again = await evApi.startJob("rag-baseline", { corpus: "rag-tpl-w1-paraphrased", question: "rag-factuality" }).catch((e: unknown) => e)
     expect(isConflict(again)).toBe(true)
     expect(await evApi.cancelJob(job.id)).toMatchObject({ state: "failed", error: "cancelled" })
   })

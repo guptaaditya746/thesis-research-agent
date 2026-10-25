@@ -1769,6 +1769,12 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
             "title": "Corpus"
           },
+          "question": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Question",
+            "description": "the question's id in the questions file: the question the baseline answers"
+          },
           "model": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$",
@@ -1779,10 +1785,11 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "corpus"
+          "corpus",
+          "question"
         ],
         "title": "AgentBaselineRequest",
-        "description": "`evaluate agent-baseline` into `$EV/runs/agent-baseline/<corpus>`."
+        "description": "`evaluate agent-baseline --question-id <question>` into `$EV/runs/agent-baseline/<corpus>` (rag-factuality),\nelse `$EV/runs/agent-baseline/<corpus>.<question>`."
       },
       "AgentTrace": {
         "properties": {
@@ -7025,6 +7032,12 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
             "title": "Corpus"
           },
+          "question": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Question",
+            "description": "the question's id in the questions file: the question the baseline answers"
+          },
           "model": {
             "type": "string",
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$",
@@ -7051,10 +7064,11 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "corpus"
+          "corpus",
+          "question"
         ],
         "title": "RagBaselineRequest",
-        "description": "`evaluate rag-baseline` into `$EV/runs/rag-baseline/<corpus>`."
+        "description": "`evaluate rag-baseline --question-id <question>` into `$EV/runs/rag-baseline/<corpus>` (rag-factuality),\nelse `$EV/runs/rag-baseline/<corpus>.<question>`."
       },
       "Rejected": {
         "properties": {
@@ -7609,7 +7623,7 @@
           "run"
         ],
         "title": "ScoreRequest",
-        "description": "`evaluate score` of an engine run (with the corpus's baselines beside it) into `$EV/scores/<group>/<name>`."
+        "description": "`evaluate score --question-id <the question the run's protocol asks>` of an engine run (with the corpus's\nbaselines of that question beside it) into `$EV/scores/<group>/<name>`."
       },
       "ScoresIndex": {
         "properties": {

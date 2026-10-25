@@ -120,6 +120,21 @@ describe("the stepper", () => {
     expect((bodies.at(-1)?.body as JobRequests["compare"]).name).toBe(`compare-${MIXED}`)
   })
 
+  it("starts the baselines of the selected question, in a run of their own", async () => {
+    const user = userEvent.setup()
+    const bodies = recordJobs()
+    server.use(http.get("/api/ev/questions/inv-metrics", () => HttpResponse.json({ id: "inv-metrics",
+      question: "Which evaluation metrics do the papers report?", kind: "inventory", protocol: "rag-factuality",
+      agentic_protocol: null, vocab: null, proposals: [] })))
+    renderRoutes(routes, `/flow/inv-metrics/run?corpus=${MIXED}`)
+    const rag = await screen.findByRole("button", { name: /RAG baseline/ }, T)
+    expect(rag).toBeEnabled()   // the world's answer on this corpus is the factuality question's
+    expect(screen.getByText(new RegExp(`runs/<baseline>/${MIXED}\\.inv-metrics`))).toBeInTheDocument()
+    await user.click(rag)
+    await waitFor(() => expect(bodies).toEqual([{ kind: "rag-baseline", body: { corpus: MIXED, question: "inv-metrics",
+      model: "orch-model", retrieval: "global", k: 8 } satisfies JobRequests["rag-baseline"] }]))
+  })
+
   it("builds a template corpus with the knobs and no LLM renderer", async () => {
     const user = userEvent.setup()
     const bodies = recordJobs()
@@ -304,7 +319,7 @@ describe("what the review asked for", () => {
 describe("the Jobs page", () => {
   it("lists the jobs, opens one with its log and cancels it", async () => {
     const user = userEvent.setup()
-    const job = await evApi.startJob("rag-baseline", { corpus: PARA })
+    const job = await evApi.startJob("rag-baseline", { corpus: PARA, question: "rag-factuality" })
     renderRoutes(routes, `/jobs/${job.id}`)
     const table = await screen.findByRole("table", { name: "Jobs" }, T)
     expect(within(table).getByText(`RAG baseline rag-baseline~${PARA}`)).toBeInTheDocument()

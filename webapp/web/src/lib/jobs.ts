@@ -17,6 +17,12 @@ export function parseProtocolParam(value: string | null | undefined): ProtocolRe
 export const NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 export const isName = (value: string) => NAME_PATTERN.test(value)
 
+/** A baseline's run name for a question (webapp/evjobs.py baseline_name): the corpus for rag-factuality, as the
+ * runbook names it, else `<corpus>.<question>`. */
+export function baselineName(corpus: string, question: string): string {
+  return question === "rag-factuality" ? corpus : `${corpus}.${question}`
+}
+
 const KIND_LABEL: Record<string, string> = {
   synth: "template corpus",
   run: "engine run",

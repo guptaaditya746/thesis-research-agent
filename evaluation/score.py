@@ -38,8 +38,8 @@ Matching rules (A; B and the pair check reuse A's matching):
    character with) a placement of the matched fact with the main role, over the pairs whose fact has one
    (dataset facts have none); an item without a main-role span is checked with all its spans.
 
-Question kinds (question-first redesign; `score(question_id=...)`, evidence/questions.yaml): A is the same for every
-kind. B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
+Question kinds (question-first redesign; `score(question_id=...)`, evidence/questions.yaml; without an id, the
+question the run's frozen protocol asks, evidence/questions.answered_by): A is the same for every kind. B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
 docstring describes, against the question's own expected answer (`effect_truth`; the corpus's own question keeps
 the saved answer, so its numbers are unchanged); inventory, consistency and best compare the answer with
 evaluation/expected.py's. Baseline answers are scored on C only. Intervals and attribution are for effect only.
@@ -141,7 +141,7 @@ from evidence.kinds import best as best_rules
 from evidence.protocol import Protocol
 from evidence.protocol import load as load_protocol
 from evidence.questions import QuestionEntry, QuestionTruth
-from evidence.questions import load as load_questions
+from evidence.questions import answered_by, answers_asked, load as load_questions
 from evidence.rundir import PROTOCOL_FILE
 from evidence.rules import FLAGS
 from synth import vocab
@@ -153,7 +153,7 @@ from .stats import bootstrap_f1, bootstrap_mean, interval_row
 from .truth import DATASET, ENGINE, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_QUESTION = "rag-factuality"   # the corpus's own question: `score` without --question-id scores it, as before
+DEFAULT_QUESTION = "rag-factuality"   # the corpus's own question (its saved answer, _question_text)
 
 VALUE_TOLERANCE = 0.005
 INFEASIBLE = 1e6
@@ -1208,11 +1208,12 @@ def _question_text(truth: GroundTruth, entry: QuestionEntry) -> str:
 # --- everything ------------------------------------------------------------------------------------
 
 def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: Path | None = None,
-          oracle: Path | None = None, question_id: str = DEFAULT_QUESTION) -> dict[str, Any]:
+          oracle: Path | None = None, question_id: str | None = None) -> dict[str, Any]:
     """The report for one run (and any baseline answers) on one corpus, for the question `question_id` of
-    evidence/questions.yaml (its kind picks B and C: integration_kind, score_kind); `oracle` an oracle's
-    answer.json (effect questions only). Baseline answers are scored on C only."""
-    entry = question(question_id)
+    evidence/questions.yaml (its kind picks B and C: integration_kind, score_kind), by default the one the run
+    answers (answered_by; ValueError when that cannot be told); `oracle` an oracle's answer.json (effect
+    questions only). Baseline answers are scored on C only."""
+    entry = question(question_id) if question_id else answered_by(run_dir, load_questions())
     corpus = Path(corpus)
     truth = GroundTruth.load(corpus / "ground_truth.json")
     files = paper_ids(read_json(corpus / "manifest.json"))
@@ -1242,13 +1243,13 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
 
 
 def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = None,
-                  question_id: str = DEFAULT_QUESTION) -> dict[str, Any]:
+                  question_id: str | None = None) -> dict[str, Any]:
     """C only, for baseline answers without an engine run (the question's hand-written protocol decides the
-    saved-answer shortcut)."""
-    entry = question(question_id)
+    saved-answer shortcut); by default for the question every answer asks (answers_asked)."""
+    given = [read_json(p) for p in answers]
+    entry = question(question_id) if question_id else answers_asked(given, load_questions())
     truth = GroundTruth.load(Path(corpus) / "ground_truth.json")
     protocol = _question_protocol(entry)
-    given = [read_json(p) for p in answers]
     systems = [score_kind(truth, entry.kind, entry.truth, protocol, a) for a in given]
     effect = entry.kind == "effect"
     scored = effect_truth(truth, entry.truth, protocol) if effect else truth

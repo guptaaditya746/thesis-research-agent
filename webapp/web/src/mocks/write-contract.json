@@ -223,7 +223,8 @@
   "method": "POST",
   "path": "/api/ev/jobs/rag-baseline",
   "body": {
-   "corpus": "rag-tpl-w1-mixed"
+   "corpus": "rag-tpl-w1-mixed",
+   "question": "rag-factuality"
   },
   "status": 409,
   "response": {

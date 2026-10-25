@@ -164,21 +164,22 @@ def test_run_jobs_with_the_runbooks_groups(client: TestClient, world: EvidenceWo
 @POSIX_ONLY
 def test_baseline_jobs(client: TestClient, world: EvidenceWorld, tmp_path: Path) -> None:
     corpus = f"{NAME}-paraphrased"
-    rag = start(client, "rag-baseline", {"corpus": corpus})
-    agent = start(client, "agent-baseline", {"corpus": corpus})
+    rag = start(client, "rag-baseline", {"corpus": corpus, "question": "rag-factuality"})
+    agent = start(client, "agent-baseline", {"corpus": corpus, "question": "rag-factuality"})
     for job in (rag, agent):
         assert wait(client, job["id"])["state"] == "done" and job["lane"] == "model"
     rag_argv, agent_argv = calls(tmp_path)
     assert rag_argv == [*TOOL, "evaluate", "rag-baseline", "--corpus", str(world.corpora / corpus),
                         "--out", str(world.runs / "rag-baseline" / corpus),
                         "--cache", str(world.root / "cache" / "rag-baseline.jsonl"), "--model", "orch-model",
-                        "--retrieval", "global", "--k", "8"]
+                        "--retrieval", "global", "--k", "8", "--question-id", "rag-factuality"]
     assert agent_argv == [*TOOL, "evaluate", "agent-baseline", "--corpus", str(world.corpora / corpus),
                           "--out", str(world.runs / "agent-baseline" / corpus),
                           "--cache", str(world.root / "cache" / "agent-baseline.jsonl"), "--model", "orch-model",
                           "--agent-root", str(Path("/opt/agent-root").resolve()),
-                          "--base-url", Settings().litellm_base_url, "--run-id", corpus]
-    again = client.post("/api/ev/jobs/rag-baseline", json={"corpus": MIXED})
+                          "--base-url", Settings().litellm_base_url, "--run-id", corpus,
+                          "--question-id", "rag-factuality"]
+    again = client.post("/api/ev/jobs/rag-baseline", json={"corpus": MIXED, "question": "rag-factuality"})
     assert again.status_code == 409 and "answer.json" in again.json()["detail"]
 
 
@@ -195,7 +196,7 @@ def test_score_and_compare_jobs(client: TestClient, world: EvidenceWorld, tmp_pa
         baselines += ["--baseline", str(world.runs / "agent-baseline" / MIXED / "answer.json")]
     assert score_argv == [*TOOL, "evaluate", "score", "--run", str(world.runs / "cascade" / MIXED),
                           "--corpus", str(world.corpora / MIXED), *baselines,
-                          "--out", str(world.scores / "cascade" / MIXED)]
+                          "--question-id", "rag-factuality", "--out", str(world.scores / "cascade" / MIXED)]
     assert compare_argv == [*TOOL, "evaluate", "compare", "--out", str(world.scores / f"compare-funnel-{MIXED}"),
                             str(world.scores / "cascade" / MIXED), str(world.scores / "cascade-gaps" / MIXED)]
     baseline = client.post("/api/ev/jobs/score", json={"run": f"rag-baseline~{MIXED}"})
@@ -254,14 +255,14 @@ def test_model_jobs_are_refused_without_a_gateway(world: EvidenceWorld, fake_pyt
     regex = {"corpus": corpus, "protocol": {"source": "repo", "name": "rag-factuality"}, "extractors": "regex-only"}
     monkeypatch.delenv("LITELLM_MASTER_KEY", raising=False)
     with TestClient(create_app(Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python)))) as c:  # type: ignore[call-arg]
-        no_key = c.post("/api/ev/jobs/rag-baseline", json={"corpus": corpus})
+        no_key = c.post("/api/ev/jobs/rag-baseline", json={"corpus": corpus, "question": "rag-factuality"})
         assert no_key.status_code == 409 and "LITELLM_MASTER_KEY" in no_key.json()["detail"]
         assert c.post("/api/ev/jobs/propose", json={"proposal": "px", "question": "rag-factuality"}).status_code == 409
         assert c.post("/api/ev/jobs/run", json=regex).status_code == 202   # no model call: no gateway needed
     monkeypatch.setenv("LITELLM_MASTER_KEY", "sk-test-never-logged")
     with TestClient(create_app(Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python),  # type: ignore[call-arg]
                                         litellm_base_url="http://127.0.0.1:9/v1"))) as c:
-        down = c.post("/api/ev/jobs/agent-baseline", json={"corpus": corpus})
+        down = c.post("/api/ev/jobs/agent-baseline", json={"corpus": corpus, "question": "rag-factuality"})
         assert down.status_code == 409 and "does not answer" in down.json()["detail"]
         assert "sk-test" not in down.text
 
@@ -283,7 +284,7 @@ def test_model_jobs_are_refused_without_a_gateway(world: EvidenceWorld, fake_pyt
         url = f"http://127.0.0.1:{server.server_address[1]}/v1"
         with TestClient(create_app(Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python),  # type: ignore[call-arg]
                                             litellm_base_url=url))) as c:
-            assert c.post("/api/ev/jobs/rag-baseline", json={"corpus": corpus}).status_code == 202
+            assert c.post("/api/ev/jobs/rag-baseline", json={"corpus": corpus, "question": "rag-factuality"}).status_code == 202
     finally:
         server.shutdown()
     assert seen == ["/v1/models Bearer sk-test-never-logged"]
@@ -350,9 +351,9 @@ def test_a_failed_propose_step_skips_the_rest_and_a_new_job_resumes(client: Test
     ("run", {"corpus": MIXED, "protocol": {"source": "repo", "name": "rag-factuality"}, "extractors": "llm-only --x"}),
     ("run", {"corpus": MIXED, "protocol": {"source": "repo", "name": "rag-factuality"}, "group": "../runs"}),
     ("run", {"corpus": MIXED, "protocol": {"source": "repo", "name": "rag-factuality"}, "import": "os"}),
-    ("rag-baseline", {"corpus": MIXED, "k": 0}),
-    ("rag-baseline", {"corpus": MIXED, "retrieval": "everything"}),
-    ("agent-baseline", {"corpus": "a~b"}),
+    ("rag-baseline", {"corpus": MIXED, "question": "rag-factuality", "k": 0}),
+    ("rag-baseline", {"corpus": MIXED, "question": "rag-factuality", "retrieval": "everything"}),
+    ("agent-baseline", {"corpus": "a~b", "question": "rag-factuality"}),
     ("compare", {"reports": [f"cascade~{MIXED}"], "name": "c"}),
     ("compare", {"reports": [f"cascade~{MIXED}", f"cascade-gaps~{MIXED}"], "name": "../c"}),
     ("propose", {"proposal": "../p", "question": "rag-factuality"}),
@@ -388,7 +389,7 @@ def test_no_jobs_without_ev(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     with TestClient(create_app(Settings(CORPORA=tmp_path))) as c:  # type: ignore[call-arg]
         (tmp_path / "c1").mkdir()
         (tmp_path / "c1" / "manifest.json").write_text('{"corpus_id": "c1", "papers": []}', encoding="utf-8")
-        response = c.post("/api/ev/jobs/rag-baseline", json={"corpus": "c1"})
+        response = c.post("/api/ev/jobs/rag-baseline", json={"corpus": "c1", "question": "rag-factuality"})
         assert response.status_code == 409 and "$EV" in response.json()["detail"]
 
 
@@ -398,14 +399,14 @@ def test_no_jobs_without_ev(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
 def test_model_jobs_queue_cancel_and_the_log(client: TestClient, world: EvidenceWorld, tmp_path: Path,
                                              monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("FAKE_SLEEP", "30")
-    first = start(client, "rag-baseline", {"corpus": f"{NAME}-paraphrased"})
-    second = start(client, "agent-baseline", {"corpus": f"{NAME}-paraphrased"})
+    first = start(client, "rag-baseline", {"corpus": f"{NAME}-paraphrased", "question": "rag-factuality"})
+    second = start(client, "agent-baseline", {"corpus": f"{NAME}-paraphrased", "question": "rag-factuality"})
     end = time.monotonic() + 20
     while client.get(f"/api/ev/jobs/{first['id']}").json()["state"] != "running":
         assert time.monotonic() < end
         time.sleep(0.05)
     assert client.get(f"/api/ev/jobs/{second['id']}").json()["state"] == "queued"   # one model job at a time
-    busy = client.post("/api/ev/jobs/rag-baseline", json={"corpus": f"{NAME}-paraphrased"})
+    busy = client.post("/api/ev/jobs/rag-baseline", json={"corpus": f"{NAME}-paraphrased", "question": "rag-factuality"})
     assert busy.status_code == 409 and first["id"] in busy.json()["detail"]
     cancelled = client.post(f"/api/ev/jobs/{second['id']}/cancel", json={}).json()
     assert (cancelled["state"], cancelled["error"]) == ("failed", "cancelled")

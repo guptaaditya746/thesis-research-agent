@@ -12,12 +12,14 @@ and asks the entry's question with the entry's kind.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Literal
+from collections.abc import Sequence
+from typing import Any, Literal, TypeVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from .protocol import Kind
+from .protocol import Kind, load as load_protocol
+from .rundir import ANSWER_FILE, PROTOCOL_FILE, RUN_FILE, RunDir
 
 DEFAULT = Path(__file__).resolve().parent / "questions.yaml"
 NAME = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"   # a directory name, never a flag or a path
@@ -93,3 +95,46 @@ def parse(path: Path) -> QuestionsFile:
 
 def load(path: Path | str = DEFAULT) -> list[QuestionEntry]:
     return parse(Path(path)).questions
+
+
+Q = TypeVar("Q")   # an entry with `id`, `question` and `kind`: a QuestionEntry, or the web app's Question
+
+
+def answered_by(run_dir: Path, entries: Sequence[Q]) -> Q:
+    """The entry a run answers, for scoring it without a question id: the one whose question and kind its
+    frozen protocol.yaml asks. A run without one (before the engine froze its protocol, or written by hand) is
+    matched by its answer.json (`question_id`, else the question asked), else by the protocol id of its run.json
+    (a hand-written protocol is named after its question). ValueError when no entry, or more than one, matches."""
+    rd = RunDir(Path(run_dir))
+    if rd.file(PROTOCOL_FILE).is_file():
+        protocol = load_protocol(rd.file(PROTOCOL_FILE))
+        found = [q for q in entries if q.question == protocol.question and q.kind == protocol.kind]
+        why = f"its protocol {protocol.id!r} asks {protocol.question!r} ({protocol.kind})"
+    else:
+        answer = rd.try_json(ANSWER_FILE)
+        answer = answer if isinstance(answer, dict) else {}
+        run = rd.try_json(RUN_FILE)
+        ref = (run.get("protocol") or {}) if isinstance(run, dict) else {}
+        found = ([q for q in entries if q.id == answer.get("question_id")]
+                 or [q for q in entries if q.question == answer.get("question")]
+                 or [q for q in entries if q.id == ref.get("id")])
+        why = "it has no protocol.yaml, and its answer.json and run.json name no question of the list"
+    if len(found) != 1:
+        raise ValueError(f"cannot tell which question the run {rd.root.name} answers: {why}; "
+                         f"give the question id (evaluate score --question-id)")
+    return found[0]
+
+
+def answers_asked(answers: Sequence[dict[str, Any]], entries: Sequence[Q]) -> Q:
+    """The one entry every baseline answer asks (`question_id`, else the question text); ValueError otherwise."""
+    asked = set()
+    for answer in answers:
+        found = ([q for q in entries if q.id == answer.get("question_id")]
+                 or [q for q in entries if q.question == answer.get("question")])
+        asked.add(found[0].id if len(found) == 1 else None)
+    if len(asked) != 1 or None in asked:
+        raise ValueError("cannot tell which question the answers answer (none given, an answer of no question of the "
+                         "list, or answers of different questions); give the question id (evaluate score "
+                         "--question-id)")
+    (qid,) = asked
+    return next(q for q in entries if q.id == qid)

@@ -707,21 +707,26 @@ class RunRequest(Request):
 
 
 class RagBaselineRequest(Request):
-    """`evaluate rag-baseline` into `$EV/runs/rag-baseline/<corpus>`."""
+    """`evaluate rag-baseline --question-id <question>` into `$EV/runs/rag-baseline/<corpus>` (rag-factuality),
+    else `$EV/runs/rag-baseline/<corpus>.<question>`."""
     corpus: Name
+    question: Name = Field(description="the question's id in the questions file: the question the baseline answers")
     model: str = Field("orch-model", pattern=MODEL)
     retrieval: Literal["global", "per_paper"] = "global"
     k: int = Field(8, ge=1, le=100)
 
 
 class AgentBaselineRequest(Request):
-    """`evaluate agent-baseline` into `$EV/runs/agent-baseline/<corpus>`."""
+    """`evaluate agent-baseline --question-id <question>` into `$EV/runs/agent-baseline/<corpus>` (rag-factuality),
+    else `$EV/runs/agent-baseline/<corpus>.<question>`."""
     corpus: Name
+    question: Name = Field(description="the question's id in the questions file: the question the baseline answers")
     model: str = Field("orch-model", pattern=MODEL)
 
 
 class ScoreRequest(Request):
-    """`evaluate score` of an engine run (with the corpus's baselines beside it) into `$EV/scores/<group>/<name>`."""
+    """`evaluate score --question-id <the question the run's protocol asks>` of an engine run (with the corpus's
+    baselines of that question beside it) into `$EV/scores/<group>/<name>`."""
     run: str = Field(description="the run's id, `<group>~<name>`")
 
 

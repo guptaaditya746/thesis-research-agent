@@ -36,10 +36,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { answerHeadline, effectAnswer } from "@/lib/ev"
-import { isName } from "@/lib/jobs"
+import { baselineName, isName } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
 
 import { protocolLabel, type Flow } from "./flow"
+import { TYPED_FLOW } from "./QuestionStep"
 
 type Extractors = "regex-only" | "cascade" | "agentic"
 
@@ -123,36 +124,40 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
   )
 }
 
-function Baselines({ corpus, runs, busy }: { corpus: string; runs: EvRunSummary[]; busy: Job[] }) {
+function Baselines({ corpus, question, runs, busy }: { corpus: string; question: string; runs: EvRunSummary[]; busy: Job[] }) {
   const rag = useStartJob("rag-baseline")
   const agent = useStartJob("agent-baseline")
   const config = useEvConfig()
   const navigate = useNavigate()
-  const has = (system: string) => runs.some((r) => r.id === `${system}~${corpus}`)
-  const running = (system: string) => busy.some((j) => j.refs.run === `${system}~${corpus}`)
+  if (question === TYPED_FLOW) {
+    return <p className="text-sm text-muted-foreground">The baselines answer the questions of the list only; this question was typed.</p>
+  }
+  const name = baselineName(corpus, question)
+  const has = (system: string) => runs.some((r) => r.id === `${system}~${name}`)
+  const running = (system: string) => busy.some((j) => j.refs.run === `${system}~${name}`)
   const model = config.data?.default_model ?? "orch-model"
   const done = { onSuccess: (job: Job) => announceJob(job, navigate), onError: (e: unknown) => announceError("The baseline did not start", e) }
   // a disabled button says why: the answer is on disk (with a link to it) or its job is running
   const state = (system: string) => (running(system) ? "running…" : has(system) ? "done" : null)
   const open = (system: string) => has(system) && (
-    <Link to={`/runs/${encodeURIComponent(`${system}~${corpus}`)}`} className="text-xs underline" aria-label={`Open ${system}~${corpus}`}>open</Link>
+    <Link to={`/runs/${encodeURIComponent(`${system}~${name}`)}`} className="text-xs underline" aria-label={`Open ${system}~${name}`}>open</Link>
   )
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button variant="outline" disabled={!!state("rag-baseline") || rag.isPending}
-        onClick={() => rag.mutate({ corpus, model, retrieval: "global", k: 8 }, done)}>
+        onClick={() => rag.mutate({ corpus, question, model, retrieval: "global", k: 8 }, done)}>
         <SearchIcon data-icon="inline-start" />
         {state("rag-baseline") ? `RAG baseline: ${state("rag-baseline")}` : "RAG baseline (global top 8)"}
       </Button>
       {open("rag-baseline")}
       <Button variant="outline" disabled={!!state("agent-baseline") || agent.isPending}
-        onClick={() => agent.mutate({ corpus, model }, done)}>
+        onClick={() => agent.mutate({ corpus, question, model }, done)}>
         <BotIcon data-icon="inline-start" />
         {state("agent-baseline") ? `Agent baseline: ${state("agent-baseline")}` : "Agent baseline"}
       </Button>
       {open("agent-baseline")}
       <span className="text-xs text-muted-foreground">
-        Plain retrieve-then-answer and the research agent with the question only, on {model}; each writes runs/&lt;baseline&gt;/{corpus}.
+        Plain retrieve-then-answer and the research agent with the question only, on {model}; each writes runs/&lt;baseline&gt;/{name}.
         {config.data && !config.data.agent_root ? " No $AGENT_ROOT: the agent baseline runs without the pinned toolchain." : ""}
       </span>
     </div>
@@ -225,7 +230,7 @@ export function RunStep({ flow }: { flow: Flow }) {
       </Card>
       <Card>
         <CardHeader><CardTitle className="text-base">Baselines on the same corpus</CardTitle></CardHeader>
-        <CardContent><Baselines corpus={corpus} runs={mine} busy={myJobs} /></CardContent>
+        <CardContent><Baselines corpus={corpus} question={flow.question.id} runs={mine} busy={myJobs} /></CardContent>
       </Card>
       <Card>
         <CardHeader>

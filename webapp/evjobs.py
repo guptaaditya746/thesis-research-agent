@@ -34,6 +34,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 
 from evidence.propose.common import CARDS, CRITIC, DECISIONS, DRAFT, FRAME, PROTOCOL, SOURCES
+from evidence.questions import answered_by
 from evidence.rundir import RunDir
 from jsonio import file_sha256, write_text_atomic
 
@@ -63,6 +64,23 @@ from .settings import Settings
 
 PROPOSE_STEPS = (("frame", FRAME), ("draft", DRAFT), ("critic", CRITIC), ("cards", CARDS))
 BASELINE_GROUPS = ("rag-baseline", "agent-baseline")   # runs/<group> of the baselines, never an engine run's
+DEFAULT_QUESTION = "rag-factuality"   # its baselines keep the runbook's runs/<system>/<corpus>
+
+
+def baseline_name(corpus: str, question: str) -> str:
+    """The run name of a baseline's answer to `question` on `corpus`: the corpus name for the default question
+    (as before), else `<corpus>.<question>`, so the answers to different questions never share a directory."""
+    return corpus if question == DEFAULT_QUESTION else f"{corpus}.{question}"
+
+
+def asks(answer: Any, question: Question) -> bool:
+    """Whether a baseline's answer.json answers `question`: its `question_id`, else the question it asked (the
+    default question's answers carry no id)."""
+    if not isinstance(answer, dict):
+        return False
+    if "question_id" in answer:
+        return answer["question_id"] == question.id
+    return answer.get("question") == question.question
 GATEWAY_TIMEOUT_S = 3.0
 
 
@@ -212,29 +230,33 @@ class Commands:
         return JobPlan("run", [step("evidence run", argv)], {"run": run_id, "corpus": r.corpus},
                        "cpu" if regex_only else "model", not regex_only)
 
-    def _baseline_out(self, system: str, corpus: str) -> tuple[Path, str]:
-        out = inside(self.runs(), system, corpus)
+    def _baseline_out(self, system: str, corpus: str, question: str) -> tuple[Path, str]:
+        self.questions.get(question)   # NotFound for a question not in the list
+        name = baseline_name(corpus, question)
+        check_id(name, "run")
+        out = inside(self.runs(), system, name)
         if (out / "answer.json").exists():
-            raise Conflict(f"{system}/{corpus} has an answer.json; move it away to run the baseline again")
-        run_id = f"{system}{RUN_SEP}{corpus}"
+            raise Conflict(f"{system}/{name} has an answer.json; move it away to run the baseline again")
+        run_id = f"{system}{RUN_SEP}{name}"
         self.free("run", run_id)
         return out, run_id
 
     def rag_baseline(self, r: RagBaselineRequest) -> JobPlan:
         corpus = self.corpus(r.corpus)
-        out, run_id = self._baseline_out("rag-baseline", r.corpus)
+        out, run_id = self._baseline_out("rag-baseline", r.corpus, r.question)
         argv = self.tool("evaluate", "rag-baseline", "--corpus", corpus, "--out", out,
                          "--cache", self.cache_root() / "rag-baseline.jsonl", "--model", r.model,
-                         "--retrieval", r.retrieval, "--k", r.k)
+                         "--retrieval", r.retrieval, "--k", r.k, "--question-id", r.question)
         return JobPlan("rag-baseline", [step("rag-baseline", argv)], {"run": run_id, "corpus": r.corpus}, "model", True)
 
     def agent_baseline(self, r: AgentBaselineRequest) -> JobPlan:
         corpus = self.corpus(r.corpus)
-        out, run_id = self._baseline_out("agent-baseline", r.corpus)
+        out, run_id = self._baseline_out("agent-baseline", r.corpus, r.question)
         agent_root = ["--agent-root", self.s.agent_root] if self.s.agent_root else []
         argv = self.tool("evaluate", "agent-baseline", "--corpus", corpus, "--out", out,
                          "--cache", self.cache_root() / "agent-baseline.jsonl", "--model", r.model, *agent_root,
-                         "--base-url", self.s.litellm_base_url, "--run-id", r.corpus)
+                         "--base-url", self.s.litellm_base_url, "--run-id", baseline_name(r.corpus, r.question),
+                         "--question-id", r.question)
         return JobPlan("agent-baseline", [step("agent-baseline", argv)], {"run": run_id, "corpus": r.corpus}, "model", True)
 
     def score(self, r: ScoreRequest) -> JobPlan:
@@ -248,10 +270,14 @@ class Commands:
         if summary.corpus is None:
             raise Conflict(f"the corpus of {r.run} is not under the corpora root")
         corpus = self.corpus(summary.corpus)
-        baselines: list[Any] = []
-        for system in ("rag-baseline", "agent-baseline"):
-            answer = inside(self.runs(), system, summary.corpus, "answer.json")
-            if answer.is_file():
+        try:   # the question the run's frozen protocol asks: its kind picks the scores, its truth the expected answer
+            question = answered_by(path, self.questions.list())
+        except ValueError as exc:
+            raise Conflict(f"{r.run} cannot be scored: {exc}") from None
+        baselines: list[Any] = []   # the corpus's baseline answers to the same question only
+        for system in BASELINE_GROUPS:
+            answer = inside(self.runs(), system, baseline_name(summary.corpus, question.id), "answer.json")
+            if answer.is_file() and asks(read_json(answer), question):
                 baselines += ["--baseline", answer]
         # the latest re-execution beside the run (`evidence reexec` writes <run>-reexec-<stamp>/reexec.json;
         # runbook step 7.1), for the stability score
@@ -260,7 +286,8 @@ class Commands:
         score_id = f"{summary.group}{RUN_SEP}{summary.name}"
         self.free("score", score_id)
         out = inside(self.scores(), summary.group, summary.name)
-        argv = self.tool("evaluate", "score", "--run", path, "--corpus", corpus, *baselines, *reexec, "--out", out)
+        argv = self.tool("evaluate", "score", "--run", path, "--corpus", corpus, *baselines, *reexec,
+                         "--question-id", question.id, "--out", out)
         return JobPlan("score", [step("evaluate score", argv)], {"score": score_id}, "cpu", False)
 
     def compare(self, r: CompareRequest) -> JobPlan:

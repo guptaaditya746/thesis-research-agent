@@ -61,7 +61,7 @@ SCENARIOS: list[dict[str, Any]] = [
     {"name": "run on an unknown corpus", "method": "POST", "path": "/api/ev/jobs/run",
      "body": {"corpus": "no-such-corpus", "protocol": REPO_PROTOCOL}},
     {"name": "rag-baseline on a corpus that has an answer", "method": "POST", "path": "/api/ev/jobs/rag-baseline",
-     "body": {"corpus": MIXED}},
+     "body": {"corpus": MIXED, "question": "rag-factuality"}},
     {"name": "propose on the frozen proposal", "method": "POST", "path": "/api/ev/jobs/propose",
      "body": {"proposal": FROZEN, "question": "rag-factuality"}},
     {"name": "propose with a new name", "method": "POST", "path": "/api/ev/jobs/propose",

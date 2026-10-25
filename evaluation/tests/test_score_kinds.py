@@ -393,3 +393,53 @@ def test_shift_skips_reports_of_other_kinds(tmp_path: Path, hard: GroundTruth) -
     assert result["systems"] == [] and result["unmatched_systems"] == []
     assert any("consistency" in n for n in result["notes"])
     assert "Not compared" in sh.render(result)
+
+
+# --- the question of a run, without --question-id (final review, finding 2) ------------------------------------
+
+TPL = EV2 / "corpora" / "rag-tpl-s1-mixed"
+
+
+def _regex_run(qid: str, corpus: Path, out: Path) -> Path:
+    from evidence import engine
+    return engine.run(ROOT / str(_q(qid).protocol), corpus, out, cache=out / "cache.jsonl", selection="regex-only",
+                      run_id=qid)
+
+
+def test_a_hallucination_run_scores_against_its_own_truth(tmp_path: Path) -> None:
+    run = _regex_run("rag-hallucination", TPL, tmp_path / "runs")
+    inferred = score(run, TPL)
+    assert (inferred["question_id"], inferred["kind"]) == ("rag-hallucination", "effect")
+    assert json.loads(rep.dumps(inferred)) == json.loads(rep.dumps(score(run, TPL, question_id="rag-hallucination")))
+    factual = score(run, TPL, question_id="rag-factuality")   # the old default: another truth, other numbers
+    assert rep.dumps(factual["integration"]) != rep.dumps(inferred["integration"])
+
+
+def test_an_inventory_run_scores_without_a_question_id(tmp_path: Path) -> None:
+    run = _regex_run("inv-metrics", HARD.parent, tmp_path / "runs")
+    out = tmp_path / "score"
+    assert evaluate(["score", "--run", str(run), "--corpus", str(HARD.parent), "--out", str(out)]) == 0
+    report = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    assert (report["question_id"], report["kind"]) == ("inv-metrics", "inventory")
+
+
+def test_a_run_of_no_listed_question_is_refused_without_a_question_id(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    run = fx.write_run(tmp_path / "runs", list(fx.perfect_items().values()), fx.engine_answer(fx.perfect_items()))
+    text = (ROOT / str(_q("rag-factuality").protocol)).read_text(encoding="utf-8")
+    (run / "protocol.yaml").write_text(text.replace(_q("rag-factuality").question, "Does anything help at all?"),
+                                       encoding="utf-8")
+    with pytest.raises(ValueError, match="cannot tell which question"):
+        score(run, corpus)
+    with pytest.raises(SystemExit, match="--question-id"):
+        evaluate(["score", "--run", str(run), "--corpus", str(corpus), "--out", str(tmp_path / "out")])
+    assert score(run, corpus, question_id="rag-factuality")["question_id"] == "rag-factuality"
+
+
+def test_baseline_answers_score_for_the_question_they_ask(tmp_path: Path, hard: GroundTruth) -> None:
+    answer = _expected(hard, "inv-datasets", "rag-baseline") | {"question_id": "inv-datasets"}
+    path = tmp_path / "answer.json"
+    path.write_text(json.dumps(answer), encoding="utf-8")
+    assert score_answers(HARD.parent, [path])["question_id"] == "inv-datasets"
+    with pytest.raises(ValueError, match="cannot tell which question"):
+        score_answers(HARD.parent, [])

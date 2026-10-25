@@ -739,11 +739,17 @@ export interface components {
     schemas: {
         /**
          * AgentBaselineRequest
-         * @description `evaluate agent-baseline` into `$EV/runs/agent-baseline/<corpus>`.
+         * @description `evaluate agent-baseline --question-id <question>` into `$EV/runs/agent-baseline/<corpus>` (rag-factuality),
+         *     else `$EV/runs/agent-baseline/<corpus>.<question>`.
          */
         AgentBaselineRequest: {
             /** Corpus */
             corpus: string;
+            /**
+             * Question
+             * @description the question's id in the questions file: the question the baseline answers
+             */
+            question: string;
             /**
              * Model
              * @default orch-model
@@ -2829,11 +2835,17 @@ export interface components {
         };
         /**
          * RagBaselineRequest
-         * @description `evaluate rag-baseline` into `$EV/runs/rag-baseline/<corpus>`.
+         * @description `evaluate rag-baseline --question-id <question>` into `$EV/runs/rag-baseline/<corpus>` (rag-factuality),
+         *     else `$EV/runs/rag-baseline/<corpus>.<question>`.
          */
         RagBaselineRequest: {
             /** Corpus */
             corpus: string;
+            /**
+             * Question
+             * @description the question's id in the questions file: the question the baseline answers
+             */
+            question: string;
             /**
              * Model
              * @default orch-model
@@ -3068,7 +3080,8 @@ export interface components {
         };
         /**
          * ScoreRequest
-         * @description `evaluate score` of an engine run (with the corpus's baselines beside it) into `$EV/scores/<group>/<name>`.
+         * @description `evaluate score --question-id <the question the run's protocol asks>` of an engine run (with the corpus's
+         *     baselines of that question beside it) into `$EV/scores/<group>/<name>`.
          */
         ScoreRequest: {
             /**
