@@ -119,17 +119,24 @@ def answer(protocol: Protocol, documents: list[str], items: dict[str, list[Item]
         entry, ids = study(protocol, doc, items.get(doc, []), (reasons or {}).get(doc))
         studies.append(entry)
         used += ids
+    out = {"kind": KIND, "system": synthesis.SYSTEM, "metric": best.metric.canonical, "studies": studies,
+           **tally([s["winner"] for s in studies], best.kinds)}
+    return out, used
+
+
+def tally(winners: list[str | None], kinds: Any) -> dict[str, Any]:
+    """`{wins, winner, tied}` from the per-paper winners (None: no win): `wins` counts each kind's wins in the
+    order of `kinds`, leaving out kinds without a win; `winner` is the kind with the most wins, or None with `tied`
+    listing (sorted) the kinds that share the most wins. Shared by the engine and the baselines."""
     wins: dict[str, int] = {}
-    for k in best.kinds:                      # in the protocol's kind order
-        n = sum(1 for s in studies if s["winner"] == k)
+    for k in kinds:                           # in the protocol's kind order
+        n = sum(1 for w in winners if w == k)
         if n:
             wins[k] = n
     most = max(wins.values(), default=0)
     leaders = sorted(k for k, n in wins.items() if n == most) if most else []
-    out = {"kind": KIND, "system": synthesis.SYSTEM, "metric": best.metric.canonical, "studies": studies,
-           "wins": wins, "winner": leaders[0] if len(leaders) == 1 else None,
-           "tied": leaders if len(leaders) > 1 else []}
-    return out, used
+    return {"wins": wins, "winner": leaders[0] if len(leaders) == 1 else None,
+            "tied": leaders if len(leaders) > 1 else []}
 
 
 def extractor_config(protocol: Protocol) -> dict[str, Any]:

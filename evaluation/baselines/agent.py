@@ -15,6 +15,10 @@
 The runner is an evidence.agentic.runner.AgentRunner: ResearchAgentRunner for real runs (Linux,
 sandbox, LiteLLM gateway), a fake in tests. Its model is AgentSettings.model (`orch-model`, the one
 model every extractor and both baselines use; docs/evidence-system.md Part G.3).
+
+`question_id` (CLI `--question-id`): a question of evidence/questions.yaml instead of `question`; the agent
+researches its text, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
+common.kind_answer_json); an effect question keeps today's shape.
 """
 from __future__ import annotations
 
@@ -27,7 +31,8 @@ from pydantic_ai.models import Model
 from evidence.agentic.runner import AgentJob, AgentRunner
 from modelcall import JsonlCache, redact
 
-from .common import DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, map_answer
+from .common import (DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, empty_reply, kind_answer_json,
+                     kind_params, map_answer)
 
 SYSTEM = "agent-baseline"
 BUDGET = {"steps": 60, "tokens": 2_000_000}  # the research runs' provisional budget (agent/rundir.BUDGET)
@@ -64,11 +69,16 @@ def answer_text(record: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, question: str = DEFAULT_QUESTION,
+def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, question: str | None = None,
                    concept: dict[str, Any] | None = None, budget: dict[str, int] | None = None,
                    cache: JsonlCache | None = None, model_id: str | None = None, run_id: str = "agent-baseline",
-                   seed: int = 0) -> dict[str, Any]:
-    """answer.json of the agent baseline for one corpus."""
+                   seed: int = 0, question_id: str | None = None) -> dict[str, Any]:
+    """answer.json of the agent baseline for one corpus. `question_id`: a question of evidence/questions.yaml
+    (not with `question`; default the RAG factuality question)."""
+    if question is not None and question_id is not None:
+        raise ValueError("give question or question_id, not both")
+    params = kind_params(question_id) if question_id is not None else None
+    question = params.question if params else (question or DEFAULT_QUESTION)
     corpus = SystemCorpus(corpus_dir)
     job = AgentJob(run_id=run_id, files={f"{p.id}.md": p.text for p in corpus.papers},
                    concept=concept or question_concept(question), budget=dict(budget or BUDGET))
@@ -82,9 +92,17 @@ def agent_baseline(corpus_dir: Path, *, runner: AgentRunner, model: Model, quest
              "answer_from": outcome.get("answer_from"), "steps": outcome.get("steps"), "tokens": outcome.get("tokens"),
              "model_calls": len(record.get("model_calls", [])), "claims": sum(c.get("status") == "accepted"
                                                                               for c in record.get("claims", []))}
+    effect = params is None or params.kind == "effect"
     if not (record.get("answer") or {}).get("rows"):
-        reply, call = AnswerReply(label="insufficient", studies=[], answer_text=text or "(no answer)"), None
+        reply = (AnswerReply(label="insufficient", studies=[], answer_text=text or "(no answer)") if effect
+                 else empty_reply(params))  # type: ignore[arg-type]
+        call = None
     else:
-        reply, call = map_answer(cache, question, corpus.ids, text, model=model, model_id=model_id, seed=seed)
-    return answer_json(SYSTEM, question, reply, corpus.ids, corpus_id=corpus.corpus_id, agent=agent,
-                       agent_answer=record.get("answer"), agent_answer_text=text, mapping_call=call)
+        reply, call = map_answer(cache, question, corpus.ids, text, model=model, model_id=model_id, seed=seed,
+                                 params=params)
+    extra = {"corpus_id": corpus.corpus_id, "agent": agent, "agent_answer": record.get("answer"),
+             "agent_answer_text": text, "mapping_call": call}
+    if params is not None and not effect:
+        return kind_answer_json(SYSTEM, params, reply, corpus.ids, answer_text=text or "(no answer)", **extra)
+    return answer_json(SYSTEM, question, reply, corpus.ids, **extra,
+                       **({"question_id": params.question_id} if params else {}))

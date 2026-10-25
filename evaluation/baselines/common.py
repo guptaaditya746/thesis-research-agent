@@ -10,22 +10,36 @@ Neither baseline is asked for a label or per-paper stances: the retrieve-then-an
 an answer with citations, the agent an answer table. One separate **mapping call** (`map_answer`:
 MAP_INSTRUCTIONS + LABEL_RULES, AnswerReply, shared by both; docs/evidence-system.md Part G.1) turns
 that answer into the label and the stance of every paper it relies on, for the synthesis score (C).
+
+Every question kind (evidence/questions.yaml, `kind_params`): the mapping call of an effect question is the one
+above, unchanged (so existing caches still hit). The other kinds each have their own reply model and versioned
+instructions (prompts/map-<kind>-v1.md, filled from the question's protocol: the inventory target, the author
+claim's definition, the method kinds of a best question): InventoryReply, ConsistencyReply, BestReply (whose
+`winner` must be one of the protocol's kinds; a reply naming another kind fails validation and gets pydantic-ai's
+retry). answer.json then has the kind's shape (evidence/kinds/*), with `system` the baseline's name; best's
+`wins`, `winner` and `tied` are computed here from the per-paper winners (evidence.kinds.best.tally), never asked.
 """
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path, PurePosixPath
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal, Optional, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 from pydantic_ai.models import Model
 
 from jsonio import sha256_hex
-from evidence import protocol as protocol_module, rules
-from modelcall import CallSettings, JsonlCache, Prompt, ask_sync, cache_key, model_name, prompt_sha256
+from evidence import protocol as protocol_module, questions as questions_module, rules
+from evidence.kinds import best as best_kind
+from evidence.kinds.inventory import fold
+from evidence.protocol import Kind, Protocol
+from modelcall import CallSettings, JsonlCache, Prompt, ask_sync, cache_key, load_prompt, model_name, prompt_sha256
 
-DEFAULT_PROTOCOL = Path(__file__).resolve().parents[2] / "evidence" / "protocols" / "rag-factuality.yaml"
+REPO = Path(__file__).resolve().parents[2]
+DEFAULT_PROTOCOL = REPO / "evidence" / "protocols" / "rag-factuality.yaml"
+PROMPTS = Path(__file__).resolve().parent / "prompts"
 DEFAULT_QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
 Stance = Literal["supports", "contradicts", "neutral"]
 GROUPS = {"supports": "supporting", "contradicts": "contradicting", "neutral": "neutral"}
@@ -141,13 +155,181 @@ def cached_reply(cache: JsonlCache | None, instructions: str, prompt: str, *, mo
 
 
 def map_answer(cache: JsonlCache | None, question: str, known: list[str], text: str, *, model: Model,
-               model_id: str | None, seed: int = 0) -> tuple[AnswerReply, dict[str, Any]]:
-    """The mapping call: a baseline's answer (as text) to the label and per-paper stances, cached.
+               model_id: str | None, seed: int = 0, params: KindParams | None = None) -> tuple[Any, dict[str, Any]]:
+    """The mapping call: a baseline's answer (as text) to the label and per-paper stances (no `params`, or an
+    effect question), or to the reply of the question's kind (`map_prompt`), cached.
 
     The record (`mapping_call` in answer.json) is without `cached`, so a cached rerun writes the same
     bytes.
     """
     prompt = f"Question: {question}\n\nCorpus paper ids: {', '.join(known)}\n\nThe answer:\n{text}"
-    reply, call = cached_reply(cache, MAP_INSTRUCTIONS, prompt, model=model, model_id=model_id, seed=seed)
+    instructions, reply_type = map_prompt(params)
+    reply, call = cached_reply(cache, instructions, prompt, model=model, model_id=model_id, seed=seed,
+                               output_type=reply_type)
     call.pop("cached")
     return reply, call
+
+
+# --- every question kind ---------------------------------------------------------------------------
+
+MAP_PROMPTS = {"inventory": "map-inventory-v1.md", "consistency": "map-consistency-v1.md", "best": "map-best-v1.md"}
+TARGET_NAME = {"metric": "evaluation metric", "condition": "method or system variant", "dataset": "dataset"}
+TARGET_TEXT = {
+    "metric": "the evaluation metrics the papers report results on (for example accuracy, exact match, latency).",
+    "condition": "the methods or system variants the papers compare (for example a closed-book model, a RAG "
+                 "pipeline, a fine-tuned model).",
+    "dataset": "the datasets the papers evaluate on (for example Natural Questions, TriviaQA)."}
+NOT_STATED = {"code": "not_stated", "text": "the answer does not say"}
+
+
+@dataclass(frozen=True, eq=False)
+class KindParams:
+    """A question of evidence/questions.yaml as a baseline answers it: its id, text, kind and hand-written protocol
+    (which gives the inventory target, the consistency metric and claim, the best metric and method kinds)."""
+    question_id: str
+    question: str
+    kind: Kind
+    protocol: Protocol | None
+
+
+def kind_params(question_id: str) -> KindParams:
+    """The question `question_id` of evidence/questions.yaml (ValueError for an unknown id)."""
+    entries = {q.id: q for q in questions_module.load()}
+    if question_id not in entries:
+        raise ValueError(f"unknown question id {question_id!r} (evidence/questions.yaml has {', '.join(entries)})")
+    entry = entries[question_id]
+    protocol = protocol_module.load(REPO / entry.protocol) if entry.protocol else None
+    if entry.kind != "effect" and protocol is None:
+        raise ValueError(f"question {question_id!r} has no hand-written protocol; a baseline needs one for kind "
+                         f"{entry.kind!r}")
+    return KindParams(entry.id, entry.question, entry.kind, protocol)
+
+
+class InventoryEntry(BaseModel):
+    name: str = Field(min_length=1, description="the name exactly as the answer writes it")
+    papers: list[str] = Field(description="the corpus paper ids the answer links to this name")
+
+
+class InventoryReply(BaseModel):
+    """The mapping call of an inventory question: every name of the target the answer gives, with its papers."""
+    entries: list[InventoryEntry] = Field(description="one entry per distinct name the answer gives")
+
+
+class ConsistencyStudy(BaseModel):
+    paper: str = Field(description="a corpus paper id")
+    claim: Literal["improves", "no_effect", "worsens"] | None = Field(
+        description="the authors' conclusion the answer attributes to this paper, or null")
+    agrees: bool | None = Field(description="whether the answer says the conclusion agrees with the results, or null")
+
+
+class ConsistencyReply(BaseModel):
+    """The mapping call of a consistency question: per paper, the claim and the stated agreement."""
+    studies: list[ConsistencyStudy] = Field(description="one entry per paper the answer speaks about")
+
+
+class BestStudy(BaseModel):
+    paper: str = Field(description="a corpus paper id")
+    winner: str | None = Field(description="the method kind the answer says is best in this paper, or null")
+
+
+class BestReply(BaseModel):
+    """The mapping call of a best question: per paper, the winning method kind. The call uses `best_reply(kinds)`,
+    whose `winner` must be one of the protocol's kinds."""
+    studies: list[BestStudy] = Field(description="one entry per paper the answer speaks about")
+
+
+@lru_cache(maxsize=None)
+def best_reply(kinds: tuple[str, ...]) -> type[BestReply]:
+    """BestReply with `winner` limited to `kinds` (an enum in the schema, checked on validation)."""
+    study = create_model("BestStudy", __base__=BestStudy,
+                         winner=(Optional[Literal[kinds]],  # noqa: UP045 - a Literal built at run time
+                                 Field(description="the method kind the answer says is best in this paper, or null")))
+    return create_model("BestReply", __base__=BestReply,
+                        studies=(list[study], Field(description="one entry per paper the answer speaks about")))
+
+
+def _protocol(params: KindParams) -> Protocol:
+    assert params.protocol is not None, "kind_params gives every non-effect question its protocol"
+    return params.protocol
+
+
+def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
+    """The mapping call's instructions and reply model for a question (effect, or none: the original call)."""
+    if params is None or params.kind == "effect":
+        return MAP_INSTRUCTIONS, AnswerReply
+    protocol = _protocol(params)
+    text = load_prompt(PROMPTS / MAP_PROMPTS[params.kind]).text
+    reply: type[BaseModel]
+    if params.kind == "inventory":
+        target = protocol.inventory.target  # type: ignore[union-attr]
+        fill = {"TARGET_TEXT": TARGET_TEXT[target], "TARGET": TARGET_NAME[target]}
+        reply = InventoryReply
+    elif params.kind == "consistency":
+        fill = {"CLAIM_TEXT": " ".join(protocol.evidence_types["author_claim"].description.split())}
+        reply = ConsistencyReply
+    else:
+        best = best_kind.spec(protocol)
+        fill = {"METRIC": best.metric.canonical, "DIRECTION": "higher" if best.metric.higher_is_better else "lower",
+                "KINDS": "\n".join(f"- {k}: {'; '.join(names)}" for k, names in best.kinds.items())}
+        reply = best_reply(tuple(best.kinds))
+    for name, value in fill.items():
+        text = text.replace(f"<<{name}>>", value)
+    assert "<<" not in text, f"{MAP_PROMPTS[params.kind]}: a placeholder is left"
+    return text, reply
+
+
+def empty_reply(params: KindParams) -> BaseModel:
+    """The reply standing for an empty answer (no mapping call): no entries or studies."""
+    _, reply = map_prompt(params)
+    return reply.model_validate({"entries": []} if params.kind == "inventory" else {"studies": []})
+
+
+def kind_answer_json(system: str, params: KindParams, reply: BaseModel, known: list[str],
+                     **extra: Any) -> dict[str, Any]:
+    """answer.json of a non-effect question in its kind's shape (evidence/kinds/*), with `system` the baseline's
+    name. Papers not in the corpus are dropped (listed in `dropped`); a paper named twice keeps its first entry;
+    studies and an entry's papers are in manifest order. A baseline has no items or values: inventory `items` and
+    best `values` are empty, consistency `direction` (the measured one) is null. A study the reply leaves null has
+    reason `not_stated`. Inventory names that fold alike (case, whitespace) are one entry, named by the first form."""
+    protocol = _protocol(params)
+    dropped: list[str] = []
+    head = {"kind": params.kind, "system": system, "question": params.question, "question_id": params.question_id}
+    if isinstance(reply, InventoryReply):
+        groups: dict[str, dict[str, Any]] = {}
+        for e in reply.entries:
+            form = " ".join(e.name.split())
+            if not form:
+                continue
+            g = groups.setdefault(fold(form), {"name": form, "forms": [], "papers": set()})
+            if form not in g["forms"]:
+                g["forms"].append(form)
+            for paper in e.papers:
+                if paper in known:
+                    g["papers"].add(paper)
+                else:
+                    dropped.append(paper)
+        entries = [{"name": g["name"], "aliases": sorted(f for f in g["forms"] if f != g["name"]),
+                    "papers": [p for p in known if p in g["papers"]], "items": []}
+                   for g in sorted(groups.values(), key=lambda g: (fold(g["name"]), g["name"]))]
+        body: dict[str, Any] = {"target": protocol.inventory.target, "entries": entries}  # type: ignore[union-attr]
+        return head | body | {"dropped": dropped} | extra
+    first: dict[str, Any] = {}
+    for s in reply.studies:  # type: ignore[attr-defined]
+        if s.paper not in known:
+            dropped.append(s.paper)
+        else:
+            first.setdefault(s.paper, s)
+    ordered = [first[p] for p in known if p in first]
+    if isinstance(reply, ConsistencyReply):
+        studies = [{"document": s.paper, "claim": s.claim, "direction": None, "agrees": s.agrees,
+                    "reason": None if s.agrees is not None else dict(NOT_STATED)} for s in ordered]
+        lists = {name: [s["document"] for s in studies if s["agrees"] is value]
+                 for name, value in (("agreeing", True), ("disagreeing", False), ("undetermined", None))}
+        body = {"metric": protocol.synthesis.metric_names[0], "studies": studies, **lists}  # type: ignore[union-attr]
+        return head | body | {"dropped": dropped} | extra
+    best = best_kind.spec(protocol)
+    studies = [{"document": s.paper, "winner": s.winner, "tied": [], "values": {},
+                "reason": None if s.winner is not None else dict(NOT_STATED)} for s in ordered]
+    body = {"metric": best.metric.canonical, "studies": studies,
+            **best_kind.tally([s["winner"] for s in studies], best.kinds)}
+    return head | body | {"dropped": dropped} | extra

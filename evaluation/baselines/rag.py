@@ -33,6 +33,11 @@ answer.json has `system: rag-baseline`, the A4 shape from the mapping (`label`, 
 groups, `label_by_rule`), `answer_text` (the model's own answer), `citations` and `retrieved`
 (`[{document, start, end(, score)}]`, raw character offsets into the paper text as agent/anchor.read_text
 and the placements use), `settings`, `model_call` and `mapping_call`.
+
+`question_id` (CLI `--question-id`): a question of evidence/questions.yaml instead of `question`; its text is
+asked and retrieved with, and its kind picks the mapping call and the answer.json shape (common.map_prompt,
+common.kind_answer_json); an effect question keeps the shape above. An empty answer of another kind is the kind's
+empty answer without a call.
 """
 from __future__ import annotations
 
@@ -49,7 +54,8 @@ from gold.chunks import split
 from modelcall import JsonlCache
 
 from ..truth import GroundTruth
-from .common import DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, cached_reply, map_answer
+from .common import (DEFAULT_QUESTION, AnswerReply, SystemCorpus, answer_json, cached_reply, empty_reply,
+                     kind_answer_json, kind_params, map_answer)
 
 SYSTEM = "rag-baseline"
 ORACLE_SYSTEM = "rag-oracle-passages"   # the diagnostic that reads ground_truth.json
@@ -178,11 +184,17 @@ def mapping_text(answer: CitedAnswer, kept: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def rag_baseline(corpus_dir: Path, *, model: Model, question: str = DEFAULT_QUESTION, k: int | None = None,
+def rag_baseline(corpus_dir: Path, *, model: Model, question: str | None = None, k: int | None = None,
                  mode: str = DEFAULT_MODE, max_chars: int = MAX_CHARS, cache: JsonlCache | None = None,
-                 model_id: str | None = None, seed: int = 0, oracle: bool = False) -> dict[str, Any]:
+                 model_id: str | None = None, seed: int = 0, oracle: bool = False,
+                 question_id: str | None = None) -> dict[str, Any]:
     """answer.json of the RAG baseline for one corpus (`mode` global or per_paper; k defaults per mode).
-    `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json)."""
+    `oracle`: the diagnostic on `oracle_passages` instead of BM25 (reads ground_truth.json). `question_id`: a
+    question of evidence/questions.yaml (not with `question`; default the RAG factuality question)."""
+    if question is not None and question_id is not None:
+        raise ValueError("give question or question_id, not both")
+    params = kind_params(question_id) if question_id is not None else None
+    question = params.question if params else (question or DEFAULT_QUESTION)
     corpus = SystemCorpus(corpus_dir)
     if oracle and (k is not None or mode != DEFAULT_MODE or max_chars != MAX_CHARS):
         raise ValueError("oracle passages take no k, retrieval mode or max_chars")
@@ -197,13 +209,20 @@ def rag_baseline(corpus_dir: Path, *, model: Model, question: str = DEFAULT_QUES
                                 seed=seed, output_type=CitedAnswer)
     call.pop("cached")  # so a cached rerun writes the same bytes
     citations, dropped = keep_citations(answer.citations, hits)
+    effect = params is None or params.kind == "effect"
     if not answer.answer_text.strip():
-        reply, mapping = AnswerReply(label="insufficient", studies=[], answer_text="(no answer)"), None
+        reply = (AnswerReply(label="insufficient", studies=[], answer_text="(no answer)") if effect
+                 else empty_reply(params))  # type: ignore[arg-type]
+        mapping = None
     else:
         reply, mapping = map_answer(cache, question, corpus.ids, mapping_text(answer, citations), model=model,
-                                    model_id=model_id, seed=seed)
+                                    model_id=model_id, seed=seed, params=params)
     retrieved = [{"document": p.document, "start": p.start, "end": p.end} | ({} if oracle else {"score": round(s, 6)})
                  for p, s in hits]
-    return answer_json(system, question, reply, corpus.ids, answer_text=answer.answer_text, citations=citations,
-                       dropped_citations=dropped, retrieved=retrieved, corpus_id=corpus.corpus_id, settings=settings,
-                       model_call=call, mapping_call=mapping, mapped_answer_text=reply.answer_text)
+    extra = {"citations": citations, "dropped_citations": dropped, "retrieved": retrieved,
+             "corpus_id": corpus.corpus_id, "settings": settings, "model_call": call, "mapping_call": mapping}
+    if params is not None and not effect:
+        return kind_answer_json(system, params, reply, corpus.ids, answer_text=answer.answer_text, **extra)
+    return answer_json(system, question, reply, corpus.ids, answer_text=answer.answer_text, **extra,
+                       mapped_answer_text=reply.answer_text,
+                       **({"question_id": params.question_id} if params else {}))   # the default run: as before

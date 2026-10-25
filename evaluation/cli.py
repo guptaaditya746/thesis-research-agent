@@ -4,8 +4,9 @@
                    [--question-id ID] --out DIR
     evaluate oracle --protocol P --corpus CORPUS --out DIR
     evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval global|per_paper] [--k N]
-                          [--oracle-passages]
+                          [--oracle-passages] [--question-id ID]
     evaluate agent-baseline --corpus CORPUS --out DIR [--model ALIAS] [--sandbox ...] [--steps N] [--tokens N]
+                            [--question-id ID]
     evaluate compare REPORT [REPORT ...] [--corpora DIR] --out DIR
     evaluate shift --base REPORT --variant REPORT --variant-json variant.json --out DIR
     evaluate benchmark REPORT [REPORT ...] --out DIR
@@ -15,7 +16,8 @@
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
 wrong studies to upstream or downstream errors with the oracle's answer.json. `score --question-id` names the question of
 evidence/questions.yaml the run and the answers answer (default rag-factuality, the corpus's own); its kind picks how
-B and C are scored.
+B and C are scored. `rag-baseline --question-id` and `agent-baseline --question-id` answer that question: its text is
+asked and its kind picks the answer.json shape (default: the RAG factuality question, as before).
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
@@ -48,12 +50,22 @@ def _write_answer(answer: dict[str, Any], out: Path) -> Path:
     return path
 
 
-def _question(args: argparse.Namespace) -> str:
-    from .baselines.common import DEFAULT_QUESTION
+def _question(args: argparse.Namespace) -> dict[str, Any]:
+    """The baseline's question keyword: `question_id` (checked here, so a bad id stops before any call), else
+    `question` from --question-file or --question, else the default question."""
+    from .baselines.common import DEFAULT_QUESTION, kind_params
 
+    if args.question_id is not None:
+        if args.question or args.question_file:
+            raise SystemExit(f"evaluate {args.cmd}: give --question-id or --question/--question-file, not both")
+        try:
+            kind_params(args.question_id)
+        except ValueError as exc:
+            raise SystemExit(f"evaluate {args.cmd}: {exc}") from None
+        return {"question_id": args.question_id}
     if args.question_file:
-        return args.question_file.read_text(encoding="utf-8").strip()
-    return args.question or DEFAULT_QUESTION
+        return {"question": args.question_file.read_text(encoding="utf-8").strip()}
+    return {"question": args.question or DEFAULT_QUESTION}
 
 
 def _model(alias: str) -> tuple[Any, str]:
@@ -99,15 +111,26 @@ def cmd_oracle(args: argparse.Namespace) -> int:
 def cmd_rag(args: argparse.Namespace) -> int:
     from .baselines.rag import ORACLE_SYSTEM, SYSTEM, rag_baseline
 
+    question = _question(args)
     model, model_id = _model(args.model)
     system = ORACLE_SYSTEM if args.oracle_passages else SYSTEM
     if args.oracle_passages and (args.k is not None or args.retrieval != "global" or args.max_chars != 1500):
         raise SystemExit("evaluate rag-baseline: --oracle-passages takes no --k, --retrieval or --max-chars")
-    answer = rag_baseline(args.corpus, model=model, model_id=model_id, question=_question(args), k=args.k,
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
                           mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
                           seed=args.seed, oracle=args.oracle_passages)
-    print(f"{_write_answer(answer, args.out)}: label={answer['label']} studies={len(answer['studies'])}")
+    print(f"{_write_answer(answer, args.out)}: {_summary(answer)}")
     return 0
+
+
+def _summary(answer: dict[str, Any]) -> str:
+    """One line about a baseline's answer: the label of an effect answer, else the kind and its winner or size."""
+    if "kind" not in answer:
+        return f"label={answer['label']} studies={len(answer['studies'])}"
+    if answer["kind"] == "inventory":
+        return f"kind=inventory entries={len(answer['entries'])}"
+    winner = f" winner={answer['winner']}" if answer["kind"] == "best" else ""
+    return f"kind={answer['kind']}{winner} studies={len(answer['studies'])}"
 
 
 def cmd_agent(args: argparse.Namespace) -> int:
@@ -116,6 +139,7 @@ def cmd_agent(args: argparse.Namespace) -> int:
 
     from .baselines.agent import BUDGET, agent_baseline
 
+    question = _question(args)
     stop_on_sigterm()
     settings = AgentSettings(model=args.model, temperature=args.temperature, seed=args.agent_seed,
                              sandbox_mode=args.sandbox, base_url=args.base_url,
@@ -125,14 +149,13 @@ def cmd_agent(args: argparse.Namespace) -> int:
     concept = json.loads(args.concept.read_text(encoding="utf-8")) if args.concept else None
     model, model_id = _model(args.model)
     try:
-        answer = agent_baseline(args.corpus, runner=runner, model=model, model_id=model_id, question=_question(args),
+        answer = agent_baseline(args.corpus, runner=runner, model=model, model_id=model_id, **question,
                                 concept=concept, budget=budget, cache=_cache(args, "agent-baseline"),
                                 run_id=args.run_id)
     except RuntimeError as exc:  # already redacted (agent_baseline, common.cached_reply)
         print(f"FAIL {exc}")
         return 1
-    print(f"{_write_answer(answer, args.out)}: label={answer['label']} studies={len(answer['studies'])} "
-          f"agent exit={answer['agent']['exit_status']}")
+    print(f"{_write_answer(answer, args.out)}: {_summary(answer)} agent exit={answer['agent']['exit_status']}")
     return 0
 
 
@@ -216,6 +239,9 @@ def parser() -> argparse.ArgumentParser:
                        help=f"LiteLLM alias of the answer and mapping calls and of the agent (default {DEFAULT_ALIAS})")
         q.add_argument("--question", help="default: the RAG factuality question")
         q.add_argument("--question-file", type=Path)
+        q.add_argument("--question-id", help="a question id of evidence/questions.yaml: its text is asked and its kind "
+                       "picks the answer's shape (not with --question or --question-file; default: the RAG "
+                       "factuality question)")
         q.add_argument("--cache", type=Path, help="JsonlCache file (default <out>/<system>-calls.jsonl)")
         q.add_argument("--seed", type=int, default=0, help="seed of the answer/mapping call")
 
