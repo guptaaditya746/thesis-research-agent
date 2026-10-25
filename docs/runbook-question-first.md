@@ -95,10 +95,20 @@ tail -n 20 llm-setup/runtime/slurm-$JOB.out     # wait until the orch replicas a
 export GLINER_URL=http://127.0.0.1:8090
 ```
 
-Good: `evidence run` prints no `skipped` for the GLiNER extractors, and `evidence.jsonl` has
-`gliner_*` rows. If the service dies mid-session, the GLiNER steps return errors, the funnel goes to the next
-extractor and runs still finish. Errors from the GLiNER service and the LLM (`service_call`) are cached, so after
-you restart the service re-run the same command with `--retry-errors`.
+Good, for each engine run dir `$RUNS/engine/$N/$Q` (corpus name `N`, question id `Q`, section 4): no GLiNER call
+was skipped, and
+GLiNER found something:
+
+```bash
+grep '"status":"skipped"' "$RUNS/engine/$N/$Q/events.jsonl" | grep -c '"agent_id":"gliner_'   # 0
+grep -c gliner_ "$RUNS/engine/$N/$Q/evidence.jsonl"                                           # more than 0
+```
+
+A skipped GLiNER call (the service was not reachable) is only an `extractor_call` event with status `skipped` in
+`events.jsonl`; `evidence run` does not print it, and `funnel.json` leaves it out (its own `skipped` means a paper
+the screen left out). If the service dies mid-session, the GLiNER steps return errors, the funnel goes to the next
+extractor and runs still finish. Errors from the GLiNER service and the LLM (`service_call`) are cached; after you
+restart the service, re-run that run as in section 4, "Retries".
 
 ## 2. Offline check (login node, no model)
 
@@ -193,8 +203,21 @@ nohup "$EV/launch.sh" grid-hard "$EV/grid.sh" "$C_HARD" > /dev/null 2>&1 &
 
 (Inside the job `in-job.sh` has `QS` and the paths through `in-job.env`; add `QS` and `C_MAIN`, `C_HARD` there.)
 Each question's logs are in `$EV/logs/grid-main.log` and `grid-hard.log`; `FAIL` lines list what to retry.
-Retries: for an engine run that ended with `service_call` errors (a GLiNER or LLM outage), run the same
-`evidence run` command again with `--retry-errors` appended, then re-score.
+Retries: for an engine run that ended with `service_call` errors (a GLiNER or LLM outage), move the failed run dir
+aside (a run dir is never overwritten: the same command again stops with `FileExistsError`), run the engine again
+with `--retry-errors`, then score again. With `Q`, `C` and `N` set as in `one.sh`:
+
+```bash
+mkdir -p "$RUNS/failed/$N"
+mv "$RUNS/engine/$N/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # keep it for the report
+uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/engine/$N" \
+  --cache "$CACHE/engine-$N" --model orch-model --strategy gaps --workers 3 --run-id "$Q" --retry-errors
+B=(); for s in rag-baseline agent-baseline; do
+  [ -f "$RUNS/$s/$N/$Q/answer.json" ] && B+=(--baseline "$RUNS/$s/$N/$Q/answer.json"); done
+uv run evaluate score --run "$RUNS/engine/$N/$Q" --corpus "$C" --question-id "$Q" "${B[@]}" --out "$SCORES/$N/$Q"
+```
+
+Run it in the job like the grid (one run at a time per corpus: it appends to that corpus's engine cache).
 
 The hard corpus (112 papers) is the slow one; if the job is about to end, finish the main corpus first and report
 the hard corpus as partial.
@@ -203,8 +226,9 @@ the hard corpus as partial.
 
 - `uv run evidence replay $RUNS/engine/<corpus>/<question> | grep '"ok"'` gives `"ok": true`.
 - `$SCORES/<corpus>/<question>/report.md` exists for each of the 20 pairs; note any missing one with its `FAIL` line.
-- Funnel: `funnel.json` in the run dir records which extractors ran and which were `skipped` (GLiNER without the
-  service). Report which it was.
+- GLiNER: `grep '"status":"skipped"' $RUNS/engine/<corpus>/<question>/events.jsonl | grep -c '"agent_id":"gliner_'`
+  counts the GLiNER calls skipped because the service was not up (0 when it was up). Report the count per run.
+  (`funnel.json`'s `skipped` is a paper the screen left out, not GLiNER.)
 
 ## 6. The deliverable table
 
