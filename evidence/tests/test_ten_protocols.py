@@ -9,7 +9,7 @@ import pytest
 from evidence import engine, protocol, questions
 from synth import vocab
 
-from .conftest import make_corpus
+from .conftest import make_corpus, regex_run
 
 REPO = Path(__file__).resolve().parents[2]
 PROTOCOLS = REPO / "evidence" / "protocols"
@@ -113,3 +113,20 @@ def test_each_new_protocol_runs_regex_only(qid: str, tmp_path: Path) -> None:
         assert "label" in answer and "kind" not in answer
     else:
         assert answer["kind"] == KINDS[qid]
+    # the fixture papers name "closed-book model" and "retrieval-augmented model" and report accuracy tables
+    if qid == "best-accuracy":
+        assert any(s["winner"] == "rag" for s in answer["studies"]), answer["studies"]
+    if KINDS[qid] == "inventory":
+        assert answer["entries"], qid
+    if qid == "inv-methods":
+        assert {"closed-book model", "retrieval-augmented model"} <= {e["name"].casefold() for e in answer["entries"]}
+
+
+def test_best_hallucination_finds_the_lowest_rate(tmp_path: Path) -> None:
+    paper = ("# Study\nWe compare the vanilla LLM, the RAG pipeline and the fine-tuned model on TriviaCheck.\n\n"
+             "| System | hallucination rate (%) |\n|---|---|\n| vanilla LLM | 31.0 |\n| RAG pipeline | 12.5 |\n"
+             "| fine-tuned model | 22.0 |\n")
+    answer, _ = regex_run({"S1": paper}, tmp_path, PROTOCOLS / "best-hallucination.yaml")
+    [study] = answer["studies"]
+    assert study["winner"] == "rag" and study["values"] == {"no-retrieval": 0.31, "rag": 0.125, "fine-tuned": 0.22}
+    assert answer["winner"] == "rag"

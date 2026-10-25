@@ -44,7 +44,8 @@ evidence_types:
     roles: [condition_label]
     merge_key: [label, kind]
     query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare, method]
-    extractors:               # regex_condition writes a role, which this type has not: the LLM extractor only
+    extractors:
+      - name: regex_condition_kind   # the names of best.kinds (injected), with their kind
       - name: llm_condition
 
   metric:

@@ -90,8 +90,8 @@ evidence_types:
     merge_key: [value]
     query: [table, results, latency, seconds, faster, slower, compared]
     extractors:
-      - name: regex_measurement
-        config: {metrics: *latency_metrics}
+      - name: regex_measurement_units   # seconds stay seconds; only fraction metrics are rate-like
+        config: {metrics: *latency_metrics, fraction_metrics: [factual_accuracy, hallucination_rate]}
       - name: llm_measurement
 
 

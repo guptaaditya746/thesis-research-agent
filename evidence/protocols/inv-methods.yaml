@@ -38,7 +38,38 @@ evidence_types:
     roles: [condition_label]
     merge_key: [label]
     query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare, method]
-    extractors:               # regex_condition writes a role, which this type has not: the LLM extractor only
+    extractors:
+      - name: regex_condition_kind   # condition names (labels and synonyms of synth/vocab.py)
+        config:
+          names:
+            - closed-book model
+            - model that answers from its own parameters
+            - parametric-only model
+            - generator without any document access
+            - no-retrieval baseline
+            - language model used on its own
+            - vanilla LLM
+            - plain generator with no lookup step
+            - retrieval-augmented model
+            - model that consults the document index before answering
+            - RAG pipeline
+            - system grounded in retrieved passages
+            - retrieval-augmented generator
+            - variant that reads retrieved evidence first
+            - retrieve-then-read model
+            - configuration that looks up supporting documents
+            - RAG without reranking
+            - retrieval variant that skips the reranker
+            - RAG with random passages
+            - variant fed with randomly drawn passages
+            - fine-tuned model
+            - generator adapted to the domain by further training
+            - chain-of-thought prompting
+            - model prompted to reason step by step
+            - self-consistency decoding
+            - model that samples several answers and votes
+            - query-rewriting variant
+            - variant that reformulates the question before the search
       - name: llm_condition
 
 inventory:

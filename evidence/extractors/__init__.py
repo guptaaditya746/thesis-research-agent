@@ -42,8 +42,9 @@ def names() -> list[str]:
 
 
 def _builtins() -> None:
-    from . import dataset, llm, regex, screen
-    for module in (regex, llm, screen, dataset):   # screen: the funnel's regex_screen and llm_screen (Part D)
+    from . import conditions, dataset, llm, regex, screen, units
+    # screen: the funnel's regex_screen and llm_screen (Part D); conditions, units: kind-aware regex (A4)
+    for module in (regex, llm, screen, dataset, conditions, units):
         for name, factory in module.FACTORIES.items():
             register(name, factory)
 
