@@ -1,7 +1,7 @@
 /**
  * The run page's "Developer tools" tab: one row per step the run took (a warm-pass call or an engine event),
  * filled in as the run writes it. Filter by paper and by status; a row with a call opens the call sheet with
- * the full prompt and reply.
+ * the full prompt and reply (a skipped extractor call has none: the backend gives it no call).
  */
 import { useState } from "react"
 
@@ -70,7 +70,8 @@ export function TraceTab({ runId }: { runId: string }) {
                 <TableCell className="font-mono text-xs">{r.document ?? DASH}</TableCell>
                 <TableCell className="text-xs">{r.evidence_type ?? DASH}</TableCell>
                 <TableCell className="text-xs">{r.extractor ?? DASH}</TableCell>
-                <TableCell className="text-xs">{r.status}</TableCell>
+                {/* a skipped extractor call: its service (GLiNER) was unavailable, so there is no call to open */}
+                <TableCell className="text-xs">{r.step === "extractor_call" && r.status === "skipped" ? "skipped: service unavailable" : r.status}</TableCell>
                 <TableCell className="text-xs tabular-nums">{r.seconds === null ? DASH : `${num(r.seconds, 1)} s`}</TableCell>
                 <TableCell className="text-xs tabular-nums">
                   {r.input_tokens === null && r.output_tokens === null ? DASH : `${int(r.input_tokens)} / ${int(r.output_tokens)}`}

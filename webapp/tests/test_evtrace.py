@@ -72,6 +72,18 @@ def test_trace_pages_with_after(tmp_path: Path) -> None:
         assert [r["step"] for r in c.get(f"/api/ev/runs/{RUN}/trace", params={"after": 6}).json()["rows"]] == ["completeness"]
 
 
+def test_a_skipped_call_links_no_call(tmp_path: Path) -> None:
+    """A GLiNER step whose service was unavailable writes a `skipped` extractor_call event and no call file."""
+    run = make_run(tmp_path)
+    skipped = event(1, "extractor_call", task_sha256="ab", evidence_type="dataset") | {"status": "skipped",
+                                                                                     "agent_id": "gliner_dataset@1#x"}
+    put(run / "events.jsonl", [skipped, event(2, "extractor_call", task_sha256="cd", evidence_type="dataset")])
+    with client(tmp_path) as c:
+        rows = c.get(f"/api/ev/runs/{RUN}/trace").json()["rows"]
+    assert [(r["status"], r["call"]) for r in rows] == [("skipped", None), ("ok", "t0002")]
+    assert rows[0]["extractor"] == "gliner_dataset@1#x" and rows[0]["seconds"] == 1.0
+
+
 def test_trace_run_phase_rows_fill_event_tokens(tmp_path: Path) -> None:
     run = make_run(tmp_path)   # workers=1: calls.jsonl rows are phase run, and are the extractor_call events' calls
     put(run / "calls.jsonl", [{**call_row(cache_key("llm-1", "ab", 0), "run"), "source": "fresh"}])

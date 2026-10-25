@@ -252,6 +252,18 @@ describe("developer tools tab", () => {
     expect(await within(sheet).findByText("user prompt", {}, T)).toBeInTheDocument()
   })
 
+  it("a skipped GLiNER call is a plain row that opens nothing", async () => {
+    const user = userEvent.setup()
+    server.use(http.get(traceUrl, () => HttpResponse.json({ rows: [row(1, { status: "skipped", extractor: "gliner_dataset@1#x",
+      document: "S004", input_tokens: null, output_tokens: null })], next: 1, done: true })))
+    renderRoutes(routes, `${run(id)}?tab=dev`)
+    const table = await screen.findByRole("table", { name: "Run trace" }, T)
+    expect(within(table).getByText("skipped: service unavailable")).toBeInTheDocument()
+    expect(within(table).queryByRole("button", { name: "extractor_call" })).toBeNull()
+    await user.click(within(table).getByText("S004"))
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
   it("trace polls while running and stops when done", async () => {
     const afters: string[] = []
     server.use(http.get(traceUrl, ({ request }) => {

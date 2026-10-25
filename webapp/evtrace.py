@@ -95,6 +95,8 @@ def _light_event(event: dict[str, Any], pos: int, size: int) -> dict[str, Any] |
         # only this event is given its real start (the others default to the time they are written)
         row["seconds"] = _seconds(event.get("started_at"), event.get("ended_at"))
         row["at"] = event.get("started_at") or event.get("ended_at")
+        if event.get("status") == "skipped":   # an unavailable service: no call was made, no calls/<id>.json to open
+            return row
         row["call"] = event.get("task_id")
         if isinstance(meta.get("task_sha256"), str) and event.get("agent_id"):
             row["key"] = cache_key(event["agent_id"], meta["task_sha256"], int(meta.get("attempt") or 0))
