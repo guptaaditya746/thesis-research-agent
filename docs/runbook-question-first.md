@@ -96,8 +96,7 @@ export GLINER_URL=http://127.0.0.1:8090
 ```
 
 Good, for each engine run dir `$RUNS/engine/$N/$Q` (corpus name `N`, question id `Q`, section 4): no GLiNER call
-was skipped, and
-GLiNER found something:
+was skipped, and GLiNER found something:
 
 ```bash
 grep '"status":"skipped"' "$RUNS/engine/$N/$Q/events.jsonl" | grep -c '"agent_id":"gliner_'   # 0
