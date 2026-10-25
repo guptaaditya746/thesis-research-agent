@@ -217,3 +217,55 @@ def test_hard_corpus_best_and_inventory_run():
     inv = expected(truth, "inventory", QuestionTruth(target="condition"))
     names = {e["name"] for e in inv["entries"]}
     assert "RAG pipeline" in names and "RAG pipeline without reranking" in names   # an ablation keeps its own name
+
+
+def _edited(protocol: protocol_module.Protocol, **changes: Any) -> protocol_module.Protocol:
+    """A copy of `protocol` as a user may have edited it (no validation: the point is what expected reads)."""
+    synthesis = changes.pop("synthesis", None)
+    update: dict[str, Any] = dict(changes)
+    if synthesis is not None:
+        update["synthesis"] = protocol.synthesis.model_copy(update=synthesis)
+    return protocol.model_copy(update=update)
+
+
+def test_user_protocol_does_not_change_truth(mixed, rag_factuality):
+    """Roles, claim vocabulary and flag thresholds are the generator's, whatever protocol is passed."""
+    edited = _edited(rag_factuality, id="my-rag", synthesis={
+        "compare": rag_factuality.synthesis.compare.model_copy(update={"treatment": "retrieval", "control": "plain"}),
+        "claim_map": {"improves": "contradicts", "worsens": "supports", "no_effect": "neutral"},
+        "flags": rag_factuality.synthesis.flags.model_copy(update={"duplicates": False}),
+        "min_effect": 0.5})
+    for kind, params in (("effect", QuestionTruth(metric="hallucination_rate", min_effect=0.01)),
+                         ("consistency", QuestionTruth(metric="factual_accuracy", min_effect=0.01))):
+        plain = expected(mixed, kind, params)
+        got = expected(mixed, kind, params, edited)
+        got.pop("question", None), plain.pop("question", None)
+        assert got == plain
+    assert expected(mixed, "consistency", QuestionTruth(metric="factual_accuracy", min_effect=0.01))["disagreeing"]
+
+
+def test_saved_answer_only_for_the_rag_factuality_question(mixed, rag_factuality):
+    params = QuestionTruth(metric="factual_accuracy", min_effect=0.01)
+    assert expected(mixed, "effect", params, rag_factuality) == mixed.answer
+    agentic = protocol_module.load(PROTOCOLS / "rag-factuality-agentic.yaml")
+    assert expected(mixed, "effect", params, agentic) == mixed.answer
+    same_text = _edited(rag_factuality, id="my-copy")          # another protocol asking the same question
+    computed = expected(mixed, "effect", params, same_text)
+    assert computed != mixed.answer and computed["system"] == "ground-truth" and "studies" in computed
+    other_metric = expected(mixed, "effect", QuestionTruth(metric="hallucination_rate", min_effect=0.01), rag_factuality)
+    assert other_metric["system"] == "ground-truth"
+
+
+def test_best_keeps_a_study_with_one_side_missing(tmp_path):
+    conditions = [("baseline", "vanilla LLM"), ("rag", "RAG pipeline"), ("other", "fine-tuned model")]
+    metric = ("factual_accuracy", "FA", True)
+    missing = _study("S001", conditions, metric, [(2, 0.6, None), (3, 0.7, None)], missing="control")
+    missing["effect"] = {"direction": "undetermined", "delta": None, "metric": "S001.k1", "treatment": "S001.m1",
+                         "control": None, "reason": "missing_control"}
+    dup = _study("S002", conditions, metric, [(1, 0.5, None), (2, 0.6, None), (3, 0.7, None)], duplicate_of="S001")
+    got = expected(_truth(tmp_path, [missing, dup]), "best", QuestionTruth(metric="factual_accuracy"))
+    first, second = got["studies"]
+    assert first == {"document": "S001", "winner": "fine-tuned", "tied": [], "values": {"rag": 0.6, "fine-tuned": 0.7},
+                     "reason": None}
+    assert second["winner"] is None and second["reason"]["code"] == "duplicate"
+    assert got["wins"] == {"fine-tuned": 1} and got["winner"] == "fine-tuned"

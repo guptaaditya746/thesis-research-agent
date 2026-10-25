@@ -2,17 +2,21 @@
 
 `expected(truth, kind, params, protocol=None)` gives the answer shape of the kind's rules module
 (evidence/kinds/), with study ids as documents and `system` "ground-truth". The truth parameters (`params`, from
-evidence/questions.yaml) decide the metric, the neutral band and the inventory target; a protocol only supplies
-the question text and, for effect and consistency, the compared roles, the claim vocabulary and the flag
-thresholds (rag-factuality's when no protocol is given). The label table is always rag-factuality's.
+evidence/questions.yaml) decide the metric, the neutral band and the inventory target. Everything else (the
+compared roles, the claim vocabulary, the flag thresholds, the label table) is the generator's own spec
+(synth/truth.default_spec, rag-factuality's synthesis block), never the passed protocol, which a user may have
+edited (Part D): truth must not change with the user's protocol. The protocol supplies only the effect answer's
+`question` text and its id for the shortcut below.
 
-For the question the corpus was generated for (an effect protocol asking `truth.question`, i.e. rag-factuality
-and its agentic variant) the saved `truth.answer` is returned unchanged: it was computed with that protocol's
-metric priority list (factual accuracy, then hallucination rate), which one truth metric cannot express.
+For the question the corpus was generated for (kind effect, `params.metric` factual_accuracy, protocol id in
+SAVED_ANSWER_IDS: rag-factuality and its agentic variant) the saved `truth.answer` is returned unchanged: it was
+computed with that protocol's metric priority list (factual accuracy, then hallucination rate), which one truth
+metric cannot express. Another effect protocol that reuses the question text does not get it.
 
 Rules:
-- Counted studies: relevant, not `duplicate_of`, and not `missing` the needed side (the `missing` measurement is
-  on the study's question metric, its first metric; it counts as missing for that metric only). A study that is
+- Counted studies: relevant, not `duplicate_of`, and (effect, consistency) not `missing` the needed side (the
+  `missing` measurement is on the study's question metric, its first metric; it counts as missing for that metric
+  only). best keeps a `missing` study: the kinds that remain measured are compared. A study that is
   not counted keeps an entry with a reason (`screened_out`, `duplicate`, `missing_control|missing_treatment`);
   effect reports a duplicate's direction as the engine does, and lists it under `duplicates` when that direction
   is determined on the question metric (else it is undetermined, as the engine would find it).
@@ -45,6 +49,8 @@ from . import canon
 from .truth import GroundTruth
 
 SYSTEM = "ground-truth"
+SAVED_ANSWER_IDS = frozenset({"rag-factuality", "rag-factuality-agentic"})   # protocols of the corpus's own question
+SAVED_ANSWER_METRIC = "factual_accuracy"
 KINDS: tuple[str, ...] = tuple(dict.fromkeys(canon.KIND_OF.values()))
 NAME_FIELD = {"condition": "label", "metric": "name"}
 GROUPS = (("supporting", "supports"), ("contradicting", "contradicts"), ("neutral", "neutral"),
@@ -59,10 +65,6 @@ SKIP_TEXT = {"screened_out": "not relevant (no experiment)", "duplicate": "a dup
 @cache
 def _default() -> Synthesis:
     return default_spec()
-
-
-def _spec(protocol: Protocol | None) -> Synthesis:
-    return protocol.synthesis if protocol is not None and protocol.synthesis is not None else _default()
 
 
 def _reason(code: str, **fmt: Any) -> dict[str, str]:
@@ -103,7 +105,10 @@ def _skip(study: dict[str, Any], metric: str) -> dict[str, str] | None:
 
 
 def _first_dataset(ms: list[dict[str, Any]], side_of: dict[str, str], need: int) -> dict[str, dict[str, Any]] | None:
-    """side -> its first value on the first dataset (measurement order) that has `need` sides; None when none has."""
+    """side -> its first value on the first dataset (measurement order) that has `need` sides; None when none has.
+
+    Truth always names a dataset and has one condition per role or kind in the main experiment, so the engine's
+    dataset=None fallback (synthesis._pair, kinds.best) and its `best_value` choice are not needed here."""
     for dataset in dict.fromkeys(m.get("dataset") for m in ms):
         chosen: dict[str, dict[str, Any]] = {}
         for m in ms:
@@ -154,7 +159,7 @@ def _effect_study(study: dict[str, Any], params: QuestionTruth, spec: Synthesis)
 
 
 def _effect(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None) -> dict[str, Any]:
-    spec = _spec(protocol)
+    spec = _default()
     studies = [_effect_study(s, params, spec) for s in truth.studies]
     determined = {e["document"] for e in studies if e["direction"] != "undetermined"}
     dup_of = {s["paper"]: s["duplicate_of"] for s in truth.studies   # the engine finds duplicates among determined studies
@@ -186,7 +191,7 @@ def _effect(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None
 
 def _consistency(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None) -> dict[str, Any]:
     assert params.metric is not None, "consistency truth takes metric"
-    spec = _spec(protocol)
+    spec = _default()
     studies = []
     for s in truth.studies:
         q = _question_metric(s)
@@ -241,7 +246,7 @@ def _inventory(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | N
 
 def _best_study(study: dict[str, Any], metric: str) -> dict[str, Any]:
     entry: dict[str, Any] = {"document": study["paper"], "winner": None, "tied": [], "values": {}, "reason": None}
-    skip = _skip(study, metric)
+    skip = _reason("screened_out") if not study.get("relevant", True) else None   # a `missing` study still counts
     if skip is None and study.get("duplicate_of"):
         skip = _reason("duplicate", of=study["duplicate_of"])
     if skip is not None:
@@ -282,6 +287,7 @@ BUILDERS = {"effect": _effect, "consistency": _consistency, "inventory": _invent
 
 def expected(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None = None) -> dict[str, Any]:
     """The kind's answer as ground truth gives it (module docstring)."""
-    if kind == "effect" and truth.answer and protocol is not None and protocol.question == truth.question:
+    if (kind == "effect" and truth.answer and params.metric == SAVED_ANSWER_METRIC and protocol is not None
+            and protocol.id in SAVED_ANSWER_IDS):
         return copy.deepcopy(truth.answer)
     return BUILDERS[kind](truth, params, protocol)
