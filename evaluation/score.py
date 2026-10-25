@@ -745,7 +745,7 @@ def called_on(run: Run | None) -> dict[str, set[tuple[str, str]]] | None:
     for event in run.events:
         meta = event.get("custom_metadata") if isinstance(event.get("custom_metadata"), dict) else {}
         document, kind = meta.get("document"), meta.get("evidence_type")
-        if event.get("agent_id") and document and kind:
+        if event.get("agent_id") and document and kind and event.get("status") != "skipped":   # skipped: not called
             out[str(event["agent_id"])].add((str(document), str(kind)))
     return dict(out)
 
@@ -890,7 +890,7 @@ def score_funnel(truth: GroundTruth, run: Run | None) -> dict[str, Any] | None:
     for event in run.events or []:
         meta = event.get("custom_metadata") if isinstance(event.get("custom_metadata"), dict) else {}
         document = meta.get("document")
-        if not document:
+        if not document or event.get("status") == "skipped":
             continue
         ids = [str(i) for i in meta.get("model_calls") or []]
         per_doc[document].update(calls=1, model_calls=len(ids))

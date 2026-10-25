@@ -79,7 +79,7 @@ def _stamp() -> str:
 def _attempts(run: Path) -> dict[str, int]:
     """cache key -> the attempt of the record each call of the run used (calls.py)."""
     return {cache_key(e["agent_id"], e["custom_metadata"]["task_sha256"]): e["custom_metadata"].get("attempt", 0)
-            for e in RunDir(run).events_of("extractor_call") or []}
+            for e in RunDir(run).events_of("extractor_call") or [] if e["status"] != "skipped"}
 
 
 def _calls(run: Path) -> dict[tuple[str, str, int, str], dict[str, Any]]:
@@ -88,7 +88,7 @@ def _calls(run: Path) -> dict[tuple[str, str, int, str], dict[str, Any]]:
     Position and name, not the id: a re-execution with changed code has new ids but the same cascade."""
     out = {}
     for event in read_lines(run / EVENTS_FILE):
-        if event["subtype"] == "extractor_call":
+        if event["subtype"] == "extractor_call" and event["status"] != "skipped":   # skipped: no call was made
             meta = event["custom_metadata"]
             result = read_json(run / CALLS_DIR / f"{event['task_id']}.json")
             name = event["agent_id"].split("@", 1)[0]

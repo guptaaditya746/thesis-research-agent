@@ -43,6 +43,8 @@ evidence_types:
     query: [accuracy, factual, hallucination, rate, metric, measure, evaluate, score, exact, match]
     extractors:
       - name: regex_metric
+      - name: abbrev_metric
+      - name: gliner_metric
       - name: llm_metric
 
 inventory:

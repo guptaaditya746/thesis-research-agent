@@ -107,6 +107,10 @@ class CallCache:
         n = self.attempts.get(cache_key(extractor_id, task_sha256), 0)
         return n, self.cache.get(cache_key(extractor_id, task_sha256, n))
 
+    def has_record(self, extractor_id: str, task_sha256: str) -> bool:
+        """Whether the cache holds the record this mode would use for the call."""
+        return self._recorded(extractor_id, task_sha256)[1] is not None
+
     def call(self, extractor: Extractor, task: ExtractionTask, make_ctx: Callable[[], EngineContext]) -> Outcome:
         spec = extractor.spec
         if self.mode == "replay":

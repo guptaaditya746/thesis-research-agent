@@ -42,6 +42,8 @@ evidence_types:
     query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare]
     extractors:
       - name: regex_condition
+      - name: abbrev_condition
+      - name: gliner_condition
       - name: llm_condition
 
   metric:
@@ -68,6 +70,8 @@ evidence_types:
             - ['(?i)\bfactual(?:ity)?\s+accuracy\b|\baccuracy\b|\bexact[- ]match\b', other, true]
             - ['(?i)\bhallucination[- ]rate\b|\brate\s+of\s+hallucinat(?:ion|ions|ed\s+answers)\b', other, false]
             - ['\bBLEU\b|\bROUGE(?:-[12L])?\b', other, true]
+      - name: abbrev_metric
+      - name: gliner_metric
       - name: llm_metric
 
   measurement:

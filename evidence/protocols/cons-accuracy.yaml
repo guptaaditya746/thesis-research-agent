@@ -42,6 +42,8 @@ evidence_types:
     query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare]
     extractors:
       - name: regex_condition
+      - name: abbrev_condition
+      - name: gliner_condition
       - name: llm_condition
 
   metric:
@@ -62,6 +64,8 @@ evidence_types:
     query: [accuracy, factual, hallucination, rate, metric, measure, evaluate, score, exact, match]
     extractors:
       - name: regex_metric
+      - name: abbrev_metric
+      - name: gliner_metric
       - name: llm_metric
 
   measurement:
@@ -84,6 +88,7 @@ evidence_types:
     query: [table, results, accuracy, rate, achieves, reaches, compared, "%"]
     extractors:
       - name: regex_measurement
+      - name: number_measurement
       - name: llm_measurement
 
   author_claim:

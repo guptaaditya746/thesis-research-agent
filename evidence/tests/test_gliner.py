@@ -160,7 +160,7 @@ def test_gliner_down_falls_through(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     rows = [json.loads(x) for x in (run / "events.jsonl").read_text(encoding="utf-8").splitlines()]
     metric_calls = [e for e in rows if e["subtype"] == "extractor_call" and e["custom_metadata"]["evidence_type"] == "metric"]
     assert [e["agent_id"].split("@")[0] for e in metric_calls] == ["gliner_metric", "llm_metric"]
-    assert metric_calls[0]["status"] == "error" and "metric" in seen
+    assert metric_calls[0]["status"] == "skipped" and "metric" in seen   # the service did not answer /info: skipped
     answer = json.loads((run / "answer.json").read_text(encoding="utf-8"))
     assert answer["label"] and json.loads((run / "run.json").read_text(encoding="utf-8"))["settings"]["gliner_url"]
 

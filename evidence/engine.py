@@ -323,6 +323,9 @@ class Execution:
                                       field_schema_sha256=spec.schema_sha256, document=state.doc, scope=found.scope,
                                       context=tuple(i.item_id for i in context),
                                       budget=ref.budget if extractor.spec.kind == "agent" else None, focus=focus)
+                if self._unavailable(extractor, task, state, p):
+                    state.next_position[etype] = p + 1   # no cache record, no call: the gaps loop moves on
+                    continue
                 call_id, result = self._call(extractor, task, state.text, state.index, spec, context, p)
                 results.append((call_id, result))
                 step = ran.setdefault(p, {"round": round_no, "position": p, "types": [], "calls": []})
@@ -336,6 +339,25 @@ class Execution:
                             custom={"document": state.doc.id, "evidence_type": etype, "sources": sources,
                                     "collisions": collisions})
         state.steps += [ran[p] for p in sorted(ran)]
+
+    def _unavailable(self, extractor: Extractor, task: ExtractionTask, state: DocState, position: int) -> bool:
+        """An extractor whose `available()` says False (a GLiNER step without its service) is not run, before the
+        record cache: one `extractor_call` event with status `skipped`, and nothing else (no cache record, no
+        checked result, no calls row). A replay has no service to ask and needs none: it skips exactly the calls
+        the cache has no record of (the recorded run skipped them too)."""
+        available = getattr(extractor, "available", None)
+        if available is None:
+            return False
+        if self.calls.mode == "replay":
+            if self.calls.has_record(extractor.spec.extractor_id, task.task_sha256):
+                return False
+        elif available():
+            return False
+        self.events.add("extractor_call", used=[state.doc.sha256], generated=[], agent_id=extractor.spec.extractor_id,
+                        status="skipped", group_id=state.doc.id,
+                        custom={"document": state.doc.id, "evidence_type": task.evidence_type, "source": None, "position": position,
+                                "model_calls": [], "rejected": 0, "focus": None})
+        return True
 
     def complete(self, state: DocState, round_no: int) -> tuple[bool, str | None, tuple[str, ...]]:
         """The completeness decision after a round: the kind's `study()` on the merged items gives no reason (for

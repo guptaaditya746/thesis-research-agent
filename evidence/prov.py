@@ -100,8 +100,9 @@ def build(run_dir: Path | str) -> Graph:
             g.add((node, PROV.used, protocol))
             g.add((node, PROV.wasAssociatedWith, _iri("extractor", event["agent_id"])))
             g.add((node, EV.status, Literal(event["status"])))
-            g.add((node, EV.taskSha256, Literal(meta["task_sha256"])))
-            g.add((node, EV.outputSha256, Literal(meta["output_sha256"])))
+            if "task_sha256" in meta:   # a skipped call has no task
+                g.add((node, EV.taskSha256, Literal(meta["task_sha256"])))
+                g.add((node, EV.outputSha256, Literal(meta["output_sha256"])))
             for ctx_item in event["used"][2:]:
                 g.add((node, PROV.used, _iri("item", ctx_item)))
         if event["subtype"] == "merge":

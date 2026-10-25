@@ -39,6 +39,7 @@ evidence_types:
     query: [dataset, benchmark, evaluate, test, split, questions, corpus]
     extractors:
       - name: regex_dataset
+      - name: gliner_dataset
       - name: llm_dataset
 
 inventory:
