@@ -95,10 +95,13 @@ class GlinerExtractor:
         roles = list(given.get("roles") or [])
         self.role = roles[0] if roles else ROLE[self.evidence_type]
         self.given = given
+        # a protocol's own metric wording ([pattern, canonical, higher_is_better] rows), as regex_metric takes it
+        self.metrics = [(str(p), str(k), bool(h)) for p, k, h in config["metrics"]] if config.get("metrics") else None
         self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="model",
                                   evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
                                   code_sha256=CODE_SHA256,
-                                  config={**given, "service": "gliner", "model": self.model, "labels": self.labels,
+                                  config={**given, **({"metrics": [list(m) for m in self.metrics]} if self.metrics else {}),
+                                          "service": "gliner", "model": self.model, "labels": self.labels,
                                           "threshold": self.threshold, "chunk_chars": self.chunk_chars,
                                           "max_spans": self.max_spans},
                                   determinism="near_exact")
@@ -229,7 +232,7 @@ class GlinerMetric(GlinerExtractor):
     evidence_type, name = "metric", "gliner_metric"
 
     def fields(self, name: str) -> dict[str, Any] | None:
-        found = terms.find_all(name, terms.METRICS)
+        found = terms.find_all(name, self.metrics or terms.METRICS)
         canonical, higher = (found[0].key, found[0].higher_is_better) if found else ("other", True)
         enum = self._enum("canonical")
         if enum is not None and canonical not in enum:

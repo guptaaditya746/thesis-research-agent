@@ -802,7 +802,9 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
                 cell[5] += associated
                 cell[6] += bool(fact) and placed(fact, truth)
     rows = []
-    for extractor in sorted(sums):
+    not_run = {str(e.get("agent_id")) for e in (run.events if run else None) or [] if e.get("status") == "skipped"}         - set(called or {})   # skipped on every document (a GLiNER step without its service): no row, not 0 recall
+    kept = [e for e in sorted(sums) if not (e in not_run and not any(c[0] for c in sums[e].values()))]
+    for extractor in kept:
         facts = fact_counts(truth, called[extractor], m.types) if called and extractor in called else all_facts
         cells = sums[extractor] or {(ALL, ALL): [0] * 7}
         for (kind, level), (n, matched, hits, only, only_matched, associated, placed_matched) in sorted(cells.items()):
@@ -812,7 +814,7 @@ def score_extractors(m: Matching, run: Run | None) -> dict[str, Any]:
                          "associated": associated if kind == "measurement" else None,
                          "association_accuracy": share(associated, matched) if kind == "measurement" else None})
     return {"rows": rows, "cost": score_extractor_cost(run), "recall_scope": "called" if called else "all_facts",
-            "papers": _extractor_papers(m, sums, called, screens)}
+            "papers": _extractor_papers(m, kept, called, screens)}
 
 
 def _extractor_papers(m: Matching, extractors: Iterable[str], called: dict[str, set[tuple[str, str]]] | None,

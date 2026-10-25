@@ -306,7 +306,8 @@ class Execution:
                 continue
             spec = self.protocol.evidence_types[etype]
             cascade = self.cascades.get(etype, [])
-            positions = list(range(len(cascade))) if position is None else [position] if position < len(cascade) else []
+            # one position of a funnel round: the first available one from `position` on (a skipped one falls through)
+            positions = list(range(len(cascade))) if position is None else list(range(position, len(cascade)))
             if position is not None and not positions:
                 continue
             if etype not in state.scopes:
@@ -332,6 +333,8 @@ class Execution:
                 step["types"].append(etype)
                 step["calls"].append(call_id)
                 state.next_position[etype] = p + 1
+                if position is not None:
+                    break
             items, sources, collisions = merge.merge(results, spec)
             state.merged[etype] = items
             self.events.add("merge", used=sorted({i.item_id for _, r in results for i in r.items}),
@@ -343,13 +346,14 @@ class Execution:
     def _unavailable(self, extractor: Extractor, task: ExtractionTask, state: DocState, position: int) -> bool:
         """An extractor whose `available()` says False (a GLiNER step without its service) is not run, before the
         record cache: one `extractor_call` event with status `skipped`, and nothing else (no cache record, no
-        checked result, no calls row). A replay has no service to ask and needs none: it skips exactly the calls
-        the cache has no record of (the recorded run skipped them too)."""
+        checked result, no calls row). A replay has no service to ask: it skips exactly the calls the recorded run
+        did not make (no cache key in `attempts`); a call it did make and the cache lost still raises NotRecorded."""
         available = getattr(extractor, "available", None)
         if available is None:
             return False
         if self.calls.mode == "replay":
-            if self.calls.has_record(extractor.spec.extractor_id, task.task_sha256):
+            attempts = self.calls.attempts
+            if attempts is None or cache_key(extractor.spec.extractor_id, task.task_sha256) in attempts:
                 return False
         elif available():
             return False

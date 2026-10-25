@@ -22,7 +22,8 @@ EXAMPLE = Path(__file__).resolve().parents[2] / "synth" / "examples" / "rag-demo
 # out when the service is missing). Specialised first steps stay where they fit: regex_condition_kind and
 # regex_measurement_units are those protocols' "regex" step. A step that would write fields the protocol's schema
 # forbids is left out: abbrev_condition and gliner_condition write {label, role}, which best-* ({label, kind}) and
-# inv-methods ({label}) do not take; latency's measurements stay with the units extractor (seconds, not fractions).
+# inv-methods ({label}) do not take. rag-latency: regex_measurement_units is its "regex" step; number_measurement takes the
+# same metrics/fraction_metrics config (time units and ms headers read as seconds); its metric steps take the latency wording.
 ROLE = ["regex_condition", "abbrev_condition", "gliner_condition", "llm_condition"]
 METRIC = ["regex_metric", "abbrev_metric", "gliner_metric", "llm_metric"]
 MEASURE = ["regex_measurement", "number_measurement", "llm_measurement"]
@@ -31,7 +32,7 @@ KIND = ["regex_condition_kind", "llm_condition"]
 EXPECTED: dict[str, dict[str, list[str]]] = {
     "rag-factuality-funnel": {"condition": ROLE, "metric": METRIC, "measurement": MEASURE, "author_claim": CLAIM},
     "rag-hallucination": {"condition": ROLE, "metric": METRIC, "measurement": MEASURE, "author_claim": CLAIM},
-    "rag-latency": {"condition": ROLE, "metric": METRIC, "measurement": ["regex_measurement_units", "llm_measurement"]},
+    "rag-latency": {"condition": ROLE, "metric": METRIC, "measurement": ["regex_measurement_units", "number_measurement", "llm_measurement"]},
     "cons-accuracy": {"condition": ROLE, "metric": METRIC, "measurement": MEASURE, "author_claim": CLAIM},
     "cons-hallucination": {"condition": ROLE, "metric": METRIC, "measurement": MEASURE, "author_claim": CLAIM},
     "best-accuracy": {"condition": KIND, "metric": METRIC, "measurement": MEASURE},

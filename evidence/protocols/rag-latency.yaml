@@ -71,7 +71,9 @@ evidence_types:
             - ['(?i)\bhallucination[- ]rate\b|\brate\s+of\s+hallucinat(?:ion|ions|ed\s+answers)\b', other, false]
             - ['\bBLEU\b|\bROUGE(?:-[12L])?\b', other, true]
       - name: abbrev_metric
+        config: {metrics: *latency_metrics}
       - name: gliner_metric
+        config: {metrics: *latency_metrics}
       - name: llm_metric
 
   measurement:
@@ -95,7 +97,9 @@ evidence_types:
     query: [table, results, latency, seconds, faster, slower, compared]
     extractors:
       - name: regex_measurement_units   # seconds stay seconds; only fraction metrics are rate-like
-        config: {metrics: *latency_metrics, fraction_metrics: [factual_accuracy, hallucination_rate]}
+        config: &latency_units {metrics: *latency_metrics, fraction_metrics: [factual_accuracy, hallucination_rate]}
+      - name: number_measurement   # time units and ms headers read as seconds; fraction metrics as fractions
+        config: *latency_units
       - name: llm_measurement
 
 
