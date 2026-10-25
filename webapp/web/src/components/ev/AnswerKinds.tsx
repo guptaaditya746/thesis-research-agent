@@ -6,10 +6,11 @@
 import type { ReactNode } from "react"
 import { Link } from "react-router"
 
-import type { BestAnswer, ConsistencyAnswer, InventoryAnswer, RunAnswer } from "@/api/ev"
+import type { BestAnswer, ConsistencyAnswer, InventoryAnswer } from "@/api/ev"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import type { KindAnswer } from "@/lib/ev"
 import { DASH, num } from "@/lib/format"
 
 import { DirectionBadge, SystemBadge } from "./bits"
@@ -26,7 +27,7 @@ function PaperChips({ papers, paperHref }: { papers: string[]; paperHref: Href }
   )
 }
 
-function KindCard({ answer, title, children }: { answer: RunAnswer; title: string; children?: ReactNode }) {
+function KindCard({ answer, title, children }: { answer: KindAnswer; title: string; children?: ReactNode }) {
   return (
     <Card>
       <CardHeader>
@@ -56,8 +57,8 @@ export function InventoryPanel({ answer, paperHref }: { answer: InventoryAnswer;
             </TableRow>
           </TableHeader>
           <TableBody>
-            {answer.entries.map((e) => (
-              <TableRow key={e.name}>
+            {answer.entries.map((e, n) => (
+              <TableRow key={`${e.name}-${n}`}>
                 <TableCell className="text-sm font-medium">{e.name}</TableCell>
                 <TableCell className="text-xs">{e.aliases.length ? e.aliases.join(", ") : DASH}</TableCell>
                 <TableCell><PaperChips papers={e.papers} paperHref={paperHref} /></TableCell>

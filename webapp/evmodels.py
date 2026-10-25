@@ -367,12 +367,22 @@ class BestAnswer(Open):
 def _answer_kind(value: Any) -> str:
     """The union's tag: the `kind` key, effect when there is none (answer.json before the question kinds)."""
     kind = value.get("kind") if isinstance(value, dict) else getattr(value, "kind", None)
-    return kind if isinstance(kind, str) else "effect"
+    if not isinstance(kind, str):
+        return "effect"
+    return kind if kind in KNOWN_ANSWER_KINDS else "unknown"
 
 
+class UnknownAnswer(Open):
+    """An answer.json of a kind this viewer does not know: kept as written so the run page still loads."""
+    kind: str
+    system: str | None = None
+
+
+KNOWN_ANSWER_KINDS = ("effect", "inventory", "consistency", "best")
 EvAnswer = Annotated[
     Annotated[EffectAnswer, Tag("effect")] | Annotated[InventoryAnswer, Tag("inventory")]
-    | Annotated[ConsistencyAnswer, Tag("consistency")] | Annotated[BestAnswer, Tag("best")],
+    | Annotated[ConsistencyAnswer, Tag("consistency")] | Annotated[BestAnswer, Tag("best")]
+    | Annotated[UnknownAnswer, Tag("unknown")],
     Discriminator(_answer_kind),
 ]
 EV_ANSWER: TypeAdapter[Any] = TypeAdapter(EvAnswer)

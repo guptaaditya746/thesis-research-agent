@@ -12,7 +12,7 @@ import { LabelBadge, SystemBadge } from "@/components/ev/bits"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
 import { CardsSkeleton, ErrorState } from "@/components/states"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { effectAnswer } from "@/lib/ev"
+import { answerHeadline, effectAnswer } from "@/lib/ev"
 
 import type { Flow } from "./flow"
 
@@ -68,6 +68,15 @@ export function GraphStep({ flow }: { flow: Flow }) {
   )
 }
 
+/** A baseline's answer in one line, by the question's kind: the label of an effect answer, else the summary. */
+function BaselineHeadline({ id }: { id: string }) {
+  const run = useEvRun(id)
+  const answer = run.data?.answer
+  if (!answer) return null
+  const effect = effectAnswer(answer)
+  return effect ? <LabelBadge label={effect.label} /> : <span className="text-xs">{answerHeadline(answer)}</span>
+}
+
 function BaselineAnswers({ corpus }: { corpus: string | null | undefined }) {
   const runs = useEvRuns()
   const baselines = (runs.data ?? []).filter((r) => r.kind === "baseline" && r.corpus === corpus)
@@ -76,7 +85,7 @@ function BaselineAnswers({ corpus }: { corpus: string | null | undefined }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Beside it: the baselines on {corpus}</CardTitle>
-        <CardDescription>{baselines.length ? "Their labels; open one for its text, citations and stances." : "None yet: start them in the run step."}</CardDescription>
+        <CardDescription>{baselines.length ? "Their answers in one line; open one for its details." : "None yet: start them in the run step."}</CardDescription>
       </CardHeader>
       {baselines.length > 0 && (
         <CardContent>
@@ -84,7 +93,7 @@ function BaselineAnswers({ corpus }: { corpus: string | null | undefined }) {
             {baselines.map((b) => (
               <li key={b.id} className="flex flex-wrap items-center gap-2 text-sm">
                 <SystemBadge system={b.system} />
-                <LabelBadge label={b.label} />
+                <BaselineHeadline id={b.id} />
                 <Link to={runHref(b.id)} className="font-mono text-xs underline">{b.id}</Link>
               </li>
             ))}

@@ -7,7 +7,7 @@
  * badge; evidence types get their own marks in the paper text. Colour never carries meaning alone: every
  * mark has a label next to it or in its title.
  */
-import type { Direction, EffectAnswer, EvRunSummary, FunnelDoc, Interval, Item, Report, RunAnswer, SynthesisScore } from "@/api/ev"
+import type { BestAnswer, ConsistencyAnswer, Direction, EffectAnswer, InventoryAnswer, EvRunSummary, FunnelDoc, Interval, Item, Report, RunAnswer, SynthesisScore } from "@/api/ev"
 import { cell, DASH, num } from "@/lib/format"
 
 export const ENGINE = "evidence-engine"
@@ -210,6 +210,9 @@ export function runsByCorpus(runs: EvRunSummary[]): Map<string, EvRunSummary[]> 
   return out
 }
 
+/** The answers whose shape is known, discriminated by `kind` (RunAnswer also holds an answer of a kind this viewer lacks). */
+export type KindAnswer = EffectAnswer | InventoryAnswer | ConsistencyAnswer | BestAnswer
+
 /** The effect answer of a run, or null for another question kind's answer (those have no label or directions). */
 export function effectAnswer(answer: RunAnswer | null | undefined): EffectAnswer | null {
   return answer && (answer.kind === undefined || answer.kind === "effect") ? (answer as EffectAnswer) : null
@@ -217,10 +220,11 @@ export function effectAnswer(answer: RunAnswer | null | undefined): EffectAnswer
 
 /** One line for a run's answer, whatever its kind: the label, the number of entries, the agreeing share, the winner. */
 export function answerHeadline(answer: RunAnswer): string {
-  switch (answer.kind) {
-    case "inventory": return `${answer.entries.length} entries`
-    case "consistency": return `${answer.agreeing.length} agree, ${answer.disagreeing.length} disagree`
-    case "best": return answer.winner ? `best: ${answer.winner}` : answer.tied.length ? `tie: ${answer.tied.join(", ")}` : "no winner"
-    default: return answer.label
+  const a = answer as KindAnswer
+  switch (a.kind) {
+    case "inventory": return `${a.entries.length} entries`
+    case "consistency": return `${a.agreeing.length} agree / ${a.disagreeing.length} disagree`
+    case "best": return a.winner ? `best: ${a.winner}` : a.tied.length ? `tie: ${a.tied.join(", ")}` : "no winner"
+    default: return effectAnswer(answer)?.label ?? `kind ${a.kind}`
   }
 }

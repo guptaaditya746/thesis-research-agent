@@ -4295,6 +4295,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/BestAnswer"
+                  },
+                  {
+                    "$ref": "#/components/schemas/UnknownAnswer"
                   }
                 ]
               },
@@ -8071,6 +8074,33 @@
         ],
         "title": "TruthAnswer",
         "description": "ground_truth.json `answer`: the label the corpus is built to have."
+      },
+      "UnknownAnswer": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "system"
+        ],
+        "title": "UnknownAnswer",
+        "description": "An answer.json of a kind this viewer does not know: kept as written so the run page still loads."
       },
       "ValidationError": {
         "properties": {

@@ -1732,7 +1732,7 @@ export interface components {
             /** Source Run */
             source_run: string | null;
             /** Answer */
-            answer: (components["schemas"]["EffectAnswer"] | components["schemas"]["InventoryAnswer"] | components["schemas"]["ConsistencyAnswer"] | components["schemas"]["BestAnswer"]) | null;
+            answer: (components["schemas"]["EffectAnswer"] | components["schemas"]["InventoryAnswer"] | components["schemas"]["ConsistencyAnswer"] | components["schemas"]["BestAnswer"] | components["schemas"]["UnknownAnswer"]) | null;
             /**
              * Funnel
              * @description funnel.json documents
@@ -3282,6 +3282,18 @@ export interface components {
             flags: {
                 [key: string]: string[];
             };
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * UnknownAnswer
+         * @description An answer.json of a kind this viewer does not know: kept as written so the run page still loads.
+         */
+        UnknownAnswer: {
+            /** Kind */
+            kind: string;
+            /** System */
+            system: string | null;
         } & {
             [key: string]: unknown;
         };

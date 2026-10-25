@@ -164,11 +164,12 @@ function SelectedRun({ id, live }: { id: string; live: boolean }) {
   if (run.isPending) return <p className="text-sm text-muted-foreground">Waiting for the run to write its first files…</p>
   if (run.isError) return <p className="text-sm text-muted-foreground">{live ? "The run has not written anything yet." : "No such run."}</p>
   const r = run.data
+  const effect = effectAnswer(r.answer)
   return (
     <KeyValues items={[
       ["state", r.complete ? "complete" : live ? "running: events and calls so far" : "incomplete (crashed, or still running elsewhere)"],
       ["papers", String(r.documents.length)],
-      ["answer", r.answer ? (effectAnswer(r.answer) ? <LabelBadge key="l" label={effectAnswer(r.answer)!.label} /> : answerHeadline(r.answer)) : "—"],
+      ["answer", r.answer ? (effect ? <LabelBadge key="l" label={effect.label} /> : answerHeadline(r.answer)) : "—"],
       ["open", <Link key="o" to={`/runs/${encodeURIComponent(id)}`} className="underline">the run page</Link>],
     ]} />
   )

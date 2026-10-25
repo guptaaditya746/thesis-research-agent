@@ -11,11 +11,11 @@ import type { EvAnswer, FunnelDoc, RunAnswer, Study } from "@/api/ev"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ENGINE, funnelStop } from "@/lib/ev"
+import { effectAnswer, ENGINE, funnelStop, type KindAnswer } from "@/lib/ev"
 import { DASH, num } from "@/lib/format"
 
 import { BestPanel, ConsistencyPanel, InventoryPanel } from "./AnswerKinds"
-import { DirectionBadge, KeyValues, LabelBadge, SystemBadge } from "./bits"
+import { DirectionBadge, JsonBlock, KeyValues, LabelBadge, SystemBadge } from "./bits"
 
 const COUNT_KEYS = ["supporting", "contradicting", "neutral", "undetermined", "duplicates"] as const
 
@@ -157,16 +157,21 @@ export function AnswerPanel({ answer, paperHref, expected, funnel, strategy }: {
   funnel?: Record<string, FunnelDoc> | null
   strategy?: string | null
 }) {
-  switch (answer.kind) {
-    case "inventory": return <InventoryPanel answer={answer} paperHref={paperHref} />
-    case "consistency": return <ConsistencyPanel answer={answer} paperHref={paperHref} />
-    case "best": return <BestPanel answer={answer} paperHref={paperHref} />
-    default: return (
+  const effect = effectAnswer(answer)
+  if (effect) {
+    return (
       <div className="space-y-4">
-        <AnswerSummary answer={answer} expected={expected} />
-        <StudiesTable answer={answer} paperHref={paperHref} funnel={funnel} strategy={strategy} />
-        {answer.system !== ENGINE && answer.retrieved && <BaselineEvidence answer={answer} paperHref={paperHref} />}
+        <AnswerSummary answer={effect} expected={expected} />
+        <StudiesTable answer={effect} paperHref={paperHref} funnel={funnel} strategy={strategy} />
+        {effect.system !== ENGINE && effect.retrieved && <BaselineEvidence answer={effect} paperHref={paperHref} />}
       </div>
     )
+  }
+  const known = answer as KindAnswer
+  switch (known.kind) {
+    case "inventory": return <InventoryPanel answer={known} paperHref={paperHref} />
+    case "consistency": return <ConsistencyPanel answer={known} paperHref={paperHref} />
+    case "best": return <BestPanel answer={known} paperHref={paperHref} />
+    default: return <JsonBlock value={answer} label={`answer of kind ${known.kind}`} />
   }
 }

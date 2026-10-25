@@ -5,7 +5,7 @@ from typing import Any
 
 import pytest
 
-from webapp.evmodels import (EV_ANSWER, BestAnswer, ConsistencyAnswer, EffectAnswer, InventoryAnswer)
+from webapp.evmodels import EV_ANSWER, BestAnswer, ConsistencyAnswer, EffectAnswer, InventoryAnswer, UnknownAnswer
 
 OLD_EFFECT = {"system": "engine", "label": "supports", "counts": {"supporting": 1}, "supporting": ["p1"],
               "studies": [{"document": "p1", "direction": "supports"}]}
@@ -35,3 +35,10 @@ def test_each_kind_loads_as_its_model(raw: dict[str, Any], model: type) -> None:
 def test_an_old_effect_answer_without_kind_still_loads() -> None:
     answer = EV_ANSWER.validate_python(OLD_EFFECT)
     assert answer.kind == "effect" and answer.label == "supports"
+
+
+def test_an_unknown_kind_still_loads_as_written() -> None:
+    raw = {"kind": "ranking", "system": "engine", "order": ["a", "b"]}
+    answer = EV_ANSWER.validate_python(raw)
+    assert isinstance(answer, UnknownAnswer)
+    assert EV_ANSWER.dump_python(answer)["order"] == ["a", "b"]

@@ -4,8 +4,9 @@ import userEvent from "@testing-library/user-event"
 import { http, HttpResponse } from "msw"
 import { afterEach, beforeAll, describe, expect, it } from "vitest"
 
-import { evApi, type DecisionsRequest, type JobRequests } from "@/api/ev"
+import { evApi, type DecisionsRequest, type EvRunDetail, type JobRequests } from "@/api/ev"
 import { routes } from "@/app/routes"
+import { evFixture } from "@/mocks/ev"
 import { finishJob, mockGateway, unfrozenProposal } from "@/mocks/handlers"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
@@ -44,6 +45,16 @@ describe("the stepper", () => {
     expect(within(steps).queryByRole("link", { name: /Scores/ })).toBeNull()
     // an old link to the step lands on the first step
     expect(await screen.findByText(/Chosen: hand-written rag-factuality./, {}, T)).toBeInTheDocument()
+  })
+
+  it("a non-effect baseline shows its summary beside the answer", async () => {
+    const id = `rag-baseline~${MIXED}`
+    const detail = evFixture<EvRunDetail>(`/api/ev/runs/${id}`)
+    server.use(http.get(`/api/ev/runs/${encodeURIComponent(id)}`, () => HttpResponse.json({ ...detail,
+      answer: { kind: "inventory", system: "rag-baseline", target: "dataset", entries: [
+        { name: "SQuAD", aliases: [], papers: ["S001"], items: [] }, { name: "NQ", aliases: [], papers: ["S002"], items: [] }] } })))
+    renderRoutes(routes, `/flow/rag-factuality/answer?corpus=${MIXED}&run=cascade-gaps~${MIXED}`)
+    expect(await screen.findByText("2 entries", {}, T)).toBeInTheDocument()
   })
 
   it("goes question → protocol → corpus → run → graph → answer, keeping the choices in the URL", async () => {
