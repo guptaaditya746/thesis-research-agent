@@ -2,11 +2,12 @@
  * One extractor call, opened from a paper's call list: its checked result (status, items, rejected
  * proposals with the reason, coverage), the task (scope, context, the funnel's focus), and what made it:
  * for an LLM extractor the model calls from the record cache (instructions, user prompt, the decoded
- * output, usage), for the agentic extractor the agent run's trace.
+ * output, usage), for a GLiNER extractor its service calls (chunk text, labels, threshold, entities), for the
+ * agentic extractor the agent run's trace.
  */
 import { useState } from "react"
 
-import { useCall, useCallTrace } from "@/api/ev"
+import { type ModelCallRecord, useCall, useCallTrace } from "@/api/ev"
 import { CardsSkeleton, ErrorState } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,47 @@ function Trace({ runId, callId, agentRun }: { runId: string; callId: string; age
   if (trace.isPending) return <CardsSkeleton count={1} />
   if (trace.isError) return <ErrorState error={trace.error} title="Could not load the agent's trace" onRetry={() => void trace.refetch()} />
   return <AgentTraceView trace={trace.data} />
+}
+
+/** One recorded call: an LLM call (instructions, user prompt, decoded output, usage), or a GLiNER service call
+ * (evidence/extractors/gliner.py: `request.service` "gliner"; the chunk text, labels, threshold and the entities). */
+export function ModelCallView({ record: m }: { record: ModelCallRecord }) {
+  const request = (m.request ?? {}) as Record<string, unknown>
+  const response = (m.response ?? null) as Record<string, unknown> | null
+  if (request.service === "gliner") {
+    const labels = Array.isArray(request.labels) ? request.labels.map(String) : []
+    return (
+      <div className="space-y-2 rounded-md border p-3">
+        <p className="text-xs text-muted-foreground">
+          <span className="font-mono">{m.id}</span> · GLiNER {String(request.model_from_info ?? "")} · labels {labels.join(", ") || "—"} · threshold {String(request.threshold ?? "—")}
+        </p>
+        {m.error && <p className="text-xs text-destructive">{m.error}</p>}
+        <details>
+          <summary className="cursor-pointer text-xs">text</summary>
+          <JsonBlock value={String(request.text ?? "")} className="mt-1" label="text" />
+        </details>
+        <JsonBlock value={response?.entities ?? null} label="entities" />
+      </div>
+    )
+  }
+  const usage = (m.usage ?? {}) as Record<string, number | undefined>
+  return (
+    <div className="space-y-2 rounded-md border p-3">
+      <p className="text-xs text-muted-foreground">
+        <span className="font-mono">{m.id}</span> · {String(request.model ?? "")} · {tokens(usage.input_tokens ?? null)} in, {tokens(usage.output_tokens ?? null)} out
+      </p>
+      {m.error && <p className="text-xs text-destructive">{m.error}</p>}
+      <details>
+        <summary className="cursor-pointer text-xs">instructions</summary>
+        <JsonBlock value={String(request.instructions ?? "")} className="mt-1" />
+      </details>
+      <details>
+        <summary className="cursor-pointer text-xs">user prompt</summary>
+        <JsonBlock value={String(request.user_prompt ?? "")} className="mt-1" />
+      </details>
+      <JsonBlock value={response?.output ?? m.response ?? null} label="model output" />
+    </div>
+  )
 }
 
 function CallBody({ runId, callId }: { runId: string; callId: string }) {
@@ -93,27 +135,7 @@ function CallBody({ runId, callId }: { runId: string; callId: string }) {
       {records.length > 0 && !agentRuns.length && (
         <section className="space-y-3">
           <h3 className="text-sm font-medium">Model calls ({records.length})</h3>
-          {records.map((m) => {
-            const request = (m.request ?? {}) as Record<string, unknown>
-            const usage = (m.usage ?? {}) as Record<string, number | undefined>
-            return (
-              <div key={m.id} className="space-y-2 rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">
-                  <span className="font-mono">{m.id}</span> · {String(request.model ?? "")} · {tokens(usage.input_tokens ?? null)} in, {tokens(usage.output_tokens ?? null)} out
-                </p>
-                {m.error && <p className="text-xs text-destructive">{m.error}</p>}
-                <details>
-                  <summary className="cursor-pointer text-xs">instructions</summary>
-                  <JsonBlock value={String(request.instructions ?? "")} className="mt-1" />
-                </details>
-                <details>
-                  <summary className="cursor-pointer text-xs">user prompt</summary>
-                  <JsonBlock value={String(request.user_prompt ?? "")} className="mt-1" />
-                </details>
-                <JsonBlock value={(m.response as Record<string, unknown> | null)?.output ?? m.response ?? null} label="model output" />
-              </div>
-            )
-          })}
+          {records.map((m) => <ModelCallView key={m.id} record={m} />)}
         </section>
       )}
       {agentRuns.length > 0 && (

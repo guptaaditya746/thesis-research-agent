@@ -56,7 +56,7 @@ import os
 import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Literal
 
@@ -95,10 +95,14 @@ class Settings:
     strategy: Strategy = "gaps"                    # gaps: the funnel (Part D); all: every extractor on everything
     # the GLiNER service of the gliner_* extractors ($GLINER_URL; None disables them); not part of any id
     gliner_url: str | None = field(default_factory=lambda: os.environ.get("GLINER_URL") or None)
+    # the model that service served when the run was made (GET /info; execute_run fills it): every gliner_* step
+    # that pins no `model` gets it, so a replay without the service builds the ids of the recorded run
+    gliner_model: str | None = None
 
     def json(self) -> dict[str, Any]:
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
-                "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url}
+                "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url,
+                "gliner_model": self.gliner_model}
 
 
 def default_provider(alias: str) -> Any:
@@ -107,11 +111,13 @@ def default_provider(alias: str) -> Any:
 
 
 def build_extractors(protocol: Protocol, selection: Selection = "cascade", model: str | None = None,
-                     gliner_url: str | None = None) -> dict[str, list[tuple[ExtractorRef, Extractor]]]:
+                     gliner_url: str | None = None,
+                     gliner_model: str | None = None) -> dict[str, list[tuple[ExtractorRef, Extractor]]]:
     """The cascade per evidence type, built from the registry with the type's schema added to each config;
     under the key `screen` the screening cascade of the protocol's `screen` block (Part D), whose extractors
     get the same injected configuration plus the block's `terms` and `question`. The gliner_* extractors also
-    get `gliner_url` (None: unavailable); only they, so no other extractor's config (and id) changes."""
+    get `gliner_url` (None: unavailable) and, unless their config pins one, `model` = `gliner_model`; only
+    they, so no other extractor's config (and id) changes."""
     out: dict[str, list[tuple[ExtractorRef, Extractor]]] = {}
     specs: dict[str, tuple[EvidenceTypeSpec, dict[str, Any]]] = {etype: (spec, {}) for etype, spec in protocol.evidence_types.items()}
     question = kinds.of(protocol).extractor_config(protocol)   # the kind's part (effect: question_metrics, compare)
@@ -124,6 +130,8 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade", model
                       "roles": list(spec.roles), "description": spec.description, **question, **extra}
             if ref.name in gliner.FACTORIES:
                 config[gliner.URL_KEY] = gliner_url
+                if gliner_model and "model" not in ref.config:
+                    config["model"] = gliner_model
             extractor = extractors.get(ref.name, config)
             if model and extractor.spec.kind in ("llm", "agent"):
                 extractor = extractors.get(ref.name, {**config, "model": model})
@@ -447,7 +455,10 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     root = Path(out_dir) / run_id
     root.mkdir(parents=True, exist_ok=False)
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
-    cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url)
+    if settings.gliner_url and settings.gliner_model is None and _uses_gliner(protocol):
+        served = gliner.info(settings.gliner_url)
+        settings = replace(settings, gliner_model=served["model"] if served else None)
+    cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
     ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls)
@@ -467,6 +478,12 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         "extractor_specs": {k: _spec_json(s) for k, s in specs.items()}, "outputs": dict(sorted(ex.outputs.items())),
         "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json()})
     return root
+
+
+def _uses_gliner(protocol: Protocol) -> bool:
+    steps = [*(s.extractors for s in protocol.evidence_types.values()),
+             *([protocol.screen.spec.extractors] if protocol.screen is not None else [])]
+    return any(ref.name in gliner.FACTORIES for refs in steps for ref in refs)
 
 
 def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:

@@ -13,6 +13,7 @@ not its id, so an upstream span change does not count as a downstream difference
 """
 from __future__ import annotations
 
+import os
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -33,7 +34,8 @@ def _settings(record: dict[str, Any], cache: Path | str | None, corpus: Path | s
     s = record["settings"]
     return Settings(corpus=str(corpus or s["corpus"]), cache=str(cache or s["cache"]), selection=s["selection"],
                     model=s.get("model"), imports=list(s.get("imports") or []), strategy=s.get("strategy") or "all",
-                    gliner_url=s.get("gliner_url"))
+                    # $GLINER_URL wins: the service may have moved; the recorded model keeps the ids
+                    gliner_url=os.environ.get("GLINER_URL") or s.get("gliner_url"), gliner_model=s.get("gliner_model"))
 
 
 def replay(run_dir: Path | str, *, cache: Path | str | None = None, corpus: Path | str | None = None,

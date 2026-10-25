@@ -15,8 +15,9 @@ matches; a dataset item is `{name}`. Spans are on the entity text, with the type
 Kind `model`: every /predict is recorded like a model call (request, response or error; no usage), so it lands
 in the record cache and in the run's calls.jsonl. The extractor's config, and so its id, holds the model name
 from /info (asked once per process and URL), the labels and the threshold: another GLiNER model never hits old
-cache records. The URL is not in the id. `model` may be pinned in the protocol config; the service must then
-serve that model. Without a URL (`gliner_url` from the engine, else $GLINER_URL), or when /info fails,
+cache records. The URL is not in the id. `model` may be pinned in the protocol config, and the engine sets it to
+the model recorded with the run (Settings.gliner_model) so a replay without the service builds the same id; the
+service must then serve that model. Without a URL (`gliner_url` from the engine, else $GLINER_URL), or when /info fails,
 `available()` is False and `extract` returns an `unavailable` error; a timeout or connection error on /predict
 is a `service_call` error. Both are results, not exceptions, so a cascade goes on. Own module, so every
 existing extractor keeps its id.
@@ -110,7 +111,7 @@ class GlinerExtractor:
             return "no GLiNER service: GLINER_URL is not set"
         if self.served is None:
             return "the GLiNER service did not answer GET /info"
-        return f"the GLiNER service serves {self.served}, not the pinned {self.model}"
+        return f"the GLiNER service serves {self.served}, not {self.model} (pinned or recorded with the run)"
 
     def extract(self, task: ExtractionTask, ctx: RunContext) -> ExtractionResult:
         text = ctx.text()
@@ -165,7 +166,8 @@ class GlinerExtractor:
     def _predict(self, recorder: Any, chunk: str) -> tuple[list[dict[str, Any]], str, str | None]:
         """One recorded /predict: (entities at chunk offsets, record id, error or None)."""
         body = {"text": chunk, "labels": self.labels, "threshold": self.threshold}
-        request = {"service": "gliner", "endpoint": "/predict", "model": self.model, **body}
+        # /predict names no model: the record keeps what /info said, under that name
+        request = {"service": "gliner", "endpoint": "/predict", "model_from_info": self.served, **body}
         call_id = f"gl-{digest([request, len(recorder.records)])[:16]}"
         record: dict[str, Any] = {"id": call_id, "request": request}
         recorder.records.append(record)
@@ -179,7 +181,7 @@ class GlinerExtractor:
         except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
             record["error"] = f"{type(exc).__name__}: {exc}"[:300]
             return [], call_id, record["error"]
-        record["response"] = {"entities": entities, "model": self.model}
+        record["response"] = {"entities": entities}
         return entities, call_id, None
 
     def fields(self, name: str) -> dict[str, Any] | None:

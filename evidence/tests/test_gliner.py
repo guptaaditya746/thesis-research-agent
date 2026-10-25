@@ -15,6 +15,7 @@ from evidence import engine, protocol
 from evidence.calls import EngineContext
 from evidence.contract import DocumentRef, ExtractionTask, ProtocolRef
 from evidence.extractors import get, gliner
+from evidence.replay import replay
 
 from .conftest import PROTOCOL, corpus_of, provider_of, screen_yes, scripted
 from .fake_gliner import FakeGliner, closed_url
@@ -68,7 +69,9 @@ def test_gliner_items_from_fake_server() -> None:
     assert server.requests[0] == {"text": TEXT, "labels": ["method", "system variant", "baseline model"], "threshold": 0.5}
     [record] = ctx.recorder.records
     assert record["request"]["labels"] == ["method", "system variant", "baseline model"]
-    assert record["request"]["model"] == "fake/gliner-a" and record["response"]["entities"]
+    # /predict names no model: the record says the name came from /info, and the response claims none
+    assert record["request"]["model_from_info"] == "fake/gliner-a" and "model" not in record["request"]
+    assert record["response"]["entities"] and set(record["response"]) == {"entities"}
     assert "usage" not in record and cond.model_calls == (record["id"],)
 
 
@@ -175,3 +178,51 @@ def test_gliner_run_records_calls_in_calls_jsonl(tmp_path: Path) -> None:
     [row] = [r for r in rows if r["extractor_id"].startswith("gliner_metric@")]
     assert row["model_calls"][0]["request"]["labels"] == ["evaluation metric"]
     assert json.loads((run / "run.json").read_text(encoding="utf-8"))["cost"]["model_calls"] >= 1
+
+
+def gliner_protocol(tmp_path: Path) -> Path:
+    proto = yaml.safe_load(PROTOCOL.read_text(encoding="utf-8"))
+    proto["evidence_types"]["metric"]["extractors"] = [{"name": "gliner_metric"}, {"name": "regex_metric"}]
+    path = tmp_path / "gliner-protocol.yaml"
+    path.write_text(yaml.safe_dump(proto, sort_keys=False), encoding="utf-8")
+    return path
+
+
+def recorded_run(tmp_path: Path) -> Path:
+    """A run with a gliner_metric step against the stand-in; the server is gone when this returns."""
+    with FakeGliner(model="fake/gliner-a") as server:
+        settings = engine.Settings(corpus=str(corpus_of(tmp_path / "corpus", {"P1": TEXT})), cache=str(tmp_path / "cache"),
+                                   strategy="all", gliner_url=server.url)
+        run = engine.execute_run(gliner_protocol(tmp_path).read_bytes(), settings, tmp_path / "runs", provider=None)
+    gliner.forget()             # a new process: nothing known about the service
+    return run
+
+
+def gliner_ids(run: Path) -> list[str]:
+    return [i for i in json.loads((run / "run.json").read_text(encoding="utf-8"))["extractors"] if i.startswith("gliner_")]
+
+
+def test_gliner_run_records_the_served_model(tmp_path: Path) -> None:
+    run = recorded_run(tmp_path)
+    settings = json.loads((run / "run.json").read_text(encoding="utf-8"))["settings"]
+    assert settings["gliner_model"] == "fake/gliner-a"
+    [spec] = [s for k, s in json.loads((run / "run.json").read_text(encoding="utf-8"))["extractor_specs"].items()
+              if k.startswith("gliner_")]
+    assert spec["config"]["model"] == "fake/gliner-a"
+
+
+def test_gliner_replay_without_the_service(tmp_path: Path) -> None:
+    run = recorded_run(tmp_path)
+    new, report = replay(run)            # the recorded URL answers nothing now
+    assert report["ok"], report
+    assert gliner_ids(new) == gliner_ids(run)
+
+
+def test_gliner_replay_takes_gliner_url_from_the_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    run = recorded_run(tmp_path)
+    with FakeGliner(model="fake/gliner-a") as moved:
+        monkeypatch.setenv("GLINER_URL", moved.url)
+        new, report = replay(run)
+    assert report["ok"], report
+    settings = json.loads((new / "run.json").read_text(encoding="utf-8"))["settings"]
+    assert settings["gliner_url"] == moved.url and settings["gliner_model"] == "fake/gliner-a"
