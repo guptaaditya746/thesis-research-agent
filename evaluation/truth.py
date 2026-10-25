@@ -29,6 +29,10 @@ FACT_LISTS: dict[EvidenceType, str] = {"condition": "conditions", "metric": "met
 MAIN_ROLE: dict[EvidenceType, str] = {"condition": "condition_label", "metric": "metric_label",
                                       "measurement": "value", "author_claim": "claim"}
 TYPES: tuple[EvidenceType, ...] = ("condition", "metric", "measurement", "author_claim")
+# Dataset facts (question-first redesign): one per (paper, dataset name), id `<paper>.d:<name>`, data `{name}`,
+# no placements (a dataset item is right when its name matches). They live in `GroundTruth.datasets`, apart from
+# `facts`, so the scoring of protocols without a `dataset` type (which iterates `facts` and TYPES) is unchanged.
+DATASET: EvidenceType = "dataset"
 
 
 def read_json(path: Path) -> Any:
@@ -55,6 +59,7 @@ class GroundTruth:
     answer: dict[str, Any]
     facts: dict[str, Fact] = field(default_factory=dict)
     seed: Any = None
+    datasets: dict[str, Fact] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: Path) -> GroundTruth:
@@ -67,10 +72,15 @@ class GroundTruth:
                 entries = study.get(key) or []
                 for entry in [entries] if isinstance(entries, dict) else entries:
                     truth.facts[entry["id"]] = Fact(entry["id"], kind, study["paper"], study["level"], entry)
+            for name in dict.fromkeys(m["dataset"] for m in study.get("measurements") or [] if m.get("dataset")):
+                fid = f"{study['paper']}.d:{name}"
+                truth.datasets[fid] = Fact(fid, DATASET, study["paper"], study["level"], {"name": name})
         return truth
 
     def of(self, paper: str, kind: EvidenceType) -> list[Fact]:
-        return [f for f in self.facts.values() if f.paper == paper and f.type == kind]
+        """The paper's facts of `kind`; for `dataset`, its dataset facts in measurement order."""
+        pool = self.datasets if kind == DATASET else self.facts
+        return [f for f in pool.values() if f.paper == paper and f.type == kind]
 
     def level_of(self, paper: str) -> str:
         return next((s["level"] for s in self.studies if s["paper"] == paper), "unknown")
