@@ -237,6 +237,14 @@ class Check(Open):
     message: str | None = None
 
 
+class Waiver(Base):
+    """A failed critic check a person accepted in decisions.yaml."""
+
+    check: str
+    reason: str
+    by: str
+
+
 class ProposalDetail(ProposalSummary):
     frame: dict[str, Any] | None = None
     sources: dict[str, Any] | None = Field(None, description="draft.sources.json")
@@ -251,6 +259,8 @@ class ProposalDetail(ProposalSummary):
     amendment_log: list[Amendment] = []
     decision_problems: list[str] = Field([], description="before freeze: everything freeze would refuse in "
                                                          "decisions.yaml (evidence/propose/cards.validate)")
+    waivers: list[Waiver] = Field([], description="before freeze: the waivers decisions.yaml holds; a save that "
+                                                  "does not send one back removes it")
     decisions_sha256: str | None = Field(None, description="sha256 of decisions.yaml as read; a PUT of the decisions "
                                                            "sends it back and is refused if the file changed since")
 

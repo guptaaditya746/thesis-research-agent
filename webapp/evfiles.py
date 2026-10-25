@@ -444,8 +444,20 @@ class EvidenceFiles:
                               cards=out_cards, proposal={k: v for k, v in proposal.items() if k not in ("frame", "sources", "critic")}
                               if isinstance(proposal, dict) else None,
                               protocol=protocol, revisions=revisions, decision_problems=problems,
+                              waivers=[] if frozen else self.waivers_of(path),
                               decisions_sha256=file_sha256(path / "decisions.yaml") if (path / "decisions.yaml").is_file() else None,
                               amendment_log=[Amendment.model_validate(a) for a in read_jsonl(path / "amendments.jsonl")])
+
+    @staticmethod
+    def waivers_of(path: Path) -> list[dict[str, str]]:
+        """The waivers decisions.yaml holds, {check, reason, by} each (entries of another shape are left out)."""
+        try:
+            data = yaml.safe_load((path / "decisions.yaml").read_text(encoding="utf-8"))
+        except (OSError, yaml.YAMLError):
+            return []
+        entries = data.get("waivers") if isinstance(data, dict) else None
+        return [{k: str(w[k]) for k in ("check", "reason", "by")} for w in entries or []
+                if isinstance(w, dict) and all(isinstance(w.get(k), str) for k in ("check", "reason", "by"))]
 
     @staticmethod
     def decisions_of(path: Path, cards: list[dict[str, Any]]) -> tuple[dict[str, Any], list[str]]:

@@ -302,16 +302,23 @@ class Commands:
             steps.append(step(f"propose {name}", argv[name], needs=needs))
         return JobPlan("propose", steps, {"proposal": r.proposal}, "model", True)
 
-    def set_kind(self, name: str, r: KindRequest) -> JobPlan:
-        """The person's kind for a proposal: written into frame.json (`kind_by: user`), the steps that came
-        after it dropped, and draft, critic and cards run again from that kind's template."""
+    def kind_check(self, name: str, r: KindRequest) -> tuple[Path, dict[str, Any]]:
+        """What set_kind needs to be true, checked without writing: (the proposal directory, its frame)."""
         directory = inside(self.proposals(), check_id(name, "proposal"))
         frame = read_json(directory / FRAME)
         if not isinstance(frame, dict):
             raise NotFound(f"proposal {name} has no frame yet (run the proposal flow first)")
         if (directory / PROTOCOL).exists():
             raise Conflict(f"proposal {name} is frozen; change it with `evidence propose amend` (command line)")
+        if frame.get("kind", "effect") == r.kind:
+            raise Conflict(f"proposal {name} is already a {r.kind} question; nothing was changed")
         self.free("proposal", name)
+        return directory, frame
+
+    def set_kind(self, name: str, r: KindRequest) -> JobPlan:
+        """The person's kind for a proposal: written into frame.json (`kind_by: user`), the steps that came
+        after it dropped, and draft, critic and cards run again from that kind's template."""
+        directory, frame = self.kind_check(name, r)
         write_text_atomic(directory / FRAME, json.dumps({**frame, "kind": r.kind, "kind_by": "user"}, indent=1) + "\n")
         for file in (DRAFT, SOURCES, CRITIC, CARDS, DECISIONS):
             (directory / file).unlink(missing_ok=True)
@@ -370,10 +377,12 @@ class Commands:
             if d.choice == CUSTOM:
                 entry["value"] = d.value
             entries.append(entry)
-        waivers = [{"check": w.check, "reason": w.reason.strip(), "by": self.s.user} for w in r.waivers]
+        kept_waivers = {(w["check"], w["reason"]): w for w in self.files.waivers_of(directory)}
+        waivers = [kept_waivers.get((w.check, w.reason.strip()))   # one already on file keeps who accepted it
+                   or {"check": w.check, "reason": w.reason.strip(), "by": self.s.user} for w in r.waivers]
+        if not self.s.user and any((w["check"], w["reason"]) not in kept_waivers for w in waivers):
+            raise BadRequest("a waiver needs a person to accept it: start the server with $WEBAPP_USER")
         if waivers:
-            if not self.s.user:
-                raise BadRequest("a waiver needs a person to accept it: start the server with $WEBAPP_USER")
             try:   # an unknown check, a reason under 10 characters
                 validate_waivers({"waivers": waivers})
             except ProposalError as exc:
@@ -451,7 +460,10 @@ def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, qu
 
     @api.put("/proposals/{name}/kind", response_model=Job, status_code=202)
     async def ev_put_kind(name: str, request: KindRequest) -> Job:
-        return await _start(c.set_kind(name, request), request)
+        c.kind_check(name, request)          # refuse before anything is wiped
+        await need_gateway(settings)
+        plan = c.set_kind(name, request)
+        return jobs.submit(plan.kind, request.model_dump(), plan.steps, lane=plan.lane, refs=plan.refs)
 
     @api.post("/jobs/freeze", response_model=Job, status_code=202)
     async def ev_start_freeze(request: FreezeRequest) -> Job:

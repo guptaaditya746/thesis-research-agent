@@ -2637,6 +2637,12 @@ export interface components {
              */
             decision_problems: string[];
             /**
+             * Waivers
+             * @description before freeze: the waivers decisions.yaml holds; a save that does not send one back removes it
+             * @default []
+             */
+            waivers: components["schemas"]["Waiver"][];
+            /**
              * Decisions Sha256
              * @description sha256 of decisions.yaml as read; a PUT of the decisions sends it back and is refused if the file changed since
              */
@@ -3569,6 +3575,18 @@ export interface components {
             };
         } & {
             [key: string]: unknown;
+        };
+        /**
+         * Waiver
+         * @description A failed critic check a person accepted in decisions.yaml.
+         */
+        Waiver: {
+            /** Check */
+            check: string;
+            /** Reason */
+            reason: string;
+            /** By */
+            by: string;
         };
         /** WaiverEntry */
         WaiverEntry: {

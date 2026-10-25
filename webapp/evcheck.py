@@ -28,7 +28,17 @@ CHECK_CARD = {"outcomes_complete": "metrics", "terms_cover_synonyms": "screen", 
               "metric_rules_collide": "metrics", "locate_params_used": "locate",
               "inventory_target_declared": "list_target", "best_kinds_nonempty": "method_kinds",
               "best_kinds_disjoint": "method_kinds", "claim_type_present": "claim_check"}
+# a check that is about one card in the effect form is about another in the other kinds
+KIND_CARD = {("best", "metrics"): "best_metric", ("best", "roles"): "method_kinds",
+             ("inventory", "metrics"): "list_target", ("inventory", "roles"): "list_target"}
 MAX_HITS = 2000
+
+
+def card_for(check_id: str, kind: str) -> str | None:
+    """The card to look at for a failed check: one that the proposal's kind has, else None."""
+    card = CHECK_CARD.get(check_id)
+    card = KIND_CARD.get((kind, card), card)
+    return card if card in {c["id"] for c in cards_module.for_kind(kind)} else None
 
 
 def proposal_dir(files: EvidenceFiles, name: str) -> Path:
@@ -55,9 +65,14 @@ def check(files: EvidenceFiles, name: str, r: CheckRequest) -> CheckResult:
                                                   card=ln.split(":", 1)[0] if ln.split(":", 1)[0] in {c["id"] for c in cards} else None)
                                      for ln in lines])
     draft = yaml.safe_load((directory / DRAFT).read_text(encoding="utf-8"))
-    applied, _ = cards_module.apply(draft, decisions, f)
+    try:
+        applied, _ = cards_module.apply(draft, decisions, f)
+    except (ProposalError, KeyError, TypeError) as exc:   # a decision that cannot be written into the draft
+        text = str(exc.args[0] if isinstance(exc, KeyError) and exc.args else exc)
+        card = next((c["id"] for c in cards if text.startswith(f"{c['id']}:")), None)
+        return CheckResult(problems=[CheckProblem(check="decision", severity="serious", message=text, card=card)])
     problems = [CheckProblem(check=c["id"], severity="serious" if c["severity"] in ("serious", "blocking") else "advisory",
-                             message=c["message"], card=CHECK_CARD.get(c["id"]))
+                             message=c["message"], card=card_for(c["id"], f.kind))
                 for c in critic.checks(dump_yaml(applied), f) if not c["ok"]]
     return CheckResult(problems=sorted(problems, key=lambda p: p.severity != "serious"))
 
@@ -70,8 +85,9 @@ def preview(files: EvidenceFiles, name: str, corpus: str, paper: str) -> Preview
     f = frame_module.load(directory / FRAME)
     _, text = files._paper_text(files.corpus_dir(corpus), check_id(paper, "paper"))
     terms: list[tuple[str, str]] = [("screen", t) for t in (draft.get("screen") or {}).get("terms") or []]
-    terms += [("roles", n) for role in (f.treatment, f.control) for n in role.names]
-    terms += [("metrics", n) for o in f.outcomes for n in o.names]
+    if f.kind in ("effect", "consistency"):   # an inventory or best question has no roles and metrics cards
+        terms += [("roles", n) for role in (f.treatment, f.control) for n in role.names]
+        terms += [("metrics", n) for o in f.outcomes for n in o.names]
     for names in ((draft.get("best") or {}).get("kinds") or {}).values():
         terms += [("method_kinds", n) for n in names or ()]
     hits: list[PreviewHit] = []

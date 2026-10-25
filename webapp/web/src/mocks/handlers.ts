@@ -258,7 +258,8 @@ export const handlers = [
     HttpResponse.json([...fixture<ProposalSummary[]>("/api/ev/proposals"), ...Object.values(db.proposals).map(proposalSummary)])),
   http.get("/api/ev/proposals/:name", ({ params }) => {
     const p = db.proposals[String(params.name)]
-    return p ? HttpResponse.json(p) : undefined   // the fixtures answer the rest
+    const waivers = Object.entries(db.waivers[String(params.name)] ?? {}).map(([check, reason]) => ({ check, reason, by: "aditya" }))
+    return p ? HttpResponse.json({ ...p, waivers: p.frozen ? [] : waivers }) : undefined   // the fixtures answer the rest
   }),
   http.post("/api/ev/proposals/:name/check", ({ params }) =>
     db.proposals[String(params.name)] ? HttpResponse.json({ problems: mockCheck.problems }) : undefined),

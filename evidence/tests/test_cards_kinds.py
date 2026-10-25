@@ -80,3 +80,13 @@ def test_every_kind_flows_to_a_frozen_protocol(tmp_path: Path, kind: str) -> Non
     record = _json(d / "proposal.json")
     assert protocol.kind == kind and record["kind"] == kind and record["kind_by"] == "model"
     assert [x["card"] for x in record["decisions"]] == [*SETS[kind], *ADVANCED]
+
+
+@pytest.mark.parametrize("target", ["dataset", "condition"])
+def test_inventory_freezes_with_a_changed_list_target(tmp_path: Path, target: str) -> None:
+    """The cascade card (applied last) still names the old `metric` type; the new target keeps its own cascade."""
+    flow(tmp_path, Scripted(frame_reply=_frame("inventory"), cards={"list_target": target}))
+    protocol = parse((tmp_path / "protocol.yaml").read_text(encoding="utf-8"))
+    assert protocol.inventory.target == target and list(protocol.evidence_types) == [target]
+    assert "run_settings" in _json(tmp_path / "proposal.json")
+    assert set(_json(tmp_path / "proposal.json")["run_settings"]) == {"strategy"}

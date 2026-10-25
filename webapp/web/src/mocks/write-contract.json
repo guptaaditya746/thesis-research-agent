@@ -259,7 +259,8 @@
    "args": {
     "proposal": "p-new",
     "question": "rag-factuality",
-    "model": "orch-model"
+    "model": "orch-model",
+    "text": null
    },
    "refs": {
     "proposal": "p-new"

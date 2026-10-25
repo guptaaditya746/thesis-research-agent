@@ -409,6 +409,24 @@ describe("the question-first flow", () => {
     expect(puts.at(-1)?.waivers).toEqual([{ check: "screen_terms", reason: "too short!" }])
   })
 
+  it("a plain save keeps the waivers decisions.yaml already holds", async () => {
+    const user = userEvent.setup()
+    mockCheck.problems = [ADVISORY]
+    const job = await evApi.startJob("propose", { proposal: "p1", question: "rag-factuality" })
+    finishJob(job.id)
+    const loaded = await evApi.proposal("p1")
+    await evApi.putDecisions("p1", { decisions: [], waivers: [{ check: "screen_terms", reason: "accepted earlier on" }], base_sha256: loaded.decisions_sha256 })
+    const puts: DecisionsRequest[] = []
+    server.events.on("request:start", async ({ request }) => {
+      if (request.method === "PUT") puts.push((await request.clone().json()) as DecisionsRequest)
+    })
+    renderRoutes(routes, "/flow/rag-factuality/protocol?proposal=p1")
+    await screen.findByRole("group", { name: /Smallest effect that counts/ }, T)
+    await user.click(screen.getByRole("button", { name: "Save decisions" }))
+    await waitFor(() => expect(puts.length).toBeGreaterThan(0))
+    expect(puts.at(-1)?.waivers).toEqual([{ check: "screen_terms", reason: "accepted earlier on" }])
+  })
+
   it("a proposal with no serious problem freezes without the waiver dialog", async () => {
     const user = userEvent.setup()
     mockCheck.problems = [ADVISORY]

@@ -72,3 +72,48 @@ def test_preview_hits_terms(client: TestClient, proposal: Path, world: EvidenceW
     assert first["card"] in {"screen", "roles", "metrics", "method_kinds"}
     assert [h["start"] for h in hit["hits"]] == sorted(h["start"] for h in hit["hits"])
     assert client.get("/api/ev/proposals/p1/preview", params={"corpus": corpus, "paper": "zzz"}).status_code == 404
+
+
+def inventory_proposal(world: EvidenceWorld) -> Path:
+    from evidence.tests.test_cards_kinds import _frame
+    return flow(world.proposals / "inv", Scripted(frame_reply=_frame("inventory")), until="cards")
+
+
+def test_check_survives_a_decision_that_cannot_be_applied(client: TestClient, proposal: Path) -> None:
+    bad = {"cascade": {"choice": "custom", "value": {"extractors": {"zzz": ["regex_metric"]}, "strategy": "gaps"},
+                       "by": "aditya"}}
+    response = client.post("/api/ev/proposals/p1/check", json={"decisions": entries(proposal, bad)})
+    assert response.status_code == 200
+    problem = response.json()["problems"][0]
+    assert (problem["check"], problem["severity"], problem["card"]) == ("decision", "serious", "cascade")
+    assert "zzz" in problem["message"]
+
+
+def test_every_check_maps_to_a_card_of_the_kind_or_none() -> None:
+    from evidence.propose import cards as cards_module, critic
+    from webapp import evcheck
+    for kind in ("effect", "consistency", "inventory", "best"):
+        ids = {c["id"] for c in cards_module.for_kind(kind)}
+        for check in critic.DETERMINISTIC:
+            assert evcheck.card_for(check, kind) in ids | {None}, (kind, check)
+    assert evcheck.card_for("regex_matches_enums", "inventory") == "list_target"
+    assert evcheck.card_for("label_complete", "inventory") is None
+    assert evcheck.card_for("outcomes_complete", "effect") == "metrics"
+
+
+def test_check_cards_of_an_inventory_proposal_exist(client: TestClient, world: EvidenceWorld) -> None:
+    d = inventory_proposal(world)
+    change = {"screen": {"choice": "custom", "value": {"question": "q?", "terms": ["zzzunrelated"]}, "by": "aditya"}}
+    problems = client.post("/api/ev/proposals/inv/check", json={"decisions": entries(d, change)}).json()["problems"]
+    ids = {c["id"] for c in __import__("evidence.propose.cards", fromlist=["x"]).for_kind("inventory")}
+    assert problems and all(p["card"] in ids | {None} for p in problems)
+
+
+def test_preview_tags_roles_and_metrics_only_for_effect_kinds(client: TestClient, world: EvidenceWorld) -> None:
+    inventory_proposal(world)
+    corpus = f"{NAME}-mixed"
+    cards_seen: set[str] = set()
+    for paper in paper_ids(world.corpora / corpus)[:5]:
+        data = client.get("/api/ev/proposals/inv/preview", params={"corpus": corpus, "paper": paper}).json()
+        cards_seen |= {h["card"] for h in data["hits"]}
+    assert cards_seen and cards_seen <= {"screen", "method_kinds"}

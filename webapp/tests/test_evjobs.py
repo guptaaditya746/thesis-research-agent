@@ -600,3 +600,50 @@ def test_decisions_write_waivers_and_refuse_a_short_reason(proposal: Path, world
         short = c.put("/api/ev/proposals/p1/decisions",
                       json={**body(proposal, entries(proposal)), "waivers": [{"check": check, "reason": "too short"}]})
         assert short.status_code == 400 and "at least 10" in short.json()["detail"]
+
+
+def _kinded(world: EvidenceWorld) -> Path:
+    directory = world.proposals / "kinded"
+    directory.mkdir(parents=True)
+    (directory / "frame.json").write_text(json.dumps({"question": "q?", "kind": "effect"}), encoding="utf-8")
+    (directory / "draft.yaml").write_text("old", encoding="utf-8")
+    return directory
+
+
+def test_kind_change_checks_the_gateway_before_wiping(world: EvidenceWorld, fake_python: Path,
+                                                      monkeypatch: pytest.MonkeyPatch) -> None:
+    d = _kinded(world)
+    monkeypatch.setattr(evjobs, "gateway_problem", lambda settings: "the gateway is down")
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_PYTHON=str(fake_python)))) as c:  # type: ignore[call-arg]
+        response = c.put("/api/ev/proposals/kinded/kind", json={"kind": "best"})
+    assert response.status_code == 409 and "gateway is down" in response.json()["detail"]
+    assert (d / "draft.yaml").exists() and json.loads((d / "frame.json").read_text(encoding="utf-8"))["kind"] == "effect"
+
+
+def test_kind_change_to_the_same_kind_does_nothing(client: TestClient, world: EvidenceWorld) -> None:
+    d = _kinded(world)
+    response = client.put("/api/ev/proposals/kinded/kind", json={"kind": "effect"})
+    assert response.status_code == 409 and "already" in response.json()["detail"]
+    assert (d / "draft.yaml").exists() and "kind_by" not in json.loads((d / "frame.json").read_text(encoding="utf-8"))
+    assert client.put("/api/ev/proposals/kinded/kind", json={"kind": "best"}).status_code == 202
+    assert not (d / "draft.yaml").exists()
+
+
+def test_existing_waivers_are_shown_and_kept_on_a_plain_save(proposal: Path, world: EvidenceWorld) -> None:
+    import yaml
+    path = proposal / "decisions.yaml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    data["waivers"] = [{"check": "metric_rules_collide", "reason": "known and harmless here", "by": "someone-else"}]
+    path.write_text(yaml.safe_dump(data), encoding="utf-8")
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
+        detail = c.get("/api/ev/proposals/p1").json()
+        assert detail["waivers"] == data["waivers"]
+        sent = body(proposal, entries(proposal))
+        sent["base_sha256"] = detail["decisions_sha256"]
+        sent["waivers"] = [{"check": w["check"], "reason": w["reason"]} for w in detail["waivers"]]
+        assert c.put("/api/ev/proposals/p1/decisions", json=sent).status_code == 200
+        assert c.get("/api/ev/proposals/p1").json()["waivers"] == data["waivers"]   # still someone-else's, not rewritten
+        sent["base_sha256"] = c.get("/api/ev/proposals/p1").json()["decisions_sha256"]
+        sent["waivers"] = []   # the person removed it
+        assert c.put("/api/ev/proposals/p1/decisions", json=sent).status_code == 200
+        assert c.get("/api/ev/proposals/p1").json()["waivers"] == []

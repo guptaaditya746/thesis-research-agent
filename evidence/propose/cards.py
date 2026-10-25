@@ -232,6 +232,8 @@ def _read_cascade(p: dict[str, Any], f: Frame) -> dict[str, Any]:
 
 def _apply_cascade(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
     for name, steps in v["extractors"].items():
+        if name in run.get("replaced_types", ()) and name not in p["evidence_types"]:
+            continue   # a type list_target swapped out: the new target keeps its own cascade
         owner = p.get("screen") if name == "screen" else p["evidence_types"].get(name)
         if owner is None:
             raise ProposalError(f"cascade: {name!r} is not an evidence type of the protocol (or its screen)")
@@ -271,6 +273,7 @@ def _apply_list_target(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]
     if p["inventory"]["target"] == v["target"]:
         return
     template = read_yaml(PROTOCOLS / f"{INVENTORY_TEMPLATES[v['target']]}.yaml")
+    run.setdefault("replaced_types", []).extend(p["evidence_types"])   # the cascade card must not name them any more
     p["evidence_types"] = copy.deepcopy(template["evidence_types"])
     p["inventory"] = {"target": v["target"]}
 
@@ -666,6 +669,7 @@ def apply(draft: dict[str, Any], decisions: list[dict[str, Any]], f: Frame) -> t
     run_settings: dict[str, Any] = {}
     for d in decisions:
         HANDLERS[d["card"]].apply(p, d["value"], run_settings)
+    run_settings.pop("replaced_types", None)
     if "synthesis" in p:   # roles and metrics: an inventory or best protocol has none
         draft_module.sync_regex(p, f)
     return p, run_settings

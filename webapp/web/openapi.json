@@ -6441,6 +6441,15 @@
             "description": "before freeze: everything freeze would refuse in decisions.yaml (evidence/propose/cards.validate)",
             "default": []
           },
+          "waivers": {
+            "items": {
+              "$ref": "#/components/schemas/Waiver"
+            },
+            "type": "array",
+            "title": "Waivers",
+            "description": "before freeze: the waivers decisions.yaml holds; a save that does not send one back removes it",
+            "default": []
+          },
           "decisions_sha256": {
             "anyOf": [
               {
@@ -6475,6 +6484,7 @@
           "revisions",
           "amendment_log",
           "decision_problems",
+          "waivers",
           "decisions_sha256"
         ],
         "title": "ProposalDetail"
@@ -8800,6 +8810,30 @@
         ],
         "title": "VariantInfo",
         "description": "variant.json of a counterfactual corpus (`synth variant`, F3)."
+      },
+      "Waiver": {
+        "properties": {
+          "check": {
+            "type": "string",
+            "title": "Check"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "check",
+          "reason",
+          "by"
+        ],
+        "title": "Waiver",
+        "description": "A failed critic check a person accepted in decisions.yaml."
       },
       "WaiverEntry": {
         "properties": {

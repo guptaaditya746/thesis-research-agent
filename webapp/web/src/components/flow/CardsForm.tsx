@@ -118,7 +118,8 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
   const [stale, setStale] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [waiverOpen, setWaiverOpen] = useState(false)
-  const [waivers, setWaivers] = useState<Record<string, string>>({})   // check -> reason, written with the decisions
+  const [waivers, setWaivers] = useState<Record<string, string>>(() =>   // check -> reason, written with the decisions
+    Object.fromEntries((proposal.waivers ?? []).map((w) => [w.check, w.reason])))   // the ones decisions.yaml has stay unless removed
   const save = usePutDecisions(proposal.name)
   const freeze = useStartJob("freeze")
   const entries = proposal.cards.map((c) => ({ card: c, ...toEntry(c, states[c.id]) }))
