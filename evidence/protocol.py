@@ -34,6 +34,9 @@ LocateStrategy = Literal["exhaustive", "bm25", "agent"]
 # What a protocol asks: the effect of a treatment, an inventory of names, whether claims agree with results,
 # or which method kind wins. Each kind has its own block (`synthesis`, `inventory`, `best`, `consistency`).
 Kind = Literal["effect", "inventory", "consistency", "best"]
+# The blocks each kind needs; a block of another kind is refused (Protocol._consistent).
+KIND_BLOCKS: dict[str, tuple[str, ...]] = {"effect": ("synthesis",), "consistency": ("synthesis", "consistency"),
+                                           "inventory": ("inventory",), "best": ("best",)}
 
 
 class Strict(BaseModel):
@@ -245,10 +248,14 @@ class Protocol(Strict):
 
     @model_validator(mode="after")
     def _consistent(self) -> Protocol:
-        for block in ({"effect": ("synthesis",), "consistency": ("synthesis", "consistency"),
-                       "inventory": ("inventory",), "best": ("best",)}[self.kind]):
+        own = KIND_BLOCKS[self.kind]
+        for block in own:
             if getattr(self, block) is None:
                 raise ValueError(f"a protocol of kind {self.kind!r} needs its {block} block")
+        for block in sorted({b for blocks in KIND_BLOCKS.values() for b in blocks} - set(own)):
+            if getattr(self, block) is not None:
+                raise ValueError(f"a protocol of kind {self.kind!r} may not have a {block} block "
+                                 f"(it belongs to another kind; set kind or remove the block)")
         if SCREEN_TYPE in self.evidence_types:
             raise ValueError(f"evidence_types may not be named {SCREEN_TYPE!r}: it is the funnel's screening pseudo type")
         for name, spec in self.evidence_types.items():

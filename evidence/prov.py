@@ -115,7 +115,8 @@ def build(run_dir: Path | str) -> Graph:
             g.add((answer, RDF.type, PROV.Entity))
             g.add((answer, RDF.type, EV.Answer))
             g.add((answer, PROV.wasGeneratedBy, node))
-            g.add((answer, EV.label, Literal(meta["label"])))
+            if "label" in meta:     # effect answers only; the other kinds have no label
+                g.add((answer, EV.label, Literal(meta["label"])))
             g.add((answer, EV.sha256, Literal(meta["answer_sha256"])))
             for item_id in event["used"]:
                 g.add((node, PROV.used, _iri("item", item_id)))

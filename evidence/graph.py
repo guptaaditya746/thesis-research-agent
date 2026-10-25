@@ -27,8 +27,8 @@ def build(papers: list[Paper], items: dict[str, list[Item]], answer: dict[str, A
             edges.append({"src": item.item_id, "dst": paper.id, "rel": "in_document"})
             for name, target in sorted(item.links.items()):
                 edges.append({"src": item.item_id, "dst": target, "rel": name})
-    for entry in answer["studies"]:
-        if entry["direction"] in ("supports", "contradicts"):
+    for entry in answer.get("studies", []):   # an inventory answer has no studies; only effect studies pair
+        if entry.get("direction") in ("supports", "contradicts") and entry.get("treatment"):
             edges.append({"src": entry["treatment"]["measurement"], "dst": entry["control"]["measurement"],
                           "rel": entry["direction"]})
         if entry.get("duplicate_of"):

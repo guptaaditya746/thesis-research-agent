@@ -17,8 +17,9 @@ supervisor's):
   the same run.
 - `gaps` (the default): the funnel. A document screened out (`on_fail: skip`) gets no extraction and its study is
   `undetermined` with reason `screened_out`. Otherwise position 0 of every type's cascade runs; then, while
-  `synthesis.study()` on the document's merged items gives no direction, the gap's reason code names the
-  evidence types to escalate (`synthesis.GAP_TYPES`), and each of those runs the NEXT position of its own
+  the kind's `study()` (evidence/kinds/; for effect `synthesis.study()`) on the document's merged items gives
+  a reason, the gap's reason code names the evidence types to escalate (the kind's `gap_types`; for effect
+  `synthesis.GAP_TYPES`), and each of those runs the NEXT position of its own
   cascade with a targeted task (`contract.Focus`, `focus_for`), the merged items of its context types as
   context, re-merged with its earlier results; the funnel stops when the study is complete or when no gap
   type has a position left (the gap is recorded). `cascade: until_found` is an `all`-mode rule; the funnel's
@@ -58,7 +59,7 @@ from jsonio import sha256_hex, write_json
 from agent.rundir import utc_now
 from modelcall import JsonlCache
 
-from . import checks, extractors, graph, merge, synthesis
+from . import checks, extractors, graph, kinds, merge
 from .calls import CallCache, EngineContext, Mode, NotRecorded
 from .contract import DocumentRef, ExtractionResult, ExtractionTask, Extractor, ExtractorSpec, Focus, Item, ProtocolRef, Scope
 from .locate import Located, Locator, locate
@@ -102,15 +103,14 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade",
     get the same injected configuration plus the block's `terms` and `question`."""
     out: dict[str, list[tuple[ExtractorRef, Extractor]]] = {}
     specs: dict[str, tuple[EvidenceTypeSpec, dict[str, Any]]] = {etype: (spec, {}) for etype, spec in protocol.evidence_types.items()}
+    question = kinds.of(protocol).extractor_config(protocol)   # the kind's part (effect: question_metrics, compare)
     if protocol.screen is not None:
         specs[SCREEN_TYPE] = (protocol.screen.spec, {"terms": list(protocol.screen.terms), "question": protocol.screen.question})
     for etype, (spec, extra) in specs.items():
         chosen = []
         for ref in spec.extractors:
             config = {**ref.config, "evidence_type": etype, "field_schema": spec.fields, "links": dict(spec.links),
-                      "roles": list(spec.roles), "description": spec.description,
-                      "question_metrics": list(protocol.synthesis.metric_names),
-                      "compare": protocol.synthesis.compare.model_dump(), **extra}
+                      "roles": list(spec.roles), "description": spec.description, **question, **extra}
             extractor = extractors.get(ref.name, config)
             if model and extractor.spec.kind in ("llm", "agent"):
                 extractor = extractors.get(ref.name, {**config, "model": model})
@@ -120,9 +120,17 @@ def build_extractors(protocol: Protocol, selection: Selection = "cascade",
     return out
 
 
-def focus_for(gap: str, spec: Synthesis, merged: dict[str, list[Item]]) -> Focus:
+def focus_for(gap: str, protocol: Protocol | Synthesis, merged: dict[str, list[Item]]) -> Focus:
     """The targeted task of an escalation (Part D): the gap code, what was found (condition roles, canonical
-    metrics) and the request in words, from the gap code and the protocol's roles."""
+    metrics) and the request in words, from the gap code and the protocol's roles. For effect and consistency
+    protocols (or a `synthesis` block given directly); for the other kinds the task names the gap only (nothing
+    in `have`) with the generic request."""
+    if isinstance(protocol, Synthesis):
+        spec = protocol
+    elif protocol.kind in ("effect", "consistency") and protocol.synthesis is not None:
+        spec = protocol.synthesis
+    else:
+        return Focus(gap=gap, have={}, want=f"the study is incomplete ({gap}); find what is missing")
     t, c = spec.compare.treatment, spec.compare.control
     roles = sorted({str(i.fields.get("role")) for i in merged.get("condition", []) if i.fields.get("role") is not None})
     metrics = sorted({str(i.fields.get("canonical")) for i in merged.get("metric", []) if i.fields.get("canonical") is not None})
@@ -195,7 +203,7 @@ class Execution:
         screen = self.protocol.screen
         if self.strategy == "gaps" and state.relevant is False and screen is not None and screen.on_fail == "skip":
             state.skipped = True
-            reason = synthesis.reason("screened_out", self.protocol.synthesis)
+            reason = kinds.screened_out(self.protocol)
             self.reasons[paper.id] = {**reason, "text": f"{reason['text']}: {state.screen['reason']}"}   # type: ignore[index]
         elif self.strategy == "gaps":
             self.funnel_loop(state)
@@ -260,7 +268,7 @@ class Execution:
             if not pending:
                 return   # exhausted: the gap stays recorded in the last decision
             round_no += 1
-            focus = focus_for(gap or "", self.protocol.synthesis, state.merged)
+            focus = focus_for(gap or "", self.protocol, state.merged)
             for etype in pending:
                 state.focus[etype] = focus
                 self.run_position(state, [etype], state.next_position[etype], round_no=round_no)
@@ -307,12 +315,14 @@ class Execution:
         state.steps += [ran[p] for p in sorted(ran)]
 
     def complete(self, state: DocState, round_no: int) -> tuple[bool, str | None, tuple[str, ...]]:
-        """The completeness decision after a round: `synthesis.study()` on the merged items gives a direction, or
-        the gap's reason code and the evidence types to escalate. A `completeness` event and a funnel.json entry."""
-        entry, _ = synthesis.study(self.protocol, state.doc.id, state.items())
-        complete = entry["direction"] != "undetermined"
+        """The completeness decision after a round: the kind's `study()` on the merged items gives no reason (for
+        effect: a direction), or the gap's reason code and the evidence types to escalate (`gap_types`). A
+        `completeness` event and a funnel.json entry."""
+        rules = kinds.of(self.protocol)
+        entry, _ = rules.study(self.protocol, state.doc.id, state.items())
+        complete = entry["reason"] is None
         gap = None if complete else entry["reason"]["code"]
-        gap_types = synthesis.GAP_TYPES.get(gap, ()) if gap else ()
+        gap_types = rules.gap_types(self.protocol, gap) if gap else ()
         decision = {"after_round": round_no, "after_position": max((s["position"] for s in state.steps), default=None),
                     "complete": complete, "gap": gap, "gap_types": list(gap_types)}
         state.decisions.append(decision)
@@ -361,7 +371,8 @@ class Execution:
         papers = self.corpus.papers
         funnel = {p.id: {"screened": self.funnel[p.id]["screen"]["relevant"] is False if self.funnel[p.id]["screen"] else False,
                          "stopped_after": self.funnel[p.id]["stopped_after"]} for p in papers if p.id in self.funnel}
-        answer, used = synthesis.answer(self.protocol, [p.id for p in papers], self.items, self.reasons, funnel)
+        answer, used = kinds.of(self.protocol).answer(self.protocol, [p.id for p in papers], self.items, self.reasons,
+                                                      funnel)
         evidence = [i.model_dump(mode="json") for p in papers for i in self.items.get(p.id, [])]
         self.outputs[LOCATE_FILE] = write_json(self.root / LOCATE_FILE, self.located)
         self.outputs[EVIDENCE_FILE] = write_lines(self.root / EVIDENCE_FILE, evidence)
@@ -369,10 +380,14 @@ class Execution:
                                                                                "documents": self.funnel})
         self.outputs[ANSWER_FILE] = write_json(self.root / ANSWER_FILE, answer)
         self.outputs[GRAPH_FILE] = write_json(self.root / GRAPH_FILE, graph.build(papers, self.items, answer))
-        self.events.add("synthesis", used=sorted(set(used)), generated=["answer"], agent_id=ENGINE,
-                        custom={"label": answer["label"], "counts": answer["counts"],
-                                "flags": {name: len(docs) for name, docs in answer["flags"].items()},   # Part F1
-                                "answer_sha256": self.outputs[ANSWER_FILE], "rule": "label_table"})
+        if self.protocol.kind == "effect":
+            custom = {"label": answer["label"], "counts": answer["counts"],
+                      "flags": {name: len(docs) for name, docs in answer["flags"].items()},   # Part F1
+                      "answer_sha256": self.outputs[ANSWER_FILE], "rule": "label_table"}
+        else:   # no label table: the record names the kind whose rules made the answer
+            custom = {"kind": self.protocol.kind, "answer_sha256": self.outputs[ANSWER_FILE],
+                      "rule": f"kind:{self.protocol.kind}"}
+        self.events.add("synthesis", used=sorted(set(used)), generated=["answer"], agent_id=ENGINE, custom=custom)
         return answer
 
 

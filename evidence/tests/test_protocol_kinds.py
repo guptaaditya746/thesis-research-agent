@@ -109,3 +109,15 @@ def test_new_fields_at_default_do_not_change_the_digest() -> None:
 def test_dataset_item_prefix() -> None:
     span = Span(role="dataset_name", selector={"file": "a.md", "start": 0, "end": 5, "exact": "TriviaCheck"})
     assert Item.build("dataset", {"name": "TriviaCheck"}, [span]).item_id.startswith("d")
+
+
+def test_foreign_kind_block_is_rejected() -> None:
+    """A block that belongs to another kind (an inventory block on an effect protocol) is a mistake, not ignored."""
+    for kind, foreign in [("effect", "inventory"), ("effect", "consistency"), ("inventory", "synthesis"),
+                          ("best", "inventory"), ("consistency", "best")]:
+        data = yaml.safe_load(minimal_yaml(kind=kind, condition_kind_enum=["rag", "baseline"]))
+        data[foreign] = {"synthesis": SYNTHESIS, "inventory": {"target": "metric"}, "consistency": {"by": "direction"},
+                         "best": {"metric": {"canonical": "accuracy", "higher_is_better": True},
+                                  "kinds": {"rag": ["RAG"], "baseline": ["LLM"]}}}[foreign]
+        with pytest.raises(ValidationError, match=f"kind {kind!r} may not have a {foreign} block"):
+            protocol.Protocol.model_validate(data)

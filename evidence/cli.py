@@ -180,8 +180,9 @@ def _dispatch(args: argparse.Namespace) -> int:
                    strategy=args.strategy, workers=args.workers)
         record = read_json(root / RUN_FILE)
         answer = read_json(root / "answer.json")
-        print(json.dumps({"run": str(root), "label": answer["label"], "counts": answer["counts"],
-                          "cost": record["cost"]}, indent=1))
+        summary = ({"label": answer["label"], "counts": answer["counts"]} if "kind" not in answer
+                   else {"kind": answer["kind"]})   # effect answers carry no kind; the others no label
+        print(json.dumps({"run": str(root), **summary, "cost": record["cost"]}, indent=1))
         return 0
     if args.command == "replay":
         from .replay import replay
