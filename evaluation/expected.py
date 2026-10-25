@@ -285,9 +285,14 @@ def _best(truth: GroundTruth, params: QuestionTruth, protocol: Protocol | None) 
 BUILDERS = {"effect": _effect, "consistency": _consistency, "inventory": _inventory, "best": _best}
 
 
+def saved_answer(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None) -> bool:
+    """Whether `expected` returns the saved `truth.answer` (the corpus's own question; module docstring)."""
+    return bool(kind == "effect" and truth.answer and params.metric == SAVED_ANSWER_METRIC and protocol is not None
+                and protocol.id in SAVED_ANSWER_IDS)
+
+
 def expected(truth: GroundTruth, kind: Kind, params: QuestionTruth, protocol: Protocol | None = None) -> dict[str, Any]:
     """The kind's answer as ground truth gives it (module docstring)."""
-    if (kind == "effect" and truth.answer and params.metric == SAVED_ANSWER_METRIC and protocol is not None
-            and protocol.id in SAVED_ANSWER_IDS):
+    if saved_answer(truth, kind, params, protocol):
         return copy.deepcopy(truth.answer)
     return BUILDERS[kind](truth, params, protocol)

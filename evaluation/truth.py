@@ -27,7 +27,7 @@ from evidence.synthesis import SYSTEM as ENGINE  # the engine's `system` name in
 FACT_LISTS: dict[EvidenceType, str] = {"condition": "conditions", "metric": "metrics",
                                        "measurement": "measurements", "author_claim": "author_claim"}
 MAIN_ROLE: dict[EvidenceType, str] = {"condition": "condition_label", "metric": "metric_label",
-                                      "measurement": "value", "author_claim": "claim"}
+                                      "measurement": "value", "author_claim": "claim", "dataset": "dataset_label"}
 TYPES: tuple[EvidenceType, ...] = ("condition", "metric", "measurement", "author_claim")
 # Dataset facts (question-first redesign): one per (paper, dataset name), id `<paper>.d:<name>`, data `{name}`,
 # no placements (a dataset item is right when its name matches). They live in `GroundTruth.datasets`, apart from

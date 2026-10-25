@@ -1,6 +1,7 @@
 """`evaluate` command line: score a run, run the two baselines, compare corpora.
 
-    evaluate score --run RUN --corpus CORPUS [--baseline ANSWER.json ...] [--reexec R.json] [--oracle O.json] --out DIR
+    evaluate score --run RUN --corpus CORPUS [--baseline ANSWER.json ...] [--reexec R.json] [--oracle O.json]
+                   [--question-id ID] --out DIR
     evaluate oracle --protocol P --corpus CORPUS --out DIR
     evaluate rag-baseline --corpus CORPUS --out DIR [--model ALIAS] [--retrieval global|per_paper] [--k N]
                           [--oracle-passages]
@@ -12,7 +13,9 @@
 
 `oracle` (synthesis on perfect evidence) and `rag-baseline --oracle-passages` (the baseline on the passages
 needed to interpret the values) are diagnostics that read ground_truth.json; `score --oracle` attributes each system's
-wrong studies to upstream or downstream errors with the oracle's answer.json.
+wrong studies to upstream or downstream errors with the oracle's answer.json. `score --question-id` names the question of
+evidence/questions.yaml the run and the answers answer (default rag-factuality, the corpus's own); its kind picks how
+B and C are scored.
 
 `shift` (the controlled variant, F3/F4) and `benchmark` (the B11 record per extractor id) read report.json
 files written by `score` (a directory holding one is accepted too).
@@ -31,6 +34,7 @@ from pathlib import Path
 from typing import Any
 
 from agent.rundir import ORCHESTRATOR
+from evidence.questions import load as load_questions
 
 from . import report as rep
 
@@ -72,8 +76,11 @@ def cmd_score(args: argparse.Namespace) -> int:
 
     if args.run is None and not args.baseline:
         raise SystemExit("evaluate score: give --run and/or --baseline")
-    result = (score(args.run, args.corpus, args.baseline, args.reexec, args.oracle) if args.run
-              else score_answers(args.corpus, args.baseline, args.oracle))
+    try:
+        result = (score(args.run, args.corpus, args.baseline, args.reexec, args.oracle, args.question_id) if args.run
+                  else score_answers(args.corpus, args.baseline, args.oracle, args.question_id))
+    except ValueError as exc:   # a run of another kind than the question's
+        raise SystemExit(f"evaluate score: {exc}") from None
     # where corpus.json is, relative to the report, so the pair moves together (compare resolves it from there)
     result["corpus_dir"] = Path(os.path.relpath(args.corpus.resolve(), args.out.resolve())).as_posix()
     js, md = rep.write_report(result, args.out)
@@ -191,6 +198,9 @@ def parser() -> argparse.ArgumentParser:
     s.add_argument("--baseline", type=Path, action="append", default=[], help="a baseline's answer.json (repeatable)")
     s.add_argument("--reexec", type=Path, help="re-execution report (default: <run>/reexec.json if present)")
     s.add_argument("--oracle", type=Path, help="an oracle's answer.json: attribute wrong studies upstream/downstream")
+    s.add_argument("--question-id", default="rag-factuality", choices=[q.id for q in load_questions()],
+                   help="the question (evidence/questions.yaml) the run and the answers answer; its kind picks B and C "
+                        "(default rag-factuality)")
     s.add_argument("--out", type=Path, required=True)
     s.set_defaults(func=cmd_score)
 

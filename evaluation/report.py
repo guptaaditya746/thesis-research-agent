@@ -119,12 +119,17 @@ def render(report: dict[str, Any]) -> str:
                                                     "recall", "f1", "span_accuracy"]), "",
                 f"Facts no item matched: {len(report['extraction']['missed'])}; items matching no fact: "
                 f"{len(report['extraction']['unmatched_items'])}.", ""]
-    if report.get("integration"):
+    kind = report.get("kind", "effect")
+    if kind != "effect":
+        out[3:3] = [f"Question id: {report.get('question_id')} (kind {kind})"]
+        out += render_integration_kind(kind, report.get("integration"))
+        out += render_synthesis_kind(kind, report.get("synthesis") or [])
+    elif report.get("integration"):
         rows = sorted(report["integration"]["rows"], key=lambda r: _level_key(r["level"]))
         out += ["## B. Integration", "", table(rows, ["level", "matched_measurements", "association_accuracy",
                                                      "condition_role_accuracy", "metric_accuracy", "condition_exact",
                                                      "metric_exact", "studies", "true_pair"]), ""]
-    if report.get("synthesis"):
+    if report.get("synthesis") and kind == "effect":
         out += ["## C. Synthesis", ""]
         summary = []
         for system in report["synthesis"]:
@@ -201,6 +206,57 @@ def render(report: dict[str, Any]) -> str:
     return "\n".join(line.rstrip() for line in out)
 
 
+KIND_B: dict[str, tuple[str, list[str], str]] = {
+    "inventory": ("Synonym merging", ["entries", "keyed_entries", "keys", "split", "merged", "clean_share"],
+                  "Each answer entry holds the truth keys of the facts its items matched in A; `split`: keys spread "
+                  "over more than one entry, `merged`: entries holding more than one key, `clean_share`: entries "
+                  "holding one key no other entry holds, of the entries with a key."),
+    "best": ("Kind assignment", ["conditions", "kind_correct", "kind_accuracy"],
+             "Matched conditions whose label vocab gives a method kind, and the share the engine gave that kind."),
+    "consistency": ("Claim to result", ["claims", "claim_correct", "claim_accuracy"],
+                    "Author-claim items whose claim span overlaps a true claim, and the share with its direction.")}
+KIND_C: dict[str, tuple[str, list[str], str]] = {
+    "inventory": ("Inventory", ["system", "target", "entries", "expected_entries", "matched", "precision", "recall",
+                                "f1", "paper_precision", "paper_recall", "paper_f1"],
+                  "Sets of keys (`canon.key` of a name or alias; a name vocab does not know matches a truth entry vocab "
+                  "does not know by its folded name, else it is a false positive), and of (key, paper) pairs."),
+    "best": ("Best", ["system", "winner", "expected_winner", "winner_correct", "studies_scored",
+                      "per_study_accuracy"],
+             "`winner_correct`: the winner (or the tie) is truth's; per-study accuracy of the paper's winner and tie "
+             "over truth's counted studies (not screened out, not a duplicate; the engine does not leave duplicates "
+             "out, which shows in its wins)."),
+    "consistency": ("Consistency", ["system", "metric", "studies_scored", "per_study_accuracy", "agreeing_precision",
+                                    "agreeing_recall", "disagreeing_precision", "disagreeing_recall"],
+                    "Over the studies truth lists (those whose question metric is the claim metric); `agrees` null "
+                    "is undetermined, right when truth's is null too.")}
+
+
+def render_integration_kind(kind: str, integration: dict[str, Any] | None) -> list[str]:
+    """The `## B` section of a question kind other than effect (score.integration_kind)."""
+    if not integration:
+        return []
+    title, columns, text = KIND_B[kind]
+    out = [f"## B. {title}", "", table([integration], columns), "", text, ""]
+    if integration.get("rows"):
+        rows = sorted(integration["rows"], key=lambda r: _level_key(r["level"]))
+        out += ["Measurement linkage (no pair check: a consistency answer names no measurement pair):", "",
+                table(rows, ["level", "matched_measurements", "association_accuracy", "condition_role_accuracy",
+                             "metric_accuracy", "condition_exact", "metric_exact"]), ""]
+    return out
+
+
+def render_synthesis_kind(kind: str, systems: list[dict[str, Any]]) -> list[str]:
+    """The `## C` section of a question kind other than effect (score.score_kind), one row per system."""
+    if not systems:
+        return []
+    title, columns, text = KIND_C[kind]
+    out = [f"## C. {title}", "", table(systems, columns), "", text, ""]
+    if kind == "inventory":
+        out += [f"- {s['system']}: false positives {', '.join(s['false_positives']) or 'none'}; missed "
+                f"{', '.join(s['missed']) or 'none'}" for s in systems] + [""]
+    return out
+
+
 def render_funnel(funnel: dict[str, Any]) -> list[str]:
     """The `## Funnel` section (Part D): cost per document, where the funnel stopped, the screen's scores."""
     means = funnel.get("per_document") or {}
@@ -255,6 +311,12 @@ def compare(reports: list[dict[str, Any]], base: Path | None = None) -> dict[str
     selection of each corpus (corpus.json, found next to the report or under `base`), and template vs LLM on the
     study ids both corpora kept; `notes` says what could not be shown."""
     rows = []
+    notes: list[str] = []
+    other = [r for r in reports if r.get("kind", "effect") != "effect"]
+    if other:   # their C has no per-level direction rows; they are read in their own report.md
+        notes.append(f"{len(other)} reports of other question kinds ({', '.join(sorted({r['kind'] for r in other}))}) "
+                     "left out: the comparison is over effect questions")
+        reports = [r for r in reports if r.get("kind", "effect") == "effect"]
     for report in reports:
         level = corpus_level(report)
         a = _overall((report.get("extraction") or {}).get("rows"), evidence_type="all", level="all")
@@ -284,7 +346,6 @@ def compare(reports: list[dict[str, Any]], base: Path | None = None) -> dict[str
                          "screen_precision": screen.get("precision") if engine else None,
                          "screen_recall": screen.get("recall") if engine else None})
     rows.sort(key=_row_key)
-    notes: list[str] = []
     corpora_of = _corpora(reports, base, notes)
     selection, excluded = selection_rows(reports, corpora_of)
     matched, matched_extraction = matched_pairs(reports, corpora_of, notes)
