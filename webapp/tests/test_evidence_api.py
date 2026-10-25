@@ -222,10 +222,10 @@ def test_agentic_call_drills_down_to_the_agent_trace(ev: TestClient, ev_world: E
 def test_agent_baseline_trace(ev: TestClient) -> None:
     run = ev.get(f"/api/ev/runs/agent-baseline~{MIXED}").json()
     assert run["has_trace"] and run["answer"]["agent"]["exit_status"] == "submitted"
-    trace = ev.get(f"/api/ev/runs/agent-baseline~{MIXED}/trace").json()
+    trace = ev.get(f"/api/ev/runs/agent-baseline~{MIXED}/agent-trace").json()
     assert trace["source"] == "run_dir" and trace["answer"]["rows"]
     assert [c["status"] for c in trace["claims"]] == ["accepted"] and trace["claims"][0]["paper_id"] == "S001"
-    assert ev.get(f"/api/ev/runs/rag-baseline~{MIXED}/trace").status_code == 404
+    assert ev.get(f"/api/ev/runs/rag-baseline~{MIXED}/agent-trace").status_code == 404
 
 
 # --- scores --------------------------------------------------------------------------------------------
@@ -456,7 +456,7 @@ def test_a_symlinked_child_is_skipped_not_a_404(ev_fresh: EvidenceWorld, tmp_pat
         (ev_fresh.agent_work / f"{agent_run}-zzzz").symlink_to(outside, target_is_directory=True)
         (baseline / "agent-runs" / f"{MIXED}-zzzz").symlink_to(outside, target_is_directory=True)
         trace = c.get(f"/api/ev/runs/agentic-gaps~{MIXED}/calls/{agentic['call_id']}/trace/{agent_run}")
-        base = c.get(f"/api/ev/runs/agent-baseline~{MIXED}/trace")
+        base = c.get(f"/api/ev/runs/agent-baseline~{MIXED}/agent-trace")
     assert trace.status_code == 200 and trace.json()["source"] == "run_dir"
     assert base.status_code == 200
 

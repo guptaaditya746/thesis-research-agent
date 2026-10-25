@@ -497,6 +497,28 @@ class CallDetail(Base):
     agent_runs: list[str] = Field([], description="agent run ids behind an agentic call")
 
 
+class TraceRow(Base):
+    """One step of the run trace: a warm-pass model call (calls.jsonl) or an engine event (events.jsonl)."""
+    n: int = Field(description="row number from 1, stable while the run grows; `after` pages by it")
+    phase: Literal["warm", "run"]
+    step: Literal["screen", "locate", "extractor_call", "merge", "completeness", "synthesis", "call"]
+    document: str | None = None
+    evidence_type: str | None = None
+    extractor: str | None = None
+    status: str
+    source: str | None = Field(None, description="cache or fresh")
+    seconds: float | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    call: str | None = Field(None, description="what GET /runs/{run}/calls/{call} takes: a call id (events) or a calls.jsonl key")
+
+
+class TracePage(Base):
+    rows: list[TraceRow]
+    next: int = Field(description="pass as `after` for the following page")
+    done: bool = Field(description="answer.json is written: the run has finished")
+
+
 class AgentTrace(Base):
     run_id: str
     source: Literal["run_dir", "cache"] = Field(description="the agent's own run directory, or the record the "

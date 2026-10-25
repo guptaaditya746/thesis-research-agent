@@ -339,7 +339,7 @@ def mock_paths(world: EvidenceWorld) -> list[str]:
             if detail["kind"] == "engine":
                 paths += [f"/api/ev/runs/{run}/graph"] + ([f"/api/ev/runs/{run}/protocol"] if run == runs[0] else [])
             elif detail["has_trace"]:
-                paths.append(f"/api/ev/runs/{run}/trace")
+                paths.append(f"/api/ev/runs/{run}/agent-trace")
             for doc in detail["documents"][:2 if run == runs[0] else 1]:
                 paths.append(f"/api/ev/runs/{run}/papers/{doc}")
                 calls = client.get(f"/api/ev/runs/{run}/papers/{doc}").json()["calls"]

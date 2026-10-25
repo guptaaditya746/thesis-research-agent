@@ -82,10 +82,12 @@ from .evmodels import (
     Segment,
     ShiftView,
     Study,
+    TracePage,
     TruthAnswer,
     VariantInfo,
 )
 from modelcall.cache import KEY_LINE
+from .evtrace import TraceReader
 from .files import ID, RUN_SEP, Damaged, NotFound, check_id, inside, read_json, read_jsonl, signature
 from .models import Claim, ClaimRef, ModelCall, Step
 from .settings import Settings
@@ -199,6 +201,7 @@ class EvidenceFiles:
     def __init__(self, settings: Settings) -> None:
         self.s = settings
         self.cache = RecordCache()
+        self.trace = TraceReader()
         self._lock = threading.Lock()
         self._memo: dict[Any, tuple[tuple[Any, ...], Any]] = {}
 
@@ -658,11 +661,19 @@ class EvidenceFiles:
             return "no record of this call: re-executed fresh, and a re-execution stores nothing in the cache"
         return None
 
-    def _record(self, run: dict[str, Any], call: CallSummary, result: ExtractionResult) -> dict[str, Any] | None:
-        cache = self._cache_file()
-        if cache is None or self._unrecorded(run, call):
+    def _record(self, run: dict[str, Any], call: CallSummary, result: ExtractionResult,
+                path: Path | None = None) -> dict[str, Any] | None:
+        """The call's model-call record: the run's own copy (calls.jsonl) first, the shared cache second."""
+        if self._unrecorded(run, call):
             return None
-        hit = self.cache.get(cache, cache_key(result.extractor_id, result.task_sha256, call.attempt))
+        key = cache_key(result.extractor_id, result.task_sha256, call.attempt)
+        own = self.trace.call_row(path, key) if path is not None else None
+        if own is not None:
+            return own
+        cache = self._cache_file()
+        if cache is None:
+            return None
+        hit = self.cache.get(cache, key)
         if not isinstance(hit, dict) or hit.get("task_sha256") not in (None, result.task_sha256) \
                 or hit.get("extractor_id") not in (None, result.extractor_id):
             return None
@@ -682,12 +693,46 @@ class EvidenceFiles:
             raise NotFound(f"run {run_id!r} has no call {call_id!r}")
         return path, run, call, ExtractionResult.model_validate(data)
 
+    def run_trace(self, run_id: str, after: int = 0) -> TracePage:
+        path = self.run_dir(run_id)
+        summary = self.run_summary(path)
+        if summary is None or summary.kind != "engine":
+            raise NotFound(f"run {run_id!r} is a baseline: it has no run trace")
+        return self.trace.page(path, max(0, after))
+
+    def _keyed_call(self, run_id: str, key: str) -> CallDetail | None:
+        """A call named by its calls.jsonl key (a warm-pass row, which has no call id yet), from the run's own copy."""
+        path = self.run_dir(run_id)
+        row = self.trace.call_row(path, key)
+        if row is None:
+            return None
+        run = RunDir(path).try_json(RUN_FILE)
+        spec = ((run if isinstance(run, dict) else {}).get("extractor_specs") or {}).get(row.get("extractor_id"))
+        result = ExtractionResult.model_validate(row.get("result") or {})
+        model_calls = row.get("model_calls") or []
+        call = CallSummary(call_id=key, document=str(row.get("document", "")), evidence_type=str(row.get("evidence_type", "")),
+                           extractor_id=str(row.get("extractor_id", "")), kind=(spec or {}).get("kind") if isinstance(spec, dict) else None,
+                           status=str(row.get("status", "")), source=row.get("source"), attempt=int(row.get("attempt") or 0),
+                           items=len(result.items), rejected=len(result.rejected), model_calls=len(model_calls))
+        return self._detail(run_id, call, result, spec, row, model_calls)
+
     def run_call(self, run_id: str, call_id: str) -> CallDetail:
-        path, run, call, result = self._call(run_id, call_id)
-        record = self._record(run, call, result)
+        try:
+            path, run, call, result = self._call(run_id, call_id)
+        except NotFound:
+            detail = self._keyed_call(run_id, check_id(call_id, "call"))
+            if detail is None:
+                raise
+            return detail
+        record = self._record(run, call, result, path)
         spec = (run.get("extractor_specs") or {}).get(result.extractor_id)
+        return self._detail(run_id, call, result, spec, record, (record or {}).get("model_calls") or [],
+                            self._unrecorded(run, call))
+
+    def _detail(self, run_id: str, call: CallSummary, result: ExtractionResult, spec: Any, record: dict[str, Any] | None,
+                records: list[Any], note: str | None = None) -> CallDetail:
         model_calls, agent_runs = [], []
-        for m in (record or {}).get("model_calls") or []:
+        for m in records:
             agent = m.get("agent_run")
             agent_id = agent.get("run_id") if isinstance(agent, dict) else None
             if agent_id and agent_id not in agent_runs:
@@ -701,7 +746,7 @@ class EvidenceFiles:
                           spec=ExtractorSpec.model_validate({k: v for k, v in spec.items() if k in ExtractorSpec.model_fields})
                           if isinstance(spec, dict) else None,
                           task=(record or {}).get("task"), cached=record is not None, model_calls=model_calls,
-                          agent_runs=agent_runs, record_note=self._unrecorded(run, call))
+                          agent_runs=agent_runs, record_note=note)
 
     def call_trace(self, run_id: str, call_id: str, agent_run: str) -> AgentTrace:
         """The trace of one agent run behind an agentic call: its own run directory under $EV_AGENT_WORK (the
@@ -710,7 +755,7 @@ class EvidenceFiles:
         agent_run = check_id(agent_run, "agent run")
         if not any(c.split("/", 1)[0] == agent_run for c in result.model_calls):
             raise NotFound(f"call {call_id} of {run_id} made no agent run {agent_run!r}")
-        record = self._record(run, call, result) or {}
+        record = self._record(run, call, result, path) or {}
         kept = next((m["agent_run"] for m in record.get("model_calls") or []
                      if isinstance(m.get("agent_run"), dict) and m["agent_run"].get("run_id") == agent_run), None)
         root = self.s.agent_work_dir

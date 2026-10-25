@@ -284,6 +284,26 @@ export interface paths {
             cookie?: never;
         };
         /**
+         * Ev Run Trace
+         * @description The live run trace: warm-pass calls, then the engine events, rows numbered from 1; `after` is the last row number held.
+         */
+        get: operations["ev_run_trace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/runs/{run_id}/agent-trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
          * Ev Baseline Trace
          * @description The agent baseline's own run (its agent-runs/ directory).
          */
@@ -3243,6 +3263,66 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** TracePage */
+        TracePage: {
+            /** Rows */
+            rows: components["schemas"]["TraceRow"][];
+            /**
+             * Next
+             * @description pass as `after` for the following page
+             */
+            next: number;
+            /**
+             * Done
+             * @description answer.json is written: the run has finished
+             */
+            done: boolean;
+        };
+        /**
+         * TraceRow
+         * @description One step of the run trace: a warm-pass model call (calls.jsonl) or an engine event (events.jsonl).
+         */
+        TraceRow: {
+            /**
+             * N
+             * @description row number from 1, stable while the run grows; `after` pages by it
+             */
+            n: number;
+            /**
+             * Phase
+             * @enum {string}
+             */
+            phase: "warm" | "run";
+            /**
+             * Step
+             * @enum {string}
+             */
+            step: "screen" | "locate" | "extractor_call" | "merge" | "completeness" | "synthesis" | "call";
+            /** Document */
+            document: string | null;
+            /** Evidence Type */
+            evidence_type: string | null;
+            /** Extractor */
+            extractor: string | null;
+            /** Status */
+            status: string;
+            /**
+             * Source
+             * @description cache or fresh
+             */
+            source: string | null;
+            /** Seconds */
+            seconds: number | null;
+            /** Input Tokens */
+            input_tokens: number | null;
+            /** Output Tokens */
+            output_tokens: number | null;
+            /**
+             * Call
+             * @description what GET /runs/{run}/calls/{call} takes: a call id (events) or a calls.jsonl key
+             */
+            call: string | null;
+        };
         /**
          * TruthAnswer
          * @description ground_truth.json `answer`: the label the corpus is built to have.
@@ -3773,6 +3853,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentTrace"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_run_trace: {
+        parameters: {
+            query?: {
+                after?: number;
+            };
+            header?: never;
+            path: {
+                run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TracePage"];
                 };
             };
             /** @description Validation Error */

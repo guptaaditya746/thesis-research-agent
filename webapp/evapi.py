@@ -29,6 +29,7 @@ from .evmodels import (
     RunPaper,
     ScoresIndex,
     ShiftView,
+    TracePage,
 )
 
 
@@ -101,7 +102,12 @@ def evidence_router(files: EvidenceFiles) -> APIRouter:  # noqa: C901 (one route
     def ev_call_trace(run_id: str, call_id: str, agent_run: str) -> AgentTrace:
         return files.call_trace(run_id, call_id, agent_run)
 
-    @api.get("/runs/{run_id}/trace", response_model=AgentTrace)
+    @api.get("/runs/{run_id}/trace", response_model=TracePage)
+    def ev_run_trace(run_id: str, after: int = 0) -> TracePage:
+        """The live run trace: warm-pass calls, then the engine events, rows numbered from 1; `after` is the last row number held."""
+        return files.run_trace(run_id, after)
+
+    @api.get("/runs/{run_id}/agent-trace", response_model=AgentTrace)
     def ev_baseline_trace(run_id: str) -> AgentTrace:
         """The agent baseline's own run (its agent-runs/ directory)."""
         return files.baseline_trace(run_id)

@@ -133,7 +133,7 @@ export const evApi = {
     getJson<CallDetail>(`/api/ev/runs/${seg(id)}/calls/${seg(call)}`, undefined, signal),
   callTrace: (id: string, call: string, agentRun: string, signal?: AbortSignal) =>
     getJson<AgentTrace>(`/api/ev/runs/${seg(id)}/calls/${seg(call)}/trace/${seg(agentRun)}`, undefined, signal),
-  baselineTrace: (id: string, signal?: AbortSignal) => getJson<AgentTrace>(`/api/ev/runs/${seg(id)}/trace`, undefined, signal),
+  baselineTrace: (id: string, signal?: AbortSignal) => getJson<AgentTrace>(`/api/ev/runs/${seg(id)}/agent-trace`, undefined, signal),
   scores: (signal?: AbortSignal) => getJson<ScoresIndex>("/api/ev/scores", undefined, signal),
   report: (id: string, signal?: AbortSignal) => getJson<ReportView>(`/api/ev/scores/reports/${seg(id)}`, undefined, signal),
   compare: (id: string, signal?: AbortSignal) => getJson<CompareTable>(`/api/ev/scores/compares/${seg(id)}`, undefined, signal),
