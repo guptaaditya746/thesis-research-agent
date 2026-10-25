@@ -482,7 +482,7 @@ class EvidenceFiles:
         return path
 
     @staticmethod
-    def _run_info(path: Path) -> tuple[EvRunSummary, str | None] | None:
+    def _run_info(path: Path, *, count_errors: bool = True) -> tuple[EvRunSummary, str | None] | None:
         """The run's summary from its own files (without the corpus, which depends on the corpora root), and its
         manifest sha256. What an engine run or a baseline is, and when it is complete, is `RunDir.kind` and
         `RunDir.complete`: without a run.json an engine run is incomplete (crashed, or still running)."""
@@ -504,7 +504,9 @@ class EvidenceFiles:
                                 model=settings.get("model"), protocol=run.get("protocol"), corpus_id=run.get("corpus_id"),
                                 label=(answer or {}).get("label") if run else None, counts=counts if run else None,
                                 papers=len((answer or {}).get("studies") or []) or None, cost=run.get("cost"),
-                                error_calls=rd.error_calls()), \
+                                # The listing can contain tens of thousands of per-call JSON files on Ceph.
+                                # Defer this optional badge count for list rows; a selected run computes it below.
+                                error_calls=rd.error_calls() if count_errors else 0), \
                 run.get("manifest_sha256")
         assert answer is not None
         settings = answer.get("settings") or {}
@@ -514,20 +516,30 @@ class EvidenceFiles:
                             corpus_id=answer.get("corpus_id"), label=answer.get("label"), counts=counts,
                             papers=len(answer.get("studies") or []) or None), None
 
-    def run_summary(self, path: Path) -> EvRunSummary | None:
+    def run_summary(self, path: Path, *, count_errors: bool = True,
+                    corpus_index: tuple[dict[str, str], dict[str, str]] | None = None) -> EvRunSummary | None:
         """The cached file part, then the corpus looked up now (the corpora root may have changed since)."""
-        info = self._cached(("run", path), RunDir(path).watched(),
-                            lambda: self._run_info(path))
+        info = self._cached(("run", path, count_errors), RunDir(path).watched(),
+                            lambda: self._run_info(path, count_errors=count_errors))
         if info is None:
             return None
         summary, manifest = info
-        return summary.model_copy(update={"corpus": self.corpus_by(manifest_sha256=manifest, corpus_id=summary.corpus_id)})
+        if corpus_index is None:
+            corpus = self.corpus_by(manifest_sha256=manifest, corpus_id=summary.corpus_id)
+        else:
+            by_manifest, by_id = corpus_index
+            corpus = by_manifest.get(manifest or "") or by_id.get(summary.corpus_id or "")
+        return summary.model_copy(update={"corpus": corpus})
 
     def runs(self) -> list[EvRunSummary]:
+        corpora = self.corpora()
+        corpus_index = ({c.manifest_sha256: c.name for c in corpora}, {c.corpus_id: c.name for c in corpora})
         out = []
         for group in subdirs(self.s.ev_runs_dir):
             for path in subdirs(group):
-                summary = self.run_summary(path)
+                # Resolve corpus links from one index for the whole list. Calling corpus_by() for each run
+                # rescans and re-stats every corpus directory (runs × corpora metadata calls on Ceph).
+                summary = self.run_summary(path, count_errors=False, corpus_index=corpus_index)
                 if summary is not None:
                     out.append(summary)
         return out
