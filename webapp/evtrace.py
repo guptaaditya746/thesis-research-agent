@@ -37,16 +37,17 @@ class _Tail:
     def __init__(self, path: Path, light: Callable[[dict[str, Any], int, int], dict[str, Any] | None]) -> None:
         self.path, self.light = path, light
         self.offset = 0
+        self.head = b""                      # the file's first bytes when last read: a rewritten file changes them
         self.rows: list[dict[str, Any]] = []
 
     def refresh(self) -> list[dict[str, Any]]:
         try:
             size = self.path.stat().st_size
-            if size < self.offset:
-                self.offset, self.rows = 0, []
-            if size == self.offset:
-                return self.rows
             with self.path.open("rb") as fh:
+                if self.offset and (size < self.offset or fh.read(len(self.head)) != self.head):
+                    self.offset, self.head, self.rows = 0, b"", []     # shrunk or rewritten: read again from the start
+                if size == self.offset:
+                    return self.rows
                 fh.seek(self.offset)
                 data = fh.read()
         except OSError:
@@ -64,6 +65,9 @@ class _Tail:
                 self.rows.append(row)
             pos += len(raw)
         self.offset = pos
+        if pos and not self.head:
+            with self.path.open("rb") as fh:
+                self.head = fh.read(min(pos, 64))
         return self.rows
 
 
@@ -85,9 +89,11 @@ def _light_event(event: dict[str, Any], pos: int, size: int) -> dict[str, Any] |
     document = meta.get("document", event.get("group_id"))
     row: dict[str, Any] = {"step": step, "document": str(document) if document is not None else None,
                            "evidence_type": meta.get("evidence_type"), "status": str(event.get("status") or ""),
-                           "source": meta.get("source"), "seconds": _seconds(event.get("started_at"), event.get("ended_at")),
+                           "source": meta.get("source"), "seconds": None,
                            "extractor": meta.get("extractor") or event.get("agent_id"), "call": None, "key": None}
     if step == "extractor_call":
+        # only this event is given its real start (the others default to the time they are written)
+        row["seconds"] = _seconds(event.get("started_at"), event.get("ended_at"))
         row["call"] = event.get("task_id")
         if isinstance(meta.get("task_sha256"), str) and event.get("agent_id"):
             row["key"] = cache_key(event["agent_id"], meta["task_sha256"], int(meta.get("attempt") or 0))

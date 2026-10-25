@@ -47,7 +47,6 @@ def client(tmp_path: Path) -> TestClient:
 def test_trace_pages_with_after(tmp_path: Path) -> None:
     run = make_run(tmp_path)
     put(run / "calls.jsonl", [call_row("k1"), call_row("k2", document="S002")])
-    key = cache_key("llm-1", "ab", 0)
     put(run / "events.jsonl", [event(1, "screen", calls=["t0001"]), event(2, "locate", evidence_type="result"),
                                event(3, "extractor_call", task_sha256="ab", source="cache", evidence_type="result"),
                                event(4, "merge")])
@@ -58,6 +57,8 @@ def test_trace_pages_with_after(tmp_path: Path) -> None:
             ("run", "screen"), ("run", "locate"), ("run", "extractor_call"), ("run", "merge")]
         assert page["rows"][0]["call"] == "k1" and page["rows"][0]["seconds"] == 2.0 and page["rows"][0]["input_tokens"] == 10
         assert page["rows"][2]["call"] == "t0001" and page["rows"][4]["call"] == "t0003"
+        # only an extractor_call event carries a real start; the other steps' times would read ~0
+        assert [r["seconds"] for r in page["rows"][2:]] == [None, None, 1.0, None]
         later = c.get(f"/api/ev/runs/{RUN}/trace", params={"after": 4}).json()
         assert [r["n"] for r in later["rows"]] == [5, 6] and later["next"] == 6
         nothing = c.get(f"/api/ev/runs/{RUN}/trace", params={"after": 6}).json()
@@ -66,7 +67,6 @@ def test_trace_pages_with_after(tmp_path: Path) -> None:
         with (run / "events.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(event(5, "completeness")) + "\n")
         assert [r["step"] for r in c.get(f"/api/ev/runs/{RUN}/trace", params={"after": 6}).json()["rows"]] == ["completeness"]
-    assert key  # the event's key is the one the engine writes
 
 
 def test_trace_run_phase_rows_fill_event_tokens(tmp_path: Path) -> None:
@@ -126,3 +126,14 @@ def test_call_detail_from_run_copy_when_cache_gone(tmp_path: Path) -> None:
         assert by_key["call"]["call_id"] == key and by_key["call"]["document"] == "S001"
         assert by_key["model_calls"][0]["response"]["output"] == "reply" and by_key["result"]["status"] == "ok"
         assert c.get(f"/api/ev/runs/{RUN}/calls/nokey").status_code == 404
+
+
+def test_trace_reads_again_when_the_file_is_rewritten(tmp_path: Path) -> None:
+    run = make_run(tmp_path)
+    put(run / "calls.jsonl", [call_row("k1"), call_row("k2")])
+    with client(tmp_path) as c:
+        assert [r["call"] for r in c.get(f"/api/ev/runs/{RUN}/trace").json()["rows"]] == ["k1", "k2"]
+        put(run / "calls.jsonl", [call_row("x1", document="S009"), call_row("x2"), call_row("x3")])   # longer, other content
+        assert [r["call"] for r in c.get(f"/api/ev/runs/{RUN}/trace").json()["rows"]] == ["x1", "x2", "x3"]
+        put(run / "calls.jsonl", [call_row("y1")])   # shorter
+        assert [r["call"] for r in c.get(f"/api/ev/runs/{RUN}/trace").json()["rows"]] == ["y1"]
