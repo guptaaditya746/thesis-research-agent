@@ -300,6 +300,120 @@
         }
       }
     },
+    "/api/ev/proposals/{name}/check": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Proposal Check",
+        "description": "The deterministic checks of the draft with these decisions applied (no model call).",
+        "operationId": "ev_proposal_check",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ev/proposals/{name}/preview": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Proposal Preview",
+        "description": "One paper's text with the hits of the draft's screen terms, the frame's names and the method kinds.",
+        "operationId": "ev_proposal_preview",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "corpus",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Corpus"
+            }
+          },
+          {
+            "name": "paper",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Paper"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ev/runs": {
       "get": {
         "tags": [
@@ -2494,6 +2608,83 @@
           "message"
         ],
         "title": "Check"
+      },
+      "CheckProblem": {
+        "properties": {
+          "check": {
+            "type": "string",
+            "title": "Check",
+            "description": "a critic check id, or `decision` for a decision cards.validate refuses"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "serious",
+              "advisory"
+            ],
+            "title": "Severity",
+            "description": "serious: freeze refuses it unless a person waives it"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "card": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Card",
+            "description": "the card to look at, when one is the cause"
+          }
+        },
+        "type": "object",
+        "required": [
+          "check",
+          "severity",
+          "message",
+          "card"
+        ],
+        "title": "CheckProblem"
+      },
+      "CheckRequest": {
+        "properties": {
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionEntry"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Decisions",
+            "description": "the decisions as the form holds them now"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decisions"
+        ],
+        "title": "CheckRequest"
+      },
+      "CheckResult": {
+        "properties": {
+          "problems": {
+            "items": {
+              "$ref": "#/components/schemas/CheckProblem"
+            },
+            "type": "array",
+            "title": "Problems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "problems"
+        ],
+        "title": "CheckResult"
       },
       "Citation": {
         "properties": {
@@ -6007,6 +6198,57 @@
           "exact"
         ],
         "title": "Placement"
+      },
+      "PreviewHit": {
+        "properties": {
+          "start": {
+            "type": "integer",
+            "title": "Start"
+          },
+          "end": {
+            "type": "integer",
+            "title": "End"
+          },
+          "card": {
+            "type": "string",
+            "title": "Card",
+            "description": "the card whose terms hit here: screen, roles, metrics or method_kinds"
+          },
+          "what": {
+            "type": "string",
+            "title": "What",
+            "description": "the term or name that hit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "card",
+          "what"
+        ],
+        "title": "PreviewHit"
+      },
+      "PreviewResult": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/PreviewHit"
+            },
+            "type": "array",
+            "title": "Hits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "hits"
+        ],
+        "title": "PreviewResult"
       },
       "ProposalDetail": {
         "properties": {

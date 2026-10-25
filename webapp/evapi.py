@@ -2,17 +2,21 @@
 protocols and proposals, engine and baseline runs (funnel, items with their spans, graph, answer, calls with
 their model records and agent traces), and the scores A/B/C with the baselines beside the engine.
 
-Read-only GETs over the files webapp/evfiles.py reads; nothing here starts a run or calls a model.
+Read-only GETs over the files webapp/evfiles.py reads, and the proposal form's check (a POST that only reads);
+nothing here starts a run or calls a model.
 """
 from __future__ import annotations
 
 from fastapi import APIRouter
 
+from . import evcheck
 from .evfiles import EvidenceFiles
 from .evmodels import (
     AgentTrace,
     BenchmarkView,
     CallDetail,
+    CheckRequest,
+    CheckResult,
     CompareTable,
     CorpusDetail,
     CorpusPaperDetail,
@@ -21,6 +25,7 @@ from .evmodels import (
     EvGraph,
     EvRunDetail,
     EvRunSummary,
+    PreviewResult,
     ProposalDetail,
     ProposalSummary,
     ProtocolEntry,
@@ -71,6 +76,16 @@ def evidence_router(files: EvidenceFiles) -> APIRouter:  # noqa: C901 (one route
     @api.get("/proposals/{name}", response_model=ProposalDetail)
     def ev_proposal(name: str) -> ProposalDetail:
         return files.proposal(name)
+
+    @api.post("/proposals/{name}/check", response_model=CheckResult)
+    def ev_proposal_check(name: str, request: CheckRequest) -> CheckResult:
+        """The deterministic checks of the draft with these decisions applied (no model call)."""
+        return evcheck.check(files, name, request)
+
+    @api.get("/proposals/{name}/preview", response_model=PreviewResult)
+    def ev_proposal_preview(name: str, corpus: str, paper: str) -> PreviewResult:
+        """One paper's text with the hits of the draft's screen terms, the frame's names and the method kinds."""
+        return evcheck.preview(files, name, corpus, paper)
 
     # --- runs --------------------------------------------------------------------------------------
 

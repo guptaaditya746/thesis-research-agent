@@ -26,7 +26,8 @@ def test_critic_passes_the_rag_draft_and_records_the_checklist(tmp_path: Path) -
     assert data["ok"] is True
     assert [c["id"] for c in data["checks"] if c["kind"] == "deterministic"] == [
         "parses", "outcomes_complete", "terms_cover_synonyms", "regex_matches_enums", "screen_present", "label_complete",
-        "extractors_registered", "vocabulary_direction", "bounds_cover_rate_metrics", "metric_rules_collide", "locate_params_used"]
+        "extractors_registered", "vocabulary_direction", "bounds_cover_rate_metrics", "metric_rules_collide", "locate_params_used",
+            "inventory_target_declared", "best_kinds_nonempty", "best_kinds_disjoint", "claim_type_present"]
     assert checks["scope"] == {"id": "scope", "kind": "llm", "ok": False,
                                "message": "the term retrieval admits retrieval-only papers"}
     assert data["call"]["step"] == "critic" and data["call"]["cached"] is False

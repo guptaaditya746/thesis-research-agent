@@ -3,7 +3,7 @@
 Refused (ProposalError, exit 2, nothing written): a missing step; an input changed after a later step read
 it (frame after draft, draft after critic or cards); decisions.yaml failing `cards.validate` (a decision
 without a reason, an unknown choice, ...); a protocol that does not validate as `evidence protocol check`
-validates it; a failing blocking check on the decided protocol (critic.py: `regex_matches_enums`,
+validates it; a failing serious check on the decided protocol (critic.py: `regex_matches_enums`,
 `bounds_cover_rate_metrics`, `metric_rules_collide`, `terms_cover_synonyms` under a screen that rejects on a
 keyword miss) that no person waived in decisions.yaml (`waivers`, cards.waivers); a directory already frozen
 (changes then go through `evidence propose amend`).
@@ -87,9 +87,9 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
 
     final = critic_module.checks(text, f)
     waived = {w["check"] for w in waivers}
-    broken = [c for c in critic_module.blocking_failures(final) if c["id"] not in waived]
+    broken = [c for c in critic_module.serious_failures(final) if c["id"] not in waived]
     if broken:
-        raise ProposalError(f"the decided protocol fails blocking checks {[c['id'] for c in broken]} (fix the "
+        raise ProposalError(f"the decided protocol fails serious checks {[c['id'] for c in broken]} (fix the "
                             "decisions, or waive a check in decisions.yaml `waivers` with your name):\n  "
                             + "\n  ".join(f"{c['id']}: {c['message']}" for c in broken))
     calls = {step: data.get("call") for step, data in

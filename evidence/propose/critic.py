@@ -21,9 +21,10 @@ Deterministic (`checks`, also run by freeze on the frozen protocol):
 - `metric_rules_collide` (ours): no frame name is matched at the same place by rules of two canonicals;
 - `locate_params_used` (ours): an exhaustive locate names no params (it would ignore them).
 
-Each check has a `severity`. `blocking` (freeze refuses the protocol unless a person waives the check in
-decisions.yaml): `regex_matches_enums`, `bounds_cover_rate_metrics`, `metric_rules_collide`, and
-`terms_cover_synonyms` when the screen drops a paper outright on a keyword miss (`on_fail: skip` with
+Each check has a `severity`. `serious` (older critic.json files say `blocking`; freeze refuses the protocol unless a person waives the check in
+decisions.yaml): `regex_matches_enums`, `bounds_cover_rate_metrics`, `metric_rules_collide`, the kind checks
+(`inventory_target_declared`, `best_kinds_nonempty`, `best_kinds_disjoint`, `claim_type_present`, each "not
+applicable" for the other kinds), and `terms_cover_synonyms` when the screen drops a paper outright on a keyword miss (`on_fail: skip` with
 `lexical_miss: reject`, so an uncovered synonym loses papers); every other check is `advisory`.
 
 LLM checklist (`ambiguous_roles`, `missing_comparator`, `metric_direction`, `scope`): pass or fail, each
@@ -51,8 +52,10 @@ from .frame import Frame
 PROMPT = "critic-v1.md"
 DETERMINISTIC = ("parses", "outcomes_complete", "terms_cover_synonyms", "regex_matches_enums", "screen_present",
                  "label_complete", "extractors_registered", "vocabulary_direction", "bounds_cover_rate_metrics",
-                 "metric_rules_collide", "locate_params_used")
-BLOCKING = ("regex_matches_enums", "bounds_cover_rate_metrics", "metric_rules_collide")   # and see `severity`
+                 "metric_rules_collide", "locate_params_used", "inventory_target_declared", "best_kinds_nonempty",
+                 "best_kinds_disjoint", "claim_type_present")
+SERIOUS = ("regex_matches_enums", "bounds_cover_rate_metrics", "metric_rules_collide", "inventory_target_declared",
+           "best_kinds_nonempty", "best_kinds_disjoint", "claim_type_present")   # and see `severity`
 LLM_CHECKS = ("ambiguous_roles", "missing_comparator", "metric_direction", "scope")
 
 
@@ -73,17 +76,21 @@ def _check(cid: str, ok: bool, message: str) -> dict[str, Any]:
 
 
 def severity(cid: str, p: Protocol | None) -> str:
-    """`blocking` or `advisory` (module docstring); terms_cover_synonyms blocks only under a screen that
+    """`serious` or `advisory` (module docstring); terms_cover_synonyms is serious only under a screen that
     drops a paper on a keyword miss."""
-    if cid in BLOCKING:
-        return "blocking"
+    if cid in SERIOUS:
+        return "serious"
     if cid == "terms_cover_synonyms" and p is not None and p.screen is not None:
-        return "blocking" if (p.screen.on_fail, p.screen.lexical_miss) == ("skip", "reject") else "advisory"
+        return "serious" if (p.screen.on_fail, p.screen.lexical_miss) == ("skip", "reject") else "advisory"
     return "advisory"
 
 
-def blocking_failures(found: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [c for c in found if c.get("severity") == "blocking" and not c["ok"]]
+def serious_failures(found: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The failed serious checks; a critic.json from before the rename says `blocking` for `serious`."""
+    return [c for c in found if c.get("severity") in ("serious", "blocking") and not c["ok"]]
+
+
+blocking_failures = serious_failures
 
 
 def _patterns(p: Protocol, name: str, key: str, default: Any) -> Any | None:
@@ -190,6 +197,49 @@ def metric_collisions(p: Protocol, f: Frame) -> list[str]:
     return out
 
 
+def _kind_checks(raw: Any) -> list[dict[str, Any]]:
+    """The four checks of the kind blocks, read from the raw mapping (they hold when the protocol does not parse
+    too); each is `not applicable` for the other kinds."""
+    raw = raw if isinstance(raw, dict) else {}
+    kind = raw.get("kind", "effect")
+    types = raw.get("evidence_types") or {}
+
+    def na(cid: str, want: str) -> dict[str, Any]:
+        return _check(cid, True, f"not applicable: a {kind} protocol (this is for {want})")
+
+    out: list[dict[str, Any]] = []
+    target = (raw.get("inventory") or {}).get("target")
+    if kind == "inventory":
+        out.append(_check("inventory_target_declared", target in types,
+                          f"the inventory lists {target!r}, an evidence type of the protocol" if target in types else
+                          f"inventory.target {target!r} is not a declared evidence type {sorted(types)}"))
+    else:
+        out.append(na("inventory_target_declared", "inventory"))
+    kinds = (raw.get("best") or {}).get("kinds")
+    kinds = kinds if isinstance(kinds, dict) else {}
+    if kind == "best":
+        empty = sorted(str(k) for k, names in kinds.items() if not names)
+        out.append(_check("best_kinds_nonempty", bool(kinds) and not empty,
+                          f"method kinds without a name: {empty}" if empty else "no method kinds" if not kinds
+                          else "every method kind has at least one name"))
+        seen: dict[str, list[str]] = {}
+        for k, names in kinds.items():
+            for n in names or ():
+                seen.setdefault(str(n).casefold(), []).append(str(k))
+        both = {n: ks for n, ks in seen.items() if len(set(ks)) > 1}
+        out.append(_check("best_kinds_disjoint", not both,
+                          "names in two kinds: " + "; ".join(f"{n!r} in {sorted(set(ks))}" for n, ks in both.items())
+                          if both else "no name is in two method kinds"))
+    else:
+        out += [na("best_kinds_nonempty", "best"), na("best_kinds_disjoint", "best")]
+    if kind == "consistency":
+        out.append(_check("claim_type_present", "author_claim" in types, "the protocol extracts author claims"
+                          if "author_claim" in types else "a consistency protocol needs an author_claim evidence type"))
+    else:
+        out.append(na("claim_type_present", "consistency"))
+    return out
+
+
 def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
     """The deterministic checks of a protocol text (and the frame it was made from, when there is one)."""
     out: list[dict[str, Any]] = []
@@ -258,6 +308,7 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
     out.append(_check("locate_params_used", not ignored,
                       f"the exhaustive locate ignores its params {ignored}" if ignored else
                       "the locate params belong to its strategy"))
+    out += _kind_checks(raw)
     return [{**c, "severity": severity(c["id"], p)} for c in out]
 
 
@@ -285,5 +336,5 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
                        refresh=refresh)
     llm = [{"id": c, "kind": "llm", "ok": getattr(reply, c).ok, "message": getattr(reply, c).message} for c in LLM_CHECKS]
     return write_json(directory / CRITIC, {"draft_sha256": sha(draft_path), "frame_sha256": sha(frame_path),
-                                           "ok": not blocking_failures(found), "checks": found + llm,
+                                           "ok": not serious_failures(found), "checks": found + llm,
                                            "call": call, "created": now()})

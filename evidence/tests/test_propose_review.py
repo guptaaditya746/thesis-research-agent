@@ -379,12 +379,13 @@ def test_checks_carry_a_severity(tmp_path: Path) -> None:
     d = flow(tmp_path / "p", Scripted(), until="draft")
     text = (d / "draft.yaml").read_text(encoding="utf-8")
     found = {c["id"]: c["severity"] for c in critic.checks(text, frame.load(d / "frame.json"))}
-    assert {k for k, v in found.items() if v == "blocking"} == {
-        "regex_matches_enums", "bounds_cover_rate_metrics", "metric_rules_collide", "terms_cover_synonyms"}
+    assert {k for k, v in found.items() if v == "serious"} == {
+        "regex_matches_enums", "bounds_cover_rate_metrics", "metric_rules_collide", "terms_cover_synonyms",
+        "inventory_target_declared", "best_kinds_nonempty", "best_kinds_disjoint", "claim_type_present"}   # the last four: n/a for effect
     escalate = text.replace("lexical_miss: reject", "lexical_miss: escalate")
     assert escalate != text
     found = {c["id"]: c["severity"] for c in critic.checks(escalate, frame.load(d / "frame.json"))}
-    assert found["terms_cover_synonyms"] == "advisory" and found["regex_matches_enums"] == "blocking"
+    assert found["terms_cover_synonyms"] == "advisory" and found["regex_matches_enums"] == "serious"
 
 
 def test_critic_ok_counts_only_blocking_checks(tmp_path: Path) -> None:

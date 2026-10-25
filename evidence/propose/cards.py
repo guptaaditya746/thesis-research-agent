@@ -620,6 +620,9 @@ def validate(cards: list[dict[str, Any]], data: Any) -> list[dict[str, Any]]:
     return [seen[c] for c in by_card]
 
 
+MIN_WAIVER_REASON = 10
+
+
 def waivers(data: Any) -> list[dict[str, Any]]:
     """decisions.yaml's `waivers` checked: each {check, reason, by} names a deterministic critic check, gives a
     reason and the person who accepts the failure (never `model`); a ProposalError listing every problem
@@ -641,6 +644,8 @@ def waivers(data: Any) -> list[dict[str, Any]]:
             problems.append(f"{label}: unknown check {check!r} (one of {', '.join(critic_module.DETERMINISTIC)})")
         if not isinstance(reason, str) or not reason.strip():
             problems.append(f"{label}: a waiver without a reason is refused")
+        elif len(reason.strip()) < MIN_WAIVER_REASON:
+            problems.append(f"{label}: the reason must be at least {MIN_WAIVER_REASON} characters (say why it is safe)")
         if not isinstance(who, str) or not who.strip() or is_model(who):
             problems.append(f"{label}: `by` must name the person who accepts the failure, not {who!r}")
         out.append({"check": check, "reason": reason.strip() if isinstance(reason, str) else reason,

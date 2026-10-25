@@ -157,6 +157,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/proposals/{name}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ev Proposal Check
+         * @description The deterministic checks of the draft with these decisions applied (no model call).
+         */
+        post: operations["ev_proposal_check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ev/proposals/{name}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ev Proposal Preview
+         * @description One paper's text with the hits of the draft's screen terms, the frame's names and the method kinds.
+         */
+        get: operations["ev_proposal_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/runs": {
         parameters: {
             query?: never;
@@ -622,6 +662,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/proposals/{name}/kind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Ev Put Kind */
+        put: operations["ev_put_kind"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/jobs/freeze": {
         parameters: {
             query?: never;
@@ -1023,6 +1080,40 @@ export interface components {
             message: string | null;
         } & {
             [key: string]: unknown;
+        };
+        /** CheckProblem */
+        CheckProblem: {
+            /**
+             * Check
+             * @description a critic check id, or `decision` for a decision cards.validate refuses
+             */
+            check: string;
+            /**
+             * Severity
+             * @description serious: freeze refuses it unless a person waives it
+             * @enum {string}
+             */
+            severity: "serious" | "advisory";
+            /** Message */
+            message: string;
+            /**
+             * Card
+             * @description the card to look at, when one is the cause
+             */
+            card: string | null;
+        };
+        /** CheckRequest */
+        CheckRequest: {
+            /**
+             * Decisions
+             * @description the decisions as the form holds them now
+             */
+            decisions: components["schemas"]["DecisionEntry"][];
+        };
+        /** CheckResult */
+        CheckResult: {
+            /** Problems */
+            problems: components["schemas"]["CheckProblem"][];
         };
         /** Citation */
         Citation: {
@@ -2280,6 +2371,23 @@ export interface components {
             pid_start: string | null;
         };
         /**
+         * KindRequest
+         * @description Say which kind of question a proposal asks, instead of the model's guess: the draft, critic and cards
+         *     steps run again from that kind's template (the cards and decisions made so far are dropped).
+         */
+        KindRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "effect" | "inventory" | "consistency" | "best";
+            /**
+             * Model
+             * @default orch-model
+             */
+            model?: string;
+        };
+        /**
          * LabelRow
          * @description One row of the label decision table: every condition in `when` must hold on the counts.
          */
@@ -2415,6 +2523,30 @@ export interface components {
             exact: string;
         } & {
             [key: string]: unknown;
+        };
+        /** PreviewHit */
+        PreviewHit: {
+            /** Start */
+            start: number;
+            /** End */
+            end: number;
+            /**
+             * Card
+             * @description the card whose terms hit here: screen, roles, metrics or method_kinds
+             */
+            card: string;
+            /**
+             * What
+             * @description the term or name that hit
+             */
+            what: string;
+        };
+        /** PreviewResult */
+        PreviewResult: {
+            /** Text */
+            text: string;
+            /** Hits */
+            hits: components["schemas"]["PreviewHit"][];
         };
         /** ProposalDetail */
         ProposalDetail: {
@@ -3661,6 +3793,75 @@ export interface operations {
             };
         };
     };
+    ev_proposal_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_proposal_preview: {
+        parameters: {
+            query: {
+                corpus: string;
+                paper: string;
+            };
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreviewResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     ev_runs: {
         parameters: {
             query?: never;
@@ -4453,6 +4654,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ProposeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_put_kind: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KindRequest"];
             };
         };
         responses: {

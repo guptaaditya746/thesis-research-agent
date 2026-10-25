@@ -761,3 +761,30 @@ class DecisionsResult(Base):
     written: str = Field(description="the decisions.yaml written")
     sha256: str = Field(description="its sha256 now: the base_sha256 of the next PUT")
     problems: list[str] = Field(description="what `evidence propose freeze` would refuse (cards.validate)")
+
+
+class CheckRequest(Request):
+    decisions: list[DecisionEntry] = Field(max_length=50, description="the decisions as the form holds them now")
+
+
+class CheckProblem(Base):
+    check: str = Field(description="a critic check id, or `decision` for a decision cards.validate refuses")
+    severity: Literal["serious", "advisory"] = Field(description="serious: freeze refuses it unless a person waives it")
+    message: str
+    card: str | None = Field(description="the card to look at, when one is the cause")
+
+
+class CheckResult(Base):
+    problems: list[CheckProblem]
+
+
+class PreviewHit(Base):
+    start: int
+    end: int
+    card: str = Field(description="the card whose terms hit here: screen, roles, metrics or method_kinds")
+    what: str = Field(description="the term or name that hit")
+
+
+class PreviewResult(Base):
+    text: str
+    hits: list[PreviewHit]
