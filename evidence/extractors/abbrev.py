@@ -2,7 +2,9 @@
 
 `definitions` finds "Long Form (LF)" and "LF (Long Form)" where the short form's letters are, in order, the
 initials of the long form's words (the parts of a hyphenated word count as words; "of", "the" and similar may
-be left out). The two extractors then find every use of such a short form whose long form names a protocol
+be left out). It also reads phrase definitions ("hallucination rate, abbreviated HR", "the vanilla LLM, denoted
+by the code B", "hereafter CB", "FLA for short"); a one-letter code only with the "code" wording, and a code
+names a condition, never a metric. The two extractors then find every use of such a short form whose long form names a protocol
 term (the terms the regex extractors use, evidence/extractors/terms.py): "FLA" in a table header is the metric
 "fact-level accuracy". The item's name is the long form, its role or canonical comes from the term found in the
 long form, and its spans are on the short forms. A definition anywhere in the document is used inside whatever
@@ -43,6 +45,8 @@ class Definition:
     short: str
     start: int   # the whole definition, "long (short)" or "short (long)", at raw offsets
     end: int
+    subject: bool = False   # `long` is a clause whose term is the name ("The X is prompted ..., and it is denoted B")
+    code: bool = False      # "denoted by the code B": a condition's code, never a metric's short form
 
 
 def _initials(words: list[re.Match[str]], letters: str) -> int | None:
@@ -64,7 +68,8 @@ def _letters(short: str) -> str:
 
 
 def definitions(text: str) -> list[Definition]:
-    """The "Long Form (LF)" and "LF (Long Form)" definitions in `text`, in document order."""
+    """The "Long Form (LF)" and "LF (Long Form)" definitions in `text`, and the phrase definitions ("long form,
+    abbreviated LF", "denoted by the code B", PHRASES), in document order."""
     found: list[Definition] = []
     for m in AFTER_LONG.finditer(text):
         letters = _letters(m.group(1))
@@ -79,7 +84,84 @@ def definitions(text: str) -> list[Definition]:
         words = list(WORD.finditer(long))
         if words and _initials(words, _letters(m.group(1))) == len(words):
             found.append(Definition(long, m.group(1), m.start(), m.end()))
+    found += _phrased(text)
     return sorted(set(found), key=lambda d: (d.start, d.end))
+
+
+# Phrase definitions, as the synthetic "distributed" papers write them (synth/render_llm.py): "<long>, abbreviated
+# HR", "<long> (abbreviated HR)", "<long>, denoted (by its/the code) B", "<long>, hereafter CB", "<long>, or FLA for
+# short". A one-letter short form only with the explicit "code" wording, never as an ordinary letter.
+PHRASES = [
+    re.compile(r"(?:\s*,)?\s*(?:\(\s*)?(?:is\s+)?abbreviated\s+(?:as\s+)?(" + SHORT + r")\b(?:\s*\))?"),
+    re.compile(r"(?:\s*,)?\s*(?:is\s+)?denoted\s+by\s+(?:its|the)\s+code\s+([A-Z][A-Za-z0-9+]{0,7})\b"),
+    re.compile(r"(?:\s*,)?\s*(?:is\s+)?denoted\s+(?:as\s+)?(?!by\b)(" + SHORT + r")\b"),
+    re.compile(r"(?:\s*,)?\s*hereafter\s+(?:called\s+)?(" + SHORT + r")\b"),
+    re.compile(r"(?:\s*,\s*or|\s*\()\s*(" + SHORT + r")\s+for\s+short\b(?:\s*\))?"),
+]
+CLAUSE_START = re.compile(r"[.!?;:\n]\s*")
+# words between the long form and the phrase: "the vanilla LLM, which is denoted"; "and"/"it" mean the phrase
+# speaks of the sentence's subject ("..., and is denoted by its code R")
+TRAILING = re.compile(r"(?i)(?:[\s,(]+|\b(?:which|that|it|is|are|was|and|also)\b)+$")
+CUT = re.compile(r"(?i)^.*(?:,|\(|:|\b(?:is|are|was|with|as|called|on|of|for|reports?|uses?|runs?|measures?|"
+                 r"evaluates?|compares?)\b)\s*")
+LEADING = re.compile(r"(?i)(?:(?:the|a|an|its|our|this)\s+)*(?:(?:metric|measure|outcome|score)\s+)?")
+
+
+def _phrased(text: str) -> list[Definition]:
+    found = []
+    for n, rx in enumerate(PHRASES):
+        for m in rx.finditer(text):
+            cuts = [c.end() for c in CLAUSE_START.finditer(text, max(0, m.start() - 400), m.start())]
+            begin = cuts[-1] if cuts else max(0, m.start() - 400)
+            window = text[begin:m.start()]
+            tail = TRAILING.search(window)
+            head = window[:tail.start()] if tail else window
+            if tail and re.search(r"(?i)\b(?:and|it)\b", tail.group()):
+                found += _subject(text, m, code=n == 1)
+                continue
+            words = list(WORD.finditer(head))[-MAX_WORDS:]
+            taken = _initials(words, _letters(m.group(1))) if words and len(m.group(1)) > 1 else None
+            if taken:   # the short form spells the last words' initials: those words are the long form
+                first = words[len(words) - taken]
+                long, offset = " ".join(head[first.start():words[-1].end()].split()), first.start()
+            else:
+                long, offset = _noun_phrase(head)
+            if long:
+                found.append(Definition(long, m.group(1), begin + offset, m.end(), code=n == 1))
+    return found
+
+
+SENTENCE_START = re.compile(r"[.!?\n]\s*")
+SUBJECT_END = re.compile(r"(?i),\s*which\b|;|,\s*and\b|\band\s+it\b|\bwhich\b")
+
+
+def _subject(text: str, m: re.Match[str], *, code: bool) -> list[Definition]:
+    """"The vanilla LLM is prompted with the question, and it is denoted by the code B": the phrase speaks of the
+    sentence's subject. The long form is the sentence up to its first clause break ("which", "; ", ", and"),
+    marked `subject`: the item takes the term found in it as its name (Abbrev.named)."""
+    cuts = [c.end() for c in SENTENCE_START.finditer(text, max(0, m.start() - 400), m.start())]
+    begin = cuts[-1] if cuts else max(0, m.start() - 400)
+    stop = SUBJECT_END.search(text, begin, m.start())
+    clause = text[begin:stop.start() if stop else m.start()]
+    lead = LEADING.match(clause)
+    start = lead.end() if lead else 0
+    words = list(WORD.finditer(clause, start))[:2 * MAX_WORDS]
+    if not words:
+        return []
+    long = " ".join(clause[start:words[-1].end()].split())
+    return [Definition(long, m.group(1), begin + start, m.end(), subject=True, code=code)]
+
+
+def _noun_phrase(head: str) -> tuple[str, int]:
+    """The noun phrase that ends `head` (after its last comma, verb or bracket, without articles), with its offset."""
+    cut = CUT.match(head)
+    start = cut.end() if cut else 0
+    lead = LEADING.match(head, start)
+    start = lead.end() if lead else start
+    long = head[start:].strip()
+    if not long or len(WORD.findall(long)) > MAX_WORDS or not long[0].isalnum():
+        return "", 0
+    return " ".join(long.split()), start
 
 
 class Abbrev:
@@ -115,9 +197,12 @@ class Abbrev:
         """(long form, short form, term found in the long form) for each definition that names a term."""
         out: dict[tuple[str, str], terms.Mention] = {}
         for d in definitions(text):
+            if d.code and self.evidence_type != "condition":
+                continue   # "denoted by the code R" names a condition, whatever its clause mentions
             mention = self.term(d.long)
             if mention is not None:
-                out.setdefault((" ".join(d.long.split()), d.short), mention)
+                long = mention.text if d.subject else d.long   # a subject clause: the term in it is the name
+                out.setdefault((" ".join(long.split()), d.short), mention)
         return [(long, short, m) for (long, short), m in out.items()]
 
     def term(self, long: str) -> terms.Mention | None:

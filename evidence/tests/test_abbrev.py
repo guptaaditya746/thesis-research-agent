@@ -135,3 +135,85 @@ def test_measure_noun_falls_back_to_other_only_when_the_enum_allows() -> None:
     assert [i.fields["canonical"] for i in extract("abbrev_metric", text, "metric").items] == ["other"]
     schema = {"properties": {"canonical": {"enum": ["factual_accuracy", "hallucination_rate"]}}}
     assert extract("abbrev_metric", text, "metric", {"field_schema": schema}).items == ()
+
+
+# --- phrase definitions ("abbreviated HR", "denoted by the code B"; synth/render_llm.py "distributed") -----
+
+PHRASED = [
+    ("The outcome is the hallucination rate, abbreviated HR, which is the share of answers.",
+     "hallucination rate", "HR"),
+    ("The metric, fact-level accuracy, is abbreviated FLA, and it is the fraction of answers.",
+     "fact-level accuracy", "FLA"),
+    ("Performance is measured with the unsupported-answer rate, abbreviated UAR, which is defined below.",
+     "unsupported-answer rate", "UAR"),
+    ("The measure answer accuracy, abbreviated AA, is the proportion of questions.", "answer accuracy", "AA"),
+    ("We report answer accuracy (abbreviated AA) throughout.", "answer accuracy", "AA"),
+    ("The vanilla LLM, which is denoted by the code B, is prompted with the question.", "vanilla LLM", "B"),
+    ("The fine-tuned model, denoted by its code A2, was trained further.", "fine-tuned model", "A2"),
+    ("The retrieval-augmented generator is denoted by its code R and is given passages.",
+     "retrieval-augmented generator", "R"),
+    ("The no-retrieval baseline, denoted NRB, receives only the question.", "no-retrieval baseline", "NRB"),
+    ("We run the closed-book model, hereafter CB, on every question.", "closed-book model", "CB"),
+    ("We report fact-level accuracy, or FLA for short, on every set.", "fact-level accuracy", "FLA"),
+    ("We report fact-level accuracy (FLA for short) on every set.", "fact-level accuracy", "FLA"),
+]
+
+
+def test_phrase_definitions_found() -> None:
+    for sentence, long, short in PHRASED:
+        assert [(d.long, d.short) for d in definitions(sentence)] == [(long, short)], sentence
+
+
+SUBJECT = [   # "..., and it is denoted by the code R": the sentence's subject; the item is named by its term
+    ("The second condition is the retrieval-augmented generator, which is given the top passages of a dense "
+     "retriever together with the question and is denoted by its code R.", "retrieval-augmented", "R"),
+    ("The vanilla LLM is prompted with the question and nothing else, and it is denoted by the code B.",
+     "vanilla LLM", "B"),
+    ("The RAG pipeline first searches the reference collection and then writes an answer, and it is denoted by "
+     "the code R.", "RAG pipeline", "R"),
+    ("The first condition, the closed-book model, relies on its parametric knowledge alone, and it is denoted "
+     "by its code B.", "closed-book model", "B"),
+]
+
+
+def test_subject_definitions_name_the_term_of_the_sentence_subject() -> None:
+    for sentence, label, short in SUBJECT:
+        [d] = definitions(sentence)
+        assert d.subject and d.code and d.short == short and label in d.long, sentence
+        [item] = extract("abbrev_condition", sentence, "condition").items
+        assert item.fields["label"] == label and [s.selector["exact"] for s in item.spans] == [short], sentence
+
+
+def test_code_definition_never_makes_a_metric() -> None:
+    text = "The retrieval-augmented generator, which improves accuracy, is denoted by the code R. R is good."
+    assert extract("abbrev_metric", text, "metric").items == ()
+
+
+def test_one_letter_short_form_needs_the_code_phrasing() -> None:
+    assert definitions("The no-retrieval baseline, denoted B, receives only the question.") == []
+    assert definitions("The baseline is abbreviated B in the tables.") == []
+    assert definitions("The vanilla LLM is denoted by x in the equations.") == []
+
+
+def test_phrase_definition_span_covers_long_and_short_form() -> None:
+    text = "The outcome is the hallucination rate, abbreviated HR, which is the share of answers."
+    [d] = definitions(text)
+    assert text[d.start:d.end] == "hallucination rate, abbreviated HR"
+
+
+DISTRIBUTED = ("# Grounded Generation\n\n## Method\n\nThe first condition is the vanilla LLM, which is prompted with "
+               "the question and nothing else and is denoted by its code B. The second condition is the "
+               "retrieval-augmented generator, which is given the top passages of a dense retriever together with "
+               "the question and is denoted by its code R. The outcome measure is the hallucination rate, abbreviated "
+               "HR, which is the share of answers with an unsupported statement.\n\n## Results\n\n"
+               "| System | HR (%) |\n| --- | --- |\n| B | 20.2 |\n| R | 6.3 |\n")
+
+
+def test_coded_conditions_and_abbreviated_metric_become_items() -> None:
+    conditions = {i.fields["label"]: i for i in extract("abbrev_condition", DISTRIBUTED, "condition").items}
+    assert {k: v.fields["role"] for k, v in conditions.items()} == {"vanilla LLM": "baseline",
+                                                                     "retrieval-augmented": "rag"}
+    assert [s.selector["exact"] for s in conditions["vanilla LLM"].spans] == ["B", "B"]
+    [metric] = extract("abbrev_metric", DISTRIBUTED, "metric").items
+    assert metric.fields["canonical"] == "hallucination_rate"
+    assert [s.selector["exact"] for s in metric.spans] == ["HR", "HR"]
