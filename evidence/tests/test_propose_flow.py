@@ -13,7 +13,7 @@ from evidence.propose import cards, critic, draft, frame, freeze, vocab
 from evidence.propose.common import ProposalError
 from evidence.protocol import load
 
-from .propose_support import QUESTION, RAG_FRAME, Scripted, comparable, flow, hand_written, query_tokens
+from .propose_support import EFFECT_CARDS, QUESTION, RAG_FRAME, Scripted, comparable, flow, hand_written, query_tokens
 
 
 def _json(path: Path) -> dict:
@@ -40,8 +40,8 @@ def test_rag_question_freezes_to_the_hand_written_protocol(tmp_path: Path) -> No
     assert proposal["vocabulary"] == vocab.load("rag-factuality").ref()
     assert set(proposal["models"]) == {"frame", "critic", "cards"} and proposal["models"]["frame"] == "scripted-propose"
     assert all(len(h) == 64 for h in proposal["prompts"].values())
-    assert proposal["decided_by"] == {"model": list(cards.HANDLERS)}
-    assert [d_["card"] for d_ in proposal["decisions"]] == list(cards.HANDLERS)
+    assert proposal["decided_by"] == {"model": EFFECT_CARDS}
+    assert [d_["card"] for d_ in proposal["decisions"]] == EFFECT_CARDS
     assert all(d_["by"] == "model" and d_["reason"].startswith("default: ") for d_ in proposal["decisions"])
     assert proposal["run_settings"] == {"strategy": "all"}
     assert all(c["ok"] for c in proposal["checks"]), proposal["checks"]
@@ -112,14 +112,14 @@ def test_cards_offer_options_and_prefill_decisions(tmp_path: Path) -> None:
     d = flow(tmp_path / "p", model, until="cards")
     data = _json(d / "cards.json")
     by_id = {c["id"]: c for c in data["cards"]}
-    assert list(by_id) == list(cards.HANDLERS)
+    assert list(by_id) == EFFECT_CARDS
     assert [o["id"] for o in by_id["min_effect"]["options"]] == ["draft", "strict", "lenient"]   # usual = draft
     assert "(= usual" in by_id["min_effect"]["options"][0]["summary"]
     assert {o["id"] for o in by_id["cascade"]["options"]} == {"draft", "gaps", "with_agentic"}
     assert by_id["label"]["default"] == "model" and by_id["label"]["options"][-1]["id"] == "model"
     assert by_id["roles"]["vocabulary"][0]["vocab_id"] == "hand:retrieval_augmented_generation"
     decisions = yaml.safe_load((d / "decisions.yaml").read_text(encoding="utf-8"))["decisions"]
-    assert [x["card"] for x in decisions] == list(cards.HANDLERS)
+    assert [x["card"] for x in decisions] == EFFECT_CARDS
     assert {x["by"] for x in decisions} == {"model"}
     assert next(x for x in decisions if x["card"] == "min_effect")["choice"] == "lenient"
     freeze.run(d)

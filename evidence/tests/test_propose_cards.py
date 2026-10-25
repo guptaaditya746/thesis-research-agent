@@ -64,8 +64,9 @@ def test_chunking_is_no_contradiction_for_bm25() -> None:
                                   "options": [{"id": "bm25", "value": {"strategy": "bm25", "params": {}}}]}]) == []
 
 
-def test_cards_v1_is_kept() -> None:
-    assert (Path(cards.__file__).parent / "prompts" / "cards-v1.md").exists() and cards.PROMPT == "cards-v2.md"
+def test_old_cards_prompts_are_kept() -> None:
+    prompts = Path(cards.__file__).parent / "prompts"
+    assert (prompts / "cards-v1.md").exists() and (prompts / "cards-v2.md").exists() and cards.PROMPT == "cards-v3.md"
 
 
 def test_cascade_all_effect_admits_until_found() -> None:

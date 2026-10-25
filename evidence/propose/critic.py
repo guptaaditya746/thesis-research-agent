@@ -162,6 +162,8 @@ def _regex_enums(p: Protocol) -> tuple[bool, str]:
 def bounds_cover_rate_metrics(p: Protocol, f: Frame) -> tuple[bool, str]:
     """Every rate-like outcome is named by a bound on the measurement value (or the bound has no `when`)."""
     spec = p.evidence_types.get("measurement")
+    if spec is None:
+        return True, "not applicable: the protocol extracts no measurements"
     bounds = [b for b in (spec.bounds if spec else ()) if b.field == "value"]
     covered = {v for b in bounds if b.when for v in b.when.values}
     missing = [o.canonical for o in _extractable(p, f) if rate_like(o) and o.canonical not in covered

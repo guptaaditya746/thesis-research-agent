@@ -38,6 +38,8 @@ RAG_FRAME: dict[str, Any] = {
                       {"value": "worsens", "direction": "contradicts"}],
 }
 
+EFFECT_CARDS = [c["id"] for c in cards.for_kind("effect")]   # an effect proposal's cards, in order
+
 CRITIC_OK = {c: {"ok": True, "message": "fine"} for c in critic.LLM_CHECKS}
 
 

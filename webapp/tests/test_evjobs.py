@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 
 from jsonio import file_sha256
 from evidence.propose import cards as cards_module
-from evidence.tests.propose_support import QUESTION, Scripted, flow
+from evidence.tests.propose_support import EFFECT_CARDS, QUESTION, Scripted, flow
 from webapp import evjobs
 from webapp.app import create_app
 from webapp.settings import REPO, Settings
@@ -462,7 +462,7 @@ def test_decisions_round_trip_through_cards_validate(proposal: Path, world: Evid
         text = (proposal / "decisions.yaml").read_text(encoding="utf-8")
         assert text.startswith(cards_module.HEADER)
         data = yaml.safe_load(text)
-        assert [d["card"] for d in data["decisions"]] == list(cards_module.HANDLERS)
+        assert [d["card"] for d in data["decisions"]] == EFFECT_CARDS
         decided = cards_module.validate(json.loads((proposal / "cards.json").read_text(encoding="utf-8"))["cards"], data)
         by_card = {d["card"]: d for d in decided}
         assert by_card["min_effect"]["value"] == {"min_effect": 0.02} and by_card["min_effect"]["by"] == "aditya"

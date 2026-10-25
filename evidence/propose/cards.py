@@ -22,22 +22,34 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict, get_args
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model, model_validator
 from pydantic_ai.models import Model
 
 from .. import rules
-from ..protocol import LocateStrategy
+from ..protocol import Kind, LocateStrategy
 from . import critic as critic_module, frame as frame_module
 from .common import (CARDS, CRITIC, DECISIONS, DRAFT, FRAME, ProposalError, ask, dump_yaml, fresh, guard,
                      mark_written, model_for, need, now, prompt, read_json, read_yaml, sha, write_json, write_text)
 from .frame import ID, Frame
 
-PROMPT = "cards-v2.md"
+PROMPT = "cards-v3.md"
 CARDS_FILE = Path(__file__).resolve().parent / "cards.yaml"
+PROTOCOLS = Path(__file__).resolve().parent.parent / "protocols"
 CUSTOM, MODEL = "custom", "model"
+
+
+class CardSpec(TypedDict):
+    """A card of cards.yaml: the kinds of question it is asked for, and whether the UI collapses it."""
+    id: str
+    title: str
+    ask: str
+    sets: list[str]
+    kinds: list[str]
+    advanced: bool
+    options: list[dict[str, Any]]
 
 
 def is_model(who: Any) -> bool:
@@ -99,6 +111,31 @@ class LabelValue(Value):
 class CascadeValue(Value):
     extractors: dict[str, list[str]]     # evidence type (or `screen`) -> extractor names in order
     strategy: Literal["all", "gaps"]     # `evidence run --strategy`; recorded in proposal.json, not in the protocol
+
+
+class ClaimCheckValue(Value):
+    by: Literal["direction"]    # the only way a claim is checked so far (protocol.Consistency)
+
+
+class ListTargetValue(Value):
+    target: Literal["metric", "condition", "dataset"]
+
+
+class SameNamesValue(Value):
+    same: dict[str, list[str]]  # a canonical name -> the other names it goes by
+
+
+class BestMetricValue(Value):
+    canonical: str = Field(pattern=ID)
+    higher_is_better: bool
+
+
+class MethodKindsValue(Value):
+    kinds: dict[str, list[str]] = Field(min_length=1)   # a method kind -> the condition names that belong to it
+
+
+class WinRuleValue(PairingValue):
+    pass
 
 
 class LocateValue(Value):
@@ -213,6 +250,67 @@ def _apply_locate(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> 
     p["locate"] = {"strategy": v["strategy"], "params": dict(v["params"])}
 
 
+def _read_claim_check(p: dict[str, Any], f: Frame) -> dict[str, Any]:
+    return {"by": (p.get("consistency") or {}).get("by", "direction")}
+
+
+def _apply_claim_check(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
+    p.setdefault("consistency", {})["by"] = v["by"]
+
+
+INVENTORY_TEMPLATES = {"metric": "inv-metrics", "condition": "inv-methods", "dataset": "inv-datasets"}
+
+
+def _read_list_target(p: dict[str, Any], f: Frame) -> dict[str, Any]:
+    return {"target": p["inventory"]["target"]}
+
+
+def _apply_list_target(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
+    """The target's evidence type must exist, so a new target brings its type (field schema, extractors) from the
+    hand-written inventory protocol of that target; the merged names belong to the old target and go."""
+    if p["inventory"]["target"] == v["target"]:
+        return
+    template = read_yaml(PROTOCOLS / f"{INVENTORY_TEMPLATES[v['target']]}.yaml")
+    p["evidence_types"] = copy.deepcopy(template["evidence_types"])
+    p["inventory"] = {"target": v["target"]}
+
+
+def _read_same_names(p: dict[str, Any], f: Frame) -> dict[str, Any]:
+    return {"same": {k: list(v) for k, v in (p["inventory"].get("same") or {}).items()}}
+
+
+def _apply_same_names(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
+    if v["same"]:
+        p["inventory"]["same"] = {k: list(n) for k, n in v["same"].items()}
+    else:
+        p["inventory"].pop("same", None)
+
+
+def _read_best_metric(p: dict[str, Any], f: Frame) -> dict[str, Any]:
+    return dict(p["best"]["metric"])
+
+
+def _apply_best_metric(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
+    p["best"]["metric"] = dict(v)
+
+
+def _read_method_kinds(p: dict[str, Any], f: Frame) -> dict[str, Any]:
+    return {"kinds": {k: list(n) for k, n in p["best"]["kinds"].items()}}
+
+
+def _apply_method_kinds(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
+    p["best"]["kinds"] = {k: list(n) for k, n in v["kinds"].items()}
+    p["evidence_types"]["condition"]["fields"]["properties"]["kind"]["enum"] = list(v["kinds"])
+
+
+def _read_win_rule(p: dict[str, Any], f: Frame) -> dict[str, Any]:
+    return {"prefer": list((p["best"].get("pairing") or {}).get("prefer", ["table_cell", "document_order"]))}
+
+
+def _apply_win_rule(p: dict[str, Any], v: dict[str, Any], run: dict[str, Any]) -> None:
+    p["best"].setdefault("pairing", {"rule": "same_dataset"})["prefer"] = list(v["prefer"])
+
+
 @dataclass(frozen=True)
 class Handler:
     value: type[Value]
@@ -227,23 +325,40 @@ HANDLERS: dict[str, Handler] = {
     "min_effect": Handler(MinEffectValue, _read_key("min_effect"), _apply_min_effect),
     "pairing": Handler(PairingValue, _read_pairing, _apply_pairing),
     "label": Handler(LabelValue, _read_label, _apply_label),
+    "claim_check": Handler(ClaimCheckValue, _read_claim_check, _apply_claim_check),
+    "list_target": Handler(ListTargetValue, _read_list_target, _apply_list_target),
+    "same_names": Handler(SameNamesValue, _read_same_names, _apply_same_names),
+    "best_metric": Handler(BestMetricValue, _read_best_metric, _apply_best_metric),
+    "method_kinds": Handler(MethodKindsValue, _read_method_kinds, _apply_method_kinds),
+    "win_rule": Handler(WinRuleValue, _read_win_rule, _apply_win_rule),
     "cascade": Handler(CascadeValue, _read_cascade, _apply_cascade),
     "locate": Handler(LocateValue, _read_locate, _apply_locate),
 }
 
 
-def definitions() -> list[dict[str, Any]]:
-    """The fixed cards of cards.yaml, checked against the handlers (same ids, same order)."""
+def definitions() -> list[CardSpec]:
+    """The fixed cards of cards.yaml, checked against the handlers (same ids)."""
     cards = yaml.safe_load(CARDS_FILE.read_text(encoding="utf-8"))
     ids = [c["id"] for c in cards]
-    if ids != list(HANDLERS):
+    if sorted(ids) != sorted(HANDLERS):
         raise AssertionError(f"cards.yaml lists {ids}, the handlers {list(HANDLERS)}")
+    known = set(get_args(Kind))
+    for c in cards:
+        if not c.get("kinds") or not set(c["kinds"]) <= known or not isinstance(c.get("advanced"), bool):
+            raise AssertionError(f"cards.yaml: card {c['id']!r} needs `kinds` (of {sorted(known)}) and `advanced: bool`")
     for c in cards:
         for o in c.get("options", []):
             HANDLERS[c["id"]].value.model_validate(o["value"])
             if not str(o.get("effect", "")).strip():
                 raise AssertionError(f"cards.yaml: option {o['id']!r} of {c['id']!r} has no `effect`")
     return cards
+
+
+def for_kind(kind: str) -> list[CardSpec]:
+    """The cards asked for a question of `kind`: the main ones in file order, then the advanced ones
+    (cascade, locate; the UI collapses them)."""
+    mine = [c for c in definitions() if kind in c["kinds"]]
+    return [c for c in mine if not c["advanced"]] + [c for c in mine if c["advanced"]]
 
 
 def _canon(value: Any) -> str:
@@ -272,6 +387,17 @@ EFFECTS: dict[str, Callable[[dict[str, Any]], str]] = {
                               "the first extractor that finds an item" if v["strategy"] == "all" else
                              "and only a gap (a study without a usable pair) escalates to the next extractor")),
     "locate": lambda v: _locate_effect(v),
+    "claim_check": lambda v: "a study agrees when the direction its authors claim equals the direction of its measured difference",
+    "list_target": lambda v: f"only {v['target']} items are extracted; the answer lists each distinct name",
+    "same_names": lambda v: (f"each canonical name stands for the names listed under it, which count as one entry; "
+                             f"{len(v['same'])} canonical name(s) merge" if v["same"] else
+                             "every distinct name is its own entry in the list"),
+    "best_metric": lambda v: (f"inside each paper the method kind with the {'highest' if v['higher_is_better'] else 'lowest'} "
+                              f"{v['canonical']} wins"),
+    "method_kinds": lambda v: ("conditions are sorted into these method kinds: " + ", ".join(v["kinds"])
+                               + "; a condition named under none is not ranked"),
+    "win_rule": lambda v: ("of several values for one condition, metric and dataset the first of these decides, "
+                           "then the next on a tie: " + ", ".join(v["prefer"])),
 }
 
 
@@ -331,10 +457,12 @@ def evidence(card_id: str, draft: dict[str, Any], f: Frame) -> list[dict[str, An
     return [r for r in rows if r]
 
 
-def reply_model() -> type[BaseModel]:
-    """The schema of the cards call: per card a default (an option id, or `model` with a proposal) and why."""
+def reply_model(kind: str = "effect") -> type[BaseModel]:
+    """The schema of the cards call for a question of `kind`: per card of the kind a default (an option id, or
+    `model` with a proposal) and why."""
     fields: dict[str, Any] = {}
-    for card_id, h in HANDLERS.items():
+    for card_id in (c["id"] for c in for_kind(kind)):
+        h = HANDLERS[card_id]
         name = "".join(w.capitalize() for w in card_id.split("_"))
         fields[card_id] = (create_model(f"{name}Default", default=(str, Field(description="an option id, or model")),
                                         rationale=(str, Field(description="why, in one or two sentences")),
@@ -343,12 +471,12 @@ def reply_model() -> type[BaseModel]:
     return create_model("CardsReply", **fields)
 
 
-CardsReply = reply_model()
+CardsReply = reply_model("effect")
 
 
 def _user_prompt(f: Frame, draft_text: str, critic: dict[str, Any], cards: list[dict[str, Any]]) -> str:
     failed = [f"- {c['id']}: {c['message']}" for c in critic.get("checks", []) if not c["ok"]]
-    parts = [f"Question: {f.question}", "",
+    parts = [f"Question: {f.question}", f"Kind of question: {f.kind}", "",
              "Frame:", json.dumps(f.model_dump(mode="json", exclude={"call", "created", "vocabulary"}), ensure_ascii=False),
              "", "Draft protocol:", draft_text.strip(), "",
              "Critic findings:", *(failed or ["- none"]), "", "Cards:"]
@@ -400,11 +528,11 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
     fresh(directory, DRAFT, critic.get("draft_sha256"), "critic")
     draft_text = draft_path.read_text(encoding="utf-8")
     draft = yaml.safe_load(draft_text)
-    cards = [{**c, "options": options(c, draft, f), "vocabulary": evidence(c["id"], draft, f)} for c in definitions()]
+    cards = [{**c, "options": options(c, draft, f), "vocabulary": evidence(c["id"], draft, f)} for c in for_kind(f.kind)]
     decisions_path = directory / DECISIONS
     guard(directory, DECISIONS, force)
     try:
-        reply, call = ask(directory, "cards", prompt(PROMPT), _user_prompt(f, draft_text, critic, cards), CardsReply,
+        reply, call = ask(directory, "cards", prompt(PROMPT), _user_prompt(f, draft_text, critic, cards), reply_model(f.kind),
                           model=model_for(alias, model), refresh=refresh)
     except ProposalError:
         raise
@@ -445,6 +573,9 @@ def validate(cards: list[dict[str, Any]], data: Any) -> list[dict[str, Any]]:
             problems.append(f"entry {n} is not a mapping")
             continue
         card = by_card.get(str(e.get("card")))
+        if card is None and str(e.get("card")) in HANDLERS:
+            problems.append(f"{e.get('card')}: not a card of this proposal (it belongs to another kind of question)")
+            continue
         if card is None:
             problems.append(f"entry {n}: unknown card {e.get('card')!r}")
             continue
@@ -530,7 +661,8 @@ def apply(draft: dict[str, Any], decisions: list[dict[str, Any]], f: Frame) -> t
     run_settings: dict[str, Any] = {}
     for d in decisions:
         HANDLERS[d["card"]].apply(p, d["value"], run_settings)
-    draft_module.sync_regex(p, f)
+    if "synthesis" in p:   # roles and metrics: an inventory or best protocol has none
+        draft_module.sync_regex(p, f)
     return p, run_settings
 
 
