@@ -1,24 +1,19 @@
 /**
- * Home `/`: select a question (evidence/questions.yaml; never typed) to open its guided flow, the supervisor's
+ * Home `/`: select a question (evidence/questions.yaml) or type your own to open its guided flow, the supervisor's
  * order (STATE.md §1, §4): question → protocol → corpus → run → evidence graph → answer, the
  * baselines beside the engine. Below: what is on disk, the active jobs, and the directories the app reads and
  * its jobs write.
  */
-import { ArrowRightIcon, ListOrderedIcon } from "lucide-react"
-import { Link } from "react-router"
-
-import { isActiveJob, useCorpora, useEvConfig, useEvRuns, useJobs, useQuestions, useScores } from "@/api/ev"
+import { isActiveJob, useCorpora, useEvConfig, useEvRuns, useJobs, useScores } from "@/api/ev"
+import { QuestionStep } from "@/components/flow/QuestionStep"
 import { JobPanel } from "@/components/jobs/JobPanel"
 import { PageHeader } from "@/components/layout/PageHeader"
-import { EmptyState, ErrorState, CardsSkeleton } from "@/components/states"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 export default function HomePage() {
   const config = useEvConfig()
-  const questions = useQuestions()
   const corpora = useCorpora()
   const runs = useEvRuns()
   const scores = useScores()
@@ -26,28 +21,8 @@ export default function HomePage() {
   const active = (jobs.data ?? []).filter(isActiveJob)
   return (
     <div className="space-y-6">
-      <PageHeader title="Evidence-level synthesis" description="Select a question. Its flow goes question → protocol → corpus → run → evidence graph → answer, the baselines beside the engine, and starts each missing step as a job." />
-      <section aria-label="Questions" className="space-y-3">
-        {questions.isPending ? <CardsSkeleton count={1} /> : questions.isError ? <ErrorState error={questions.error} title="The questions file does not validate" /> : questions.data.length === 0 ? (
-          <EmptyState icon={<ListOrderedIcon />} title="No questions" description={`Add one to ${config.data?.questions.path ?? "evidence/questions.yaml"}.`} />
-        ) : questions.data.map((q) => (
-          <Card key={q.id} className="relative">
-            <CardHeader>
-              <CardTitle className="flex flex-wrap items-center gap-2 text-lg text-balance">
-                <Link to={`/flow/${encodeURIComponent(q.id)}`} className="after:absolute after:inset-0 hover:underline">{q.question}</Link>
-                <ArrowRightIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-              </CardTitle>
-              <CardDescription className="flex flex-wrap items-center gap-2">
-                <span className="font-mono">{q.id}</span>
-                <Badge variant="outline">{q.kind}</Badge>
-                {q.protocol ? <Badge variant="secondary">hand-written protocol {q.protocol}</Badge> : <Badge variant="outline">no protocol yet: propose one</Badge>}
-                {q.agentic_protocol && <Badge variant="outline">agentic variant</Badge>}
-                {q.proposals.length > 0 && <Badge variant="outline">{q.proposals.length} proposal(s)</Badge>}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        ))}
-      </section>
+      <PageHeader title="Evidence-level synthesis" description="Select a question or type your own. Its flow goes question → protocol → corpus → run → evidence graph → answer, the baselines beside the engine, and starts each missing step as a job." />
+      <QuestionStep />
       {/* one line once every count is in, not a row of "…" filling in one by one */}
       {corpora.isPending || runs.isPending || scores.isPending ? <Skeleton className="h-5 w-full max-w-2xl" aria-label="Counting what is on disk" /> : (
         <p className="text-sm text-muted-foreground">

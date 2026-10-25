@@ -45,3 +45,6 @@ export function toEntry(card: Card, s: CardState): { entry: DecisionEntry; error
   }
   return { entry, error: null }
 }
+
+/** The cards the agent marks `advanced` (cascade, locate): the form folds them away. */
+export const advancedCard = (card: Card): boolean => card["advanced"] === true

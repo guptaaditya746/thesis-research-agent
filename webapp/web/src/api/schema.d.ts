@@ -1563,6 +1563,12 @@ export interface components {
             /** Decisions */
             decisions: components["schemas"]["DecisionEntry"][];
             /**
+             * Waivers
+             * @description serious problems the person waives; written to decisions.yaml as {check, reason, by: the server's user}
+             * @default []
+             */
+            waivers?: components["schemas"]["WaiverEntry"][];
+            /**
              * Base Sha256
              * @description decisions_sha256 of the proposal as the form loaded it (null: there was no decisions.yaml); refused with 409 if the file changed since
              */
@@ -2678,7 +2684,12 @@ export interface components {
              * Question
              * @description the question's id in the questions file
              */
-            question: string;
+            question?: string | null;
+            /**
+             * Text
+             * @description a question the person typed, instead of one of the questions file
+             */
+            text?: string | null;
             /**
              * Model
              * @default orch-model
@@ -3558,6 +3569,19 @@ export interface components {
             };
         } & {
             [key: string]: unknown;
+        };
+        /** WaiverEntry */
+        WaiverEntry: {
+            /**
+             * Check
+             * @description the critic check id the person accepts as failing
+             */
+            check: string;
+            /**
+             * Reason
+             * @description why it is safe: at least 10 characters (cards.waivers)
+             */
+            reason: string;
         };
     };
     responses: never;

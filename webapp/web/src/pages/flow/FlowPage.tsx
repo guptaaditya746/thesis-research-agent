@@ -5,13 +5,14 @@
  * (components/flow/flow.ts). A step whose input is not chosen yet says which one.
  */
 import { CheckIcon } from "lucide-react"
-import { Link, useParams } from "react-router"
+import { Link, useParams, useSearchParams } from "react-router"
 
-import { useQuestion } from "@/api/ev"
+import { useActiveJobs, useProposal, useQuestion } from "@/api/ev"
 import { QueryPage } from "@/components/ev/bits"
 import { CorpusStep } from "@/components/flow/CorpusStep"
 import { isStep, STEPS, useFlow, type Flow, type StepId } from "@/components/flow/flow"
 import { ProtocolStep } from "@/components/flow/ProtocolStep"
+import { TYPED_FLOW } from "@/components/flow/QuestionStep"
 import { AnswerStep, GraphStep } from "@/components/flow/ResultSteps"
 import { RunStep } from "@/components/flow/RunStep"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -76,9 +77,28 @@ function FlowView({ question, step }: { question: Question; step: StepId }) {
   )
 }
 
+/**
+ * A question the person typed (`/flow/typed/...?proposal=name`): it has no entry in the questions file, so its
+ * question is what the proposal's frame asks and its kind what the frame (or the person) says.
+ */
+function TypedFlow({ step }: { step: StepId }) {
+  const [params] = useSearchParams()
+  const name = params.get("proposal") ?? ""
+  const jobs = useActiveJobs({ proposal: name })
+  const proposal = useProposal(name, jobs.length > 0)
+  const frame = proposal.data?.frame
+  const kind = (["effect", "inventory", "consistency", "best"] as const).find((k) => k === frame?.kind) ?? "effect"
+  const question: Question = {
+    id: TYPED_FLOW, question: typeof frame?.question === "string" ? frame.question : "Your question", kind,
+    protocol: null, agentic_protocol: null, vocab: null, proposals: name ? [name] : [],
+  }
+  return <FlowView question={question} step={step} />
+}
+
 export default function FlowPage() {
   const { qid = "", step } = useParams()
-  const question = useQuestion(qid)
+  const question = useQuestion(qid === TYPED_FLOW ? "" : qid)
+  if (qid === TYPED_FLOW) return <TypedFlow step={isStep(step) ? step : "protocol"} />
   return (
     <QueryPage query={question} what={`question ${qid}`} back={{ to: "/", label: "All questions" }}>
       {(q) => <FlowView question={q} step={isStep(step) ? step : "protocol"} />}

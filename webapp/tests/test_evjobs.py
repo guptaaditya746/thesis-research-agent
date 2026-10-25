@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 
 from jsonio import file_sha256
 from evidence.propose import cards as cards_module
+from evidence.propose import critic as critic_module
 from evidence.tests.propose_support import EFFECT_CARDS, QUESTION, Scripted, flow
 from webapp import evjobs
 from webapp.app import create_app
@@ -570,3 +571,32 @@ def test_template_corpus_regex_run_and_score_through_the_real_commands(tmp_path:
         assert score["state"] == "done", c.get(f"/api/ev/jobs/{score['id']}/log").text
         report = c.get("/api/ev/scores/reports/regex-only~ui-explicit").json()
         assert report["report"]["levels"] == ["explicit"]
+
+
+def test_propose_needs_exactly_one_of_question_and_text(client: TestClient) -> None:
+    for bad in ({"proposal": "p9"}, {"proposal": "p9", "question": "rag-factuality", "text": "a typed question here"},
+                {"proposal": "p9", "text": "short"}):
+        assert client.post("/api/ev/jobs/propose", json=bad).status_code == 422
+
+
+@POSIX_ONLY
+def test_propose_a_typed_question_has_no_vocabulary(client: TestClient, world: EvidenceWorld, tmp_path: Path) -> None:
+    text = "Which retriever is best on long documents?"
+    job = start(client, "propose", {"proposal": "p-typed", "text": text})
+    assert wait(client, job["id"])["state"] == "done"
+    d = world.proposals / "p-typed"
+    assert calls(tmp_path)[0] == [*TOOL, "evidence", "propose", "frame", "--question", text, "--out", str(d),
+                                  "--model", "orch-model"]
+
+
+def test_decisions_write_waivers_and_refuse_a_short_reason(proposal: Path, world: EvidenceWorld) -> None:
+    with TestClient(create_app(Settings(EV=world.root, WEBAPP_USER="aditya"))) as c:  # type: ignore[call-arg]
+        check = next(iter(critic_module.DETERMINISTIC))
+        waiver = {"check": check, "reason": "the screen is deliberately broad here"}
+        ok = c.put("/api/ev/proposals/p1/decisions", json={**body(proposal, entries(proposal)), "waivers": [waiver]})
+        assert ok.status_code == 200
+        assert yaml.safe_load((proposal / "decisions.yaml").read_text(encoding="utf-8"))["waivers"] == [
+            {**waiver, "by": "aditya"}]
+        short = c.put("/api/ev/proposals/p1/decisions",
+                      json={**body(proposal, entries(proposal)), "waivers": [{"check": check, "reason": "too short"}]})
+        assert short.status_code == 400 and "at least 10" in short.json()["detail"]

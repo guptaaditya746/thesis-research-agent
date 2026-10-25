@@ -30,6 +30,8 @@ import { isName, protocolParam } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
 
 import { CardsForm } from "./CardsForm"
+import { KindConfirm } from "./KindConfirm"
+import { TYPED_FLOW } from "./QuestionStep"
 import { protocolLabel, type Flow } from "./flow"
 
 function ChosenProtocol({ protocol }: { protocol: ProtocolRef }) {
@@ -105,6 +107,9 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
   const config = useEvConfig()
   const navigate = useNavigate()
   const p: ProposalDetail | undefined = proposal.data
+  const typed = flow.question.id === TYPED_FLOW   // asked by its text: the frame holds it
+  const frameQuestion = typeof p?.frame?.question === "string" ? p.frame.question : null
+  const kind = String(p?.frame?.kind ?? "effect")
   return (
     <Card>
       <CardHeader>
@@ -123,15 +128,16 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
             <p className="text-muted-foreground">No frame.json in {name} yet{proposal.error instanceof Error ? ` (${proposal.error.message})` : ""}.</p>
           </div>
         )}
-        {p && !p.frozen && !p.steps.includes("cards") && !jobs.length && (
+        {p && !p.frozen && !p.steps.includes("cards") && !jobs.length && (!typed || frameQuestion) && (
           <Button size="sm" variant="outline" disabled={resume.isPending}
-            onClick={() => resume.mutate({ proposal: name, question: flow.question.id, model: config.data?.default_model ?? "orch-model" }, {
+            onClick={() => resume.mutate({ proposal: name, ...(typed ? { text: frameQuestion ?? "" } : { question: flow.question.id }), model: config.data?.default_model ?? "orch-model" }, {
               onSuccess: (job) => announceJob(job, navigate), onError: (e) => announceError("Resume failed", e),
             })}>
             <PlayIcon data-icon="inline-start" />
             Resume from the first missing step
           </Button>
         )}
+        {p?.frame && p.steps.includes("frame") && <KindConfirm proposal={p} />}
         {p?.frame && (
           <details>
             <summary className="cursor-pointer text-sm font-medium">Frame</summary>
@@ -144,7 +150,7 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
             <div className="mt-2"><CriticChecks checks={p.checks} /></div>
           </details>
         )}
-        {p && p.steps.includes("cards") && !p.frozen && <CardsForm key={`${p.name}-${loaded}`} proposal={p}
+        {p && p.steps.includes("cards") && !p.frozen && <CardsForm key={`${p.name}-${kind}-${loaded}`} proposal={p}
           onReload={() => void proposal.refetch().then(() => setLoaded((n) => n + 1))} />}
         {p?.frozen && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -193,7 +199,7 @@ export function ProtocolStep({ flow }: { flow: Flow }) {
         </CardContent>
       </Card>
       {flow.proposal && <Workbench flow={flow} name={flow.proposal} />}
-      <Card>
+      {q.id !== TYPED_FLOW && <Card>
         <CardHeader>
           <CardTitle className="text-base">Propose a protocol</CardTitle>
           <CardDescription>
@@ -203,7 +209,7 @@ export function ProtocolStep({ flow }: { flow: Flow }) {
           </CardDescription>
         </CardHeader>
         <CardContent><ProposeForm flow={flow} /></CardContent>
-      </Card>
+      </Card>}
       {flow.protocol && (
         <section className="space-y-2" aria-label="Chosen protocol">
           <h2 className="text-base font-semibold">{protocolLabel(flow.protocol)}</h2>

@@ -84,6 +84,12 @@ export type FreezeRequest = S["FreezeRequest"]
 export type DecisionEntry = S["DecisionEntry"]
 export type DecisionsRequest = S["DecisionsRequest"]
 export type DecisionsResult = S["DecisionsResult"]
+export type WaiverEntry = S["WaiverEntry"]
+export type KindRequest = S["KindRequest"]
+export type CheckProblem = S["CheckProblem"]
+export type CheckResult = S["CheckResult"]
+export type PreviewResult = S["PreviewResult"]
+export type PreviewHit = S["PreviewHit"]
 
 /** The effect directions of answer.json and ground_truth.json (evidence/rules.py DIRECTIONS + undetermined). */
 export type Direction = "supports" | "contradicts" | "neutral" | "undetermined"
@@ -148,6 +154,11 @@ export const evApi = {
   jobLog: (id: string, lines = 200, signal?: AbortSignal) => getText(`/api/ev/jobs/${seg(id)}/log`, { lines }, signal),
   cancelJob: (id: string) => postJson<Job>(`/api/ev/jobs/${seg(id)}/cancel`, {}),
   startJob: <K extends JobKind>(kind: K, body: JobRequests[K]) => postJson<Job>(`/api/ev/jobs/${kind}`, body),
+  putKind: (proposal: string, body: KindRequest) => putJson<Job>(`/api/ev/proposals/${seg(proposal)}/kind`, body),
+  checkProposal: (proposal: string, decisions: DecisionEntry[]) =>
+    postJson<CheckResult>(`/api/ev/proposals/${seg(proposal)}/check`, { decisions }),
+  preview: (proposal: string, corpus: string, paper: string, signal?: AbortSignal) =>
+    getJson<PreviewResult>(`/api/ev/proposals/${seg(proposal)}/preview`, { corpus, paper }, signal),
   putDecisions: (proposal: string, body: DecisionsRequest) =>
     putJson<DecisionsResult>(`/api/ev/proposals/${seg(proposal)}/decisions`, body),
 }
@@ -188,6 +199,9 @@ export const useProtocols = () => useEv(["protocols"], (s) => evApi.protocols(s)
 export const useProtocol = (name: string) => useEv(["protocols", name], (s) => evApi.protocol(name, s), !!name)
 export const useProposals = (live = false) => useEv(["proposals"], (s) => evApi.proposals(s), true, live)
 export const useProposal = (name: string, live = false) => useEv(["proposals", name], (s) => evApi.proposal(name, s), !!name, live)
+export const usePreview = (proposal: string, corpus: string | null, paper: string | null) =>
+  useEv(["proposals", proposal, "preview", corpus ?? "", paper ?? ""], (s) => evApi.preview(proposal, corpus ?? "", paper ?? "", s),
+    !!proposal && !!corpus && !!paper)
 export const useEvRuns = (live = false) => useEv(["runs"], (s) => evApi.runs(s), true, live)
 export const useEvRun = (id: string, live = false) => useEv(["runs", id], (s) => evApi.run(id, s), !!id, live)
 export const useRunPaper = (id: string, doc: string | null, live = false) =>
@@ -289,5 +303,18 @@ export function usePutDecisions(proposal: string) {
   return useMutation({
     mutationFn: (body: DecisionsRequest) => evApi.putDecisions(proposal, body),
     onSuccess: () => void client.invalidateQueries({ queryKey: evKeys.of("proposals", proposal) }),
+  })
+}
+
+/** Say which kind a proposal asks: starts the job that drafts, checks and makes the cards again from that kind. */
+export function usePutKind(proposal: string) {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: KindRequest) => evApi.putKind(proposal, body),
+    onSuccess: (job) => {
+      client.setQueryData<Job[]>(evKeys.jobs, (old) => [job, ...(old ?? []).filter((j) => j.id !== job.id)])
+      void client.invalidateQueries({ queryKey: evKeys.jobs })
+      void client.invalidateQueries({ queryKey: evKeys.of("proposals", proposal) })
+    },
   })
 }

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Discriminator, Field, Tag, TypeAdapter, model_validator
 
 from evidence.contract import ExtractionResult, ExtractorSpec, Item
 from evidence.protocol import Kind, Protocol
@@ -725,8 +725,16 @@ class ProposeRequest(Request):
     """The proposal flow's frame, draft, critic and cards steps into `$EV/proposals/<proposal>` (resumed from the
     first step whose file is missing)."""
     proposal: Name
-    question: Name = Field(description="the question's id in the questions file")
+    question: Name | None = Field(None, description="the question's id in the questions file")
+    text: str | None = Field(None, min_length=10, max_length=600,
+                             description="a question the person typed, instead of one of the questions file")
     model: str = Field("orch-model", pattern=MODEL)
+
+    @model_validator(mode="after")
+    def one_question(self) -> "ProposeRequest":
+        if (self.question is None) == (self.text is None):
+            raise ValueError("give either `question` (an id of the questions file) or `text` (a typed question)")
+        return self
 
 
 class FreezeRequest(Request):
@@ -750,8 +758,15 @@ class DecisionEntry(Request):
                                 "in the app), or the name decisions.yaml already has for this card (kept as it is)")
 
 
+class WaiverEntry(Request):
+    check: Name = Field(description="the critic check id the person accepts as failing")
+    reason: str = Field(max_length=4000, description="why it is safe: at least 10 characters (cards.waivers)")
+
+
 class DecisionsRequest(Request):
     decisions: list[DecisionEntry] = Field(max_length=50)
+    waivers: list[WaiverEntry] = Field([], max_length=20, description="serious problems the person waives; written to "
+                                       "decisions.yaml as {check, reason, by: the server's user}")
     base_sha256: str | None = Field(description="decisions_sha256 of the proposal as the form loaded it (null: there "
                                                 "was no decisions.yaml); refused with 409 if the file changed since")
     force: bool = Field(False, description="write even though decisions.yaml changed since it was loaded")

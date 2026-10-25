@@ -7,7 +7,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest"
 import { evApi, type DecisionsRequest, type EvRunDetail, type JobRequests } from "@/api/ev"
 import { routes } from "@/app/routes"
 import { evFixture } from "@/mocks/ev"
-import { finishJob, mockGateway, unfrozenProposal } from "@/mocks/handlers"
+import { finishJob, mockCheck, mockGateway, unfrozenProposal } from "@/mocks/handlers"
 import { server } from "@/mocks/node"
 import { renderRoutes } from "@/test/render"
 
@@ -313,5 +313,122 @@ describe("the Jobs page", () => {
     await user.click(within(panels[0]).getByRole("button", { name: "Cancel" }))
     await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Cancel job" }))
     await waitFor(() => expect(within(table).getByText(/cancelled/)).toBeInTheDocument(), T)
+  })
+})
+
+describe("the question-first flow", () => {
+  const SERIOUS = { check: "screen_terms", severity: "serious", message: "no screen term appears in any paper", card: "screen" } as const
+  const ADVISORY = { check: "metric_names", severity: "advisory", message: "one metric has no synonym", card: "metrics" } as const
+
+  async function openProposal(kind?: "inventory") {
+    const job = await evApi.startJob("propose", { proposal: "p1", question: "rag-factuality" })
+    finishJob(job.id)
+    if (kind) {
+      const k = await evApi.putKind("p1", { kind })
+      finishJob(k.id)
+    }
+    return renderRoutes(routes, "/flow/rag-factuality/protocol?proposal=p1")
+  }
+
+  it("typed question starts propose job", async () => {
+    const user = userEvent.setup()
+    const bodies = recordJobs()
+    const { router } = renderRoutes(routes, "/")
+    const form = await screen.findByRole("form", { name: "Your own question" }, T)
+    const send = within(form).getByRole("button", { name: "Propose a protocol" })
+    expect(send).toBeDisabled()   // too short to be a question
+    await user.type(within(form).getByLabelText("Question"), "Which retriever is best on long documents?")
+    await user.click(send)
+    await waitFor(() => expect(bodies).toEqual([{ kind: "propose", body: { proposal: "typed-p1", text: "Which retriever is best on long documents?", model: "orch-model" } }]))
+    await waitFor(() => expect(router.state.location.pathname).toBe("/flow/typed/protocol"))
+    expect(new URLSearchParams(router.state.location.search).get("proposal")).toBe("typed-p1")
+    expect(await screen.findByLabelText("Job proposal typed-p1", {}, T)).toBeInTheDocument()
+  })
+
+  it("kind change reloads cards", async () => {
+    const user = userEvent.setup()
+    const kinds: unknown[] = []
+    server.events.on("request:start", async ({ request }) => {
+      if (request.method === "PUT" && request.url.endsWith("/kind")) kinds.push(await request.clone().json())
+    })
+    await openProposal()
+    expect(await screen.findByRole("group", { name: /Pairing preference/ }, T)).toBeInTheDocument()
+    const confirm = screen.getByRole("region", { name: "Kind of question" })
+    expect(within(confirm).getByText(/The model reads this as an effect question/)).toBeInTheDocument()
+    await choose(user, "Kind", /inventory/)
+    await user.click(within(confirm).getByRole("button", { name: "Use this kind" }))
+    await waitFor(() => expect(kinds).toEqual([{ kind: "inventory", model: "orch-model" }]))
+    expect(await screen.findByLabelText(/Job proposal p1/, {}, T)).toBeInTheDocument()
+    expect(screen.queryByRole("group", { name: /Pairing preference/ })).toBeNull()   // the old cards are gone while it drafts again
+    finishJob((await evApi.jobs())[0].id)
+    expect(await screen.findByText(/You said this is an inventory question/, {}, T)).toBeInTheDocument()
+    expect(await screen.findByRole("group", { name: /Smallest effect that counts/ }, T)).toBeInTheDocument()
+    expect(screen.queryByRole("group", { name: /Pairing preference/ })).toBeNull()   // the inventory card set has no pairing card
+  })
+
+  it("keeps the advanced cards collapsed and shows the checker's problems, advisory ones apart", async () => {
+    mockCheck.problems = [SERIOUS, ADVISORY]
+    await openProposal()
+    const advanced = (await screen.findByText(/Advanced cards/, {}, T)).closest("details")!
+    expect(advanced).not.toHaveAttribute("open")
+    expect(within(advanced).getByRole("group", { name: /cascade/i, hidden: true })).toBeInTheDocument()
+    const panel = await screen.findByRole("region", { name: "Checker" }, T)
+    expect(await within(panel).findByText(/no screen term appears in any paper/, {}, T)).toBeInTheDocument()
+    expect(within(panel).getByText("must be fixed or waived")).toBeInTheDocument()
+    expect(within(panel).getByText(/one metric has no synonym/)).toBeInTheDocument()
+    expect(within(panel).getByText("worth a look")).toBeInTheDocument()
+  })
+
+  it("serious problem blocks freeze until waiver reason", async () => {
+    const user = userEvent.setup()
+    mockCheck.problems = [SERIOUS, ADVISORY]
+    const puts: DecisionsRequest[] = []
+    server.events.on("request:start", async ({ request }) => {
+      if (request.method === "PUT") puts.push((await request.clone().json()) as DecisionsRequest)
+    })
+    const bodies = recordJobs()
+    await openProposal()
+    const panel = await screen.findByRole("region", { name: "Checker" }, T)
+    await within(panel).findByText(/no screen term appears/, {}, T)
+    await user.click(screen.getByRole("button", { name: "Save decisions" }))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Freeze" })).toBeEnabled())
+    await user.click(screen.getByRole("button", { name: "Freeze" }))
+    const dialog = await screen.findByRole("dialog", { name: /Waive/ }, T)
+    expect(within(dialog).getByText(/no screen term appears in any paper/)).toBeInTheDocument()
+    expect(within(dialog).queryByText(/one metric has no synonym/)).toBeNull()   // advisory problems need no waiver
+    const go = within(dialog).getByRole("button", { name: "Waive and freeze" })
+    expect(go).toBeDisabled()
+    const reason = within(dialog).getByLabelText("Reason for waiving screen_terms")
+    await user.type(reason, "too short")   // 9 characters
+    expect(go).toBeDisabled()
+    expect(reason).toHaveAccessibleDescription(/at least 10 characters/)
+    await user.type(reason, "!")
+    await waitFor(() => expect(go).toBeEnabled())
+    await user.click(go)
+    await waitFor(() => expect(bodies.at(-1)).toEqual({ kind: "freeze", body: { proposal: "p1" } }))
+    expect(puts.at(-1)?.waivers).toEqual([{ check: "screen_terms", reason: "too short!" }])
+  })
+
+  it("a proposal with no serious problem freezes without the waiver dialog", async () => {
+    const user = userEvent.setup()
+    mockCheck.problems = [ADVISORY]
+    await openProposal()
+    await screen.findByRole("group", { name: /Smallest effect that counts/ }, T)
+    await user.click(screen.getByRole("button", { name: "Save decisions" }))
+    await waitFor(() => expect(screen.getByRole("button", { name: "Freeze" })).toBeEnabled())
+    await user.click(screen.getByRole("button", { name: "Freeze" }))
+    expect(await screen.findByRole("alertdialog")).toBeInTheDocument()
+    expect(screen.queryByRole("dialog", { name: /Waive/ })).toBeNull()
+  })
+
+  it("preview highlights hits", async () => {
+    const user = userEvent.setup()
+    await openProposal()
+    const panel = await screen.findByRole("region", { name: "Paper preview" }, T)
+    await choose(user, "Corpus", MIXED)
+    await choose(user, "Paper", /S001/)
+    const hit = await within(panel).findByText("Retrieval", { selector: "mark" }, T)
+    expect(hit).toHaveAttribute("title", "screen: Retrieval")
+    expect(panel).toHaveTextContent("Paper S001. Retrieval raised accuracy in this study.")
   })
 })

@@ -22,8 +22,10 @@ import type {
   DecisionsRequest,
   Job,
   JobKind,
+  KindRequest,
   JobRequests,
   ProposalDetail,
+  CheckProblem,
   ProposalSummary,
   Question,
 } from "@/api/ev"
@@ -39,6 +41,8 @@ interface Db {
   proposals: Record<string, ProposalDetail>
   runs: Set<string>
   corpora: Set<string>
+  /** the waivers each proposal's decisions.yaml holds, by check */
+  waivers: Record<string, Record<string, string>>
 }
 
 const fixture = <T,>(path: string) => structuredClone(EV_FIXTURES[path]) as T
@@ -53,7 +57,7 @@ const groupKeyOf = (r: { protocol: { source: string; name: string }; extractors?
 function initialDb(): Db {
   const runs = fixture<{ id: string }[]>("/api/ev/runs").map((r) => r.id)
   const corpora = fixture<{ name: string }[]>("/api/ev/corpora").map((c) => c.name)
-  return { jobs: [], logs: {}, proposals: {}, runs: new Set(runs), corpora: new Set(corpora) }
+  return { jobs: [], logs: {}, proposals: {}, runs: new Set(runs), corpora: new Set(corpora), waivers: {} }
 }
 
 let db: Db = initialDb()
@@ -61,6 +65,7 @@ let db: Db = initialDb()
 export function resetDb() {
   db = initialDb()
   mockGateway.ok = true
+  mockCheck.problems = []
   for (const t of timers) clearTimeout(t)
   timers.clear()
 }
@@ -69,6 +74,8 @@ export function resetDb() {
 export const timing: { jobMs: number | null } = { jobMs: 3_000 }
 /** ok false: the backend refuses model jobs (no key or no gateway), as webapp/evjobs.py need_gateway does. */
 export const mockGateway = { ok: true }
+/** What POST /proposals/{name}/check answers (the backend's CheckResult): the tests set the problems. */
+export const mockCheck: { problems: CheckProblem[] } = { problems: [] }
 const timers = new Set<ReturnType<typeof setTimeout>>()
 
 const now = () => new Date().toISOString()
@@ -80,13 +87,16 @@ const frozen = (name: string) => conflict(`proposal ${name} is frozen; change it
 const valueModel = (card: string) => `${card.replace(/(^|_)([a-z])/g, (_, __, c: string) => c.toUpperCase())}Value`
 
 /** An unfrozen proposal made from the fixtures' frozen one: decisions back to the model's defaults. */
-export function unfrozenProposal(name: string): ProposalDetail {
+export function unfrozenProposal(name: string, kind: KindRequest["kind"] = "effect"): ProposalDetail {
   const p = fixture<ProposalDetail>(`/api/ev/proposals/${FROZEN}`)
+  // a kind's own card set (evidence/propose/cards.yaml): the effect cards all; the others without pairing and label;
+  // cascade and locate are the advanced cards of every kind
+  const mine = p.cards.filter((c) => kind === "effect" || !["pairing", "label"].includes(c.id))
   return {
-    ...p, name, frozen: false, revision: null, protocol_sha256: null, decided_by: {}, amendments: 0, proposal: null, protocol: null,
+    ...p, name, frame: { ...p.frame, kind, kind_by: "model" }, frozen: false, revision: null, protocol_sha256: null, decided_by: {}, amendments: 0, proposal: null, protocol: null,
     revisions: [], amendment_log: [], decision_problems: [], decisions_sha256: "sha-0", steps: ["frame", "draft", "critic", "cards"],
-    cards: p.cards.map((c) => ({
-      ...c, problems: [], raw_decision: null,
+    cards: mine.map((c) => ({
+      ...c, advanced: ["cascade", "locate"].includes(c.id), kinds: [kind], problems: [], raw_decision: null,
       decision: { card: c.id, choice: c.default ?? "draft", reason: `default: ${c.rationale ?? ""}`, by: "model", value: null, default: c.default },
     })),
   }
@@ -147,6 +157,7 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
     case "compare": return { score: (body as JobRequests["compare"]).name }
     case "propose": {
       const b = body as JobRequests["propose"]
+      if (!b.question === !b.text) return invalid("give either `question` or `text`", ["question"])
       if (b.proposal === FROZEN || db.proposals[b.proposal]?.frozen) return frozen(b.proposal)
       if (db.proposals[b.proposal]) return conflict(`proposal ${b.proposal} has its cards: decide them and freeze it`)
       return { proposal: b.proposal }
@@ -157,6 +168,8 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
       if (!p) return conflict(`proposal ${name} has no cards yet (run the proposal flow first)`)
       if (p.frozen) return frozen(name)
       if (p.decision_problems.length) return conflict(`decisions.yaml refused:\n  ${p.decision_problems.join("\n  ")}`)
+      const unwaived = mockCheck.problems.filter((x) => x.severity === "serious" && x.check !== "decision" && !db.waivers[name]?.[x.check])
+      if (unwaived.length) return conflict(`decisions.yaml refused:\n  ${unwaived.map((x) => `${x.check}: ${x.message} (waive it in decisions.yaml)`).join("\n  ")}`)
       return { proposal: name }
     }
   }
@@ -180,7 +193,12 @@ export function finishJob(id: string, state: "done" | "failed" = "done", failedC
   if (state !== "done") return
   if (job.refs.run) db.runs.add(job.refs.run)
   if (job.kind === "synth") for (const l of [...((job.args.levels as string[]) ?? []), "mixed"]) db.corpora.add(`${job.refs.corpus_set}-${l}`)
-  if (job.kind === "propose") db.proposals[job.refs.proposal] = unfrozenProposal(job.refs.proposal)
+  if (job.kind === "propose") {
+    const made = unfrozenProposal(job.refs.proposal, (job.args.kind as KindRequest["kind"] | undefined) ?? "effect")
+    // a typed question is what the frame asks, and stays so when the kind is changed
+    const typed = (job.args.text as string | undefined) ?? (db.proposals[job.refs.proposal]?.question || undefined)
+    db.proposals[job.refs.proposal] = typed ? { ...made, question: typed, frame: { ...made.frame, question: typed } } : made
+  }
   if (job.kind === "freeze") {
     const p = db.proposals[job.refs.proposal]
     p.frozen = true
@@ -201,6 +219,10 @@ function submit<K extends JobKind>(kind: K, body: JobRequests[K]): Response {
   const active = db.jobs.find((j) => (j.state === "queued" || j.state === "running") && busy.some(([k, v]) => j.refs[k] === v))
   const [ref, value] = busy.find(([k, v]) => active?.refs[k] === v) ?? []
   if (active) return conflict(`job ${active.id} (${active.kind}) is ${active.state} on ${ref} ${value}; wait for it or cancel it`)
+  return makeJob(kind, body, refs)
+}
+
+function makeJob<K extends JobKind>(kind: K, body: JobRequests[K] | Record<string, unknown>, refs: Record<string, string>): Response {
   const id = `20261018T120000-${kind}-${(db.jobs.length + 1).toString(16).padStart(6, "0")}`
   const argv = ["python", "-m", "webapp.tool", kind, ...Object.entries(body).flatMap(([k, v]) => [`--${k}`, typeof v === "object" ? JSON.stringify(v) : String(v)])]
   const job: Job = {
@@ -238,6 +260,27 @@ export const handlers = [
     const p = db.proposals[String(params.name)]
     return p ? HttpResponse.json(p) : undefined   // the fixtures answer the rest
   }),
+  http.post("/api/ev/proposals/:name/check", ({ params }) =>
+    db.proposals[String(params.name)] ? HttpResponse.json({ problems: mockCheck.problems }) : undefined),
+  http.get("/api/ev/proposals/:name/preview", ({ params, request }) => {
+    const q = new URL(request.url).searchParams
+    if (!db.proposals[String(params.name)]) return undefined
+    const text = `Paper ${q.get("paper")}. Retrieval raised accuracy in this study.`
+    const start = text.indexOf("Retrieval")
+    return HttpResponse.json({ text, hits: [{ start, end: start + "Retrieval".length, card: "screen", what: "Retrieval" }] })
+  }),
+  http.put("/api/ev/proposals/:name/kind", async ({ params, request }) => {
+    const p = db.proposals[String(params.name)]
+    if (!p) return notFound(`proposal ${String(params.name)} has no frame yet (run the proposal flow first)`)
+    if (p.frozen) return frozen(p.name)
+    const body = (await request.json()) as KindRequest
+    const active = db.jobs.find((j) => (j.state === "queued" || j.state === "running") && j.refs.proposal === p.name)
+    if (active) return conflict(`job ${active.id} (${active.kind}) is ${active.state} on proposal ${p.name}; wait for it or cancel it`)
+    p.frame = { ...p.frame, kind: body.kind, kind_by: "user" }
+    p.steps = ["frame"]
+    p.cards = []
+    return makeJob("propose", { proposal: p.name, kind: body.kind, model: body.model ?? "orch-model" }, { proposal: p.name })
+  }),
   http.put("/api/ev/proposals/:name/decisions", async ({ params, request }) => {
     const p = db.proposals[String(params.name)]
     if (!p) return conflict(`proposal ${String(params.name)} has no cards yet (run the proposal flow first)`)
@@ -245,6 +288,8 @@ export const handlers = [
     const body = (await request.json()) as DecisionsRequest
     if (body.base_sha256 !== p.decisions_sha256 && !body.force) return conflict("decisions.yaml changed since the form loaded it (edited by hand or in another tab): reload to see it, or overwrite it")
     const problems = decisionProblems(p.cards, body.decisions)
+    db.waivers[p.name] = Object.fromEntries((body.waivers ?? []).map((w) => [w.check, w.reason]))
+    for (const w of body.waivers ?? []) if (w.reason.trim().length < 10) return HttpResponse.json({ detail: `waiver (${w.check}): the reason must be at least 10 characters` }, { status: 400 })
     p.decision_problems = problems
     p.cards = p.cards.map((c) => {
       const d = body.decisions.find((e) => e.card === c.id)

@@ -3914,6 +3914,16 @@
             "maxItems": 50,
             "title": "Decisions"
           },
+          "waivers": {
+            "items": {
+              "$ref": "#/components/schemas/WaiverEntry"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Waivers",
+            "description": "serious problems the person waives; written to decisions.yaml as {check, reason, by: the server's user}",
+            "default": []
+          },
           "base_sha256": {
             "anyOf": [
               {
@@ -6558,10 +6568,31 @@
             "title": "Proposal"
           },
           "question": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Question",
             "description": "the question's id in the questions file"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 600,
+                "minLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "a question the person typed, instead of one of the questions file"
           },
           "model": {
             "type": "string",
@@ -6573,8 +6604,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "proposal",
-          "question"
+          "proposal"
         ],
         "title": "ProposeRequest",
         "description": "The proposal flow's frame, draft, critic and cards steps into `$EV/proposals/<proposal>` (resumed from the\nfirst step whose file is missing)."
@@ -8770,6 +8800,29 @@
         ],
         "title": "VariantInfo",
         "description": "variant.json of a counterfactual corpus (`synth variant`, F3)."
+      },
+      "WaiverEntry": {
+        "properties": {
+          "check": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+            "title": "Check",
+            "description": "the critic check id the person accepts as failing"
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 4000,
+            "title": "Reason",
+            "description": "why it is safe: at least 10 characters (cards.waivers)"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "check",
+          "reason"
+        ],
+        "title": "WaiverEntry"
       }
     }
   }

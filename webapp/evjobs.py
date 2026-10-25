@@ -275,20 +275,24 @@ class Commands:
         return JobPlan("compare", [step("evaluate compare", argv)], {"score": r.name}, "cpu", False)
 
     def propose(self, r: ProposeRequest) -> JobPlan:
-        q = self.questions.get(r.question)
+        if r.text is not None:   # a question the person typed: no vocabulary snapshot
+            text, vocab = r.text.strip(), None
+        else:
+            q = self.questions.get(r.question or "")
+            text, vocab = q.question, q.vocab
         directory = inside(self.proposals(), r.proposal)
         if (directory / PROTOCOL).exists():
             raise Conflict(f"proposal {r.proposal} is frozen; change it with `evidence propose amend` (command line)")
         frame = read_json(directory / FRAME)
-        if isinstance(frame, dict) and frame.get("question") != q.question:
+        if isinstance(frame, dict) and frame.get("question") != text:
             raise Conflict(f"proposal {r.proposal} asks another question; choose another name")
         self.free("proposal", r.proposal)
         todo = [name for name, file in PROPOSE_STEPS if not (directory / file).exists()]
         if not todo:
             raise Conflict(f"proposal {r.proposal} has its cards: decide them and freeze it")
         first = [name for name, _ in PROPOSE_STEPS].index(todo[0])
-        argv = {"frame": self.tool("evidence", "propose", "frame", "--question", q.question,
-                                   *(["--vocab", q.vocab] if q.vocab else []), "--out", directory, "--model", r.model),
+        argv = {"frame": self.tool("evidence", "propose", "frame", "--question", text,
+                                   *(["--vocab", vocab] if vocab else []), "--out", directory, "--model", r.model),
                 "draft": self.tool("evidence", "propose", "draft", directory),
                 "critic": self.tool("evidence", "propose", "critic", directory, "--model", r.model),
                 "cards": self.tool("evidence", "propose", "cards", directory, "--model", r.model)}
@@ -343,7 +347,8 @@ class Commands:
         `by` is `model`, the server's $WEBAPP_USER, or the name the file already has for that card (a hand edit's,
         kept as it is): nobody else's name is written. The form sends the file's sha256 as it loaded it; a file
         changed since (a hand edit, another tab) is refused with 409 unless `force`, so no edit is lost unseen."""
-        from evidence.propose.cards import CUSTOM, HEADER
+        from evidence.propose.cards import CUSTOM, HEADER, waivers as validate_waivers
+        from evidence.propose.common import ProposalError
         from evidence.propose.common import dump_yaml
 
         directory = self.proposal_dir(name)
@@ -365,7 +370,15 @@ class Commands:
             if d.choice == CUSTOM:
                 entry["value"] = d.value
             entries.append(entry)
-        write_text_atomic(path, HEADER + dump_yaml({"decisions": entries}))
+        waivers = [{"check": w.check, "reason": w.reason.strip(), "by": self.s.user} for w in r.waivers]
+        if waivers:
+            if not self.s.user:
+                raise BadRequest("a waiver needs a person to accept it: start the server with $WEBAPP_USER")
+            try:   # an unknown check, a reason under 10 characters
+                validate_waivers({"waivers": waivers})
+            except ProposalError as exc:
+                raise BadRequest(str(exc)) from exc
+        write_text_atomic(path, HEADER + dump_yaml({"decisions": entries, **({"waivers": waivers} if waivers else {})}))
         _, problems = self.files.decisions_of(directory, cards)
         return DecisionsResult(written=str(path), sha256=file_sha256(path), problems=problems)
 
