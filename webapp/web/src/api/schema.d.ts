@@ -746,6 +746,28 @@ export interface components {
             markdown: string | null;
         };
         /**
+         * Best
+         * @description A best-method question: conditions are grouped into method kinds; inside each paper the kind with the
+         *     top value of `metric` wins. `kinds` maps a kind to the condition names that belong to it.
+         */
+        Best: {
+            metric: components["schemas"]["QuestionMetric"];
+            /** Kinds */
+            kinds: {
+                [key: string]: string[];
+            };
+            /**
+             * @default {
+             *       "rule": "same_dataset",
+             *       "prefer": [
+             *         "table_cell",
+             *         "document_order"
+             *       ]
+             *     }
+             */
+            pairing?: components["schemas"]["Pairing"];
+        };
+        /**
          * Bound
          * @description A range a numeric field must lie in, checked by the engine (rejected with reason schema otherwise);
          *     e.g. a measurement of an accuracy or a rate is a fraction in [0, 1].
@@ -1035,6 +1057,18 @@ export interface components {
             }[];
             /** Markdown */
             markdown: string | null;
+        };
+        /**
+         * Consistency
+         * @description A consistency question: does what the authors claim agree with what they measured?
+         */
+        Consistency: {
+            /**
+             * By
+             * @default direction
+             * @constant
+             */
+            by?: "direction";
         };
         /** CorpusDetail */
         CorpusDetail: {
@@ -1690,13 +1724,13 @@ export interface components {
             };
             /** Links */
             links?: {
-                [key: string]: "condition" | "metric" | "measurement" | "author_claim" | "screen";
+                [key: string]: "condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen";
             };
             /**
              * Context
              * @default []
              */
-            context?: ("condition" | "metric" | "measurement" | "author_claim" | "screen")[];
+            context?: ("condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen")[];
             /** Roles */
             roles: string[];
             /** Merge Key */
@@ -1799,7 +1833,7 @@ export interface components {
              */
             kind: "regex" | "model" | "llm" | "agent";
             /** Evidence Types */
-            evidence_types: ("condition" | "metric" | "measurement" | "author_claim" | "screen")[];
+            evidence_types: ("condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen")[];
             /** Code Sha256 */
             code_sha256: string;
             /** Config */
@@ -1902,6 +1936,22 @@ export interface components {
             version: string;
         };
         /**
+         * Inventory
+         * @description An inventory question: list every distinct item of one evidence type. `same` maps a canonical name to
+         *     the other names it goes by.
+         */
+        Inventory: {
+            /**
+             * Target
+             * @enum {string}
+             */
+            target: "metric" | "condition" | "dataset";
+            /** Same */
+            same?: {
+                [key: string]: string[];
+            };
+        };
+        /**
          * Item
          * @description One piece of evidence: typed fields plus checked spans (contract section 5).
          */
@@ -1912,7 +1962,7 @@ export interface components {
              * Evidence Type
              * @enum {string}
              */
-            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "screen";
+            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen";
             /** Fields */
             fields: {
                 [key: string]: unknown;
@@ -2342,7 +2392,16 @@ export interface components {
              */
             locate?: components["schemas"]["Locate"];
             screen?: components["schemas"]["Screen"] | null;
-            synthesis: components["schemas"]["Synthesis"];
+            /**
+             * Kind
+             * @default effect
+             * @enum {string}
+             */
+            kind?: "effect" | "inventory" | "consistency" | "best";
+            synthesis?: components["schemas"]["Synthesis"] | null;
+            inventory?: components["schemas"]["Inventory"] | null;
+            best?: components["schemas"]["Best"] | null;
+            consistency?: components["schemas"]["Consistency"] | null;
         };
         /** ProtocolEntry */
         ProtocolEntry: {
@@ -2400,6 +2459,13 @@ export interface components {
             id: string;
             /** Question */
             question: string;
+            /**
+             * Kind
+             * @description what the question asks: an effect, an inventory, whether claims agree with results (consistency), or which method kind is best
+             * @default effect
+             * @enum {string}
+             */
+            kind: "effect" | "inventory" | "consistency" | "best";
             /**
              * Protocol
              * @description the hand-written protocol's name under the protocols directory (`/api/ev/protocols/{name}`), or null: the question needs a proposal
@@ -2459,7 +2525,7 @@ export interface components {
              * Evidence Type
              * @enum {string}
              */
-            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "screen";
+            evidence_type: "condition" | "metric" | "measurement" | "author_claim" | "dataset" | "screen";
             /** Fields */
             fields: {
                 [key: string]: unknown;
@@ -2706,6 +2772,8 @@ export interface components {
          * Screen
          * @description Per-document screening before any extraction (Part D, the funnel; ours): is the paper one the protocol
          *     can use at all? `terms` feed the regex screen (no hit: not relevant); the cascade decides the rest.
+         *     `lexical_miss`: a regex "not relevant" ends the cascade (`reject`, the default) or passes the document on
+         *     to the next screen extractor (`escalate`; the keyword list may miss synonyms).
          *     `spec` is the pseudo evidence type the engine runs the screen calls on, so they are checked, cached and
          *     replayed exactly like extractor calls.
          */
@@ -2725,6 +2793,12 @@ export interface components {
              * @enum {string}
              */
             on_fail?: "skip" | "extract_anyway";
+            /**
+             * Lexical Miss
+             * @default reject
+             * @enum {string}
+             */
+            lexical_miss?: "reject" | "escalate";
         };
         /**
          * Segment

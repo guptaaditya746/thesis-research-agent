@@ -75,9 +75,21 @@ def latency_items(text: str, tmp: Path) -> dict[tuple[str, str], list[float]]:
 
 def test_seconds_stay_seconds_and_percent_stays_a_fraction(tmp_path: Path) -> None:
     found = latency_items(LAT_TEXT, tmp_path)
-    assert found[("rag", "latency")] == [1.8]          # prose "1.80 s" and the cell 1.8: one value
+    assert found[("rag", "latency")] == [1.8]          # the table cell (the sentence names no metric)
     assert found[("baseline", "latency")] == [1.21]
     assert found[("rag", "other")] == [0.71] and found[("baseline", "other")] == [0.62]
+
+
+def test_prose_seconds_are_read(tmp_path: Path) -> None:
+    text = ("# Study\nWe compare the retrieval-augmented model with the closed-book model.\n\n"
+            "The latency of the retrieval-augmented model is 1.80 s, compared with 1.21 s for the closed-book model.\n")
+    assert latency_items(text, tmp_path) == {("rag", "latency"): [1.8], ("baseline", "latency"): [1.21]}
+
+
+def test_a_time_difference_is_not_a_value(tmp_path: Path) -> None:
+    text = ("# Study\nWe compare the retrieval-augmented model with the closed-book model.\n\n"
+            "The retrieval-augmented model is 0.45 s slower than the closed-book model in latency.\n")
+    assert latency_items(text, tmp_path) == {}
 
 
 def test_milliseconds_become_seconds(tmp_path: Path) -> None:

@@ -6,7 +6,8 @@ measure.py), but only the metrics in `fraction_metrics` (default factual_accurac
 canonicals a protocol bounds to [0, 1]) are rate-like. Any other value stays in its own unit: a table cell as
 written (a cell under a millisecond header, "Latency (ms)", is divided by 1000, so values are seconds), and in a
 sentence a number with a time unit ("1.80 s", "655 ms", "2 seconds") becomes a value of the nearest non-fraction
-metric, linked to a condition as measure.py links sentence values. A percentage (a % sign, a % header or
+metric, linked to a condition as measure.py links sentence values; a difference ("0.45 s slower than") is no
+value. A percentage (a % sign, a % header or
 caption) is still a fraction. It lives in its own module so every existing extractor keeps its id.
 """
 from __future__ import annotations
@@ -23,6 +24,9 @@ SOURCES = (base.HERE / "units.py", base.HERE / "measure.py", base.HERE / "terms.
 CODE_SHA256 = base.source_sha256(*SOURCES)
 FRACTION_METRICS = ["factual_accuracy", "hallucination_rate"]
 TIME = re.compile(r"(?<![\w.,])(\d+(?:\.\d+)?|\.\d+)\s?(ms|milliseconds?|s|secs?|seconds?)\b")
+# "0.45 s slower than": a difference between two conditions, not a value of either
+DIFFERENCE_AFTER = re.compile(r"(?i)\s+(?:slower|faster|longer|shorter|more|less)\b")
+UNIT_AFTER = re.compile(r"\s?(?:ms|milliseconds?|s|secs?|seconds?)\b")
 MS_HEADER = re.compile(r"(?i)\(\s*(?:ms|milliseconds?)\s*\)")
 
 
@@ -46,7 +50,8 @@ class MeasurementUnitsRegex:
         context = ctx.context_items()
         patterns = {**self.patterns, "question_metrics": self.fractions,   # rate-like: the fraction metrics only
                     "treatment": (self.given.get("compare") or {}).get("treatment")}
-        found = [self._seconds(f, context) for f in measurements(task, text, parts, context, patterns)]
+        found = [self._seconds(f, context) for f in measurements(task, text, parts, context, patterns)
+                 if not self._difference(f, text, context)]
         resolver = Resolver(text, context, patterns)
         if resolver.conditions and resolver.metrics:
             for a, b in parts:
@@ -55,6 +60,15 @@ class MeasurementUnitsRegex:
         items: list[Item] = base.group("measurement", found)
         return ExtractionResult(extractor_id=self.spec.extractor_id, task_sha256=task.task_sha256, status="ok",
                                 items=tuple(items), coverage=base.coverage(parts, items)).canonical()
+
+    def _difference(self, found: Found, text: str, context: list[Item]) -> bool:
+        """A non-fraction value measure.py read in a sentence that is a difference ("0.45 s slower than")."""
+        metric = next((i for i in context if i.item_id == found[1].get("metric")), None)
+        if metric is None or metric.fields.get("canonical") in self.fractions:
+            return False
+        end = next((int(s.selector["end"]) for s in found[2] if s.role == "value"), None)
+        unit = UNIT_AFTER.match(text, end) if end is not None else None
+        return unit is not None and DIFFERENCE_AFTER.match(text, unit.end()) is not None
 
     def _seconds(self, found: Found, context: list[Item]) -> Found:
         """A non-fraction value under a millisecond header, in seconds."""
@@ -77,6 +91,8 @@ class MeasurementUnitsRegex:
         for hit in TIME.finditer(text, s, e):
             before = text[max(s, hit.start() - 20):hit.start()]
             if DELTA_BEFORE.search(before) or SIGNED.search(before) or any(a <= hit.start() < b for a, b in changes):
+                continue
+            if DIFFERENCE_AFTER.match(text, hit.end(), e):
                 continue
             after = AFTER.match(text, hit.end(), e)
             following = next(((m, i) for m, i in conditions if after and m.start == after.end()), None)

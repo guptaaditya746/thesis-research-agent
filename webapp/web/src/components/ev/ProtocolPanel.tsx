@@ -209,7 +209,11 @@ export function ProtocolPanel({ view }: { view: ProtocolView }) {
         )}
         {p && (
           <TabsContent value="synthesis">
-            <SynthesisBlock synthesis={p.synthesis} />
+            {p.synthesis ? (
+              <SynthesisBlock synthesis={p.synthesis} />
+            ) : (
+              <p className="text-sm text-muted-foreground">No synthesis block: this protocol is of kind {p.kind ?? "effect"}.</p>
+            )}
           </TabsContent>
         )}
         <TabsContent value="yaml">
