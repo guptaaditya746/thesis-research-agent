@@ -230,7 +230,7 @@ describe("runs", () => {
 describe("developer tools tab", () => {
   const id = `cascade~${EXPLICIT}`
   const row = (n: number, over: Partial<TracePage["rows"][number]> = {}): TracePage["rows"][number] => ({
-    n, phase: "run", step: "extractor_call", document: "S001", evidence_type: "metric", extractor: "regex", status: "ok",
+    n, phase: "run", at: null, step: "extractor_call", document: "S001", evidence_type: "metric", extractor: "regex", status: "ok",
     source: "fresh", seconds: 1.5, input_tokens: 10, output_tokens: 5, call: null, ...over,
   })
   const traceUrl = `/api/ev/runs/${id}/trace`
@@ -268,6 +268,38 @@ describe("developer tools tab", () => {
     expect(afters).toHaveLength(calls)
   }, 30_000)
 
+  it("a click anywhere on a call row opens the sheet, and the time shows", async () => {
+    const user = userEvent.setup()
+    const call = evFixture<CallDetail>(`/api/ev/runs/${id}/calls/t000002`)
+    server.use(
+      http.get(traceUrl, () => HttpResponse.json({ rows: [row(1, { call: "t000002", document: "S002", at: "2026-10-25T10:00:07+00:00" })], next: 1, done: true })),
+      http.get(`/api/ev/runs/${id}/calls/t000002`, () => HttpResponse.json(call)),
+    )
+    renderRoutes(routes, `${run(id)}?tab=dev`)
+    const table = await screen.findByRole("table", { name: "Run trace" }, T)
+    expect(within(table).getByText(/^\d\d:\d\d:07$/)).toBeInTheDocument()
+    await user.click(within(table).getByText("S002"))
+    expect(await screen.findByRole("dialog", {}, T)).toBeInTheDocument()
+  })
+
+  it("a failed poll keeps the rows and says so; a restarted trace starts over", async () => {
+    let n = 0
+    server.use(http.get(traceUrl, ({ request }) => {
+      n += 1
+      const after = new URL(request.url).searchParams.get("after")
+      if (n === 1) return HttpResponse.json({ rows: [row(1), row(2), row(3, { document: "S003" })], next: 3, done: false })
+      if (n === 2) return HttpResponse.json({ detail: "boom" }, { status: 500 })
+      if (after === "3") return HttpResponse.json({ rows: [], next: 1, done: false })    // restarted: one row now
+      return HttpResponse.json({ rows: [row(1, { document: "S100" })], next: 1, done: true })
+    }))
+    renderRoutes(routes, `${run(id)}?tab=dev`)
+    const table = await screen.findByRole("table", { name: "Run trace" }, T)
+    expect(within(table).getAllByRole("row")).toHaveLength(4)
+    expect(await screen.findByRole("alert", {}, T)).toHaveTextContent(/latest poll failed/)
+    expect(within(table).getAllByRole("row")).toHaveLength(4)
+    await waitFor(() => expect(within(table).getByText("S100")).toBeInTheDocument(), T)
+    expect(within(table).getAllByRole("row")).toHaveLength(2)
+  }, 30_000)
   it("filter by status shows errors only", async () => {
     const user = userEvent.setup()
     server.use(http.get(traceUrl, () => HttpResponse.json({ rows: [row(1), row(2, { status: "error", document: "S007" }), row(3, { document: "S008" })], next: 3, done: true })))

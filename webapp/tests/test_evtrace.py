@@ -59,6 +59,9 @@ def test_trace_pages_with_after(tmp_path: Path) -> None:
         assert page["rows"][2]["call"] == "t0001" and page["rows"][4]["call"] == "t0003"
         # only an extractor_call event carries a real start; the other steps' times would read ~0
         assert [r["seconds"] for r in page["rows"][2:]] == [None, None, 1.0, None]
+        # `at`: a call's start, an extractor_call's start, any other event's end
+        assert [r["at"] for r in page["rows"]] == ["2026-10-25T10:00:00+00:00"] * 2 + ["2026-10-25T10:00:01+00:00",
+            "2026-10-25T10:00:01+00:00", "2026-10-25T10:00:00+00:00", "2026-10-25T10:00:01+00:00"]
         later = c.get(f"/api/ev/runs/{RUN}/trace", params={"after": 4}).json()
         assert [r["n"] for r in later["rows"]] == [5, 6] and later["next"] == 6
         nothing = c.get(f"/api/ev/runs/{RUN}/trace", params={"after": 6}).json()

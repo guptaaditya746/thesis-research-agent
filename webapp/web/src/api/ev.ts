@@ -216,6 +216,8 @@ export function useTrace(id: string, live = false) {
       const before = client.getQueryData<TracePage>(key)
       const page = await evApi.runTrace(id, before?.next ?? 0, signal)
       if (!before) return page
+      // `next` below the one we hold: the trace restarted, so the rows we hold are stale; read it again from the start
+      if (page.next < before.next) return evApi.runTrace(id, 0, signal)
       const seen = new Set(before.rows.map((r) => r.n))
       return { ...page, rows: [...before.rows, ...page.rows.filter((r) => !seen.has(r.n))] }
     },
@@ -223,7 +225,7 @@ export function useTrace(id: string, live = false) {
     refetchInterval: (query) => (live || !query.state.data?.done ? LIVE_MS : false),
   })
 }
-export const useScores =(live = false) => useEv(["scores"], (s) => evApi.scores(s), true, live)
+export const useScores = (live = false) => useEv(["scores"], (s) => evApi.scores(s), true, live)
 export const useReport = (id: string) => useEv(["scores", "reports", id], (s) => evApi.report(id, s), !!id)
 export const useCompare = (id: string) => useEv(["scores", "compares", id], (s) => evApi.compare(id, s), !!id)
 export const useShift = (id: string) => useEv(["scores", "shifts", id], (s) => evApi.shift(id, s), !!id)

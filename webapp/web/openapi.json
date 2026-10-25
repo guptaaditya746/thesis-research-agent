@@ -8099,6 +8099,18 @@
             ],
             "title": "Phase"
           },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At",
+            "description": "ISO time: a call's start, an event's end (an extractor_call's start)"
+          },
           "step": {
             "type": "string",
             "enum": [
@@ -8211,6 +8223,7 @@
         "required": [
           "n",
           "phase",
+          "at",
           "step",
           "document",
           "evidence_type",

@@ -501,6 +501,7 @@ class TraceRow(Base):
     """One step of the run trace: a warm-pass model call (calls.jsonl) or an engine event (events.jsonl)."""
     n: int = Field(description="row number from 1, stable while the run grows; `after` pages by it")
     phase: Literal["warm", "run"]
+    at: str | None = Field(None, description="ISO time: a call's start, an event's end (an extractor_call's start)")
     step: Literal["screen", "locate", "extractor_call", "merge", "completeness", "synthesis", "call"]
     document: str | None = None
     evidence_type: str | None = None

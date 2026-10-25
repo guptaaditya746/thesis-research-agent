@@ -2,7 +2,8 @@
  * Run `/runs/:runId` (`<group>~<name>`): what the run is (system, selection, strategy, model, protocol,
  * corpus, cost) and tabs for the answer (label, studies with their reasons, flags; a baseline's text,
  * citations and retrieved passages), the papers (each with where the funnel stopped, opening the paper
- * view), the evidence graph, the protocol it ran, its extractors, the agent baseline's trace, and for an engine run the Developer tools tab (its step trace, live). The
+ * view), the evidence graph, the protocol it ran, its extractors, the agent baseline's trace, and for an engine run
+ * the Developer tools tab (its step trace, live). The
  * baselines on the same corpus and the run's score reports are linked. The tab is in the URL (?tab=). While a job
  * of the app writes the run, the page polls, so an incomplete run fills in as the engine writes it.
  */

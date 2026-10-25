@@ -14,6 +14,12 @@ import { DASH, int, num } from "@/lib/format"
 
 const SELECT = "h-8 rounded-md border bg-background px-2 text-sm"
 
+/** ISO time -> local HH:MM:SS; none or unreadable -> "—". */
+function clock(iso: string | null | undefined): string {
+  const d = iso ? new Date(iso) : null
+  return d && !Number.isNaN(d.getTime()) ? d.toLocaleTimeString("en-GB") : DASH
+}
+
 export function TraceTab({ runId }: { runId: string }) {
   const live = useActiveJobs({ run: runId }).length > 0
   const trace = useTrace(runId, live)
@@ -21,13 +27,14 @@ export function TraceTab({ runId }: { runId: string }) {
   const [status, setStatus] = useState("")
   const [call, setCall] = useState<string | null>(null)
   if (trace.isPending) return <CardsSkeleton count={1} />
-  if (trace.isError) return <ErrorState error={trace.error} />
+  if (!trace.data) return <ErrorState error={trace.error} />   // failed before any rows arrived
   const all = trace.data.rows
   const papers = [...new Set(all.map((r) => r.document).filter((d): d is string => !!d))].sort()
   const statuses = [...new Set(all.map((r) => r.status))].sort()
   const rows = all.filter((r) => (!paper || r.document === paper) && (!status || r.status === status))
   return (
     <div className="space-y-3">
+      {trace.isError && <p role="alert" className="text-sm text-destructive">The latest poll failed ({trace.error.message}); showing the rows read so far.</p>}
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <label className="flex items-center gap-2">Paper
           <select aria-label="Paper" className={SELECT} value={paper} onChange={(e) => setPaper(e.target.value)}>
@@ -47,16 +54,18 @@ export function TraceTab({ runId }: { runId: string }) {
         <Table aria-label="Run trace">
           <TableHeader>
             <TableRow>
-              {["#", "phase", "step", "paper", "type", "extractor", "status", "seconds", "tokens"].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}
+              {["#", "time", "phase", "step", "paper", "type", "extractor", "status", "seconds", "tokens"].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((r) => (
-              <TableRow key={r.n}>
+              <TableRow key={r.n} className={r.call ? "cursor-pointer" : undefined}
+                onClick={r.call ? () => setCall(r.call) : undefined}>
                 <TableCell className="text-xs tabular-nums">{r.n}</TableCell>
+                <TableCell className="text-xs tabular-nums">{clock(r.at)}</TableCell>
                 <TableCell className="text-xs">{r.phase}</TableCell>
                 <TableCell className="font-mono text-xs">
-                  {r.call ? <Button variant="link" size="sm" className="h-auto p-0 font-mono text-xs" onClick={() => setCall(r.call)}>{r.step}</Button> : r.step}
+                  {r.call ? <Button variant="link" size="sm" className="h-auto p-0 font-mono text-xs" onClick={(e) => { e.stopPropagation(); setCall(r.call) }}>{r.step}</Button> : r.step}
                 </TableCell>
                 <TableCell className="font-mono text-xs">{r.document ?? DASH}</TableCell>
                 <TableCell className="text-xs">{r.evidence_type ?? DASH}</TableCell>

@@ -3294,6 +3294,11 @@ export interface components {
              */
             phase: "warm" | "run";
             /**
+             * At
+             * @description ISO time: a call's start, an event's end (an extractor_call's start)
+             */
+            at: string | null;
+            /**
              * Step
              * @enum {string}
              */

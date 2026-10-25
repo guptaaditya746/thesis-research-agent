@@ -77,7 +77,7 @@ def _light_call(row: dict[str, Any], pos: int, size: int) -> dict[str, Any] | No
     tokens_in, tokens_out = usage([m for m in row.get("model_calls") or [] if isinstance(m, dict)])
     return {"key": row["key"], "phase": "warm" if row.get("phase") == "warm" else "run", "document": row.get("document"),
             "evidence_type": row.get("evidence_type"), "extractor": row.get("extractor_id"), "status": str(row.get("status", "")),
-            "source": row.get("source"), "seconds": _seconds(row.get("started_at"), row.get("ended_at")),
+            "source": row.get("source"), "seconds": _seconds(row.get("started_at"), row.get("ended_at")), "at": row.get("started_at"),
             "input_tokens": tokens_in, "output_tokens": tokens_out, "pos": pos, "size": size}
 
 
@@ -89,11 +89,12 @@ def _light_event(event: dict[str, Any], pos: int, size: int) -> dict[str, Any] |
     document = meta.get("document", event.get("group_id"))
     row: dict[str, Any] = {"step": step, "document": str(document) if document is not None else None,
                            "evidence_type": meta.get("evidence_type"), "status": str(event.get("status") or ""),
-                           "source": meta.get("source"), "seconds": None,
+                           "source": meta.get("source"), "seconds": None, "at": event.get("ended_at"),
                            "extractor": meta.get("extractor") or event.get("agent_id"), "call": None, "key": None}
     if step == "extractor_call":
         # only this event is given its real start (the others default to the time they are written)
         row["seconds"] = _seconds(event.get("started_at"), event.get("ended_at"))
+        row["at"] = event.get("started_at") or event.get("ended_at")
         row["call"] = event.get("task_id")
         if isinstance(meta.get("task_sha256"), str) and event.get("agent_id"):
             row["key"] = cache_key(event["agent_id"], meta["task_sha256"], int(meta.get("attempt") or 0))
@@ -138,13 +139,15 @@ class TraceReader:
         for c in (c for c in calls if c["phase"] == "warm"):
             rows.append(TraceRow(n=len(rows) + 1, phase="warm", step="call", document=c["document"], evidence_type=c["evidence_type"],
                                  extractor=c["extractor"], status=c["status"], source=c["source"], seconds=c["seconds"],
+                                 at=c["at"],
                                  input_tokens=c["input_tokens"], output_tokens=c["output_tokens"], call=c["key"]))
         for e in events:
             match = by_key.get(e["key"]) if e["key"] else None
             rows.append(TraceRow(n=len(rows) + 1, phase="run", step=e["step"], document=e["document"],
                                  evidence_type=e["evidence_type"], extractor=e["extractor"], status=e["status"],
                                  source=e["source"], seconds=e["seconds"], call=e["call"],
+                                 at=e["at"],
                                  input_tokens=match["input_tokens"] if match else None,
                                  output_tokens=match["output_tokens"] if match else None))
         fresh = [r for r in rows if r.n > after]
-        return TracePage(rows=fresh, next=fresh[-1].n if fresh else after, done=(run / ANSWER_FILE).is_file())
+        return TracePage(rows=fresh, next=fresh[-1].n if fresh else min(after, len(rows)), done=(run / ANSWER_FILE).is_file())
