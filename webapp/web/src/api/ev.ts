@@ -52,6 +52,8 @@ export type RunPaper = S["RunPaper"]
 export type Item = S["Item"]
 export type CallSummary = S["CallSummary"]
 export type CallDetail = S["CallDetail"]
+export type TracePage = S["TracePage"]
+export type TraceRow = S["TraceRow"]
 export type ModelCallRecord = S["ModelCallRecord"]
 export type AgentTrace = S["AgentTrace"]
 export type ExtractorSpec = S["ExtractorSpec"]
@@ -133,6 +135,8 @@ export const evApi = {
     getJson<CallDetail>(`/api/ev/runs/${seg(id)}/calls/${seg(call)}`, undefined, signal),
   callTrace: (id: string, call: string, agentRun: string, signal?: AbortSignal) =>
     getJson<AgentTrace>(`/api/ev/runs/${seg(id)}/calls/${seg(call)}/trace/${seg(agentRun)}`, undefined, signal),
+  runTrace: (id: string, after: number, signal?: AbortSignal) =>
+    getJson<TracePage>(`/api/ev/runs/${seg(id)}/trace`, { after }, signal),
   baselineTrace: (id: string, signal?: AbortSignal) => getJson<AgentTrace>(`/api/ev/runs/${seg(id)}/agent-trace`, undefined, signal),
   scores: (signal?: AbortSignal) => getJson<ScoresIndex>("/api/ev/scores", undefined, signal),
   report: (id: string, signal?: AbortSignal) => getJson<ReportView>(`/api/ev/scores/reports/${seg(id)}`, undefined, signal),
@@ -199,7 +203,27 @@ export const useCallTrace = (id: string, call: string | null, agentRun: string |
     !!id && !!call && !!agentRun)
 export const useBaselineTrace = (id: string, enabled = true) =>
   useEv(["runs", id, "trace"], (s) => evApi.baselineTrace(id, s), !!id && enabled)
-export const useScores = (live = false) => useEv(["scores"], (s) => evApi.scores(s), true, live)
+/**
+ * The run's step trace, accumulated: each fetch asks for the rows after the last one seen and appends them.
+ * Polls while a job writes the run (`live`) or until the trace says `done`.
+ */
+export function useTrace(id: string, live = false) {
+  const client = useQueryClient()
+  const key = evKeys.of("runs", id, "run-trace")
+  return useQuery({
+    queryKey: key,
+    queryFn: async ({ signal }): Promise<TracePage> => {
+      const before = client.getQueryData<TracePage>(key)
+      const page = await evApi.runTrace(id, before?.next ?? 0, signal)
+      if (!before) return page
+      const seen = new Set(before.rows.map((r) => r.n))
+      return { ...page, rows: [...before.rows, ...page.rows.filter((r) => !seen.has(r.n))] }
+    },
+    enabled: !!id,
+    refetchInterval: (query) => (live || !query.state.data?.done ? LIVE_MS : false),
+  })
+}
+export const useScores =(live = false) => useEv(["scores"], (s) => evApi.scores(s), true, live)
 export const useReport = (id: string) => useEv(["scores", "reports", id], (s) => evApi.report(id, s), !!id)
 export const useCompare = (id: string) => useEv(["scores", "compares", id], (s) => evApi.compare(id, s), !!id)
 export const useShift = (id: string) => useEv(["scores", "shifts", id], (s) => evApi.shift(id, s), !!id)

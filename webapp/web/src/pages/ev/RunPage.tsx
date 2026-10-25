@@ -2,7 +2,7 @@
  * Run `/runs/:runId` (`<group>~<name>`): what the run is (system, selection, strategy, model, protocol,
  * corpus, cost) and tabs for the answer (label, studies with their reasons, flags; a baseline's text,
  * citations and retrieved passages), the papers (each with where the funnel stopped, opening the paper
- * view), the evidence graph, the protocol it ran, its extractors, and the agent baseline's trace. The
+ * view), the evidence graph, the protocol it ran, its extractors, the agent baseline's trace, and for an engine run the Developer tools tab (its step trace, live). The
  * baselines on the same corpus and the run's score reports are linked. The tab is in the URL (?tab=). While a job
  * of the app writes the run, the page polls, so an incomplete run fills in as the engine writes it.
  */
@@ -14,6 +14,7 @@ import { AgentTraceView } from "@/components/ev/AgentTraceView"
 import { AnswerPanel } from "@/components/ev/AnswerPanel"
 import { ErrorCallsBadge } from "@/components/badges"
 import { KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
+import { TraceTab } from "@/components/ev/TraceTab"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
 import { ProtocolPanel } from "@/components/ev/ProtocolPanel"
 import { PageHeader } from "@/components/layout/PageHeader"
@@ -41,7 +42,7 @@ function ProtocolTab({ runId }: { runId: string }) {
   return <ProtocolPanel view={protocol.data} />
 }
 
-function TraceTab({ runId }: { runId: string }) {
+function AgentTraceTab({ runId }: { runId: string }) {
   const trace = useBaselineTrace(runId)
   if (trace.isPending) return <CardsSkeleton count={1} />
   if (trace.isError) return <ErrorState error={trace.error} />
@@ -85,7 +86,7 @@ function RunView({ run }: { run: EvRunDetail }) {
   const tabs = [
     { value: "answer", label: "Answer" },
     { value: "papers", label: "Papers" },
-    ...(engine ? [{ value: "graph", label: "Evidence graph" }, { value: "protocol", label: "Protocol" }, { value: "extractors", label: "Extractors" }] : []),
+    ...(engine ? [{ value: "graph", label: "Evidence graph" }, { value: "protocol", label: "Protocol" }, { value: "extractors", label: "Extractors" }, { value: "dev", label: "Developer tools" }] : []),
     ...(run.has_trace ? [{ value: "trace", label: "Agent trace" }] : []),
   ]
   const tab = tabs.some((t) => t.value === params.get("tab")) ? params.get("tab")! : "answer"
@@ -142,7 +143,8 @@ function RunView({ run }: { run: EvRunDetail }) {
               render={(c, v) => (c === "code_sha256" ? <span className="font-mono">{String(v).slice(0, 12)}</span> : Array.isArray(v) ? v.join(", ") : String(v ?? "—"))} />
           </TabsContent>
         )}
-        {run.has_trace && <TabsContent value="trace">{tab === "trace" && <TraceTab runId={run.id} />}</TabsContent>}
+        {engine && <TabsContent value="dev">{tab === "dev" && <TraceTab runId={run.id} />}</TabsContent>}
+        {run.has_trace && <TabsContent value="trace">{tab === "trace" && <AgentTraceTab runId={run.id} />}</TabsContent>}
       </Tabs>
     </div>
   )
