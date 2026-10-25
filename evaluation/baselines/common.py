@@ -11,12 +11,13 @@ an answer with citations, the agent an answer table. One separate **mapping call
 MAP_INSTRUCTIONS + LABEL_RULES, AnswerReply, shared by both; docs/evidence-system.md Part G.1) turns
 that answer into the label and the stance of every paper it relies on, for the synthesis score (C).
 
-Every question kind (evidence/questions.yaml, `kind_params`): the mapping call of an effect question is the one
-above, unchanged (so existing caches still hit). The other kinds each have their own reply model and versioned
-instructions (prompts/map-<kind>-v1.md, filled from the question's protocol: the inventory target, the author
-claim's definition, the method kinds of a best question): InventoryReply, ConsistencyReply, BestReply (whose
-`winner` must be one of the protocol's kinds; a reply naming another kind fails validation and gets pydantic-ai's
-retry). answer.json then has the kind's shape (evidence/kinds/*), with `system` the baseline's name; best's
+Every question kind (evidence/questions.yaml, `kind_params`): the mapping call of the default question
+(rag-factuality) is the one above, unchanged (so existing caches still hit); another effect question gets
+prompts/map-effect-v1.md, the same task with its own metric and direction (AnswerReply). The other kinds each have
+their own reply model and versioned instructions (prompts/map-<kind>-v1.md, filled from the question's protocol:
+the inventory target, the author claim's definition, the method kinds of a best question): InventoryReply,
+ConsistencyReply, BestReply (whose `winner` and `tied` must name the protocol's kinds; a reply naming another kind
+fails validation and gets pydantic-ai's retry). answer.json then has the kind's shape (evidence/kinds/*), with `system` the baseline's name; best's
 `wins`, `winner` and `tied` are computed here from the per-paper winners (evidence.kinds.best.tally), never asked.
 """
 from __future__ import annotations
@@ -172,7 +173,8 @@ def map_answer(cache: JsonlCache | None, question: str, known: list[str], text: 
 
 # --- every question kind ---------------------------------------------------------------------------
 
-MAP_PROMPTS = {"inventory": "map-inventory-v1.md", "consistency": "map-consistency-v1.md", "best": "map-best-v1.md"}
+DEFAULT_QUESTION_ID = "rag-factuality"   # its mapping call is the original one
+MAP_PROMPTS = {"effect": "map-effect-v1.md", "inventory": "map-inventory-v1.md", "consistency": "map-consistency-v1.md", "best": "map-best-v1.md"}
 TARGET_NAME = {"metric": "evaluation metric", "condition": "method or system variant", "dataset": "dataset"}
 TARGET_TEXT = {
     "metric": "the evaluation metrics the papers report results on (for example accuracy, exact match, latency).",
@@ -227,23 +229,29 @@ class ConsistencyReply(BaseModel):
     studies: list[ConsistencyStudy] = Field(description="one entry per paper the answer speaks about")
 
 
+WINNER = "the method kind the answer says is best in this paper, or null (a tie, or not said)"
+TIED = "the method kinds the answer says tie for the best in this paper (two or more), else empty"
+
+
 class BestStudy(BaseModel):
     paper: str = Field(description="a corpus paper id")
-    winner: str | None = Field(description="the method kind the answer says is best in this paper, or null")
+    winner: str | None = Field(description=WINNER)
+    tied: list[str] = Field(default_factory=list, description=TIED)
 
 
 class BestReply(BaseModel):
-    """The mapping call of a best question: per paper, the winning method kind. The call uses `best_reply(kinds)`,
-    whose `winner` must be one of the protocol's kinds."""
+    """The mapping call of a best question: per paper, the winning method kind or the kinds that tie. The call uses
+    `best_reply(kinds)`, whose `winner` and `tied` must name the protocol's kinds."""
     studies: list[BestStudy] = Field(description="one entry per paper the answer speaks about")
 
 
 @lru_cache(maxsize=None)
 def best_reply(kinds: tuple[str, ...]) -> type[BestReply]:
-    """BestReply with `winner` limited to `kinds` (an enum in the schema, checked on validation)."""
+    """BestReply with `winner` and `tied` limited to `kinds` (an enum in the schema, checked on validation)."""
+    kind = Literal[kinds]  # type: ignore[valid-type]
     study = create_model("BestStudy", __base__=BestStudy,
-                         winner=(Optional[Literal[kinds]],  # noqa: UP045 - a Literal built at run time
-                                 Field(description="the method kind the answer says is best in this paper, or null")))
+                         winner=(Optional[kind], Field(description=WINNER)),  # noqa: UP045 - a run-time Literal
+                         tied=(list[kind], Field(default_factory=list, description=TIED)))
     return create_model("BestReply", __base__=BestReply,
                         studies=(list[study], Field(description="one entry per paper the answer speaks about")))
 
@@ -254,13 +262,22 @@ def _protocol(params: KindParams) -> Protocol:
 
 
 def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
-    """The mapping call's instructions and reply model for a question (effect, or none: the original call)."""
-    if params is None or params.kind == "effect":
+    """The mapping call's instructions and reply model for a question. No question, or the default question
+    (rag-factuality): the original call, byte-identical (so existing caches hit). Another effect question:
+    map-effect-v1.md with its metric and direction (AnswerReply). Other kinds: map-<kind>-v1.md."""
+    if params is None or (params.kind == "effect" and (params.question_id == DEFAULT_QUESTION_ID
+                                                       or params.protocol is None)):
         return MAP_INSTRUCTIONS, AnswerReply
     protocol = _protocol(params)
     text = load_prompt(PROMPTS / MAP_PROMPTS[params.kind]).text
     reply: type[BaseModel]
-    if params.kind == "inventory":
+    if params.kind == "effect":
+        metric = protocol.synthesis.metrics[0]  # type: ignore[union-attr]
+        fill = {"METRIC": metric.canonical.replace("_", " "),
+                "BETTER": "higher" if metric.higher_is_better else "lower",
+                "WORSE": "lower" if metric.higher_is_better else "higher"}
+        reply = AnswerReply
+    elif params.kind == "inventory":
         target = protocol.inventory.target  # type: ignore[union-attr]
         fill = {"TARGET_TEXT": TARGET_TEXT[target], "TARGET": TARGET_NAME[target]}
         reply = InventoryReply
@@ -269,8 +286,13 @@ def map_prompt(params: KindParams | None) -> tuple[str, type[BaseModel]]:
         reply = ConsistencyReply
     else:
         best = best_kind.spec(protocol)
+        named = [(k, names[0]) for k, names in best.kinds.items() if names]
+        assert len(named) >= 2, f"{protocol.id}: the best prompt's examples need two kinds with a name"
+        (kind_a, name_a), (kind_b, name_b) = named[:2]
         fill = {"METRIC": best.metric.canonical, "DIRECTION": "higher" if best.metric.higher_is_better else "lower",
-                "KINDS": "\n".join(f"- {k}: {'; '.join(names)}" for k, names in best.kinds.items())}
+                "KINDS": "\n".join(f"- {k}: {'; '.join(names)}" for k, names in best.kinds.items()),
+                "KIND_A": kind_a, "KIND_B": kind_b, "NAME_A": name_a, "NAME_B": name_b,
+                "TIED_AB": ", ".join(json.dumps(k) for k in sorted((kind_a, kind_b)))}
         reply = best_reply(tuple(best.kinds))
     for name, value in fill.items():
         text = text.replace(f"<<{name}>>", value)
@@ -289,7 +311,8 @@ def kind_answer_json(system: str, params: KindParams, reply: BaseModel, known: l
     """answer.json of a non-effect question in its kind's shape (evidence/kinds/*), with `system` the baseline's
     name. Papers not in the corpus are dropped (listed in `dropped`); a paper named twice keeps its first entry;
     studies and an entry's papers are in manifest order. A baseline has no items or values: inventory `items` and
-    best `values` are empty, consistency `direction` (the measured one) is null. A study the reply leaves null has
+    best `values` are empty, consistency `direction` (the measured one) is null. A best study with no winner and
+    two or more `tied` kinds is a tie (tied sorted, reason null); a study the reply leaves null otherwise has
     reason `not_stated`. Inventory names that fold alike (case, whitespace) are one entry, named by the first form."""
     protocol = _protocol(params)
     dropped: list[str] = []
@@ -328,8 +351,11 @@ def kind_answer_json(system: str, params: KindParams, reply: BaseModel, known: l
         body = {"metric": protocol.synthesis.metric_names[0], "studies": studies, **lists}  # type: ignore[union-attr]
         return head | body | {"dropped": dropped} | extra
     best = best_kind.spec(protocol)
-    studies = [{"document": s.paper, "winner": s.winner, "tied": [], "values": {},
-                "reason": None if s.winner is not None else dict(NOT_STATED)} for s in ordered]
+    studies = []
+    for s in ordered:   # a tie: no winner and two or more kinds (as evidence/kinds/best.py); a tie is complete
+        tied = sorted(set(s.tied)) if s.winner is None and len(set(s.tied)) >= 2 else []
+        studies.append({"document": s.paper, "winner": s.winner, "tied": tied, "values": {},
+                        "reason": None if s.winner is not None or tied else dict(NOT_STATED)})
     body = {"metric": best.metric.canonical, "studies": studies,
             **best_kind.tally([s["winner"] for s in studies], best.kinds)}
     return head | body | {"dropped": dropped} | extra

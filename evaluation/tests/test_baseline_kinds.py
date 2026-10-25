@@ -149,3 +149,43 @@ def test_cli_question_id_sets_question_text(tmp_path: Path, monkeypatch: pytest.
     with pytest.raises(SystemExit, match="--question-id"):
         cli.main(["agent-baseline", "--corpus", str(corpus), "--out", str(tmp_path / "y"), "--question-id",
                   "inv-metrics", "--question", "other?"])
+
+
+def test_best_stated_tie_scores_correct_against_a_tied_truth(tmp_path: Path) -> None:
+    from evaluation.score import score_best
+
+    corpus = fx.write_corpus(tmp_path)
+    _, reply_type = common.map_prompt(common.kind_params("best-accuracy"))
+    assert set(reply_type.model_json_schema()["$defs"]["BestStudy"]["properties"]) == {"paper", "winner", "tied"}
+    tie = {"studies": [{"paper": "S001", "winner": None, "tied": ["rag", "no-retrieval"]},
+                       {"paper": "S002", "winner": "rag", "tied": ["rag", "fine-tuned"]},   # a winner: no tie
+                       ]}
+    answer = rag.rag_baseline(corpus, model=two_calls(tie).model(), question_id="best-accuracy")
+    assert answer["studies"][0] == {"document": "S001", "winner": None, "tied": ["no-retrieval", "rag"],
+                                    "values": {}, "reason": None}
+    assert answer["studies"][1]["tied"] == [] and answer["wins"] == {"rag": 1}
+    truth = {"metric": "factual_accuracy", "winner": None, "tied": [], "wins": {},
+             "studies": [{"document": "S001", "winner": None, "tied": ["no-retrieval", "rag"], "reason": None}]}
+    assert score_best(truth, answer)["studies"][0]["correct"] is True
+    lone = {"studies": [{"paper": "S001", "winner": None, "tied": ["rag"]}]}   # one kind is no tie: not stated
+    answer = rag.rag_baseline(corpus, model=two_calls(lone).model(), question_id="best-accuracy")
+    assert answer["studies"][0]["tied"] == [] and answer["studies"][0]["reason"]["code"] == "not_stated"
+    bad = {"studies": [{"paper": "S001", "winner": None, "tied": ["rag", "magic"]}]}
+    with pytest.raises(RuntimeError):                    # tied names only the protocol's kinds
+        rag.rag_baseline(corpus, model=two_calls(bad).model(), question_id="best-accuracy")
+
+
+def test_best_prompt_examples_use_the_protocols_kinds() -> None:
+    instructions, _ = common.map_prompt(common.kind_params("best-hallucination"))
+    assert '"winner": "rag"' in instructions and '"tied": ["no-retrieval", "rag"]' in instructions
+    assert "closed-book model" in instructions.split("Example 1")[1]   # the example names come from best.kinds
+
+
+def test_effect_questions_by_id_get_their_metric_and_direction() -> None:
+    latency, reply_type = common.map_prompt(common.kind_params("rag-latency"))
+    assert reply_type is common.AnswerReply and latency != common.MAP_INSTRUCTIONS
+    assert "lower latency" in latency and "is the improvement" in latency and "factual accuracy" not in latency
+    assert "<<" not in latency
+    hallucination, _ = common.map_prompt(common.kind_params("rag-hallucination"))
+    assert "lower hallucination rate" in hallucination
+    assert common.map_prompt(common.kind_params("rag-factuality"))[0] == common.MAP_INSTRUCTIONS   # cache unchanged
