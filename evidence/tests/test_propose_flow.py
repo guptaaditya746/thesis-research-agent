@@ -138,10 +138,11 @@ def test_a_person_overrides_a_default_and_a_custom_value(tmp_path: Path) -> None
 def test_freeze_refuses_a_stale_draft_and_a_second_freeze(tmp_path: Path) -> None:
     d = flow(tmp_path / "p", Scripted(), until="cards")
     text = (d / "draft.yaml").read_text(encoding="utf-8")
-    (d / "draft.yaml").write_text(text.replace("min_effect: 0.01", "min_effect: 0.03"), encoding="utf-8")
+    # newline="\n" as the flow writes it: a platform newline (CRLF on Windows) would change the bytes, not restore them
+    (d / "draft.yaml").write_text(text.replace("min_effect: 0.01", "min_effect: 0.03"), encoding="utf-8", newline="\n")
     with pytest.raises(ProposalError, match="changed after"):
         freeze.run(d)
-    (d / "draft.yaml").write_text(text, encoding="utf-8")
+    (d / "draft.yaml").write_text(text, encoding="utf-8", newline="\n")
     freeze.run(d)
     with pytest.raises(ProposalError, match="frozen"):
         freeze.run(d)
