@@ -269,3 +269,24 @@ def test_best_keeps_a_study_with_one_side_missing(tmp_path):
                      "reason": None}
     assert second["winner"] is None and second["reason"]["code"] == "duplicate"
     assert got["wins"] == {"fine-tuned": 1} and got["winner"] == "fine-tuned"
+
+
+def test_claim_flags_only_when_the_claim_is_about_the_question_metric(tmp_path):
+    """Minor 6: the author claim is about the study's first metric (accuracy here); it says nothing about
+    latency, so the latency question raises no claim flag and leaves `agrees_with_data` null."""
+    study = _study("S001", [("baseline", "vanilla LLM"), ("rag", "RAG pipeline")], ("factual_accuracy", "FA", True),
+                   [(1, 0.5, None), (2, 0.6, None)], claim="worsens")
+    study["metrics"].append({"id": "S001.k2", "canonical": "other", "name": "latency", "higher_is_better": False})
+    study["measurements"] += [{"id": "S001.m3", "condition": "S001.c1", "metric": "S001.k2", "value": 1.0,
+                               "dataset": "OpenFactQA"},
+                              {"id": "S001.m4", "condition": "S001.c2", "metric": "S001.k2", "value": 2.0,
+                               "dataset": "OpenFactQA"}]
+    truth = _truth(tmp_path, [study])
+    latency = expected(truth, "effect", QuestionTruth(metric="latency", min_effect=0.05))
+    entry = latency["studies"][0]
+    assert entry["direction"] == "contradicts"                    # RAG slower; the claim "worsens" is about accuracy
+    assert entry["author_claim"]["agrees_with_data"] is None
+    assert "claim_disagrees" not in entry["flags"] and latency["flags"]["claim_disagrees"] == []
+    accuracy = expected(truth, "effect", QuestionTruth(metric="factual_accuracy", min_effect=0.01))
+    assert accuracy["studies"][0]["author_claim"]["agrees_with_data"] is False
+    assert accuracy["flags"]["claim_disagrees"] == ["S001"]
