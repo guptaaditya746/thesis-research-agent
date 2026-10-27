@@ -378,8 +378,14 @@ done; done
 
 Read `report.json` / `report.md` of each score dir. A and B exist for the engine run only (`extraction`,
 `integration`); the baselines are scored on C only (`synthesis`, one row per system: `evidence-engine`,
-`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1) and is the same for
-every kind. B and C by kind, with the field names as they are in `report.json`:
+`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1). It counts
+only the evidence types the question's protocol extracts, and `report.json` lists them in `scored_types` (an
+inventory question of datasets is scored on datasets only, an effect question on its conditions, metrics,
+measurements and claims). So A is comparable across systems and corpora for the same question, not across
+questions or kinds; copy `scored_types` into the summary next to A. If a `report.json` has no `scored_types`, its
+`all` / `all` row still counts every type in the corpus (older scoring code): write A as `-` for that run and say
+so under Failures (the runs are kept, so the scores can be made again). B and C by kind, with the field names as
+they are in `report.json`:
 
 | kind | B (engine only) | C (every system) |
 |---|---|---|
@@ -388,6 +394,8 @@ every kind. B and C by kind, with the field names as they are in `report.json`:
 | consistency | `integration`: `claim_accuracy` | `synthesis`: `per_study_accuracy` |
 | best | `integration`: `kind_accuracy` | `synthesis`: `winner_correct`, `per_study_accuracy` |
 
+`direction_accuracy` and `per_study_accuracy` are scored on the papers the truth can decide, and a paper the system
+left out counts as wrong; `completeness` is reported next to them in `synthesis`: copy it into C beside them.
 `report.md` shows the same numbers under "B." and "C." headings; copy from there if a field is nested.
 
 Write `reports/question-first/summary.md` with:
@@ -398,7 +406,8 @@ Write `reports/question-first/summary.md` with:
    |---|---|---|---|---|---|
 
    Engine rows have A, B and C; the baseline rows have C only, and `-` for A and B. Write B and C as the fields of
-   the table above (for example `label_correct / direction_accuracy`).
+   the table above (for example `label_correct / direction_accuracy / completeness`), and give each question's
+   `scored_types` once under the table.
 2. **Per-extractor A**, for each corpus: from `report.json`'s `extractors.rows`, one line per extractor id with
    precision, recall, f1, for the regex, abbreviation, GLiNER, number and LLM extractors (`regex_*`, `abbrev_*`,
    `gliner_*`, `number_*`, `llm_*`), per question. Each extractor has two rows with `level = all`: copy the
