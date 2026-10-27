@@ -142,7 +142,7 @@ export GLINER_URL=http://127.0.0.1:8090
 EOF
 source "$EV/in-job.env"
 mkdir -p "$EV"/{logs,runs,scores,cache,agent-work}
-echo "$JOB $RUNS $C_MAIN $GLINER_URL"; echo $QS | wc -w      # the job id, the paths, 10
+echo "$JOB $RUNS $C_MAIN $GLINER_URL"; echo "$QS" | wc -w      # the job id, the paths, 10
 ```
 
    Leave out the `GLINER_URL` line only when GLiNER did not start in 1.5 (and say so in the report). If you start
@@ -206,74 +206,106 @@ Claude, not for you to fix).
 
 ## 4. The grid: question x corpus x system
 
-The two scripts below have not been run as whole scripts. Run `one.sh` once on one question (for example `inv-datasets`
-on `$C_MAIN`) and check its output before starting `grid.sh`.
-
-One script runs the three systems for one question and one corpus, then scores. The engine run is
+`one.sh` runs the three systems for one question and one corpus, then scores. The engine run is
 `$EV/runs/engine/<corpus>/<question>`. A baseline answer is where the web app keeps it (`webapp/evjobs.py`,
 `baseline_name`), so the app's Score finds it: `$EV/runs/<system>/<corpus>.<question>`, and for `rag-factuality`
 `$EV/runs/<system>/<corpus>` (the EV2 layout). Each system has its own cache file, because two processes must
-never append to the same cache file.
+never append to the same cache file. A system whose `answer.json` is already there is skipped, so `one.sh` and
+`grid.sh` can be started again after a stop and only do what is missing; the score is always written again.
 
 ```bash
 cat > $EV/one.sh <<'EOF'
 #!/usr/bin/env bash
-# one.sh <question-id> <corpus-dir>: engine + RAG baseline + agent baseline + score
+# one.sh <question-id> <corpus-dir> [retry]: engine + RAG baseline + agent baseline + score.
+# Skips a system whose answer.json exists. `retry`: move the engine run aside (kept under runs/failed/) and run
+# it again with --retry-errors (cached service_call errors are asked again).
 set -u
-Q=$1; C=$2; N=$(basename "$C")
+Q=$1; C=$2; MODE=${3:-}; N=$(basename "$C")
 P=evidence/protocols/$Q.yaml
 BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N        # the baselines' run name, as the web app names it
 RUN=$RUNS/engine/$N; mkdir -p "$RUN" "$SCORES/$N"
-uv run evidence run --protocol "$P" --corpus "$C" --out "$RUN" --cache "$CACHE/engine-$N" \
-  --model orch-model --strategy gaps --workers 3 --run-id "$Q" || echo "FAIL engine $Q $N"
-uv run evaluate rag-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/rag-baseline/$BN" \
-  --cache "$CACHE/rag-baseline-$N.jsonl" --model orch-model --retrieval global --k 8 || echo "FAIL rag $Q $N"
-uv run evaluate agent-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/agent-baseline/$BN" \
-  --cache "$CACHE/agent-baseline-$N.jsonl" --model orch-model --agent-root "$AGENT_ROOT" --run-id "$BN" \
-  || echo "FAIL agent $Q $N"
-B=(); for s in rag-baseline agent-baseline; do
-  [ -f "$RUNS/$s/$BN/answer.json" ] && B+=(--baseline "$RUNS/$s/$BN/answer.json"); done
-RUNARG=(); [ -f "$RUN/$Q/answer.json" ] && RUNARG=(--run "$RUN/$Q")
-uv run evaluate score "${RUNARG[@]}" --corpus "$C" --question-id "$Q" "${B[@]}" --out "$SCORES/$N/$Q" \
-  || echo "FAIL score $Q $N"
+RETRY=()
+if [ "$MODE" = retry ] && [ -e "$RUN/$Q" ]; then
+  mkdir -p "$RUNS/failed/$N"
+  mv "$RUN/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # a run dir is never overwritten; keep it for the report
+  RETRY=(--retry-errors)
+fi
+if [ -f "$RUN/$Q/answer.json" ]; then
+  echo "skip engine $Q $N: done"
+elif [ -e "$RUN/$Q" ]; then
+  echo "FAIL engine $Q $N: an unfinished run dir is in the way; run: one.sh $Q $C retry"
+else
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUN" --cache "$CACHE/engine-$N" \
+    --model orch-model --strategy gaps --workers 3 --run-id "$Q" ${RETRY[@]+"${RETRY[@]}"} || echo "FAIL engine $Q $N"
+fi
+if [ -f "$RUNS/rag-baseline/$BN/answer.json" ]; then
+  echo "skip rag $Q $N: done"
+else
+  uv run evaluate rag-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/rag-baseline/$BN" \
+    --cache "$CACHE/rag-baseline-$N.jsonl" --model orch-model --retrieval global --k 8 || echo "FAIL rag $Q $N"
+fi
+if [ -f "$RUNS/agent-baseline/$BN/answer.json" ]; then
+  echo "skip agent $Q $N: done"
+else
+  uv run evaluate agent-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/agent-baseline/$BN" \
+    --cache "$CACHE/agent-baseline-$N.jsonl" --model orch-model --agent-root "$AGENT_ROOT" --run-id "$BN" \
+    || echo "FAIL agent $Q $N"
+fi
+ARGS=()
+[ -f "$RUN/$Q/answer.json" ] && ARGS+=(--run "$RUN/$Q")
+for s in rag-baseline agent-baseline; do
+  [ -f "$RUNS/$s/$BN/answer.json" ] && ARGS+=(--baseline "$RUNS/$s/$BN/answer.json")
+done
+if [ "${#ARGS[@]}" -eq 0 ]; then
+  echo "FAIL score $Q $N: no answer to score"
+else
+  uv run evaluate score "${ARGS[@]}" --corpus "$C" --question-id "$Q" --out "$SCORES/$N/$Q" || echo "FAIL score $Q $N"
+fi
 EOF
-chmod +x $EV/one.sh
+cat > $EV/grid.sh <<'EOF'
+#!/usr/bin/env bash
+# grid.sh <corpus-dir>: one.sh for every question of $QS (from in-job.env), one after another
+set -u
+for Q in $QS; do "$EV/one.sh" "$Q" "$1"; done
+EOF
+chmod +x $EV/one.sh $EV/grid.sh
 ```
 
-Add `export RUNS=$EV/runs SCORES=$EV/scores CACHE=$EV/cache` to `in-job.env` if not already there.
+The scripts read `RUNS`, `SCORES`, `CACHE`, `AGENT_ROOT`, `EV` and `QS` from `in-job.env` (0.3 and step 1.6), and
+the relative protocol path needs the repository root as working directory, which `in-job.env` sets. Run them
+through `launch.sh`, never as plain commands on the login node.
+
+First run `one.sh` once on one question and check its output (`$EV/logs/one-check.log`, the run dir, the two
+answers, `report.md`) before starting the grid; the grid skips what this run finished:
+
+```bash
+"$EV/launch.sh" one-check "$EV/one.sh" inv-datasets "$C_MAIN"; tail -n 1 "$EV/logs/one-check.launch"
+```
 
 Run the questions of one corpus one after another (they share that corpus's three cache files, and two processes must
 never append to the same cache file). The two corpora may run side by side, so two long `orch-model` steps are
 active at once:
 
 ```bash
-cat > $EV/grid.sh <<'EOF'
-#!/usr/bin/env bash
-C=$1
-for Q in $QS; do "$EV/one.sh" "$Q" "$C"; done
-EOF
-chmod +x $EV/grid.sh
 nohup "$EV/launch.sh" grid-main "$EV/grid.sh" "$C_MAIN" > /dev/null 2>&1 &
 nohup "$EV/launch.sh" grid-hard "$EV/grid.sh" "$C_HARD" > /dev/null 2>&1 &
 ```
 
-(Inside the job `in-job.sh` has `QS` and the paths through `in-job.env`; add `QS` and `C_MAIN`, `C_HARD` there.)
-Each question's logs are in `$EV/logs/grid-main.log` and `grid-hard.log`; `FAIL` lines list what to retry.
-Retries: for an engine run that ended with `service_call` errors (a GLiNER or LLM outage), move the failed run dir
-aside (a run dir is never overwritten: the same command again stops with `FileExistsError`), run the engine again
-with `--retry-errors`, then score again. With `Q`, `C`, `N` and `BN` set as in `one.sh`:
+The logs are `$EV/logs/grid-main.log` and `grid-hard.log` (`launch.sh` starts a step's log afresh, so give a new
+step name to every later launch); `FAIL` lines list what to retry. Starting a grid again is safe: it only runs
+what has no `answer.json`.
+
+Retries: for an engine run that ended with `service_call` errors (a GLiNER or LLM outage, after the service is
+back), or a `FAIL engine` line, run `one.sh` with `retry`. It moves the run dir aside to `$RUNS/failed/<corpus>/`,
+runs the engine again with `--retry-errors`, runs any baseline that has no answer, and scores again. Run it in the
+job, and only when no grid is running on that corpus (it appends to that corpus's caches):
 
 ```bash
-mkdir -p "$RUNS/failed/$N"
-mv "$RUNS/engine/$N/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # keep it for the report
-uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/engine/$N" \
-  --cache "$CACHE/engine-$N" --model orch-model --strategy gaps --workers 3 --run-id "$Q" --retry-errors
-B=(); for s in rag-baseline agent-baseline; do
-  [ -f "$RUNS/$s/$BN/answer.json" ] && B+=(--baseline "$RUNS/$s/$BN/answer.json"); done
-uv run evaluate score --run "$RUNS/engine/$N/$Q" --corpus "$C" --question-id "$Q" "${B[@]}" --out "$SCORES/$N/$Q"
+"$EV/launch.sh" retry-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" retry
 ```
 
-Run it in the job like the grid (one run at a time per corpus: it appends to that corpus's engine cache).
+(Pass the question and corpus as arguments, as above: `in-job.env` exports its own `Q` and `P` (0.3), so a `Q`
+set in your login shell does not reach a command run through `launch.sh`.)
 
 The hard corpus (112 papers) is the slow one; if the job is about to end, finish the main corpus first and report
 the hard corpus as partial.
