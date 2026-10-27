@@ -406,7 +406,10 @@ echo $! > "$EV/logs/3-engine.pid"
 
 The corpus list is explicit (the per-level corpora, the variants named in `$EV/cf-*.txt`, the knob sets' mixed
 corpora, the hard set's `complex` and `mixed`), so a variant left over from a retry is never run. A non-zero exit
-of any run is a `FAIL` line and the script exits 1 (record that; the loop still runs the rest). The hard set is
+of any run is a `FAIL` line and the script exits 1 (record that; the loop still runs the rest). A run whose
+extractor calls failed (the gateway or the GLiNER service did not answer) is written but exits 2, after a line
+`FAIL engine-errors <run dir> <count>` in the log: rerun it into a new run id with `--retry-errors` once the
+service answers. The hard set is
 100 papers per corpus: the long part of this step. `--model orch-model` is the default, written
 out so the record (`run.json` `settings.model`) is explicit; `--strategy all` is written out because the default is now `gaps`. The `gaps`
 run shares the record cache with the `all` run: a call whose task is byte for byte one the `all` run made

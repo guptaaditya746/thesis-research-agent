@@ -217,11 +217,20 @@ class RunDir:
 
     def error_calls(self) -> int:
         """Calls whose checked result is an error (calls/<call_id>.json status "error"); an unreadable file is not one."""
+        return self._calls_with("error")
+
+    def failed_calls(self) -> int:
+        """Calls that failed in whole or in part (status "error" or "partial"): the model gateway or the GLiNER
+        service did not answer for some or all of the call's chunks (or an agentic call ran out of budget).
+        `evidence run` exits 2 on a count above 0, and `--retry-errors` asks both again."""
+        return self._calls_with("error", "partial")
+
+    def _calls_with(self, *statuses: str) -> int:
         folder = self.file(CALLS_DIR)
         if not folder.is_dir():
             return 0
         found = (self.try_json(f"{CALLS_DIR}/{p.name}") for p in sorted(folder.glob("*.json")))
-        return sum(1 for c in found if isinstance(c, dict) and c.get("status") == "error")
+        return sum(1 for c in found if isinstance(c, dict) and c.get("status") in statuses)
 
     def cache_file(self) -> Path | None:
         """The record cache run.json names (`settings.cache`, a directory or the jsonl file), when it exists."""

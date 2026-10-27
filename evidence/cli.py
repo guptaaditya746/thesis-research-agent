@@ -2,6 +2,7 @@
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
                  [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--workers N] [--import MODULE] [--run-id ID]
+                 [--retry-errors] [--allow-failed-calls]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
     evidence prov RUN
@@ -26,6 +27,10 @@ model call each (`--model`, default orch-model), the rest is deterministic, and 
 Exit status: 0 ok,
 1 a replay mismatch, a cache miss, a broken chain or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
 refused proposal step (a decision without a reason, an amendment without a reason or a change, a stale input).
+`run` also exits 2 when the run it wrote has failed extractor calls (calls/*.json status error or partial: the
+model gateway or the GLiNER service did not answer): the run stays on disk, and stderr has
+`FAIL engine-errors <run dir> <count>`. Those results are in the record cache, so a later run reuses them until it
+is given `--retry-errors`. `--allow-failed-calls` exits 0 instead and only warns (the web app counts them itself).
 """
 from __future__ import annotations
 
@@ -39,7 +44,7 @@ import yaml
 from agent.chain import verify
 
 from .calls import NotRecorded
-from .rundir import EVENTS_FILE, RUN_FILE, read_json
+from .rundir import EVENTS_FILE, RUN_FILE, RunDir, read_json
 
 DEFAULT_MODEL = "orch-model"  # agent/rundir.ORCHESTRATOR's alias; evidence.engine.Settings.model stays None by default
 
@@ -68,7 +73,9 @@ def _parser() -> argparse.ArgumentParser:
                    help="papers whose model calls run at once; outputs do not depend on it")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
     r.add_argument("--run-id")
-    r.add_argument("--retry-errors", action="store_true", help="run cached error results again")
+    r.add_argument("--retry-errors", action="store_true", help="run cached error and partial results again")
+    r.add_argument("--allow-failed-calls", action="store_true",
+                   help="exit 0 even when extractor calls failed (default: exit 2 with a FAIL engine-errors line)")
     for name, text in (("replay", "rebuild a run from the record cache and check its output hashes"),
                        ("reexec", "run extractors again, bypassing the cache, and compare")):
         s = sub.add_parser(name, help=text)
@@ -164,6 +171,16 @@ def _dispatch(args: argparse.Namespace) -> int:
         summary = ({"label": answer["label"], "counts": answer["counts"]} if "kind" not in answer
                    else {"kind": answer["kind"]})   # effect answers carry no kind; the others no label
         print(json.dumps({"run": str(root), **summary, "cost": record["cost"]}, indent=1))
+        failed = RunDir(root).failed_calls()
+        if failed and args.allow_failed_calls:
+            print(f"warning: {failed} extractor call(s) failed (status error or partial in {root / 'calls'})",
+                  file=sys.stderr)
+        elif failed:
+            print(f"FAIL engine-errors {root} {failed}", file=sys.stderr)
+            print(f"  {failed} extractor call(s) failed (status error or partial in calls/: the model gateway or the "
+                  "GLiNER service did not answer). The run is kept, and the failed results are in the record cache: "
+                  "once the service answers, run again into a new run dir with --retry-errors.", file=sys.stderr)
+            return 2
         return 0
     if args.command == "replay":
         from .replay import replay

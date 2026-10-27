@@ -160,8 +160,16 @@ A skipped GLiNER call (the service was not reachable) is only an `extractor_call
 `events.jsonl`; `evidence run` does not print it, and `funnel.json` leaves it out (its own `skipped` means a paper
 the screen left out). The engine asks GLiNER's `/info` once per run: if the service was not up when a run started,
 all of that run's GLiNER calls are skipped. If the service dies mid-run, the GLiNER steps return errors, the funnel
-goes to the next extractor and runs still finish. Errors from the GLiNER service and the LLM (`service_call`) are
-cached; after you restart the service, re-run that run as in section 4, "Retries".
+goes to the next extractor and runs still finish.
+
+**Failed calls.** A failed LLM call (the gateway refused, timed out or was restarting) has the error reason
+`model_call` (`evidence/extractors/llm.py`, and the LLM screen); a failed GLiNER `/predict` has `service_call`
+(`evidence/extractors/gliner.py`, the only `service_call`). Either way the call's result is `error` (every chunk
+failed) or `partial` (some chunks failed), the funnel moves on, and the run finishes with less evidence. These
+results are stored in the record cache, so a plain rerun reuses them. So `evidence run` counts them once it has
+written the run: above 0 it prints `FAIL engine-errors <run dir> <count>` and exits with code 2 (the run stays on
+disk), and `one.sh` then prints `FAIL engine-errors <question> <corpus>`. Retry those runs with
+`one.sh <question> <corpus> retry` once the service answers (section 4, "Retries").
 
 ## 2. Offline check (login node, no model)
 
@@ -218,7 +226,7 @@ cat > $EV/one.sh <<'EOF'
 #!/usr/bin/env bash
 # one.sh <question-id> <corpus-dir> [retry]: engine + RAG baseline + agent baseline + score.
 # Skips a system whose answer.json exists. `retry`: move the engine run aside (kept under runs/failed/) and run
-# it again with --retry-errors (cached service_call errors are asked again).
+# it again with --retry-errors (cached failed calls, status error or partial, are asked again).
 set -u
 Q=$1; C=$2; MODE=${3:-}; N=$(basename "$C")
 P=evidence/protocols/$Q.yaml
@@ -236,7 +244,13 @@ elif [ -e "$RUN/$Q" ]; then
   echo "FAIL engine $Q $N: an unfinished run dir is in the way; run: one.sh $Q $C retry"
 else
   uv run evidence run --protocol "$P" --corpus "$C" --out "$RUN" --cache "$CACHE/engine-$N" \
-    --model orch-model --strategy gaps --workers 3 --run-id "$Q" ${RETRY[@]+"${RETRY[@]}"} || echo "FAIL engine $Q $N"
+    --model orch-model --strategy gaps --workers 3 --run-id "$Q" ${RETRY[@]+"${RETRY[@]}"}
+  rc=$?
+  if [ "$rc" -eq 2 ] && [ -f "$RUN/$Q/run.json" ]; then   # the run is written, but some extractor calls failed
+    echo "FAIL engine-errors $Q $N: failed calls (count on the FAIL line above); when the service answers: one.sh $Q $C retry"
+  elif [ "$rc" -ne 0 ]; then
+    echo "FAIL engine $Q $N (exit $rc)"
+  fi
 fi
 if [ -f "$RUNS/rag-baseline/$BN/answer.json" ]; then
   echo "skip rag $Q $N: done"
@@ -295,10 +309,11 @@ The logs are `$EV/logs/grid-main.log` and `grid-hard.log` (`launch.sh` starts a 
 step name to every later launch); `FAIL` lines list what to retry. Starting a grid again is safe: it only runs
 what has no `answer.json`.
 
-Retries: for an engine run that ended with `service_call` errors (a GLiNER or LLM outage, after the service is
-back), or a `FAIL engine` line, run `one.sh` with `retry`. It moves the run dir aside to `$RUNS/failed/<corpus>/`,
-runs the engine again with `--retry-errors`, runs any baseline that has no answer, and scores again. Run it in the
-job, and only when no grid is running on that corpus (it appends to that corpus's caches):
+Retries: for a `FAIL engine-errors` line (failed LLM calls, `model_call`, or failed GLiNER calls, `service_call`;
+section 1, "Failed calls"), once the gateway or the service answers again, or for a `FAIL engine` line, run `one.sh`
+with `retry`. It moves the run dir aside to `$RUNS/failed/<corpus>/`, runs the engine again with `--retry-errors`
+(the cached `error` and `partial` results are asked again), runs any baseline that has no answer, and scores again.
+Run it in the job, and only when no grid is running on that corpus (it appends to that corpus's caches):
 
 ```bash
 "$EV/launch.sh" retry-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" retry
@@ -312,7 +327,18 @@ the hard corpus as partial.
 
 ## 5. Check each run
 
-- `uv run evidence replay $RUNS/engine/<corpus>/<question> | grep '"ok"'` gives `"ok": true`.
+- `uv run evidence replay $RUNS/engine/<corpus>/<question> | grep '"ok"'` gives `"ok": true`. (A replay is also
+  `ok` for a run whose calls failed: it replays the cached failures. That is why the next check exists.)
+- Failed calls: the count per run, 0 when every LLM and GLiNER call answered. Report it per run (step 6, item 5),
+  and retry every run above 0 with `one.sh <question> <corpus> retry` (section 4, "Retries"), then count again:
+
+```bash
+for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
+  R=$RUNS/engine/$N/$Q; [ -f "$R/run.json" ] || { echo "$N $Q: no finished run"; continue; }
+  echo "$N $Q $(uv run python -c 'import sys; from evidence.rundir import RunDir; print(RunDir(sys.argv[1]).failed_calls())' "$R")"
+done; done
+```
+
 - `$SCORES/<corpus>/<question>/report.md` exists for each of the 20 pairs; note any missing one with its `FAIL` line.
 - GLiNER: `grep '"status":"skipped"' $RUNS/engine/<corpus>/<question>/events.jsonl | grep -c '"agent_id":"gliner_'`
   counts the GLiNER calls skipped because the service was not up (0 when it was up). Report the count per run.
@@ -351,7 +377,8 @@ Write `reports/question-first/summary.md` with:
 4. **GPU and GLiNER**: `nvidia-smi` driver and CUDA, GLiNER's memory use, free memory left on GPU 0, whether
    `orch-3x40-gliner.yaml` needed `gpu_memory_utilization: 0.88`, whether GLiNER started (`gliner health ok`),
    whether `GLINER_URL` was set.
-5. **Failures**: each `FAIL` line and what you did; the number of cached errors that needed `--retry-errors`.
+5. **Failures**: each `FAIL` line and what you did; the failed-call count of every engine run (step 5), before
+   and after its retry, and which runs needed `one.sh ... retry`.
 
 ## 7. Hand-back
 
