@@ -13,8 +13,9 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from evidence.protocol import Protocol, load
 from evidence.propose import cards, critic, draft, frame, freeze
 from evidence.propose.compare import comparable, query_tokens  # noqa: F401  (the tests import them from here)
+from evidence.propose.common import KIND_TEMPLATES
 
-from .conftest import PROTOCOL, prompt_of, respond
+from .conftest import prompt_of, respond
 
 QUESTION = "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?"
 
@@ -96,4 +97,6 @@ def flow(directory: Path, model: Scripted, *, vocab: str | None = "rag-factualit
 
 
 def hand_written() -> Protocol:
-    return load(PROTOCOL)
+    """The hand-written protocol the RAG question's proposal reproduces: the effect template, rag-factuality.yaml
+    with the funnel steps (rag-factuality-funnel.yaml)."""
+    return load(KIND_TEMPLATES["effect"])

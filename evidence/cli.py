@@ -102,7 +102,7 @@ def _propose_parser(sub: argparse._SubParsersAction) -> None:
     f.add_argument("--refresh", action="store_true", help="ask the model again instead of using its cached reply")
     d = pro.add_parser("draft", help="frame.json + the example protocol -> draft.yaml, draft.sources.json")
     d.add_argument("dir", type=Path)
-    d.add_argument("--template", type=Path, help="example protocol (default evidence/protocols/rag-factuality.yaml)")
+    d.add_argument("--template", type=Path, help="example protocol (default: the hand-written protocol of the question's kind, evidence/propose/common.KIND_TEMPLATES)")
     for name, text in (("critic", "deterministic checks and an LLM checklist -> critic.json"),
                        ("cards", "the fixed choice points -> cards.json, decisions.yaml (prefilled)")):
         s = pro.add_parser(name, help=text)

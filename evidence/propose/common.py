@@ -16,9 +16,11 @@ from jsonio import file_sha256, sha256_hex
 import modelcall
 
 HERE = Path(__file__).resolve().parent
-EXAMPLE_PROTOCOL = HERE.parent / "protocols" / "rag-factuality.yaml"   # the draft's template for an effect question
+# The effect template is rag-factuality.yaml with the funnel steps (regex -> abbrev -> GLiNER -> number -> LLM),
+# like the templates of the other kinds, so an effect draft and its cascade card offer them too.
+EFFECT_TEMPLATE = HERE.parent / "protocols" / "rag-factuality-funnel.yaml"
 # The draft starts from the hand-written protocol of the question's kind.
-KIND_TEMPLATES = {"effect": EXAMPLE_PROTOCOL,
+KIND_TEMPLATES = {"effect": EFFECT_TEMPLATE,
                   "consistency": HERE.parent / "protocols" / "cons-accuracy.yaml",
                   "inventory": HERE.parent / "protocols" / "inv-metrics.yaml",
                   "best": HERE.parent / "protocols" / "best-accuracy.yaml"}

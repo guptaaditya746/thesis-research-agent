@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from evidence import cli
 from evidence.propose import critic, draft, frame
@@ -81,3 +82,26 @@ def test_cli_kind_flag(tmp_path: Path) -> None:
     assert args.kind == "best"
     with pytest.raises(SystemExit):
         cli._parser().parse_args(["propose", "frame", "--question", "q", "--out", str(tmp_path), "--kind", "nope"])
+
+
+FUNNEL = ("regex_", "abbrev_", "gliner_", "number_", "llm_")   # the agreed order; a type has a subset of the steps
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_draft_cascades_follow_the_funnel(tmp_path: Path, kind: str) -> None:
+    """Every kind's draft offers the funnel steps its template has, in the order regex -> abbrev -> GLiNER ->
+    number -> LLM (the effect template was rag-factuality.yaml, without abbrev, GLiNER and number)."""
+    frame.run(QUESTION, tmp_path, model=Scripted(frame_reply=_frame_reply(kind)).model)
+    draft.run(tmp_path)
+    data = yaml.safe_load((tmp_path / "draft.yaml").read_text(encoding="utf-8"))
+    names = {t: [e["name"] for e in spec.get("extractors", [])] for t, spec in data["evidence_types"].items()}
+    steps = [n for cascade in names.values() for n in cascade]
+    assert any(n.startswith("gliner_") for n in steps), names
+    if kind in ("effect", "consistency"):
+        assert names["condition"][:3] == ["regex_condition", "abbrev_condition", "gliner_condition"]
+        assert names["metric"][:3] == ["regex_metric", "abbrev_metric", "gliner_metric"]
+        assert "number_measurement" in names["measurement"]
+    for cascade in names.values():
+        ranks = [next(i for i, p in enumerate(FUNNEL) if n.startswith(p)) for n in cascade
+                 if any(n.startswith(p) for p in FUNNEL)]
+        assert ranks == sorted(ranks), cascade

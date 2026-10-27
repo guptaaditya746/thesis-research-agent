@@ -1,6 +1,6 @@
 """Step 2, `draft` (deterministic): frame.json and the example protocol -> draft.yaml, draft.sources.json.
 
-The example protocol (`evidence/protocols/rag-factuality.yaml` unless `--template` names another) gives
+The example protocol (the kind's template, common.KIND_TEMPLATES, unless `--template` names another) gives
 everything the frame does not decide: the four evidence types' field schemas, span roles, links, context
 and cascades, the locate step, the screen's extractors, `min_effect`, the pairing rule, the label table and
 the flag thresholds. The frame decides the rest:
