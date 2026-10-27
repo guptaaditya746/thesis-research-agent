@@ -161,7 +161,8 @@ something:
 
 ```bash
 for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
-  R=$RUNS/engine/$N/$Q; [ -f "$R/run.json" ] || continue
+  G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps; R=$RUNS/$G/$N   # as one.sh, section 4
+  [ -f "$R/run.json" ] || continue
   echo "$N $Q skipped=$(grep '"status":"skipped"' "$R/events.jsonl" | grep -c '"agent_id":"gliner_') found=$(grep -c gliner_ "$R/evidence.jsonl")"
 done; done                                  # skipped=0 and found above 0 on every line
 ```
@@ -227,10 +228,12 @@ Claude, not for you to fix).
 
 ## 4. The grid: question x corpus x system
 
-`one.sh` runs the three systems for one question and one corpus, then scores. The engine run is
-`$EV/runs/engine/<corpus>/<question>`. A baseline answer is where the web app keeps it (`webapp/evjobs.py`,
-`baseline_name`), so the app's Score finds it: `$EV/runs/<system>/<corpus>.<question>`, and for `rag-factuality`
-`$EV/runs/<system>/<corpus>` (the EV2 layout). Each system has its own cache file, because two processes must
+`one.sh` runs the three systems for one question and one corpus, then scores. Every run is where the web app
+keeps it, so the app lists, opens and scores the grid's runs as its own (`$EV` is the app's `$EV`). The engine run
+is `$EV/runs/<question>-cascade-gaps/<corpus>`, and for `rag-factuality` `$EV/runs/cascade-gaps/<corpus>`
+(`webapp/evjobs.py`, `run_group`: the group of a repo protocol run with the cascade and the `gaps` strategy; the
+run name is the corpus, the app's default). A baseline answer is `$EV/runs/<system>/<corpus>.<question>`, and for
+`rag-factuality` `$EV/runs/<system>/<corpus>` (`baseline_name`, the EV2 layout), so the app's Score finds it. Each system has its own cache file, because two processes must
 never append to the same cache file. A finished system is skipped (the engine's `run.json`, a baseline's
 `answer.json`), so `one.sh` and `grid.sh` can be started again after a stop and only do what is missing; the score
 is always written again.
@@ -239,30 +242,31 @@ is always written again.
 cat > $EV/one.sh <<'EOF'
 #!/usr/bin/env bash
 # one.sh <question-id> <corpus-dir> [retry|rerun]: engine + RAG baseline + agent baseline + score.
-# Skips a system whose answer.json exists. `retry` and `rerun` first move the engine run aside (kept under
-# runs/failed/<corpus>/) and run it again: `retry` with --retry-errors (cached failed calls, status error or
-# partial, are asked again), `rerun` without (skipped GLiNER steps; a killed run).
+# Skips a finished system (the engine's run.json, a baseline's answer.json). `retry` and `rerun` first move the
+# engine run aside (kept under runs/failed/<corpus>/) and run it again: `retry` with --retry-errors (cached failed
+# calls, status error or partial, are asked again), `rerun` without (skipped GLiNER steps; a killed run).
 set -u
 Q=$1; C=$2; MODE=${3:-}; N=$(basename "$C")
 case $MODE in ""|retry|rerun) ;; *) echo "FAIL one.sh $Q $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
 P=evidence/protocols/$Q.yaml
+G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run's group, as the web app names it
 BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N        # the baselines' run name, as the web app names it
-RUN=$RUNS/engine/$N; mkdir -p "$RUN" "$SCORES/$N"
+RUN=$RUNS/$G/$N; mkdir -p "$RUNS/$G" "$SCORES/$N"   # the engine run dir: <group>/<corpus>
 RETRY=()
-if [ -n "$MODE" ] && [ -e "$RUN/$Q" ]; then
+if [ -n "$MODE" ] && [ -e "$RUN" ]; then
   mkdir -p "$RUNS/failed/$N"
-  mv "$RUN/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # a run dir is never overwritten; keep it for the report
+  mv "$RUN" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # a run dir is never overwritten; keep it for the report
 fi
 [ "$MODE" = retry ] && RETRY=(--retry-errors)
-if [ -f "$RUN/$Q/run.json" ]; then                  # the engine writes run.json last
+if [ -f "$RUN/run.json" ]; then                     # the engine writes run.json last
   echo "skip engine $Q $N: done"
-elif [ -e "$RUN/$Q" ]; then
+elif [ -e "$RUN" ]; then
   echo "FAIL engine $Q $N: a run dir without run.json is in the way (a killed run); one.sh $Q $C rerun moves it to $RUNS/failed/$N/ and runs again"
 else
-  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUN" --cache "$CACHE/engine-$N" \
-    --model orch-model --strategy gaps --workers 3 --run-id "$Q" ${RETRY[@]+"${RETRY[@]}"}
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/$G" --cache "$CACHE/engine-$N" \
+    --model orch-model --strategy gaps --workers 3 --run-id "$N" ${RETRY[@]+"${RETRY[@]}"}
   rc=$?
-  if [ "$rc" -eq 2 ] && [ -f "$RUN/$Q/run.json" ]; then   # the run is written, but some extractor calls failed
+  if [ "$rc" -eq 2 ] && [ -f "$RUN/run.json" ]; then     # the run is written, but some extractor calls failed
     echo "FAIL engine-errors $Q $N: failed calls (count on the FAIL line above); when the service answers: one.sh $Q $C retry"
   elif [ "$rc" -ne 0 ]; then
     echo "FAIL engine $Q $N (exit $rc)"
@@ -282,7 +286,7 @@ else
     || echo "FAIL agent $Q $N"
 fi
 ARGS=()
-[ -f "$RUN/$Q/run.json" ] && ARGS+=(--run "$RUN/$Q")
+[ -f "$RUN/run.json" ] && ARGS+=(--run "$RUN")
 for s in rag-baseline agent-baseline; do
   [ -f "$RUNS/$s/$BN/answer.json" ] && ARGS+=(--baseline "$RUNS/$s/$BN/answer.json")
 done
@@ -355,14 +359,16 @@ the hard corpus as partial.
 
 ## 5. Check each run
 
-- `uv run evidence replay $RUNS/engine/<corpus>/<question> | grep '"ok"'` gives `"ok": true`. (A replay is also
-  `ok` for a run whose calls failed: it replays the cached failures. That is why the next check exists.)
+- `uv run evidence replay $RUNS/<question>-cascade-gaps/<corpus> | grep '"ok"'` (for `rag-factuality`
+  `$RUNS/cascade-gaps/<corpus>`) gives `"ok": true`. (A replay is also `ok` for a run whose calls failed: it
+  replays the cached failures. That is why the next check exists.)
 - Failed calls: the count per run, 0 when every LLM and GLiNER call answered. Report it per run (step 6, item 5),
   and retry every run above 0 with `one.sh <question> <corpus> retry` (section 4, "Retries"), then count again:
 
 ```bash
 for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
-  R=$RUNS/engine/$N/$Q; [ -f "$R/run.json" ] || { echo "$N $Q: no finished run"; continue; }
+  G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps; R=$RUNS/$G/$N   # as one.sh, section 4
+  [ -f "$R/run.json" ] || { echo "$N $Q: no finished run"; continue; }
   echo "$N $Q $(uv run python -c 'import sys; from evidence.rundir import RunDir; print(RunDir(sys.argv[1]).failed_calls())' "$R")"
 done; done
 ```
@@ -430,7 +436,8 @@ for N in rag-claude-s1-mixed rag-tpl-hard-complex; do
     D=$SCORES/$N/$Q; [ -f "$D/report.json" ] || continue
     mkdir -p reports/question-first/$N/$Q
     cp "$D"/report.json "$D"/report.md reports/question-first/$N/$Q/
-    cp "$RUNS"/engine/$N/$Q/funnel.json reports/question-first/$N/$Q/ 2>/dev/null
+    G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run, as one.sh writes it
+    cp "$RUNS/$G/$N/funnel.json" reports/question-first/$N/$Q/ 2>/dev/null
   done
 done
 cp -r $EV/scores/mapcheck reports/question-first/mapcheck 2>/dev/null
