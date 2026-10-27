@@ -158,9 +158,12 @@ grep -c gliner_ "$RUNS/engine/$N/$Q/evidence.jsonl"                             
 
 A skipped GLiNER call (the service was not reachable) is only an `extractor_call` event with status `skipped` in
 `events.jsonl`; `evidence run` does not print it, and `funnel.json` leaves it out (its own `skipped` means a paper
-the screen left out). The engine asks GLiNER's `/info` once per run: if the service was not up when a run started,
-all of that run's GLiNER calls are skipped. If the service dies mid-run, the GLiNER steps return errors, the funnel
-goes to the next extractor and runs still finish.
+the screen left out). The engine asks GLiNER's `/info` when a run starts and, while it gets no answer, again at
+most once a minute at a later GLiNER step: the steps before the service answers are skipped, the ones after it run.
+A skip is not stored in the record cache, so skipped GLiNER steps need a **plain rerun** after the run dir is moved
+aside, not `--retry-errors`: `one.sh <question> <corpus> rerun` (section 4) does exactly that. If the service dies
+mid-run, the GLiNER steps return errors (`service_call`, below), the funnel goes to the next extractor and runs
+still finish.
 
 **Failed calls.** A failed LLM call (the gateway refused, timed out or was restarting) has the error reason
 `model_call` (`evidence/extractors/llm.py`, and the LLM screen); a failed GLiNER `/predict` has `service_call`
@@ -224,20 +227,22 @@ never append to the same cache file. A system whose `answer.json` is already the
 ```bash
 cat > $EV/one.sh <<'EOF'
 #!/usr/bin/env bash
-# one.sh <question-id> <corpus-dir> [retry]: engine + RAG baseline + agent baseline + score.
-# Skips a system whose answer.json exists. `retry`: move the engine run aside (kept under runs/failed/) and run
-# it again with --retry-errors (cached failed calls, status error or partial, are asked again).
+# one.sh <question-id> <corpus-dir> [retry|rerun]: engine + RAG baseline + agent baseline + score.
+# Skips a system whose answer.json exists. `retry` and `rerun` first move the engine run aside (kept under
+# runs/failed/<corpus>/) and run it again: `retry` with --retry-errors (cached failed calls, status error or
+# partial, are asked again), `rerun` without (skipped GLiNER steps; a killed run).
 set -u
 Q=$1; C=$2; MODE=${3:-}; N=$(basename "$C")
+case $MODE in ""|retry|rerun) ;; *) echo "FAIL one.sh $Q $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
 P=evidence/protocols/$Q.yaml
 BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N        # the baselines' run name, as the web app names it
 RUN=$RUNS/engine/$N; mkdir -p "$RUN" "$SCORES/$N"
 RETRY=()
-if [ "$MODE" = retry ] && [ -e "$RUN/$Q" ]; then
+if [ -n "$MODE" ] && [ -e "$RUN/$Q" ]; then
   mkdir -p "$RUNS/failed/$N"
   mv "$RUN/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # a run dir is never overwritten; keep it for the report
-  RETRY=(--retry-errors)
 fi
+[ "$MODE" = retry ] && RETRY=(--retry-errors)
 if [ -f "$RUN/$Q/answer.json" ]; then
   echo "skip engine $Q $N: done"
 elif [ -e "$RUN/$Q" ]; then
@@ -319,6 +324,12 @@ Run it in the job, and only when no grid is running on that corpus (it appends t
 "$EV/launch.sh" retry-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" retry
 ```
 
+Reruns: for a run with skipped GLiNER steps (step 5 counts them; the service was not up yet), once GLiNER answers,
+run `one.sh` with `rerun` instead: it moves the run dir aside the same way and runs the engine again **without**
+`--retry-errors` (skips are not cached, so a plain run makes those GLiNER calls; every other call comes from the
+cache). Same rules: in the job, no grid on that corpus, a new step name:
+`"$EV/launch.sh" rerun-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" rerun`.
+
 (Pass the question and corpus as arguments, as above: `in-job.env` exports its own `Q` and `P` (0.3), so a `Q`
 set in your login shell does not reach a command run through `launch.sh`.)
 
@@ -342,6 +353,8 @@ done; done
 - `$SCORES/<corpus>/<question>/report.md` exists for each of the 20 pairs; note any missing one with its `FAIL` line.
 - GLiNER: `grep '"status":"skipped"' $RUNS/engine/<corpus>/<question>/events.jsonl | grep -c '"agent_id":"gliner_'`
   counts the GLiNER calls skipped because the service was not up (0 when it was up). Report the count per run.
+  Above 0 while GLiNER now answers (`curl -s 127.0.0.1:8090/info` through `srun`, step 1.5): rerun that run with
+  `one.sh <question> <corpus> rerun` (section 4, "Reruns"; not `retry`), then count again.
   (`funnel.json`'s `skipped` is a paper the screen left out, not GLiNER.)
 
 ## 6. The deliverable table

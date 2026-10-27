@@ -497,6 +497,11 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         ex.document(paper)
     ex.finish()
     ex.cost["seconds"] = round(time.monotonic() - t0, 3)
+    if settings.gliner_model is None:   # GLiNER came up after the run started: record the model it served
+        served = sorted({e.model for c in cascades.values() for ref, e in c
+                         if isinstance(e, gliner.GlinerExtractor) and "model" not in ref.config and e.model})
+        if served:
+            settings = replace(settings, gliner_model=served[0])
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
     write_json(root / RUN_FILE, {
         "run_id": run_id, "mode": mode, "source_run": source_run, "protocol": {"id": protocol.id, "sha256": protocol.sha256},

@@ -226,3 +226,59 @@ def test_gliner_replay_takes_gliner_url_from_the_environment(tmp_path: Path, mon
     assert report["ok"], report
     settings = json.loads((new / "run.json").read_text(encoding="utf-8"))["settings"]
     assert settings["gliner_url"] == moved.url and settings["gliner_model"] == "fake/gliner-a"
+
+
+def test_a_failed_info_is_asked_again_after_the_back_off_and_the_id_takes_the_model(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    with FakeGliner(model="fake/gliner-a", info_fails=1) as server:
+        ex = get("gliner_metric", config("metric", gliner_url=server.url))
+        down_id = ex.spec.extractor_id
+        assert not ex.available() and not ex.available() and server.info_calls == 1   # within the back-off: not asked
+        assert ex.spec.config["model"] is None
+        monkeypatch.setattr(gliner, "RETRY_S", 0.0)
+        assert ex.available() and server.info_calls == 2                           # asked again: up now
+        assert ex.spec.config["model"] == "fake/gliner-a" and ex.spec.extractor_id != down_id
+        up = get("gliner_metric", config("metric", gliner_url=server.url))          # the reply is kept
+        assert server.info_calls == 2 and up.spec.extractor_id == ex.spec.extractor_id
+
+
+def test_a_pinned_model_stays_and_needs_the_service_to_serve_it(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(gliner, "RETRY_S", 0.0)
+    with FakeGliner(model="fake/gliner-b", info_fails=1) as server:
+        ex = get("gliner_metric", config("metric", gliner_url=server.url, model="fake/gliner-a"))
+        pinned = ex.spec.extractor_id
+        assert not ex.available() and ex.spec.extractor_id == pinned   # up, but another model: still unavailable
+        assert ex.served == "fake/gliner-b" and ex.spec.config["model"] == "fake/gliner-a"
+
+
+def test_gliner_up_after_the_run_started_is_used_and_recorded(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """/info fails when the run starts (the engine's ask and the extractor's), then answers at the first step: the
+    step runs, run.json records the served model, and a replay without the service gives the same ids."""
+    monkeypatch.setattr(gliner, "RETRY_S", 0.0)
+    with FakeGliner(model="fake/gliner-a", info_fails=2) as server:
+        settings = engine.Settings(corpus=str(corpus_of(tmp_path / "corpus", {"P1": TEXT})), cache=str(tmp_path / "cache"),
+                                   strategy="all", gliner_url=server.url)
+        run = engine.execute_run(gliner_protocol(tmp_path).read_bytes(), settings, tmp_path / "runs", provider=None)
+        assert server.info_calls == 3
+    rows = [json.loads(x) for x in (run / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    statuses = [e["status"] for e in rows if e["subtype"] == "extractor_call" and e["agent_id"].startswith("gliner_")]
+    assert statuses == ["ok"]
+    record = json.loads((run / "run.json").read_text(encoding="utf-8"))
+    assert record["settings"]["gliner_model"] == "fake/gliner-a"
+    [spec] = [s for k, s in record["extractor_specs"].items() if k.startswith("gliner_")]
+    assert spec["config"]["model"] == "fake/gliner-a"
+    gliner.forget()
+    new, report = replay(run)
+    assert report["ok"], report
+    assert gliner_ids(new) == gliner_ids(run)
+
+
+def test_gliner_down_for_the_whole_run_asks_info_once_a_minute(tmp_path: Path) -> None:
+    with FakeGliner(info_fails=100) as server:
+        settings = engine.Settings(corpus=str(corpus_of(tmp_path / "corpus", {"P1": TEXT, "P2": TEXT})),
+                                   cache=str(tmp_path / "cache"), strategy="all", gliner_url=server.url)
+        run = engine.execute_run(gliner_protocol(tmp_path).read_bytes(), settings, tmp_path / "runs", provider=None)
+        assert server.info_calls == 1          # the run is shorter than RETRY_S: the start's ask only
+    rows = [json.loads(x) for x in (run / "events.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [e["status"] for e in rows if e["agent_id"].startswith("gliner_")] == ["skipped", "skipped"]
+    assert json.loads((run / "run.json").read_text(encoding="utf-8"))["settings"]["gliner_model"] is None

@@ -5,7 +5,8 @@ free localhost port (threading http.server), with a deterministic regex entity f
     POST /predict  {"text", "labels", "threshold"} -> {"entities": [{"start", "end", "text", "label", "score"}]}
 
 Each label has a list of (pattern, score); an entity is a match of a requested label's pattern whose score is at
-least the threshold. `requests` keeps every /predict body; `delay` makes /predict slow (a timeout test).
+least the threshold. `requests` keeps every /predict body; `delay` makes /predict slow (a timeout test);
+`info_fails` answers the first n GET /info with 503 (a service still loading).
 """
 from __future__ import annotations
 
@@ -42,8 +43,9 @@ class FakeGliner:
     """`with FakeGliner() as server:` serves on `server.url` until the block ends."""
 
     def __init__(self, model: str = "fake/gliner-test", patterns: dict[str, list[tuple[str, float]]] | None = None,
-                 delay: float = 0.0, offsets: int = 0) -> None:
+                 delay: float = 0.0, offsets: int = 0, info_fails: int = 0) -> None:
         self.model, self.patterns, self.delay = model, patterns or PATTERNS, delay
+        self.info_fails = info_fails
         self.offsets = offsets       # added to every start and end: a server whose offsets are wrong
         self.requests: list[dict[str, Any]] = []
         self.info_calls = 0
@@ -66,6 +68,9 @@ class FakeGliner:
                     self.send_error(404)
                     return
                 fake.info_calls += 1
+                if fake.info_calls <= fake.info_fails:
+                    self.send_error(503, "loading")
+                    return
                 self._send({"model": fake.model})
 
             def do_POST(self) -> None:   # noqa: N802

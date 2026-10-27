@@ -14,18 +14,27 @@ matches; a dataset item is `{name}`. Spans are on the entity text, with the type
 
 Kind `model`: every /predict is recorded like a model call (request, response or error; no usage), so it lands
 in the record cache and in the run's calls.jsonl. The extractor's config, and so its id, holds the model name
-from /info (asked once per process and URL), the labels and the threshold: another GLiNER model never hits old
-cache records. The URL is not in the id. `model` may be pinned in the protocol config, and the engine sets it to
-the model recorded with the run (Settings.gliner_model) so a replay without the service builds the same id; the
-service must then serve that model. Without a URL (`gliner_url` from the engine, else $GLINER_URL), or when /info fails,
-`available()` is False and `extract` returns an `unavailable` error; a timeout or connection error on /predict
-is a `service_call` error. Both are results, not exceptions, so a cascade goes on. Own module, so every
-existing extractor keeps its id.
+from /info, the labels and the threshold: another GLiNER model never hits old cache records. The URL is not in the
+id. `model` may be pinned in the protocol config, and the engine sets it to the model recorded with the run
+(Settings.gliner_model) so a replay without the service builds the same id; the service must then serve that model.
+
+/info: a reply is kept per process and URL. A failed /info is not kept: `available()` asks again on a later step,
+at most once every RETRY_S seconds per URL (the other threads do not wait for that request; they see the service
+as down until it answers), so a service that was still loading when the run started is used from the step after
+it comes up, and a dead one costs one refused connection a minute. An extractor built while the service was down
+has model None in its id; when /info first answers, it takes the served model (its id changes to the one a run
+with the service up from the start has) and the engine records that model in run.json.
+
+Without a URL (`gliner_url` from the engine, else $GLINER_URL), or while /info fails, `available()` is False and
+`extract` returns an `unavailable` error (the engine skips the step before calling it); a timeout or connection
+error on /predict is a `service_call` error. Both are results, not exceptions, so a cascade goes on. Own module,
+so every existing extractor keeps its id.
 """
 from __future__ import annotations
 
 import os
 import threading
+import time
 from typing import Any
 
 import httpx
@@ -48,32 +57,44 @@ DEFAULTS: dict[str, Any] = {"threshold": 0.5, "chunk_chars": 1500, "max_spans": 
 TIMEOUT = 10.0
 URL_KEY = "gliner_url"   # what the engine adds (Settings.gliner_url); not part of the id
 
-_INFO: dict[str, dict[str, Any] | None] = {}   # url -> /info reply, or None when it failed (per process)
+RETRY_S = 60.0   # a failed /info is asked again at most this often (per process and URL)
+
+_INFO: dict[str, dict[str, Any]] = {}   # url -> its /info reply (per process); only a reply that names a model
+_ASKED: dict[str, float] = {}           # url -> time.monotonic() of the last /info asked while there is no reply
 _LOCK = threading.Lock()
 
 
 def forget() -> None:
-    """Drop the per-process /info cache (tests)."""
+    """Drop the per-process /info cache and back-off (tests)."""
     with _LOCK:
         _INFO.clear()
+        _ASKED.clear()
 
 
 def info(url: str | None, timeout: float = TIMEOUT) -> dict[str, Any] | None:
-    """The service's /info reply, asked once per process and URL; None without a URL or when it fails."""
+    """The service's /info reply; None without a URL, when it fails, or within RETRY_S of the last failed ask
+    (or while another thread asks). A reply is kept for the process; a failure is not."""
     if not url:
         return None
     with _LOCK:
         if url in _INFO:
             return _INFO[url]
-        try:
-            reply = httpx.get(f"{url.rstrip('/')}/info", timeout=timeout)
-            reply.raise_for_status()
-            body = reply.json()
-            found = body if isinstance(body, dict) and isinstance(body.get("model"), str) else None
-        except (httpx.HTTPError, ValueError):
-            found = None
-        _INFO[url] = found
-        return found
+        last = _ASKED.get(url)
+        if last is not None and time.monotonic() - last < RETRY_S:
+            return None
+        _ASKED[url] = time.monotonic()   # this thread asks; the others see "down" instead of waiting on it
+    try:
+        reply = httpx.get(f"{url.rstrip('/')}/info", timeout=timeout)
+        reply.raise_for_status()
+        body = reply.json()
+        found = body if isinstance(body, dict) and isinstance(body.get("model"), str) else None
+    except (httpx.HTTPError, ValueError):
+        found = None
+    if found is not None:
+        with _LOCK:
+            found = _INFO.setdefault(url, found)
+            _ASKED.pop(url, None)
+    return found
 
 
 class GlinerExtractor:
@@ -90,23 +111,38 @@ class GlinerExtractor:
         self.chunk_chars = int(config.get("chunk_chars", DEFAULTS["chunk_chars"]))
         self.max_spans = int(config.get("max_spans", DEFAULTS["max_spans"]))
         served = info(self.url, self.timeout)
-        self.served = served["model"] if served else None
-        self.model = config.get("model") or self.served
+        self.served: str | None = served["model"] if served else None
+        self.model: str | None = config.get("model") or self.served
         roles = list(given.get("roles") or [])
         self.role = roles[0] if roles else ROLE[self.evidence_type]
         self.given = given
         # a protocol's own metric wording ([pattern, canonical, higher_is_better] rows), as regex_metric takes it
         self.metrics = [(str(p), str(k), bool(h)) for p, k, h in config["metrics"]] if config.get("metrics") else None
-        self.spec = ExtractorSpec(name=self.name, version=VERSION, kind="model",
-                                  evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
-                                  code_sha256=CODE_SHA256,
-                                  config={**given, **({"metrics": [list(m) for m in self.metrics]} if self.metrics else {}),
-                                          "service": "gliner", "model": self.model, "labels": self.labels,
-                                          "threshold": self.threshold, "chunk_chars": self.chunk_chars,
-                                          "max_spans": self.max_spans},
-                                  determinism="near_exact")
+        self._lock = threading.Lock()
+        self.spec = self._spec()
+
+    def _spec(self) -> ExtractorSpec:
+        return ExtractorSpec(name=self.name, version=VERSION, kind="model",
+                             evidence_types=(self.evidence_type,),  # type: ignore[arg-type]
+                             code_sha256=CODE_SHA256,
+                             config={**self.given, **({"metrics": [list(m) for m in self.metrics]} if self.metrics else {}),
+                                     "service": "gliner", "model": self.model, "labels": self.labels,
+                                     "threshold": self.threshold, "chunk_chars": self.chunk_chars,
+                                     "max_spans": self.max_spans},
+                             determinism="near_exact")
 
     def available(self) -> bool:
+        """Whether the service serves this extractor's model. While /info has not answered it is asked again
+        (info() limits how often); on the first answer an extractor without a model takes the served one."""
+        if self.served is None and self.url:
+            served = info(self.url, self.timeout)
+            if served is not None:
+                with self._lock:
+                    if self.served is None:
+                        if self.model is None:
+                            self.model = served["model"]
+                            self.spec = self._spec()   # before `served`: a thread that sees it available sees the id
+                        self.served = served["model"]
         return self.served is not None and self.model == self.served
 
     def _why_unavailable(self) -> str:
