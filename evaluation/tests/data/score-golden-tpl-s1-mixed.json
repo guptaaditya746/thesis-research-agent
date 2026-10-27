@@ -429,7 +429,7 @@
         "items": 0,
         "level": "paraphrased",
         "matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null
       },
@@ -495,7 +495,7 @@
         "items": 0,
         "level": "paraphrased",
         "matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null
       }
@@ -1603,7 +1603,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2351,7 +2351,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2453,7 +2453,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2521,7 +2521,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2555,7 +2555,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2623,7 +2623,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2657,7 +2657,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2759,7 +2759,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2861,7 +2861,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0

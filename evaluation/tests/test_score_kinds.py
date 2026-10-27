@@ -616,3 +616,17 @@ def test_best_counts_only_papers_with_a_winner_or_a_tie(mixed: GroundTruth) -> N
     c = _c(mixed, "best-accuracy", answer)
     n = len(decidable)
     assert c["per_study_accuracy"] == pytest.approx((n - 1) / n) and c["completeness"] == pytest.approx((n - 1) / n)
+
+
+def test_precision_with_nothing_given_is_undefined_and_shown_as_n_a(hard: GroundTruth) -> None:
+    """Minor 10: an empty answer has no precision (null, not 0.0); F1 is still 0 and report.md prints n/a."""
+    from evaluation.score import prf
+    assert prf(0, 0, 5) == {"items": 0, "facts": 5, "matched": 0, "precision": None, "recall": 0.0, "f1": 0.0}
+    assert prf(2, 4, 2)["f1"] == pytest.approx(2 * 0.5 * 1.0 / 1.5)
+    c = _c(hard, "inv-metrics", copy.deepcopy(EMPTY["inventory"]))
+    assert (c["precision"], c["paper_precision"], c["f1"], c["paper_f1"]) == (None, None, 0.0, 0.0)
+    text = "\n".join(rep.render_synthesis_kind("inventory", [c]))
+    row = next(line for line in text.splitlines() if line.startswith("| empty"))
+    cells = [cell.strip() for cell in row.strip("|").split("|")]
+    header = [cell.strip() for cell in text.splitlines()[2].strip("|").split("|")]
+    assert cells[header.index("precision")] == "n/a" and cells[header.index("paper_precision")] == "n/a"

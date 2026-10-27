@@ -33,7 +33,8 @@ Matching rules (A; B and the pair check reuse A's matching):
    match), then prefers pairs whose spans and labels agree; incompatible pairs it is forced into are
    dropped. The result does not depend on input order except between exactly equal costs, where
    items and facts are sorted by id first, so it is deterministic.
-5. Precision = matched / items, recall = matched / facts, F1 their harmonic mean (0 when both are 0).
+5. Precision = matched / items (null when there are no items: undefined), recall = matched / facts, F1 their
+   harmonic mean, 2 matched / (items + facts) (0 when nothing matched).
    Counts are pooled (micro) over papers, per evidence type and difficulty level (the level of the
    paper's study), and over all levels.
 6. Span accuracy = share of matched pairs whose main-role span overlaps (shares at least one
@@ -176,9 +177,11 @@ OPTIONAL_COUNTS = ("undetermined", "duplicates")          # compared when both s
 # --- small helpers ---------------------------------------------------------------------------------
 
 def prf(matched: int, items: int, facts: int) -> dict[str, Any]:
-    precision = matched / items if items else 0.0
+    """Precision (None when nothing was given: undefined, not 0), recall (0.0 without facts) and F1 from the
+    counts (2 matched / (items + facts), the harmonic mean; 0.0 when both are 0), never from a None precision."""
+    precision = matched / items if items else None
     recall = matched / facts if facts else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    f1 = 2 * matched / (items + facts) if matched else 0.0
     return {"items": items, "facts": facts, "matched": matched, "precision": precision, "recall": recall,
             "f1": f1}
 

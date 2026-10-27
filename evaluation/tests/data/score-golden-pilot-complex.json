@@ -518,7 +518,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0

@@ -47,8 +47,14 @@ def _fmt(value: Any) -> Any:
     return value
 
 
+def _cell(row: dict[str, Any], column: str) -> Any:
+    """A null precision means nothing was given (score.prf, share): undefined, shown as n/a."""
+    value = row.get(column)
+    return "n/a" if value is None and column.endswith("precision") else _fmt(value)
+
+
 def table(rows: list[dict[str, Any]], columns: list[str], headers: list[str] | None = None) -> str:
-    return tabulate([[_fmt(r.get(c)) for c in columns] for r in rows], headers=headers or columns,
+    return tabulate([[_cell(r, c) for c in columns] for r in rows], headers=headers or columns,
                     tablefmt="github", disable_numparse=True)
 
 
