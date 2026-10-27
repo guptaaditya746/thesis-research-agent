@@ -57,7 +57,7 @@ describe("corpora", () => {
     renderRoutes(routes, "/corpora")
     const table = await screen.findByRole("table", { name: "Corpora" }, T)
     expect(within(table).getByRole("link", { name: MIXED })).toHaveAttribute("href", `/corpora/${MIXED}`)
-    expect(within(table).getAllByText("duplicates 1, missing 1, irrelevant 1").length).toBeGreaterThan(0)
+    expect(within(table).getAllByText("knobs: duplicates 1, missing 1, irrelevant 1").length).toBeGreaterThan(0)
     expect(within(table).getByText(/S002: supports → contradicts/)).toBeInTheDocument()
   })
 
