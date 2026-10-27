@@ -100,11 +100,22 @@ def load(path: Path | str = DEFAULT) -> list[QuestionEntry]:
 Q = TypeVar("Q")   # an entry with `id`, `question` and `kind`: a QuestionEntry, or the web app's Question
 
 
+class UnknownQuestion(ValueError):
+    """No entry, or more than one, matches a run: `run` (its directory name) and `why` (what it asks), so a caller
+    can word its own advice; the message itself gives the command line's (`--question-id`)."""
+
+    def __init__(self, run: str, why: str) -> None:
+        self.run, self.why = run, why
+        super().__init__(f"cannot tell which question the run {run} answers: {why}; "
+                         f"give the question id (evaluate score --question-id)")
+
+
 def answered_by(run_dir: Path, entries: Sequence[Q]) -> Q:
     """The entry a run answers, for scoring it without a question id: the one whose question and kind its
     frozen protocol.yaml asks. A run without one (before the engine froze its protocol, or written by hand) is
     matched by its answer.json (`question_id`, else the question asked), else by the protocol id of its run.json
-    (a hand-written protocol is named after its question). ValueError when no entry, or more than one, matches."""
+    (a hand-written protocol is named after its question). UnknownQuestion (a ValueError) when no entry, or
+    more than one, matches."""
     rd = RunDir(Path(run_dir))
     if rd.file(PROTOCOL_FILE).is_file():
         protocol = load_protocol(rd.file(PROTOCOL_FILE))
@@ -120,8 +131,7 @@ def answered_by(run_dir: Path, entries: Sequence[Q]) -> Q:
                  or [q for q in entries if q.id == ref.get("id")])
         why = "it has no protocol.yaml, and its answer.json and run.json name no question of the list"
     if len(found) != 1:
-        raise ValueError(f"cannot tell which question the run {rd.root.name} answers: {why}; "
-                         f"give the question id (evaluate score --question-id)")
+        raise UnknownQuestion(rd.root.name, why)
     return found[0]
 
 

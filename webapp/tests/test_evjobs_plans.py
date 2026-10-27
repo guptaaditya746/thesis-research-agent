@@ -140,8 +140,11 @@ def test_score_plan_refuses_a_run_of_no_listed_question(commands: Commands, worl
     question = next(q for q in Questions(settings).list() if q.id == "rag-factuality").question
     typed.write_text(text.replace(question, "Does anything help at all?"), encoding="utf-8")
     run = _engine_run(world, "proposal-typed-regex-only", typed)
-    with pytest.raises(Conflict, match="cannot tell which question"):
+    with pytest.raises(Conflict, match="answers none of the listed questions") as refused:
         commands.score(ScoreRequest(run=run))
+    message = str(refused.value)   # advice a web user can follow, not the command line's
+    assert "Does anything help at all?" in message and "listed questions" in message
+    assert "--question-id" not in message and "evaluate score" not in message
 
 
 def test_baseline_plans_answer_the_question_asked(commands: Commands, world: EvidenceWorld) -> None:

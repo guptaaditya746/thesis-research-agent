@@ -34,7 +34,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import PlainTextResponse
 
 from evidence.propose.common import CARDS, CRITIC, DECISIONS, DRAFT, FRAME, PROTOCOL, SOURCES
-from evidence.questions import answered_by
+from evidence.questions import UnknownQuestion, answered_by
 from evidence.rundir import RunDir
 from jsonio import file_sha256, write_text_atomic
 
@@ -272,6 +272,10 @@ class Commands:
         corpus = self.corpus(summary.corpus)
         try:   # the question the run's frozen protocol asks: its kind picks the scores, its truth the expected answer
             question = answered_by(path, self.questions.list())
+        except UnknownQuestion as exc:   # a typed question (or a hand-edited one): no ground truth to score against
+            raise Conflict(f"{r.run} cannot be scored: it answers none of the listed questions ({exc.why}). Scores "
+                           "need a listed question's ground truth; this run's graph, answer and trace stay open "
+                           "to read. To score, start the flow again from one of the listed questions.") from None
         except ValueError as exc:
             raise Conflict(f"{r.run} cannot be scored: {exc}") from None
         baselines: list[Any] = []   # the corpus's baseline answers to the same question only
