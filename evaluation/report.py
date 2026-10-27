@@ -141,21 +141,23 @@ def render(report: dict[str, Any]) -> str:
                             "label_correct": system["label_correct"], "studies": overall.get("studies"),
                             "determined": overall.get("determined"),
                             "direction_accuracy": overall.get("direction_accuracy"),
-
+                            "direction_accuracy_all_papers": overall.get("direction_accuracy_all_papers"),
                             "accuracy_answered": overall.get("accuracy_answered"),
                             "completeness": overall.get("completeness"),
                             "traceability": overall.get("traceability"), "overlap": overall.get("overlap")})
         out += [table(summary, ["system", "label", "expected", "label_correct", "studies", "determined",
-                                "direction_accuracy", "completeness", "accuracy_answered", "traceability",
-                                "overlap"]), "",
+                                "direction_accuracy", "completeness", "accuracy_answered",
+                                "direction_accuracy_all_papers", "traceability", "overlap"]), "",
                 *[f"- {s['system']}: {e}" for s in report["synthesis"] for e in s.get("errors") or []],
                 *([""] if any(s.get("errors") for s in report["synthesis"]) else []),
-                "direction_accuracy is over all scored studies: a study whose expected direction is undetermined "
-                "(missing information, an irrelevant paper) is right when the system says undetermined or leaves it "
-                "out, a determined study is wrong then. completeness (the supervisor's word: the share of the "
+                "direction_accuracy, completeness and accuracy_answered are over the determined studies only (the "
+                "studies truth can decide): a determined study the system leaves out or calls undetermined is wrong, "
+                "and a study whose expected direction is undetermined (missing information, an irrelevant paper) is "
+                "not counted, so an empty answer scores 0. completeness (the supervisor's word: the share of the "
                 "`determined` studies the system gives a direction for) and accuracy_answered (accuracy over those) "
-                "are over the determined studies only, so a baseline that cites only some papers, or guesses on "
-                "undeterminable ones, is seen in both. traceability is the share of a baseline's cited passages that "
+                "split it: direction_accuracy = completeness x accuracy_answered. direction_accuracy_all_papers is "
+                "the old number over all scored studies, where silence on an undetermined study counts as right. "
+                "traceability is the share of a baseline's cited passages that "
                 "overlap a value, metric-label or claim placement of the paper they cite, dropped citations counted "
                 "as untraced (span overlap only: not \"same study or condition\", not entailment; the passage need "
                 "not support the claim); overlap is the lenient share, over a placement of any role, a condition "
@@ -164,8 +166,8 @@ def render(report: dict[str, Any]) -> str:
         if levels:
             levels.sort(key=lambda r: (_level_key(r["level"]), r["system"]))
             out += ["Per level:", "", table(levels, ["level", "system", "studies", "determined", "direction_accuracy",
-                                                     "completeness", "accuracy_answered", "traceability",
-                                                     "overlap"]), ""]
+                                                     "completeness", "accuracy_answered",
+                                                     "direction_accuracy_all_papers", "traceability", "overlap"]), ""]
         flagged = [s for s in report["synthesis"] if s.get("flags")]
         if flagged:
             rows = [{"system": s["system"], **r} for s in flagged for r in s["flags"]["rows"]]
@@ -224,14 +226,21 @@ KIND_C: dict[str, tuple[str, list[str], str]] = {
                   "Sets of keys (`canon.key` of a name or alias; a name vocab does not know matches a truth entry vocab "
                   "does not know by its folded name, else it is a false positive), and of (key, paper) pairs."),
     "best": ("Best", ["system", "winner", "expected_winner", "winner_correct", "studies_scored",
-                      "per_study_accuracy"],
+                      "per_study_accuracy", "completeness", "studies_all_papers", "per_study_accuracy_all_papers"],
              "`winner_correct`: the winner (or the tie) is truth's; per-study accuracy of the paper's winner and tie "
-             "over truth's counted studies (not screened out, not a duplicate; the engine does not leave duplicates "
-             "out, which shows in its wins)."),
-    "consistency": ("Consistency", ["system", "metric", "studies_scored", "per_study_accuracy", "agreeing_precision",
+             "over the studies truth can decide (a winner or a tie): a decidable paper left out or given neither is "
+             "wrong, a paper with no comparison is not counted; completeness is the share of them given a winner or "
+             "tie. `*_all_papers`: the old number over truth's studies not screened out and not a duplicate, where "
+             "silence on a no-comparison paper is right (the engine does not leave duplicates out, which shows in its "
+             "wins)."),
+    "consistency": ("Consistency", ["system", "metric", "studies_scored", "per_study_accuracy", "completeness",
+                                    "studies_all_papers", "per_study_accuracy_all_papers", "agreeing_precision",
                                     "agreeing_recall", "disagreeing_precision", "disagreeing_recall"],
-                    "Over the studies truth lists (those whose question metric is the claim metric); `agrees` null "
-                    "is undetermined, right when truth's is null too.")}
+                    "Over the studies truth can decide (its question metric is the claim metric and `agrees` is not "
+                    "null: duplicates and papers with missing data or no claim drop out): a decidable paper left out "
+                    "or called undetermined is wrong; completeness is the share given true or false; the agreeing and "
+                    "disagreeing sets are over the same studies. `*_all_papers`: the old number over every study "
+                    "truth lists, `agrees` null right when truth's is null too.")}
 
 
 def render_integration_kind(kind: str, integration: dict[str, Any] | None) -> list[str]:
@@ -439,10 +448,11 @@ def _share(num: int, den: int) -> float | None:
 
 
 def _accuracies(studies: list[dict[str, Any]]) -> dict[str, float | None]:
-    """direction_accuracy, completeness and accuracy_answered (score.score_synthesis) over per-study rows."""
+    """direction_accuracy (over the determined studies), completeness and accuracy_answered (score.score_synthesis)
+    over per-study rows."""
     determined = [s for s in studies if s.get("determined")]
     answered = [s for s in determined if s.get("given") != "undetermined"]
-    return {"direction_accuracy": _share(sum(bool(s["correct"]) for s in studies), len(studies)),
+    return {"direction_accuracy": _share(sum(bool(s["correct"]) for s in determined), len(determined)),
             "completeness": _share(len(answered), len(determined)),
             "accuracy_answered": _share(sum(bool(s["correct"]) for s in answered), len(answered))}
 

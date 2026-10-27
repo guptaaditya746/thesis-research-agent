@@ -125,7 +125,8 @@ def test_best_per_study_accuracy_counts_a_wrong_paper(mixed: GroundTruth) -> Non
     won = next(s for s in answer["studies"] if s["winner"])
     won["winner"] = "fine-tuned" if won["winner"] != "fine-tuned" else "rag"
     c = _c(mixed, "best-accuracy", answer)
-    counted = len(c["studies"])
+    counted = sum(s["counted"] for s in c["studies"])
+    assert counted == c["studies_scored"]
     assert c["per_study_accuracy"] == pytest.approx((counted - 1) / counted)
     assert not next(s for s in c["studies"] if s["paper"] == won["document"])["correct"]
 
@@ -335,7 +336,9 @@ def test_compare_leaves_out_reports_of_other_kinds(tmp_path: Path, hard: GroundT
 
 # --- fix round 1 ----------------------------------------------------------------------------------------------
 
-def test_consistency_document_left_out_is_wrong_even_when_truth_is_undetermined(hard: GroundTruth) -> None:
+def test_consistency_document_left_out_where_truth_is_undetermined_is_not_counted(hard: GroundTruth) -> None:
+    """Fix round 1 made this wrong; under the decidable-papers rule (findings 3-5) it is not counted. The old
+    all-papers number still counts it wrong."""
     exp = _expected(hard, "cons-accuracy")
     assert exp["undetermined"], "the hard corpus has undetermined consistency studies"
     left_out = exp["undetermined"][0]
@@ -344,12 +347,13 @@ def test_consistency_document_left_out_is_wrong_even_when_truth_is_undetermined(
     answer["undetermined"].remove(left_out)
     c = _c(hard, "cons-accuracy", answer)
     n = len(exp["studies"])
-    assert c["per_study_accuracy"] == pytest.approx((n - 1) / n)
+    assert c["per_study_accuracy"] == 1.0
+    assert c["per_study_accuracy_all_papers"] == pytest.approx((n - 1) / n)
     row = next(s for s in c["studies"] if s["paper"] == left_out)
-    assert (row["answered"], row["correct"]) == (False, False)
-    # listed as undetermined without a studies entry: answered, and right
+    assert (row["answered"], row["correct"], row["counted"]) == (False, False, False)
+    # listed as undetermined without a studies entry: answered, and right under the old rule
     answer["undetermined"].append(left_out)
-    assert _c(hard, "cons-accuracy", answer)["per_study_accuracy"] == 1.0
+    assert _c(hard, "cons-accuracy", answer)["per_study_accuracy_all_papers"] == 1.0
 
 
 def test_consistency_integration_counts_a_claim_item_once(tmp_path: Path) -> None:
@@ -511,3 +515,104 @@ def test_perfect_latency_evidence_scores_one_on_a_and_b(corpus: Path) -> None:
     assert rows["metric"]["f1"] == 1.0 and rows["all"]["f1"] == 1.0
     b = score_integration(m, None, effect_truth(truth, _q("rag-latency").truth, protocol))
     assert next(r for r in b["rows"] if r["level"] == "all")["association_accuracy"] == 1.0
+
+
+# --- C over the papers truth can decide (findings 3, 4, 5) ----------------------------------------------------
+
+EMPTY = {"effect": {"system": "empty", "label": "insufficient", "studies": []},
+         "inventory": {"kind": "inventory", "system": "empty", "entries": []},
+         "consistency": {"kind": "consistency", "system": "empty", "studies": []},
+         "best": {"kind": "best", "system": "empty", "studies": [], "winner": None, "tied": []}}
+
+
+def _c_metrics(c: dict[str, Any], kind: str) -> dict[str, Any]:
+    if kind == "effect":
+        overall = next(r for r in c["rows"] if r["level"] == "all")
+        return {k: overall[k] for k in ("direction_accuracy", "completeness")}
+    if kind == "inventory":
+        return {k: c[k] for k in ("recall", "f1", "paper_recall", "paper_f1")}
+    return {k: c[k] for k in ("per_study_accuracy", "completeness")}
+
+
+@pytest.mark.parametrize("qid", sorted(QUESTIONS))
+@pytest.mark.parametrize("corpus", ["mixed", "hard"])
+def test_an_empty_answer_scores_zero_on_every_c_metric(qid: str, corpus: str, request: pytest.FixtureRequest) -> None:
+    truth = request.getfixturevalue(corpus)
+    kind = _q(qid).kind
+    c = _c(truth, qid, copy.deepcopy(EMPTY[kind]))
+    assert set(_c_metrics(c, kind).values()) == {0.0}
+
+
+@pytest.mark.parametrize("qid", sorted(QUESTIONS))
+@pytest.mark.parametrize("corpus", ["mixed", "hard"])
+def test_the_expected_answer_scores_one_on_every_c_metric(qid: str, corpus: str, request: pytest.FixtureRequest) -> None:
+    from evaluation.score import expected_direction
+    truth = request.getfixturevalue(corpus)
+    kind = _q(qid).kind
+    answer = _expected(truth, qid)
+    if "studies" not in answer:   # the corpus's own question: the saved answer has no per-study entries
+        answer["studies"] = [{"document": s["paper"], "direction": expected_direction(s)} for s in truth.studies]
+    assert set(_c_metrics(_c(truth, qid, answer), kind).values()) == {1.0}
+
+
+def test_effect_direction_accuracy_is_over_the_determined_papers(mixed: GroundTruth) -> None:
+    """Finding 3: rag-latency main has 3 determined papers of 20; silence is no longer right on the other 17."""
+    exp = _expected(mixed, "rag-latency")
+    determined = [s for s in exp["studies"] if s["direction"] != "undetermined"]
+    assert 0 < len(determined) < len(exp["studies"])
+    c = _c(mixed, "rag-latency", copy.deepcopy(EMPTY["effect"]))
+    overall = next(r for r in c["rows"] if r["level"] == "all")
+    assert overall["direction_accuracy"] == 0.0
+    n = len(exp["studies"])
+    assert overall["direction_accuracy_all_papers"] == pytest.approx((n - len(determined)) / n)   # the old number
+    answer = copy.deepcopy(exp)
+    answer["studies"] = [s for s in answer["studies"] if s["document"] != determined[0]["document"]]
+    overall = next(r for r in _c(mixed, "rag-latency", answer)["rows"] if r["level"] == "all")
+    assert overall["direction_accuracy"] == pytest.approx((len(determined) - 1) / len(determined))
+
+
+def test_consistency_duplicates_and_undecidable_papers_are_not_counted(hard: GroundTruth) -> None:
+    """Findings 4 and 5: the engine gives a duplicate its own agreement; leaving an undecidable paper out is not
+    wrong; leaving a decidable one out, or calling it undetermined, is."""
+    exp = _expected(hard, "cons-accuracy")
+    dups = [s["document"] for s in exp["studies"] if (s["reason"] or {}).get("code") == "duplicate"]
+    assert dups, "the hard corpus has duplicate consistency studies"
+    answer = copy.deepcopy(exp)
+    for s in answer["studies"]:
+        if s["document"] in dups:
+            s["agrees"] = True
+    undecidable = [s["document"] for s in exp["studies"] if s["agrees"] is None and s["document"] not in dups]
+    answer["studies"] = [s for s in answer["studies"] if s["document"] not in undecidable]
+    for name in ("undetermined", "agreeing", "disagreeing"):
+        answer[name] = [d for d in answer[name] if d not in undecidable]
+    c = _c(hard, "cons-accuracy", answer)
+    decidable = [s for s in exp["studies"] if s["agrees"] is not None]
+    assert c["studies_scored"] == len(decidable)
+    assert (c["per_study_accuracy"], c["completeness"]) == (1.0, 1.0)
+    assert c["per_study_accuracy_all_papers"] < 1.0   # the old rule: duplicates and left-out papers wrong
+    left_out, called_undetermined = decidable[0]["document"], decidable[1]["document"]
+    answer["studies"] = [s for s in answer["studies"] if s["document"] != left_out]
+    for name in ("agreeing", "disagreeing"):
+        answer[name] = [d for d in answer[name] if d != left_out]
+    for s in answer["studies"]:
+        if s["document"] == called_undetermined:
+            s["agrees"] = None
+    c = _c(hard, "cons-accuracy", answer)
+    n = len(decidable)
+    assert c["per_study_accuracy"] == pytest.approx((n - 2) / n) and c["completeness"] == pytest.approx((n - 2) / n)
+
+
+def test_best_counts_only_papers_with_a_winner_or_a_tie(mixed: GroundTruth) -> None:
+    """Finding 3: a paper truth has no winner for (no comparison) is not counted; a decidable paper left out is
+    wrong."""
+    exp = _expected(mixed, "best-accuracy")
+    decidable = [s for s in exp["studies"] if s["winner"] or s["tied"]]
+    assert 0 < len(decidable) < len(exp["studies"])
+    c = _c(mixed, "best-accuracy", copy.deepcopy(EMPTY["best"]))
+    assert c["studies_scored"] == len(decidable) and c["per_study_accuracy"] == 0.0
+    assert c["per_study_accuracy_all_papers"] > 0.0   # the old number: silence right on the no-comparison papers
+    answer = copy.deepcopy(exp)
+    answer["studies"] = [s for s in answer["studies"] if s["document"] != decidable[0]["document"]]
+    c = _c(mixed, "best-accuracy", answer)
+    n = len(decidable)
+    assert c["per_study_accuracy"] == pytest.approx((n - 1) / n) and c["completeness"] == pytest.approx((n - 1) / n)

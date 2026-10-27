@@ -315,21 +315,23 @@ def test_compare_orders_corpora_by_level(tmp_path: Path) -> None:
 
 
 def test_compare_shows_direction_intervals_with_bounds(tmp_path: Path) -> None:
-    """Six studies, the baseline right on four of them: the direction accuracy has real bounds in compare.md."""
+    """Four determined studies (of six), the baseline right on two of them: the direction accuracy has real bounds
+    in compare.md."""
     corpus = fx.write_f_corpus(tmp_path)
     fx.dump(tmp_path / "rag.json", fx.baseline_answer("rag-baseline", {"S001": "supports", "S002": "supports",
                                                                         "S003": "supports", "S006": "contradicts"}, "mixed"))
     fx.dump(tmp_path / "engine.json", fx.f_answer())
     report = score_answers(corpus, [tmp_path / "engine.json", tmp_path / "rag.json"])
     rag = row(report["intervals"]["synthesis"], system="rag-baseline")
-    assert rag["point"] == pytest.approx(4 / 6) and rag["low"] is not None and rag["low"] < rag["point"] < rag["high"]
+    assert rag["point"] == pytest.approx(2 / 4) and rag["low"] is not None and rag["low"] < rag["point"] < rag["high"]
+    assert rag["n_rows"] == 4                   # the undetermined S004 and S005 are not counted
     assert rag["method"] in ("BCa", "percentile")
     text = rep.render(report)
     assert "| method" in text and f"| {rag['method']}" in text and "| determined" in text
     paired = row(report["intervals"]["paired"], system="rag-baseline")
-    assert paired["point"] == pytest.approx(2 / 6) and paired["low"] is not None
+    assert paired["point"] == pytest.approx(2 / 4) and paired["low"] is not None
     line = next(l for l in rep.render_compare(rep.compare([report])).splitlines() if "rag-baseline" in l and "[" in l)
-    assert "0.667 [" in line and "0.333 [" in line
+    assert line.count("0.500 [") == 2
 
 
 def test_report_shows_accuracy_on_answered_studies(tmp_path: Path, corpus: Path) -> None:

@@ -1,5 +1,8 @@
-"""Expected `undetermined` (F4): a study with missing information or an irrelevant paper is right when the
-system says undetermined or leaves it out; answered and accuracy_answered are over determined expectations."""
+"""Expected `undetermined` (F4): a study with missing information or an irrelevant paper is not counted in
+`direction_accuracy` (the decidable-papers rule: C only on the studies truth can decide, a determined study left
+out or called undetermined is wrong); `direction_accuracy_all_papers` keeps the old rule, where such a study is right
+when the system says undetermined or leaves it out. completeness and accuracy_answered are over determined
+expectations."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -39,13 +42,15 @@ def test_guessing_on_an_undetermined_study_is_wrong_but_not_counted_as_answered(
     answer = fx.f_answer(directions={**fx.F_DIRECTIONS, "S004": "supports", "S005": "supports"})
     result = score_synthesis(_truth(), answer)
     overall = row(result["rows"], level="all")
-    assert overall["direction_accuracy"] == pytest.approx(4 / 6)
-    assert (overall["completeness"], overall["accuracy_answered"]) == (1.0, 1.0)   # over the 4 determined studies only
-    assert row(result["rows"], level="complex")["direction_accuracy"] == 0.0
+    assert overall["direction_accuracy"] == 1.0                                    # over the 4 determined studies only
+    assert overall["direction_accuracy_all_papers"] == pytest.approx(4 / 6)
+    assert (overall["completeness"], overall["accuracy_answered"]) == (1.0, 1.0)
+    complex_ = row(result["rows"], level="complex")                                # S004 only, undetermined
+    assert (complex_["direction_accuracy"], complex_["direction_accuracy_all_papers"]) == (None, 0.0)
     assert {"expected": "undetermined", "given": "supports", "n": 2} in result["confusion"]
 
 
-def test_a_baseline_that_leaves_the_undetermined_studies_out_is_right_on_them() -> None:
+def test_a_baseline_that_leaves_the_undetermined_studies_out_loses_nothing_and_gains_nothing() -> None:
     answer = fx.baseline_answer("rag-baseline", {"S001": "supports", "S002": "contradicts", "S003": "supports",
                                                  "S006": "supports"}, "mixed")
     result = score_synthesis(_truth(), answer)
@@ -54,14 +59,16 @@ def test_a_baseline_that_leaves_the_undetermined_studies_out_is_right_on_them() 
     assert result["flags"] is None
     partial = fx.baseline_answer("agent-baseline", {"S001": "supports"}, "supported")
     overall = row(score_synthesis(_truth(), partial)["rows"], level="all")
-    assert overall["direction_accuracy"] == pytest.approx(3 / 6)   # S001 right, S004 and S005 right by silence
+    assert overall["direction_accuracy"] == pytest.approx(1 / 4)   # S001 right; S002, S003, S006 left out: wrong
+    assert overall["direction_accuracy_all_papers"] == pytest.approx(3 / 6)   # old: S004 and S005 right by silence
     assert overall["completeness"] == 0.25 and overall["accuracy_answered"] == 1.0
 
 
 def test_an_undetermined_answer_on_a_determined_study_is_unanswered_and_wrong() -> None:
     answer = fx.f_answer(directions={**fx.F_DIRECTIONS, "S006": "undetermined"})
     overall = row(score_synthesis(_truth(), answer)["rows"], level="all")
-    assert overall["direction_accuracy"] == pytest.approx(5 / 6)
+    assert overall["direction_accuracy"] == pytest.approx(3 / 4)
+    assert overall["direction_accuracy_all_papers"] == pytest.approx(5 / 6)
     assert overall["completeness"] == 0.75 and overall["accuracy_answered"] == 1.0
 
 

@@ -55,19 +55,25 @@ item whose `canonical` is the true metric's canonical (`association` = both). `c
 (metric) fact. True pair: the engine's answer names measurement items for treatment and control per
 study; the pair is true when A matched them to the facts `effect.treatment` and `effect.control`.
 
-C: for every ground-truth study with an expected direction, the system's `studies` entry with `document`
+C, one rule for every kind: C is scored only on the papers truth can decide (effect: an expected direction that
+is not `undetermined`; best: a winner or a tie; consistency: `agrees` not null, so duplicates and papers with
+missing data drop out). A decidable paper the answer leaves out, or calls undetermined (no_comparison, null), is
+wrong; an undecidable one is not counted, whatever the answer says (`score_best`'s NOT_COUNTED, generalised). So
+an empty answer scores 0 and silence is never rewarded. The old all-papers numbers stay as `*_all_papers`.
+
+Effect: for every ground-truth study with an expected direction, the system's `studies` entry with `document`
 = the study's paper gives a direction (a missing entry, or one with a direction outside supports /
 contradicts / neutral / undetermined, counts as `undetermined`); it is correct when it equals the
 expected direction. The expected direction is `effect.direction`, or `undetermined` for a study that is
-`relevant: false` (F2; `expected_direction`); a study without either is not scored. So a study whose
-true effect is `undetermined` (missing information) or that is irrelevant is right when the system says
-`undetermined` or does not answer it (F4). The label is correct when equal to `answer.label`.
+`relevant: false` (F2; `expected_direction`); a study without either is not scored. The label is correct when
+equal to `answer.label`.
 Correctness, completeness and traceability are the supervisor's three comparison criteria (STATE.md §1
 §7; docs/evidence-system.md Part G.1); the definitions that follow are ours. `direction_accuracy`
-(correctness) is over all scored studies. **completeness** = share of the studies with a *determined*
-expected direction (not `undetermined`) the system gives a direction for, and `accuracy_answered` =
-accuracy over those, so a system that answers everything is not rewarded for guessing on a study nobody
-can determine. **traceability** = share of the cited passages (`answer.citations`, a baseline's
+(correctness) is over the studies with a *determined* expected direction (not `undetermined`);
+`direction_accuracy_all_papers` is over all scored studies, where a study whose true effect is `undetermined`
+(missing information) or that is irrelevant is right when the system says `undetermined` or does not answer it
+(the old F4 rule). **completeness** = share of the determined studies the system gives a direction for, and
+`accuracy_answered` = accuracy over those (direction_accuracy = completeness x accuracy_answered). **traceability** = share of the cited passages (`answer.citations`, a baseline's
 `[{document, start, end}]) that overlap (share a character with) a ground-truth placement of role `value`,
 `metric_label` or `claim` of the paper they cite (strict: a passage touching only a condition label traces
 nothing), over all cited passages; **overlap** is the lenient share, over a placement of any role. The
@@ -523,13 +529,14 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
         for level in (study.get("level", "unknown"), ALL):
             per_level[level].update(studies=1, correct=got == expected, determined=determined,
                                     complete=determined and got != "undetermined",
-                                    correct_answered=determined and got == expected and got != "undetermined")
+                                    correct_answered=determined and got == expected)
     cited = score_citations(truth, answer.get("citations"), answer.get("dropped_citations"))
     rows = []
     for level, c in sorted(per_level.items()):
         n = cited.get(level, Counter()) if cited is not None else None
         rows.append({"level": level, "studies": c["studies"], "determined": c["determined"],
-                     "direction_accuracy": share(c["correct"], c["studies"]),
+                     "direction_accuracy": share(c["correct_answered"], c["determined"]),
+                     "direction_accuracy_all_papers": share(c["correct"], c["studies"]),
                      "completeness": share(c["complete"], c["determined"]),
                      "accuracy_answered": share(c["correct_answered"], c["complete"]),
                      "citations": None if n is None else n["citations"],
@@ -547,11 +554,13 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
 # --- C attribution (Tim M2 §5C, our addition) -----------------------------------------------------
 
 def attribute(truth: GroundTruth, system_answer: dict[str, Any], oracle_answer: dict[str, Any]) -> list[dict[str, Any]]:
-    """Per scored study: system and oracle correct, and `error` None, `upstream` (only the system wrong) or
-    `downstream` (both wrong)."""
+    """Per study C counts (a determined expected direction): system and oracle correct, and `error` None,
+    `upstream` (only the system wrong) or `downstream` (both wrong)."""
     oracle_ok = {s["study"]: s["correct"] for s in score_synthesis(truth, oracle_answer)["studies"]}
     out = []
     for s in score_synthesis(truth, system_answer)["studies"]:
+        if not s["determined"]:
+            continue
         ok = oracle_ok[s["study"]]
         out.append({"study": s["study"], "system_correct": s["correct"], "oracle_correct": ok,
                     "error": None if s["correct"] else "upstream" if ok else "downstream"})
@@ -641,7 +650,8 @@ def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | 
 
 def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[str, Any]:
     """Bootstrap intervals (docstring: Intervals; rules in stats.py) for extraction F1, direction accuracy
-    and the paired engine-minus-baseline difference."""
+    and the paired engine-minus-baseline difference; the last two over the studies C counts (a determined
+    expected direction), as `direction_accuracy` is."""
     extraction = []
     if m is not None:
         for kind in (*m.types, ALL):
@@ -651,18 +661,21 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
                 cells = [m.cells.get((paper, k), (0, 0, 0, 0, 0)) for k in kinds]
                 rows.append((sum(c[2] for c in cells), sum(c[0] for c in cells), sum(c[1] for c in cells)))
             extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind, n_rows=len(rows)))
-    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in system["studies"]), system=system["system"],
-                              n_rows=len(system["studies"])) for system in systems]
+    def counted(system: dict[str, Any]) -> list[dict[str, Any]]:   # the studies C counts: a determined expectation
+        return [s for s in system["studies"] if s.get("determined", True)]
+
+    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in counted(system)), system=system["system"],
+                              n_rows=len(counted(system))) for system in systems]
     engine = next((s for s in systems if s["system"] == ENGINE), None)
     paired = []
     if engine is not None:
-        engine_correct = {s["paper"]: int(s["correct"]) for s in engine["studies"]}
+        engine_correct = {s["paper"]: int(s["correct"]) for s in counted(engine)}
         for system in systems:
             if system is engine:
                 continue
-            diffs = [engine_correct[s["paper"]] - int(s["correct"]) for s in system["studies"]
+            diffs = [engine_correct[s["paper"]] - int(s["correct"]) for s in counted(system)
                      if s["paper"] in engine_correct]
-            excluded = sorted({s["paper"] for s in system["studies"]} ^ engine_correct.keys())   # in only one system
+            excluded = sorted({s["paper"] for s in counted(system)} ^ engine_correct.keys())   # in only one system
             paired.append(interval_row(bootstrap_mean(diffs), system=system["system"], n_rows=len(diffs),
                                        excluded_ids=excluded))
     return {"extraction": extraction, "synthesis": synthesis, "paired": paired}
@@ -1095,22 +1108,27 @@ def _agrees(answer: dict[str, Any]) -> dict[str, bool | None]:
 
 
 def score_consistency(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
-    """C, consistency: per-study accuracy of `agrees` (null = undetermined, right when truth's is null too and the
-    answer has an entry or list membership for the document; a document it leaves out is wrong) and
-    precision/recall of the agreeing and disagreeing sets, over the studies truth lists (those on the claim metric;
-    the engine lists every document, the others are left out)."""
+    """C, consistency, over the studies truth can decide (`agrees` not null: a duplicate, a paper with a side
+    missing or without a claim drops out; `counted`): per-study accuracy of `agrees` (a decidable document the
+    answer leaves out or calls undetermined, null, is wrong), `completeness` (the share of them the answer gives
+    true or false for) and precision/recall of the agreeing and disagreeing sets. Truth lists only the studies on
+    the claim metric; the engine lists every document, the others are left out. `per_study_accuracy_all_papers`
+    is the old number over every listed study (null right when truth's is null and the answer has the document)."""
     given = _agrees(answer)
-    # a document the answer leaves out is wrong, even where truth's `agrees` is null: undetermined must be said
     studies = [{"paper": e["document"], "expected": e["agrees"], "given": given.get(e["document"]),
-                "answered": e["document"] in given,
+                "answered": e["document"] in given, "counted": e["agrees"] is not None,
                 "correct": e["document"] in given and given[e["document"]] == e["agrees"]} for e in exp["studies"]]
+    counted = [s for s in studies if s["counted"]]
     out: dict[str, Any] = {"kind": "consistency", "system": answer.get("system", "unknown"), "metric": exp["metric"],
-                           "studies_scored": len(studies),
-                           "per_study_accuracy": share(sum(s["correct"] for s in studies), len(studies)),
+                           "studies_scored": len(counted),
+                           "per_study_accuracy": share(sum(s["correct"] for s in counted), len(counted)),
+                           "completeness": share(sum(isinstance(s["given"], bool) for s in counted), len(counted)),
+                           "studies_all_papers": len(studies),
+                           "per_study_accuracy_all_papers": share(sum(s["correct"] for s in studies), len(studies)),
                            "studies": studies}
     for name, value in (("agreeing", True), ("disagreeing", False)):
         want = set(exp[name])
-        got = {s["paper"] for s in studies if s["given"] is value}
+        got = {s["paper"] for s in counted if s["given"] is value}
         tp = len(want & got)
         out |= {f"{name}_precision": share(tp, len(got)), f"{name}_recall": share(tp, len(want)),
                 f"{name}_tp": tp, f"{name}_given": len(got), f"{name}_expected": len(want)}
@@ -1122,8 +1140,11 @@ NOT_COUNTED = ("screened_out", "duplicate")   # best: truth's studies that are n
 
 def score_best(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
     """C, best: whether the answer's winner (or, without one, its tie) is truth's, and per-study accuracy of the
-    winner and tie over truth's counted studies (not screened out, not a duplicate). The engine does not leave
-    duplicates out; that shows in its wins and winner, not here."""
+    winner and tie over the studies truth can decide (a winner or a tie; `counted`): a decidable paper the answer
+    leaves out or gives neither is wrong, and `completeness` is the share it gives a winner or tie for.
+    `per_study_accuracy_all_papers` is the old number over truth's studies that are not screened out or a duplicate
+    (NOT_COUNTED), where silence is right on a paper with no comparison. The engine does not leave duplicates out;
+    that shows in its wins and winner, not here."""
     given = {str(s.get("document")): s for s in answer.get("studies") or [] if isinstance(s, dict)}
     studies = []
     for e in exp["studies"]:
@@ -1132,13 +1153,19 @@ def score_best(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
         g = given.get(e["document"], {})
         got = (g.get("winner"), sorted(g.get("tied") or []))
         studies.append({"paper": e["document"], "expected": e["winner"], "expected_tied": e["tied"],
-                        "given": got[0], "given_tied": got[1], "correct": got == (e["winner"], e["tied"])})
+                        "given": got[0], "given_tied": got[1], "counted": bool(e["winner"] or e["tied"]),
+                        "correct": got == (e["winner"], e["tied"])})
+    counted = [s for s in studies if s["counted"]]
     winner = (answer.get("winner"), sorted(answer.get("tied") or []))
     return {"kind": "best", "system": answer.get("system", "unknown"), "metric": exp["metric"],
             "winner": winner[0], "tied": winner[1], "expected_winner": exp["winner"], "expected_tied": exp["tied"],
             "winner_correct": winner == (exp["winner"], exp["tied"]),
-            "wins": dict(answer.get("wins") or {}), "expected_wins": exp["wins"], "studies_scored": len(studies),
-            "per_study_accuracy": share(sum(s["correct"] for s in studies), len(studies)), "studies": studies}
+            "wins": dict(answer.get("wins") or {}), "expected_wins": exp["wins"], "studies_scored": len(counted),
+            "per_study_accuracy": share(sum(s["correct"] for s in counted), len(counted)),
+            "completeness": share(sum(bool(s["given"] or s["given_tied"]) for s in counted), len(counted)),
+            "studies_all_papers": len(studies),
+            "per_study_accuracy_all_papers": share(sum(s["correct"] for s in studies), len(studies)),
+            "studies": studies}
 
 
 def score_kind(truth: GroundTruth, kind: str, params: QuestionTruth, protocol: Protocol | None,
