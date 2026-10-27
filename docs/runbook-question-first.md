@@ -399,10 +399,12 @@ Write `reports/question-first/summary.md` with:
 
    Engine rows have A, B and C; the baseline rows have C only, and `-` for A and B. Write B and C as the fields of
    the table above (for example `label_correct / direction_accuracy`).
-2. **Per-extractor A**, for each corpus: from `report.json`'s `extractors.rows`, the rows with `level = all`, one
-   line per extractor id with precision, recall, f1, for the regex, abbreviation, GLiNER, number and LLM
-   extractors (`regex_*`, `abbrev_*`, `gliner_*`, `number_*`, `llm_*`), per question. A GLiNER line that says
-   skipped or has zero facts means the service was not up.
+2. **Per-extractor A**, for each corpus: from `report.json`'s `extractors.rows`, one line per extractor id with
+   precision, recall, f1, for the regex, abbreviation, GLiNER, number and LLM extractors (`regex_*`, `abbrev_*`,
+   `gliner_*`, `number_*`, `llm_*`), per question. Each extractor has two rows with `level = all`: copy the
+   **per-type row**, the one whose `evidence_type` is the extractor's own type (`metric` for `gliner_metric`), not
+   the one with `evidence_type = all`. A GLiNER extractor with no row at all was skipped on every paper (the service
+   was not up); one with zero matches found nothing.
 3. **Mapping check** from step 3: per kind, the retries and failures you saw (or "none").
 4. **GPU and GLiNER**: `nvidia-smi` driver and CUDA, GLiNER's memory use, free memory left on GPU 0, whether
    `orch-3x40-gliner.yaml` needed `gpu_memory_utilization: 0.88`, whether GLiNER started (`gliner health ok`),
