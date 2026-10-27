@@ -7,7 +7,6 @@
         truth: {metric: factual_accuracy, min_effect: 0.01}   # the expected answer's parameters (evaluation)
         protocol: evidence/protocols/rag-factuality.yaml           # optional: the hand-written protocol
         agentic_protocol: evidence/protocols/rag-factuality-agentic.yaml   # optional: its agentic variant
-        vocab: rag-factuality                    # optional: the proposal flow's vocabulary (evidence/vocab/)
 
 Paths are relative to the repository and must lie in the protocols directory (`$EV_PROTOCOLS`), where the run
 step finds protocols by name; a protocol must parse (evidence/protocol.py) and ask the entry's question with
@@ -70,7 +69,7 @@ def load(path: Path, protocols: Path, base: Path = REPO) -> list[Question]:
                     names[key] = protocol_name(text, protocols, q.question, base, q.kind)
                 except ValueError as exc:
                     problems.append(f"{q.id}.{key}: {exc}")
-        out.append(Question(id=q.id, question=q.question, kind=q.kind, vocab=q.vocab, **names))
+        out.append(Question(id=q.id, question=q.question, kind=q.kind, **names))
     if problems:
         raise ValueError(f"{path.name} does not validate: " + "; ".join(problems))
     return out

@@ -25,8 +25,7 @@ is open.
 (`evaluation/baselines/agent.py`), the locate step and locate recall, the extractor cascade with
 `found_by` and marginal contribution, the provenance and replay lane (hash-chained events, record cache,
 exact replay, re-execution as a stability measurement), the PROV-O export, the funnel engine
-(`evidence run --strategy gaps`) and the proposal flow (`evidence propose`, below) with its optional
-vocabulary snapshot (`docs/STATE.md`).
+(`evidence run --strategy gaps`) and the proposal flow (`evidence propose`, below) (`docs/STATE.md`).
 
 Files and formats: [`docs/evidence-system.md`](docs/evidence-system.md) (Part A the files between the
 packages, Part B the extractor contract). One synthetic corpus end to end, offline (regex extractors, no
@@ -44,13 +43,12 @@ model, `orch-model` by default, cached in the proposal directory; nothing runs t
 
 ```bash
 uv run evidence propose frame --question "Does retrieval-augmented generation improve ...?" \
-    --vocab rag-factuality --out proposals/rag      # frame.json: population, roles, outcomes, sources
+    --out proposals/rag                             # frame.json: population, roles, outcomes
 uv run evidence propose draft proposals/rag         # draft.yaml + draft.sources.json, from the example protocol
 uv run evidence propose critic proposals/rag        # critic.json: deterministic checks + LLM checklist
 uv run evidence propose cards proposals/rag         # cards.json + decisions.yaml (edit: choice, reason, by)
 uv run evidence propose freeze proposals/rag        # protocol.yaml (revision 1) + proposal.json
 uv run evidence propose amend proposals/rag --reason "..." [--before-main-run]   # after editing protocol.yaml
-uv run evidence vocab build --name N --source DIR --out evidence/vocab/N.json    # snapshot from local files
 ```
 
 ## Web app

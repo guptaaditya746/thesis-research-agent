@@ -125,7 +125,7 @@ describe("the stepper", () => {
     const bodies = recordJobs()
     server.use(http.get("/api/ev/questions/inv-metrics", () => HttpResponse.json({ id: "inv-metrics",
       question: "Which evaluation metrics do the papers report?", kind: "inventory", protocol: "rag-factuality",
-      agentic_protocol: null, vocab: null, proposals: [] })))
+      agentic_protocol: null, proposals: [] })))
     renderRoutes(routes, `/flow/inv-metrics/run?corpus=${MIXED}`)
     const rag = await screen.findByRole("button", { name: /RAG baseline/ }, T)
     expect(rag).toBeEnabled()   // the world's answer on this corpus is the factuality question's

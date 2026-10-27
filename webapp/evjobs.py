@@ -306,11 +306,10 @@ class Commands:
         return JobPlan("compare", [step("evaluate compare", argv)], {"score": r.name}, "cpu", False)
 
     def propose(self, r: ProposeRequest) -> JobPlan:
-        if r.text is not None:   # a question the person typed: no vocabulary snapshot
-            text, vocab = r.text.strip(), None
+        if r.text is not None:   # a question the person typed
+            text = r.text.strip()
         else:
-            q = self.questions.get(r.question or "")
-            text, vocab = q.question, q.vocab
+            text = self.questions.get(r.question or "").question
         directory = inside(self.proposals(), r.proposal)
         if (directory / PROTOCOL).exists():
             raise Conflict(f"proposal {r.proposal} is frozen; change it with `evidence propose amend` (command line)")
@@ -323,7 +322,7 @@ class Commands:
             raise Conflict(f"proposal {r.proposal} has its cards: decide them and freeze it")
         first = [name for name, _ in PROPOSE_STEPS].index(todo[0])
         argv = {"frame": self.tool("evidence", "propose", "frame", "--question", text,
-                                   *(["--vocab", vocab] if vocab else []), "--out", directory, "--model", r.model),
+                                   "--out", directory, "--model", r.model),
                 "draft": self.tool("evidence", "propose", "draft", directory),
                 "critic": self.tool("evidence", "propose", "critic", directory, "--model", r.model),
                 "cards": self.tool("evidence", "propose", "cards", directory, "--model", r.model)}

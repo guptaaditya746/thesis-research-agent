@@ -16,8 +16,8 @@ PROTOCOLS = REPO / "evidence" / "protocols"
 
 def test_the_committed_file_offers_the_rag_question() -> None:
     q = load(REPO / "evidence" / "questions.yaml", PROTOCOLS)[0]
-    assert (q.id, q.question, q.protocol, q.agentic_protocol, q.vocab) == (
-        "rag-factuality", QUESTION, "rag-factuality", "rag-factuality-agentic", "rag-factuality")
+    assert (q.id, q.question, q.protocol, q.agentic_protocol) == (
+        "rag-factuality", QUESTION, "rag-factuality", "rag-factuality-agentic")
 
 
 def write(tmp_path: Path, text: str) -> Path:
@@ -33,7 +33,7 @@ def write(tmp_path: Path, text: str) -> Path:
     ("questions:\n  - {id: a, question: ' Q?'}", "spaces"),
     ("questions:\n  - {id: a, question: 'Q?'}\n  - {id: a, question: 'R?'}", "unique"),
     ("questions:\n  - {id: a, question: 'Q?', extra: 1}", "extra"),
-    ("questions:\n  - {id: a, question: 'Q?', vocab: ../v}", "vocab"),
+    ("questions:\n  - {id: a, question: 'Q?', vocab: rag-factuality}", "vocab"),   # removed 27 Oct: refused
     ("questions: [unclosed", "not YAML"),
     ("questions:\n  - {id: a, question: 'Q?', protocol: evidence/protocols/rag-factuality.yaml}", "asks"),
     (f"questions:\n  - {{id: a, question: '{QUESTION}', protocol: evidence/protocols/nope.yaml}}", "no such file"),
@@ -48,7 +48,7 @@ def test_a_broken_file_is_refused_with_its_problem(tmp_path: Path, text: str, me
 
 def test_a_question_without_a_protocol_needs_a_proposal(tmp_path: Path) -> None:
     [q] = load(write(tmp_path, "questions:\n  - {id: new-q, question: 'Does X improve Y?'}"), PROTOCOLS)
-    assert q.protocol is None and q.agentic_protocol is None and q.vocab is None
+    assert q.protocol is None and q.agentic_protocol is None
 
 
 def test_a_protocol_that_does_not_parse_is_refused(tmp_path: Path) -> None:

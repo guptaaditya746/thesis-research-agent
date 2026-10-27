@@ -7,13 +7,12 @@
     evidence prov RUN
     evidence verify RUN
     evidence protocol check P
-    evidence propose frame --question Q [--vocab V] --out DIR [--model ALIAS] [--force] [--refresh]
+    evidence propose frame --question Q --out DIR [--model ALIAS] [--force] [--refresh]
     evidence propose draft DIR [--template P]
     evidence propose critic DIR [--model ALIAS] [--refresh]
     evidence propose cards DIR [--model ALIAS] [--force] [--refresh]
     evidence propose freeze DIR
     evidence propose amend DIR --reason R [--before-main-run]
-    evidence vocab build --name N --source DIR --out FILE
 
 `--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
 screen, then escalate only the gaps; `all` runs every extractor on every document and records the
@@ -24,7 +23,7 @@ and prints {id, version, revision, sha256, phases, extractors per type}. `propos
 (docs/evidence-system.md Part E, evidence/propose): question -> frame -> draft -> critic -> cards (the person
 edits decisions.yaml) -> freeze -> amend, all files in one directory; frame, critic and cards make one cached
 model call each (`--model`, default orch-model), the rest is deterministic, and nothing runs the protocol.
-`vocab build` makes a vocabulary snapshot from local files (evidence/propose/vocab.py). Exit status: 0 ok,
+Exit status: 0 ok,
 1 a replay mismatch, a cache miss, a broken chain or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
 refused proposal step (a decision without a reason, an amendment without a reason or a change, a stale input).
 """
@@ -93,7 +92,6 @@ def _propose_parser(sub: argparse._SubParsersAction) -> None:
     model_help = f"model alias (default {DEFAULT_MODEL})"
     f = pro.add_parser("frame", help="question -> frame.json (one model call)")
     f.add_argument("--question", required=True)
-    f.add_argument("--vocab", help="vocabulary snapshot: a path or a name under evidence/vocab/")
     f.add_argument("--out", required=True, type=Path, help="the proposal directory, e.g. proposals/<slug>")
     f.add_argument("--model", default=DEFAULT_MODEL, help=model_help)
     f.add_argument("--kind", choices=("effect", "inventory", "consistency", "best"),
@@ -116,20 +114,14 @@ def _propose_parser(sub: argparse._SubParsersAction) -> None:
     a.add_argument("dir", type=Path)
     a.add_argument("--reason", required=True)
     a.add_argument("--before-main-run", action="store_true", help="the amendment is made before the main run")
-    v = sub.add_parser("vocab", help="vocabulary snapshots").add_subparsers(dest="vocab_command", required=True)
-    b = v.add_parser("build", help="build a snapshot from local term files (no network)")
-    b.add_argument("--name", required=True)
-    b.add_argument("--source", required=True, type=Path, help="directory with sources.json and the term files")
-    b.add_argument("--out", required=True, type=Path)
 
 
 def _propose(args: argparse.Namespace) -> int:
     from .propose import amend, cards, critic, draft, frame, freeze
     from .propose.common import ProposalError
-    from .propose.vocab import VocabError
     try:
         if args.propose_command == "frame":
-            out = frame.run(args.question, args.out, vocab=args.vocab, alias=args.model, force=args.force,
+            out = frame.run(args.question, args.out, alias=args.model, force=args.force,
                             refresh=args.refresh, kind=args.kind)
         elif args.propose_command == "draft":
             out = draft.run(args.dir, template=args.template)
@@ -142,26 +134,13 @@ def _propose(args: argparse.Namespace) -> int:
         else:
             print(json.dumps(amend.run(args.dir, args.reason, before_main_run=args.before_main_run), indent=1))
             return 0
-    except (ProposalError, VocabError) as exc:
+    except ProposalError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except RuntimeError as exc:   # a failed model call (common.ask redacts the key); nothing was written
         print(f"error: model call failed: {exc}", file=sys.stderr)
         return 1
     print(out)
-    return 0
-
-
-def _vocab(args: argparse.Namespace) -> int:
-    from .propose import vocab
-    try:
-        data = vocab.build(args.name, args.source)
-    except (OSError, ValueError, KeyError) as exc:   # VocabError and pydantic's ValidationError are ValueErrors
-        print(f"error: {exc}", file=sys.stderr)
-        return 2
-    path = vocab.write(data, args.out)
-    print(json.dumps({"file": str(path), "name": data["name"], "sha256": data["sha256"], "terms": len(data["terms"])},
-                     indent=1))
     return 0
 
 
@@ -206,8 +185,6 @@ def _dispatch(args: argparse.Namespace) -> int:
         return _protocol_check(args.protocol)
     if args.command == "propose":
         return _propose(args)
-    if args.command == "vocab":
-        return _vocab(args)
     report = verify(args.run / EVENTS_FILE, head=read_json(args.run / RUN_FILE).get("chain_head"))
     print(json.dumps({"ok": report.ok, "records": report.records, "head": report.head, "errors": report.errors}, indent=1))
     return 0 if report.ok else 1

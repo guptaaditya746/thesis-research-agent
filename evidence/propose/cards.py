@@ -3,8 +3,7 @@ prefilled with the model's defaults for the person to edit.
 
 Each card has options: `draft` (the draft's own value), the fixed options of cards.yaml (the cascade card's
 are made from the draft: the same cascades escalating only the gaps, and with the agentic extractor last),
-and `model` when the model proposes a value of its own. The model picks a default and gives a rationale. The
-vocabulary evidence of a card is the snapshot's entries behind the values it sets (the frame's matches).
+and `model` when the model proposes a value of its own. The model picks a default and gives a rationale.
 
 decisions.yaml holds one entry per card: `choice` (an option id, or `custom` with a `value` in the card's
 shape), `reason`, `by`. Prefilled entries are the model's default with `reason: "default: <rationale>"` and
@@ -442,24 +441,6 @@ def options(card: dict[str, Any], draft: dict[str, Any], f: Frame) -> list[dict[
     return out
 
 
-def evidence(card_id: str, draft: dict[str, Any], f: Frame) -> list[dict[str, Any]]:
-    """The vocabulary entries behind a card's values (from the frame's lookups); empty without a vocabulary."""
-    def entry(name: str, x: Any) -> dict[str, Any] | None:
-        if getattr(x, "vocab_id", None) is None:
-            return None
-        return {"name": name, "vocab_id": x.vocab_id, "synonyms": list(getattr(x, "vocab_synonyms", []) or []),
-                "higher_is_better": getattr(x, "vocab_higher_is_better", None)}
-    if card_id == "screen":
-        rows = [entry(t.term, t) for t in f.population.terms]
-    elif card_id == "roles":
-        rows = [entry(r.role, r) for r in (f.treatment, f.control)]
-    elif card_id == "metrics":
-        rows = [entry(o.canonical, o) for o in f.outcomes]
-    else:
-        rows = []
-    return [r for r in rows if r]
-
-
 def reply_model(kind: str = "effect") -> type[BaseModel]:
     """The schema of the cards call for a question of `kind`: per card of the kind a default (an option id, or
     `model` with a proposal) and why."""
@@ -480,14 +461,12 @@ CardsReply = reply_model("effect")
 def _user_prompt(f: Frame, draft_text: str, critic: dict[str, Any], cards: list[dict[str, Any]]) -> str:
     failed = [f"- {c['id']}: {c['message']}" for c in critic.get("checks", []) if not c["ok"]]
     parts = [f"Question: {f.question}", f"Kind of question: {f.kind}", "",
-             "Frame:", json.dumps(f.model_dump(mode="json", exclude={"call", "created", "vocabulary"}), ensure_ascii=False),
+             "Frame:", json.dumps(f.model_dump(mode="json", exclude={"call", "created"}), ensure_ascii=False),
              "", "Draft protocol:", draft_text.strip(), "",
              "Critic findings:", *(failed or ["- none"]), "", "Cards:"]
     for c in cards:
         parts += [f"## {c['id']}: {c['title']}", c["ask"]]
         parts += [f"- option {o['id']}: {json.dumps(o['value'], ensure_ascii=False)} ({o['summary']}); effect: {o['effect']}" for o in c["options"]]
-        if c["vocabulary"]:
-            parts.append("Vocabulary: " + json.dumps(c["vocabulary"], ensure_ascii=False))
     return "\n".join(parts) + "\n"
 
 
@@ -531,7 +510,7 @@ def run(directory: Path | str, *, model: Model | None = None, alias: str | None 
     fresh(directory, DRAFT, critic.get("draft_sha256"), "critic")
     draft_text = draft_path.read_text(encoding="utf-8")
     draft = yaml.safe_load(draft_text)
-    cards = [{**c, "options": options(c, draft, f), "vocabulary": evidence(c["id"], draft, f)} for c in for_kind(f.kind)]
+    cards = [{**c, "options": options(c, draft, f)} for c in for_kind(f.kind)]
     decisions_path = directory / DECISIONS
     guard(directory, DECISIONS, force)
     try:

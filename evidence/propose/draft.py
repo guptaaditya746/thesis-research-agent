@@ -20,10 +20,9 @@ the flag thresholds. The frame decides the rest:
   without config, so the RAG frame drafts the hand-written cascades exactly. `sync_regex` does this from a
   protocol mapping's roles and metrics; freeze runs it again after the decisions.
 
-draft.sources.json says where every decided value and every term comes from: `ontology` (a vocabulary term
-matched it in the frame), `protocol` (copied from the example protocol) or `invented` (the model's, not in
-the vocabulary), with the vocabulary entry id where there is one, and the sha256 of the frame and template
-it was drafted from.
+draft.sources.json says where every decided value and every term comes from: `frame` (the frame's, so the
+model's or the person's who edited frame.json) or `protocol` (copied from the example protocol), and the sha256
+of the frame and template it was drafted from.
 """
 from __future__ import annotations
 
@@ -174,12 +173,6 @@ def sync_regex(p: dict[str, Any], f: Frame) -> list[tuple[str, Any]]:
     return out
 
 
-def _source(term: FrameTerm | str, owner: Any) -> dict[str, Any]:
-    if isinstance(term, FrameTerm):
-        return {"source": term.source, "vocab_id": term.vocab_id}
-    return {"source": owner.source, "vocab_id": owner.vocab_id}
-
-
 def build(f: Frame, template: dict[str, Any], proposal_id: str,
           kind: str | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
     """(the draft protocol as a mapping, its sources {fields, terms}) for a question of `kind` (the frame's),
@@ -191,11 +184,11 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str,
     fields: list[dict[str, Any]] = []
     terms: list[dict[str, Any]] = []
 
-    def field(path: str, source: str, vocab_id: str | None = None) -> None:
-        fields.append({"path": path, "source": source, "vocab_id": vocab_id})
+    def field(path: str, source: str) -> None:
+        fields.append({"path": path, "source": source})
 
-    def term(path: str, text: str, source: str, vocab_id: str | None = None) -> None:
-        terms.append({"path": path, "term": text, "source": source, "vocab_id": vocab_id})
+    def term(path: str, text: str, source: str) -> None:
+        terms.append({"path": path, "term": text, "source": source})
 
     types = copy.deepcopy(template["evidence_types"])
     screen_t = template.get("screen") or {}
@@ -205,9 +198,9 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str,
     p["screen"] = {"question": f.population.screening_question, "terms": [x.term for x in f.population.terms],
                    "extractors": copy.deepcopy(screen_t.get("extractors") or [{"name": "regex_screen"}, {"name": "llm_screen"}]),
                    "on_fail": screen_t.get("on_fail", "skip"), "lexical_miss": screen_t.get("lexical_miss", "reject")}
-    field("screen.question", f.population.source)
+    field("screen.question", "frame")
     for x in f.population.terms:
-        term("screen.terms", x.term, x.source, x.vocab_id)
+        term("screen.terms", x.term, "frame")
     field("screen.extractors", "protocol")
     field("screen.on_fail", "protocol")
     field("screen.lexical_miss", "protocol")   # named so the reader sees it; at its default it leaves the sha256 alone
@@ -227,8 +220,8 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str,
                            f"other for anything else.")
     cond["fields"]["properties"]["role"]["enum"] = roles
     cond["fields"]["properties"]["role"]["description"] = f"{t.role}, {c.role} or other"
-    field("evidence_types.condition.description", "invented")
-    field("evidence_types.condition.fields.role.enum", "invented")
+    field("evidence_types.condition.description", "frame")
+    field("evidence_types.condition.fields.role.enum", "frame")
 
     outcomes = [o.canonical for o in f.outcomes]
     met = types["metric"]
@@ -236,14 +229,14 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str,
                           + ", ".join(f"{o.canonical} for {o.label}" for o in f.outcomes)
                           + ", other for anything else.")
     met["fields"]["properties"]["canonical"]["enum"] = [*outcomes, "other"]
-    field("evidence_types.metric.description", "invented")
-    field("evidence_types.metric.fields.canonical.enum", "invented")
+    field("evidence_types.metric.description", "frame")
+    field("evidence_types.metric.fields.canonical.enum", "frame")
 
     fractions = [o.canonical for o in f.outcomes if rate_like(o)]
     meas = types["measurement"]
     meas["bounds"] = ([{"field": "value", "min": 0, "max": 1,
                         "when": {"link": "metric", "field": "canonical", "values": fractions}}] if fractions else [])
-    field("evidence_types.measurement.bounds", "protocol" if fractions else "invented")
+    field("evidence_types.measurement.bounds", "protocol" if fractions else "frame")
 
     claim = types["author_claim"]
     values = [e.value for e in f.effect_labels]
@@ -251,8 +244,8 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str,
                             f"over {c.label}: {', '.join(values[:-1])} or {values[-1]}." if len(values) > 1 else
                             f"The authors' own conclusion about whether {t.label} improves {f.outcomes[0].label}: {values[0]}.")
     claim["fields"]["properties"]["direction"]["enum"] = values
-    field("evidence_types.author_claim.description", "invented")
-    field("evidence_types.author_claim.fields.direction.enum", "invented")
+    field("evidence_types.author_claim.description", "frame")
+    field("evidence_types.author_claim.fields.direction.enum", "frame")
 
     query_names = {"condition": [*t.names, *c.names], "metric": [n for o in f.outcomes for n in o.names],
                    "measurement": [n for o in f.outcomes for n in o.names],
@@ -260,7 +253,7 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str,
     for name, spec in types.items():
         if name in TYPE_WORDS:
             spec["query"] = _dedup([*query_names[name], *TYPE_WORDS[name]])
-            field(f"evidence_types.{name}.query", "invented")
+            field(f"evidence_types.{name}.query", "frame")
         field(f"evidence_types.{name}.extractors", "protocol")
         field(f"evidence_types.{name}.fields", "protocol")
 
@@ -275,23 +268,19 @@ def build(f: Frame, template: dict[str, Any], proposal_id: str,
         "label": copy.deepcopy(syn_t["label"]),
         "flags": copy.deepcopy(syn_t.get("flags", {})),
     }
-    owners = {r.role: r for r in (t, c)} | {o.canonical: o for o in f.outcomes}
     for path, x in sync_regex(p, f):
-        owner = owners.get(path.split(".", 1)[-1], t)
-        term(f"regex.{path}", x.term if isinstance(x, FrameTerm) else x, **_source(x, owner))
+        term(f"regex.{path}", x.term if isinstance(x, FrameTerm) else x, "frame")
     if kind == "consistency":
         p["kind"] = kind
         p["consistency"] = copy.deepcopy(template["consistency"])
         field("consistency", "protocol")
-    field("synthesis.compare.treatment", t.source, t.vocab_id)
-    field("synthesis.compare.control", c.source, c.vocab_id)
-    for n, o in enumerate(f.outcomes):
-        field(f"synthesis.metrics[{n}].canonical", o.source, o.vocab_id)
-        agrees = o.vocab_higher_is_better is not None and o.vocab_higher_is_better == o.higher_is_better
-        field(f"synthesis.metrics[{n}].higher_is_better", "ontology" if agrees else "invented",
-              o.vocab_id if agrees else None)
+    field("synthesis.compare.treatment", "frame")
+    field("synthesis.compare.control", "frame")
+    for n, _ in enumerate(f.outcomes):
+        field(f"synthesis.metrics[{n}].canonical", "frame")
+        field(f"synthesis.metrics[{n}].higher_is_better", "frame")
     for e in f.effect_labels:
-        field(f"synthesis.claim_map.{e.value}", e.source)
+        field(f"synthesis.claim_map.{e.value}", "frame")
     for key in ("min_effect", "pairing", "label", "flags"):
         field(f"synthesis.{key}", "protocol")
     return p, {"fields": fields, "terms": terms}
@@ -319,7 +308,5 @@ def run(directory: Path | str, *, template: Path | str | None = None) -> Path:
     write_text(directory / DRAFT, text)
     write_json(directory / SOURCES, {"frame_sha256": sha(frame_path),
                                      "template": {"path": template_path.name, "sha256": sha(template_path)},
-                                     "vocabulary": ({k: f.vocabulary[k] for k in ("name", "sha256")}
-                                                    if f.vocabulary else None),
                                      **sources})
     return directory / DRAFT

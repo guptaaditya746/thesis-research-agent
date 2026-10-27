@@ -4,7 +4,7 @@
 Per entry: `id` (a plain name), `question` (exactly as its hand-written protocol asks it), `kind` (effect,
 inventory, consistency or best; the protocol's kind), `truth` (the parameters the expected answer is computed
 with, fixed here and never taken from a user's protocol), `protocol` (the hand-written protocol, a path from the
-repository root), `agentic_protocol` and `vocab` (rag-factuality only). Truth parameters by kind: effect and
+repository root) and `agentic_protocol` (rag-factuality only). Truth parameters by kind: effect and
 consistency take `metric` and `min_effect`; inventory takes `target`; best takes `metric`. A parameter of another
 kind is refused. This module checks the file's shape only; the web app also checks that each protocol parses
 and asks the entry's question with the entry's kind.
@@ -46,7 +46,6 @@ class QuestionEntry(BaseModel):
     truth: QuestionTruth = QuestionTruth()
     protocol: str | None = None
     agentic_protocol: str | None = None
-    vocab: str | None = Field(None, pattern=NAME)
 
     @field_validator("question")
     @classmethod

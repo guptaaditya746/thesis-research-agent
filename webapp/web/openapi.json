@@ -2500,15 +2500,6 @@
             "title": "Options",
             "default": []
           },
-          "vocabulary": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Vocabulary",
-            "default": []
-          },
           "default": {
             "anyOf": [
               {
@@ -2564,7 +2555,6 @@
           "ask",
           "sets",
           "options",
-          "vocabulary",
           "default",
           "rationale",
           "decision",
@@ -6972,18 +6962,6 @@
             "title": "Agentic Protocol",
             "description": "its variant with the agentic extractor, when there is one"
           },
-          "vocab": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Vocab",
-            "description": "the vocabulary snapshot the proposal flow's frame step uses"
-          },
           "proposals": {
             "items": {
               "type": "string"
@@ -7001,7 +6979,6 @@
           "kind",
           "protocol",
           "agentic_protocol",
-          "vocab",
           "proposals"
         ],
         "title": "Question"

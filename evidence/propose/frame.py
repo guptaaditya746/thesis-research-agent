@@ -3,16 +3,15 @@
 The model names the population (which papers, as a screening question and the terms a relevant paper
 contains), the treatment and the control (a role id, a label, a definition, synonyms), the outcomes (a
 canonical id, its direction, the scale of its values, synonyms) and the effect labels an author's
-conclusion takes (each with the direction it asserts). The *source* of every entry is not the model's
-word: the code looks each name up in the vocabulary snapshot (if one is given) and writes
-`source: ontology` with the term's id when it is there, `invented` otherwise. A matched term's other
-synonyms and its direction are recorded beside the entry as evidence for the person who edits the frame;
-they are not added to it (a synonym the regex extractors do not know would change the draft's patterns).
+conclusion takes (each with the direction it asserts).
 
-The person may edit frame.json before `draft`; `Frame` validates it then.
+The person may edit frame.json before `draft`; `Frame` validates it then. A frame.json written while the flow
+still had vocabulary snapshots (removed 27 Oct) carries `vocabulary`, and per entry `source`, `vocab_id`,
+`vocab_synonyms` and `vocab_higher_is_better`; they are dropped when it is read (`LEGACY_KEYS`).
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any, Literal
 
@@ -20,12 +19,15 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validat
 from pydantic_ai.models import Model
 
 from ..protocol import Kind
-from . import vocab as vocab_module
 from .common import (CACHE, FRAME, REDO, ProposalError, ask, guard, mark_written, model_for, now, prompt,
                      write_json)
 
 PROMPT = "frame-v3.md"
-Source = Literal["ontology", "invented"]
+# The user message's second part. The flow had vocabulary snapshots until 27 Oct; this is the text it sent
+# without one, kept so the prompt (and the cached replies of earlier frames) stay the same.
+NO_VOCABULARY = "Vocabulary: none."
+# Keys of a frame.json from the vocabulary snapshot days, dropped when it is read (see the module docstring).
+LEGACY_KEYS = ("vocabulary", "source", "vocab_id", "vocab_synonyms", "vocab_higher_is_better")
 Scale = Literal["fraction", "percent", "count", "score", "other"]
 ID = r"^[a-z][a-z0-9_]*$"
 
@@ -72,18 +74,22 @@ class FrameReply(BaseModel):
 class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_vocabulary(cls, data: Any) -> Any:
+        if isinstance(data, dict) and any(k in data for k in LEGACY_KEYS):
+            data = {k: v for k, v in data.items() if k not in LEGACY_KEYS}
+        return data
+
 
 class FrameTerm(Strict):
     term: str = Field(min_length=1)
-    source: Source = "invented"
-    vocab_id: str | None = None
 
 
 class Population(Strict):
     description: str
     screening_question: str = Field(min_length=1)
     terms: list[FrameTerm] = Field(min_length=1)
-    source: Source = "invented"
 
 
 class Role(Strict):
@@ -91,9 +97,6 @@ class Role(Strict):
     label: str = Field(min_length=1)
     definition: str
     synonyms: list[FrameTerm] = Field(default_factory=list)
-    source: Source = "invented"
-    vocab_id: str | None = None
-    vocab_synonyms: list[str] = Field(default_factory=list)   # evidence only; not used by the draft
 
     @property
     def names(self) -> list[str]:
@@ -106,10 +109,6 @@ class Outcome(Strict):
     higher_is_better: bool
     scale: Scale = "other"
     synonyms: list[FrameTerm] = Field(default_factory=list)
-    source: Source = "invented"
-    vocab_id: str | None = None
-    vocab_synonyms: list[str] = Field(default_factory=list)
-    vocab_higher_is_better: bool | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -135,7 +134,6 @@ class Outcome(Strict):
 class EffectLabel(Strict):
     value: str = Field(pattern=ID)
     direction: Literal["supports", "contradicts", "neutral"]
-    source: Source = "invented"
 
 
 class Frame(Strict):
@@ -143,7 +141,6 @@ class Frame(Strict):
     kind: Kind = "effect"                        # no kind in a frame.json from before the kinds: an effect question
     kind_reason: str = ""
     kind_by: str = "model"                       # "model" (the guess) or "user" (`--kind`, the kind endpoint)
-    vocabulary: dict[str, str] | None = None     # {name, sha256, path} of the snapshot used, or null
     call: dict[str, Any] | None = None           # the model call that made it
     created: str | None = None
     population: Population
@@ -177,22 +174,11 @@ def load(path: Path) -> Frame:
         raise ProposalError(f"{path}: {exc}") from exc
 
 
-def vocabulary_listing(vocab: vocab_module.Vocabulary | None) -> str:
-    if vocab is None:
-        return "Vocabulary: none."
-    lines = [f"Vocabulary {vocab.name} (id | kind | label | synonyms | higher is better):"]
-    for t in vocab.terms:
-        hib = "" if t.higher_is_better is None else str(t.higher_is_better).lower()
-        lines.append(f"- {t.id} | {t.kind} | {t.label} | {'; '.join(t.synonyms)} | {hib}")
-    return "\n".join(lines)
-
-
 def _slug(text: str) -> str:
-    return vocab_module.slug(text) or "x"
+    return re.sub(r"[^a-z0-9]+", "_", text.casefold()).strip("_") or "x"
 
 
-def _terms(names: list[str], vocab: vocab_module.Vocabulary | None, kinds: tuple[str, ...],
-           skip: str | None = None) -> list[FrameTerm]:
+def _terms(names: list[str], skip: str | None = None) -> list[FrameTerm]:
     """Names as FrameTerms, repeats dropped. Only exact repeats: "retrieval augmented" and "retrieval-augmented"
     are two screen terms (a term is matched word-bounded as written, evidence/extractors/screen.py)."""
     out: list[FrameTerm] = []
@@ -201,49 +187,31 @@ def _terms(names: list[str], vocab: vocab_module.Vocabulary | None, kinds: tuple
         if not name or name in seen:
             continue
         seen.add(name)
-        term = vocab.match(name, kinds) if vocab else None
-        out.append(FrameTerm(term=name, source="ontology" if term else "invented", vocab_id=term.id if term else None))
+        out.append(FrameTerm(term=name))
     return out
 
 
-def _match_any(names: list[str], vocab: vocab_module.Vocabulary | None, kinds: tuple[str, ...]) -> vocab_module.Term | None:
-    for name in names:
-        term = vocab.match(name, kinds) if vocab else None
-        if term:
-            return term
-    return None
-
-
-def _role(reply: RoleReply, vocab: vocab_module.Vocabulary | None) -> Role:
-    kinds = ("condition", "method")
-    term = _match_any([reply.label, reply.role, *reply.synonyms], vocab, kinds)
+def _role(reply: RoleReply) -> Role:
     return Role(role=_slug(reply.role), label=reply.label.strip(), definition=reply.definition.strip(),
-                synonyms=_terms(reply.synonyms, vocab, kinds, skip=reply.label),
-                source="ontology" if term else "invented", vocab_id=term.id if term else None,
-                vocab_synonyms=[n for n in term.names if n not in (reply.label, *reply.synonyms)] if term else [])
+                synonyms=_terms(reply.synonyms, skip=reply.label))
 
 
-def _outcome(reply: OutcomeReply, vocab: vocab_module.Vocabulary | None) -> Outcome:
-    kinds = ("metric",)
-    term = _match_any([reply.label, reply.canonical, *reply.synonyms], vocab, kinds)
+def _outcome(reply: OutcomeReply) -> Outcome:
     return Outcome(canonical=_slug(reply.canonical), label=reply.label.strip(), higher_is_better=reply.higher_is_better,
-                   scale=reply.scale, synonyms=_terms(reply.synonyms, vocab, kinds, skip=reply.label),
-                   source="ontology" if term else "invented", vocab_id=term.id if term else None,
-                   vocab_synonyms=[n for n in term.names if n not in (reply.label, *reply.synonyms)] if term else [],
-                   vocab_higher_is_better=term.higher_is_better if term else None)
+                   scale=reply.scale, synonyms=_terms(reply.synonyms, skip=reply.label))
 
 
-def annotate(question: str, reply: FrameReply, vocab: vocab_module.Vocabulary | None) -> Frame:
-    """The reply with ids normalised and every entry's source looked up in the vocabulary."""
+def annotate(question: str, reply: FrameReply) -> Frame:
+    """The reply with ids normalised and repeated names dropped."""
     population = Population(description=reply.population.description.strip(),
                             screening_question=reply.population.screening_question.strip(),
-                            terms=_terms(reply.population.terms, vocab, ("condition", "method", "metric")))
-    return Frame(question=question, kind=reply.kind, kind_reason=reply.kind_reason.strip(), population=population, treatment=_role(reply.treatment, vocab),
-                 control=_role(reply.control, vocab), outcomes=[_outcome(o, vocab) for o in reply.outcomes],
+                            terms=_terms(reply.population.terms))
+    return Frame(question=question, kind=reply.kind, kind_reason=reply.kind_reason.strip(), population=population, treatment=_role(reply.treatment),
+                 control=_role(reply.control), outcomes=[_outcome(o) for o in reply.outcomes],
                  effect_labels=[EffectLabel(value=_slug(e.value), direction=e.direction) for e in reply.effect_labels])
 
 
-def run(question: str, out: Path | str, *, vocab: str | Path | None = None, model: Model | None = None,
+def run(question: str, out: Path | str, *, model: Model | None = None,
         alias: str | None = None, force: bool = False, refresh: bool = False, kind: str | None = None) -> Path:
     """Write OUT/frame.json for `question` (one cached model call). An existing frame.json the person edited
     is kept unless `force`; `refresh` asks the model again instead of using its cached reply. `kind` overrides
@@ -251,19 +219,17 @@ def run(question: str, out: Path | str, *, vocab: str | Path | None = None, mode
     directory = Path(out)
     directory.mkdir(parents=True, exist_ok=True)
     guard(directory, FRAME, force)
-    snapshot = vocab_module.load(vocab) if vocab else None
     instructions = prompt(PROMPT)
-    user = f"Question: {question.strip()}\n\n{vocabulary_listing(snapshot)}\n"
+    user = f"Question: {question.strip()}\n\n{NO_VOCABULARY}\n"
     reply, call = ask(directory, "frame", instructions, user, FrameReply, model=model_for(alias, model), refresh=refresh)
     try:
-        frame = annotate(question.strip(), reply, snapshot)
+        frame = annotate(question.strip(), reply)
     except ValueError as exc:   # an id the model made that the frame cannot take
         raise ProposalError(f"the frame the model returned does not validate: {exc}; "
                             + REDO.format(cache=directory / CACHE, key=call["cache_key"])) from exc
     if kind is not None:
         frame = frame.model_copy(update={"kind": kind, "kind_by": "user"})
-    ref = {**snapshot.ref(), "path": Path(vocab).as_posix()} if snapshot else None   # as given: a name or a path
-    data = frame.model_copy(update={"vocabulary": ref, "call": call, "created": now()}).model_dump(mode="json")
+    data = frame.model_copy(update={"call": call, "created": now()}).model_dump(mode="json")
     write_json(directory / FRAME, data)
     mark_written(directory, FRAME)
     return directory / FRAME

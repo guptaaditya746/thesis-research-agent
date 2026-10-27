@@ -282,7 +282,7 @@ def proposal(directory: Path) -> Path:
     from evidence.tests.propose_support import QUESTION, Scripted
 
     model = Scripted()
-    frame.run(QUESTION, directory, vocab="rag-factuality", model=model.model)
+    frame.run(QUESTION, directory, model=model.model)
     draft.run(directory)
     critic.run(directory, model=model.model)
     cards.run(directory, model=model.model)

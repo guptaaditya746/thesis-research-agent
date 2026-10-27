@@ -12,7 +12,7 @@ import yaml
 
 from evidence import cli
 from evidence.extractors import terms as regex_terms
-from evidence.propose import amend, cards, critic, frame, freeze, vocab
+from evidence.propose import amend, cards, critic, frame, freeze
 from evidence.propose.common import ProposalError
 from evidence.protocol import load
 
@@ -114,14 +114,14 @@ def test_critic_check_both_directions() -> None:
 def test_frame_rerun_keeps_an_edited_frame(tmp_path: Path) -> None:
     model = Scripted()
     d = flow(tmp_path / "p", model, until="frame")
-    frame.run(QUESTION, d, vocab="rag-factuality", model=model.model)        # untouched: written again
+    frame.run(QUESTION, d, model=model.model)        # untouched: written again
     data = json.loads((d / "frame.json").read_text(encoding="utf-8"))
     data["treatment"]["definition"] = "edited by a person"
     (d / "frame.json").write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(ProposalError, match="has been edited"):
-        frame.run(QUESTION, d, vocab="rag-factuality", model=model.model)
+        frame.run(QUESTION, d, model=model.model)
     assert "edited by a person" in (d / "frame.json").read_text(encoding="utf-8")
-    frame.run(QUESTION, d, vocab="rag-factuality", model=model.model, force=True)
+    frame.run(QUESTION, d, model=model.model, force=True)
     assert "edited by a person" not in (d / "frame.json").read_text(encoding="utf-8")
 
 
@@ -139,29 +139,6 @@ def test_cards_keep_decisions_they_did_not_write(tmp_path: Path) -> None:
 
 
 # 4. clean refusals -------------------------------------------------------------------------------------------
-
-def test_a_malformed_vocabulary_is_a_clean_refusal(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    bad = tmp_path / "bad.json"
-    bad.write_text(json.dumps({"name": "bad", "terms": []}), encoding="utf-8")
-    with pytest.raises(vocab.VocabError, match="not a vocabulary snapshot"):
-        vocab.load(bad)
-    assert cli.main(["propose", "frame", "--question", "Q?", "--vocab", str(bad), "--out", str(tmp_path / "p")]) == 2
-    assert "not a vocabulary snapshot" in capsys.readouterr().err
-
-
-def test_a_csv_with_a_byte_order_mark(tmp_path: Path) -> None:
-    src = tmp_path / "src"
-    src.mkdir()
-    (src / "sources.json").write_text('﻿[{"name": "pwc", "version": "1", "url": null, "file": "m.csv"}]',
-                                      encoding="utf-8")
-    (src / "m.csv").write_text("﻿label,synonyms,kind,higher_is_better\nExact Match,EM,metric,true\n",
-                               encoding="utf-8")
-    data = vocab.build("bom", src)
-    assert data["terms"][0]["label"] == "Exact Match"
-    (src / "m.csv").write_text("name,kind\nx,metric\n", encoding="utf-8")
-    with pytest.raises(vocab.VocabError, match="m.csv: missing key 'label'"):
-        vocab.build("bom", src)
-
 
 def test_a_choice_that_is_not_a_name(tmp_path: Path) -> None:
     d = flow(tmp_path / "p", Scripted(), until="cards")

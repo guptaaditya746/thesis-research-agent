@@ -77,10 +77,9 @@ class Scripted:
         return respond(info, {"frame": self.frame, "critic": self.critic, "cards": self.cards}[step])
 
 
-def flow(directory: Path, model: Scripted, *, vocab: str | None = "rag-factuality", question: str = QUESTION,
-         until: str = "freeze") -> Path:
+def flow(directory: Path, model: Scripted, *, question: str = QUESTION, until: str = "freeze") -> Path:
     """Run the steps up to `until` (frame, draft, critic, cards, freeze) with the scripted model."""
-    frame.run(question, directory, vocab=vocab, model=model.model)
+    frame.run(question, directory, model=model.model)
     if until == "frame":
         return directory
     draft.run(directory)

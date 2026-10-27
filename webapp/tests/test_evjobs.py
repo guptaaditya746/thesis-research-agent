@@ -304,8 +304,7 @@ def test_propose_job_runs_the_missing_steps(client: TestClient, world: EvidenceW
     assert done["state"] == "done" and job["lane"] == "model" and job["refs"] == {"proposal": "p-new"}
     d = world.proposals / "p-new"
     assert calls(tmp_path) == [
-        [*TOOL, "evidence", "propose", "frame", "--question", QUESTION, "--vocab", "rag-factuality", "--out", str(d),
-         "--model", "orch-model"],
+        [*TOOL, "evidence", "propose", "frame", "--question", QUESTION, "--out", str(d), "--model", "orch-model"],
         [*TOOL, "evidence", "propose", "draft", str(d)],
         [*TOOL, "evidence", "propose", "critic", str(d), "--model", "orch-model"],
         [*TOOL, "evidence", "propose", "cards", str(d), "--model", "orch-model"]]
@@ -581,7 +580,7 @@ def test_propose_needs_exactly_one_of_question_and_text(client: TestClient) -> N
 
 
 @POSIX_ONLY
-def test_propose_a_typed_question_has_no_vocabulary(client: TestClient, world: EvidenceWorld, tmp_path: Path) -> None:
+def test_propose_a_typed_question(client: TestClient, world: EvidenceWorld, tmp_path: Path) -> None:
     text = "Which retriever is best on long documents?"
     job = start(client, "propose", {"proposal": "p-typed", "text": text})
     assert wait(client, job["id"])["state"] == "done"

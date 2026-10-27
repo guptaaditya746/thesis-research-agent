@@ -1047,13 +1047,6 @@ export interface components {
             options: {
                 [key: string]: unknown;
             }[];
-            /**
-             * Vocabulary
-             * @default []
-             */
-            vocabulary: {
-                [key: string]: unknown;
-            }[];
             /** Default */
             default: string | null;
             /** Rationale */
@@ -2814,11 +2807,6 @@ export interface components {
              * @description its variant with the agentic extractor, when there is one
              */
             agentic_protocol: string | null;
-            /**
-             * Vocab
-             * @description the vocabulary snapshot the proposal flow's frame step uses
-             */
-            vocab: string | null;
             /**
              * Proposals
              * @description proposals (by directory name) whose frame asks this question

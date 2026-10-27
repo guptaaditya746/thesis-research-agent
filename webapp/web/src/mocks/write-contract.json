@@ -287,8 +287,6 @@
       "frame",
       "--question",
       "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
-      "--vocab",
-      "rag-factuality",
       "--out",
       "*",
       "--model",

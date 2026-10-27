@@ -26,7 +26,7 @@ def test_critic_passes_the_rag_draft_and_records_the_checklist(tmp_path: Path) -
     assert data["ok"] is True
     assert [c["id"] for c in data["checks"] if c["kind"] == "deterministic"] == [
         "parses", "outcomes_complete", "terms_cover_synonyms", "regex_matches_enums", "screen_present", "label_complete",
-        "extractors_registered", "vocabulary_direction", "bounds_cover_rate_metrics", "metric_rules_collide", "locate_params_used",
+        "extractors_registered", "bounds_cover_rate_metrics", "metric_rules_collide", "locate_params_used",
             "inventory_target_declared", "best_kinds_nonempty", "best_kinds_disjoint", "claim_type_present"]
     assert checks["scope"] == {"id": "scope", "kind": "llm", "ok": False,
                                "message": "the term retrieval admits retrieval-only papers"}
@@ -52,7 +52,7 @@ def test_critic_flags_a_broken_draft(tmp_path: Path) -> None:
 
 
 def test_checks_on_a_protocol_that_does_not_parse() -> None:
-    f = frame.annotate("Q?", frame.FrameReply.model_validate(RAG_FRAME), None)
+    f = frame.annotate("Q?", frame.FrameReply.model_validate(RAG_FRAME))
     text = (Path(critic.__file__).parents[1] / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8")
     broken = text.replace("    - {then: insufficient}", "    - {when: {neutral: \"==0\"}, then: insufficient}")
     checks = by_id(critic.checks(broken, f))
@@ -65,22 +65,11 @@ def test_coverage_names_what_the_regex_patterns_miss() -> None:
     reply = json.loads(json.dumps(RAG_FRAME))
     reply["control"]["synonyms"].append("parametric-only model")
     reply["outcomes"][0]["synonyms"].append("F1")
-    f = frame.annotate("Q?", frame.FrameReply.model_validate(reply), None)
+    f = frame.annotate("Q?", frame.FrameReply.model_validate(reply))
     text = (Path(critic.__file__).parents[1] / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8")
     check = by_id(critic.checks(text, f))["terms_cover_synonyms"]
     assert not check["ok"]
     assert "'parametric-only model' (regex_condition)" in check["message"] and "'F1' (regex_metric)" in check["message"]
-
-
-def test_vocabulary_direction_is_checked() -> None:
-    from evidence.propose import vocab
-    reply = json.loads(json.dumps(RAG_FRAME))
-    reply["outcomes"][1]["higher_is_better"] = True
-    f = frame.annotate("Q?", frame.FrameReply.model_validate(reply), vocab.load("rag-factuality"))
-    text = (Path(critic.__file__).parents[1] / "protocols" / "rag-factuality.yaml").read_text(encoding="utf-8")
-    checks = by_id(critic.checks(text, f))
-    assert not checks["vocabulary_direction"]["ok"] and "hallucination_rate" in checks["vocabulary_direction"]["message"]
-    assert not checks["outcomes_complete"]["ok"]
 
 
 def test_critic_says_exhaustive_ignores_params() -> None:

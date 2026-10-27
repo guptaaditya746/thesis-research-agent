@@ -24,7 +24,7 @@ from .files import Conflict, NotFound, check_id, inside, read_json
 
 CHECK_CARD = {"outcomes_complete": "metrics", "terms_cover_synonyms": "screen", "regex_matches_enums": "roles",
               "screen_present": "screen", "label_complete": "label", "extractors_registered": "cascade",
-              "vocabulary_direction": "metrics", "bounds_cover_rate_metrics": "metrics",
+              "bounds_cover_rate_metrics": "metrics",
               "metric_rules_collide": "metrics", "locate_params_used": "locate",
               "inventory_target_declared": "list_target", "best_kinds_nonempty": "method_kinds",
               "best_kinds_disjoint": "method_kinds", "claim_type_present": "claim_check"}

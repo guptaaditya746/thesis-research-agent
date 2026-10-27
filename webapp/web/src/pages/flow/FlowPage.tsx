@@ -90,7 +90,7 @@ function TypedFlow({ step }: { step: StepId }) {
   const kind = (["effect", "inventory", "consistency", "best"] as const).find((k) => k === frame?.kind) ?? "effect"
   const question: Question = {
     id: TYPED_FLOW, question: typeof frame?.question === "string" ? frame.question : "Your question", kind,
-    protocol: null, agentic_protocol: null, vocab: null, proposals: name ? [name] : [],
+    protocol: null, agentic_protocol: null, proposals: name ? [name] : [],
   }
   return <FlowView question={question} step={step} />
 }

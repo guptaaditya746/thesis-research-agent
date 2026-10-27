@@ -17,7 +17,6 @@ Deterministic (`checks`, also run by freeze on the frozen protocol):
   pattern; freeze refuses a protocol that fails it;
 - `bounds_cover_rate_metrics` (ours): every rate-like outcome (draft.rate_like) is in the measurement bound, so
   a value outside [0, 1] is rejected;
-- `vocabulary_direction` (ours, beyond Part E): no outcome's direction contradicts its vocabulary term's;
 - `metric_rules_collide` (ours): no frame name is matched at the same place by rules of two canonicals;
 - `locate_params_used` (ours): an exhaustive locate names no params (it would ignore them).
 
@@ -51,7 +50,7 @@ from .frame import Frame
 
 PROMPT = "critic-v1.md"
 DETERMINISTIC = ("parses", "outcomes_complete", "terms_cover_synonyms", "regex_matches_enums", "screen_present",
-                 "label_complete", "extractors_registered", "vocabulary_direction", "bounds_cover_rate_metrics",
+                 "label_complete", "extractors_registered", "bounds_cover_rate_metrics",
                  "metric_rules_collide", "locate_params_used", "inventory_target_declared", "best_kinds_nonempty",
                  "best_kinds_disjoint", "claim_type_present")
 SERIOUS = ("regex_matches_enums", "bounds_cover_rate_metrics", "metric_rules_collide", "inventory_target_declared",
@@ -291,11 +290,6 @@ def checks(text: str, f: Frame | None) -> list[dict[str, Any]]:
                       "every extractor is registered" if named else "no extractors named"))
 
     if f is not None:
-        bad = [o.canonical for o in f.outcomes
-               if o.vocab_higher_is_better is not None and o.vocab_higher_is_better != o.higher_is_better]
-        out.append(_check("vocabulary_direction", not bad,
-                          f"direction differs from the vocabulary for {bad}" if bad else
-                          "no outcome's direction contradicts the vocabulary"))
         out.append(_check("bounds_cover_rate_metrics", *(bounds_cover_rate_metrics(p, f) if p is not None else (False, skipped))))
         collisions = metric_collisions(p, f) if p is not None else None
         out.append(_check("metric_rules_collide", collisions == [],

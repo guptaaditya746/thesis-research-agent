@@ -13,7 +13,7 @@ the decided roles and metrics (draft.sync_regex), and `revision: 1` (`version` s
 the protocol format, evidence/protocol.py). A copy `protocol.v1.yaml` is the base of the first amendment.
 proposal.json records what the protocol was made from: the frame, the draft's sources, the critic, every
 decision with who made it, the deterministic checks on the frozen protocol, the run settings the cascade
-card chose (`strategy`), the vocabulary `{name, sha256}` or null, the model and prompt hash of every model
+card chose (`strategy`), the model and prompt hash of every model
 step, the sha256 of the inputs and of the protocol, and `review`: who decided (`status` model_defaults when
 every decision is the model's, human when none is, partly_human otherwise; `decided_by`) and the `waivers`.
 `frozen` (protocol.yaml written) says nothing about review: a protocol of model defaults is frozen too.
@@ -105,7 +105,6 @@ def run(directory: Path | str, *, created: str | None = None) -> Path:
         "created": created,
         "protocol": {"file": PROTOCOL, "id": protocol.id, "version": protocol.version, "revision": protocol.revision,
                      "sha256": protocol.sha256},
-        "vocabulary": ({k: f.vocabulary[k] for k in ("name", "sha256")} if f.vocabulary else None),
         "models": {step: (c or {}).get("model") for step, c in calls.items()},
         "prompts": {step: (c or {}).get("prompt_sha256") for step, c in calls.items()},
         "inputs": {"frame_sha256": sha(frame_path), "draft_sha256": sha(draft_path),

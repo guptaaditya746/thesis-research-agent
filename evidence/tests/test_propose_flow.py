@@ -1,5 +1,5 @@
 """The proposal flow end to end with a scripted model (docs/evidence-system.md Part E): the RAG question
-frozen equals the hand-written protocol up to free text; the flow without a vocabulary; the record cache."""
+frozen equals the hand-written protocol up to free text; where the draft's values come from; the record cache."""
 from __future__ import annotations
 
 import json
@@ -9,7 +9,7 @@ import pytest
 import yaml
 
 from evidence import cli
-from evidence.propose import cards, critic, draft, frame, freeze, vocab
+from evidence.propose import cards, critic, draft, frame, freeze
 from evidence.propose.common import ProposalError
 from evidence.protocol import load
 
@@ -37,7 +37,7 @@ def test_rag_question_freezes_to_the_hand_written_protocol(tmp_path: Path) -> No
     proposal = _json(d / "proposal.json")
     assert proposal["protocol"] == {"file": "protocol.yaml", "id": "rag-factuality", "version": 2, "revision": 1,
                                     "sha256": frozen.sha256}
-    assert proposal["vocabulary"] == vocab.load("rag-factuality").ref()
+    assert "vocabulary" not in proposal
     assert set(proposal["models"]) == {"frame", "critic", "cards"} and proposal["models"]["frame"] == "scripted-propose"
     assert all(len(h) == 64 for h in proposal["prompts"].values())
     assert proposal["decided_by"] == {"model": EFFECT_CARDS}
@@ -49,41 +49,28 @@ def test_rag_question_freezes_to_the_hand_written_protocol(tmp_path: Path) -> No
     assert cli.main(["protocol", "check", str(d / "protocol.yaml")]) == 0
 
 
-def test_frame_sources_come_from_the_vocabulary(tmp_path: Path) -> None:
+def test_draft_sources_say_frame_or_protocol(tmp_path: Path) -> None:
     d = flow(tmp_path / "p", Scripted(), until="draft")
     f = _json(d / "frame.json")
-    assert f["vocabulary"]["name"] == "rag-factuality" and len(f["vocabulary"]["sha256"]) == 64
-    assert f["treatment"]["source"] == "ontology" and f["treatment"]["vocab_id"] == "hand:retrieval_augmented_generation"
-    assert f["control"]["vocab_id"] == "hand:closed_book"
-    assert [o["vocab_id"] for o in f["outcomes"]] == ["hand:factual_accuracy", "hand:hallucination_rate"]
-    assert f["outcomes"][1]["vocab_higher_is_better"] is False
-    by_term = {t["term"]: t for t in f["population"]["terms"]}
-    assert by_term["RAG"]["source"] == "ontology" and by_term["retrieval"]["source"] == "invented"
-    sources = _json(d / "draft.sources.json")
-    kinds = {x["source"] for x in sources["fields"] + sources["terms"]}
-    assert kinds == {"ontology", "protocol", "invented"}
-    compare = next(x for x in sources["fields"] if x["path"] == "synthesis.compare.treatment")
-    assert compare == {"path": "synthesis.compare.treatment", "source": "ontology",
-                       "vocab_id": "hand:retrieval_augmented_generation"}
-    hib = next(x for x in sources["fields"] if x["path"] == "synthesis.metrics[1].higher_is_better")
-    assert hib["source"] == "ontology"
-
-
-def test_flow_without_a_vocabulary(tmp_path: Path) -> None:
-    d = flow(tmp_path / "novocab", Scripted(), vocab=None)
-    f = _json(d / "frame.json")
-    assert f["vocabulary"] is None
     names = [f["treatment"], f["control"], *f["outcomes"], *f["population"]["terms"],
              *(s for r in (f["treatment"], f["control"], *f["outcomes"]) for s in r["synonyms"])]
-    assert {x["source"] for x in names} == {"invented"} and all(x["vocab_id"] is None for x in names)
+    assert not {"vocabulary", "source", "vocab_id"} & {k for x in [f, *names] for k in x}
     sources = _json(d / "draft.sources.json")
-    assert {x["source"] for x in sources["fields"] + sources["terms"]} == {"protocol", "invented"}
-    assert sources["vocabulary"] is None
-    proposal = _json(d / "proposal.json")
-    assert proposal["vocabulary"] is None
-    assert comparable(load(d / "protocol.yaml")) == comparable(hand_written())
-    names = [c["id"] for c in proposal["checks"]]
-    assert "vocabulary_direction" in names and all(c["ok"] for c in proposal["checks"])
+    assert set(sources) == {"frame_sha256", "template", "fields", "terms"}
+    assert {x["source"] for x in sources["fields"] + sources["terms"]} == {"frame", "protocol"}
+    assert all("vocab_id" not in x for x in sources["fields"] + sources["terms"])
+    compare = next(x for x in sources["fields"] if x["path"] == "synthesis.compare.treatment")
+    assert compare == {"path": "synthesis.compare.treatment", "source": "frame"}
+
+
+def test_a_frame_from_the_vocabulary_days_still_loads() -> None:
+    """frame.json files written before the vocabulary snapshots were removed carry `vocabulary`, `source` and
+    `vocab_*` keys; they are dropped when the file is read."""
+    old = Path(__file__).resolve().parents[2] / "tests/EV1/proposal/frame.json"
+    data = _json(old)
+    assert "vocabulary" in data and "source" in data["treatment"]
+    f = frame.load(old)
+    assert f.treatment.role and "vocab_id" not in f.model_dump()["treatment"]
 
 
 def test_rerun_of_model_steps_hits_the_cache(tmp_path: Path) -> None:
@@ -92,7 +79,7 @@ def test_rerun_of_model_steps_hits_the_cache(tmp_path: Path) -> None:
     assert model.calls == ["frame", "critic", "cards"]
     before = {n: _json(d / n)["call"] for n in ("frame.json", "critic.json", "cards.json")}
     assert not any(c["cached"] for c in before.values())
-    frame.run(QUESTION, d, vocab="rag-factuality", model=model.model)
+    frame.run(QUESTION, d, model=model.model)
     draft.run(d)
     critic.run(d, model=model.model)
     cards.run(d, model=model.model)
@@ -117,7 +104,7 @@ def test_cards_offer_options_and_prefill_decisions(tmp_path: Path) -> None:
     assert "(= usual" in by_id["min_effect"]["options"][0]["summary"]
     assert {o["id"] for o in by_id["cascade"]["options"]} == {"draft", "gaps", "with_agentic"}
     assert by_id["label"]["default"] == "model" and by_id["label"]["options"][-1]["id"] == "model"
-    assert by_id["roles"]["vocabulary"][0]["vocab_id"] == "hand:retrieval_augmented_generation"
+    assert all("vocabulary" not in c for c in data["cards"])
     decisions = yaml.safe_load((d / "decisions.yaml").read_text(encoding="utf-8"))["decisions"]
     assert [x["card"] for x in decisions] == EFFECT_CARDS
     assert {x["by"] for x in decisions} == {"model"}
@@ -185,7 +172,7 @@ def test_a_question_the_built_in_patterns_do_not_know(tmp_path: Path) -> None:
                       "scale": "fraction", "synonyms": ["solve rate"]}],
         "effect_labels": RAG_FRAME["effect_labels"],
     }
-    d = flow(tmp_path / "cot-accuracy", Scripted(frame_reply=cot), vocab=None,
+    d = flow(tmp_path / "cot-accuracy", Scripted(frame_reply=cot),
              question="Does chain-of-thought prompting improve answer accuracy?")
     p = load(d / "protocol.yaml")
     assert p.synthesis.compare.treatment == "cot" and p.synthesis.metric_names == ("answer_accuracy",)

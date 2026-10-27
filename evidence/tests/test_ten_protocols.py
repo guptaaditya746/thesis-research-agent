@@ -45,8 +45,8 @@ def test_all_ten_parse_and_match_questions_yaml() -> None:
         assert (p.id, p.question, p.kind) == (e.id, e.question, e.kind), e.id
         assert e.kind == KINDS[e.id]
         assert e.truth.model_dump(exclude_none=True) == TRUTH[e.id], e.id
-    extra = {e.id: (e.agentic_protocol, e.vocab) for e in entries if e.agentic_protocol or e.vocab}
-    assert extra == {"rag-factuality": ("evidence/protocols/rag-factuality-agentic.yaml", "rag-factuality")}
+    extra = {e.id: e.agentic_protocol for e in entries if e.agentic_protocol}
+    assert extra == {"rag-factuality": "evidence/protocols/rag-factuality-agentic.yaml"}
 
 
 @pytest.mark.parametrize("name", list(HASHES))

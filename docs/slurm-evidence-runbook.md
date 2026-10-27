@@ -30,8 +30,8 @@ it. The point is that every part meets the real models once and the first number
   pass: the protocols (`evidence/protocols/`), the extractor prompts (`evidence/extractors/prompts/`), the
   regex vocabularies (`evidence/extractors/terms.py`), the synthesis machinery (`evidence/rules.py`,
   `evidence/synthesis.py`; its parameters are in the protocols), the funnel (`evidence/engine.py`'s screen
-  and completeness decisions, `evidence/extractors/screen.py`), the proposal flow's prompts, cards and
-  vocabulary (`evidence/propose/prompts/`, `evidence/propose/cards.yaml`, `evidence/vocab/`), the level
+  and completeness decisions, `evidence/extractors/screen.py`), the proposal flow's prompts and cards
+  (`evidence/propose/prompts/`, `evidence/propose/cards.yaml`), the level
   definitions, knobs and fidelity checks (`synth/levels.py`, `synth/levelcheck.py`, `synth/truth.py`,
   `synth/variant.py`, `synth/fidelity.py`, `synth/assoc.py`), the renderer prompts (`synth/prompts/`), the
   scoring rules (`evaluation/score.py`, `evaluation/stats.py`, `evaluation/shift.py`,
@@ -741,12 +741,12 @@ record the message and ask the user. Row `EV-fidelity`: those numbers and the sh
 ## 9. Proposal flow dry run (orch-model, three calls; between two long steps)
 
 The proposal flow (`docs/evidence-system.md` Part E) has run only on a scripted model. This runs it once on
-`orch-model` for the RAG question with the committed vocabulary snapshot, every decision left at the model's
+`orch-model` for the RAG question, every decision left at the model's
 default (`by: model`), and compares the frozen protocol with the hand-written one. **Nothing runs the
 proposed protocol**: no `evidence run --protocol "$PR/protocol.yaml"`, now or later in this session.
 
 ```bash
-uv run evidence propose frame --question "$Q" --vocab evidence/vocab/rag-factuality.json --out "$PR" \
+uv run evidence propose frame --question "$Q" --out "$PR" \
   --model orch-model 2>&1 | tee "$EV/logs/9-propose.log"
 uv run evidence propose draft "$PR" 2>&1 | tee -a "$EV/logs/9-propose.log"
 uv run evidence propose critic "$PR" --model orch-model 2>&1 | tee -a "$EV/logs/9-propose.log"
@@ -772,8 +772,7 @@ is `reject`); the message names them. **Do not waive one yourself**: a waiver in
 refusal and its check ids and hand it to the user in step 10; the dry run then has no `protocol.yaml`, and the
 steps that need it (`protocol check`, `diff`, `compare`) are `NOT RUN (freeze refused)`. a failed model call (exit 1) may be retried once; a cached reply the step cannot use
 names `--refresh`: rerun that step once with `--refresh`. Row `EV-propose-live`: per step the exit status,
-`call.cached` and tokens if logged; from `frame.json` the roles, outcomes and each entry's source (ontology /
-invented); `critic.json` `ok` and every failed deterministic check, and the four checklist answers; per card
+`call.cached` and tokens if logged; from `frame.json` the roles and outcomes; `critic.json` `ok` and every failed deterministic check, and the four checklist answers; per card
 of `cards.json` the model's default and whether it is `draft`; `proposal.json` `protocol.sha256`,
 `run_settings`, `decided_by` and `review` (`review.status` is `model_defaults` for this dry run, as every decision
 is the model's; it becomes `partly_human` or `human` only after the user's decisions; `review.waivers` lists any); `protocol-compare.json` `equal` and every differing path; the size of

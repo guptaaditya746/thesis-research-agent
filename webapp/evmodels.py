@@ -210,7 +210,6 @@ class Card(Open):
     ask: str | None = None
     sets: list[str] = []
     options: list[dict[str, Any]] = []
-    vocabulary: list[dict[str, Any]] = []
     default: str | None = None
     rationale: str | None = None
     decision: Decision | None = Field(None, description="the decision of decisions.yaml (or, once frozen, of "
@@ -653,7 +652,6 @@ class Question(Base):
                                                    "(`/api/ev/protocols/{name}`), or null: the question needs a "
                                                    "proposal")
     agentic_protocol: str | None = Field(None, description="its variant with the agentic extractor, when there is one")
-    vocab: str | None = Field(None, description="the vocabulary snapshot the proposal flow's frame step uses")
     proposals: list[str] = Field([], description="proposals (by directory name) whose frame asks this question")
 
 

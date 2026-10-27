@@ -109,7 +109,7 @@ def test_proposal_cards_decisions_amendments(ev: TestClient) -> None:
     assert len(cards) == 8 and cards["min_effect"]["decision"]["by"] == "aditya"
     assert cards["min_effect"]["decision"]["default"] == "draft" and cards["min_effect"]["decision"]["choice"] != "draft"
     assert cards["screen"]["decision"]["by"] == "model" and cards["screen"]["decision"]["reason"].startswith("default: ")
-    assert detail["frame"]["treatment"]["source"] == "ontology" and detail["sources"]["fields"]
+    assert detail["frame"]["treatment"]["role"] and detail["sources"]["fields"]
     assert any(c["kind"] == "deterministic" for c in detail["checks"])
     assert detail["revisions"] == [1, 2] and detail["protocol"]["protocol"]["revision"] == 2
     assert detail["proposal"]["decided_by"] and not {"frame", "sources", "critic"} & set(detail["proposal"])

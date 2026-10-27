@@ -1,7 +1,6 @@
 /**
  * A proposal `/proposals/:name` (evidence propose, Part E; our design): the frame (population, treatment,
- * control, outcomes; each name's source, ontology or invented, by the code's lookup in the vocabulary), the
- * draft's sources, the critic's checks, the eight choice-point cards with the model's default, its rationale
+ * control, outcomes), the draft's sources (each field and term from the frame or the example protocol), the critic's checks, the eight choice-point cards with the model's default, its rationale
  * and the decision taken (who decided, why), the frozen protocol with its hash and revision, and the
  * amendments log. Read-only: the decisions are made in a question's flow (the protocol step's cards form, which
  * writes decisions.yaml) or by editing decisions.yaml; amendments on the command line.
@@ -129,8 +128,8 @@ export default function ProposalPage() {
             <TabsContent value="sources">
               {p.sources ? (
                 <div className="space-y-3">
-                  <RowsTable caption="Field sources" rows={(p.sources.fields as Record<string, unknown>[] | undefined) ?? []} columns={["path", "source", "vocab_id"]} />
-                  <RowsTable caption="Term sources" rows={(p.sources.terms as Record<string, unknown>[] | undefined) ?? []} columns={["path", "term", "source", "vocab_id"]} />
+                  <RowsTable caption="Field sources" rows={(p.sources.fields as Record<string, unknown>[] | undefined) ?? []} columns={["path", "source"]} />
+                  <RowsTable caption="Term sources" rows={(p.sources.terms as Record<string, unknown>[] | undefined) ?? []} columns={["path", "term", "source"]} />
                 </div>
               ) : <p className="text-sm text-muted-foreground">No draft yet.</p>}
             </TabsContent>

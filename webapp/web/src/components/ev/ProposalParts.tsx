@@ -1,6 +1,6 @@
 /**
  * Parts of a proposal (evidence propose, Part E) shown on the proposal page and in the flow's protocol step:
- * the steps done, the frame (each name's source, ontology or invented) and the critic's checks.
+ * the steps done, the frame and the critic's checks.
  */
 import { CheckCircle2Icon, CircleDashedIcon, OctagonXIcon } from "lucide-react"
 
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const PROPOSAL_STEPS = ["frame", "draft", "critic", "cards", "freeze"]
-type Named = { term?: string; label?: string; source?: string; vocab_id?: string | null }
+type Named = { term?: string; label?: string }
 
 export function ProposalSteps({ steps }: { steps: string[] }) {
   return (
@@ -27,16 +27,11 @@ export function ProposalSteps({ steps }: { steps: string[] }) {
   )
 }
 
-function Source({ source, id }: { source?: string; id?: string | null }) {
-  if (!source) return null
-  return <Badge variant={source === "ontology" ? "secondary" : "outline"} className="font-normal" title={id ?? undefined}>{source}</Badge>
-}
-
 function Names({ items }: { items: Named[] | undefined }) {
   return (
     <ul className="flex flex-wrap gap-1.5">
       {(items ?? []).map((t, i) => (
-        <li key={i} className="flex items-center gap-1 text-xs"><span className="font-mono">{t.term ?? t.label}</span><Source source={t.source} id={t.vocab_id} /></li>
+        <li key={i} className="flex items-center gap-1 text-xs"><span className="font-mono">{t.term ?? t.label}</span></li>
       ))}
     </ul>
   )
@@ -57,10 +52,10 @@ export function Frame({ frame }: { frame: Record<string, unknown> }) {
         return (
           <Card key={k}>
             <CardHeader>
-              <CardTitle as="h3" className="flex items-center gap-2 text-base">{k}: <span className="font-mono">{String(s.role)}</span> <Source source={s.source} id={s.vocab_id} /></CardTitle>
+              <CardTitle as="h3" className="flex items-center gap-2 text-base">{k}: <span className="font-mono">{String(s.role)}</span></CardTitle>
               <CardDescription>{String(s.label ?? "")}: {String(s.definition ?? "")}</CardDescription>
             </CardHeader>
-            <CardContent><KeyValues items={[["synonyms", <Names key="s" items={s.synonyms as Named[]} />], ["vocabulary synonyms", ((s.vocab_synonyms as string[] | undefined) ?? []).join(", ") || "—"]]} /></CardContent>
+            <CardContent><KeyValues items={[["synonyms", <Names key="s" items={s.synonyms as Named[]} />]]} /></CardContent>
           </Card>
         )
       })}
@@ -69,7 +64,7 @@ export function Frame({ frame }: { frame: Record<string, unknown> }) {
         <CardContent className="space-y-2">
           {outcomes.map((o) => (
             <div key={String(o.canonical)} className="space-y-1 text-sm">
-              <div className="flex items-center gap-2"><span className="font-mono">{String(o.canonical)}</span> <Source source={o.source} id={o.vocab_id} />
+              <div className="flex items-center gap-2"><span className="font-mono">{String(o.canonical)}</span>
                 <span className="text-xs text-muted-foreground">{o.higher_is_better ? "higher is better" : "lower is better"}{o.fraction ? ", a fraction" : ""}</span></div>
               <Names items={o.synonyms as Named[]} />
             </div>
