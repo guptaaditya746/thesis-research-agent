@@ -156,15 +156,17 @@ squeue -h -j "$JOB" -o '%i %T'                                  # the job id and
    `sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env" && source "$EV/in-job.env" && squeue -h -j "$JOB" -o '%i %T'`.
    A stale `JOB` makes every launch fail at once (srun: invalid job id), before any run starts.
 
-Good, for every finished engine run (section 4 makes them): no GLiNER call was skipped, and GLiNER found
-something:
+Good, for every finished engine run (section 4 makes them): no GLiNER call was skipped (`skipped=0` on every
+line), and GLiNER found something (`found=` above 0) in the runs whose protocol has a `gliner_` step and needed it.
+`rag-factuality` and `inv-methods` have no GLiNER step, so `found=0` there is expected; in `gaps` mode GLiNER runs
+only where an earlier step left a gap, so a 0 elsewhere is a note, not a failure.
 
 ```bash
 for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
   G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps; R=$RUNS/$G/$N   # as one.sh, section 4
   [ -f "$R/run.json" ] || continue
   echo "$N $Q skipped=$(grep '"status":"skipped"' "$R/events.jsonl" | grep -c '"agent_id":"gliner_') found=$(grep -c gliner_ "$R/evidence.jsonl")"
-done; done                                  # skipped=0 and found above 0 on every line
+done; done                                  # skipped=0 on every line
 ```
 
 A skipped GLiNER call (the service was not reachable) is only an `extractor_call` event with status `skipped` in
@@ -233,10 +235,10 @@ keeps it, so the app lists, opens and scores the grid's runs as its own (`$EV` i
 is `$EV/runs/<question>-cascade-gaps/<corpus>`, and for `rag-factuality` `$EV/runs/cascade-gaps/<corpus>`
 (`webapp/evjobs.py`, `run_group`: the group of a repo protocol run with the cascade and the `gaps` strategy; the
 run name is the corpus, the app's default). A baseline answer is `$EV/runs/<system>/<corpus>.<question>`, and for
-`rag-factuality` `$EV/runs/<system>/<corpus>` (`baseline_name`, the EV2 layout), so the app's Score finds it. Each system has its own cache file, because two processes must
-never append to the same cache file. A finished system is skipped (the engine's `run.json`, a baseline's
-`answer.json`), so `one.sh` and `grid.sh` can be started again after a stop and only do what is missing; the score
-is always written again.
+`rag-factuality` `$EV/runs/<system>/<corpus>` (`baseline_name`, the EV2 layout), so the app's Score finds it. Each
+system has its own cache file, because two processes must never append to the same cache file. A finished system
+is skipped (the engine's `run.json`, a baseline's `answer.json`), so `one.sh` and `grid.sh` can be started again
+after a stop and only do what is missing; the score is always written again.
 
 ```bash
 cat > "$EV/one.sh" <<'EOF'
@@ -327,7 +329,8 @@ nohup "$EV/launch.sh" grid-hard "$EV/grid.sh" "$C_HARD" > /dev/null 2>&1 &
 
 The logs are `$EV/logs/grid-main.log` and `grid-hard.log` (`launch.sh` starts a step's log afresh, so give a new
 step name to every later launch); `FAIL` lines list what to retry. Starting a grid again is safe: it only runs
-what has no `answer.json`.
+what is not finished (an engine run without `run.json`, a baseline without `answer.json`), and a killed engine run
+dir is reported, not overwritten (see "Killed runs" below).
 
 Retries: for a `FAIL engine-errors` line (failed LLM calls, `model_call`, or failed GLiNER calls, `service_call`;
 section 1, "Failed calls"), once the gateway or the service answers again, or for a `FAIL engine` line, run `one.sh`
@@ -385,10 +388,9 @@ done; done
 Read `report.json` / `report.md` of each score dir. A and B exist for the engine run only (`extraction`,
 `integration`); the baselines are scored on C only (`synthesis`, one row per system: `evidence-engine`,
 `rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1). It counts
-only the evidence types the question's protocol extracts, and `report.json` lists them in `scored_types` (an
-inventory question of datasets is scored on datasets only, an effect question on its conditions, metrics,
-measurements and claims). So A is comparable across systems and corpora for the same question, not across
-questions or kinds; copy `scored_types` into the summary next to A. If a `report.json` has no `scored_types`, its
+only the evidence types the question's protocol extracts, and `report.json` lists them in `scored_types` (for
+example, `inv-datasets` is scored on datasets only). So A is comparable across corpora for the same question, not
+across questions or kinds; copy `scored_types` into the summary next to A. If a `report.json` has no `scored_types`, its
 `all` / `all` row still counts every type in the corpus (older scoring code): write A as `-` for that run and say
 so under Failures (the runs are kept, so the scores can be made again). B and C by kind, with the field names as
 they are in `report.json`:
