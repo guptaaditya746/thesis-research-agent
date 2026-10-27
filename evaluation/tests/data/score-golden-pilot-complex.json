@@ -237,6 +237,12 @@
         "span_accuracy": 1.0
       }
     ],
+    "scored_types": [
+      "condition",
+      "metric",
+      "measurement",
+      "author_claim"
+    ],
     "unmatched_items": [
       "c-21a7fd89e690d97b",
       "m-4122821caa3bf709",

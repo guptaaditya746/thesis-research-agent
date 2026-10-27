@@ -500,6 +500,12 @@
         "span_accuracy": null
       }
     ],
+    "scored_types": [
+      "condition",
+      "metric",
+      "measurement",
+      "author_claim"
+    ],
     "unmatched_items": [
       "m-40dcf54e24410b23",
       "m-f4667235b4e5d984",

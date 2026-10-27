@@ -443,3 +443,35 @@ def test_baseline_answers_score_for_the_question_they_ask(tmp_path: Path, hard: 
     assert score_answers(HARD.parent, [path])["question_id"] == "inv-datasets"
     with pytest.raises(ValueError, match="cannot tell which question"):
         score_answers(HARD.parent, [])
+
+
+# --- pre-EV3 scoring fixes --------------------------------------------------------------------------------------
+
+def _all_all(extraction: dict[str, Any]) -> dict[str, Any]:
+    return next(r for r in extraction["rows"] if r["evidence_type"] == "all" and r["level"] == "all")
+
+
+def test_a_counts_only_the_types_the_protocol_extracts(tmp_path: Path) -> None:
+    """Finding 1: an inventory protocol that extracts metrics only is not charged with conditions, measurements
+    and claims; perfect extraction of its own types is A F1 = 1.0, and report.json names the types scored."""
+    corpus = fx.write_corpus(tmp_path)
+    metrics = [i for i in fx.perfect_items().values() if i.evidence_type == "metric"]
+    run = fx.write_run(tmp_path / "runs", metrics, None)
+    (run / "protocol.yaml").write_text((ROOT / str(_q("inv-metrics").protocol)).read_text(encoding="utf-8"),
+                                       encoding="utf-8")
+    extraction = score(run, corpus, question_id="inv-metrics")["extraction"]
+    assert extraction["scored_types"] == ["metric"]
+    assert {r["evidence_type"] for r in extraction["rows"]} == {"metric", "all"}
+    row = _all_all(extraction)
+    assert (row["items"], row["facts"], row["matched"], row["f1"]) == (3, 3, 3, 1.0)
+
+
+@pytest.mark.parametrize("qid", ["inv-methods", "inv-metrics"])
+def test_perfect_inventory_extraction_is_a_f1_one_on_the_hard_corpus(hard: GroundTruth, qid: str) -> None:
+    from evaluation.oracle import items_from_truth
+    from evaluation.score import protocol_matching
+    protocol = _protocol(qid)
+    items, _ = items_from_truth(hard, HARD.parent)
+    own = [i for doc in items.values() for i in doc if i.evidence_type in protocol.evidence_types]
+    m = protocol_matching(own, hard, paper_ids(read_json(HARD.parent / "manifest.json")), protocol)
+    assert _all_all(score_extraction(m))["f1"] == 1.0

@@ -39,7 +39,9 @@ Matching rules (A; B and the pair check reuse A's matching):
    (dataset facts have none); an item without a main-role span is checked with all its spans.
 
 Question kinds (question-first redesign; `score(question_id=...)`, evidence/questions.yaml; without an id, the
-question the run's frozen protocol asks, evidence/questions.answered_by): A is the same for every kind. B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
+question the run's frozen protocol asks, evidence/questions.answered_by): A is computed the same way for every kind,
+over the evidence types the run's protocol extracts (`scored_types`; report.json `extraction.scored_types`), so
+its `all` / `all` row means "all the types this protocol extracts". B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
 docstring describes, against the question's own expected answer (`effect_truth`; the corpus's own question keeps
 the saved answer, so its numbers are unchanged); inventory, consistency and best compare the answer with
 evaluation/expected.py's. Baseline answers are scored on C only. Intervals and attribution are for effect only.
@@ -342,9 +344,26 @@ class Matching:
                                                  sum(placed(f, truth) for _, f in pairs))
 
 
+def scored_types(protocol: Protocol | None, items: Iterable[Item] = ()) -> tuple[EvidenceType, ...]:
+    """A's evidence types: the protocol's own (those of TYPES and `dataset` it declares), so A's `all` / `all` row is
+    over all the types this protocol extracts and a protocol is never charged with facts of a type it does not ask
+    for (an inventory of metrics is not scored on conditions). Without a protocol, the four of TYPES, plus `dataset`
+    when the run has dataset items."""
+    if protocol is not None:
+        return tuple(t for t in (*TYPES, DATASET) if t in protocol.evidence_types)
+    return TYPES + ((DATASET,) if any(i.evidence_type == DATASET for i in items) else ())
+
+
+def protocol_matching(items: list[Item], truth: GroundTruth, files: dict[str, str],
+                      protocol: Protocol | None) -> Matching:
+    """A's matching of a run with its protocol: over the protocol's evidence types (`scored_types`)."""
+    return Matching(items, truth, files, scored_types(protocol, items))
+
+
 def score_extraction(m: Matching) -> dict[str, Any]:
     """A: P/R/F1 and span accuracy per evidence type x level (and over all levels and all types); span accuracy is
-    over the matched facts that have a placement (a dataset fact has none)."""
+    over the matched facts that have a placement (a dataset fact has none). `scored_types` are the evidence types
+    matched (`scored_types()`): the `all` rows pool these only."""
     sums: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0])
     for (paper, kind), cell in m.cells.items():
         level = m.truth.level_of(paper)
@@ -354,7 +373,7 @@ def score_extraction(m: Matching) -> dict[str, Any]:
     for (kind, level), (n_items, n_facts, matched, hits, placed_matched) in sorted(sums.items()):
         rows.append({"evidence_type": kind, "level": level, **prf(matched, n_items, n_facts),
                      "span_accuracy": share(hits, placed_matched)})
-    return {"rows": rows, "missed": sorted(f for f in m.facts if f not in m.item_of),
+    return {"rows": rows, "scored_types": list(m.types), "missed": sorted(f for f in m.facts if f not in m.item_of),
             "unmatched_items": sorted(i for i in m.items if i not in m.fact_of)}
 
 
@@ -1219,9 +1238,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
     files = paper_ids(read_json(corpus / "manifest.json"))
     run = Run.load(run_dir, reexec)
     protocol = _run_protocol(run, entry)
-    with_datasets = ((protocol is not None and DATASET in protocol.evidence_types)
-                     or any(i.evidence_type == DATASET for i in run.items))
-    m = Matching(run.items, truth, files, TYPES + (DATASET,) if with_datasets else TYPES)
+    m = protocol_matching(run.items, truth, files, protocol)
     answers = ([run.answer] if run.answer is not None else []) + [read_json(p) for p in baselines]
     systems = [score_kind(truth, entry.kind, entry.truth, protocol, a) for a in answers]
     effect = entry.kind == "effect"

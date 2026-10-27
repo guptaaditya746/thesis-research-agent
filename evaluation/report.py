@@ -119,6 +119,9 @@ def render(report: dict[str, Any]) -> str:
                                                     "recall", "f1", "span_accuracy"]), "",
                 f"Facts no item matched: {len(report['extraction']['missed'])}; items matching no fact: "
                 f"{len(report['extraction']['unmatched_items'])}.", ""]
+        if report["extraction"].get("scored_types"):
+            out[-1:-1] = ["", "Evidence types scored (the protocol's own; the `all` rows pool these only): "
+                          + ", ".join(report["extraction"]["scored_types"]) + "."]
     kind = report.get("kind", "effect")
     if kind != "effect":
         out[3:3] = [f"Question id: {report.get('question_id')} (kind {kind})"]
