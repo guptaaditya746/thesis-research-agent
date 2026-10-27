@@ -285,21 +285,21 @@ def line(key: str, value: object) -> str:
 
 
 def test_record_cache_scans_only_what_was_appended(tmp_path: Path) -> None:
-    path = tmp_path / "c.jsonl"
-    path.write_text(line("a", 1) + line("b", 2), encoding="utf-8")
+    path = tmp_path / "c.jsonl"    # newline="\n": LF lines as JsonlCache writes them; the byte counts below assume it
+    path.write_text(line("a", 1) + line("b", 2), encoding="utf-8", newline="\n")
     cache = RecordCache()
     assert cache.get(path, "a") == 1
     scanned = cache._index[path][2]
-    with path.open("a", encoding="utf-8") as fh:
+    with path.open("a", encoding="utf-8", newline="\n") as fh:
         fh.write(line("c", 3) + '{"key": "d", "va')                  # a torn last line waits for its end
     assert (cache.get(path, "c"), cache.get(path, "d")) == (3, None)
     assert cache._index[path][2] == scanned + len(line("c", 3).encode())
-    with path.open("a", encoding="utf-8") as fh:
+    with path.open("a", encoding="utf-8", newline="\n") as fh:
         fh.write('lue": 4}\n')
     assert cache.get(path, "d") == 4 and cache.get(path, "a") == 1
-    path.write_text(line("x", 9) + line("a", 7) + line("y", 8) * 3, encoding="utf-8")   # rewritten, and longer
+    path.write_text(line("x", 9) + line("a", 7) + line("y", 8) * 3, encoding="utf-8", newline="\n")   # rewritten, longer
     assert (cache.get(path, "a"), cache.get(path, "b"), cache.get(path, "x")) == (7, None, 9)
-    path.write_text(line("a", 5), encoding="utf-8")                  # shrank
+    path.write_text(line("a", 5), encoding="utf-8", newline="\n")    # shrank
     assert (cache.get(path, "a"), cache.get(path, "y")) == (5, None)
 
 
