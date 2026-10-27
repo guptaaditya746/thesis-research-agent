@@ -221,8 +221,9 @@ Claude, not for you to fix).
 `$EV/runs/engine/<corpus>/<question>`. A baseline answer is where the web app keeps it (`webapp/evjobs.py`,
 `baseline_name`), so the app's Score finds it: `$EV/runs/<system>/<corpus>.<question>`, and for `rag-factuality`
 `$EV/runs/<system>/<corpus>` (the EV2 layout). Each system has its own cache file, because two processes must
-never append to the same cache file. A system whose `answer.json` is already there is skipped, so `one.sh` and
-`grid.sh` can be started again after a stop and only do what is missing; the score is always written again.
+never append to the same cache file. A finished system is skipped (the engine's `run.json`, a baseline's
+`answer.json`), so `one.sh` and `grid.sh` can be started again after a stop and only do what is missing; the score
+is always written again.
 
 ```bash
 cat > $EV/one.sh <<'EOF'
@@ -243,10 +244,10 @@ if [ -n "$MODE" ] && [ -e "$RUN/$Q" ]; then
   mv "$RUN/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # a run dir is never overwritten; keep it for the report
 fi
 [ "$MODE" = retry ] && RETRY=(--retry-errors)
-if [ -f "$RUN/$Q/answer.json" ]; then
+if [ -f "$RUN/$Q/run.json" ]; then                  # the engine writes run.json last
   echo "skip engine $Q $N: done"
 elif [ -e "$RUN/$Q" ]; then
-  echo "FAIL engine $Q $N: an unfinished run dir is in the way; run: one.sh $Q $C retry"
+  echo "FAIL engine $Q $N: a run dir without run.json is in the way (a killed run); one.sh $Q $C rerun moves it to $RUNS/failed/$N/ and runs again"
 else
   uv run evidence run --protocol "$P" --corpus "$C" --out "$RUN" --cache "$CACHE/engine-$N" \
     --model orch-model --strategy gaps --workers 3 --run-id "$Q" ${RETRY[@]+"${RETRY[@]}"}
@@ -271,7 +272,7 @@ else
     || echo "FAIL agent $Q $N"
 fi
 ARGS=()
-[ -f "$RUN/$Q/answer.json" ] && ARGS+=(--run "$RUN/$Q")
+[ -f "$RUN/$Q/run.json" ] && ARGS+=(--run "$RUN/$Q")
 for s in rag-baseline agent-baseline; do
   [ -f "$RUNS/$s/$BN/answer.json" ] && ARGS+=(--baseline "$RUNS/$s/$BN/answer.json")
 done
@@ -323,6 +324,12 @@ Run it in the job, and only when no grid is running on that corpus (it appends t
 ```bash
 "$EV/launch.sh" retry-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" retry
 ```
+
+Killed runs: an engine run dir without `run.json` (the Slurm time limit, a lost node, a cancelled step) blocks its
+own rerun: `evidence run` refuses it ("exists without run.json: a run that was killed or crashed ... Move it aside,
+to $RUNS/failed/<corpus>/ ..., and run again") and `one.sh` prints `FAIL engine <question> <corpus>: a run dir
+without run.json is in the way`. Do what it says: `one.sh <question> <corpus> rerun` moves it to
+`$RUNS/failed/<corpus>/` and runs again (the record cache keeps the calls it finished, so this is cheap).
 
 Reruns: for a run with skipped GLiNER steps (step 5 counts them; the service was not up yet), once GLiNER answers,
 run `one.sh` with `rerun` instead: it moves the run dir aside the same way and runs the engine again **without**

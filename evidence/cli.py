@@ -31,6 +31,8 @@ refused proposal step (a decision without a reason, an amendment without a reaso
 model gateway or the GLiNER service did not answer): the run stays on disk, and stderr has
 `FAIL engine-errors <run dir> <count>`. Those results are in the record cache, so a later run reuses them until it
 is given `--retry-errors`. `--allow-failed-calls` exits 0 instead and only warns (the web app counts them itself).
+A run dir that exists already is refused with exit 2 (a run dir is never written over); one without run.json is a
+killed run, and the message says to move it aside and run again.
 """
 from __future__ import annotations
 
@@ -44,7 +46,7 @@ import yaml
 from agent.chain import verify
 
 from .calls import NotRecorded
-from .rundir import EVENTS_FILE, RUN_FILE, RunDir, read_json
+from .rundir import EVENTS_FILE, RUN_FILE, RunDir, RunDirExists, read_json
 
 DEFAULT_MODEL = "orch-model"  # agent/rundir.ORCHESTRATOR's alias; evidence.engine.Settings.model stays None by default
 
@@ -163,9 +165,13 @@ def main(argv: list[str] | None = None) -> int:
 def _dispatch(args: argparse.Namespace) -> int:
     if args.command == "run":
         from .engine import run
-        root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
-                   model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
-                   strategy=args.strategy, workers=args.workers)
+        try:
+            root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+                       model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+                       strategy=args.strategy, workers=args.workers)
+        except RunDirExists as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
         record = read_json(root / RUN_FILE)
         answer = read_json(root / "answer.json")
         summary = ({"label": answer["label"], "counts": answer["counts"]} if "kind" not in answer

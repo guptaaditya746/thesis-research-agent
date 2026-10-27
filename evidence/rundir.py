@@ -39,6 +39,22 @@ class CorpusError(RuntimeError):
     pass
 
 
+class RunDirExists(FileExistsError):
+    """A run would be written into a directory that is already there: a run dir is never written over. The
+    message says which case it is and what to do."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root
+        if RunDir(root).complete:
+            why = (f"{root} exists and holds a finished run (run.json); a run dir is never written over: give "
+                   "another --run-id or --out")
+        else:
+            why = (f"{root} exists without run.json: a run that was killed or crashed (or one still running). Move "
+                   "it aside, to $RUNS/failed/<corpus>/ in the runbooks, and run again; the record cache keeps the "
+                   "calls it finished")
+        super().__init__(why)
+
+
 @dataclass(frozen=True)
 class Paper:
     id: str

@@ -1,5 +1,6 @@
 """`evidence run` on a run with failed extractor calls (the model gateway went away): exit 2 and a FAIL line, the
-run kept on disk; `--allow-failed-calls` only warns; `--retry-errors` with the model back gives a clean run."""
+run kept on disk; `--allow-failed-calls` only warns; `--retry-errors` with the model back gives a clean run. A run
+dir that is already there (a killed run without run.json, or a finished one) is refused with what to do."""
 from __future__ import annotations
 
 import json
@@ -66,3 +67,19 @@ def test_a_clean_regex_run_exits_0(protocol_file: Path, corpus: Path, tmp_path: 
     assert cli.main(["run", "--protocol", str(protocol_file), "--corpus", str(corpus), "--out", str(out),
                      "--extractors", "regex-only", "--run-id", "r"]) == 0
     assert "FAIL" not in capsys.readouterr().err
+
+
+def test_a_killed_run_dir_is_refused_with_what_to_do(protocol_file: Path, corpus: Path, tmp_path: Path,
+                                                     capsys: pytest.CaptureFixture[str]) -> None:
+    out = tmp_path / "runs"
+    args = ["run", "--protocol", str(protocol_file), "--corpus", str(corpus), "--out", str(out),
+            "--extractors", "regex-only", "--run-id", "r"]
+    (out / "r").mkdir(parents=True)
+    (out / "r" / "events.jsonl").write_text("")          # what a killed run leaves: no run.json
+    assert cli.main(args) == 2
+    err = capsys.readouterr().err
+    assert "exists without run.json" in err and "$RUNS/failed/<corpus>/" in err and "run again" in err
+    (out / "r").rename(tmp_path / "aside")
+    assert cli.main(args) == 0                            # moved aside: the run goes through
+    capsys.readouterr()
+    assert cli.main(args) == 2 and "holds a finished run" in capsys.readouterr().err
