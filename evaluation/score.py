@@ -19,8 +19,10 @@ Matching rules (A; B and the pair check reuse A's matching):
 3. A pair is *compatible* when: measurement, |item value - fact value| <= 0.005 (values are normalised
    fractions on both sides); condition, equal `role` (an item without a `role` field, from a best or inventory
    protocol: the same name, by `canon.key` or case-folded, or its label span on the condition's placement);
-   metric, equal `canonical`, or the item's canonical and the fact's name have one `canon.key` (`latency`, which
-   truth files under `other`); dataset (matched only when the run has dataset items or its protocol declares the
+   metric, the item's `canonical` equals the fact's projected onto the protocol's `canonical` enum
+   (`protocol_canonical`: a canonical the enum lacks is `other`, and `latency`, which truth files under `other`,
+   is `latency` where the enum has it); without a protocol enum, equal `canonical`, or the item's canonical and the
+   fact's name have one `canon.key`; dataset (matched only when the run has dataset items or its protocol declares the
    type), the same name; author claim, equal `direction`.
 4. Among compatible pairs the assignment is a minimum-cost assignment (Hungarian method,
    scipy.optimize.linear_sum_assignment) with cost 1, minus 0.5 if the item's span of the type's main
@@ -207,12 +209,34 @@ def link(item: Item, name: str) -> str | None:
 # --- A: matching -----------------------------------------------------------------------------------
 
 QUESTION_CANONICALS = frozenset(vocab.QUESTION_METRICS)   # factual_accuracy, hallucination_rate: compared as they are
+OTHER = "other"
 
 
-def same_metric(fields: dict[str, Any], data: dict[str, Any]) -> bool:
-    """A metric item names the true metric: equal `canonical`, or, only for a fact truth files under `other` (or
-    another canonical that is not a question metric's), a question-specific item canonical such as `latency` that
-    has the `canon.key` of the fact's name. A fact with a question metric's canonical needs the equal canonical."""
+def protocol_canonical(data: dict[str, Any], canonicals: tuple[str, ...]) -> Any:
+    """A metric fact's canonical in a protocol's `canonical` enum: its own when the enum has it (not `other`); else an
+    enum value with the `canon.key` of the fact's name (latency, which truth files under `other`); else `other`
+    when the enum has it (a canonical the enum lacks: rag-latency's [latency, other] has no factual_accuracy);
+    else its own."""
+    own = data.get("canonical")
+    if own in canonicals and own != OTHER:
+        return own
+    k = canon.key("metric", str(data.get("name") or ""))
+    if k is not None:
+        for value in canonicals:
+            if value != OTHER and canon.key("metric", value) == k:
+                return value
+    return OTHER if OTHER in canonicals else own
+
+
+def same_metric(fields: dict[str, Any], data: dict[str, Any], canonicals: tuple[str, ...] | None = None) -> bool:
+    """A metric item names the true metric. With the protocol's `canonical` enum (`canonicals`, `metric_canonicals`):
+    the item's canonical equals the fact's projected onto the enum (`protocol_canonical`), so an engine that labels
+    accuracy `other` as the latency protocol says is right. Without one: equal `canonical`, or, only for a fact
+    truth files under `other` (or another canonical that is not a question metric's), a question-specific item
+    canonical such as `latency` that has the `canon.key` of the fact's name; a fact with a question metric's
+    canonical needs the equal canonical."""
+    if canonicals:
+        return fields.get("canonical") == protocol_canonical(data, canonicals)
     if fields.get("canonical") == data.get("canonical"):
         return True
     if data.get("canonical") in QUESTION_CANONICALS:
@@ -232,7 +256,8 @@ def _same_name(item: Item, fact: Fact, target: canon.Target) -> bool:
                                                                               for n in given)
 
 
-def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None) -> bool:
+def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None,
+               canonicals: tuple[str, ...] | None = None) -> bool:
     f, d = item.fields, fact.data
     if fact.type == "measurement":
         value = _number(f.get("value"))
@@ -243,7 +268,7 @@ def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None) -> bool
         # a protocol without roles (best, inventory): the same name, or the item's label span on the condition's
         return _same_name(item, fact, "condition") or (truth is not None and span_hit(item, fact, truth))
     if fact.type == "metric":
-        return same_metric(f, d)
+        return same_metric(f, d, canonicals)
     if fact.type == DATASET:
         return _same_name(item, fact, "dataset")
     return f.get("direction") == d.get("direction")
@@ -280,8 +305,8 @@ def _labels_agree(item: Item, fact: Fact) -> bool:
     return bool(given & known)
 
 
-def cost(item: Item, fact: Fact, truth: GroundTruth) -> float:
-    if not compatible(item, fact, truth):
+def cost(item: Item, fact: Fact, truth: GroundTruth, canonicals: tuple[str, ...] | None = None) -> float:
+    if not compatible(item, fact, truth, canonicals):
         return INFEASIBLE
     c = 1.0 - 0.5 * span_hit(item, fact, truth) - 0.25 * _labels_agree(item, fact)
     if fact.type == "measurement":
@@ -289,13 +314,14 @@ def cost(item: Item, fact: Fact, truth: GroundTruth) -> float:
     return c
 
 
-def match(items: list[Item], facts: list[Fact], truth: GroundTruth) -> list[tuple[Item, Fact]]:
+def match(items: list[Item], facts: list[Fact], truth: GroundTruth,
+          canonicals: tuple[str, ...] | None = None) -> list[tuple[Item, Fact]]:
     """One-to-one maximum compatible matching with the cost rules of the module docstring."""
     items = sorted(items, key=lambda i: i.item_id)
     facts = sorted(facts, key=lambda f: f.id)
     if not items or not facts:
         return []
-    matrix = np.array([[cost(i, f, truth) for f in facts] for i in items])
+    matrix = np.array([[cost(i, f, truth, canonicals) for f in facts] for i in items])
     rows, cols = linear_sum_assignment(matrix)
     return [(items[r], facts[c]) for r, c in zip(rows, cols) if matrix[r, c] < INFEASIBLE]
 
@@ -310,11 +336,14 @@ class Matching:
     """A's matching for a whole run: item id <-> fact id, and per (paper, type) the counts.
 
     `types` are the evidence types matched: the four of TYPES, and `dataset` when the run has dataset items or the
-    caller passes it (a protocol that declares the type), so a run without dataset items is scored as before."""
+    caller passes it (a protocol that declares the type), so a run without dataset items is scored as before.
+    `canonicals` is the protocol's metric `canonical` enum (`metric_canonicals`): metric canonicals are compared
+    through it (`same_metric`), in A and in B; None compares them as they are."""
 
     def __init__(self, items: list[Item], truth: GroundTruth, files: dict[str, str],
-                 types: Iterable[EvidenceType] | None = None) -> None:
+                 types: Iterable[EvidenceType] | None = None, canonicals: tuple[str, ...] | None = None) -> None:
         self.truth = truth
+        self.canonicals = canonicals
         self.types: tuple[EvidenceType, ...] = (tuple(types) if types is not None else
                                                 TYPES + ((DATASET,) if any(i.evidence_type == DATASET for i in items)
                                                          else ()))
@@ -333,7 +362,7 @@ class Matching:
         for paper in self.papers:
             for kind in self.types:
                 its, facts = grouped.get((paper, kind), []), truth.of(paper, kind)
-                pairs = match(its, facts, truth)
+                pairs = match(its, facts, truth, canonicals)
                 self.pairs += pairs
                 for item, fact in pairs:
                     self.fact_of[item.item_id] = fact.id
@@ -354,10 +383,18 @@ def scored_types(protocol: Protocol | None, items: Iterable[Item] = ()) -> tuple
     return TYPES + ((DATASET,) if any(i.evidence_type == DATASET for i in items) else ())
 
 
+def metric_canonicals(protocol: Protocol | None) -> tuple[str, ...] | None:
+    """The protocol's metric `canonical` enum (rag-latency: latency, other); None without one."""
+    spec = protocol.evidence_types.get("metric") if protocol is not None else None
+    values = spec.enum_of("canonical") if spec is not None else None
+    return tuple(str(v) for v in values) if values else None
+
+
 def protocol_matching(items: list[Item], truth: GroundTruth, files: dict[str, str],
                       protocol: Protocol | None) -> Matching:
-    """A's matching of a run with its protocol: over the protocol's evidence types (`scored_types`)."""
-    return Matching(items, truth, files, scored_types(protocol, items))
+    """A's matching of a run with its protocol: over the protocol's evidence types (`scored_types`), metric
+    canonicals compared through the protocol's enum (`metric_canonicals`)."""
+    return Matching(items, truth, files, scored_types(protocol, items), metric_canonicals(protocol))
 
 
 def score_extraction(m: Matching) -> dict[str, Any]:
@@ -392,7 +429,7 @@ def score_integration(m: Matching, answer: dict[str, Any] | None, truth: GroundT
         condition = m.items.get(link(item, "condition") or "")
         metric = m.items.get(link(item, "metric") or "")
         role_ok = bool(condition and true_condition and condition.fields.get("role") == true_condition.data["role"])
-        canon_ok = bool(metric and true_metric and same_metric(metric.fields, true_metric.data))
+        canon_ok = bool(metric and true_metric and same_metric(metric.fields, true_metric.data, m.canonicals))
         counts = Counter(matched=1, condition_role=role_ok, metric_canonical=canon_ok, association=role_ok and canon_ok,
                          condition_exact=bool(condition and m.fact_of.get(condition.item_id) == fact.data["condition"]),
                          metric_exact=bool(metric and m.fact_of.get(metric.item_id) == fact.data["metric"]))
@@ -754,7 +791,7 @@ def _associated(m: Matching, item: Item, fact: Fact) -> bool:
     true_condition, true_metric = truth.facts.get(fact.data.get("condition", "")), truth.facts.get(fact.data.get("metric", ""))
     condition, metric = m.items.get(link(item, "condition") or ""), m.items.get(link(item, "metric") or "")
     return bool(condition and true_condition and condition.fields.get("role") == true_condition.data.get("role")
-                and metric and true_metric and same_metric(metric.fields, true_metric.data))
+                and metric and true_metric and same_metric(metric.fields, true_metric.data, m.canonicals))
 
 
 def called_on(run: Run | None) -> dict[str, set[tuple[str, str]]] | None:

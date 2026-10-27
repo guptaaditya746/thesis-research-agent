@@ -475,3 +475,39 @@ def test_perfect_inventory_extraction_is_a_f1_one_on_the_hard_corpus(hard: Groun
     own = [i for doc in items.values() for i in doc if i.evidence_type in protocol.evidence_types]
     m = protocol_matching(own, hard, paper_ids(read_json(HARD.parent / "manifest.json")), protocol)
     assert _all_all(score_extraction(m))["f1"] == 1.0
+
+
+def test_metric_canonicals_compare_through_the_protocols_enum() -> None:
+    """Finding 2: rag-latency's enum is [latency, other]; a truth canonical the enum lacks is `other` there."""
+    enum = ("latency", "other")
+    assert same_metric({"canonical": "other"}, {"canonical": "factual_accuracy", "name": "answer accuracy"}, enum)
+    assert same_metric({"canonical": "other"}, {"canonical": "hallucination_rate", "name": "x"}, enum)
+    assert same_metric({"canonical": "latency"}, {"canonical": "other", "name": "Lat."}, enum)
+    assert not same_metric({"canonical": "other"}, {"canonical": "other", "name": "latency"}, enum)
+    assert not same_metric({"canonical": "latency"}, {"canonical": "other", "name": "BLEU"}, enum)
+    full = ("factual_accuracy", "hallucination_rate", "other")
+    assert same_metric({"canonical": "other"}, {"canonical": "other", "name": "latency"}, full)
+    assert not same_metric({"canonical": "other"}, {"canonical": "factual_accuracy", "name": "x"}, full)
+
+
+@pytest.mark.parametrize("corpus", [MIXED, HARD], ids=["main", "hard"])
+def test_perfect_latency_evidence_scores_one_on_a_and_b(corpus: Path) -> None:
+    """Finding 2: perfect evidence labelled as the latency protocol says (latency, else other)."""
+    from evaluation.oracle import items_from_truth
+    from evaluation.score import effect_truth, protocol_matching, score_integration
+    truth = GroundTruth.load(corpus)
+    protocol = _protocol("rag-latency")
+    items, _ = items_from_truth(truth, corpus.parent)
+
+    def as_protocol(item: Item) -> Item:
+        if item.evidence_type != "metric":
+            return item
+        lat = canon.key("metric", item.fields["name"]) == "latency"
+        return item.model_copy(update={"fields": {**item.fields, "canonical": "latency" if lat else "other"}})
+
+    own = [as_protocol(i) for doc in items.values() for i in doc if i.evidence_type in protocol.evidence_types]
+    m = protocol_matching(own, truth, paper_ids(read_json(corpus.parent / "manifest.json")), protocol)
+    rows = {r["evidence_type"]: r for r in score_extraction(m)["rows"] if r["level"] == "all"}
+    assert rows["metric"]["f1"] == 1.0 and rows["all"]["f1"] == 1.0
+    b = score_integration(m, None, effect_truth(truth, _q("rag-latency").truth, protocol))
+    assert next(r for r in b["rows"] if r["level"] == "all")["association_accuracy"] == 1.0
