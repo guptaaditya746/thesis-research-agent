@@ -14,7 +14,7 @@ session helpers are those of `docs/slurm-evidence-runbook.md` (sections 0.2 and 
   lines), then go on with the next independent step.
 - No system under test reads `ground_truth.json`; only `evaluate score` does.
 - One model: `orch-model` everywhere (the defaults).
-- Hand back a branch with report files only (step 7).
+- Run the code from `main`; save report files only, on the `results` branch, and tag them `ev3` (step 7).
 
 **The ten question ids** (kind): `rag-factuality`, `rag-hallucination`, `rag-latency` (effect); `inv-metrics`,
 `inv-methods`, `inv-datasets` (inventory); `cons-accuracy`, `cons-hallucination` (consistency); `best-accuracy`,
@@ -31,7 +31,8 @@ log shows queue-full or 429 errors, lower `--workers` to 2 and record it.
 
 ```bash
 cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
-git fetch origin && git checkout -b qf-runs origin/step4/proposal    # holds Parts A-D; if the user has merged it into main first, use origin/main instead
+git fetch origin --tags && git checkout --detach origin/main    # the code; main holds Parts A-D (tag qf-v1)
+git describe --tags                       # record this in summary.md
 git submodule update --init --recursive
 uv sync --locked --all-groups
 uv run evidence --help | head -n 3        # the entry points exist
@@ -277,11 +278,13 @@ for N in rag-claude-s1-mixed rag-tpl-hard-complex; do
 done
 cp -r $EV/scores/mapcheck reports/question-first/mapcheck 2>/dev/null
 cp $EV/failures.md reports/question-first/ 2>/dev/null
+git checkout results && git pull --ff-only origin results   # reports/ is untracked, so it comes along
 git add reports/question-first
 git status --short | grep -v '^A  reports/question-first' ; echo "(nothing above: only report files)"
 git commit -m "reports: question-first runs on Slurm"
-git push origin qf-runs
+git push origin results
+git tag -a ev3 -m "EV3: question-first runs on Slurm" && git push origin ev3
 ```
 
-The branch holds report files only: no run directories, no caches, no corpora, no code changes. Send the user the
-branch name and `reports/question-first/summary.md`.
+The `results` branch takes report files only: no run directories, no caches, no corpora, no code changes. Never push
+to `main`, and never make a new branch. Send the user the tag `ev3` and `reports/question-first/summary.md`.
