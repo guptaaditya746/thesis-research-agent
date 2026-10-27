@@ -209,9 +209,11 @@ Claude, not for you to fix).
 The two scripts below have not been run as whole scripts. Run `one.sh` once on one question (for example `inv-datasets`
 on `$C_MAIN`) and check its output before starting `grid.sh`.
 
-One script runs the three systems for one question and one corpus, then scores. Names are
-`$EV/runs/<system>/<corpus>/<question>`; each system has its own cache file, because two processes must never
-append to the same cache file.
+One script runs the three systems for one question and one corpus, then scores. The engine run is
+`$EV/runs/engine/<corpus>/<question>`. A baseline answer is where the web app keeps it (`webapp/evjobs.py`,
+`baseline_name`), so the app's Score finds it: `$EV/runs/<system>/<corpus>.<question>`, and for `rag-factuality`
+`$EV/runs/<system>/<corpus>` (the EV2 layout). Each system has its own cache file, because two processes must
+never append to the same cache file.
 
 ```bash
 cat > $EV/one.sh <<'EOF'
@@ -220,16 +222,17 @@ cat > $EV/one.sh <<'EOF'
 set -u
 Q=$1; C=$2; N=$(basename "$C")
 P=evidence/protocols/$Q.yaml
-RUN=$RUNS/engine/$N; mkdir -p "$RUN" "$RUNS/rag-baseline/$N" "$RUNS/agent-baseline/$N" "$SCORES/$N"
+BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N        # the baselines' run name, as the web app names it
+RUN=$RUNS/engine/$N; mkdir -p "$RUN" "$SCORES/$N"
 uv run evidence run --protocol "$P" --corpus "$C" --out "$RUN" --cache "$CACHE/engine-$N" \
   --model orch-model --strategy gaps --workers 3 --run-id "$Q" || echo "FAIL engine $Q $N"
-uv run evaluate rag-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/rag-baseline/$N/$Q" \
+uv run evaluate rag-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/rag-baseline/$BN" \
   --cache "$CACHE/rag-baseline-$N.jsonl" --model orch-model --retrieval global --k 8 || echo "FAIL rag $Q $N"
-uv run evaluate agent-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/agent-baseline/$N/$Q" \
-  --cache "$CACHE/agent-baseline-$N.jsonl" --model orch-model --agent-root "$AGENT_ROOT" --run-id "$Q" \
+uv run evaluate agent-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/agent-baseline/$BN" \
+  --cache "$CACHE/agent-baseline-$N.jsonl" --model orch-model --agent-root "$AGENT_ROOT" --run-id "$BN" \
   || echo "FAIL agent $Q $N"
 B=(); for s in rag-baseline agent-baseline; do
-  [ -f "$RUNS/$s/$N/$Q/answer.json" ] && B+=(--baseline "$RUNS/$s/$N/$Q/answer.json"); done
+  [ -f "$RUNS/$s/$BN/answer.json" ] && B+=(--baseline "$RUNS/$s/$BN/answer.json"); done
 RUNARG=(); [ -f "$RUN/$Q/answer.json" ] && RUNARG=(--run "$RUN/$Q")
 uv run evaluate score "${RUNARG[@]}" --corpus "$C" --question-id "$Q" "${B[@]}" --out "$SCORES/$N/$Q" \
   || echo "FAIL score $Q $N"
@@ -258,7 +261,7 @@ nohup "$EV/launch.sh" grid-hard "$EV/grid.sh" "$C_HARD" > /dev/null 2>&1 &
 Each question's logs are in `$EV/logs/grid-main.log` and `grid-hard.log`; `FAIL` lines list what to retry.
 Retries: for an engine run that ended with `service_call` errors (a GLiNER or LLM outage), move the failed run dir
 aside (a run dir is never overwritten: the same command again stops with `FileExistsError`), run the engine again
-with `--retry-errors`, then score again. With `Q`, `C` and `N` set as in `one.sh`:
+with `--retry-errors`, then score again. With `Q`, `C`, `N` and `BN` set as in `one.sh`:
 
 ```bash
 mkdir -p "$RUNS/failed/$N"
@@ -266,7 +269,7 @@ mv "$RUNS/engine/$N/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # keep it 
 uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/engine/$N" \
   --cache "$CACHE/engine-$N" --model orch-model --strategy gaps --workers 3 --run-id "$Q" --retry-errors
 B=(); for s in rag-baseline agent-baseline; do
-  [ -f "$RUNS/$s/$N/$Q/answer.json" ] && B+=(--baseline "$RUNS/$s/$N/$Q/answer.json"); done
+  [ -f "$RUNS/$s/$BN/answer.json" ] && B+=(--baseline "$RUNS/$s/$BN/answer.json"); done
 uv run evaluate score --run "$RUNS/engine/$N/$Q" --corpus "$C" --question-id "$Q" "${B[@]}" --out "$SCORES/$N/$Q"
 ```
 
