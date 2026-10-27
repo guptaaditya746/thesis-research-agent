@@ -237,7 +237,11 @@ source "$EV/in-job.env"
 ```
 
 In every new shell: `export EV=...` (as above) and `source "$EV/in-job.env"`. A long step's exit status is the
-last line of `$EV/logs/<step>.launch`.
+last line of `$EV/logs/<step>.launch`. `JOB` is written into in-job.env here, and `launch.sh` reads it only from
+there: after a new stack job, update it (`sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env"`). (The question-first
+session, `docs/runbook-question-first.md` step 1.6, writes this file after its stack starts and appends
+`unset Q P PA`: its scripts take the question id as an argument, so this EV2 question and its protocols must not
+reach them.)
 
 ### 0.4 Environment check and offline smoke (in the job)
 

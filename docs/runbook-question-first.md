@@ -131,10 +131,13 @@ srun --jobid "$JOB" --overlap nvidia-smi --query-gpu=index,memory.used,memory.to
 6. The session environment. Write `$EV/in-job.env`, `in-job.sh` and `launch.sh` as in
    `docs/slurm-evidence-runbook.md` 0.3, from the repository root, with
    `export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf`, and **after** 1.5 (in-job.env records
-   `$JOB`). Then add this session's variables (the grid's jobs read them from there):
+   `$JOB`). Then add this session's variables (the grid's jobs read them from there). The first line drops 0.3's
+   EV2 variables `Q` (the EV2 question's text), `P` and `PA` (its protocols): this session's scripts take the
+   question id as an argument, and a leftover `Q` or `P` would only point them at the wrong file.
 
 ```bash
 cat >> "$EV/in-job.env" <<EOF
+unset Q P PA
 export C_MAIN=$PWD/tests/EV2/corpora/rag-claude-s1-mixed
 export C_HARD=$PWD/tests/EV2/corpora/rag-tpl-hard-complex
 export QS="rag-factuality rag-hallucination rag-latency inv-metrics inv-methods inv-datasets cons-accuracy cons-hallucination best-accuracy best-hallucination"
@@ -143,17 +146,24 @@ EOF
 source "$EV/in-job.env"
 mkdir -p "$EV"/{logs,runs,scores,cache,agent-work}
 echo "$JOB $RUNS $C_MAIN $GLINER_URL"; echo "$QS" | wc -w      # the job id, the paths, 10
+echo "Q=${Q-unset} P=${P-unset} PA=${PA-unset}"                 # Q=unset P=unset PA=unset
+squeue -h -j "$JOB" -o '%i %T'                                  # the job id and RUNNING
 ```
 
-   Leave out the `GLINER_URL` line only when GLiNER did not start in 1.5 (and say so in the report). If you start
-   the stack again later, update `JOB` in in-job.env: `sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env"`.
+   Leave out the `GLINER_URL` line only when GLiNER did not start in 1.5 (and say so in the report). `launch.sh`
+   reads `JOB` only from in-job.env, so if you start the stack again later, update it there at once (with `JOB`
+   set to the new job, as in 1.5), then check it as above:
+   `sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env" && source "$EV/in-job.env" && squeue -h -j "$JOB" -o '%i %T'`.
+   A stale `JOB` makes every launch fail at once (srun: invalid job id), before any run starts.
 
-Good, for each engine run dir `$RUNS/engine/$N/$Q` (corpus name `N`, question id `Q`, section 4): no GLiNER call
-was skipped, and GLiNER found something:
+Good, for every finished engine run (section 4 makes them): no GLiNER call was skipped, and GLiNER found
+something:
 
 ```bash
-grep '"status":"skipped"' "$RUNS/engine/$N/$Q/events.jsonl" | grep -c '"agent_id":"gliner_'   # 0
-grep -c gliner_ "$RUNS/engine/$N/$Q/evidence.jsonl"                                           # more than 0
+for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
+  R=$RUNS/engine/$N/$Q; [ -f "$R/run.json" ] || continue
+  echo "$N $Q skipped=$(grep '"status":"skipped"' "$R/events.jsonl" | grep -c '"agent_id":"gliner_') found=$(grep -c gliner_ "$R/evidence.jsonl")"
+done; done                                  # skipped=0 and found above 0 on every line
 ```
 
 A skipped GLiNER call (the service was not reachable) is only an `extractor_call` event with status `skipped` in
@@ -337,8 +347,8 @@ run `one.sh` with `rerun` instead: it moves the run dir aside the same way and r
 cache). Same rules: in the job, no grid on that corpus, a new step name:
 `"$EV/launch.sh" rerun-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" rerun`.
 
-(Pass the question and corpus as arguments, as above: `in-job.env` exports its own `Q` and `P` (0.3), so a `Q`
-set in your login shell does not reach a command run through `launch.sh`.)
+(Pass the question and corpus as arguments, as above: a command run through `launch.sh` sees only `in-job.env`,
+never a `Q` set in your login shell, and `in-job.env` unsets 0.3's `Q`, `P` and `PA` (step 1.6).)
 
 The hard corpus (112 papers) is the slow one; if the job is about to end, finish the main corpus first and report
 the hard corpus as partial.
@@ -358,8 +368,8 @@ done; done
 ```
 
 - `$SCORES/<corpus>/<question>/report.md` exists for each of the 20 pairs; note any missing one with its `FAIL` line.
-- GLiNER: `grep '"status":"skipped"' $RUNS/engine/<corpus>/<question>/events.jsonl | grep -c '"agent_id":"gliner_'`
-  counts the GLiNER calls skipped because the service was not up (0 when it was up). Report the count per run.
+- GLiNER: the loop at the end of section 1 counts, per run, the GLiNER calls skipped because the service was not
+  up (`skipped=`, 0 when it was up) and the evidence GLiNER found (`found=`). Report both per run.
   Above 0 while GLiNER now answers (`curl -s 127.0.0.1:8090/info` through `srun`, step 1.5): rerun that run with
   `one.sh <question> <corpus> rerun` (section 4, "Reruns"; not `retry`), then count again.
   (`funnel.json`'s `skipped` is a paper the screen left out, not GLiNER.)
