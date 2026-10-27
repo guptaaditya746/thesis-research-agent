@@ -1,16 +1,17 @@
 # Runbook: the question-first runs on Slurm (Codex)
 
 This session runs the 10 questions of `evidence/questions.yaml` on two corpora with three systems (the evidence
-engine, the RAG baseline, the agent baseline), scores them, and hands back one table. The environment, stack and
-session helpers are those of `docs/slurm-evidence-runbook.md` (sections 0.2 and 0.3: `$EV`, `in-job.env`,
-`launch.sh`, `$AGENT_ROOT`, `$LITELLM_BASE_URL`). Use them; this file only adds what is new.
+engine, the RAG baseline, the agent baseline), scores them, and hands back one table. The environment and session
+helpers are those of `docs/slurm-evidence-runbook.md` (section 0.3: `$EV`, `in-job.env`, `launch.sh`,
+`$AGENT_ROOT`, `$LITELLM_BASE_URL`). Use them; this file only adds what is new. The stack is started by step 1
+below (with the GLiNER service), not as in that file's 0.2.
 
 **Rules**
 
 - Entry points only: `uv run evidence ...`, `uv run evaluate ...`. Never `python -m evidence`.
 - **Never rebuild the corpora.** They are built locally and are in git under `tests/EV2/corpora/`.
 - Do not change code, protocols, prompts or `evidence/questions.yaml`. Do not change `llm-setup` except as step 1 says
-  (and only a new profile file). A failure is recorded in `$EV/failures.md` (step, command, exit code, last 30 log
+  (only the new profile file `profiles/orch-3x40-gliner.yaml`). A failure is recorded in `$EV/failures.md` (step, command, exit code, last 30 log
   lines), then go on with the next independent step.
 - No system under test reads `ground_truth.json`; only `evaluate score` does.
 - One model: `orch-model` everywhere (the defaults).
@@ -24,7 +25,7 @@ session helpers are those of `docs/slurm-evidence-runbook.md` (sections 0.2 and 
 `tests/EV2/corpora/`.
 
 **Engine settings**: `--strategy gaps` (the default, written out), `--workers 3`. The LiteLLM gateway
-(profile `orch-3x40`) allows 8 active and 8 queued requests per replica; three workers stay well inside that. If a
+(profile `orch-3x40`, here its copy `orch-3x40-gliner`) allows 8 active and 8 queued requests per replica; three workers stay well inside that. If a
 log shows queue-full or 429 errors, lower `--workers` to 2 and record it.
 
 ## 0. Branch and setup (login node)
@@ -34,67 +35,118 @@ cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
 git fetch origin --tags && git checkout --detach origin/main    # the code; main holds Parts A-D (tag qf-v1)
 git describe --tags                       # record this in summary.md
 git submodule update --init --recursive
+git -C llm-setup log -1 --oneline         # expect 4c8ccbf GLiNER: start failure keeps the stack, ...
 uv sync --locked --all-groups
 uv run evidence --help | head -n 3        # the entry points exist
 uv run evaluate score --help | grep question-id
 ```
 
-Set up `$EV`, `in-job.env` and `launch.sh` as in `docs/slurm-evidence-runbook.md` 0.3, with `export EV=.../evidence-qf`.
-Then add to the environment:
+`main` records `llm-setup` at `4c8ccbf`: `22dae03`'s orch-only profiles plus the GLiNER service (the llm-setup
+branch `gliner`). That commit must be fetchable from the llm-setup remote (the user pushes the branch `gliner`
+there). If `git submodule update` cannot find `4c8ccbf` (`not our ref`, `did not contain`), or `git log -1` shows
+another commit, stop: **USER** (do not change the submodule yourself). This replaces the `22dae03` check of
+`docs/slurm-evidence-runbook.md` 0.2. Do not start the stack as 0.2 does either: step 1 starts it, with GLiNER.
+
+Check: both corpora (`tests/EV2/corpora/rag-claude-s1-mixed` and `tests/EV2/corpora/rag-tpl-hard-complex`) have
+`manifest.json`; `uv run evidence protocol check evidence/protocols/inv-datasets.yaml` prints id and sha256 and
+exits 0.
+
+## 1. GPU report, the stack with the GLiNER service, the session environment
+
+GLiNER is part of the recorded llm-setup commit, so this is a normal step. The llm-setup side is described in
+`llm-setup/docs/OPERATIONS.md`, "GLiNER". If GLiNER itself fails (in 1.3 or at its start in 1.5), record it in
+`$EV/failures.md` and go on without it: the engine's GLiNER steps are then recorded as `skipped` and every run
+still finishes; say so in the report.
+
+1. On a GPU node: `nvidia-smi`. Report the driver version and the CUDA version it prints. (The cu124 torch index
+   is not usable: vLLM pins torch 2.11.0, so torch comes from PyPI together with vLLM, and GLiNER uses that torch.
+   The CUDA version is for the record, not for pinning anything.)
+2. Login node, in `llm-setup`: `uv lock --check` first. `uv.lock` was edited by hand on the laptop; if the check
+   fails, run `uv lock` on the cluster, record that it changed, and go on. Then download GLiNER's weights and its
+   backbone's tokenizer (GLiNER loads offline):
 
 ```bash
-export C_MAIN=$PWD/tests/EV2/corpora/rag-claude-s1-mixed
-export C_HARD=$PWD/tests/EV2/corpora/rag-tpl-hard-complex
-export QS="rag-factuality rag-hallucination rag-latency inv-metrics inv-methods inv-datasets cons-accuracy cons-hallucination best-accuracy best-hallucination"
-mkdir -p "$EV"/{logs,runs,scores,cache,agent-work}
+cd llm-setup
+uv lock --check
+huggingface-cli download urchade/gliner_medium-v2.1 --revision 40ec419335d09393f298636f471328b722c6da9e
+huggingface-cli download microsoft/deberta-v3-base config.json tokenizer_config.json spm.model
+cd ..
 ```
 
-Check: both corpora have `manifest.json`; `uv run evidence protocol check evidence/protocols/inv-datasets.yaml`
-prints id and sha256 and exits 0.
+3. Only if you can get a GPU of your own for a few minutes (a short allocation, before the stack starts): load
+   GLiNER alone, offline, and call it. An error here is cheaper than in the batch job. Without such a GPU, skip
+   this: 1.5 checks the same inside the stack.
 
-## 1. GPU report and the GLiNER service (only if the user has merged or checked out the `gliner` branch)
+```bash
+cd llm-setup
+uv sync --python 3.13 --extra serve --extra gliner
+HF_HUB_OFFLINE=1 CUDA_VISIBLE_DEVICES=0 uv run python -m llm_setup.gliner_server \
+  --model urchade/gliner_medium-v2.1 --revision 40ec419335d09393f298636f471328b722c6da9e --port 8090 &
+curl -s 127.0.0.1:8090/info               # repeat until it answers (loading takes a minute)
+curl -s 127.0.0.1:8090/predict -H 'Content-Type: application/json' \
+  -d '{"text": "We evaluate RAG on SQuAD.", "labels": ["method", "dataset"], "threshold": 0.5}'
+kill %1
+cd ..
+```
 
-**Skip this whole step, and do not set `GLINER_URL`, unless the user says the llm-setup branch `gliner` (built on
-`orch-only-profiles`) is merged or checked out.** Without it the engine's GLiNER steps are recorded as `skipped`
-and every run still finishes; say so in the report.
+   Good: `/info` names the model and revision; `/predict` returns `{"entities": [...]}` with at least one entity
+   (for example `SQuAD`).
+4. The profile. `profiles/orch-3x40.yaml` carries the `gliner:` block commented out; never edit that file. Copy it
+   to `profiles/orch-3x40-gliner.yaml` with the block enabled (port 8090, GPU 0, shared with the first orch
+   replica). This copy is the only llm-setup change you may make, and it is not committed to any branch except one
+   the user names.
 
-1. On a GPU node (inside the allocation): `nvidia-smi`. Report the driver version and the CUDA version it prints.
-   (The cu124 torch index is not usable: vLLM pins torch 2.11.0, so torch comes from PyPI together with vLLM. The
-   CUDA version is for the record, not for pinning anything.)
-2. In `llm-setup`: `uv lock --check` first. `uv.lock` was edited by hand on the laptop; if the check fails, run
-   `uv lock` on the cluster, record that it changed, and go on.
-3. Follow the **"First run"** checklist in `llm-setup/docs/OPERATIONS.md`:
-   - login node: download the weights and the backbone tokenizer with the two `huggingface-cli download` commands
-     of that file;
-   - allocation: load GLiNER on its own, offline, and call it (the block under "First run" step 2:
-     `uv sync --python 3.13 --extra serve --extra gliner`, start `llm_setup.gliner_server` on port 8090, `curl
-     127.0.0.1:8090/info`, one `curl .../predict`, then kill it). Good: `/info` names the model and revision,
-     `/predict` returns `{"entities": [...]}` with at least one entity (for example `SQuAD`). Any error here is
-     cheaper than in the batch job; record it and stop step 1 (the runs go on without GLiNER);
-   - enable the `gliner:` block in a profile and start the stack with it; then
-     `uv run llm-setup doctor --profile <profile>` must show `gliner health ok` and no `gliner start failed` event;
-   - `nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv`: write down what GLiNER uses.
-   - **If under about 1 GB stays free on GLiNER's GPU**, do not edit `profiles/orch-3x40.yaml`. Copy it to
-     `profiles/orch-3x40-gliner.yaml` with `gpu_memory_utilization: 0.88` and the `gliner` block enabled, and
-     start that one instead. This new file is the only llm-setup change you may make, and it is not committed to
-     any branch except one the user names.
-4. Start the stack. Use `orch-3x40-gliner.yaml` only if you made that low-memory copy in step 3; otherwise start
-   `profiles/orch-3x40.yaml` with the `gliner:` block enabled as the user's branch has it (never edit `orch-3x40.yaml`
-   yourself; if the block is still commented out there, say so and ask the user). Shown with the copy:
+```bash
+cd llm-setup
+sed -e 's/^# gliner:$/gliner:/' -e 's/^#   \(enabled\|gpu\|port\|model\|revision\|max_chars\):/  \1:/' \
+  profiles/orch-3x40.yaml > profiles/orch-3x40-gliner.yaml
+diff profiles/orch-3x40.yaml profiles/orch-3x40-gliner.yaml | grep -c '^>'          # 7: the gliner lines only
+uv run llm-setup profile validate --profile profiles/orch-3x40-gliner.yaml          # Profile valid: orch-3x40
+uv run llm-setup profile extras --profile profiles/orch-3x40-gliner.yaml            # gliner
+cd ..
+```
+
+5. Start the stack with it. The batch job installs the `gliner` extra itself (because `profile extras` prints it)
+   and starts GLiNER after the models are ready.
 
 ```bash
 cd llm-setup
 JOB=$(LLM_SETUP_PROFILE=profiles/orch-3x40-gliner.yaml sbatch slurm/llm-stack.sbatch); JOB=${JOB##* }; export JOB
 cd ..
-tail -n 20 llm-setup/runtime/slurm-$JOB.out     # wait until the orch replicas are ready and the log says: gliner: ready
+echo "Slurm job: $JOB"
+tail -n 20 llm-setup/runtime/slurm-$JOB.out     # repeat until orch, orch-2, orch-3 and gliner say "ready after"
+srun --jobid "$JOB" --overlap bash -lc 'cd llm-setup && set -a && source .env && set +a && uv run llm-setup doctor --profile profiles/orch-3x40-gliner.yaml' 2>&1 | tail -n 8
+srun --jobid "$JOB" --overlap curl -s 127.0.0.1:8090/info
+srun --jobid "$JOB" --overlap nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv
 ```
 
-5. Check from the node: `curl -s 127.0.0.1:8090/info` and one `/predict` (as above). Then, for every engine run
-   below, in `in-job.env`:
+   Good: the log has `gliner: ready after ...` and no `gliner: start failed, continuing without it`; `doctor`
+   shows `gliner health ok`; `/info` names `urchade/gliner_medium-v2.1`. Write down what GLiNER uses on GPU 0
+   (`nvidia-smi` lists its process) and the memory left free there.
+   - **If under about 1 GB stays free on GPU 0**: `scancel $JOB`, set the orch model's
+     `gpu_memory_utilization: 0.88` in `profiles/orch-3x40-gliner.yaml` (not in `orch-3x40.yaml`), and do 1.5
+     again. Record it.
+   - If GLiNER did not start (`start failed`), the stack runs without it: record the log lines
+     (`uv run llm-setup logs --service gliner` in `llm-setup/`, through `srun` as for `doctor`) and go on.
+6. The session environment. Write `$EV/in-job.env`, `in-job.sh` and `launch.sh` as in
+   `docs/slurm-evidence-runbook.md` 0.3, from the repository root, with
+   `export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf`, and **after** 1.5 (in-job.env records
+   `$JOB`). Then add this session's variables (the grid's jobs read them from there):
 
 ```bash
+cat >> "$EV/in-job.env" <<EOF
+export C_MAIN=$PWD/tests/EV2/corpora/rag-claude-s1-mixed
+export C_HARD=$PWD/tests/EV2/corpora/rag-tpl-hard-complex
+export QS="rag-factuality rag-hallucination rag-latency inv-metrics inv-methods inv-datasets cons-accuracy cons-hallucination best-accuracy best-hallucination"
 export GLINER_URL=http://127.0.0.1:8090
+EOF
+source "$EV/in-job.env"
+mkdir -p "$EV"/{logs,runs,scores,cache,agent-work}
+echo "$JOB $RUNS $C_MAIN $GLINER_URL"; echo $QS | wc -w      # the job id, the paths, 10
 ```
+
+   Leave out the `GLINER_URL` line only when GLiNER did not start in 1.5 (and say so in the report). If you start
+   the stack again later, update `JOB` in in-job.env: `sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env"`.
 
 Good, for each engine run dir `$RUNS/engine/$N/$Q` (corpus name `N`, question id `Q`, section 4): no GLiNER call
 was skipped, and GLiNER found something:
@@ -106,9 +158,10 @@ grep -c gliner_ "$RUNS/engine/$N/$Q/evidence.jsonl"                             
 
 A skipped GLiNER call (the service was not reachable) is only an `extractor_call` event with status `skipped` in
 `events.jsonl`; `evidence run` does not print it, and `funnel.json` leaves it out (its own `skipped` means a paper
-the screen left out). If the service dies mid-session, the GLiNER steps return errors, the funnel goes to the next
-extractor and runs still finish. Errors from the GLiNER service and the LLM (`service_call`) are cached; after you
-restart the service, re-run that run as in section 4, "Retries".
+the screen left out). The engine asks GLiNER's `/info` once per run: if the service was not up when a run started,
+all of that run's GLiNER calls are skipped. If the service dies mid-run, the GLiNER steps return errors, the funnel
+goes to the next extractor and runs still finish. Errors from the GLiNER service and the LLM (`service_call`) are
+cached; after you restart the service, re-run that run as in section 4, "Retries".
 
 ## 2. Offline check (login node, no model)
 
@@ -260,8 +313,9 @@ Write `reports/question-first/summary.md` with:
    extractors (`regex_*`, `abbrev_*`, `gliner_*`, `number_*`, `llm_*`), per question. A GLiNER line that says
    skipped or has zero facts means the service was not up.
 3. **Mapping check** from step 3: per kind, the retries and failures you saw (or "none").
-4. **GPU and GLiNER**: `nvidia-smi` driver and CUDA, GLiNER's memory use, free memory left, whether the
-   `orch-3x40-gliner.yaml` copy was needed, whether `GLINER_URL` was set.
+4. **GPU and GLiNER**: `nvidia-smi` driver and CUDA, GLiNER's memory use, free memory left on GPU 0, whether
+   `orch-3x40-gliner.yaml` needed `gpu_memory_utilization: 0.88`, whether GLiNER started (`gliner health ok`),
+   whether `GLINER_URL` was set.
 5. **Failures**: each `FAIL` line and what you did; the number of cached errors that needed `--retry-errors`.
 
 ## 7. Hand-back
