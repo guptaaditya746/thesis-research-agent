@@ -239,7 +239,7 @@ never append to the same cache file. A finished system is skipped (the engine's 
 is always written again.
 
 ```bash
-cat > $EV/one.sh <<'EOF'
+cat > "$EV/one.sh" <<'EOF'
 #!/usr/bin/env bash
 # one.sh <question-id> <corpus-dir> [retry|rerun]: engine + RAG baseline + agent baseline + score.
 # Skips a finished system (the engine's run.json, a baseline's answer.json). `retry` and `rerun` first move the
@@ -296,13 +296,13 @@ else
   uv run evaluate score "${ARGS[@]}" --corpus "$C" --question-id "$Q" --out "$SCORES/$N/$Q" || echo "FAIL score $Q $N"
 fi
 EOF
-cat > $EV/grid.sh <<'EOF'
+cat > "$EV/grid.sh" <<'EOF'
 #!/usr/bin/env bash
 # grid.sh <corpus-dir>: one.sh for every question of $QS (from in-job.env), one after another
 set -u
 for Q in $QS; do "$EV/one.sh" "$Q" "$1"; done
 EOF
-chmod +x $EV/one.sh $EV/grid.sh
+chmod +x "$EV/one.sh" "$EV/grid.sh"
 ```
 
 The scripts read `RUNS`, `SCORES`, `CACHE`, `AGENT_ROOT`, `EV` and `QS` from `in-job.env` (0.3 and step 1.6), and
@@ -434,14 +434,14 @@ mkdir -p reports/question-first
 for N in rag-claude-s1-mixed rag-tpl-hard-complex; do
   for Q in $QS; do
     D=$SCORES/$N/$Q; [ -f "$D/report.json" ] || continue
-    mkdir -p reports/question-first/$N/$Q
-    cp "$D"/report.json "$D"/report.md reports/question-first/$N/$Q/
+    mkdir -p "reports/question-first/$N/$Q"
+    cp "$D/report.json" "$D/report.md" "reports/question-first/$N/$Q/"
     G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run, as one.sh writes it
-    cp "$RUNS/$G/$N/funnel.json" reports/question-first/$N/$Q/ 2>/dev/null
+    cp "$RUNS/$G/$N/funnel.json" "reports/question-first/$N/$Q/" 2>/dev/null
   done
 done
-cp -r $EV/scores/mapcheck reports/question-first/mapcheck 2>/dev/null
-cp $EV/failures.md reports/question-first/ 2>/dev/null
+cp -r "$EV/scores/mapcheck" reports/question-first/mapcheck 2>/dev/null
+cp "$EV/failures.md" reports/question-first/ 2>/dev/null
 git checkout results && git pull --ff-only origin results   # reports/ is untracked, so it comes along
 git add reports/question-first
 git status --short | grep -v '^A  reports/question-first' ; echo "(nothing above: only report files)"
