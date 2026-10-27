@@ -116,6 +116,44 @@ def test_complete_after_regex_makes_no_llm_extraction_call_and_the_gaps_escalate
     assert set(done[0]) == {"document", "after_round", "after_position", "complete", "gap", "gap_types"}
 
 
+# The question metric under a name no regex knows ("FLA"): only a later metric position can find it.
+BEST_FLA = ("# Retrieval or not\n\nWe compare the closed-book model with the retrieval-augmented model on NQ.\n\n"
+            "## Results\n\n| System | FLA |\n|---|---|\n| closed-book model | 0.41 |\n| retrieval-augmented model | 0.58 |\n")
+
+
+def test_best_escalates_the_metric_cascade_when_the_question_metric_is_missing(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pre-EV3 review A2: a best paper whose question metric regex misses escalates metric (abbrev, GLiNER, LLM),
+    not only measurement; the LLM's metric then lets the measurement step link the values."""
+    monkeypatch.delenv("GLINER_URL", raising=False)        # GLiNER is skipped; the round falls through to the LLM
+    seen: list[tuple[str, str]] = []
+
+    def script(kind: str, doc: str, prompt: str) -> dict[str, Any]:
+        seen.append((kind, doc))
+        if kind == "screen":
+            return screen_yes(prompt)
+        if kind == "metric":
+            return {"items": [{"fields": {"name": "FLA", "canonical": "factual_accuracy", "higher_is_better": True},
+                               "quotes": {"metric_label": "FLA"}}]}
+        if kind == "measurement":
+            fla, closed, rag = (context_id(prompt, f) for f in ('"FLA"', '"closed-book model"', '"retrieval-augmented model"'))
+            return {"items": [{"fields": {"value": v, "dataset": "NQ"}, "links": {"condition": c, "metric": fla},
+                               "quotes": {"value": q, "condition_label": None, "metric_label": None}}
+                              for c, v, q in ((closed, 0.41, "0.41"), (rag, 0.58, "0.58"))]}
+        return {"items": []}
+
+    root = gaps_run(tmp_path, {"S1": BEST_FLA}, script, proto=PROTOCOL.parent / "best-accuracy.yaml")
+    s1 = read(root, "funnel.json")["documents"]["S1"]
+    decisions = [(d["gap"], d["gap_types"]) for d in s1["decisions"]]
+    assert decisions[0] == ("no_question_metric", ["metric"]), decisions
+    assert any(s["position"] >= 1 and s["types"] == ["metric"] for s in s1["steps"]), s1["steps"]
+    called = {e["agent_id"].split("@")[0] for e in extraction_calls(root, "S1") if e["status"] != "skipped"}
+    assert {"abbrev_metric", "llm_metric"} <= called, called
+    assert ("metric", "S1") in seen
+    [study] = read(root, "answer.json")["studies"]
+    assert study["winner"] == "rag" and study["reason"] is None, (study, decisions)
+
+
 def test_a_screened_out_paper_gets_no_extraction_and_is_undetermined_screened_out(tmp_path: Path) -> None:
     seen: list[tuple[str, str]] = []
     root = gaps_run(tmp_path, DOCS, make_script(seen))

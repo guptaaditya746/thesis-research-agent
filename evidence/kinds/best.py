@@ -12,7 +12,8 @@ kind is compared.
 
 Per document: the kind with the top value (the highest, or the lowest when `higher_is_better` is false) is the
 `winner`; when several kinds share the top value there is no winner and `tied` lists them (sorted), and the paper
-counts no win. Reasons: `too_few_kinds` (conditions of fewer than two kinds; the funnel escalates condition) and
+counts no win. Reasons, in this order: `too_few_kinds` (conditions of fewer than two kinds; the funnel escalates
+condition), `no_question_metric` (no metric item has `best.metric.canonical`; escalates metric, as effect does) and
 `no_comparison` (no dataset has values of two kinds on the metric; escalates measurement); a tie is complete
 (reason null). Answer: `{kind, system, metric, studies: [{document, winner, tied, values, reason}], wins, winner,
 tied}`; `wins` counts the papers each kind won (kinds without a win are left out), `winner` is the kind with the
@@ -28,9 +29,10 @@ from ..evidence_types import EvidenceType
 from ..protocol import Best, Protocol
 
 KIND = "best"
-GAP_TYPES: dict[str, tuple[EvidenceType, ...]] = {"too_few_kinds": ("condition",), "no_comparison": ("measurement",),
-                                                  "screened_out": ()}
+GAP_TYPES: dict[str, tuple[EvidenceType, ...]] = {"too_few_kinds": ("condition",), "no_question_metric": ("metric",),
+                                                  "no_comparison": ("measurement",), "screened_out": ()}
 REASONS = {"too_few_kinds": "conditions of fewer than two method kinds found",
+           "no_question_metric": "no metric item of {metric} found",
            "no_comparison": "no dataset with values of two method kinds on {metric}"}
 
 
@@ -67,6 +69,9 @@ def study(protocol: Protocol, document: str, items: list[Item],
         entry["reason"] = reason("too_few_kinds", best)
         return entry, []
     metrics = {i.item_id for i in items if i.evidence_type == "metric" and i.fields.get("canonical") == best.metric.canonical}
+    if not metrics:
+        entry["reason"] = reason("no_question_metric", best)
+        return entry, []
     on = [m for m in items if m.evidence_type == "measurement" and m.links.get("metric") in metrics
           and m.links.get("condition") in kinds]
     chosen: dict[str, Item] = {}

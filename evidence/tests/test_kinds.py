@@ -215,9 +215,14 @@ def test_best_paper_without_metric_is_undetermined() -> None:
     r, b, k = cond("RAG"), cond("LLM"), metric("hallucination rate", "hallucination_rate")
     items = [r, b, k, meas(r, k, 0.2), meas(b, k, 0.3)]       # measured, but not on the question metric
     entry, used = mod.study(p, "D1", items)
-    assert entry["winner"] is None and entry["values"] == {} and entry["reason"]["code"] == "no_comparison"
+    # no metric item of the question: the funnel escalates metric first (pre-EV3 review A2), as effect does
+    assert entry["winner"] is None and entry["values"] == {} and entry["reason"] == {
+        "code": "no_question_metric", "text": "no metric item of factual_accuracy found"}
     assert used == []
-    assert mod.gap_types(p, "no_comparison") == ("measurement",)
+    assert mod.gap_types(p, "no_question_metric") == ("metric",)
+    q = metric("accuracy")                                    # the question metric, but a value of one kind only
+    entry, _ = mod.study(p, "D1", [r, b, q, meas(r, q, 0.7)])
+    assert entry["reason"]["code"] == "no_comparison" and mod.gap_types(p, "no_comparison") == ("measurement",)
     entry, _ = mod.study(p, "D2", [cond("RAG", doc="D2"), metric("accuracy", doc="D2")])
     assert entry["reason"]["code"] == "too_few_kinds" and mod.gap_types(p, "too_few_kinds") == ("condition",)
     answer, _ = mod.answer(p, ["D1", "D2"], {"D1": items}, {}, {})
