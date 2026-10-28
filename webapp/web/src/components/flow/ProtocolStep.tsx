@@ -3,7 +3,7 @@
  * agentic variant, or a frozen proposal), see it, or propose one (evidence propose frame → draft → critic →
  * cards as one model job, resumed from the first missing step), decide the eight cards and freeze.
  */
-import { FileCode2Icon, PlayIcon, SparklesIcon } from "lucide-react"
+import { CheckIcon, FileCode2Icon, PlayIcon, SparklesIcon } from "lucide-react"
 import { useState, type ReactNode } from "react"
 import { Link, useNavigate } from "react-router"
 
@@ -26,8 +26,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { isName, protocolParam } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
+import { cn } from "@/lib/utils"
 
 import { CardsForm } from "./CardsForm"
 import { KindConfirm } from "./KindConfirm"
@@ -48,13 +50,13 @@ function ChosenProtocol({ protocol }: { protocol: ProtocolRef }) {
 function Choice({ flow, value, title, children, href }: { flow: Flow; value: ProtocolRef; title: string; children?: ReactNode; href: string }) {
   const chosen = flow.protocol?.source === value.source && flow.protocol.name === value.name
   return (
-    <li className="flex flex-wrap items-center gap-2 rounded-md border p-2 text-sm">
-      <FileCode2Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+    <li className={cn("flex flex-wrap items-center gap-2 rounded-lg border p-3 text-sm transition-colors duration-(--motion-fast)", chosen && "border-primary bg-primary/5")}>
+      <FileCode2Icon className={cn("size-4", chosen ? "text-primary" : "text-muted-foreground")} aria-hidden="true" />
       <span className="font-medium">{title}</span>
-      <Link to={href} className="font-mono text-xs underline">{value.name}</Link>
+      <Link to={href} className="inline-flex min-h-6 items-center font-mono text-xs underline underline-offset-2">{value.name}</Link>
       {children}
       <span className="flex-1" />
-      {chosen ? <Badge>chosen</Badge> : (
+      {chosen ? <Badge><CheckIcon aria-hidden="true" />chosen</Badge> : (
         <Button size="sm" variant="outline" onClick={() => flow.set({ protocol: protocolParam(value), run: null }, { push: true })} aria-label={`Use ${value.source === "repo" ? "protocol" : "proposal"} ${value.name}`}>Use</Button>
       )}
     </li>
@@ -75,26 +77,28 @@ function ProposeForm({ flow }: { flow: Flow }) {
   const proposal = name || suggestion
   const ok = isName(proposal)
   return (
-    <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => {
+    <form className="flex flex-wrap items-start gap-3" onSubmit={(e) => {
       e.preventDefault()
       start.mutate({ proposal, question: flow.question.id, model: model || config.data?.default_model || "orch-model" }, {
         onSuccess: (job) => { announceJob(job, navigate); flow.set({ proposal }) },
         onError: (err) => announceError("The proposal flow did not start", err),
       })
     }}>
-      <div className="grid gap-1.5">
+      <div className="grid w-full gap-1.5 sm:w-56">
         <Label htmlFor="proposal-name">Proposal name</Label>
-        <Input id="proposal-name" className="w-56 font-mono" placeholder={suggestion} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!ok} />
+        <Input id="proposal-name" className="font-mono" placeholder={suggestion} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!ok}
+          aria-describedby={ok ? undefined : "proposal-name-error"} />
+        {!ok && <p id="proposal-name-error" className="text-xs text-destructive">Letters, digits, dots, dashes and underscores, starting with a letter or digit.</p>}
       </div>
-      <div className="grid gap-1.5">
+      <div className="grid w-full gap-1.5 sm:w-40">
         <Label htmlFor="proposal-model">Model</Label>
-        <Input id="proposal-model" className="w-40 font-mono" placeholder={config.data?.default_model ?? "orch-model"} value={model} onChange={(e) => setModel(e.target.value)} />
+        <Input id="proposal-model" className="font-mono" placeholder={config.data?.default_model ?? "orch-model"} value={model} onChange={(e) => setModel(e.target.value)} />
       </div>
-      <Button type="submit" disabled={!ok || start.isPending}>
-        <SparklesIcon data-icon="inline-start" />
+      {/* sm:mt-6 lines the button up with the fields under their labels */}
+      <Button type="submit" className="sm:mt-6" disabled={!ok || start.isPending}>
+        {start.isPending ? <Spinner data-icon="inline-start" aria-hidden="true" /> : <SparklesIcon data-icon="inline-start" aria-hidden="true" />}
         Propose a protocol
       </Button>
-      {!ok && <p className="w-full text-xs text-destructive">A name of letters, digits, dots, dashes and underscores, starting with a letter or digit.</p>}
     </form>
   )
 }
@@ -124,10 +128,11 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
       <CardContent className="space-y-4">
         {jobs.map((j) => <JobPanel key={j.id} job={j} compact />)}
         {proposal.isError && !jobs.length && (
-          <div className="space-y-2 text-sm">
-            <p className="text-muted-foreground">No frame.json in {name} yet{proposal.error instanceof Error ? ` (${proposal.error.message})` : ""}.</p>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Proposal {name} has no frame yet: the model has not framed the question{proposal.error instanceof Error ? ` (${proposal.error.message})` : ""}.
+          </p>
         )}
+        {proposal.isPending && !jobs.length && <CardsSkeleton count={1} className="md:grid-cols-1 xl:grid-cols-1" />}
         {p && !p.frozen && !p.steps.includes("cards") && !jobs.length && (!typed || frameQuestion) && (
           <Button size="sm" variant="outline" disabled={resume.isPending}
             onClick={() => resume.mutate({ proposal: name, ...(typed ? { text: frameQuestion ?? "" } : { question: flow.question.id }), model: config.data?.default_model ?? "orch-model" }, {
@@ -140,13 +145,13 @@ function Workbench({ flow, name }: { flow: Flow; name: string }) {
         {p?.frame && p.steps.includes("frame") && <KindConfirm proposal={p} />}
         {p?.frame && (
           <details>
-            <summary className="cursor-pointer text-sm font-medium">Frame</summary>
+            <summary className="text-sm font-medium">How the model framed the question</summary>
             <div className="mt-2"><Frame frame={p.frame} /></div>
           </details>
         )}
         {p && p.checks.length > 0 && (
           <details open={!p.steps.includes("cards")}>
-            <summary className="cursor-pointer text-sm font-medium">Critic ({p.checks.filter((c) => !c.ok).length} failing)</summary>
+            <summary className="text-sm font-medium">The critic's checks of the draft: {p.checks.filter((c) => !c.ok).length} of {p.checks.length} fail</summary>
             <div className="mt-2"><CriticChecks checks={p.checks} /></div>
           </details>
         )}
@@ -169,14 +174,18 @@ export function ProtocolStep({ flow }: { flow: Flow }) {
   const q = flow.question
   const proposals = useProposals()
   const mine = (proposals.data ?? []).filter((p) => q.proposals.includes(p.name))
+  const working = !!flow.proposal
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex flex-wrap items-center gap-2 text-base">Protocol for the run <Badge variant="outline" title="what the question asks">{q.kind}</Badge></CardTitle>
+          <CardTitle className="flex flex-wrap items-center gap-2 text-base">
+            Protocols for this question {q.kind && <Badge variant="outline" title="what the question asks">{q.kind}</Badge>}
+          </CardTitle>
           <CardDescription>Chosen: {protocolLabel(flow.protocol)}. {q.protocol ? "" : "This question has no hand-written protocol: propose one below."}</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          {proposals.isError && <ErrorState error={proposals.error} title="Could not list the proposals" onRetry={() => void proposals.refetch()} />}
           <ul className="space-y-2">
             {q.protocol && <Choice flow={flow} value={{ source: "repo", name: q.protocol }} title="Hand-written" href={`/protocol/${encodeURIComponent(q.protocol)}`} />}
             {q.agentic_protocol && (
@@ -187,12 +196,14 @@ export function ProtocolStep({ flow }: { flow: Flow }) {
                 <Badge variant="outline">frozen, revision {p.revision}</Badge>
               </Choice>
             ) : (
-              <li key={p.name} className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-2 text-sm">
+              <li key={p.name} className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3 text-sm">
                 <span className="font-medium">Proposal</span>
                 <span className="font-mono text-xs">{p.name}</span>
                 <Badge variant="outline">{p.steps.at(-1) ?? "started"}: not frozen</Badge>
                 <span className="flex-1" />
-                <Button size="xs" variant="outline" onClick={() => flow.set({ proposal: p.name }, { push: true })}>Work on it</Button>
+                {flow.proposal === p.name ? <Badge variant="secondary">open below</Badge> : (
+                  <Button size="sm" variant="outline" onClick={() => flow.set({ proposal: p.name }, { push: true })}>Work on it</Button>
+                )}
               </li>
             ))}
           </ul>
@@ -201,19 +212,22 @@ export function ProtocolStep({ flow }: { flow: Flow }) {
       {flow.proposal && <Workbench flow={flow} name={flow.proposal} />}
       {q.id !== TYPED_FLOW && <Card>
         <CardHeader>
-          <CardTitle className="text-base">Propose a protocol</CardTitle>
+          <CardTitle className="text-base">{working ? "Propose another protocol" : "Propose a protocol"}</CardTitle>
           <CardDescription>
-            The proposal flow (docs/evidence-system.md Part E): a PICO-style frame, a draft from the example protocol, a critic, and eight
-            choice-point cards with the model's defaults for you to decide. Runs as one model job; nothing runs the proposed protocol until you
-            freeze it and choose it here.
+            The model frames the question, drafts a protocol from the example one, checks it with a critic and turns its open choices into
+            eight cards, each with the model's default, for you to decide. It runs as one model job; nothing uses the proposed protocol until
+            you freeze it and choose it here.
           </CardDescription>
         </CardHeader>
         <CardContent><ProposeForm flow={flow} /></CardContent>
       </Card>}
       {flow.protocol && (
-        <section className="space-y-2" aria-label="Chosen protocol">
-          <h2 className="text-base font-semibold">{protocolLabel(flow.protocol)}</h2>
-          <ChosenProtocol protocol={flow.protocol} />
+        <section aria-label="Chosen protocol">
+          {/* every evidence type's fields: long, so it opens on request instead of pushing the step's actions away */}
+          <details className="rounded-xl border bg-card px-4 py-2">
+            <summary className="text-sm font-medium">Show the chosen protocol in full: {protocolLabel(flow.protocol)}</summary>
+            <div className="mt-3 pb-2"><ChosenProtocol protocol={flow.protocol} /></div>
+          </details>
         </section>
       )}
     </div>

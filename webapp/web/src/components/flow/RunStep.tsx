@@ -26,18 +26,20 @@ import {
 import { ErrorCallsBadge } from "@/components/badges"
 import { KeyValues, LabelBadge, SystemBadge } from "@/components/ev/bits"
 import { JobPanel } from "@/components/jobs/JobPanel"
-import { TableSkeleton } from "@/components/states"
+import { ErrorState, TableSkeleton } from "@/components/states"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { answerHeadline, effectAnswer } from "@/lib/ev"
 import { baselineName, isName } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
+import { cn } from "@/lib/utils"
 
 import { protocolLabel, type Flow } from "./flow"
 import { TYPED_FLOW } from "./QuestionStep"
@@ -75,11 +77,11 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
         onError: (err) => announceError("The run did not start", err),
       })
     }}>
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="grid gap-1.5">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="grid w-full gap-1.5 sm:w-auto">
           <Label htmlFor="run-extractors">Extractors</Label>
           <Select value={extractors} onValueChange={(v) => setExtractors(v as Extractors)}>
-            <SelectTrigger id="run-extractors" className="w-64" aria-label="Extractors"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="run-extractors" className="w-full sm:w-64" aria-label="Extractors"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="regex-only">regex only (no model)</SelectItem>
               <SelectItem value="cascade">cascade: regex, then the LLM extractor</SelectItem>
@@ -87,32 +89,34 @@ function RunForm({ flow, corpus, existing }: { flow: Flow; corpus: string; exist
             </SelectContent>
           </Select>
         </div>
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-auto">
           <Label htmlFor="run-strategy">Strategy</Label>
           <Select value={extractors === "regex-only" ? "all" : strategy} onValueChange={(v) => setStrategy(v as "all" | "gaps")} disabled={extractors === "regex-only"}>
-            <SelectTrigger id="run-strategy" className="w-56" aria-label="Strategy"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="run-strategy" className="w-full sm:w-56" aria-label="Strategy"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">all: every extractor on every paper</SelectItem>
               <SelectItem value="gaps">gaps: the funnel, escalate only the gaps</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-40">
           <Label htmlFor="run-model">Model</Label>
-          <Input id="run-model" className="w-40 font-mono" placeholder={config.data?.default_model ?? "orch-model"} value={model} onChange={(e) => setModel(e.target.value)} disabled={extractors === "regex-only"} />
+          <Input id="run-model" className="font-mono" placeholder={config.data?.default_model ?? "orch-model"} value={model} onChange={(e) => setModel(e.target.value)} disabled={extractors === "regex-only"} />
         </div>
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-56">
           <Label htmlFor="run-name">Run name</Label>
-          <Input id="run-name" className="w-56 font-mono" placeholder={corpus} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!ok} aria-describedby={ok ? undefined : "run-name-error"} />
+          {/* an error once the person typed a name; before that, a taken default name is a hint, not a red error */}
+          <Input id="run-name" className="font-mono" placeholder={corpus} value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!ok && !!name}
+            aria-describedby={ok ? undefined : "run-name-error"} />
           {/* under the field, not in the note below the row: that is where the eye is when Start is off */}
-          {!ok && <p id="run-name-error" className="w-56 text-xs text-destructive">{taken ? "That run exists: give this one a name of its own." : "Letters, digits, . _ -; starting with a letter or digit."}</p>}
+          {!ok && <p id="run-name-error" className={cn("text-xs", name ? "text-destructive" : "text-status-warning-fg")}>{taken ? (name ? "That run exists: give this one a name of its own." : `A run named ${corpus} exists: type a name to start another.`) : "Letters, digits, . _ -; starting with a letter or digit."}</p>}
         </div>
-        <div className="flex items-center gap-2 pb-2">
+        <div className="flex min-h-9 items-center gap-2 sm:mt-6">
           <Switch id="run-retry" checked={retry} onCheckedChange={setRetry} aria-label="Retry errors" />
           <Label htmlFor="run-retry" title="--retry-errors: run cached error results again instead of taking them from the record cache">retry errors</Label>
         </div>
-        <Button type="submit" disabled={!ok || start.isPending}>
-          <PlayIcon data-icon="inline-start" />
+        <Button type="submit" className="sm:mt-6" disabled={!ok || start.isPending}>
+          {start.isPending ? <Spinner data-icon="inline-start" aria-hidden="true" /> : <PlayIcon data-icon="inline-start" aria-hidden="true" />}
           Start run
         </Button>
       </div>
@@ -140,7 +144,7 @@ function Baselines({ corpus, question, runs, busy }: { corpus: string; question:
   // a disabled button says why: the answer is on disk (with a link to it) or its job is running
   const state = (system: string) => (running(system) ? "running…" : has(system) ? "done" : null)
   const open = (system: string) => has(system) && (
-    <Link to={`/runs/${encodeURIComponent(`${system}~${name}`)}`} className="text-xs underline" aria-label={`Open ${system}~${name}`}>open</Link>
+    <Link to={`/runs/${encodeURIComponent(`${system}~${name}`)}`} className="inline-flex min-h-6 items-center px-1 text-xs underline" aria-label={`Open ${system}~${name}`}>open</Link>
   )
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -238,11 +242,14 @@ export function RunStep({ flow }: { flow: Flow }) {
           <CardDescription>Choose the engine run whose graph, answer and scores the next steps show; score a finished run, then compare.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {runs.isPending ? <TableSkeleton rows={3} /> : mine.length === 0 ? <p className="text-sm text-muted-foreground">No runs on this corpus yet.</p> : (
+          {runs.isPending ? <TableSkeleton rows={3} /> : runs.isError ? <ErrorState error={runs.error} title="Could not list the runs" onRetry={() => void runs.refetch()} /> : mine.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No runs on this corpus yet: start the engine above.</p>
+          ) : (
             <div className="overflow-auto rounded-md border">
               <Table aria-label="Runs on the corpus">
                 <TableHeader>
-                  <TableRow>{["run", "system", "state", "label", ""].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}</TableRow>
+                  {/* on a phone the run id wraps and system and label hide, so Choose and Score stay on screen */}
+                  <TableRow>{["run", "system", "state", "label"].map((h) => <TableHead key={h} className={cn("text-xs", (h === "system" || h === "label") && "hidden sm:table-cell")}>{h}</TableHead>)}<TableHead><span className="sr-only">Actions</span></TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {mine.map((r) => {
@@ -250,20 +257,22 @@ export function RunStep({ flow }: { flow: Flow }) {
                     const scoring = active.some((j) => j.kind === "score" && j.refs.score === r.id)
                     return (
                       <TableRow key={r.id} data-state={r.id === flow.run ? "selected" : undefined}>
-                        <TableCell className="font-mono text-xs"><Link to={`/runs/${encodeURIComponent(r.id)}`} className="hover:underline">{r.id}</Link></TableCell>
-                        <TableCell><SystemBadge system={r.system} /></TableCell>
-                        <TableCell className="text-xs">{running ? "running" : r.complete ? "complete" : "incomplete"}{reports.has(r.id) ? ", scored" : ""}</TableCell>
-                        <TableCell>{r.label ? <LabelBadge label={r.label} /> : "—"} <ErrorCallsBadge count={r.error_calls} /></TableCell>
-                        <TableCell className="space-x-1 text-right whitespace-nowrap">
-                          {r.kind === "engine" && (r.id === flow.run ? <Badge>chosen</Badge> : (
-                            <Button size="sm" variant="outline" onClick={() => flow.set({ run: r.id }, { push: true })} aria-label={`Choose ${r.id}`}>Choose</Button>
-                          ))}
-                          {r.kind === "engine" && r.complete && !running && (
-                            <Button size="xs" variant="outline" disabled={scoring || score.isPending} onClick={() => score.mutate({ run: r.id }, done)} aria-label={`Score ${r.id}`}>
-                              <BarChart3Icon data-icon="inline-start" />
-                              {reports.has(r.id) ? "Score again" : "Score"}
-                            </Button>
-                          )}
+                        <TableCell className="min-w-24 font-mono text-xs break-all whitespace-normal sm:break-normal sm:whitespace-nowrap"><Link to={`/runs/${encodeURIComponent(r.id)}`} className="inline-flex min-h-6 items-center hover:underline">{r.id}</Link></TableCell>
+                        <TableCell className="hidden sm:table-cell"><SystemBadge system={r.system} /></TableCell>
+                        <TableCell className="text-xs whitespace-normal sm:whitespace-nowrap">{running ? "running" : r.complete ? "complete" : "incomplete"}{reports.has(r.id) ? ", scored" : ""}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{r.label ? <LabelBadge label={r.label} /> : "—"} <ErrorCallsBadge count={r.error_calls} /></TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex flex-wrap items-center justify-end gap-1">
+                            {r.kind === "engine" && (r.id === flow.run ? <Badge>chosen</Badge> : (
+                              <Button size="sm" variant="outline" onClick={() => flow.set({ run: r.id }, { push: true })} aria-label={`Choose ${r.id}`}>Choose</Button>
+                            ))}
+                            {r.kind === "engine" && r.complete && !running && (
+                              <Button size="sm" variant="outline" disabled={scoring || score.isPending} onClick={() => score.mutate({ run: r.id }, done)} aria-label={`Score ${r.id}`}>
+                                <BarChart3Icon data-icon="inline-start" aria-hidden="true" />
+                                {reports.has(r.id) ? "Score again" : "Score"}
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     )

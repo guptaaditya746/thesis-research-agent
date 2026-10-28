@@ -47,6 +47,26 @@ describe("the stepper", () => {
     expect(await screen.findByText(/Chosen: hand-written rag-factuality./, {}, T)).toBeInTheDocument()
   })
 
+  it("says which step this is and offers Next only once the step's choice is made", async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutes(routes, "/flow/rag-factuality/corpus")
+    expect(await screen.findByRole("heading", { level: 2, name: "Choose a corpus" }, T)).toBeInTheDocument()
+    expect(screen.getByText("Step 3 of 6")).toBeInTheDocument()
+    const steps = screen.getByRole("navigation", { name: "Steps" })
+    expect(within(steps).getByRole("link", { name: "Corpus" })).toHaveAttribute("aria-current", "step")
+    const footer = screen.getByRole("navigation", { name: "Step navigation" })
+    expect(within(footer).getByRole("button", { name: "Next: Run" })).toBeDisabled()
+    expect(within(footer).getByText("Choose a corpus to go on.")).toBeInTheDocument()
+    const table = await screen.findByRole("table", { name: "Corpora" }, T)
+    await user.click(within(table).getByRole("button", { name: `Use ${MIXED}` }))
+    // the stepper names the chosen corpus, and Next goes on to the run step with the choice kept
+    expect(await within(steps).findByRole("link", { name: `Corpus: ${MIXED}` }, T)).toBeInTheDocument()
+    await user.click(within(footer).getByRole("link", { name: "Next: Run" }))
+    await waitFor(() => expect(router.state.location.pathname).toBe("/flow/rag-factuality/run"))
+    expect(new URLSearchParams(router.state.location.search).get("corpus")).toBe(MIXED)
+    expect(within(footer).getByRole("link", { name: "Back: Corpus" })).toBeInTheDocument()
+  })
+
   it("a non-effect baseline shows its summary beside the answer", async () => {
     const id = `rag-baseline~${MIXED}`
     const detail = evFixture<EvRunDetail>(`/api/ev/runs/${id}`)
@@ -184,7 +204,7 @@ describe("the cards form", () => {
     expect(within(card).getByText("decided by aditya")).toBeInTheDocument()
     const reason = within(card).getByLabelText("Reason (required)")
     await user.clear(reason)
-    expect(reason).toHaveAccessibleDescription(/a reason is required/)   // under the field, no alert
+    expect(reason).toHaveAccessibleDescription(/a reason is required/i)   // under the field, no alert
     expect(screen.getByRole("button", { name: "Save decisions" })).toBeDisabled()
     await user.type(reason, "two points is the noise between runs")
     expect(screen.getByRole("button", { name: "Freeze" })).toBeDisabled()   // unsaved
@@ -322,7 +342,9 @@ describe("the Jobs page", () => {
     const job = await evApi.startJob("rag-baseline", { corpus: PARA, question: "rag-factuality" })
     renderRoutes(routes, `/jobs/${job.id}`)
     const table = await screen.findByRole("table", { name: "Jobs" }, T)
-    expect(within(table).getByText(`RAG baseline rag-baseline~${PARA}`)).toBeInTheDocument()
+    // the job opens from its name (the id column hides on a phone), and the open one is marked
+    expect(within(table).getByRole("link", { name: `RAG baseline rag-baseline~${PARA}` })).toHaveAttribute("href", `/jobs/${job.id}`)
+    expect(within(table).getByRole("link", { name: `RAG baseline rag-baseline~${PARA}` })).toHaveAttribute("aria-current", "page")
     const panels = await screen.findAllByLabelText(`Job RAG baseline rag-baseline~${PARA}`, {}, T)
     expect(await within(panels[0]).findByLabelText(/Log of job/, {}, T)).toHaveTextContent("mock rag-baseline working")
     await user.click(within(panels[0]).getByRole("button", { name: "Cancel" }))
@@ -394,6 +416,27 @@ describe("the question-first flow", () => {
     expect(within(panel).getByText("worth a look")).toBeInTheDocument()
   })
 
+  it("a checker problem shows on its card and links to it, opening the advanced cards when needed", async () => {
+    const user = userEvent.setup()
+    const ADVANCED = { check: "cascade_types", severity: "serious", message: "a type has no extractor", card: "cascade" } as const
+    mockCheck.problems = [SERIOUS, ADVISORY, ADVANCED]
+    await openProposal()
+    const panel = await screen.findByRole("region", { name: "Checker" }, T)
+    await within(panel).findByText(/no screen term appears/, {}, T)
+    // the card carries its own problem, so the fix and the problem sit together
+    const card = screen.getByRole("group", { name: /Screening question and terms/ })
+    expect(within(card).getByRole("list", { name: /Checker on Screening/ })).toHaveTextContent(/no screen term appears in any paper/)
+    await user.click(within(panel).getByRole("button", { name: "Go to card: Screening question and terms" }))
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Choice for screen" })).toHaveFocus())
+    // an advanced card's problem opens the fold first
+    const advanced = screen.getByText(/Advanced cards/).closest("details")!
+    expect(advanced).not.toHaveAttribute("open")
+    expect(within(advanced).getByText("1 serious")).toBeInTheDocument()
+    await user.click(within(panel).getByRole("button", { name: /Go to card: Extractor cascade/ }))
+    await waitFor(() => expect(advanced).toHaveAttribute("open"))
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Choice for cascade" })).toHaveFocus())
+  })
+
   it("serious problem blocks freeze until waiver reason", async () => {
     const user = userEvent.setup()
     mockCheck.problems = [SERIOUS, ADVISORY]
@@ -410,6 +453,10 @@ describe("the question-first flow", () => {
     await user.click(screen.getByRole("button", { name: "Freeze" }))
     const dialog = await screen.findByRole("dialog", { name: /Waive/ }, T)
     expect(within(dialog).getByText(/no screen term appears in any paper/)).toBeInTheDocument()
+    // what is overridden, in words: the card, the problem, and that waiving does not fix it
+    expect(within(dialog).getByText("Card: Screening question and terms")).toBeInTheDocument()
+    expect(dialog).toHaveTextContent(/Waiving does not fix it/)
+    expect(dialog).toHaveTextContent(/under your name \(aditya\)/)
     expect(within(dialog).queryByText(/one metric has no synonym/)).toBeNull()   // advisory problems need no waiver
     const go = within(dialog).getByRole("button", { name: "Waive and freeze" })
     expect(go).toBeDisabled()

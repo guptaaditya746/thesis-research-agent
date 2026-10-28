@@ -57,7 +57,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader>
+      {/* landmarks, so every part of the sidebar is reachable from a screen reader's landmark list */}
+      <SidebarHeader role="navigation" aria-label="Home">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip="Evidence-level synthesis">
@@ -74,7 +75,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent role="navigation" aria-label="Questions and pages">
         <SidebarGroup>
           <SidebarGroupLabel>Questions</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -108,7 +109,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter role="complementary" aria-label="Backend">
         <BackendStatus />
       </SidebarFooter>
       <SidebarRail />

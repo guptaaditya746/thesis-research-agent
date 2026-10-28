@@ -32,17 +32,17 @@ export function PaperPreview({ proposal }: { proposal: string }) {
     <section aria-label="Paper preview" className="space-y-3 rounded-lg border p-3">
       <h3 className="text-sm font-semibold">Paper preview</h3>
       <div className="flex flex-wrap gap-3">
-        <div className="grid gap-1">
+        <div className="grid min-w-40 flex-[2] gap-1">
           <Label htmlFor="preview-corpus" className="text-xs">Corpus</Label>
           <Select value={corpus ?? undefined} onValueChange={(c) => { setCorpus(c); setPaper(null) }}>
-            <SelectTrigger id="preview-corpus" aria-label="Corpus" className="w-48"><SelectValue placeholder="choose a corpus" /></SelectTrigger>
+            <SelectTrigger id="preview-corpus" aria-label="Corpus" className="w-full"><SelectValue placeholder="choose a corpus" /></SelectTrigger>
             <SelectContent>{(corpora.data ?? []).map((c) => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <div className="grid gap-1">
+        <div className="grid min-w-24 flex-1 gap-1">
           <Label htmlFor="preview-paper" className="text-xs">Paper</Label>
           <Select value={paper ?? undefined} onValueChange={setPaper} disabled={!detail.data}>
-            <SelectTrigger id="preview-paper" aria-label="Paper" className="w-32"><SelectValue placeholder="paper" /></SelectTrigger>
+            <SelectTrigger id="preview-paper" aria-label="Paper" className="w-full"><SelectValue placeholder="paper" /></SelectTrigger>
             <SelectContent>{(detail.data?.papers_list ?? []).map((p) => <SelectItem key={p.id} value={p.id}>{p.id}</SelectItem>)}</SelectContent>
           </Select>
         </div>
@@ -54,7 +54,9 @@ export function PaperPreview({ proposal }: { proposal: string }) {
           <div className="max-h-96 overflow-auto whitespace-pre-wrap text-sm leading-relaxed"><Highlighted text={preview.data.text} hits={preview.data.hits} /></div>
         </>
       )}
-      {!preview.data && !preview.isError && <p className="text-xs text-muted-foreground">Choose a corpus and a paper to see what the draft picks up.</p>}
+      {!preview.data && !preview.isError && (paper && preview.isFetching
+        ? <p className="text-xs text-muted-foreground" role="status">Loading paper {paper}…</p>
+        : <p className="text-xs text-muted-foreground">Choose a corpus and a paper to see what the draft picks up.</p>)}
     </section>
   )
 }
