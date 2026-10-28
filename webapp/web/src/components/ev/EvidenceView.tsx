@@ -113,7 +113,8 @@ function Evidence<T>({ runId, view }: { runId: string; view: KindView<T> }) {
     setTarget(null)
     requestAnimationFrame(() => opener.current?.focus())
   }
-  const table = useEvidenceTable({ rows, columns: view.columns, onOpen: open, compact: phone || (wide && !!target) })
+  const compact = phone || (wide && !!target)
+  const table = useEvidenceTable({ rows, columns: view.columns, onOpen: open, compact, phone })
   const order = shownRows(table, view.lanes).filter((r) => r.target)
   const at = target ? order.findIndex((r) => r.key === target.key) : -1
   const step = (by: number) => {
@@ -132,17 +133,21 @@ function Evidence<T>({ runId, view }: { runId: string; view: KindView<T> }) {
       <CoverageBar counts={laneCounts(view.rows, view.lanes)} active={laneFilter} onToggle={setLaneFilter} unit={view.unit}>
         <ColumnsMenu table={table} />
       </CoverageBar>
+      <p className="sr-only" aria-live="polite">
+        {laneFilter ? `Showing ${rows.length} of ${view.rows.length} ${view.unit}: ${view.lanes.find((l) => l.key === laneFilter)?.label}` : ""}
+      </p>
       <div className={target && wide ? "grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,42%)]" : undefined}>
-        <EvidenceTable table={table} lanes={view.lanes} caption={view.caption} active={target?.key} footer={view.footer} />
+        <EvidenceTable table={table} lanes={view.lanes} caption={view.caption} active={target?.key} footer={view.footer} compact={compact} />
         {wide && panel && (
-          <aside aria-label={`Source: ${target.title}`} className="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border bg-card p-4">
+          <aside aria-label={`Source: ${target.title}`} onKeyDown={(e) => { if (e.key === "Escape") close() }}
+            className="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border bg-card p-4">
             {panel}
           </aside>
         )}
       </div>
       {!wide && (
         <Sheet open={!!target} onOpenChange={(o) => { if (!o) close() }}>
-          <SheetContent className="w-full gap-0 overflow-y-auto p-4 pt-12 sm:max-w-xl">
+          <SheetContent className="w-full gap-0 overflow-y-auto p-4 pt-12 motion-reduce:animate-none! motion-reduce:transition-none! sm:max-w-xl">
             <SheetTitle className="sr-only">Source: {target?.title}</SheetTitle>
             <SheetDescription className="sr-only">The paper with this row's evidence marked.</SheetDescription>
             {panel}

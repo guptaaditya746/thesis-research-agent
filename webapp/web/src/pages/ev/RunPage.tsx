@@ -159,7 +159,7 @@ function RunView({ run }: { run: EvRunDetail }) {
         </Card>
       </div>
       <Tabs value={tab} onValueChange={(v) => setParams({ tab: v }, { replace: true })}>
-        <TabsList className="flex-wrap">{tabs.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}</TabsList>
+        <TabsList className="h-auto max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto">{tabs.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}</TabsList>
         <TabsContent value="answer" className="space-y-4">
           <EvidenceView run={run} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null} />
         </TabsContent>

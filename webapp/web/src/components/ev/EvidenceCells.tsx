@@ -29,7 +29,7 @@ export function EffectMark({ delta, direction, scale }: { delta: number | null; 
   const x = 30 + (scale > 0 ? (delta / scale) * 26 : 0)
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-      <svg width="60" height="12" viewBox="0 0 60 12" aria-hidden="true" className="shrink-0">
+      <svg width="60" height="12" viewBox="0 0 60 12" aria-hidden="true" className="shrink-0 group-data-[compact=true]/evtable:hidden">
         <line x1="2" x2="58" y1="6" y2="6" className="stroke-border" strokeWidth="1" />
         <line x1="30" x2="30" y1="1" y2="11" className="stroke-muted-foreground" strokeWidth="1" />
         <circle cx={x} cy="6" r="3.5" className={cn(direction === "supports" ? "fill-status-good" : direction === "contradicts" ? "fill-status-critical" : "fill-status-neutral")} />

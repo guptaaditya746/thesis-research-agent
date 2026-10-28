@@ -35,6 +35,7 @@ export function effectColumns(answer: EffectAnswer, rows: EvidenceRow<EffectData
     header: "verdict and rule",
     sort: (r) => r.data.direction,
     className: "min-w-40",
+    priority: true,
     cell: (r) => (
       <span className="flex flex-col items-start gap-1">
         {r.data.study ? <DirectionBadge direction={r.data.direction} /> : <Badge variant="outline" className="font-normal">not used</Badge>}
@@ -178,6 +179,7 @@ export function consistencyColumns(answer: ConsistencyAnswer): EvidenceColumn<Co
       header: "agree?",
       sort: (r) => r.lane,
       className: "min-w-40",
+      priority: true,
       cell: (r) => {
         const s = r.data.study
         if (!s) return <Badge variant="outline" className="font-normal">not used</Badge>

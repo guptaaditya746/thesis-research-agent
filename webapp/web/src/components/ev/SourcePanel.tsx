@@ -102,7 +102,7 @@ export function SourcePanel({ runId, target, lane, onFocus, onClose, onPrev, onN
                 <span className="min-w-0 space-y-0.5">
                   {on ? (
                     <button type="button" onClick={() => onFocus(step.item!)} aria-pressed={focus === step.item}
-                      className={cn("cursor-pointer rounded-sm px-1 text-left underline decoration-2 underline-offset-[3px] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                      className={cn("min-h-6 cursor-pointer rounded-sm px-1 text-left underline decoration-2 underline-offset-[3px] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                         focus === step.item && "bg-status-warning/30")}
                       style={{ textDecorationColor: TYPE_COLOR[types.get(step.item!) ?? ""] }}>
                       {step.text}

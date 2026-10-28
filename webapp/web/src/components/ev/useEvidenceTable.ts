@@ -27,15 +27,19 @@ export interface EvidenceColumn<T> {
   hideable?: boolean
   /** false: hidden while the table is compact (beside the source panel, on a phone) unless the user shows it */
   compact?: boolean
+  /** on a phone, moved next to the first column so it is seen without scrolling sideways (the verdict) */
+  priority?: boolean
   className?: string
 }
 
-export function useEvidenceTable<T>({ rows, columns, onOpen, compact = false }: {
+export function useEvidenceTable<T>({ rows, columns: given, onOpen, compact = false, phone = false }: {
   rows: EvidenceRow<T>[]
   columns: EvidenceColumn<T>[]
   onOpen: Opener
   compact?: boolean
+  phone?: boolean
 }) {
+  const columns = phone ? [...given.slice(0, 1), ...given.slice(1).filter((c) => c.priority), ...given.slice(1).filter((c) => !c.priority)] : given
   const [sorting, setSorting] = useState<SortingState>([])
   // what the user chose in the columns menu wins over the compact defaults
   const [chosen, setChosen] = useState<VisibilityState>({})
