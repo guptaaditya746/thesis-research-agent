@@ -41,13 +41,15 @@ const Segment = memo(function Segment({ s, color, double, active, onSelect }: {
   )
 })
 
-export function PaperText({ segments, colorOf, selected, onSelect, label }: {
+export function PaperText({ segments, colorOf, selected, onSelect, label, className }: {
   segments: TextSegment[]
   /** the mark colour of an id (null: not drawn) */
   colorOf: (mark: string) => string | null
   selected?: string | null
   onSelect?: (marks: string[]) => void
   label: string
+  /** classes for the scrolling box (its height, mostly) */
+  className?: string
 }) {
   // Callers pass an inline `onSelect`; a stable wrapper keeps the memoised segments from re-rendering on it.
   const latest = useRef(onSelect)
@@ -57,7 +59,7 @@ export function PaperText({ segments, colorOf, selected, onSelect, label }: {
   return (
     // A focusable region: the text scrolls, and keyboard users need to reach it to scroll it.
     <div role="region" tabIndex={0} aria-label={label}
-      className="max-h-[70vh] overflow-auto rounded-md border bg-card p-4 font-serif text-sm leading-relaxed whitespace-pre-wrap focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+      className={cn("max-h-[70vh] overflow-auto rounded-md border bg-card p-4 font-serif text-sm leading-relaxed whitespace-pre-wrap focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", className)}>
       {segments.map((s) => {
         const marks = s.marks ?? []
         const colors = marks.map(colorOf).filter((c): c is string => !!c)

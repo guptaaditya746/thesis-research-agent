@@ -148,20 +148,33 @@ describe("runs", () => {
     expect(within(table).getByText("RAG baseline")).toBeInTheDocument()
   })
 
-  it("a run's answer lists every study with its direction and the funnel", async () => {
+  it("a run's answer is the evidence table: a row per paper, each opening its source", async () => {
     const detail = evFixture<EvRunDetail>(`/api/ev/runs/cascade-gaps~${MIXED}`)
     renderRoutes(routes, run(`cascade-gaps~${MIXED}`))
-    const studies = await screen.findByRole("table", { name: "Studies" }, T)
-    expect(within(studies).getAllByRole("row")).toHaveLength(effectAnswer(detail.answer)!.studies.length + 1)
-    expect(within(studies).getByRole("link", { name: "S001" })).toHaveAttribute("href", `${run(`cascade-gaps~${MIXED}`)}/papers/S001`)
+    const table = await screen.findByRole("table", { name: "Evidence per paper" }, T)
+    for (const s of effectAnswer(detail.answer)!.studies) {
+      expect(within(table).getByRole("button", { name: `${s.document}: show the evidence in the paper` })).toBeInTheDocument()
+    }
     expect(screen.getByRole("link", { name: `rag-baseline~${MIXED}` })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: `cascade-gaps~${MIXED}` })).toHaveAttribute("href", `/scores/reports/${encodeURIComponent(`cascade-gaps~${MIXED}`)}`)
   })
 
-  it("the graph tab draws the evidence of one paper", async () => {
-    renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}?tab=graph`)
+  it("the evidence graph sits in Developer tools beside the trace and draws one paper", async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}?tab=dev`)
+    expect(screen.queryByRole("tab", { name: "Evidence graph" })).toBeNull()
+    const dev = await screen.findByRole("tablist", { name: "Developer tools" }, T)
+    expect(within(dev).getByRole("tab", { name: "Step trace" })).toHaveAttribute("aria-selected", "true")
+    await user.click(within(dev).getByRole("tab", { name: "Evidence graph" }))
     expect(await screen.findByRole("group", { name: "Evidence graph of S001" }, T)).toBeInTheDocument()
     expect(screen.getByText(/nodes, \d+ edges/)).toBeInTheDocument()
+    expect(router.state.location.search).toBe("?tab=dev&dev=graph")
+  })
+
+  it("the old ?tab=graph link opens the graph under Developer tools", async () => {
+    renderRoutes(routes, `${run(`cascade~${EXPLICIT}`)}?tab=graph`)
+    expect(await screen.findByRole("group", { name: "Evidence graph of S001" }, T)).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Developer tools" })).toHaveAttribute("aria-selected", "true")
   })
 
   it("a run paper: the funnel, items with their spans, a call's model records", async () => {
