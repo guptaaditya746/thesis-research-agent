@@ -204,7 +204,7 @@ describe("the cards form", () => {
     expect(within(card).getByText("decided by aditya")).toBeInTheDocument()
     const reason = within(card).getByLabelText("Reason (required)")
     await user.clear(reason)
-    expect(reason).toHaveAccessibleDescription(/a reason is required/)   // under the field, no alert
+    expect(reason).toHaveAccessibleDescription(/a reason is required/i)   // under the field, no alert
     expect(screen.getByRole("button", { name: "Save decisions" })).toBeDisabled()
     await user.type(reason, "two points is the noise between runs")
     expect(screen.getByRole("button", { name: "Freeze" })).toBeDisabled()   // unsaved
@@ -414,6 +414,27 @@ describe("the question-first flow", () => {
     expect(within(panel).getByText("worth a look")).toBeInTheDocument()
   })
 
+  it("a checker problem shows on its card and links to it, opening the advanced cards when needed", async () => {
+    const user = userEvent.setup()
+    const ADVANCED = { check: "cascade_types", severity: "serious", message: "a type has no extractor", card: "cascade" } as const
+    mockCheck.problems = [SERIOUS, ADVISORY, ADVANCED]
+    await openProposal()
+    const panel = await screen.findByRole("region", { name: "Checker" }, T)
+    await within(panel).findByText(/no screen term appears/, {}, T)
+    // the card carries its own problem, so the fix and the problem sit together
+    const card = screen.getByRole("group", { name: /Screening question and terms/ })
+    expect(within(card).getByRole("list", { name: /Checker on Screening/ })).toHaveTextContent(/no screen term appears in any paper/)
+    await user.click(within(panel).getByRole("button", { name: "Go to card: Screening question and terms" }))
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Choice for screen" })).toHaveFocus())
+    // an advanced card's problem opens the fold first
+    const advanced = screen.getByText(/Advanced cards/).closest("details")!
+    expect(advanced).not.toHaveAttribute("open")
+    expect(within(advanced).getByText("1 serious")).toBeInTheDocument()
+    await user.click(within(panel).getByRole("button", { name: /Go to card: Extractor cascade/ }))
+    await waitFor(() => expect(advanced).toHaveAttribute("open"))
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Choice for cascade" })).toHaveFocus())
+  })
+
   it("serious problem blocks freeze until waiver reason", async () => {
     const user = userEvent.setup()
     mockCheck.problems = [SERIOUS, ADVISORY]
@@ -430,6 +451,10 @@ describe("the question-first flow", () => {
     await user.click(screen.getByRole("button", { name: "Freeze" }))
     const dialog = await screen.findByRole("dialog", { name: /Waive/ }, T)
     expect(within(dialog).getByText(/no screen term appears in any paper/)).toBeInTheDocument()
+    // what is overridden, in words: the card, the problem, and that waiving does not fix it
+    expect(within(dialog).getByText("Card: Screening question and terms")).toBeInTheDocument()
+    expect(dialog).toHaveTextContent(/Waiving does not fix it/)
+    expect(dialog).toHaveTextContent(/under your name \(aditya\)/)
     expect(within(dialog).queryByText(/one metric has no synonym/)).toBeNull()   // advisory problems need no waiver
     const go = within(dialog).getByRole("button", { name: "Waive and freeze" })
     expect(go).toBeDisabled()

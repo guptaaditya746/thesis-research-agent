@@ -6,14 +6,17 @@
  * with the file's sha256 as the form loaded it: if the file changed since, the server refuses and the form offers
  * reload or overwrite. It shows what `evidence propose freeze` would refuse; Freeze starts that command as a job
  * once the saved decisions pass. Amendments after the freeze stay on the command line.
+ *
+ * Each card shows the checker's problems that belong to it; the checker beside the cards links each problem to its
+ * card (opening the advanced cards when it is one of them). Save and Freeze stay in reach in a bar under the cards.
  */
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { LockIcon, SaveIcon } from "lucide-react"
-import { useState } from "react"
+import { CircleCheckIcon, InfoIcon, LockIcon, OctagonXIcon, SaveIcon, UserCheckIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router"
 
 import { isConflict } from "@/api/client"
-import { evApi, evKeys, useEvConfig, usePutDecisions, useStartJob, type Card as CardT, type ProposalDetail } from "@/api/ev"
+import { evApi, evKeys, useEvConfig, usePutDecisions, useStartJob, type Card as CardT, type CheckProblem, type ProposalDetail } from "@/api/ev"
 import { JsonBlock } from "@/components/ev/bits"
 import {
   AlertDialog,
@@ -30,9 +33,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { useDebounced } from "@/hooks/use-debounced"
 import { announceError, announceJob } from "@/lib/toasts"
+import { cn } from "@/lib/utils"
 
 import { CheckerPanel } from "./CheckerPanel"
 import { CUSTOM, advancedCard, initialState, optionValue, toEntry, type CardState } from "./cards"
@@ -42,33 +47,61 @@ import { WaiverDialog } from "./WaiverDialog"
 /** The checker waits for the typing to stop (the endpoint re-applies every decision to the draft). */
 export const CHECK_DEBOUNCE_MS = 400
 
+/** How long a card the checker sent you to stays marked. */
+const MARK_MS = 1600
 
-function CardField({ card, state, onChange, user }: { card: CardT; state: CardState; onChange: (s: CardState) => void; user: string }) {
+const cardDom = (id: string) => `card-${id}`
+
+function CardField({ card, state, onChange, user, checks, marked }: {
+  card: CardT
+  state: CardState
+  onChange: (s: CardState) => void
+  user: string
+  /** the live checker's problems that belong to this card */
+  checks: CheckProblem[]
+  /** the checker just sent the person here */
+  marked: boolean
+}) {
   const touch = (patch: Partial<CardState>) => onChange({ ...state, ...patch, by: user })
   // JSON is half-typed most of the time: say it does not parse once the field is left, not on every keystroke
   const [left, setLeft] = useState(false)
-  const reasonError = state.reason.trim() ? null : "a reason is required"
+  const reasonError = state.reason.trim() ? null : "A reason is required: say in a sentence why this choice fits the question."
   const jsonError = state.choice === CUSTOM && left && toEntry(card, { ...state, reason: "-" }).error
-  const id = `card-${card.id}`
+  const id = cardDom(card.id)
   const shown = state.choice === CUSTOM ? null : optionValue(card, state.choice)
+  const serious = checks.some((p) => p.severity === "serious")
+  const byModel = state.by === "model"
   return (
-    <Card size="sm" role="group" aria-labelledby={`${id}-title`}>
+    <Card id={id} tabIndex={-1} size="sm" role="group" aria-labelledby={`${id}-title`}
+      className={cn("min-w-0 scroll-mt-20 outline-none transition-shadow duration-(--motion-base)", serious && "ring-destructive/50", marked && "ring-2 ring-primary")}>
       <CardHeader>
         <CardTitle id={`${id}-title`} className="flex flex-wrap items-center gap-2 text-sm">
           {card.title ?? card.id}
-          <Badge variant={state.by === "model" ? "outline" : "secondary"}>{state.by === "model" ? "model's default" : `decided by ${state.by}`}</Badge>
+          <Badge variant={byModel ? "outline" : "secondary"}>
+            {!byModel && <UserCheckIcon aria-hidden="true" />}
+            {byModel ? "model's default" : `decided by ${state.by}`}
+          </Badge>
           {state.choice !== card.default && <Badge>changed from the default</Badge>}
         </CardTitle>
         <CardDescription>{card.ask}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-xs text-muted-foreground">
-          Model's default <span className="font-mono">{card.default}</span>{card.rationale ? `: ${card.rationale}` : ""}
-        </p>
-        <div className="grid gap-1.5">
+      <CardContent className="space-y-4">
+        {checks.length > 0 && (
+          <ul className="space-y-1.5 rounded-md bg-muted/60 p-2 text-sm" aria-label={`Checker on ${card.title ?? card.id}`}>
+            {checks.map((p) => (
+              <li key={`${p.check}-${p.message}`} className="flex gap-2">
+                {p.severity === "serious"
+                  ? <OctagonXIcon className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+                  : <InfoIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
+                <span><span className="sr-only">{p.severity === "serious" ? "Serious: " : "Worth a look: "}</span>{p.message}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="grid min-w-0 gap-1.5">
           <Label htmlFor={`${id}-choice`}>Choice</Label>
           <Select value={state.choice} onValueChange={(choice) => touch({ choice })}>
-            <SelectTrigger id={`${id}-choice`} aria-label={`Choice for ${card.id}`} className="w-full"><SelectValue /></SelectTrigger>
+            <SelectTrigger id={`${id}-choice`} aria-label={`Choice for ${card.id}`} aria-describedby={`${id}-default`} className="w-full"><SelectValue /></SelectTrigger>
             <SelectContent>
               {card.options.map((o) => (
                 <SelectItem key={String(o.id)} value={String(o.id)}>{String(o.id)}: {String(o.summary ?? "")}</SelectItem>
@@ -76,6 +109,9 @@ function CardField({ card, state, onChange, user }: { card: CardT; state: CardSt
               <SelectItem value={CUSTOM}>custom: a value of my own (JSON)</SelectItem>
             </SelectContent>
           </Select>
+          <p id={`${id}-default`} className="text-xs text-muted-foreground">
+            The model's default is <span className="font-mono">{card.default}</span>{card.rationale ? `: ${card.rationale}` : "."}
+          </p>
         </div>
         {state.choice === CUSTOM ? (
           <div className="grid gap-1.5">
@@ -86,15 +122,17 @@ function CardField({ card, state, onChange, user }: { card: CardT; state: CardSt
           </div>
         ) : (
           <details>
-            <summary className="cursor-pointer text-xs text-muted-foreground">value of {state.choice}</summary>
+            <summary className="text-xs text-muted-foreground">What <span className="font-mono">{state.choice}</span> sets in the protocol</summary>
             <JsonBlock value={shown} className="mt-1 max-h-40" />
           </details>
         )}
         <div className="grid gap-1.5">
           <Label htmlFor={`${id}-reason`}>Reason (required)</Label>
-          <Textarea id={`${id}-reason`} className="min-h-16" value={state.reason} onChange={(e) => touch({ reason: e.target.value })}
-            aria-invalid={!!reasonError} aria-describedby={reasonError ? `${id}-reason-error` : undefined} />
-          {reasonError && <p id={`${id}-reason-error`} className="text-xs text-destructive">{card.id}: {reasonError}</p>}
+          <Textarea id={`${id}-reason`} className="min-h-16" value={state.reason} onChange={(e) => touch({ reason: e.target.value })} required
+            aria-invalid={!!reasonError} aria-describedby={reasonError ? `${id}-reason-error` : `${id}-reason-help`} />
+          {reasonError
+            ? <p id={`${id}-reason-error`} className="text-xs text-destructive">{reasonError}</p>
+            : <p id={`${id}-reason-help`} className="text-xs text-muted-foreground">Saved in decisions.yaml with the choice and who made it.</p>}
         </div>
         {card.problems.length > 0 && (
           <ul className="space-y-0.5 text-xs text-destructive" aria-label={`Problems of ${card.id}`}>
@@ -118,6 +156,8 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
   const [stale, setStale] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [waiverOpen, setWaiverOpen] = useState(false)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [marked, setMarked] = useState<string | null>(null)   // the card the checker sent the person to
   const [waivers, setWaivers] = useState<Record<string, string>>(() =>   // check -> reason, written with the decisions
     Object.fromEntries((proposal.waivers ?? []).map((w) => [w.check, w.reason])))   // the ones decisions.yaml has stay unless removed
   const save = usePutDecisions(proposal.name)
@@ -132,11 +172,39 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
     queryFn: () => evApi.checkProposal(proposal.name, JSON.parse(sent) as ReturnType<typeof toEntry>["entry"][]),
     placeholderData: keepPreviousData,
   })
+  const checks = check.data?.problems ?? []
   // a serious problem a person can waive (the `decision` ones are cards.validate's: they are fixed, never waived)
-  const waivable = (check.data?.problems ?? []).filter((p) => p.severity === "serious" && p.check !== "decision" && !waivers[p.check])
+  const waivable = checks.filter((p) => p.severity === "serious" && p.check !== "decision" && !waivers[p.check])
   const freezeOff = !proposal.steps.includes("cards") ? "the proposal has no cards yet."
-    : dirty ? "unsaved changes: save before freezing."
-    : problems.length > 0 ? "decisions.yaml has problems freeze would refuse (above)." : null
+    : dirty ? "save your changes first."
+    : problems.length > 0 ? "decisions.yaml has problems freeze would refuse (listed above)." : null
+  const titles = Object.fromEntries(proposal.cards.map((c) => [c.id, c.title ?? c.id]))
+  const advancedIds = new Set(proposal.cards.filter(advancedCard).map((c) => c.id))
+
+  // the checker's "Go to card": open the advanced fold if needed, then bring the card into view and focus its choice
+  const pending = useRef<string | null>(null)
+  const [jumps, setJumps] = useState(0)   // one per "Go to card", so going to the same card again scrolls again
+  const showCard = (id: string) => {
+    if (advancedIds.has(id)) setAdvancedOpen(true)
+    pending.current = id
+    setMarked(id)
+    setJumps((n) => n + 1)
+  }
+  useEffect(() => {   // after the render that opened the fold: the card is in the page now
+    const id = pending.current
+    if (!id) return
+    pending.current = null
+    const el = document.getElementById(cardDom(id))
+    const smooth = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    el?.scrollIntoView?.({ block: "center", behavior: smooth ? "smooth" : "auto" })
+    const field = document.getElementById(`${cardDom(id)}-choice`)
+    ;(field ?? el)?.focus({ preventScroll: true })
+  }, [jumps])
+  useEffect(() => {
+    if (!marked) return
+    const t = setTimeout(() => setMarked(null), MARK_MS)
+    return () => clearTimeout(t)
+  }, [marked, jumps])
 
   const onSave = (force = false) =>
     save.mutate({ decisions: entries.map((e) => e.entry), waivers: Object.entries(waivers).map(([c, reason]) => ({ check: c, reason })), base_sha256: base, force }, {
@@ -158,25 +226,44 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
   }
 
   const field = (c: CardT) => (
-    <CardField key={c.id} card={c} state={states[c.id]} user={user ?? "you"}
+    <CardField key={c.id} card={c} state={states[c.id]} user={user ?? "you"} marked={marked === c.id}
+      checks={checks.filter((p) => p.card === c.id)}
       onChange={(s) => { setStates((old) => ({ ...old, [c.id]: s })); setDirty(true) }} />
   )
   const main = proposal.cards.filter((c) => !advancedCard(c))
   const advanced = proposal.cards.filter(advancedCard)
+  const advancedSerious = checks.filter((p) => p.severity === "serious" && p.card && advancedIds.has(p.card)).length
+  const changed = proposal.cards.filter((c) => states[c.id].choice !== c.default).length
+  const byPeople = proposal.cards.filter((c) => states[c.id].by !== "model").length
   return (
     <section className="space-y-4" aria-label="Cards">
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="space-y-4">
-          <div className="grid gap-4 2xl:grid-cols-2">{main.map(field)}</div>
+      <div className="space-y-1">
+        <h3 className="text-base font-semibold">Decide the cards</h3>
+        <p className="max-w-prose text-sm text-muted-foreground">
+          Each card is one open choice in the protocol. Keep the model's default or pick another option, and say why. The checker
+          re-checks the draft each time you stop typing.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {proposal.cards.length} cards: {changed} changed from the default, {byPeople} decided by a person.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 space-y-4">
+          <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">{main.map(field)}</div>
           {advanced.length > 0 && (
-            <details>
-              <summary className="cursor-pointer text-sm font-medium">Advanced cards ({advanced.length}): {advanced.map((c) => c.id).join(", ")}</summary>
-              <div className="mt-3 grid gap-4 2xl:grid-cols-2">{advanced.map(field)}</div>
+            <details open={advancedOpen} onToggle={(e) => setAdvancedOpen(e.currentTarget.open)} className="rounded-xl border border-dashed px-4 py-2">
+              <summary className="text-sm font-medium">
+                Advanced cards ({advanced.length}): {advanced.map((c) => c.id).join(", ")}
+                {advancedSerious > 0 && <Badge variant="destructive" className="ml-2">{advancedSerious} serious</Badge>}
+              </summary>
+              <p className="mt-1 text-xs text-muted-foreground">How the engine screens and locates; most protocols keep the model's defaults here.</p>
+              <div className="mt-3 grid grid-cols-1 gap-4 pb-2 2xl:grid-cols-2">{advanced.map(field)}</div>
             </details>
           )}
         </div>
-        <div className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-          <CheckerPanel problems={check.data?.problems} pending={check.isFetching} failed={check.isError} waived={waivers} />
+        <div className="min-w-0 space-y-4 xl:sticky xl:top-16 xl:self-start">
+          <CheckerPanel problems={check.data?.problems} pending={check.isFetching} failed={check.isError} waived={waivers}
+            cardTitles={titles} onShowCard={showCard} />
           <PaperPreview proposal={proposal.name} />
         </div>
       </div>
@@ -195,18 +282,31 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
           <ul className="mt-1 list-disc pl-5 text-xs">{problems.map((x) => <li key={x}>{x}</li>)}</ul>
         </div>
       )}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* in reach while scrolling the cards: stuck to the bottom of the screen until the form ends */}
+      <div className="sticky bottom-0 z-10 -mx-1 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border bg-background/95 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <Button onClick={() => onSave()} disabled={errors.length > 0 || save.isPending || !user}>
-          <SaveIcon data-icon="inline-start" />
+          {save.isPending ? <Spinner data-icon="inline-start" aria-hidden="true" /> : <SaveIcon data-icon="inline-start" aria-hidden="true" />}
           Save decisions
         </Button>
-        {config.data && !user && <span className="text-xs font-medium">No $WEBAPP_USER on the server: saving is off.</span>}
         {/* freezing is one-way (revision 1, then only `amend`): confirm it, and say why it is off */}
-        <Button variant="outline" disabled={!!freezeOff || freeze.isPending} onClick={() => (waivable.length > 0 ? setWaiverOpen(true) : setConfirmOpen(true))}>
-          <LockIcon data-icon="inline-start" />
+        <Button variant="outline" disabled={!!freezeOff || freeze.isPending} aria-describedby="cards-status"
+          onClick={() => (waivable.length > 0 ? setWaiverOpen(true) : setConfirmOpen(true))}>
+          {freeze.isPending ? <Spinner data-icon="inline-start" aria-hidden="true" /> : <LockIcon data-icon="inline-start" aria-hidden="true" />}
           Freeze
         </Button>
-        <WaiverDialog problems={waivable} open={waiverOpen} onOpenChange={setWaiverOpen} busy={save.isPending || freeze.isPending} onConfirm={onWaiveAndFreeze} />
+        <p id="cards-status" role="status" className="min-w-0 flex-1 text-sm">
+          {config.data && !user ? <span className="font-medium">No $WEBAPP_USER on the server: saving is off.</span>
+            : errors.length > 0 ? <span className="text-destructive">{errors.length} card(s) need a reason or valid JSON.</span>
+            : freezeOff ? <span className="text-muted-foreground">{dirty ? "Unsaved changes. " : ""}Freeze is off: {freezeOff}</span>
+            : (
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                {save.isSuccess && <CircleCheckIcon className="size-4 shrink-0 text-status-good" aria-hidden="true" />}
+                {save.isSuccess ? "Saved. " : ""}{waivable.length > 0 ? `Freezing asks you to waive ${waivable.length} serious problem(s).` : "Ready to freeze: it writes the protocol as revision 1."}
+              </span>
+            )}
+        </p>
+        <WaiverDialog problems={waivable} open={waiverOpen} onOpenChange={setWaiverOpen} busy={save.isPending || freeze.isPending} onConfirm={onWaiveAndFreeze}
+          cardTitles={titles} user={user} />
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -222,10 +322,6 @@ export function CardsForm({ proposal, onReload }: { proposal: ProposalDetail; on
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        <span className="text-xs text-muted-foreground">
-          {errors.length > 0 ? `${errors.length} card(s) need a reason or valid JSON. ` : save.isSuccess && !dirty ? "Saved. " : ""}
-          {freezeOff ? <strong className="font-medium text-foreground">Freeze is off: {freezeOff}</strong> : "Freeze writes protocol.yaml (revision 1); after that, changes go through evidence propose amend."}
-        </span>
       </div>
     </section>
   )

@@ -20,6 +20,9 @@ const KINDS: { id: QuestionKind; what: string }[] = [
   { id: "best", what: "which kind of method does best, paper by paper" },
 ]
 
+/** "does a treatment change …" → "Does a treatment change ….": a fragment as a sentence of its own. */
+const sentence = (s: string | undefined) => (s ? `${s[0].toUpperCase()}${s.slice(1)}.` : "")
+
 export function KindConfirm({ proposal }: { proposal: ProposalDetail }) {
   const frame = proposal.frame ?? {}
   const kind = (KINDS.some((k) => k.id === frame.kind) ? frame.kind : "effect") as QuestionKind
@@ -36,14 +39,14 @@ export function KindConfirm({ proposal }: { proposal: ProposalDetail }) {
       <h3 className="flex flex-wrap items-center gap-2 text-sm font-semibold">Kind of question <Badge>{kind}</Badge></h3>
       <p className="text-sm text-muted-foreground">
         {byUser ? `You said this is ${article} ${kind} question.` : `The model reads this as ${article} ${kind} question.`}{" "}
-        {KINDS.find((k) => k.id === kind)?.what}. Each kind has its own cards.
+        {sentence(KINDS.find((k) => k.id === kind)?.what)} Each kind has its own cards.
       </p>
       {!frozen && (
         <div className="flex flex-wrap items-end gap-3">
-          <div className="grid w-full gap-1 sm:w-auto">
+          <div className="grid w-full min-w-0 gap-1 sm:w-auto">
             <Label htmlFor="kind-choice" className="text-xs">Kind</Label>
             <Select value={next} onValueChange={(k) => setChosen(k as QuestionKind)}>
-              <SelectTrigger id="kind-choice" aria-label="Kind" className="w-full sm:w-80"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="kind-choice" aria-label="Kind" className="w-full min-w-0 sm:w-80"><SelectValue /></SelectTrigger>
               <SelectContent>{KINDS.map((k) => <SelectItem key={k.id} value={k.id}>{k.id}: {k.what}</SelectItem>)}</SelectContent>
             </Select>
           </div>
