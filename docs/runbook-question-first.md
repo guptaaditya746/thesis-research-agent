@@ -669,3 +669,28 @@ git tag -a ev3 -m "EV3: question-first runs on Slurm" && git push origin ev3
 
 The `results` branch takes the files above only: no whole run directories, no corpora, no code changes. Never push
 to `main`, and never make a new branch. Send the user the tag `ev3` and `reports/question-first/summary.md`.
+
+## 8. Limits to state
+
+Copy this section into `summary.md` as it is, under the heading "Limits", and fill the last column of the table
+from the runs (write "as below" if nothing changed). These are known before the run; they are not failures.
+
+1. All numbers come from two synthetic corpora on one topic, made with a fixed vocabulary that the extractors and
+   protocols were also written against; extraction scores are an upper bound.
+2. The main corpus has 20 papers; some cells rest on 3-11 papers, so differences under about 0.3 are not shown.
+3. The over-claiming test rests on 4 papers (the hard corpus has none), so it is a demonstration, not a measurement.
+4. All systems use the same local model; the grid's RAG baseline reads 8 passages, so the per-paper RAG row and
+   the cost columns separate "reads more" from "reasons from evidence".
+5. Truth and engine share the synthesis rules, so C tests extraction and pairing; the oracle row shows the ceiling
+   and the counterfactual shows whether the answer follows the evidence.
+6. The baselines are not told the protocol's neutral band (`min_effect`: 0.01, 0.05 s for latency) or its metric
+   definitions; a baseline that calls a change inside the band "better" or "worse" is scored wrong for a rule it
+   never saw.
+
+| cell | n | what it means |
+|---|---|---|
+| rag-latency, main, C `direction_accuracy` | 3 decidable papers | one paper moves it by 0.33 |
+| every effect question, both corpora, C `label_correct` | 1 label, truth `mixed` in all 6 cells | "always say mixed" scores 6/6 |
+| cons-accuracy / cons-hallucination, hard | 0 disagreeing papers | "always agrees" scores 1.0 |
+| cons-accuracy / cons-hallucination, main | 3 / 1 disagreeing papers | the over-claiming test, 4 papers |
+| per level, main | 4 papers per level | describe only, no comparison |
