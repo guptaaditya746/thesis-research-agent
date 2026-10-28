@@ -1,11 +1,13 @@
 /**
  * Run `/runs/:runId` (`<group>~<name>`): what the run is (system, selection, strategy, model, protocol,
- * corpus, cost) and tabs for the answer (label, studies with their reasons, flags; a baseline's text,
- * citations and retrieved passages), the papers (each with where the funnel stopped, opening the paper
- * view), the evidence graph, the protocol it ran, its extractors, the agent baseline's trace, and for an engine run
- * the Developer tools tab (its step trace, live). The
- * baselines on the same corpus and the run's score reports are linked. The tab is in the URL (?tab=). While a job
- * of the app writes the run, the page polls, so an incomplete run fills in as the engine writes it.
+ * corpus, cost) and tabs for the answer (the evidence table: the answer, a row per paper by verdict, one click
+ * to the sentence; a baseline's text, citations and retrieved passages), the papers (each with where the
+ * funnel stopped, opening the paper view), the protocol it ran, its extractors, the agent baseline's trace,
+ * and for an engine run the Developer tools tab: its step trace (live) and the raw evidence graph
+ * (graph.json in React Flow, and as JSON). The baselines on the same corpus and the run's score reports are
+ * linked. The tab is in the URL (?tab=, and ?dev= inside Developer tools; the old ?tab=graph opens the
+ * graph there). While a job of the app writes the run, the page polls, so an incomplete run fills in as the
+ * engine writes it.
  */
 import type { ReactNode } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
@@ -13,7 +15,7 @@ import { Link, useParams, useSearchParams } from "react-router"
 import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
 import { AgentTraceView } from "@/components/ev/AgentTraceView"
 import { ErrorCallsBadge } from "@/components/badges"
-import { KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
+import { JsonBlock, KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
 import { TraceTab } from "@/components/ev/TraceTab"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
 import { EvidenceView } from "@/components/ev/EvidenceView"
@@ -33,7 +35,34 @@ function GraphTab({ run }: { run: EvRunDetail }) {
   const graph = useRunGraph(run.id)
   if (graph.isPending) return <CardsSkeleton count={1} />
   if (graph.isError) return <ErrorState error={graph.error} />
-  return <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`} />
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        The engine's raw evidence graph (graph.json): every item and link, for debugging. The Answer tab shows the same
+        evidence as a row per paper.
+      </p>
+      <EvidenceGraph graph={graph.data} documents={run.documents} paperHref={(d) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`} />
+      <details>
+        <summary className="cursor-pointer text-sm">graph.json</summary>
+        <JsonBlock value={graph.data} label="graph.json" className="mt-2" />
+      </details>
+    </div>
+  )
+}
+
+const DEV_TABS = [{ value: "trace", label: "Step trace" }, { value: "graph", label: "Evidence graph" }]
+
+/** Developer tools: the run's step trace and its raw evidence graph, each behind its own tab (?dev=). */
+function DevTools({ run, sub, onSub }: { run: EvRunDetail; sub: string; onSub: (v: string) => void }) {
+  return (
+    <Tabs value={sub} onValueChange={onSub} className="space-y-3">
+      <TabsList aria-label="Developer tools">
+        {DEV_TABS.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}
+      </TabsList>
+      <TabsContent value="trace">{sub === "trace" && <TraceTab runId={run.id} />}</TabsContent>
+      <TabsContent value="graph">{sub === "graph" && <GraphTab run={run} />}</TabsContent>
+    </Tabs>
+  )
 }
 
 function ProtocolTab({ runId }: { runId: string }) {
@@ -87,10 +116,13 @@ function RunView({ run }: { run: EvRunDetail }) {
   const tabs = [
     { value: "answer", label: "Answer" },
     { value: "papers", label: "Papers" },
-    ...(engine ? [{ value: "graph", label: "Evidence graph" }, { value: "protocol", label: "Protocol" }, { value: "extractors", label: "Extractors" }, { value: "dev", label: "Developer tools" }] : []),
+    ...(engine ? [{ value: "protocol", label: "Protocol" }, { value: "extractors", label: "Extractors" }, { value: "dev", label: "Developer tools" }] : []),
     ...(run.has_trace ? [{ value: "trace", label: "Agent trace" }] : []),
   ]
-  const tab = tabs.some((t) => t.value === params.get("tab")) ? params.get("tab")! : "answer"
+  // ?tab=graph (before the graph moved under Developer tools) still opens it
+  const asked = params.get("tab") === "graph" ? "dev" : params.get("tab")
+  const tab = tabs.some((t) => t.value === asked) ? asked! : "answer"
+  const dev = params.get("tab") === "graph" ? "graph" : DEV_TABS.some((t) => t.value === params.get("dev")) ? params.get("dev")! : "trace"
   const cost = (run.cost ?? {}) as Record<string, number | undefined>
   return (
     <div className="space-y-6">
@@ -132,7 +164,6 @@ function RunView({ run }: { run: EvRunDetail }) {
           <EvidenceView run={run} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null} />
         </TabsContent>
         <TabsContent value="papers"><PapersTab run={run} /></TabsContent>
-        {engine && <TabsContent value="graph">{tab === "graph" && <GraphTab run={run} />}</TabsContent>}
         {engine && <TabsContent value="protocol">{tab === "protocol" && <ProtocolTab runId={run.id} />}</TabsContent>}
         {engine && (
           <TabsContent value="extractors">
@@ -140,7 +171,11 @@ function RunView({ run }: { run: EvRunDetail }) {
               render={(c, v) => (c === "code_sha256" ? <span className="font-mono">{String(v).slice(0, 12)}</span> : Array.isArray(v) ? v.join(", ") : String(v ?? "—"))} />
           </TabsContent>
         )}
-        {engine && <TabsContent value="dev">{tab === "dev" && <TraceTab runId={run.id} />}</TabsContent>}
+        {engine && (
+          <TabsContent value="dev">
+            {tab === "dev" && <DevTools run={run} sub={dev} onSub={(v) => setParams({ tab: "dev", dev: v }, { replace: true })} />}
+          </TabsContent>
+        )}
         {run.has_trace && <TabsContent value="trace">{tab === "trace" && <AgentTraceTab runId={run.id} />}</TabsContent>}
       </Tabs>
     </div>
