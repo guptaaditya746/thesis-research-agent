@@ -25,6 +25,7 @@ export function baselineName(corpus: string, question: string): string {
 
 const KIND_LABEL: Record<string, string> = {
   synth: "template corpus",
+  fetch: "arXiv corpus",
   run: "engine run",
   "rag-baseline": "RAG baseline",
   "agent-baseline": "agent baseline",

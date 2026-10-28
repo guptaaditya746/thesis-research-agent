@@ -557,5 +557,81 @@
   "response": {
    "detail": "proposal p-new has its cards: decide them and freeze it"
   }
+ },
+ {
+  "name": "fetch from arXiv with a new name",
+  "method": "POST",
+  "path": "/api/ev/jobs/fetch",
+  "body": {
+   "query": "retrieval augmented generation",
+   "max_papers": 3,
+   "category": "cs.CL",
+   "name": "arxiv-contract"
+  },
+  "status": 202,
+  "response": {
+   "id": "*",
+   "kind": "fetch",
+   "lane": "cpu",
+   "args": {
+    "query": "retrieval augmented generation",
+    "max_papers": 3,
+    "category": "cs.CL",
+    "name": "arxiv-contract"
+   },
+   "refs": {
+    "corpus": "arxiv-contract"
+   },
+   "state": "queued",
+   "created_at": "*",
+   "started_at": "*",
+   "ended_at": "*",
+   "exit_code": null,
+   "error": null,
+   "warnings": [],
+   "failed_calls": null,
+   "orphaned": false,
+   "steps": [
+    {
+     "name": "evidence fetch",
+     "argv": [
+      "*",
+      "-m",
+      "webapp.tool",
+      "evidence",
+      "fetch",
+      "--query=retrieval augmented generation",
+      "--max",
+      "3",
+      "--out",
+      "*",
+      "--category",
+      "cs.CL"
+     ],
+     "command": "*",
+     "required": true,
+     "needs": [],
+     "state": "pending",
+     "exit_code": null,
+     "started_at": "*",
+     "ended_at": "*",
+     "pid": "*",
+     "pid_start": "*"
+    }
+   ]
+  }
+ },
+ {
+  "name": "fetch from arXiv into an existing corpus",
+  "method": "POST",
+  "path": "/api/ev/jobs/fetch",
+  "body": {
+   "query": "retrieval augmented generation",
+   "name": "rag-tpl-w1-mixed"
+  },
+  "status": 409,
+  "response": {
+   "detail": "corpus rag-tpl-w1-mixed exists; choose another name"
+  }
  }
 ]

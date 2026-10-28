@@ -21,6 +21,7 @@ import { isName } from "@/lib/jobs"
 import { announceError, announceJob } from "@/lib/toasts"
 import { cn } from "@/lib/utils"
 
+import { ArxivFetchDialog, DemoBadge } from "./ArxivFetchDialog"
 import type { Flow } from "./flow"
 
 const KNOBS = [
@@ -124,7 +125,7 @@ function SynthForm({ flow }: { flow: Flow }) {
 
 export function CorpusStep({ flow }: { flow: Flow }) {
   const jobs = useJobs()
-  const synthJobs = (jobs.data ?? []).filter((j) => j.kind === "synth" && isActiveJob(j))
+  const synthJobs = (jobs.data ?? []).filter((j) => (j.kind === "synth" || j.kind === "fetch") && isActiveJob(j))
   const corpora = useCorpora(synthJobs.length > 0)
   return (
     <div className="space-y-6">
@@ -146,7 +147,7 @@ export function CorpusStep({ flow }: { flow: Flow }) {
                 <TableBody>
                   {corpora.data.map((c) => (
                     <TableRow key={c.name} data-state={c.name === flow.corpus ? "selected" : undefined}>
-                      <TableCell className="font-mono text-xs"><Link to={`/corpora/${encodeURIComponent(c.name)}`} className="hover:underline">{c.name}</Link>{c.variant && <Badge variant="outline" className="ml-1">variant</Badge>}</TableCell>
+                      <TableCell className="font-mono text-xs"><Link to={`/corpora/${encodeURIComponent(c.name)}`} className="hover:underline">{c.name}</Link>{c.variant && <Badge variant="outline" className="ml-1">variant</Badge>}<DemoBadge corpus={c} /></TableCell>
                       <TableCell className="text-xs">{c.level ?? "—"}</TableCell>
                       <TableCell className="text-xs">{c.renderer ?? "—"}</TableCell>
                       <TableCell className="text-xs tabular-nums">{c.seed ?? "—"}</TableCell>
@@ -163,6 +164,7 @@ export function CorpusStep({ flow }: { flow: Flow }) {
               </Table>
             </div>
           )}
+          <ArxivFetchDialog onStarted={(job) => flow.set({ corpus: job.refs.corpus ?? null, run: null })} />
         </CardContent>
       </Card>
       <Card>
