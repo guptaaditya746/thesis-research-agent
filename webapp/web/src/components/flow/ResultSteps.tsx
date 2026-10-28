@@ -7,9 +7,9 @@ import type { ReactNode } from "react"
 import { Link } from "react-router"
 
 import { isActiveJob, useCorpus, useEvRun, useEvRuns, useJobs, useRunGraph, type EvRunDetail } from "@/api/ev"
-import { AnswerPanel } from "@/components/ev/AnswerPanel"
 import { LabelBadge, SystemBadge } from "@/components/ev/bits"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
+import { EvidenceView } from "@/components/ev/EvidenceView"
 import { CardsSkeleton, ErrorState } from "@/components/states"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { answerHeadline, effectAnswer } from "@/lib/ev"
@@ -107,11 +107,7 @@ function BaselineAnswers({ corpus }: { corpus: string | null | undefined }) {
 function Answer({ run }: { run: EvRunDetail }) {
   const corpus = useCorpus(run.corpus ?? "")
   if (!run.answer) return <p className="text-sm text-muted-foreground">No answer.json yet: the engine writes it when the run finishes.</p>
-  const paperHref = (d: string) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`
-  return (
-    <AnswerPanel answer={run.answer} paperHref={paperHref} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null}
-      funnel={run.funnel} strategy={run.strategy} />
-  )
+  return <EvidenceView run={run} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null} />
 }
 
 export function AnswerStep({ flow }: { flow: Flow }) {
