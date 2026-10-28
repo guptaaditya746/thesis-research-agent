@@ -13,8 +13,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { announceError, announceJob } from "@/lib/toasts"
+
+import { TOTAL_STEPS } from "./flow"
 
 /** The backend's shortest typed question (ProposeRequest.text). */
 export const MIN_QUESTION = 10
@@ -54,10 +57,13 @@ function TypedQuestion() {
           <div className="grid gap-1.5">
             <Label htmlFor="typed-question">Question</Label>
             <Textarea id="typed-question" className="min-h-16" maxLength={600} value={text} onChange={(e) => setText(e.target.value)}
-              placeholder="Which retriever is best on long documents?" />
+              placeholder="Which retriever is best on long documents?" aria-describedby="typed-question-help" />
+            <p id="typed-question-help" className="text-xs text-muted-foreground">
+              At least {MIN_QUESTION} characters{text.trim().length > 0 && !ok ? ` (${MIN_QUESTION - text.trim().length} to go)` : ""}. Up to 600.
+            </p>
           </div>
           <Button type="submit" disabled={!ok || start.isPending}>
-            <SparklesIcon data-icon="inline-start" />
+            {start.isPending ? <Spinner data-icon="inline-start" aria-hidden="true" /> : <SparklesIcon data-icon="inline-start" aria-hidden="true" />}
             Propose a protocol
           </Button>
         </form>
@@ -71,19 +77,27 @@ export function QuestionStep() {
   const questions = useQuestions()
   return (
     <div className="space-y-4">
+      <header className="space-y-1">
+        <p className="text-xs font-semibold tracking-wide text-primary uppercase">Step 1 of {TOTAL_STEPS}</p>
+        <h2 className="text-lg font-semibold tracking-tight">Pick a research question</h2>
+        <p className="max-w-prose text-sm text-muted-foreground">Open one of the questions below, or type your own and let the model propose a protocol for it.</p>
+      </header>
       <section aria-label="Questions" className="space-y-3">
-        {questions.isPending ? <CardsSkeleton count={1} /> : questions.isError ? <ErrorState error={questions.error} title="The questions file does not validate" /> : questions.data.length === 0 ? (
-          <EmptyState icon={<ListOrderedIcon />} title="No questions" description={`Add one to ${config.data?.questions.path ?? "evidence/questions.yaml"}.`} />
+        {questions.isPending ? <CardsSkeleton count={1} className="md:grid-cols-1 xl:grid-cols-1" /> : questions.isError ? (
+          <ErrorState error={questions.error} title="The questions file does not validate" onRetry={() => void questions.refetch()} />
+        ) : questions.data.length === 0 ? (
+          <EmptyState icon={<ListOrderedIcon />} title="No questions" description={`Add one to ${config.data?.questions.path ?? "evidence/questions.yaml"}, or type your own below.`} />
         ) : questions.data.map((q) => (
-          <Card key={q.id} className="relative">
+          // the whole card is the link's target (after:inset-0); its ring shows where keyboard focus is
+          <Card key={q.id} className="relative transition-colors duration-(--motion-fast) hover:bg-muted/50 has-[a:focus-visible]:ring-3 has-[a:focus-visible]:ring-ring/50">
             <CardHeader>
               <CardTitle className="flex flex-wrap items-center gap-2 text-lg text-balance">
-                <Link to={`/flow/${encodeURIComponent(q.id)}`} className="after:absolute after:inset-0 hover:underline">{q.question}</Link>
-                <ArrowRightIcon className="size-4 text-muted-foreground" aria-hidden="true" />
+                <Link to={`/flow/${encodeURIComponent(q.id)}`} className="outline-none after:absolute after:inset-0 hover:underline">{q.question}</Link>
+                <ArrowRightIcon className="size-4 text-primary" aria-hidden="true" />
               </CardTitle>
               <CardDescription className="flex flex-wrap items-center gap-2">
                 <span className="font-mono">{q.id}</span>
-                <Badge variant="outline">{q.kind}</Badge>
+                {q.kind && <Badge variant="outline" title="the kind of question">{q.kind}</Badge>}
                 {q.protocol ? <Badge variant="secondary">hand-written protocol {q.protocol}</Badge> : <Badge variant="outline">no protocol yet: propose one</Badge>}
                 {q.agentic_protocol && <Badge variant="outline">agentic variant</Badge>}
                 {q.proposals.length > 0 && <Badge variant="outline">{q.proposals.length} proposal(s)</Badge>}

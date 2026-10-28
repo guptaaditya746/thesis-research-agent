@@ -4,75 +4,48 @@
  * shows what is on disk and starts what is missing as a job (webapp/evjobs.py); the choices live in the URL
  * (components/flow/flow.ts). A step whose input is not chosen yet says which one.
  */
-import { CheckIcon } from "lucide-react"
-import { Link, useParams, useSearchParams } from "react-router"
+import { useParams, useSearchParams } from "react-router"
 
 import { useActiveJobs, useProposal, useQuestion } from "@/api/ev"
 import { QueryPage } from "@/components/ev/bits"
 import { CorpusStep } from "@/components/flow/CorpusStep"
-import { isStep, STEPS, useFlow, type Flow, type StepId } from "@/components/flow/flow"
+import { isStep, useFlow, type StepId } from "@/components/flow/flow"
 import { ProtocolStep } from "@/components/flow/ProtocolStep"
 import { TYPED_FLOW } from "@/components/flow/QuestionStep"
 import { AnswerStep, GraphStep } from "@/components/flow/ResultSteps"
 import { RunStep } from "@/components/flow/RunStep"
+import { StepFooter, StepHeader, Stepper } from "@/components/flow/Stepper"
 import { PageHeader } from "@/components/layout/PageHeader"
+import { Badge } from "@/components/ui/badge"
 import type { Question } from "@/api/ev"
-import { cn } from "@/lib/utils"
 
-/** Whether a step's inputs are chosen, and the value it shows as chosen. */
-function stepState(flow: Flow, step: StepId): { done: boolean; value: string | null } {
-  switch (step) {
-    case "protocol": return { done: !!flow.protocol, value: flow.protocol ? flow.protocol.name : null }
-    case "corpus": return { done: !!flow.corpus, value: flow.corpus }
-    case "run": return { done: !!flow.run, value: flow.run }
-    default: return { done: false, value: null }
-  }
-}
-
-export function Stepper({ flow, current }: { flow: Flow; current: StepId }) {
-  return (
-    <nav aria-label="Steps" className="overflow-x-auto">
-      <ol className="flex min-w-max items-stretch gap-1 rounded-lg border p-1">
-        <li className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground">
-          <span className="flex size-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground"><CheckIcon className="size-3.5" /></span>
-          <Link to="/" className="hover:underline">Question</Link>
-        </li>
-        {STEPS.map((s, n) => {
-          const { done, value } = stepState(flow, s.id)
-          const active = s.id === current
-          return (
-            <li key={s.id}>
-              <Link
-                to={flow.href(s.id)}
-                aria-current={active ? "step" : undefined}
-                className={cn("flex h-full items-center gap-2 rounded-md px-3 py-1.5 text-sm hover:bg-muted", active && "bg-muted font-medium")}
-              >
-                <span className={cn("flex size-6 items-center justify-center rounded-full text-xs tabular-nums", done ? "bg-primary text-primary-foreground" : "border")}>
-                  {done ? <CheckIcon className="size-3.5" /> : n + 2}
-                </span>
-                <span>{s.label}</span>
-                {/* muted-foreground on the active step's bg-muted falls under 4.5:1 */}
-                {value && <span className={cn("max-w-40 truncate font-mono text-xs", active ? "text-foreground/80" : "text-muted-foreground")} title={value}>{value}</span>}
-              </Link>
-            </li>
-          )
-        })}
-      </ol>
-    </nav>
-  )
-}
+/** The stepper moved to components/flow/Stepper; kept here for imports of the old place. */
+export { Stepper }
 
 function FlowView({ question, step }: { question: Question; step: StepId }) {
   const flow = useFlow(question)
   return (
     <div className="space-y-6">
-      <PageHeader title={<span className="text-balance">{question.question}</span>} docTitle={question.id} description={<>Question <span className="font-mono">{question.id}</span>: choose its protocol, a corpus, run the engine and the baselines, then read the evidence graph and the answer.</>} />
+      <PageHeader
+        title={<span className="text-balance">{question.question}</span>}
+        docTitle={question.id}
+        description={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>Question <span className="font-mono">{question.id}</span></span>
+            {question.kind && <Badge variant="outline">{question.kind} question</Badge>}
+          </span>
+        }
+      />
       <Stepper flow={flow} current={step} />
-      {step === "protocol" && <ProtocolStep flow={flow} />}
-      {step === "corpus" && <CorpusStep flow={flow} />}
-      {step === "run" && <RunStep flow={flow} />}
-      {step === "graph" && <GraphStep flow={flow} />}
-      {step === "answer" && <AnswerStep flow={flow} />}
+      <section aria-labelledby="step-title" className="space-y-6">
+        <StepHeader step={step} />
+        {step === "protocol" && <ProtocolStep flow={flow} />}
+        {step === "corpus" && <CorpusStep flow={flow} />}
+        {step === "run" && <RunStep flow={flow} />}
+        {step === "graph" && <GraphStep flow={flow} />}
+        {step === "answer" && <AnswerStep flow={flow} />}
+        <StepFooter flow={flow} step={step} />
+      </section>
     </div>
   )
 }

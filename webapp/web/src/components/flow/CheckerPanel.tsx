@@ -31,6 +31,7 @@ export function CheckerPanel({ problems, pending, failed, waived }: { problems: 
         Checker {pending && <Spinner className="size-3.5" aria-label="Checking" />}
       </h3>
       {failed && <p className="text-xs text-muted-foreground">The checker did not answer; freeze still checks the decisions.</p>}
+      {!problems && !failed && <p className="text-sm text-muted-foreground" role="status">Checking the cards…</p>}
       {problems && problems.length === 0 && <p className="text-sm text-muted-foreground">No problems found.</p>}
       {serious.length > 0 && (
         <div className="space-y-1">

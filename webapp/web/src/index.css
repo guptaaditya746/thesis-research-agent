@@ -67,18 +67,20 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
+    /* One calm accent (design-system/thesis-research-agent/MASTER.md, "How the web app applies this"):
+       teal-700 with white text, 5.5:1. */
+    --primary: #0f766e;
+    --primary-foreground: #ffffff;
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
+    --muted-foreground: oklch(0.52 0 0);   /* >= 4.5:1 on white and on --muted (0.556 was 4.3:1 on --muted) */
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
+    --destructive: oklch(0.505 0.213 27.518);   /* red-700: red text on its 10% tint stays >= 4.5:1 */
     --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.45 0 0);
+    --input: oklch(0.88 0 0);   /* a field's edge at 3:1-ish against white is easier to find than 0.922 */
+    --ring: #0f766e;
     /* Data colours: the dataviz reference palette (slots in fixed order; chart-3/4/5 darkened to reach
        3:1 on white, since they are the only cue in graph borders and underlines), and the reserved
        status colours, which always come with an icon and a label. --status-warning is for fills and
@@ -98,12 +100,15 @@
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-primary: #0f766e;
+    --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: oklch(0.97 0 0);
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar-ring: #0f766e;
+    /* motion: colour and hover changes, and a new step or panel arriving */
+    --motion-fast: 150ms;
+    --motion-base: 200ms;
 }
 
 .dark {
@@ -113,8 +118,8 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
+    --primary: #2dd4bf;   /* teal-400 with teal-950 text */
+    --primary-foreground: #042f2e;
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
@@ -124,7 +129,7 @@
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --ring: #2dd4bf;
     --chart-1: #3987e5;
     --chart-2: #d95926;
     --chart-3: #199e70;
@@ -135,12 +140,12 @@
     --status-serious-fg: #ec835a;
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-primary: #2dd4bf;
+    --sidebar-primary-foreground: #042f2e;
     --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    --sidebar-ring: #2dd4bf;
 }
 
 @layer base {
@@ -152,12 +157,29 @@
   :where(a, button, summary, input, [role="button"], [tabindex]):focus-visible {
     @apply outline-2 outline-offset-2;
   }
+  /* A disclosure's summary is a control: a pointer and at least 24px of height (WCAG 2.5.8), even in 12px text. */
+  :where(summary) {
+    @apply cursor-pointer py-1;
+  }
+  :where(button:not(:disabled), [role="button"]:not([aria-disabled="true"])) {
+    @apply cursor-pointer;
+  }
   body {
     @apply bg-background text-foreground;
     }
   html {
     @apply font-sans;
     }
+  /* prefers-reduced-motion: no movement anywhere (tw-animate's enter/exit, transitions, the live dot); the end
+     state is shown at once. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 /* React Flow (knowledge graph) in the app's colours, light and dark. */

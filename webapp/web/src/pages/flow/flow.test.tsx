@@ -47,6 +47,26 @@ describe("the stepper", () => {
     expect(await screen.findByText(/Chosen: hand-written rag-factuality./, {}, T)).toBeInTheDocument()
   })
 
+  it("says which step this is and offers Next only once the step's choice is made", async () => {
+    const user = userEvent.setup()
+    const { router } = renderRoutes(routes, "/flow/rag-factuality/corpus")
+    expect(await screen.findByRole("heading", { level: 2, name: "Choose a corpus" }, T)).toBeInTheDocument()
+    expect(screen.getByText("Step 3 of 6")).toBeInTheDocument()
+    const steps = screen.getByRole("navigation", { name: "Steps" })
+    expect(within(steps).getByRole("link", { name: "Corpus" })).toHaveAttribute("aria-current", "step")
+    const footer = screen.getByRole("navigation", { name: "Step navigation" })
+    expect(within(footer).getByRole("button", { name: "Next: Run" })).toBeDisabled()
+    expect(within(footer).getByText("Choose a corpus to go on.")).toBeInTheDocument()
+    const table = await screen.findByRole("table", { name: "Corpora" }, T)
+    await user.click(within(table).getByRole("button", { name: `Use ${MIXED}` }))
+    // the stepper names the chosen corpus, and Next goes on to the run step with the choice kept
+    expect(await within(steps).findByRole("link", { name: `Corpus: ${MIXED}` }, T)).toBeInTheDocument()
+    await user.click(within(footer).getByRole("link", { name: "Next: Run" }))
+    await waitFor(() => expect(router.state.location.pathname).toBe("/flow/rag-factuality/run"))
+    expect(new URLSearchParams(router.state.location.search).get("corpus")).toBe(MIXED)
+    expect(within(footer).getByRole("link", { name: "Back: Corpus" })).toBeInTheDocument()
+  })
+
   it("a non-effect baseline shows its summary beside the answer", async () => {
     const id = `rag-baseline~${MIXED}`
     const detail = evFixture<EvRunDetail>(`/api/ev/runs/${id}`)

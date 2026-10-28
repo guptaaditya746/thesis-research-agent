@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { knobText } from "@/lib/ev"
 import { isName } from "@/lib/jobs"
@@ -109,7 +110,7 @@ function SynthForm({ flow }: { flow: Flow }) {
       </fieldset>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={!ok || start.isPending}>
-          <HammerIcon data-icon="inline-start" />
+          {start.isPending ? <Spinner data-icon="inline-start" aria-hidden="true" /> : <HammerIcon data-icon="inline-start" aria-hidden="true" />}
           Build template corpus
         </Button>
         <span className="text-xs text-muted-foreground">
@@ -141,12 +142,12 @@ export function CorpusStep({ flow }: { flow: Flow }) {
             <div className="max-h-96 overflow-auto rounded-md border">
               <Table aria-label="Corpora">
                 <TableHeader>
-                  <TableRow>{["corpus", "level", "renderer", "seed", "papers", "knobs", ""].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}</TableRow>
+                  <TableRow>{["corpus", "level", "renderer", "seed", "papers", "knobs"].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}<TableHead><span className="sr-only">Actions</span></TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {corpora.data.map((c) => (
                     <TableRow key={c.name} data-state={c.name === flow.corpus ? "selected" : undefined}>
-                      <TableCell className="font-mono text-xs"><Link to={`/corpora/${encodeURIComponent(c.name)}`} className="hover:underline">{c.name}</Link>{c.variant && <Badge variant="outline" className="ml-1">variant</Badge>}</TableCell>
+                      <TableCell className="font-mono text-xs"><Link to={`/corpora/${encodeURIComponent(c.name)}`} className="inline-flex min-h-6 items-center hover:underline">{c.name}</Link>{c.variant && <Badge variant="outline" className="ml-1">variant</Badge>}</TableCell>
                       <TableCell className="text-xs">{c.level ?? "—"}</TableCell>
                       <TableCell className="text-xs">{c.renderer ?? "—"}</TableCell>
                       <TableCell className="text-xs tabular-nums">{c.seed ?? "—"}</TableCell>
@@ -168,7 +169,7 @@ export function CorpusStep({ flow }: { flow: Flow }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Build a template corpus</CardTitle>
-          <CardDescription>synth build --renderer template: seeded ground truth from the protocol's synthesis block, papers written by templates.</CardDescription>
+          <CardDescription>Papers written from templates around a seeded ground truth (the protocol's synthesis block). No model, so it takes seconds.</CardDescription>
         </CardHeader>
         <CardContent><SynthForm flow={flow} /></CardContent>
       </Card>

@@ -40,10 +40,10 @@ export function KindConfirm({ proposal }: { proposal: ProposalDetail }) {
       </p>
       {!frozen && (
         <div className="flex flex-wrap items-end gap-3">
-          <div className="grid gap-1">
+          <div className="grid w-full gap-1 sm:w-auto">
             <Label htmlFor="kind-choice" className="text-xs">Kind</Label>
             <Select value={next} onValueChange={(k) => setChosen(k as QuestionKind)}>
-              <SelectTrigger id="kind-choice" aria-label="Kind" className="w-80"><SelectValue /></SelectTrigger>
+              <SelectTrigger id="kind-choice" aria-label="Kind" className="w-full sm:w-80"><SelectValue /></SelectTrigger>
               <SelectContent>{KINDS.map((k) => <SelectItem key={k.id} value={k.id}>{k.id}: {k.what}</SelectItem>)}</SelectContent>
             </Select>
           </div>
