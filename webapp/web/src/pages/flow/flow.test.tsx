@@ -342,7 +342,9 @@ describe("the Jobs page", () => {
     const job = await evApi.startJob("rag-baseline", { corpus: PARA, question: "rag-factuality" })
     renderRoutes(routes, `/jobs/${job.id}`)
     const table = await screen.findByRole("table", { name: "Jobs" }, T)
-    expect(within(table).getByText(`RAG baseline rag-baseline~${PARA}`)).toBeInTheDocument()
+    // the job opens from its name (the id column hides on a phone), and the open one is marked
+    expect(within(table).getByRole("link", { name: `RAG baseline rag-baseline~${PARA}` })).toHaveAttribute("href", `/jobs/${job.id}`)
+    expect(within(table).getByRole("link", { name: `RAG baseline rag-baseline~${PARA}` })).toHaveAttribute("aria-current", "page")
     const panels = await screen.findAllByLabelText(`Job RAG baseline rag-baseline~${PARA}`, {}, T)
     expect(await within(panels[0]).findByLabelText(/Log of job/, {}, T)).toHaveTextContent("mock rag-baseline working")
     await user.click(within(panels[0]).getByRole("button", { name: "Cancel" }))

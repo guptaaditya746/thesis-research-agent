@@ -248,7 +248,8 @@ export function RunStep({ flow }: { flow: Flow }) {
             <div className="overflow-auto rounded-md border">
               <Table aria-label="Runs on the corpus">
                 <TableHeader>
-                  <TableRow>{["run", "system", "state", "label"].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}<TableHead><span className="sr-only">Actions</span></TableHead></TableRow>
+                  {/* on a phone the run id wraps and system and label hide, so Choose and Score stay on screen */}
+                  <TableRow>{["run", "system", "state", "label"].map((h) => <TableHead key={h} className={cn("text-xs", (h === "system" || h === "label") && "hidden sm:table-cell")}>{h}</TableHead>)}<TableHead><span className="sr-only">Actions</span></TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {mine.map((r) => {
@@ -256,20 +257,22 @@ export function RunStep({ flow }: { flow: Flow }) {
                     const scoring = active.some((j) => j.kind === "score" && j.refs.score === r.id)
                     return (
                       <TableRow key={r.id} data-state={r.id === flow.run ? "selected" : undefined}>
-                        <TableCell className="font-mono text-xs"><Link to={`/runs/${encodeURIComponent(r.id)}`} className="inline-flex min-h-6 items-center hover:underline">{r.id}</Link></TableCell>
-                        <TableCell><SystemBadge system={r.system} /></TableCell>
-                        <TableCell className="text-xs">{running ? "running" : r.complete ? "complete" : "incomplete"}{reports.has(r.id) ? ", scored" : ""}</TableCell>
-                        <TableCell>{r.label ? <LabelBadge label={r.label} /> : "—"} <ErrorCallsBadge count={r.error_calls} /></TableCell>
-                        <TableCell className="space-x-1 text-right whitespace-nowrap">
-                          {r.kind === "engine" && (r.id === flow.run ? <Badge>chosen</Badge> : (
-                            <Button size="sm" variant="outline" onClick={() => flow.set({ run: r.id }, { push: true })} aria-label={`Choose ${r.id}`}>Choose</Button>
-                          ))}
-                          {r.kind === "engine" && r.complete && !running && (
-                            <Button size="xs" variant="outline" disabled={scoring || score.isPending} onClick={() => score.mutate({ run: r.id }, done)} aria-label={`Score ${r.id}`}>
-                              <BarChart3Icon data-icon="inline-start" />
-                              {reports.has(r.id) ? "Score again" : "Score"}
-                            </Button>
-                          )}
+                        <TableCell className="min-w-24 font-mono text-xs break-all whitespace-normal sm:break-normal sm:whitespace-nowrap"><Link to={`/runs/${encodeURIComponent(r.id)}`} className="inline-flex min-h-6 items-center hover:underline">{r.id}</Link></TableCell>
+                        <TableCell className="hidden sm:table-cell"><SystemBadge system={r.system} /></TableCell>
+                        <TableCell className="text-xs whitespace-normal sm:whitespace-nowrap">{running ? "running" : r.complete ? "complete" : "incomplete"}{reports.has(r.id) ? ", scored" : ""}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{r.label ? <LabelBadge label={r.label} /> : "—"} <ErrorCallsBadge count={r.error_calls} /></TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex flex-wrap items-center justify-end gap-1">
+                            {r.kind === "engine" && (r.id === flow.run ? <Badge>chosen</Badge> : (
+                              <Button size="sm" variant="outline" onClick={() => flow.set({ run: r.id }, { push: true })} aria-label={`Choose ${r.id}`}>Choose</Button>
+                            ))}
+                            {r.kind === "engine" && r.complete && !running && (
+                              <Button size="sm" variant="outline" disabled={scoring || score.isPending} onClick={() => score.mutate({ run: r.id }, done)} aria-label={`Score ${r.id}`}>
+                                <BarChart3Icon data-icon="inline-start" aria-hidden="true" />
+                                {reports.has(r.id) ? "Score again" : "Score"}
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     )

@@ -94,7 +94,7 @@ function BaselineAnswers({ corpus }: { corpus: string | null | undefined }) {
               <li key={b.id} className="flex flex-wrap items-center gap-2 text-sm">
                 <SystemBadge system={b.system} />
                 <BaselineHeadline id={b.id} />
-                <Link to={runHref(b.id)} className="font-mono text-xs underline">{b.id}</Link>
+                <Link to={runHref(b.id)} className="inline-flex min-h-6 items-center font-mono text-xs break-all underline">{b.id}</Link>
               </li>
             ))}
           </ul>

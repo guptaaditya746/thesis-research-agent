@@ -39,11 +39,14 @@ function FlowView({ question, step }: { question: Question; step: StepId }) {
       <Stepper flow={flow} current={step} />
       <section aria-labelledby="step-title" className="space-y-6">
         <StepHeader step={step} />
-        {step === "protocol" && <ProtocolStep flow={flow} />}
-        {step === "corpus" && <CorpusStep flow={flow} />}
-        {step === "run" && <RunStep flow={flow} />}
-        {step === "graph" && <GraphStep flow={flow} />}
-        {step === "answer" && <AnswerStep flow={flow} />}
+        {/* a new step's content rises in once (200ms): it says the page moved on; nothing moves under reduced motion */}
+        <div key={step} className="duration-(--motion-base) motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1">
+          {step === "protocol" && <ProtocolStep flow={flow} />}
+          {step === "corpus" && <CorpusStep flow={flow} />}
+          {step === "run" && <RunStep flow={flow} />}
+          {step === "graph" && <GraphStep flow={flow} />}
+          {step === "answer" && <AnswerStep flow={flow} />}
+        </div>
         <StepFooter flow={flow} step={step} />
       </section>
     </div>

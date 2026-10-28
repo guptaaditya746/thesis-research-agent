@@ -32,6 +32,9 @@ const KNOBS = [
 ] as const
 type Knob = (typeof KNOBS)[number]["key"]
 
+/** The corpus table's columns shown from `sm` up only. */
+const WIDE_ONLY: Partial<Record<string, string>> = { renderer: "hidden sm:table-cell", seed: "hidden sm:table-cell", knobs: "hidden md:table-cell" }
+
 function NumberField({ id, label, value, onChange, min, max, help }: {
   id: string; label: string; value: number; onChange: (n: number) => void; min: number; max: number; help?: string
 }) {
@@ -100,7 +103,7 @@ function SynthForm({ flow }: { flow: Flow }) {
         </div>
       </fieldset>
       <fieldset className="space-y-1.5">
-        <legend className="text-sm font-medium">Knobs (docs/evidence-system.md F2)</legend>
+        <legend className="text-sm font-medium">Knobs: what the corpus mixes in to test the engine</legend>
         <div className="flex flex-wrap gap-3">
           {KNOBS.map((k) => (
             <NumberField key={k.key} id={`synth-${k.key}`} label={k.key} help={k.help} value={knobs[k.key]} min={0} max={50}
@@ -142,17 +145,18 @@ export function CorpusStep({ flow }: { flow: Flow }) {
             <div className="max-h-96 overflow-auto rounded-md border">
               <Table aria-label="Corpora">
                 <TableHeader>
-                  <TableRow>{["corpus", "level", "renderer", "seed", "papers", "knobs"].map((h) => <TableHead key={h} className="text-xs">{h}</TableHead>)}<TableHead><span className="sr-only">Actions</span></TableHead></TableRow>
+                  {/* on a phone the name wraps and renderer, seed and knobs hide, so the Use button stays on screen */}
+                  <TableRow>{(["corpus", "level", "renderer", "seed", "papers", "knobs"] as const).map((h) => <TableHead key={h} className={cn("text-xs", WIDE_ONLY[h])}>{h}</TableHead>)}<TableHead><span className="sr-only">Actions</span></TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
                   {corpora.data.map((c) => (
                     <TableRow key={c.name} data-state={c.name === flow.corpus ? "selected" : undefined}>
-                      <TableCell className="font-mono text-xs"><Link to={`/corpora/${encodeURIComponent(c.name)}`} className="inline-flex min-h-6 items-center hover:underline">{c.name}</Link>{c.variant && <Badge variant="outline" className="ml-1">variant</Badge>}</TableCell>
+                      <TableCell className="min-w-24 font-mono text-xs break-all whitespace-normal sm:break-normal sm:whitespace-nowrap"><Link to={`/corpora/${encodeURIComponent(c.name)}`} className="inline-flex min-h-6 items-center hover:underline">{c.name}</Link>{c.variant && <Badge variant="outline" className="ml-1">variant</Badge>}</TableCell>
                       <TableCell className="text-xs">{c.level ?? "—"}</TableCell>
-                      <TableCell className="text-xs">{c.renderer ?? "—"}</TableCell>
-                      <TableCell className="text-xs tabular-nums">{c.seed ?? "—"}</TableCell>
+                      <TableCell className={cn("text-xs", WIDE_ONLY.renderer)}>{c.renderer ?? "—"}</TableCell>
+                      <TableCell className={cn("text-xs tabular-nums", WIDE_ONLY.seed)}>{c.seed ?? "—"}</TableCell>
                       <TableCell className="text-xs tabular-nums">{c.papers}</TableCell>
-                      <TableCell className="text-xs">{knobText(c.settings)}</TableCell>
+                      <TableCell className={cn("text-xs", WIDE_ONLY.knobs)}>{knobText(c.settings)}</TableCell>
                       <TableCell className="text-right">
                         {c.name === flow.corpus ? <Badge>chosen</Badge> : (
                           <Button size="sm" variant="outline" onClick={() => flow.set({ corpus: c.name, run: null }, { push: true })} aria-label={`Use ${c.name}`}>Use</Button>
