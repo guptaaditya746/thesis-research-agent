@@ -459,19 +459,52 @@ Write `reports/question-first/summary.md` with:
 
 ## 7. Hand-back
 
+The scores alone are not enough: a later scoring fix needs the answers and runs again, and `data-tmp` is cleaned.
+So the hand-back keeps, besides every score dir, the files a score is made from, under
+`reports/question-first/runs/` with the same paths as under `$RUNS`: of every finished engine run `answer.json`,
+`run.json`, `funnel.json` and `events.jsonl` (gzipped); of every baseline its `answer.json`. Run directories are not
+copied whole (no `evidence.jsonl`, `reexec.json` or agent work dirs). `$RUNS/check` is left out, `$RUNS/failed`
+is kept (it shows what was retried).
+
 ```bash
-mkdir -p reports/question-first
-for N in rag-claude-s1-mixed rag-tpl-hard-complex; do
+R=$PWD/reports/question-first; mkdir -p "$R/runs" "$R/scores"
+for N in rag-claude-s1-mixed rag-tpl-hard-complex; do         # the old layout: <corpus>/<question>/report.*
   for Q in $QS; do
     D=$SCORES/$N/$Q; [ -f "$D/report.json" ] || continue
-    mkdir -p "reports/question-first/$N/$Q"
-    cp "$D/report.json" "$D/report.md" "reports/question-first/$N/$Q/"
+    mkdir -p "$R/$N/$Q"
+    cp "$D/report.json" "$D/report.md" "$R/$N/$Q/"
     G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run, as one.sh writes it
-    cp "$RUNS/$G/$N/funnel.json" "reports/question-first/$N/$Q/" 2>/dev/null
+    cp "$RUNS/$G/$N/funnel.json" "$R/$N/$Q/" 2>/dev/null
   done
 done
-cp -r "$EV/scores/mapcheck" reports/question-first/mapcheck 2>/dev/null
-cp "$EV/failures.md" reports/question-first/ 2>/dev/null
+# every score dir (grid, extras, shift, mapcheck), with its path under $SCORES
+(cd "$SCORES" && find . -path ./check -prune -o -type f \( -name 'report.*' -o -name 'shift.*' \) -print0 \
+  | xargs -0 -r cp --parents -t "$R/scores")
+# the answers and runs the scores are made from, with their paths under $RUNS
+(cd "$RUNS" && find . -path ./check -prune -o -type f \( -name answer.json -o -name run.json -o -name funnel.json \) \
+  -print0 | xargs -0 -r cp --parents -t "$R/runs")
+(cd "$RUNS" && find . -path ./check -prune -o -type f -name events.jsonl -print0 | while IFS= read -r -d '' f; do
+  mkdir -p "$R/runs/$(dirname "$f")" && gzip -c "$f" > "$R/runs/$f.gz"; done)
+cp "$EV/failures.md" "$R/" 2>/dev/null
+du -sh "$R/runs" "$R/scores"; find "$R" -type f -size +50M      # the last line prints nothing
+```
+
+The caches hold every model reply; with them a run can be replayed and rescored without the model. Check their
+size before packing them:
+
+```bash
+du -sh "$CACHE"                                         # the record caches, uncompressed
+tar -C "$EV" -czf "$EV/caches.tar.gz" cache && ls -lh "$EV/caches.tar.gz"
+```
+
+- If `caches.tar.gz` is under 90 MB: `split -b 45m "$EV/caches.tar.gz" "$R/caches.tar.gz.part-"` (GitHub refuses
+  files over 100 MB and warns over 50 MB), and write in `summary.md` how to join them
+  (`cat caches.tar.gz.part-* > caches.tar.gz`).
+- If it is larger: do not commit it. Copy it off `data-tmp` to a place that is not cleaned
+  (`cp "$EV/caches.tar.gz" ~/`, your home directory) and write its path and size in `summary.md`; the **USER**
+  collects it.
+
+```bash
 git checkout results && git pull --ff-only origin results   # reports/ is untracked, so it comes along
 git add reports/question-first
 git status --short | grep -v '^A  reports/question-first' ; echo "(nothing above: only report files)"
@@ -480,5 +513,5 @@ git push origin results
 git tag -a ev3 -m "EV3: question-first runs on Slurm" && git push origin ev3
 ```
 
-The `results` branch takes report files only: no run directories, no caches, no corpora, no code changes. Never push
+The `results` branch takes the files above only: no whole run directories, no corpora, no code changes. Never push
 to `main`, and never make a new branch. Send the user the tag `ev3` and `reports/question-first/summary.md`.
