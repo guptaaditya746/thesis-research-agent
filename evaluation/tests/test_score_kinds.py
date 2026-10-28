@@ -631,3 +631,65 @@ def test_precision_with_nothing_given_is_undefined_and_shown_as_n_a(hard: Ground
     cells = [cell.strip() for cell in row.strip("|").split("|")]
     header = [cell.strip() for cell in text.splitlines()[2].strip("|").split("|")]
     assert cells[header.index("precision")] == "n/a" and cells[header.index("paper_precision")] == "n/a"
+
+
+# --- intervals for every kind ---------------------------------------------------------------------------------
+
+def _baseline_report(tmp_path: Path, qid: str, answer: dict[str, Any]) -> dict[str, Any]:
+    path = tmp_path / "answer.json"
+    path.write_text(json.dumps(answer), encoding="utf-8")
+    return score_answers(HARD.parent, [path], question_id=qid)
+
+
+def _ci(report: dict[str, Any], metric: str, value: float) -> dict[str, Any]:
+    """The rag-baseline interval row of `metric` in report.json `intervals.synthesis` (effect rows carry no
+    `metric`: theirs is direction_accuracy); it has bounds around the point value, which is C's own number."""
+    (row,) = [r for r in report["intervals"]["synthesis"]
+              if r["system"] == "rag-baseline" and r.get("metric", "direction_accuracy") == metric]
+    assert row["point"] == pytest.approx(value)
+    assert row["low"] is not None and row["high"] is not None
+    assert row["low"] <= row["point"] <= row["high"] and row["method"] in ("BCa", "percentile")
+    assert f"{row['point']:.3f} [{row['low']:.2f}, {row['high']:.2f}]" in rep.render(report)
+    return row
+
+
+def test_effect_interval_is_over_the_determined_papers(tmp_path: Path, hard: GroundTruth) -> None:
+    answer = _expected(hard, "rag-latency", "rag-baseline")
+    determined = [s["document"] for s in answer["studies"] if s["direction"] != "undetermined"]
+    answer["studies"] = [s for s in answer["studies"] if s["document"] not in determined[:10]]
+    report = _baseline_report(tmp_path, "rag-latency", answer)
+    overall = next(r for r in report["synthesis"][0]["rows"] if r["level"] == "all")
+    assert _ci(report, "direction_accuracy", overall["direction_accuracy"])["n_rows"] == len(determined)
+
+
+def test_best_interval_is_over_the_decidable_papers(tmp_path: Path, hard: GroundTruth) -> None:
+    answer = _expected(hard, "best-accuracy", "rag-baseline")
+    decidable = [s["document"] for s in answer["studies"] if s["winner"] or s["tied"]]
+    answer["studies"] = [s for s in answer["studies"] if s["document"] not in decidable[:10]]
+    report = _baseline_report(tmp_path, "best-accuracy", answer)
+    (c,) = report["synthesis"]
+    assert _ci(report, "per_study_accuracy", c["per_study_accuracy"])["n_rows"] == len(decidable)
+
+
+def test_consistency_interval_is_over_the_decidable_papers(tmp_path: Path, hard: GroundTruth) -> None:
+    answer = _expected(hard, "cons-accuracy", "rag-baseline")
+    decidable = [s["document"] for s in answer["studies"] if s["agrees"] is not None]
+    left_out = set(decidable[:10])
+    answer["studies"] = [s for s in answer["studies"] if s["document"] not in left_out]
+    for name in ("agreeing", "disagreeing", "undetermined"):
+        answer[name] = [d for d in answer[name] if d not in left_out]
+    report = _baseline_report(tmp_path, "cons-accuracy", answer)
+    (c,) = report["synthesis"]
+    assert _ci(report, "per_study_accuracy", c["per_study_accuracy"])["n_rows"] == len(decidable)
+
+
+def test_inventory_intervals_are_over_the_truth_and_given_names(tmp_path: Path, hard: GroundTruth) -> None:
+    answer = _expected(hard, "inv-methods", "rag-baseline")
+    expected_names = len(answer["entries"])
+    answer["entries"] = answer["entries"][8:] + [{"name": f"MadeUp{i}", "aliases": [], "papers": ["S001"],
+                                                   "items": []} for i in range(4)]
+    report = _baseline_report(tmp_path, "inv-methods", answer)
+    (c,) = report["synthesis"]
+    assert c["false_positives"] and c["missed"]
+    for metric in ("precision", "recall", "f1"):
+        assert _ci(report, metric, c[metric])["n_rows"] == expected_names + 4   # the union of truth and given names

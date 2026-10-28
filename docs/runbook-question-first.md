@@ -33,7 +33,9 @@ log shows queue-full or 429 errors, lower `--workers` to 2 and record it.
 
 ```bash
 cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
-git fetch origin --tags && git checkout --detach ev3-code     # the code: main with the engine, run and score fixes
+git fetch origin --tags
+git rev-parse --verify -q 'ev3-code^{commit}' || echo 'FAIL step 0: no tag ev3-code; stop, USER'
+git checkout --detach ev3-code            # the code: main with the engine, run and score fixes
 git describe --tags                       # ev3-code; record this and `git rev-parse HEAD` in summary.md
 git submodule update --init --recursive
 git -C llm-setup log -1 --oneline         # expect 4c8ccbf GLiNER: start failure keeps the stack, ...
@@ -42,8 +44,10 @@ uv run evidence --help | head -n 3        # the entry points exist
 uv run evaluate score --help | grep question-id
 ```
 
-If the tag `ev3-code` does not exist (`git checkout` fails), stop: **USER**. Never run from a bare `origin/main`:
-the tag is the one commit known to hold all three fixes.
+The **USER** creates the tag `ev3-code` on `main` (after merging the engine, run and score fixes) and pushes it to
+`origin` before handing this runbook over. If `git rev-parse` prints `FAIL step 0: no tag ev3-code` (or
+`git checkout` fails), stop: **USER**. Never run from a bare `origin/main`: the tag is the one commit known to
+hold all three fixes.
 
 `main` records `llm-setup` at `4c8ccbf`: `22dae03`'s orch-only profiles plus the GLiNER service (the llm-setup
 branch `gliner`). That commit must be fetchable from the llm-setup remote (the user pushes the branch `gliner`
@@ -166,11 +170,11 @@ line), and GLiNER found something (`found=` above 0) in the runs whose protocol 
 only where an earlier step left a gap, so a 0 elsewhere is a note, not a failure.
 
 ```bash
-for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
-  G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps; R=$RUNS/$G/$N   # as one.sh, section 4
-  [ -f "$R/run.json" ] || continue
-  echo "$N $Q skipped=$(grep '"status":"skipped"' "$R/events.jsonl" | grep -c '"agent_id":"gliner_') found=$(grep -c gliner_ "$R/evidence.jsonl")"
-done; done                                  # skipped=0 on every line
+for R in "$RUNS"/*/*; do      # every finished engine run: the grid, step 4b/4c extras, not failed/ or check/
+  case $R in "$RUNS"/failed/*|"$RUNS"/check/*) continue;; esac
+  [ -f "$R/run.json" ] && [ -f "$R/protocol.yaml" ] || continue   # protocol.yaml: an engine run, not a baseline
+  echo "${R#"$RUNS"/} skipped=$(grep '"status":"skipped"' "$R/events.jsonl" | grep -c '"agent_id":"gliner_') found=$(grep -c gliner_ "$R/evidence.jsonl")"
+done                                        # skipped=0 on every line
 ```
 
 A skipped GLiNER call (the service was not reachable) is only an `extractor_call` event with status `skipped` in
@@ -222,14 +226,19 @@ the real model. Run one question of each kind on the 20-paper corpus with the RA
 ```bash
 for Q in rag-hallucination inv-metrics cons-accuracy best-accuracy; do
   uv run evaluate rag-baseline --corpus $C_MAIN --question-id $Q --out $EV/runs/mapcheck/rag/$Q \
-    --cache $EV/cache/mapcheck-rag.jsonl --model orch-model --retrieval global --k 8
+    --cache "$CACHE/rag-baseline-rag-claude-s1-mixed.jsonl" --model orch-model --retrieval global --k 8
   uv run evaluate score --corpus $C_MAIN --question-id $Q --baseline $EV/runs/mapcheck/rag/$Q/answer.json \
     --out $EV/scores/mapcheck/$Q
 done
 ```
 
+The cache is the grid's RAG cache for the main corpus (one.sh's `$CACHE/rag-baseline-<corpus>.jsonl`), so the grid
+replays these answers instead of asking again, and the go/no-go below is made on the answers the grid scores.
+Nothing else writes that file yet (the grid has not started).
+
 Do the same with `evaluate agent-baseline` for `inv-metrics` and `best-accuracy` only (it is the costly one):
-`--agent-root "$AGENT_ROOT" --run-id mapcheck-<id>`, output under `$EV/runs/mapcheck/agent/<id>`.
+`--agent-root "$AGENT_ROOT" --run-id mapcheck-<id>`, output under `$EV/runs/mapcheck/agent/<id>`, and
+`--cache "$CACHE/agent-baseline-rag-claude-s1-mixed.jsonl"` (the grid's agent cache, for the same reason).
 
 Look at, and report in the table of step 6, for each of the four:
 
@@ -532,17 +541,24 @@ a failure.
 - `uv run evidence replay $RUNS/<question>-cascade-gaps/<corpus> | grep '"ok"'` (for `rag-factuality`
   `$RUNS/cascade-gaps/<corpus>`) gives `"ok": true`. (A replay is also `ok` for a run whose calls failed: it
   replays the cached failures. That is why the next check exists.)
-- Failed calls: the count per run, 0 when every LLM and GLiNER call answered. Report it per run (step 6, item 5),
+- Failed calls: the count per run (every engine run: the grid's and the extra ones of steps 4b and 4c, named by
+  their path under `$RUNS`), 0 when every LLM and GLiNER call answered. An extra run is retried with
+  `extra.sh <variant> <corpus> <question> retry` (the counterfactual with `one.sh`), and a repeat (`-r2`) with
+  failed calls left is not used for the spread of step 4b item 4. Report it per run (step 6, item 5),
   and retry every run above 0 with `one.sh <question> <corpus> retry` (section 4, "Retries"), then count again.
   Retry one run at most twice: if it is still above 0, stop retrying it and report its count (and the FAIL lines)
   under Failures:
 
 ```bash
-for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
+for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do     # the grid: say what is missing
   G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps; R=$RUNS/$G/$N   # as one.sh, section 4
-  [ -f "$R/run.json" ] || { echo "$N $Q: no finished run"; continue; }
-  echo "$N $Q $(uv run python -c 'import sys; from evidence.rundir import RunDir; print(RunDir(sys.argv[1]).failed_calls())' "$R")"
+  [ -f "$R/run.json" ] || echo "$N $Q: no finished run"
 done; done
+for R in "$RUNS"/*/*; do      # every finished engine run: the grid, step 4b/4c extras, not failed/ or check/
+  case $R in "$RUNS"/failed/*|"$RUNS"/check/*) continue;; esac
+  [ -f "$R/run.json" ] && [ -f "$R/protocol.yaml" ] || continue   # protocol.yaml: an engine run, not a baseline
+  echo "${R#"$RUNS"/} $(uv run python -c 'import sys; from evidence.rundir import RunDir; print(RunDir(sys.argv[1]).failed_calls())' "$R")"
+done
 ```
 
 - `$SCORES/<corpus>/<question>/report.md` exists for each of the 20 pairs; note any missing one with its `FAIL` line.
@@ -586,12 +602,20 @@ Write `reports/question-first/summary.md` with:
 
 1. **Main table**, one row per question x system, for each corpus:
 
-   | corpus | question | system | A (f1) | B | C |
-   |---|---|---|---|---|---|
+   | corpus | question | system | A (f1) | B | C | cost |
+   |---|---|---|---|---|---|---|
 
    Engine rows have A, B and C; the baseline rows have C only, and `-` for A and B. Write B and C as the fields of
    the table above (for example `label_correct / direction_accuracy / completeness`), and give each question's
-   `scored_types` once under the table.
+   `scored_types` once under the table. The **cost** column, as `calls / input tokens / output tokens / seconds`:
+   - engine: `report.json` `cost.total`: `made_model_calls`, `input_tokens`, `output_tokens`, `seconds`;
+   - RAG (every variant): `answer.json` `model_call` and `mapping_call`: 2 calls, the sum of their
+     `input_tokens` and of their `output_tokens`; seconds `-` (not recorded);
+   - agent: `answer.json` `agent.model_calls` + 1 (the mapping), `agent.tokens` (and the `mapping_call` tokens),
+     seconds `-`; and in the same cell `agent.exit_status` and `agent.steps` (budget: 60 steps), so a row that ran
+     out of budget is not read as a reasoning failure. Print them with
+     `for f in "$RUNS"/agent-baseline/*/answer.json; do uv run python -c 'import json, sys; a = json.load(open(sys.argv[1]))["agent"]; print(sys.argv[1], a["exit_status"], a["steps"], a["model_calls"], a["tokens"])' "$f"; done`.
+   A cached call (`cached: true`) was not asked again in this run; count it anyway and say so.
 2. **Per-extractor A**, for each corpus: from `report.json`'s `extractors.rows`, one line per extractor id with
    precision, recall, f1, for the regex, abbreviation, GLiNER, number and LLM extractors (`regex_*`, `abbrev_*`,
    `gliner_*`, `number_*`, `llm_*`), per question. Each extractor has two rows with `level = all`: copy the
@@ -601,7 +625,13 @@ Write `reports/question-first/summary.md` with:
 3. **Mapping check** from step 3: per kind, the retries and failures you saw (or "none").
 4. **GPU and GLiNER**: `nvidia-smi` driver and CUDA, GLiNER's memory use, free memory left on GPU 0, whether
    `orch-3x40-gliner.yaml` needed `gpu_memory_utilization: 0.88`, whether GLiNER started (`gliner health ok`),
-   whether `GLINER_URL` was set.
+   whether `GLINER_URL` was set. **Versions**: the commit (`git rev-parse HEAD`, step 0); the vLLM version the
+   stack runs, from inside the job:
+   `srun --jobid "$JOB" --overlap bash -lc 'cd llm-setup && uv run --no-sync python -c "import vllm; print(vllm.__version__)"'`
+   (if that fails, the `version` under `name = "vllm"` in `llm-setup/uv.lock`, and say which); and every served
+   model name with its call count:
+   `grep -rhoE '"served_model": ?"[^"]*"' "$RUNS" | sort | uniq -c` (expect the orch model, and the GLiNER
+   model if its calls record one).
 5. **Failures**: each `FAIL` line and what you did; the failed-call count of every engine run (step 5), before
    and after its retry, and which runs needed `one.sh ... retry`.
 6. **Extra rows** (step 4b), for each corpus they ran on: one row per question x variant, from
@@ -615,10 +645,11 @@ Write `reports/question-first/summary.md` with:
 
 The scores alone are not enough: a later scoring fix needs the answers and runs again, and `data-tmp` is cleaned.
 So the hand-back keeps, besides every score dir, the files a score is made from, under
-`reports/question-first/runs/` with the same paths as under `$RUNS`: of every finished engine run `answer.json`,
-`run.json`, `funnel.json` and `events.jsonl` (gzipped); of every baseline its `answer.json`. Run directories are not
-copied whole (no `evidence.jsonl`, `reexec.json` or agent work dirs). `$RUNS/check` is left out, `$RUNS/failed`
-is kept (it shows what was retried).
+`reports/question-first/runs/` with the same paths as under `$RUNS`: of every engine run `answer.json`,
+`run.json`, `funnel.json`, `protocol.yaml`, `locate.json`, `events.jsonl` and `evidence.jsonl` (both gzipped) and
+its `calls/` folder (as `calls.tar.gz`); of every baseline its `answer.json`. That is what `evaluate score --run`
+and `evidence replay` read (gunzip and untar first). Not copied: `reexec.json`, `graph.json`, `prov.ttl`, agent
+work dirs. `$RUNS/check` is left out, `$RUNS/failed` is kept (it shows what was retried).
 
 ```bash
 R=$PWD/reports/question-first; mkdir -p "$R/runs" "$R/scores"
@@ -635,10 +666,12 @@ done
 (cd "$SCORES" && find . -path ./check -prune -o -type f \( -name 'report.*' -o -name 'shift.*' \) -print0 \
   | xargs -0 -r cp --parents -t "$R/scores")
 # the answers and runs the scores are made from, with their paths under $RUNS
-(cd "$RUNS" && find . -path ./check -prune -o -type f \( -name answer.json -o -name run.json -o -name funnel.json \) \
-  -print0 | xargs -0 -r cp --parents -t "$R/runs")
-(cd "$RUNS" && find . -path ./check -prune -o -type f -name events.jsonl -print0 | while IFS= read -r -d '' f; do
-  mkdir -p "$R/runs/$(dirname "$f")" && gzip -c "$f" > "$R/runs/$f.gz"; done)
+(cd "$RUNS" && find . -path ./check -prune -o -type f \( -name answer.json -o -name run.json -o -name funnel.json \
+  -o -name protocol.yaml -o -name locate.json \) -print0 | xargs -0 -r cp --parents -t "$R/runs")
+(cd "$RUNS" && find . -path ./check -prune -o -type f \( -name events.jsonl -o -name evidence.jsonl \) -print0 \
+  | while IFS= read -r -d '' f; do mkdir -p "$R/runs/$(dirname "$f")" && gzip -c "$f" > "$R/runs/$f.gz"; done)
+(cd "$RUNS" && find . -path ./check -prune -o -type d -name calls -print0 | while IFS= read -r -d '' d; do
+  mkdir -p "$R/runs/$(dirname "$d")" && tar -C "$(dirname "$d")" -czf "$R/runs/$d.tar.gz" calls; done)
 cp "$EV/failures.md" "$R/" 2>/dev/null
 du -sh "$R/runs" "$R/scores"; find "$R" -type f -size +50M      # the last line prints nothing
 ```
@@ -660,8 +693,11 @@ tar -C "$EV" -czf "$EV/caches.tar.gz" cache && ls -lh "$EV/caches.tar.gz"
 
 ```bash
 git checkout results && git pull --ff-only origin results   # reports/ is untracked, so it comes along
-git add reports/question-first
-git status --short | grep -v '^A  reports/question-first' ; echo "(nothing above: only report files)"
+git add -f reports/question-first      # -f: .gitignore ignores runs/, which would drop reports/question-first/runs
+n=$(git ls-files reports/question-first/runs | wc -l)
+if [ "$n" -gt 0 ]; then echo "runs files staged: $n"
+else echo 'FAIL hand-back: no file under reports/question-first/runs is staged; do not commit, USER'; fi
+git status --short | grep -v '^A  reports/question-first' ; echo "(nothing above but ' M llm-setup': only report files)"
 git commit -m "reports: question-first runs on Slurm"
 git push origin results
 git tag -a ev3 -m "EV3: question-first runs on Slurm" && git push origin ev3
@@ -680,7 +716,7 @@ from the runs (write "as below" if nothing changed). These are known before the 
 2. The main corpus has 20 papers; some cells rest on 3-11 papers, so differences under about 0.3 are not shown.
 3. The over-claiming test rests on 4 papers (the hard corpus has none), so it is a demonstration, not a measurement.
 4. All systems use the same local model; the grid's RAG baseline reads 8 passages, so the per-paper RAG row and
-   the cost columns separate "reads more" from "reasons from evidence".
+   the cost column separate "reads more" from "reasons from evidence".
 5. Truth and engine share the synthesis rules, so C tests extraction and pairing; the oracle row shows the ceiling
    and the counterfactual shows whether the answer follows the evidence.
 6. The baselines are not told the protocol's neutral band (`min_effect`: 0.01, 0.05 s for latency) or its metric

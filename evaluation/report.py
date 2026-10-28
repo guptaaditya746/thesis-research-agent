@@ -70,14 +70,21 @@ def _method(row: dict[str, Any] | None) -> str | None:
 
 
 def render_intervals(intervals: dict[str, Any]) -> list[str]:
-    """The `## Intervals` section (F4): extraction F1 per type, direction accuracy per system, paired difference."""
+    """The `## Intervals` section (F4): extraction F1 per type, direction accuracy per system, paired difference;
+    for another kind, its C metrics per system (score.kind_intervals)."""
     out = ["## Intervals", "", "95 % bootstrap intervals over papers (2,000 resamples, seed 0; evaluation/stats.py), "
            "`point [low, high]`; `method` is BCa, or percentile where BCa is undefined; `[n/a]`: a degenerate "
            "sample (fewer than two papers, or no spread), the point value only.", ""]
     if intervals.get("extraction"):
         rows = [{"evidence_type": r["evidence_type"], "f1": _ci(r), "method": _method(r)} for r in intervals["extraction"]]
         out += ["Extraction F1 (all levels):", "", table(rows, ["evidence_type", "f1", "method"]), ""]
-    if intervals.get("synthesis"):
+    kinds = [r for r in intervals.get("synthesis") or [] if r.get("metric")]   # a kind other than effect
+    if kinds:
+        rows = [{"system": r["system"], "metric": r["metric"], "interval": _ci(r), "method": _method(r),
+                 "n": r.get("n_rows")} for r in kinds]
+        out += ["C per system (`n`: the decidable papers resampled; inventory: the names, truth's and the "
+                "answer's):", "", table(rows, ["system", "metric", "interval", "method", "n"]), ""]
+    elif intervals.get("synthesis"):
         paired = {r["system"]: r for r in intervals.get("paired") or []}
         rows = [{"system": r["system"], "direction_accuracy": _ci(r), "method": _method(r),
                  "engine_minus_system": _ci(paired.get(r["system"])) if r["system"] != ENGINE else "-",
