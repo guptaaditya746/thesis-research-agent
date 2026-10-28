@@ -346,7 +346,11 @@ Killed runs: an engine run dir without `run.json` (the Slurm time limit, a lost 
 own rerun: `evidence run` refuses it ("exists without run.json: a run that was killed or crashed ... Move it aside,
 to $RUNS/failed/<corpus>/ ..., and run again") and `one.sh` prints `FAIL engine <question> <corpus>: a run dir
 without run.json is in the way`. Do what it says: `one.sh <question> <corpus> rerun` moves it to
-`$RUNS/failed/<corpus>/` and runs again (the record cache keeps the calls it finished, so this is cheap).
+`$RUNS/failed/<corpus>/` and runs again (the record cache keeps the calls it finished, so this is cheap). A run
+that is still going has no `run.json` either, so first make sure nothing runs on that corpus: every step you
+launched for it (`grid-*`, `one-*`, `retry-*`, `rerun-*`) has its `exit` line as the last line of
+`$EV/logs/<step>.launch` (launch.sh writes it when the command ends), and `squeue --steps -j "$JOB"` shows no
+step you cannot account for. Never move a live run dir.
 
 Reruns: for a run with skipped GLiNER steps (step 5 counts them; the service was not up yet), once GLiNER answers,
 run `one.sh` with `rerun` instead: it moves the run dir aside the same way and runs the engine again **without**
@@ -366,7 +370,9 @@ the hard corpus as partial.
   `$RUNS/cascade-gaps/<corpus>`) gives `"ok": true`. (A replay is also `ok` for a run whose calls failed: it
   replays the cached failures. That is why the next check exists.)
 - Failed calls: the count per run, 0 when every LLM and GLiNER call answered. Report it per run (step 6, item 5),
-  and retry every run above 0 with `one.sh <question> <corpus> retry` (section 4, "Retries"), then count again:
+  and retry every run above 0 with `one.sh <question> <corpus> retry` (section 4, "Retries"), then count again.
+  Retry one run at most twice: if it is still above 0, stop retrying it and report its count (and the FAIL lines)
+  under Failures:
 
 ```bash
 for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do

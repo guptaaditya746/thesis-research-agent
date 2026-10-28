@@ -416,8 +416,9 @@ class EvRunSummary(Base):
     counts: Counts | None = None
     papers: int | None = None
     cost: dict[str, Any] | None = None
-    error_calls: int = Field(0, description="engine: extractor calls whose result is an error (calls/*.json status "
-                                            "error, e.g. no model gateway); `--retry-errors` runs them again")
+    error_calls: int = Field(0, description="engine: extractor calls the model gateway or the GLiNER service failed, "
+                                            "in whole or in part (calls/*.json status error or partial with reason "
+                                            "model_call or service_call); `--retry-errors` runs them again")
 
 
 class FunnelDecision(Open):

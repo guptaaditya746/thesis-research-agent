@@ -68,10 +68,11 @@ class Services:
             path = self.evidence.run_dir(job.refs["run"])
         except NotFound:
             return
-        job.failed_calls = RunDir(path).error_calls()
+        job.failed_calls = RunDir(path).failed_calls()
         if job.failed_calls:
-            job.warnings.append(f"{job.failed_calls} extractor call(s) failed (status error in calls/); they are in "
-                                "the record cache: run again with 'retry errors' once the model answers")
+            job.warnings.append(f"{job.failed_calls} extractor call(s) failed (the model gateway or the GLiNER service "
+                                "did not answer; status error or partial in calls/); they are in the record cache: "
+                                "run again with 'retry errors' once the service answers")
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:

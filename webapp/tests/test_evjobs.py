@@ -45,8 +45,9 @@ if tool[:2] == ["evidence", "run"] and os.environ.get("FAKE_ERROR_CALLS"):
     calls = Path(tool[tool.index("--out") + 1]) / tool[tool.index("--run-id") + 1] / "calls"
     calls.mkdir(parents=True)
     for n in range(int(os.environ["FAKE_ERROR_CALLS"])):
-        (calls / f"c{{n}}.json").write_text('{{"status": "error"}}')
+        (calls / f"c{{n}}.json").write_text('{{"status": "partial", "error": {{"reason": "model_call"}}}}')
     (calls / "ok.json").write_text('{{"status": "ok"}}')
+    (calls / "agent.json").write_text('{{"status": "partial", "error": {{"reason": "no_final_answer"}}}}')   # not one
 if tool[:2] == ["evidence", "propose"]:
     step = tool[2]
     d = Path(tool[tool.index("--out") + 1]) if step == "frame" else Path(tool[3])

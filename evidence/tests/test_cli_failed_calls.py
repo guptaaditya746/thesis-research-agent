@@ -54,11 +54,17 @@ def test_failed_calls_exit_2_with_a_fail_line_and_the_run_is_kept(protocol_file:
     assert calls and RunDir(out / "retried").failed_calls() == 0
 
 
-def test_partial_counts_as_failed(tmp_path: Path) -> None:
+def test_only_calls_the_service_failed_count(tmp_path: Path) -> None:
     (tmp_path / "calls").mkdir()
-    for name, status in (("a", "ok"), ("b", "partial"), ("c", "error")):
-        (tmp_path / "calls" / f"{name}.json").write_text(json.dumps({"status": status}))
-    assert RunDir(tmp_path).failed_calls() == 2 and RunDir(tmp_path).error_calls() == 1
+    rows = {"ok": ("ok", None), "gliner": ("partial", "service_call"), "llm": ("error", "model_call"),
+            "agent-budget": ("partial", "no_final_answer"), "agent-none": ("error", "no_final_answer"),
+            "crash": ("error", "ValueError")}
+    for name, (status, reason) in rows.items():
+        (tmp_path / "calls" / f"{name}.json").write_text(json.dumps(
+            {"status": status, "error": {"reason": reason, "detail": ""} if reason else None}))
+    assert RunDir(tmp_path).failed_calls() == 2       # the GLiNER partial and the LLM error only
+    assert RunDir(tmp_path).error_calls() == 3        # status error, any reason
+
 
 
 def test_a_clean_regex_run_exits_0(protocol_file: Path, corpus: Path, tmp_path: Path,

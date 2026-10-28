@@ -519,7 +519,7 @@ class EvidenceFiles:
                                 model=settings.get("model"), protocol=run.get("protocol"), corpus_id=run.get("corpus_id"),
                                 label=(answer or {}).get("label") if run else None, counts=counts if run else None,
                                 papers=len((answer or {}).get("studies") or []) or None, cost=run.get("cost"),
-                                error_calls=rd.error_calls()), \
+                                error_calls=rd.failed_calls()), \
                 run.get("manifest_sha256")
         assert answer is not None
         settings = answer.get("settings") or {}
