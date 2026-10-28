@@ -387,23 +387,30 @@ done; done
 
 Read `report.json` / `report.md` of each score dir. A and B exist for the engine run only (`extraction`,
 `integration`); the baselines are scored on C only (`synthesis`, one row per system: `evidence-engine`,
-`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1). It counts
-only the evidence types the question's protocol extracts, and `report.json` lists them in `scored_types` (for
-example, `inv-datasets` is scored on datasets only). So A is comparable across corpora for the same question, not
-across questions or kinds; copy `scored_types` into the summary next to A. If a `report.json` has no `scored_types`, its
-`all` / `all` row still counts every type in the corpus (older scoring code): write A as `-` for that run and say
-so under Failures (the runs are kept, so the scores can be made again). B and C by kind, with the field names as
-they are in `report.json`:
+`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction`: precision, recall, f1 over the
+evidence types this question's protocol extracts, listed in `extraction.scored_types` (for example, `inv-datasets`
+is scored on datasets only). It is computed the same way for every kind, but over different types, so compare A
+within a question (across corpora and systems), not across questions or kinds; copy `extraction.scored_types` into
+the summary next to A. Step 2 already stops on scoring code without `scored_types`; if a `report.json` still has
+none, write A as `-` for that run and say so under Failures. B and C by kind, with the field names as they are in
+`report.json`:
 
 | kind | B (engine only) | C (every system) |
 |---|---|---|
-| effect | `integration.rows`: `association_accuracy` | `synthesis`: `label_correct`, `direction_accuracy` |
-| inventory | `integration`: `clean_share` | `synthesis`: `precision`, `recall`, `f1` |
-| consistency | `integration`: `claim_accuracy` | `synthesis`: `per_study_accuracy` |
-| best | `integration`: `kind_accuracy` | `synthesis`: `winner_correct`, `per_study_accuracy` |
+| effect | `integration.rows`: `association_accuracy` | `synthesis`: `label_correct`, `direction_accuracy`, `completeness` |
+| inventory | `integration`: `clean_share` | `synthesis`: `precision`, `recall`, `f1` (`recall` is inventory's completeness) |
+| consistency | `integration`: `claim_accuracy` | `synthesis`: `per_study_accuracy`, `completeness` |
+| best | `integration`: `kind_accuracy` | `synthesis`: `winner_correct`, `per_study_accuracy`, `completeness` |
 
-`direction_accuracy` and `per_study_accuracy` are scored on the papers the truth can decide, and a paper the system
-left out counts as wrong; `completeness` is reported next to them in `synthesis`: copy it into C beside them.
+`direction_accuracy` (effect) and `per_study_accuracy` (best, consistency) are over the papers the truth can decide
+only (effect: a determined direction; best: a winner or a tie; consistency: `agrees` true or false, so duplicates
+and papers with missing data are left out). A decidable paper the system leaves out or calls undetermined counts as
+wrong; an empty answer scores 0. `completeness` is the share of those decidable papers the system answered at all,
+so "wrong" and "silent" can be told apart. The old numbers over all papers are `direction_accuracy_all_papers` /
+`per_study_accuracy_all_papers`; do not copy them into the table.
+
+A precision of `null` (`report.md` shows `n/a`) means the system gave nothing: write `n/a`, never 0. This applies to
+inventory C precision and to the per-extractor A rows of an extractor that found nothing.
 `report.md` shows the same numbers under "B." and "C." headings; copy from there if a field is nested.
 
 Write `reports/question-first/summary.md` with:
