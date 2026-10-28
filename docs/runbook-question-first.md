@@ -393,8 +393,10 @@ cat > "$EV/extra.sh" <<'EOF'
 # extra.sh <variant> <corpus-dir> [question-id|all] [retry|rerun]: one extra system for every question of $QS
 # (or one), each scored on its own in $SCORES/<corpus>/<question>.<variant>. Skips a finished answer or run.
 # RAG variants: rag-per-paper (top 2 passages of every paper), rag-per-paper-k1 (top 1 of every paper),
-# rag-oracle (the passages truth needs; a diagnostic that reads ground_truth.json).
-# Engine variants: regex-only, llm-only (--extractors), run in $RUNS/<question>-<variant>/<corpus>.
+# rag-oracle (the passages truth needs; a diagnostic that reads ground_truth.json), rag-seed1, rag-seed2 (the
+# grid's RAG with another seed).
+# Engine variants: regex-only, llm-only (--extractors), run in $RUNS/<question>-<variant>/<corpus>; engine-r2,
+# the grid's engine again with a fresh cache, in the grid's group as <corpus>-r2.
 # `retry` and `rerun` move an engine variant's run dir aside first, as one.sh does.
 set -u
 V=$1; C=$2; ONLY=${3:-all}; MODE=${4:-}; N=$(basename "$C")
@@ -404,7 +406,10 @@ case $V in
   rag-per-paper) RAG=(--retrieval per_paper --k 2) ;;
   rag-per-paper-k1) RAG=(--retrieval per_paper --k 1) ;;
   rag-oracle) RAG=(--oracle-passages) ;;
+  rag-seed1) RAG=(--retrieval global --k 8 --seed 1) ;;
+  rag-seed2) RAG=(--retrieval global --k 8 --seed 2) ;;
   regex-only|llm-only) EXT=$V ;;
+  engine-r2) RID=$N-r2; GV=cascade-gaps ;;
   *) echo "FAIL extra.sh: unknown variant '$V'"; exit 2;;
 esac
 QL=$QS; [ "$ONLY" = all ] || QL=$ONLY
@@ -424,7 +429,8 @@ for Q in $QL; do
     fi
     continue
   fi
-  RUN=$RUNS/$Q-$GV/$RID; mkdir -p "$RUNS/$Q-$GV"        # an engine variant
+  G=$Q-$GV; [ "$V" = engine-r2 ] && [ "$Q" = rag-factuality ] && G=cascade-gaps   # r2: the grid's group
+  RUN=$RUNS/$G/$RID; mkdir -p "$RUNS/$G"              # an engine variant
   if [ -n "$MODE" ] && [ -e "$RUN" ]; then
     mkdir -p "$RUNS/failed/$N"; mv "$RUN" "$RUNS/failed/$N/$Q-$V-$(date +%Y%m%dT%H%M%S)"
   fi
@@ -434,7 +440,7 @@ for Q in $QL; do
   elif [ -e "$RUN" ]; then
     echo "FAIL $V $Q $N: a run dir without run.json is in the way; extra.sh $V $C $Q rerun"
   else
-    uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$Q-$GV" \
+    uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$G" \
       --cache "$CACHE/$V-$N" --model orch-model --extractors "$EXT" --strategy gaps --workers 3 --run-id "$RID" \
       ${RETRY[@]+"${RETRY[@]}"}
     rc=$?
@@ -463,7 +469,8 @@ Start the extras on the main corpus **after `grid-main` has finished** (its log 
 exit), so the GPU is shared with at most the hard grid; they write `FAIL` lines as the grid does:
 
 ```bash
-nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper rag-oracle regex-only llm-only > /dev/null 2>&1 &
+nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper rag-oracle regex-only llm-only \
+  rag-seed1 rag-seed2 engine-r2 > /dev/null 2>&1 &
 ```
 
 The rows, in this order of importance (stop at the job's end and report what is missing):
@@ -486,6 +493,11 @@ The rows, in this order of importance (stop at the job's end and report what is 
    and C of `regex-only`, `llm-only` and the grid's cascade side by side, and read each step as a **marginal gain**
    (cascade minus regex-only is what the later extractors add). Retries and reruns work as in one.sh:
    `"$EV/launch.sh" retry-llm-only-main "$EV/extra.sh" llm-only "$C_MAIN" inv-metrics retry`.
+4. **Repeats** (main): `rag-seed1` and `rag-seed2` are the grid's RAG (`global`, k 8) with `--seed 1` and `2`;
+   `engine-r2` is the grid's engine once more with a fresh cache dir (`$CACHE/engine-r2-<corpus>`) and
+   `--run-id <corpus>-r2`, so every call is asked again. Temperature is 0, but the server batches requests, so
+   answers can still differ. Report, per question, the spread of C over the grid's run and its repeats
+   (min-max). A difference between systems smaller than that spread is not a result.
 
 ## 4c. The counterfactual corpus (main, rag-factuality)
 
