@@ -1830,7 +1830,7 @@ export interface components {
             } | null;
             /**
              * Error Calls
-             * @description engine: extractor calls whose result is an error (calls/*.json status error, e.g. no model gateway); `--retry-errors` runs them again
+             * @description engine: extractor calls the model gateway or the GLiNER service failed, in whole or in part (calls/*.json status error or partial with reason model_call or service_call); `--retry-errors` runs them again
              * @default 0
              */
             error_calls: number;
@@ -1941,7 +1941,7 @@ export interface components {
             } | null;
             /**
              * Error Calls
-             * @description engine: extractor calls whose result is an error (calls/*.json status error, e.g. no model gateway); `--retry-errors` runs them again
+             * @description engine: extractor calls the model gateway or the GLiNER service failed, in whole or in part (calls/*.json status error or partial with reason model_call or service_call); `--retry-errors` runs them again
              * @default 0
              */
             error_calls: number;
@@ -2314,7 +2314,7 @@ export interface components {
             warnings: string[];
             /**
              * Failed Calls
-             * @description an engine run's extractor calls that ended in an error (calls/*.json status error): done, but with failed calls
+             * @description an engine run's extractor calls the model gateway or the GLiNER service failed (calls/*.json status error or partial with reason model_call or service_call): done, but with failed calls
              */
             failed_calls: number | null;
             /**
