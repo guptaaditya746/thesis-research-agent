@@ -147,7 +147,8 @@ def test_run_jobs_with_the_runbooks_groups(client: TestClient, world: EvidenceWo
     assert by_out[str(world.runs / "cascade-gaps")] == [
         *TOOL, "evidence", "run", "--protocol", str(REPO / "evidence" / "protocols" / "rag-factuality.yaml"),
         "--corpus", str(world.corpora / corpus), "--out", str(world.runs / "cascade-gaps"), "--cache", str(world.cache),
-        "--extractors", "cascade", "--strategy", "gaps", "--model", "orch-model", "--run-id", corpus]
+        "--extractors", "cascade", "--strategy", "gaps", "--model", "orch-model", "--run-id", corpus,
+        "--allow-failed-calls"]
     assert by_out[str(world.runs / "regex-only")][by_out[str(world.runs / "regex-only")].index("--extractors") + 1] == "regex-only"
     agentic_argv = by_out[str(world.runs / "agentic-gaps")]
     assert agentic_argv[agentic_argv.index("--model") + 1] == "other-model"

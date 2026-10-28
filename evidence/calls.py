@@ -7,7 +7,8 @@ call inside it. Modes:
 - `run`: the latest attempt is used, a miss runs the extractor and is stored (an error result too, so the
   run can be replayed); a call this process made itself is `fresh` when asked again and is never retried (the
   warm pass of parallel papers fills the cache, the sequential loop then reads it back at the right cost);
-  `retry_errors` runs a cached error again and stores it as a NEW attempt under
+  `retry_errors` runs a cached error or partial result again (a partial one is a call some of whose chunks
+  failed: a GLiNER timeout on one chunk, a failed LLM chunk or quote retry) and stores it as a NEW attempt under
   digest([key, n]), so the records earlier runs rest on are never overwritten;
 - `replay`: cache only, the attempt the recorded run used (its events record it), a miss is NotRecorded;
 - `reexec`: extractors chosen by `bypass` run again from scratch and are not stored (the record stays the
@@ -27,6 +28,7 @@ from .contract import ExtractionError, ExtractionResult, ExtractionTask, Extract
 from .recording import Provider, Recorder
 
 Mode = Literal["run", "replay", "reexec"]
+RETRIED = ("error", "partial")   # the cached statuses `retry_errors` asks again
 
 
 class NotRecorded(RuntimeError):
@@ -125,7 +127,7 @@ class CallCache:
         if hit is not None and cache_key(spec.extractor_id, task.task_sha256, n) in self.made:
             return Outcome(ExtractionResult.model_validate(hit["result"]), list(hit.get("model_calls") or []),
                            "fresh", n)
-        if hit is not None and not (self.retry_errors and hit["result"]["status"] == "error"):
+        if hit is not None and not (self.retry_errors and hit["result"]["status"] in RETRIED):
             return self._from(hit, n)
         n = n + 1 if hit is not None else 0
         self._check_version(spec)

@@ -74,7 +74,7 @@ def test_run_plan_argv(commands: Commands, world: EvidenceWorld, settings: Setti
         "evidence", "run", "--protocol", str(settings.protocols / "rag-factuality.yaml"),
         "--corpus", str(world.corpora / MIXED), "--out", str(world.runs / "cascade"),
         "--cache", str(settings.ev_cache_dir), "--extractors", "cascade", "--strategy", "all",
-        "--model", "orch-model", "--run-id", "fresh"]
+        "--model", "orch-model", "--run-id", "fresh", "--allow-failed-calls"]
     assert plan.refs == {"run": "cascade~fresh", "corpus": MIXED}
     assert plan.lane == "model" and plan.needs_gateway
 

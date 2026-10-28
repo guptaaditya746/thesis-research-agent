@@ -169,7 +169,8 @@
       "--model",
       "orch-model",
       "--run-id",
-      "contract-run"
+      "contract-run",
+      "--allow-failed-calls"
      ],
      "command": "*",
      "required": true,
@@ -530,7 +531,8 @@
       "--model",
       "orch-model",
       "--run-id",
-      "contract-proposal-run"
+      "contract-proposal-run",
+      "--allow-failed-calls"
      ],
      "command": "*",
      "required": true,

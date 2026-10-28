@@ -237,7 +237,11 @@ source "$EV/in-job.env"
 ```
 
 In every new shell: `export EV=...` (as above) and `source "$EV/in-job.env"`. A long step's exit status is the
-last line of `$EV/logs/<step>.launch`.
+last line of `$EV/logs/<step>.launch`. `JOB` is written into in-job.env here, and `launch.sh` reads it only from
+there: after a new stack job, update it (`sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env"`). (The question-first
+session, `docs/runbook-question-first.md` step 1.6, writes this file after its stack starts and appends
+`unset Q P PA`: its scripts take the question id as an argument, so this EV2 question and its protocols must not
+reach them.)
 
 ### 0.4 Environment check and offline smoke (in the job)
 
@@ -406,7 +410,10 @@ echo $! > "$EV/logs/3-engine.pid"
 
 The corpus list is explicit (the per-level corpora, the variants named in `$EV/cf-*.txt`, the knob sets' mixed
 corpora, the hard set's `complex` and `mixed`), so a variant left over from a retry is never run. A non-zero exit
-of any run is a `FAIL` line and the script exits 1 (record that; the loop still runs the rest). The hard set is
+of any run is a `FAIL` line and the script exits 1 (record that; the loop still runs the rest). A run whose
+extractor calls failed (the gateway or the GLiNER service did not answer) is written but exits 2, after a line
+`FAIL engine-errors <run dir> <count>` in the log: rerun it into a new run id with `--retry-errors` once the
+service answers. The hard set is
 100 papers per corpus: the long part of this step. `--model orch-model` is the default, written
 out so the record (`run.json` `settings.model`) is explicit; `--strategy all` is written out because the default is now `gaps`. The `gaps`
 run shares the record cache with the `all` run: a call whose task is byte for byte one the `all` run made

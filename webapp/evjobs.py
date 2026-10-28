@@ -225,7 +225,8 @@ class Commands:
         self.free("run", run_id)
         argv = self.tool("evidence", "run", "--protocol", protocol, "--corpus", corpus, "--out", out,
                          "--cache", self.engine_cache(), "--extractors", r.extractors, "--strategy", r.strategy,
-                         "--model", r.model, "--run-id", name, *(["--retry-errors"] if r.retry_errors else []))
+                         "--model", r.model, "--run-id", name, "--allow-failed-calls",
+                         *(["--retry-errors"] if r.retry_errors else []))
         regex_only = r.extractors == "regex-only"
         return JobPlan("run", [step("evidence run", argv)], {"run": run_id, "corpus": r.corpus},
                        "cpu" if regex_only else "model", not regex_only)

@@ -131,10 +131,13 @@ srun --jobid "$JOB" --overlap nvidia-smi --query-gpu=index,memory.used,memory.to
 6. The session environment. Write `$EV/in-job.env`, `in-job.sh` and `launch.sh` as in
    `docs/slurm-evidence-runbook.md` 0.3, from the repository root, with
    `export EV=/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf`, and **after** 1.5 (in-job.env records
-   `$JOB`). Then add this session's variables (the grid's jobs read them from there):
+   `$JOB`). Then add this session's variables (the grid's jobs read them from there). The first line drops 0.3's
+   EV2 variables `Q` (the EV2 question's text), `P` and `PA` (its protocols): this session's scripts take the
+   question id as an argument, and a leftover `Q` or `P` would only point them at the wrong file.
 
 ```bash
 cat >> "$EV/in-job.env" <<EOF
+unset Q P PA
 export C_MAIN=$PWD/tests/EV2/corpora/rag-claude-s1-mixed
 export C_HARD=$PWD/tests/EV2/corpora/rag-tpl-hard-complex
 export QS="rag-factuality rag-hallucination rag-latency inv-metrics inv-methods inv-datasets cons-accuracy cons-hallucination best-accuracy best-hallucination"
@@ -143,25 +146,46 @@ EOF
 source "$EV/in-job.env"
 mkdir -p "$EV"/{logs,runs,scores,cache,agent-work}
 echo "$JOB $RUNS $C_MAIN $GLINER_URL"; echo "$QS" | wc -w      # the job id, the paths, 10
+echo "Q=${Q-unset} P=${P-unset} PA=${PA-unset}"                 # Q=unset P=unset PA=unset
+squeue -h -j "$JOB" -o '%i %T'                                  # the job id and RUNNING
 ```
 
-   Leave out the `GLINER_URL` line only when GLiNER did not start in 1.5 (and say so in the report). If you start
-   the stack again later, update `JOB` in in-job.env: `sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env"`.
+   Leave out the `GLINER_URL` line only when GLiNER did not start in 1.5 (and say so in the report). `launch.sh`
+   reads `JOB` only from in-job.env, so if you start the stack again later, update it there at once (with `JOB`
+   set to the new job, as in 1.5), then check it as above:
+   `sed -i "s/ JOB=[0-9]*/ JOB=$JOB/" "$EV/in-job.env" && source "$EV/in-job.env" && squeue -h -j "$JOB" -o '%i %T'`.
+   A stale `JOB` makes every launch fail at once (srun: invalid job id), before any run starts.
 
-Good, for each engine run dir `$RUNS/engine/$N/$Q` (corpus name `N`, question id `Q`, section 4): no GLiNER call
-was skipped, and GLiNER found something:
+Good, for every finished engine run (section 4 makes them): no GLiNER call was skipped (`skipped=0` on every
+line), and GLiNER found something (`found=` above 0) in the runs whose protocol has a `gliner_` step and needed it.
+`rag-factuality` and `inv-methods` have no GLiNER step, so `found=0` there is expected; in `gaps` mode GLiNER runs
+only where an earlier step left a gap, so a 0 elsewhere is a note, not a failure.
 
 ```bash
-grep '"status":"skipped"' "$RUNS/engine/$N/$Q/events.jsonl" | grep -c '"agent_id":"gliner_'   # 0
-grep -c gliner_ "$RUNS/engine/$N/$Q/evidence.jsonl"                                           # more than 0
+for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
+  G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps; R=$RUNS/$G/$N   # as one.sh, section 4
+  [ -f "$R/run.json" ] || continue
+  echo "$N $Q skipped=$(grep '"status":"skipped"' "$R/events.jsonl" | grep -c '"agent_id":"gliner_') found=$(grep -c gliner_ "$R/evidence.jsonl")"
+done; done                                  # skipped=0 on every line
 ```
 
 A skipped GLiNER call (the service was not reachable) is only an `extractor_call` event with status `skipped` in
 `events.jsonl`; `evidence run` does not print it, and `funnel.json` leaves it out (its own `skipped` means a paper
-the screen left out). The engine asks GLiNER's `/info` once per run: if the service was not up when a run started,
-all of that run's GLiNER calls are skipped. If the service dies mid-run, the GLiNER steps return errors, the funnel
-goes to the next extractor and runs still finish. Errors from the GLiNER service and the LLM (`service_call`) are
-cached; after you restart the service, re-run that run as in section 4, "Retries".
+the screen left out). The engine asks GLiNER's `/info` when a run starts and, while it gets no answer, again at
+most once a minute at a later GLiNER step: the steps before the service answers are skipped, the ones after it run.
+A skip is not stored in the record cache, so skipped GLiNER steps need a **plain rerun** after the run dir is moved
+aside, not `--retry-errors`: `one.sh <question> <corpus> rerun` (section 4) does exactly that. If the service dies
+mid-run, the GLiNER steps return errors (`service_call`, below), the funnel goes to the next extractor and runs
+still finish.
+
+**Failed calls.** A failed LLM call (the gateway refused, timed out or was restarting) has the error reason
+`model_call` (`evidence/extractors/llm.py`, and the LLM screen); a failed GLiNER `/predict` has `service_call`
+(`evidence/extractors/gliner.py`, the only `service_call`). Either way the call's result is `error` (every chunk
+failed) or `partial` (some chunks failed), the funnel moves on, and the run finishes with less evidence. These
+results are stored in the record cache, so a plain rerun reuses them. So `evidence run` counts them once it has
+written the run: above 0 it prints `FAIL engine-errors <run dir> <count>` and exits with code 2 (the run stays on
+disk), and `one.sh` then prints `FAIL engine-errors <question> <corpus>`. Retry those runs with
+`one.sh <question> <corpus> retry` once the service answers (section 4, "Retries").
 
 ## 2. Offline check (login node, no model)
 
@@ -206,37 +230,49 @@ Claude, not for you to fix).
 
 ## 4. The grid: question x corpus x system
 
-`one.sh` runs the three systems for one question and one corpus, then scores. The engine run is
-`$EV/runs/engine/<corpus>/<question>`. A baseline answer is where the web app keeps it (`webapp/evjobs.py`,
-`baseline_name`), so the app's Score finds it: `$EV/runs/<system>/<corpus>.<question>`, and for `rag-factuality`
-`$EV/runs/<system>/<corpus>` (the EV2 layout). Each system has its own cache file, because two processes must
-never append to the same cache file. A system whose `answer.json` is already there is skipped, so `one.sh` and
-`grid.sh` can be started again after a stop and only do what is missing; the score is always written again.
+`one.sh` runs the three systems for one question and one corpus, then scores. Every run is where the web app
+keeps it, so the app lists, opens and scores the grid's runs as its own (`$EV` is the app's `$EV`). The engine run
+is `$EV/runs/<question>-cascade-gaps/<corpus>`, and for `rag-factuality` `$EV/runs/cascade-gaps/<corpus>`
+(`webapp/evjobs.py`, `run_group`: the group of a repo protocol run with the cascade and the `gaps` strategy; the
+run name is the corpus, the app's default). A baseline answer is `$EV/runs/<system>/<corpus>.<question>`, and for
+`rag-factuality` `$EV/runs/<system>/<corpus>` (`baseline_name`, the EV2 layout), so the app's Score finds it. Each
+system has its own cache file, because two processes must never append to the same cache file. A finished system
+is skipped (the engine's `run.json`, a baseline's `answer.json`), so `one.sh` and `grid.sh` can be started again
+after a stop and only do what is missing; the score is always written again.
 
 ```bash
-cat > $EV/one.sh <<'EOF'
+cat > "$EV/one.sh" <<'EOF'
 #!/usr/bin/env bash
-# one.sh <question-id> <corpus-dir> [retry]: engine + RAG baseline + agent baseline + score.
-# Skips a system whose answer.json exists. `retry`: move the engine run aside (kept under runs/failed/) and run
-# it again with --retry-errors (cached service_call errors are asked again).
+# one.sh <question-id> <corpus-dir> [retry|rerun]: engine + RAG baseline + agent baseline + score.
+# Skips a finished system (the engine's run.json, a baseline's answer.json). `retry` and `rerun` first move the
+# engine run aside (kept under runs/failed/<corpus>/) and run it again: `retry` with --retry-errors (cached failed
+# calls, status error or partial, are asked again), `rerun` without (skipped GLiNER steps; a killed run).
 set -u
 Q=$1; C=$2; MODE=${3:-}; N=$(basename "$C")
+case $MODE in ""|retry|rerun) ;; *) echo "FAIL one.sh $Q $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
 P=evidence/protocols/$Q.yaml
+G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run's group, as the web app names it
 BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N        # the baselines' run name, as the web app names it
-RUN=$RUNS/engine/$N; mkdir -p "$RUN" "$SCORES/$N"
+RUN=$RUNS/$G/$N; mkdir -p "$RUNS/$G" "$SCORES/$N"   # the engine run dir: <group>/<corpus>
 RETRY=()
-if [ "$MODE" = retry ] && [ -e "$RUN/$Q" ]; then
+if [ -n "$MODE" ] && [ -e "$RUN" ]; then
   mkdir -p "$RUNS/failed/$N"
-  mv "$RUN/$Q" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # a run dir is never overwritten; keep it for the report
-  RETRY=(--retry-errors)
+  mv "$RUN" "$RUNS/failed/$N/$Q-$(date +%Y%m%dT%H%M%S)"   # a run dir is never overwritten; keep it for the report
 fi
-if [ -f "$RUN/$Q/answer.json" ]; then
+[ "$MODE" = retry ] && RETRY=(--retry-errors)
+if [ -f "$RUN/run.json" ]; then                     # the engine writes run.json last
   echo "skip engine $Q $N: done"
-elif [ -e "$RUN/$Q" ]; then
-  echo "FAIL engine $Q $N: an unfinished run dir is in the way; run: one.sh $Q $C retry"
+elif [ -e "$RUN" ]; then
+  echo "FAIL engine $Q $N: a run dir without run.json is in the way (a killed run); one.sh $Q $C rerun moves it to $RUNS/failed/$N/ and runs again"
 else
-  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUN" --cache "$CACHE/engine-$N" \
-    --model orch-model --strategy gaps --workers 3 --run-id "$Q" ${RETRY[@]+"${RETRY[@]}"} || echo "FAIL engine $Q $N"
+  uv run evidence run --protocol "$P" --corpus "$C" --out "$RUNS/$G" --cache "$CACHE/engine-$N" \
+    --model orch-model --strategy gaps --workers 3 --run-id "$N" ${RETRY[@]+"${RETRY[@]}"}
+  rc=$?
+  if [ "$rc" -eq 2 ] && [ -f "$RUN/run.json" ]; then     # the run is written, but some extractor calls failed
+    echo "FAIL engine-errors $Q $N: failed calls (count on the FAIL line above); when the service answers: one.sh $Q $C retry"
+  elif [ "$rc" -ne 0 ]; then
+    echo "FAIL engine $Q $N (exit $rc)"
+  fi
 fi
 if [ -f "$RUNS/rag-baseline/$BN/answer.json" ]; then
   echo "skip rag $Q $N: done"
@@ -252,7 +288,7 @@ else
     || echo "FAIL agent $Q $N"
 fi
 ARGS=()
-[ -f "$RUN/$Q/answer.json" ] && ARGS+=(--run "$RUN/$Q")
+[ -f "$RUN/run.json" ] && ARGS+=(--run "$RUN")
 for s in rag-baseline agent-baseline; do
   [ -f "$RUNS/$s/$BN/answer.json" ] && ARGS+=(--baseline "$RUNS/$s/$BN/answer.json")
 done
@@ -262,13 +298,13 @@ else
   uv run evaluate score "${ARGS[@]}" --corpus "$C" --question-id "$Q" --out "$SCORES/$N/$Q" || echo "FAIL score $Q $N"
 fi
 EOF
-cat > $EV/grid.sh <<'EOF'
+cat > "$EV/grid.sh" <<'EOF'
 #!/usr/bin/env bash
 # grid.sh <corpus-dir>: one.sh for every question of $QS (from in-job.env), one after another
 set -u
 for Q in $QS; do "$EV/one.sh" "$Q" "$1"; done
 EOF
-chmod +x $EV/one.sh $EV/grid.sh
+chmod +x "$EV/one.sh" "$EV/grid.sh"
 ```
 
 The scripts read `RUNS`, `SCORES`, `CACHE`, `AGENT_ROOT`, `EV` and `QS` from `in-job.env` (0.3 and step 1.6), and
@@ -293,37 +329,71 @@ nohup "$EV/launch.sh" grid-hard "$EV/grid.sh" "$C_HARD" > /dev/null 2>&1 &
 
 The logs are `$EV/logs/grid-main.log` and `grid-hard.log` (`launch.sh` starts a step's log afresh, so give a new
 step name to every later launch); `FAIL` lines list what to retry. Starting a grid again is safe: it only runs
-what has no `answer.json`.
+what is not finished (an engine run without `run.json`, a baseline without `answer.json`), and a killed engine run
+dir is reported, not overwritten (see "Killed runs" below).
 
-Retries: for an engine run that ended with `service_call` errors (a GLiNER or LLM outage, after the service is
-back), or a `FAIL engine` line, run `one.sh` with `retry`. It moves the run dir aside to `$RUNS/failed/<corpus>/`,
-runs the engine again with `--retry-errors`, runs any baseline that has no answer, and scores again. Run it in the
-job, and only when no grid is running on that corpus (it appends to that corpus's caches):
+Retries: for a `FAIL engine-errors` line (failed LLM calls, `model_call`, or failed GLiNER calls, `service_call`;
+section 1, "Failed calls"), once the gateway or the service answers again, or for a `FAIL engine` line, run `one.sh`
+with `retry`. It moves the run dir aside to `$RUNS/failed/<corpus>/`, runs the engine again with `--retry-errors`
+(the cached `error` and `partial` results are asked again), runs any baseline that has no answer, and scores again.
+Run it in the job, and only when no grid is running on that corpus (it appends to that corpus's caches):
 
 ```bash
 "$EV/launch.sh" retry-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" retry
 ```
 
-(Pass the question and corpus as arguments, as above: `in-job.env` exports its own `Q` and `P` (0.3), so a `Q`
-set in your login shell does not reach a command run through `launch.sh`.)
+Killed runs: an engine run dir without `run.json` (the Slurm time limit, a lost node, a cancelled step) blocks its
+own rerun: `evidence run` refuses it ("exists without run.json: a run that was killed or crashed ... Move it aside,
+to $RUNS/failed/<corpus>/ ..., and run again") and `one.sh` prints `FAIL engine <question> <corpus>: a run dir
+without run.json is in the way`. Do what it says: `one.sh <question> <corpus> rerun` moves it to
+`$RUNS/failed/<corpus>/` and runs again (the record cache keeps the calls it finished, so this is cheap).
+
+Reruns: for a run with skipped GLiNER steps (step 5 counts them; the service was not up yet), once GLiNER answers,
+run `one.sh` with `rerun` instead: it moves the run dir aside the same way and runs the engine again **without**
+`--retry-errors` (skips are not cached, so a plain run makes those GLiNER calls; every other call comes from the
+cache). Same rules: in the job, no grid on that corpus, a new step name:
+`"$EV/launch.sh" rerun-main-inv-metrics "$EV/one.sh" inv-metrics "$C_MAIN" rerun`.
+
+(Pass the question and corpus as arguments, as above: a command run through `launch.sh` sees only `in-job.env`,
+never a `Q` set in your login shell, and `in-job.env` unsets 0.3's `Q`, `P` and `PA` (step 1.6).)
 
 The hard corpus (112 papers) is the slow one; if the job is about to end, finish the main corpus first and report
 the hard corpus as partial.
 
 ## 5. Check each run
 
-- `uv run evidence replay $RUNS/engine/<corpus>/<question> | grep '"ok"'` gives `"ok": true`.
+- `uv run evidence replay $RUNS/<question>-cascade-gaps/<corpus> | grep '"ok"'` (for `rag-factuality`
+  `$RUNS/cascade-gaps/<corpus>`) gives `"ok": true`. (A replay is also `ok` for a run whose calls failed: it
+  replays the cached failures. That is why the next check exists.)
+- Failed calls: the count per run, 0 when every LLM and GLiNER call answered. Report it per run (step 6, item 5),
+  and retry every run above 0 with `one.sh <question> <corpus> retry` (section 4, "Retries"), then count again:
+
+```bash
+for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
+  G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps; R=$RUNS/$G/$N   # as one.sh, section 4
+  [ -f "$R/run.json" ] || { echo "$N $Q: no finished run"; continue; }
+  echo "$N $Q $(uv run python -c 'import sys; from evidence.rundir import RunDir; print(RunDir(sys.argv[1]).failed_calls())' "$R")"
+done; done
+```
+
 - `$SCORES/<corpus>/<question>/report.md` exists for each of the 20 pairs; note any missing one with its `FAIL` line.
-- GLiNER: `grep '"status":"skipped"' $RUNS/engine/<corpus>/<question>/events.jsonl | grep -c '"agent_id":"gliner_'`
-  counts the GLiNER calls skipped because the service was not up (0 when it was up). Report the count per run.
+- GLiNER: the loop at the end of section 1 counts, per run, the GLiNER calls skipped because the service was not
+  up (`skipped=`, 0 when it was up) and the evidence GLiNER found (`found=`). Report both per run.
+  Above 0 while GLiNER now answers (`curl -s 127.0.0.1:8090/info` through `srun`, step 1.5): rerun that run with
+  `one.sh <question> <corpus> rerun` (section 4, "Reruns"; not `retry`), then count again.
   (`funnel.json`'s `skipped` is a paper the screen left out, not GLiNER.)
 
 ## 6. The deliverable table
 
 Read `report.json` / `report.md` of each score dir. A and B exist for the engine run only (`extraction`,
 `integration`); the baselines are scored on C only (`synthesis`, one row per system: `evidence-engine`,
-`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1) and is the same for
-every kind. B and C by kind, with the field names as they are in `report.json`:
+`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1). It counts
+only the evidence types the question's protocol extracts, and `report.json` lists them in `scored_types` (for
+example, `inv-datasets` is scored on datasets only). So A is comparable across corpora for the same question, not
+across questions or kinds; copy `scored_types` into the summary next to A. If a `report.json` has no `scored_types`, its
+`all` / `all` row still counts every type in the corpus (older scoring code): write A as `-` for that run and say
+so under Failures (the runs are kept, so the scores can be made again). B and C by kind, with the field names as
+they are in `report.json`:
 
 | kind | B (engine only) | C (every system) |
 |---|---|---|
@@ -332,6 +402,8 @@ every kind. B and C by kind, with the field names as they are in `report.json`:
 | consistency | `integration`: `claim_accuracy` | `synthesis`: `per_study_accuracy` |
 | best | `integration`: `kind_accuracy` | `synthesis`: `winner_correct`, `per_study_accuracy` |
 
+`direction_accuracy` and `per_study_accuracy` are scored on the papers the truth can decide, and a paper the system
+left out counts as wrong; `completeness` is reported next to them in `synthesis`: copy it into C beside them.
 `report.md` shows the same numbers under "B." and "C." headings; copy from there if a field is nested.
 
 Write `reports/question-first/summary.md` with:
@@ -342,16 +414,20 @@ Write `reports/question-first/summary.md` with:
    |---|---|---|---|---|---|
 
    Engine rows have A, B and C; the baseline rows have C only, and `-` for A and B. Write B and C as the fields of
-   the table above (for example `label_correct / direction_accuracy`).
-2. **Per-extractor A**, for each corpus: from `report.json`'s `extractors.rows`, the rows with `level = all`, one
-   line per extractor id with precision, recall, f1, for the regex, abbreviation, GLiNER, number and LLM
-   extractors (`regex_*`, `abbrev_*`, `gliner_*`, `number_*`, `llm_*`), per question. A GLiNER line that says
-   skipped or has zero facts means the service was not up.
+   the table above (for example `label_correct / direction_accuracy / completeness`), and give each question's
+   `scored_types` once under the table.
+2. **Per-extractor A**, for each corpus: from `report.json`'s `extractors.rows`, one line per extractor id with
+   precision, recall, f1, for the regex, abbreviation, GLiNER, number and LLM extractors (`regex_*`, `abbrev_*`,
+   `gliner_*`, `number_*`, `llm_*`), per question. Each extractor has two rows with `level = all`: copy the
+   **per-type row**, the one whose `evidence_type` is the extractor's own type (`metric` for `gliner_metric`), not
+   the one with `evidence_type = all`. A GLiNER extractor with no row at all was skipped on every paper (the service
+   was not up); one with zero matches found nothing.
 3. **Mapping check** from step 3: per kind, the retries and failures you saw (or "none").
 4. **GPU and GLiNER**: `nvidia-smi` driver and CUDA, GLiNER's memory use, free memory left on GPU 0, whether
    `orch-3x40-gliner.yaml` needed `gpu_memory_utilization: 0.88`, whether GLiNER started (`gliner health ok`),
    whether `GLINER_URL` was set.
-5. **Failures**: each `FAIL` line and what you did; the number of cached errors that needed `--retry-errors`.
+5. **Failures**: each `FAIL` line and what you did; the failed-call count of every engine run (step 5), before
+   and after its retry, and which runs needed `one.sh ... retry`.
 
 ## 7. Hand-back
 
@@ -360,13 +436,14 @@ mkdir -p reports/question-first
 for N in rag-claude-s1-mixed rag-tpl-hard-complex; do
   for Q in $QS; do
     D=$SCORES/$N/$Q; [ -f "$D/report.json" ] || continue
-    mkdir -p reports/question-first/$N/$Q
-    cp "$D"/report.json "$D"/report.md reports/question-first/$N/$Q/
-    cp "$RUNS"/engine/$N/$Q/funnel.json reports/question-first/$N/$Q/ 2>/dev/null
+    mkdir -p "reports/question-first/$N/$Q"
+    cp "$D/report.json" "$D/report.md" "reports/question-first/$N/$Q/"
+    G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run, as one.sh writes it
+    cp "$RUNS/$G/$N/funnel.json" "reports/question-first/$N/$Q/" 2>/dev/null
   done
 done
-cp -r $EV/scores/mapcheck reports/question-first/mapcheck 2>/dev/null
-cp $EV/failures.md reports/question-first/ 2>/dev/null
+cp -r "$EV/scores/mapcheck" reports/question-first/mapcheck 2>/dev/null
+cp "$EV/failures.md" reports/question-first/ 2>/dev/null
 git checkout results && git pull --ff-only origin results   # reports/ is untracked, so it comes along
 git add reports/question-first
 git status --short | grep -v '^A  reports/question-first' ; echo "(nothing above: only report files)"

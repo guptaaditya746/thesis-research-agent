@@ -73,8 +73,8 @@ from .locate import Located, Locator, locate
 from .protocol import SCREEN_TYPE, EvidenceTypeSpec, ExtractorRef, Protocol, Synthesis, parse
 from .recording import Provider, usage
 from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE,
-                     LOCATE_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, new_run_id,
-                     write_lines)
+                     LOCATE_FILE, PROTOCOL_FILE, RUN_CALLS_FILE, RUN_FILE, Corpus, Events, RunCalls, RunDirExists,
+                     new_run_id, write_lines)
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
@@ -479,7 +479,10 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     corpus = Corpus(settings.corpus)
     run_id = run_id or new_run_id(protocol.id, "" if mode == "run" else f"-{mode}")
     root = Path(out_dir) / run_id
-    root.mkdir(parents=True, exist_ok=False)
+    try:
+        root.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        raise RunDirExists(root) from None
     (root / PROTOCOL_FILE).write_bytes(protocol_bytes)
     if settings.gliner_url and settings.gliner_model is None and _uses_gliner(protocol):
         served = gliner.info(settings.gliner_url)
@@ -497,6 +500,11 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         ex.document(paper)
     ex.finish()
     ex.cost["seconds"] = round(time.monotonic() - t0, 3)
+    if settings.gliner_model is None:   # GLiNER came up after the run started: record the model it served
+        served = sorted({e.model for c in cascades.values() for ref, e in c
+                         if isinstance(e, gliner.GlinerExtractor) and "model" not in ref.config and e.model})
+        if served:
+            settings = replace(settings, gliner_model=served[0])
     specs = {e.spec.extractor_id: e.spec for c in cascades.values() for _, e in c}
     write_json(root / RUN_FILE, {
         "run_id": run_id, "mode": mode, "source_run": source_run, "protocol": {"id": protocol.id, "sha256": protocol.sha256},

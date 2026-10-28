@@ -19,14 +19,14 @@ SPEC = ExtractorSpec(name="counting", version=1, kind="regex", evidence_types=("
 class Counting:
     spec = SPEC
 
-    def __init__(self, fail: bool = False) -> None:
-        self.runs, self.fail = 0, fail
+    def __init__(self, fail: bool = False, status: str = "ok") -> None:
+        self.runs, self.fail, self.status = 0, fail, status
 
     def extract(self, task, ctx) -> ExtractionResult:
         self.runs += 1
         if self.fail:
             raise ValueError("always fails")
-        return ExtractionResult(extractor_id=SPEC.extractor_id, task_sha256=task.task_sha256, status="ok")
+        return ExtractionResult(extractor_id=SPEC.extractor_id, task_sha256=task.task_sha256, status=self.status)
 
 
 def make_task() -> ExtractionTask:
@@ -59,3 +59,14 @@ def test_retry_errors_retries_a_made_error_only_once(tmp_path) -> None:
     cache = CallCache(JsonlCache(path), "run", retry_errors=True)
     a, b = cache.call(ext, make_task(), make_ctx), cache.call(ext, make_task(), make_ctx)
     assert (a.attempt, b.attempt) == (1, 1) and ext.runs == 2 and b.source == "fresh"
+
+
+def test_retry_errors_retries_a_partial_result_and_never_an_ok_one(tmp_path) -> None:
+    path, partial = tmp_path / "c.jsonl", Counting(status="partial")
+    CallCache(JsonlCache(path), "run").call(partial, make_task(), make_ctx)       # attempt 0: one chunk failed
+    assert CallCache(JsonlCache(path), "run").call(partial, make_task(), make_ctx).source == "cache"   # no flag: reused
+    fixed = Counting()
+    again = CallCache(JsonlCache(path), "run", retry_errors=True).call(fixed, make_task(), make_ctx)
+    assert (again.attempt, again.source, again.raw.status, fixed.runs) == (1, "fresh", "ok", 1)
+    later = CallCache(JsonlCache(path), "run", retry_errors=True).call(fixed, make_task(), make_ctx)
+    assert (later.attempt, later.source, fixed.runs) == (1, "cache", 1)          # an ok result is never asked again
