@@ -1283,6 +1283,48 @@
         }
       }
     },
+    "/api/ev/jobs/fetch": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Ev Start Fetch",
+        "description": "Real papers from the arXiv API as a demonstration corpus (no ground truth: runs on it are not scored).",
+        "operationId": "ev_start_fetch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FetchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ev/jobs/run": {
       "post": {
         "tags": [
@@ -3279,6 +3321,23 @@
             "type": "string",
             "title": "Manifest Sha256"
           },
+          "ground_truth": {
+            "type": "boolean",
+            "title": "Ground Truth",
+            "description": "false for a demonstration corpus of real papers (source.json `ground_truth: false`, `evidence fetch`): nothing to score against",
+            "default": true
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CorpusSource"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "source.json: where the papers came from (arXiv)"
+          },
           "papers_list": {
             "items": {
               "$ref": "#/components/schemas/CorpusPaper"
@@ -3328,6 +3387,8 @@
           "variant",
           "base",
           "manifest_sha256",
+          "ground_truth",
+          "source",
           "papers_list",
           "models",
           "generator"
@@ -3527,6 +3588,88 @@
         ],
         "title": "CorpusPaperDetail"
       },
+      "CorpusSource": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "arxiv"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "fetched": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched",
+            "description": "when it was fetched (ISO 8601, UTC)"
+          },
+          "ground_truth": {
+            "type": "boolean",
+            "title": "Ground Truth",
+            "default": false
+          },
+          "papers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Papers"
+          },
+          "skipped": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Skipped",
+            "description": "papers whose PDF could not be fetched or converted, and why",
+            "default": []
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "kind",
+          "query",
+          "category",
+          "fetched",
+          "ground_truth",
+          "papers",
+          "skipped"
+        ],
+        "title": "CorpusSource",
+        "description": "source.json of a corpus of real papers (`evidence fetch`, evidence/arxiv.py)."
+      },
       "CorpusSummary": {
         "properties": {
           "name": {
@@ -3666,6 +3809,23 @@
           "manifest_sha256": {
             "type": "string",
             "title": "Manifest Sha256"
+          },
+          "ground_truth": {
+            "type": "boolean",
+            "title": "Ground Truth",
+            "description": "false for a demonstration corpus of real papers (source.json `ground_truth: false`, `evidence fetch`): nothing to score against",
+            "default": true
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CorpusSource"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "source.json: where the papers came from (arXiv)"
           }
         },
         "type": "object",
@@ -3684,7 +3844,9 @@
           "answer",
           "variant",
           "base",
-          "manifest_sha256"
+          "manifest_sha256",
+          "ground_truth",
+          "source"
         ],
         "title": "CorpusSummary"
       },
@@ -5182,6 +5344,59 @@
         ],
         "title": "ExtractorSpec",
         "description": "Identity of one extractor version (contract section 3)."
+      },
+      "FetchRequest": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 3,
+            "pattern": "^[^\\x00-\\x1f\\x7f]*\\w[^\\x00-\\x1f\\x7f]*$",
+            "title": "Query",
+            "description": "search words; every word must occur in the paper's arXiv record"
+          },
+          "max_papers": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Max Papers",
+            "description": "papers to fetch (one request every three seconds)",
+            "default": 10
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z-]*(\\.[A-Za-z][A-Za-z-]*)?$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category",
+            "description": "an arXiv category, e.g. cs.CL"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "the corpus directory; default arxiv-<slug>-<yyyymmdd>"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "title": "FetchRequest",
+        "description": "`evidence fetch` (evidence/arxiv.py): real papers from the arXiv API into `$EV/corpora/<name>`, a\ndemonstration corpus with no ground truth. The name defaults to `arxiv-<slug of the query>-<yyyymmdd>`."
       },
       "Flags": {
         "properties": {

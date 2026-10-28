@@ -560,6 +560,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ev/jobs/fetch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ev Start Fetch
+         * @description Real papers from the arXiv API as a demonstration corpus (no ground truth: runs on it are not scored).
+         */
+        post: operations["ev_start_fetch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ev/jobs/run": {
         parameters: {
             query?: never;
@@ -1338,6 +1358,14 @@ export interface components {
             base: string | null;
             /** Manifest Sha256 */
             manifest_sha256: string;
+            /**
+             * Ground Truth
+             * @description false for a demonstration corpus of real papers (source.json `ground_truth: false`, `evidence fetch`): nothing to score against
+             * @default true
+             */
+            ground_truth: boolean;
+            /** @description source.json: where the papers came from (arXiv) */
+            source: components["schemas"]["CorpusSource"] | null;
             /** Papers List */
             papers_list: components["schemas"]["CorpusPaper"][];
             /** Models */
@@ -1416,6 +1444,43 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /**
+         * CorpusSource
+         * @description source.json of a corpus of real papers (`evidence fetch`, evidence/arxiv.py).
+         */
+        CorpusSource: {
+            /**
+             * Kind
+             * @description arxiv
+             */
+            kind: string;
+            /** Query */
+            query: string | null;
+            /** Category */
+            category: string | null;
+            /**
+             * Fetched
+             * @description when it was fetched (ISO 8601, UTC)
+             */
+            fetched: string | null;
+            /**
+             * Ground Truth
+             * @default false
+             */
+            ground_truth: boolean;
+            /** Papers */
+            papers: number | null;
+            /**
+             * Skipped
+             * @description papers whose PDF could not be fetched or converted, and why
+             * @default []
+             */
+            skipped: {
+                [key: string]: unknown;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
         /** CorpusSummary */
         CorpusSummary: {
             /**
@@ -1465,6 +1530,14 @@ export interface components {
             base: string | null;
             /** Manifest Sha256 */
             manifest_sha256: string;
+            /**
+             * Ground Truth
+             * @description false for a demonstration corpus of real papers (source.json `ground_truth: false`, `evidence fetch`): nothing to score against
+             * @default true
+             */
+            ground_truth: boolean;
+            /** @description source.json: where the papers came from (arXiv) */
+            source: components["schemas"]["CorpusSource"] | null;
         };
         /** Counts */
         Counts: {
@@ -2080,6 +2153,34 @@ export interface components {
              * @enum {string}
              */
             determinism: "exact" | "near_exact" | "variable";
+        };
+        /**
+         * FetchRequest
+         * @description `evidence fetch` (evidence/arxiv.py): real papers from the arXiv API into `$EV/corpora/<name>`, a
+         *     demonstration corpus with no ground truth. The name defaults to `arxiv-<slug of the query>-<yyyymmdd>`.
+         */
+        FetchRequest: {
+            /**
+             * Query
+             * @description search words; every word must occur in the paper's arXiv record
+             */
+            query: string;
+            /**
+             * Max Papers
+             * @description papers to fetch (one request every three seconds)
+             * @default 10
+             */
+            max_papers?: number;
+            /**
+             * Category
+             * @description an arXiv category, e.g. cs.CL
+             */
+            category?: string | null;
+            /**
+             * Name
+             * @description the corpus directory; default arxiv-<slug>-<yyyymmdd>
+             */
+            name?: string | null;
         };
         /** Flags */
         Flags: {
@@ -4499,6 +4600,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SynthRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ev_start_fetch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FetchRequest"];
             };
         };
         responses: {
