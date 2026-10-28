@@ -434,7 +434,9 @@ for Q in $QL; do
   elif [ -e "$RUN" ]; then
     echo "FAIL $V $Q $N: a run dir without run.json is in the way; extra.sh $V $C $Q rerun"
   else
-    uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$Q-$GV"       --cache "$CACHE/$V-$N" --model orch-model --extractors "$EXT" --strategy gaps --workers 3 --run-id "$RID"       ${RETRY[@]+"${RETRY[@]}"}
+    uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$Q-$GV" \
+      --cache "$CACHE/$V-$N" --model orch-model --extractors "$EXT" --strategy gaps --workers 3 --run-id "$RID" \
+      ${RETRY[@]+"${RETRY[@]}"}
     rc=$?
     if [ "$rc" -eq 2 ] && [ -f "$RUN/run.json" ]; then
       echo "FAIL engine-errors $V $Q $N: when the service answers: extra.sh $V $C $Q retry"
@@ -484,6 +486,34 @@ The rows, in this order of importance (stop at the job's end and report what is 
    and C of `regex-only`, `llm-only` and the grid's cascade side by side, and read each step as a **marginal gain**
    (cascade minus regex-only is what the later extractors add). Retries and reruns work as in one.sh:
    `"$EV/launch.sh" retry-llm-only-main "$EV/extra.sh" llm-only "$C_MAIN" inv-metrics retry`.
+
+## 4c. The counterfactual corpus (main, rag-factuality)
+
+`rag-claude-s1-mixed-cf-S001-contradicts` is the main corpus with one study changed: S001's numbers are rewritten so
+its direction goes from `supports` to `contradicts` (`variant.json` lists the changed values). Every system should
+change its answer for S001 and nowhere else. **Only if the corpus is present** (it is in git; `ls` below shows its
+`variant.json`); if it is not, skip this step and write "counterfactual not run: corpus missing" in the summary.
+Run it after `grid-main` has finished (it has its own caches, named after the corpus):
+
+```bash
+C_CF=$(dirname "$C_MAIN")/rag-claude-s1-mixed-cf-S001-contradicts
+ls "$C_CF/variant.json" "$C_CF/manifest.json"
+nohup "$EV/launch.sh" cf-main "$EV/one.sh" rag-factuality "$C_CF" > /dev/null 2>&1 &
+```
+
+When `cf-main` has finished and `$SCORES/rag-claude-s1-mixed-cf-S001-contradicts/rag-factuality/report.json`
+exists, compare it with the main corpus (no model; login node is fine):
+
+```bash
+C_CF=$(dirname "$C_MAIN")/rag-claude-s1-mixed-cf-S001-contradicts
+uv run evaluate shift --base "$SCORES/rag-claude-s1-mixed/rag-factuality" \
+  --variant "$SCORES/rag-claude-s1-mixed-cf-S001-contradicts/rag-factuality" \
+  --variant-json "$C_CF/variant.json" --out "$SCORES/shift-cf-S001"
+```
+
+Good: it prints `shifted as expected:` with one `yes` or `no` per system (`evidence-engine`, `rag-baseline`,
+`agent-baseline`). Copy that line and `shift.md`'s table into the summary (step 6 item 7). A `no` is a result, not
+a failure.
 
 ## 5. Check each run
 
@@ -567,6 +597,7 @@ Write `reports/question-first/summary.md` with:
    engine variant has A, B and C). Name the variant in the system column (for example `rag-baseline (per_paper)`).
    Say under the table that the `rag-per-paper` row is the fair RAG comparison for C: every paper is seen, so a
    left-out paper there is the model's choice, not the retriever's.
+7. **Counterfactual** (step 4c): the `shifted as expected` line and the table of `shift.md`, or why it did not run.
 
 ## 7. Hand-back
 
