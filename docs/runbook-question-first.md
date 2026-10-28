@@ -379,6 +379,76 @@ never a `Q` set in your login shell, and `in-job.env` unsets 0.3's `Q`, `P` and 
 The hard corpus (112 papers) is the slow one; if the job is about to end, finish the main corpus first and report
 the hard corpus as partial.
 
+## 4b. Extra rows on the main corpus
+
+The grid's RAG baseline reads 8 passages of the whole corpus, so it sees at most 8 papers, and a paper it leaves
+out counts as wrong in C. The rows below make the comparison fair and show how much of a number is noise.
+`extra.sh` runs one extra system (a "variant") for every question on one corpus and scores each answer **on its
+own**, in `$SCORES/<corpus>/<question>.<variant>/`. Each variant has its own cache file or dir, so it never shares
+a cache with the grid or with another variant; never run the same variant twice at once on one corpus.
+
+```bash
+cat > "$EV/extra.sh" <<'EOF'
+#!/usr/bin/env bash
+# extra.sh <variant> <corpus-dir> [question-id|all] [retry|rerun]: one extra system for every question of $QS
+# (or one), each scored on its own in $SCORES/<corpus>/<question>.<variant>. Skips a finished answer or run.
+# RAG variants: rag-per-paper (top 2 passages of every paper), rag-per-paper-k1 (top 1 of every paper).
+set -u
+V=$1; C=$2; ONLY=${3:-all}; MODE=${4:-}; N=$(basename "$C")
+case $MODE in ""|retry|rerun) ;; *) echo "FAIL extra.sh $V $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
+RAG=(); EXT=cascade; RID=$N; GV=$V
+case $V in
+  rag-per-paper) RAG=(--retrieval per_paper --k 2) ;;
+  rag-per-paper-k1) RAG=(--retrieval per_paper --k 1) ;;
+  *) echo "FAIL extra.sh: unknown variant '$V'"; exit 2;;
+esac
+QL=$QS; [ "$ONLY" = all ] || QL=$ONLY
+for Q in $QL; do
+  BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N       # the baselines' run name, as one.sh
+  OUT=$SCORES/$N/$Q.$V; mkdir -p "$SCORES/$N"
+  if [ "${#RAG[@]}" -gt 0 ]; then                     # a RAG variant
+    A=$RUNS/$V/$BN/answer.json
+    if [ -f "$A" ]; then
+      echo "skip $V $Q $N: done"
+    else
+      uv run evaluate rag-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/$V/$BN" \
+        --cache "$CACHE/$V-$N.jsonl" --model orch-model "${RAG[@]}" || echo "FAIL $V $Q $N"
+    fi
+    if [ -f "$A" ]; then
+      uv run evaluate score --baseline "$A" --corpus "$C" --question-id "$Q" --out "$OUT" || echo "FAIL score $V $Q $N"
+    fi
+    continue
+  fi
+done
+EOF
+cat > "$EV/extras.sh" <<'EOF'
+#!/usr/bin/env bash
+# extras.sh <corpus-dir> <variant>...: extra.sh for each variant, one after another
+set -u
+C=$1; shift
+for V in "$@"; do "$EV/extra.sh" "$V" "$C"; done
+EOF
+chmod +x "$EV/extra.sh" "$EV/extras.sh"
+```
+
+Start the extras on the main corpus **after `grid-main` has finished** (its log ends and `launch.sh` printed its
+exit), so the GPU is shared with at most the hard grid; they write `FAIL` lines as the grid does:
+
+```bash
+nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper > /dev/null 2>&1 &
+```
+
+The rows, in this order of importance (stop at the job's end and report what is missing):
+
+1. **`rag-per-paper`** (main): RAG with `--retrieval per_paper --k 2`, the top 2 passages of **every** paper (40
+   passages, about 15k tokens). This is the fair RAG row for C: a paper left out counts as wrong, and the grid's
+   global RAG leaves out at least 12 of 20 papers by construction. On the hard corpus it only fits with one passage
+   per paper (112 x 1 500 characters, about 42k tokens) and a context of at least 64k tokens: check
+   `grep -n max_model_len llm-setup/profiles/orch-3x40-gliner.yaml` (the `orch` model's line). Only if it is
+   65536 or more, after `grid-hard` has finished:
+   `nohup "$EV/launch.sh" extras-hard "$EV/extras.sh" "$C_HARD" rag-per-paper-k1 > /dev/null 2>&1 &`.
+   Otherwise write "rag-per-paper not run on hard: max_model_len <n>" in the summary.
+
 ## 5. Check each run
 
 - `uv run evidence replay $RUNS/<question>-cascade-gaps/<corpus> | grep '"ok"'` (for `rag-factuality`
@@ -456,6 +526,11 @@ Write `reports/question-first/summary.md` with:
    whether `GLINER_URL` was set.
 5. **Failures**: each `FAIL` line and what you did; the failed-call count of every engine run (step 5), before
    and after its retry, and which runs needed `one.sh ... retry`.
+6. **Extra rows** (step 4b), for each corpus they ran on: one row per question x variant, from
+   `$SCORES/<corpus>/<question>.<variant>/report.json`, in the main table's columns (a RAG variant has C only; an
+   engine variant has A, B and C). Name the variant in the system column (for example `rag-baseline (per_paper)`).
+   Say under the table that the `rag-per-paper` row is the fair RAG comparison for C: every paper is seen, so a
+   left-out paper there is the model's choice, not the retriever's.
 
 ## 7. Hand-back
 
