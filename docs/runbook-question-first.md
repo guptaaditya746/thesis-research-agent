@@ -392,7 +392,8 @@ cat > "$EV/extra.sh" <<'EOF'
 #!/usr/bin/env bash
 # extra.sh <variant> <corpus-dir> [question-id|all] [retry|rerun]: one extra system for every question of $QS
 # (or one), each scored on its own in $SCORES/<corpus>/<question>.<variant>. Skips a finished answer or run.
-# RAG variants: rag-per-paper (top 2 passages of every paper), rag-per-paper-k1 (top 1 of every paper).
+# RAG variants: rag-per-paper (top 2 passages of every paper), rag-per-paper-k1 (top 1 of every paper),
+# rag-oracle (the passages truth needs; a diagnostic that reads ground_truth.json).
 set -u
 V=$1; C=$2; ONLY=${3:-all}; MODE=${4:-}; N=$(basename "$C")
 case $MODE in ""|retry|rerun) ;; *) echo "FAIL extra.sh $V $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
@@ -400,6 +401,7 @@ RAG=(); EXT=cascade; RID=$N; GV=$V
 case $V in
   rag-per-paper) RAG=(--retrieval per_paper --k 2) ;;
   rag-per-paper-k1) RAG=(--retrieval per_paper --k 1) ;;
+  rag-oracle) RAG=(--oracle-passages) ;;
   *) echo "FAIL extra.sh: unknown variant '$V'"; exit 2;;
 esac
 QL=$QS; [ "$ONLY" = all ] || QL=$ONLY
@@ -435,7 +437,7 @@ Start the extras on the main corpus **after `grid-main` has finished** (its log 
 exit), so the GPU is shared with at most the hard grid; they write `FAIL` lines as the grid does:
 
 ```bash
-nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper > /dev/null 2>&1 &
+nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper rag-oracle > /dev/null 2>&1 &
 ```
 
 The rows, in this order of importance (stop at the job's end and report what is missing):
@@ -448,6 +450,10 @@ The rows, in this order of importance (stop at the job's end and report what is 
    65536 or more, after `grid-hard` has finished:
    `nohup "$EV/launch.sh" extras-hard "$EV/extras.sh" "$C_HARD" rag-per-paper-k1 > /dev/null 2>&1 &`.
    Otherwise write "rag-per-paper not run on hard: max_model_len <n>" in the summary.
+2. **`rag-oracle`** (main): RAG on the passages truth needs (`--oracle-passages`) instead of BM25. It reads
+   `ground_truth.json` on purpose, so it is a **diagnostic**, not a baseline: its C is the ceiling of RAG's
+   reasoning when retrieval is perfect, and the gap to `rag-per-paper` is what retrieval costs. Its answer says
+   `system: rag-oracle-passages`; label its row so in the table.
 
 ## 5. Check each run
 
