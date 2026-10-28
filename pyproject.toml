@@ -6,7 +6,7 @@ requires-python = ">=3.13"
 dependencies = [
     "argilla==2.8.0",
     "fastapi[standard]==0.143.0",
-    "filelock==3.32.7",
+    "filelock==4.2.1",
     "httpx==0.28.1",
     "jsonschema==4.25.1",
     "markdown-it-py==4.2.0",
@@ -38,7 +38,7 @@ synth = "synth.cli:main"
 evaluate = "evaluation.cli:main"
 
 [dependency-groups]
-dev = ["pytest==8.4.2"]
+dev = ["pytest==9.2.0"]
 frontend = ["nodejs-wheel==22.20.0"]
 
 [build-system]
