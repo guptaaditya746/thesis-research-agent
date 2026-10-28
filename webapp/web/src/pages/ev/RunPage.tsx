@@ -12,11 +12,11 @@ import { Link, useParams, useSearchParams } from "react-router"
 
 import { useActiveJobs, useBaselineTrace, useCorpus, useEvRun, useRunGraph, useRunProtocol, type EvRunDetail } from "@/api/ev"
 import { AgentTraceView } from "@/components/ev/AgentTraceView"
-import { AnswerPanel } from "@/components/ev/AnswerPanel"
 import { ErrorCallsBadge } from "@/components/badges"
 import { KeyValues, QueryPage, RowsTable, SystemBadge } from "@/components/ev/bits"
 import { TraceTab } from "@/components/ev/TraceTab"
 import { EvidenceGraph } from "@/components/ev/EvidenceGraph"
+import { EvidenceView } from "@/components/ev/EvidenceView"
 import { ProtocolPanel } from "@/components/ev/ProtocolPanel"
 import { PageHeader } from "@/components/layout/PageHeader"
 import { CardsSkeleton, ErrorState } from "@/components/states"
@@ -92,7 +92,6 @@ function RunView({ run }: { run: EvRunDetail }) {
   ]
   const tab = tabs.some((t) => t.value === params.get("tab")) ? params.get("tab")! : "answer"
   const cost = (run.cost ?? {}) as Record<string, number | undefined>
-  const paperHref = (d: string) => `${runHref(run.id)}/papers/${encodeURIComponent(d)}`
   return (
     <div className="space-y-6">
       <PageHeader title={<span className="font-mono">{run.group} / {run.name}</span>} description={run.corpus ? <>on <Link to={`/corpora/${encodeURIComponent(run.corpus)}`} className="font-mono underline">{run.corpus}</Link></> : run.corpus_id}>
@@ -130,10 +129,7 @@ function RunView({ run }: { run: EvRunDetail }) {
       <Tabs value={tab} onValueChange={(v) => setParams({ tab: v }, { replace: true })}>
         <TabsList className="flex-wrap">{tabs.map((t) => <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>)}</TabsList>
         <TabsContent value="answer" className="space-y-4">
-          {run.answer ? (
-            <AnswerPanel answer={run.answer} paperHref={paperHref} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null}
-              funnel={run.funnel} strategy={run.strategy} />
-          ) : <p className="text-sm text-muted-foreground">No answer.json.</p>}
+          <EvidenceView run={run} expected={effectAnswer(run.answer) ? corpus.data?.answer?.label : null} />
         </TabsContent>
         <TabsContent value="papers"><PapersTab run={run} /></TabsContent>
         {engine && <TabsContent value="graph">{tab === "graph" && <GraphTab run={run} />}</TabsContent>}
