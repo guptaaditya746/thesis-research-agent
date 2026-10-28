@@ -35,6 +35,20 @@ ENGINE_MARKERS = (EVENTS_FILE, PROTOCOL_FILE, FUNNEL_FILE, CALLS_DIR)   # what o
 REEXEC_GLOB = "{name}-reexec-*"   # sibling directories `evidence reexec` writes next to a run
 
 
+SERVICE_REASONS = ("model_call", "service_call")   # error reasons of a call the model gateway / GLiNER did not answer
+
+
+def service_failed(result: Any) -> bool:
+    """Whether an extraction result (as JSON) failed, in whole or in part, because the model gateway (`model_call`:
+    the LLM extractors and the LLM screen) or the GLiNER service (`service_call`) did not answer for some or all of
+    its chunks. An agentic run that ran out of budget (`no_final_answer`) or an extractor's own exception is not
+    one: asking the same service again would not change it."""
+    if not isinstance(result, dict) or result.get("status") not in ("error", "partial"):
+        return False
+    error = result.get("error")
+    return isinstance(error, dict) and error.get("reason") in SERVICE_REASONS
+
+
 class CorpusError(RuntimeError):
     pass
 
@@ -233,20 +247,20 @@ class RunDir:
 
     def error_calls(self) -> int:
         """Calls whose checked result is an error (calls/<call_id>.json status "error"); an unreadable file is not one."""
-        return self._calls_with("error")
+        return self._count(lambda c: c.get("status") == "error")
 
     def failed_calls(self) -> int:
-        """Calls that failed in whole or in part (status "error" or "partial"): the model gateway or the GLiNER
-        service did not answer for some or all of the call's chunks (or an agentic call ran out of budget).
-        `evidence run` exits 2 on a count above 0, and `--retry-errors` asks both again."""
-        return self._calls_with("error", "partial")
+        """Calls the model gateway or the GLiNER service failed, in whole or in part (`service_failed`: status
+        "error" or "partial" with reason `model_call` or `service_call`). `evidence run` exits 2 on a count above 0,
+        the web app shows it, and `--retry-errors` asks them again. An agentic call that ran out of budget is not one."""
+        return self._count(service_failed)
 
-    def _calls_with(self, *statuses: str) -> int:
+    def _count(self, test: Any) -> int:
         folder = self.file(CALLS_DIR)
         if not folder.is_dir():
             return 0
         found = (self.try_json(f"{CALLS_DIR}/{p.name}") for p in sorted(folder.glob("*.json")))
-        return sum(1 for c in found if isinstance(c, dict) and c.get("status") in statuses)
+        return sum(1 for c in found if isinstance(c, dict) and test(c))
 
     def cache_file(self) -> Path | None:
         """The record cache run.json names (`settings.cache`, a directory or the jsonl file), when it exists."""

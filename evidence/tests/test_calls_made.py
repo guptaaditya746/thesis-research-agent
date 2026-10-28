@@ -4,7 +4,8 @@ from __future__ import annotations
 from agent.anchor import Index, text_sha256
 from evidence import protocol
 from evidence.calls import CallCache, EngineContext
-from evidence.contract import (DocumentRef, ExtractionResult, ExtractionTask, ExtractorSpec, ProtocolRef)
+from evidence.contract import (DocumentRef, ExtractionError, ExtractionResult, ExtractionTask, ExtractorSpec,
+                               ProtocolRef)
 from modelcall import JsonlCache
 
 from .conftest import PAPERS, PROTOCOL
@@ -19,14 +20,16 @@ SPEC = ExtractorSpec(name="counting", version=1, kind="regex", evidence_types=("
 class Counting:
     spec = SPEC
 
-    def __init__(self, fail: bool = False, status: str = "ok") -> None:
-        self.runs, self.fail, self.status = 0, fail, status
+    def __init__(self, fail: bool = False, status: str = "ok", reason: str | None = None) -> None:
+        self.runs, self.fail, self.status, self.reason = 0, fail, status, reason
 
     def extract(self, task, ctx) -> ExtractionResult:
         self.runs += 1
         if self.fail:
             raise ValueError("always fails")
-        return ExtractionResult(extractor_id=SPEC.extractor_id, task_sha256=task.task_sha256, status=self.status)
+        error = ExtractionError(reason=self.reason) if self.reason else None
+        return ExtractionResult(extractor_id=SPEC.extractor_id, task_sha256=task.task_sha256, status=self.status,
+                                error=error)
 
 
 def make_task() -> ExtractionTask:
@@ -62,7 +65,7 @@ def test_retry_errors_retries_a_made_error_only_once(tmp_path) -> None:
 
 
 def test_retry_errors_retries_a_partial_result_and_never_an_ok_one(tmp_path) -> None:
-    path, partial = tmp_path / "c.jsonl", Counting(status="partial")
+    path, partial = tmp_path / "c.jsonl", Counting(status="partial", reason="service_call")
     CallCache(JsonlCache(path), "run").call(partial, make_task(), make_ctx)       # attempt 0: one chunk failed
     assert CallCache(JsonlCache(path), "run").call(partial, make_task(), make_ctx).source == "cache"   # no flag: reused
     fixed = Counting()
@@ -70,3 +73,10 @@ def test_retry_errors_retries_a_partial_result_and_never_an_ok_one(tmp_path) -> 
     assert (again.attempt, again.source, again.raw.status, fixed.runs) == (1, "fresh", "ok", 1)
     later = CallCache(JsonlCache(path), "run", retry_errors=True).call(fixed, make_task(), make_ctx)
     assert (later.attempt, later.source, fixed.runs) == (1, "cache", 1)          # an ok result is never asked again
+
+
+def test_retry_errors_leaves_an_agent_that_ran_out_of_budget(tmp_path) -> None:
+    path, agent = tmp_path / "c.jsonl", Counting(status="partial", reason="no_final_answer")
+    CallCache(JsonlCache(path), "run").call(agent, make_task(), make_ctx)
+    again = CallCache(JsonlCache(path), "run", retry_errors=True).call(agent, make_task(), make_ctx)
+    assert (again.source, again.attempt, agent.runs) == ("cache", 0, 1)     # the costly agent is not run again
