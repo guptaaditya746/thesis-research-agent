@@ -23,6 +23,7 @@ fails validation and gets pydantic-ai's retry). answer.json then has the kind's 
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
@@ -109,6 +110,26 @@ every corpus paper the answer relies on, the stance it attributes to that paper.
 {LABEL_RULES}"""
 
 
+_STUDY_ID = re.compile(r"\bS\d+\b", re.IGNORECASE)
+
+
+def paper_id(raw: Any, known: list[str]) -> str | None:
+    """The manifest id in `known` that a mapped paper id `raw` names, else None. Exact first; then case-folded,
+    without a file extension (`S001.md`) or a leading word (`Paper S001`); then the one `S<digits>` part, when it
+    names exactly one known id. The mapping model writes ids loosely; the engine's ids are exact by construction."""
+    text = " ".join(str(raw).split())
+    if text in known:
+        return text
+    folded = {k.casefold(): k for k in known}
+    stem = PurePosixPath(text).stem if PurePosixPath(text).suffix.lower() in (".md", ".txt", ".pdf") else text
+    for form in (text, stem):
+        if form.casefold() in folded:
+            return folded[form.casefold()]
+    parts = {m.group(0).casefold() for m in _STUDY_ID.finditer(stem)}
+    hits = [folded[x] for x in parts if x in folded]
+    return hits[0] if len(hits) == 1 else None
+
+
 def answer_json(system: str, question: str, reply: AnswerReply, known: list[str], *, answer_text: str | None = None,
                 **extra: Any) -> dict[str, Any]:
     """answer.json (section 4) for a baseline: the mapped label and per-paper stances, as stated.
@@ -121,11 +142,12 @@ def answer_json(system: str, question: str, reply: AnswerReply, known: list[str]
     """
     studies, dropped, seen = [], [], set()
     for s in reply.studies:
-        if s.document not in known:
+        doc = paper_id(s.document, known)
+        if doc is None:
             dropped.append(s.document)
-        elif s.document not in seen:
-            seen.add(s.document)
-            studies.append({"document": s.document, "direction": s.stance})
+        elif doc not in seen:
+            seen.add(doc)
+            studies.append({"document": doc, "direction": s.stance})
     studies.sort(key=lambda s: s["document"])
     groups = {g: [s["document"] for s in studies if s["direction"] == d] for d, g in GROUPS.items()}
     counts = {g: len(v) for g, v in groups.items()} | {"undetermined": 0}
@@ -327,8 +349,9 @@ def kind_answer_json(system: str, params: KindParams, reply: BaseModel, known: l
             if form not in g["forms"]:
                 g["forms"].append(form)
             for paper in e.papers:
-                if paper in known:
-                    g["papers"].add(paper)
+                doc = paper_id(paper, known)
+                if doc is not None:
+                    g["papers"].add(doc)
                 else:
                     dropped.append(paper)
         entries = [{"name": g["name"], "aliases": sorted(f for f in g["forms"] if f != g["name"]),
@@ -338,23 +361,24 @@ def kind_answer_json(system: str, params: KindParams, reply: BaseModel, known: l
         return head | body | {"dropped": dropped} | extra
     first: dict[str, Any] = {}
     for s in reply.studies:  # type: ignore[attr-defined]
-        if s.paper not in known:
+        doc = paper_id(s.paper, known)
+        if doc is None:
             dropped.append(s.paper)
         else:
-            first.setdefault(s.paper, s)
-    ordered = [first[p] for p in known if p in first]
+            first.setdefault(doc, s)
+    ordered = [(p, first[p]) for p in known if p in first]
     if isinstance(reply, ConsistencyReply):
-        studies = [{"document": s.paper, "claim": s.claim, "direction": None, "agrees": s.agrees,
-                    "reason": None if s.agrees is not None else dict(NOT_STATED)} for s in ordered]
+        studies = [{"document": doc, "claim": s.claim, "direction": None, "agrees": s.agrees,
+                    "reason": None if s.agrees is not None else dict(NOT_STATED)} for doc, s in ordered]
         lists = {name: [s["document"] for s in studies if s["agrees"] is value]
                  for name, value in (("agreeing", True), ("disagreeing", False), ("undetermined", None))}
         body = {"metric": protocol.synthesis.metric_names[0], "studies": studies, **lists}  # type: ignore[union-attr]
         return head | body | {"dropped": dropped} | extra
     best = best_kind.spec(protocol)
     studies = []
-    for s in ordered:   # a tie: no winner and two or more kinds (as evidence/kinds/best.py); a tie is complete
+    for doc, s in ordered:   # a tie: no winner and two or more kinds (as evidence/kinds/best.py); a tie is complete
         tied = sorted(set(s.tied)) if s.winner is None and len(set(s.tied)) >= 2 else []
-        studies.append({"document": s.paper, "winner": s.winner, "tied": tied, "values": {},
+        studies.append({"document": doc, "winner": s.winner, "tied": tied, "values": {},
                         "reason": None if s.winner is not None or tied else dict(NOT_STATED)})
     body = {"metric": best.metric.canonical, "studies": studies,
             **best_kind.tally([s["winner"] for s in studies], best.kinds)}

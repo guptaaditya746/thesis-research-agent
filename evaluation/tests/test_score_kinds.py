@@ -106,6 +106,7 @@ def test_inventory_missing_entry_lowers_recall(hard: GroundTruth) -> None:
     c = _c(hard, "inv-metrics", answer)
     assert c["precision"] == 1.0 and c["recall"] < 1.0
     assert dropped["name"] in c["missed"]
+    assert c["completeness"] == c["recall"]   # inventory's completeness: the share of expected names given
 
 
 # --- C: best --------------------------------------------------------------------------------------------------
