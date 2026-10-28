@@ -125,7 +125,8 @@ def test_best_per_study_accuracy_counts_a_wrong_paper(mixed: GroundTruth) -> Non
     won = next(s for s in answer["studies"] if s["winner"])
     won["winner"] = "fine-tuned" if won["winner"] != "fine-tuned" else "rag"
     c = _c(mixed, "best-accuracy", answer)
-    counted = len(c["studies"])
+    counted = sum(s["counted"] for s in c["studies"])
+    assert counted == c["studies_scored"]
     assert c["per_study_accuracy"] == pytest.approx((counted - 1) / counted)
     assert not next(s for s in c["studies"] if s["paper"] == won["document"])["correct"]
 
@@ -335,7 +336,9 @@ def test_compare_leaves_out_reports_of_other_kinds(tmp_path: Path, hard: GroundT
 
 # --- fix round 1 ----------------------------------------------------------------------------------------------
 
-def test_consistency_document_left_out_is_wrong_even_when_truth_is_undetermined(hard: GroundTruth) -> None:
+def test_consistency_document_left_out_where_truth_is_undetermined_is_not_counted(hard: GroundTruth) -> None:
+    """Fix round 1 made this wrong; under the decidable-papers rule (findings 3-5) it is not counted. The old
+    all-papers number still counts it wrong."""
     exp = _expected(hard, "cons-accuracy")
     assert exp["undetermined"], "the hard corpus has undetermined consistency studies"
     left_out = exp["undetermined"][0]
@@ -344,12 +347,13 @@ def test_consistency_document_left_out_is_wrong_even_when_truth_is_undetermined(
     answer["undetermined"].remove(left_out)
     c = _c(hard, "cons-accuracy", answer)
     n = len(exp["studies"])
-    assert c["per_study_accuracy"] == pytest.approx((n - 1) / n)
+    assert c["per_study_accuracy"] == 1.0
+    assert c["per_study_accuracy_all_papers"] == pytest.approx((n - 1) / n)
     row = next(s for s in c["studies"] if s["paper"] == left_out)
-    assert (row["answered"], row["correct"]) == (False, False)
-    # listed as undetermined without a studies entry: answered, and right
+    assert (row["answered"], row["correct"], row["counted"]) == (False, False, False)
+    # listed as undetermined without a studies entry: answered, and right under the old rule
     answer["undetermined"].append(left_out)
-    assert _c(hard, "cons-accuracy", answer)["per_study_accuracy"] == 1.0
+    assert _c(hard, "cons-accuracy", answer)["per_study_accuracy_all_papers"] == 1.0
 
 
 def test_consistency_integration_counts_a_claim_item_once(tmp_path: Path) -> None:
@@ -443,3 +447,186 @@ def test_baseline_answers_score_for_the_question_they_ask(tmp_path: Path, hard: 
     assert score_answers(HARD.parent, [path])["question_id"] == "inv-datasets"
     with pytest.raises(ValueError, match="cannot tell which question"):
         score_answers(HARD.parent, [])
+
+
+# --- pre-EV3 scoring fixes --------------------------------------------------------------------------------------
+
+def _all_all(extraction: dict[str, Any]) -> dict[str, Any]:
+    return next(r for r in extraction["rows"] if r["evidence_type"] == "all" and r["level"] == "all")
+
+
+def test_a_counts_only_the_types_the_protocol_extracts(tmp_path: Path) -> None:
+    """Finding 1: an inventory protocol that extracts metrics only is not charged with conditions, measurements
+    and claims; perfect extraction of its own types is A F1 = 1.0, and report.json names the types scored."""
+    corpus = fx.write_corpus(tmp_path)
+    metrics = [i for i in fx.perfect_items().values() if i.evidence_type == "metric"]
+    run = fx.write_run(tmp_path / "runs", metrics, None)
+    (run / "protocol.yaml").write_text((ROOT / str(_q("inv-metrics").protocol)).read_text(encoding="utf-8"),
+                                       encoding="utf-8")
+    extraction = score(run, corpus, question_id="inv-metrics")["extraction"]
+    assert extraction["scored_types"] == ["metric"]
+    assert {r["evidence_type"] for r in extraction["rows"]} == {"metric", "all"}
+    row = _all_all(extraction)
+    assert (row["items"], row["facts"], row["matched"], row["f1"]) == (3, 3, 3, 1.0)
+
+
+@pytest.mark.parametrize("qid", ["inv-methods", "inv-metrics"])
+def test_perfect_inventory_extraction_is_a_f1_one_on_the_hard_corpus(hard: GroundTruth, qid: str) -> None:
+    from evaluation.oracle import items_from_truth
+    from evaluation.score import protocol_matching
+    protocol = _protocol(qid)
+    items, _ = items_from_truth(hard, HARD.parent)
+    own = [i for doc in items.values() for i in doc if i.evidence_type in protocol.evidence_types]
+    m = protocol_matching(own, hard, paper_ids(read_json(HARD.parent / "manifest.json")), protocol)
+    assert _all_all(score_extraction(m))["f1"] == 1.0
+
+
+def test_metric_canonicals_compare_through_the_protocols_enum() -> None:
+    """Finding 2: rag-latency's enum is [latency, other]; a truth canonical the enum lacks is `other` there."""
+    enum = ("latency", "other")
+    assert same_metric({"canonical": "other"}, {"canonical": "factual_accuracy", "name": "answer accuracy"}, enum)
+    assert same_metric({"canonical": "other"}, {"canonical": "hallucination_rate", "name": "x"}, enum)
+    assert same_metric({"canonical": "latency"}, {"canonical": "other", "name": "Lat."}, enum)
+    assert not same_metric({"canonical": "other"}, {"canonical": "other", "name": "latency"}, enum)
+    assert not same_metric({"canonical": "latency"}, {"canonical": "other", "name": "BLEU"}, enum)
+    full = ("factual_accuracy", "hallucination_rate", "other")
+    assert same_metric({"canonical": "other"}, {"canonical": "other", "name": "latency"}, full)
+    assert not same_metric({"canonical": "other"}, {"canonical": "factual_accuracy", "name": "x"}, full)
+
+
+@pytest.mark.parametrize("corpus", [MIXED, HARD], ids=["main", "hard"])
+def test_perfect_latency_evidence_scores_one_on_a_and_b(corpus: Path) -> None:
+    """Finding 2: perfect evidence labelled as the latency protocol says (latency, else other)."""
+    from evaluation.oracle import items_from_truth
+    from evaluation.score import effect_truth, protocol_matching, score_integration
+    truth = GroundTruth.load(corpus)
+    protocol = _protocol("rag-latency")
+    items, _ = items_from_truth(truth, corpus.parent)
+
+    def as_protocol(item: Item) -> Item:
+        if item.evidence_type != "metric":
+            return item
+        lat = canon.key("metric", item.fields["name"]) == "latency"
+        return item.model_copy(update={"fields": {**item.fields, "canonical": "latency" if lat else "other"}})
+
+    own = [as_protocol(i) for doc in items.values() for i in doc if i.evidence_type in protocol.evidence_types]
+    m = protocol_matching(own, truth, paper_ids(read_json(corpus.parent / "manifest.json")), protocol)
+    rows = {r["evidence_type"]: r for r in score_extraction(m)["rows"] if r["level"] == "all"}
+    assert rows["metric"]["f1"] == 1.0 and rows["all"]["f1"] == 1.0
+    b = score_integration(m, None, effect_truth(truth, _q("rag-latency").truth, protocol))
+    assert next(r for r in b["rows"] if r["level"] == "all")["association_accuracy"] == 1.0
+
+
+# --- C over the papers truth can decide (findings 3, 4, 5) ----------------------------------------------------
+
+EMPTY = {"effect": {"system": "empty", "label": "insufficient", "studies": []},
+         "inventory": {"kind": "inventory", "system": "empty", "entries": []},
+         "consistency": {"kind": "consistency", "system": "empty", "studies": []},
+         "best": {"kind": "best", "system": "empty", "studies": [], "winner": None, "tied": []}}
+
+
+def _c_metrics(c: dict[str, Any], kind: str) -> dict[str, Any]:
+    if kind == "effect":
+        overall = next(r for r in c["rows"] if r["level"] == "all")
+        return {k: overall[k] for k in ("direction_accuracy", "completeness")}
+    if kind == "inventory":
+        return {k: c[k] for k in ("recall", "f1", "paper_recall", "paper_f1")}
+    return {k: c[k] for k in ("per_study_accuracy", "completeness")}
+
+
+@pytest.mark.parametrize("qid", sorted(QUESTIONS))
+@pytest.mark.parametrize("corpus", ["mixed", "hard"])
+def test_an_empty_answer_scores_zero_on_every_c_metric(qid: str, corpus: str, request: pytest.FixtureRequest) -> None:
+    truth = request.getfixturevalue(corpus)
+    kind = _q(qid).kind
+    c = _c(truth, qid, copy.deepcopy(EMPTY[kind]))
+    assert set(_c_metrics(c, kind).values()) == {0.0}
+
+
+@pytest.mark.parametrize("qid", sorted(QUESTIONS))
+@pytest.mark.parametrize("corpus", ["mixed", "hard"])
+def test_the_expected_answer_scores_one_on_every_c_metric(qid: str, corpus: str, request: pytest.FixtureRequest) -> None:
+    from evaluation.score import expected_direction
+    truth = request.getfixturevalue(corpus)
+    kind = _q(qid).kind
+    answer = _expected(truth, qid)
+    if "studies" not in answer:   # the corpus's own question: the saved answer has no per-study entries
+        answer["studies"] = [{"document": s["paper"], "direction": expected_direction(s)} for s in truth.studies]
+    assert set(_c_metrics(_c(truth, qid, answer), kind).values()) == {1.0}
+
+
+def test_effect_direction_accuracy_is_over_the_determined_papers(mixed: GroundTruth) -> None:
+    """Finding 3: rag-latency main has 3 determined papers of 20; silence is no longer right on the other 17."""
+    exp = _expected(mixed, "rag-latency")
+    determined = [s for s in exp["studies"] if s["direction"] != "undetermined"]
+    assert 0 < len(determined) < len(exp["studies"])
+    c = _c(mixed, "rag-latency", copy.deepcopy(EMPTY["effect"]))
+    overall = next(r for r in c["rows"] if r["level"] == "all")
+    assert overall["direction_accuracy"] == 0.0
+    n = len(exp["studies"])
+    assert overall["direction_accuracy_all_papers"] == pytest.approx((n - len(determined)) / n)   # the old number
+    answer = copy.deepcopy(exp)
+    answer["studies"] = [s for s in answer["studies"] if s["document"] != determined[0]["document"]]
+    overall = next(r for r in _c(mixed, "rag-latency", answer)["rows"] if r["level"] == "all")
+    assert overall["direction_accuracy"] == pytest.approx((len(determined) - 1) / len(determined))
+
+
+def test_consistency_duplicates_and_undecidable_papers_are_not_counted(hard: GroundTruth) -> None:
+    """Findings 4 and 5: the engine gives a duplicate its own agreement; leaving an undecidable paper out is not
+    wrong; leaving a decidable one out, or calling it undetermined, is."""
+    exp = _expected(hard, "cons-accuracy")
+    dups = [s["document"] for s in exp["studies"] if (s["reason"] or {}).get("code") == "duplicate"]
+    assert dups, "the hard corpus has duplicate consistency studies"
+    answer = copy.deepcopy(exp)
+    for s in answer["studies"]:
+        if s["document"] in dups:
+            s["agrees"] = True
+    undecidable = [s["document"] for s in exp["studies"] if s["agrees"] is None and s["document"] not in dups]
+    answer["studies"] = [s for s in answer["studies"] if s["document"] not in undecidable]
+    for name in ("undetermined", "agreeing", "disagreeing"):
+        answer[name] = [d for d in answer[name] if d not in undecidable]
+    c = _c(hard, "cons-accuracy", answer)
+    decidable = [s for s in exp["studies"] if s["agrees"] is not None]
+    assert c["studies_scored"] == len(decidable)
+    assert (c["per_study_accuracy"], c["completeness"]) == (1.0, 1.0)
+    assert c["per_study_accuracy_all_papers"] < 1.0   # the old rule: duplicates and left-out papers wrong
+    left_out, called_undetermined = decidable[0]["document"], decidable[1]["document"]
+    answer["studies"] = [s for s in answer["studies"] if s["document"] != left_out]
+    for name in ("agreeing", "disagreeing"):
+        answer[name] = [d for d in answer[name] if d != left_out]
+    for s in answer["studies"]:
+        if s["document"] == called_undetermined:
+            s["agrees"] = None
+    c = _c(hard, "cons-accuracy", answer)
+    n = len(decidable)
+    assert c["per_study_accuracy"] == pytest.approx((n - 2) / n) and c["completeness"] == pytest.approx((n - 2) / n)
+
+
+def test_best_counts_only_papers_with_a_winner_or_a_tie(mixed: GroundTruth) -> None:
+    """Finding 3: a paper truth has no winner for (no comparison) is not counted; a decidable paper left out is
+    wrong."""
+    exp = _expected(mixed, "best-accuracy")
+    decidable = [s for s in exp["studies"] if s["winner"] or s["tied"]]
+    assert 0 < len(decidable) < len(exp["studies"])
+    c = _c(mixed, "best-accuracy", copy.deepcopy(EMPTY["best"]))
+    assert c["studies_scored"] == len(decidable) and c["per_study_accuracy"] == 0.0
+    assert c["per_study_accuracy_all_papers"] > 0.0   # the old number: silence right on the no-comparison papers
+    answer = copy.deepcopy(exp)
+    answer["studies"] = [s for s in answer["studies"] if s["document"] != decidable[0]["document"]]
+    c = _c(mixed, "best-accuracy", answer)
+    n = len(decidable)
+    assert c["per_study_accuracy"] == pytest.approx((n - 1) / n) and c["completeness"] == pytest.approx((n - 1) / n)
+
+
+def test_precision_with_nothing_given_is_undefined_and_shown_as_n_a(hard: GroundTruth) -> None:
+    """Minor 10: an empty answer has no precision (null, not 0.0); F1 is still 0 and report.md prints n/a."""
+    from evaluation.score import prf
+    assert prf(0, 0, 5) == {"items": 0, "facts": 5, "matched": 0, "precision": None, "recall": 0.0, "f1": 0.0}
+    assert prf(2, 4, 2)["f1"] == pytest.approx(2 * 0.5 * 1.0 / 1.5)
+    c = _c(hard, "inv-metrics", copy.deepcopy(EMPTY["inventory"]))
+    assert (c["precision"], c["paper_precision"], c["f1"], c["paper_f1"]) == (None, None, 0.0, 0.0)
+    text = "\n".join(rep.render_synthesis_kind("inventory", [c]))
+    row = next(line for line in text.splitlines() if line.startswith("| empty"))
+    cells = [cell.strip() for cell in row.strip("|").split("|")]
+    header = [cell.strip() for cell in text.splitlines()[2].strip("|").split("|")]
+    assert cells[header.index("precision")] == "n/a" and cells[header.index("paper_precision")] == "n/a"

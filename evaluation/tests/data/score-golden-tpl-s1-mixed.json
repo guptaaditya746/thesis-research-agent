@@ -429,7 +429,7 @@
         "items": 0,
         "level": "paraphrased",
         "matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null
       },
@@ -495,10 +495,16 @@
         "items": 0,
         "level": "paraphrased",
         "matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null
       }
+    ],
+    "scored_types": [
+      "condition",
+      "metric",
+      "measurement",
+      "author_claim"
     ],
     "unmatched_items": [
       "m-40dcf54e24410b23",
@@ -1597,7 +1603,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2345,7 +2351,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2447,7 +2453,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2515,7 +2521,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2549,7 +2555,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2617,7 +2623,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2651,7 +2657,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2753,7 +2759,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -2855,7 +2861,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -3805,6 +3811,7 @@
           "completeness": 0.8,
           "determined": 20,
           "direction_accuracy": 0.8,
+          "direction_accuracy_all_papers": 0.8,
           "level": "all",
           "overlap": null,
           "studies": 20,
@@ -3816,6 +3823,7 @@
           "completeness": 1.0,
           "determined": 4,
           "direction_accuracy": 1.0,
+          "direction_accuracy_all_papers": 1.0,
           "level": "complex",
           "overlap": null,
           "studies": 4,
@@ -3827,6 +3835,7 @@
           "completeness": 1.0,
           "determined": 4,
           "direction_accuracy": 1.0,
+          "direction_accuracy_all_papers": 1.0,
           "level": "contradictory",
           "overlap": null,
           "studies": 4,
@@ -3838,6 +3847,7 @@
           "completeness": 1.0,
           "determined": 4,
           "direction_accuracy": 1.0,
+          "direction_accuracy_all_papers": 1.0,
           "level": "distributed",
           "overlap": null,
           "studies": 4,
@@ -3849,6 +3859,7 @@
           "completeness": 1.0,
           "determined": 4,
           "direction_accuracy": 1.0,
+          "direction_accuracy_all_papers": 1.0,
           "level": "explicit",
           "overlap": null,
           "studies": 4,
@@ -3860,6 +3871,7 @@
           "completeness": 0.0,
           "determined": 4,
           "direction_accuracy": 0.0,
+          "direction_accuracy_all_papers": 0.0,
           "level": "paraphrased",
           "overlap": null,
           "studies": 4,

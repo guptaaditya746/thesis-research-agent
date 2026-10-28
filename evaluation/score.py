@@ -19,8 +19,10 @@ Matching rules (A; B and the pair check reuse A's matching):
 3. A pair is *compatible* when: measurement, |item value - fact value| <= 0.005 (values are normalised
    fractions on both sides); condition, equal `role` (an item without a `role` field, from a best or inventory
    protocol: the same name, by `canon.key` or case-folded, or its label span on the condition's placement);
-   metric, equal `canonical`, or the item's canonical and the fact's name have one `canon.key` (`latency`, which
-   truth files under `other`); dataset (matched only when the run has dataset items or its protocol declares the
+   metric, the item's `canonical` equals the fact's projected onto the protocol's `canonical` enum
+   (`protocol_canonical`: a canonical the enum lacks is `other`, and `latency`, which truth files under `other`,
+   is `latency` where the enum has it); without a protocol enum, equal `canonical`, or the item's canonical and the
+   fact's name have one `canon.key`; dataset (matched only when the run has dataset items or its protocol declares the
    type), the same name; author claim, equal `direction`.
 4. Among compatible pairs the assignment is a minimum-cost assignment (Hungarian method,
    scipy.optimize.linear_sum_assignment) with cost 1, minus 0.5 if the item's span of the type's main
@@ -31,7 +33,8 @@ Matching rules (A; B and the pair check reuse A's matching):
    match), then prefers pairs whose spans and labels agree; incompatible pairs it is forced into are
    dropped. The result does not depend on input order except between exactly equal costs, where
    items and facts are sorted by id first, so it is deterministic.
-5. Precision = matched / items, recall = matched / facts, F1 their harmonic mean (0 when both are 0).
+5. Precision = matched / items (null when there are no items: undefined), recall = matched / facts, F1 their
+   harmonic mean, 2 matched / (items + facts) (0 when nothing matched).
    Counts are pooled (micro) over papers, per evidence type and difficulty level (the level of the
    paper's study), and over all levels.
 6. Span accuracy = share of matched pairs whose main-role span overlaps (shares at least one
@@ -39,7 +42,9 @@ Matching rules (A; B and the pair check reuse A's matching):
    (dataset facts have none); an item without a main-role span is checked with all its spans.
 
 Question kinds (question-first redesign; `score(question_id=...)`, evidence/questions.yaml; without an id, the
-question the run's frozen protocol asks, evidence/questions.answered_by): A is the same for every kind. B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
+question the run's frozen protocol asks, evidence/questions.answered_by): A is computed the same way for every kind,
+over the evidence types the run's protocol extracts (`scored_types`; report.json `extraction.scored_types`), so
+its `all` / `all` row means "all the types this protocol extracts". B and C follow the question's kind (`integration_kind`, `score_kind`; their docstrings): effect is what this
 docstring describes, against the question's own expected answer (`effect_truth`; the corpus's own question keeps
 the saved answer, so its numbers are unchanged); inventory, consistency and best compare the answer with
 evaluation/expected.py's. Baseline answers are scored on C only. Intervals and attribution are for effect only.
@@ -51,19 +56,25 @@ item whose `canonical` is the true metric's canonical (`association` = both). `c
 (metric) fact. True pair: the engine's answer names measurement items for treatment and control per
 study; the pair is true when A matched them to the facts `effect.treatment` and `effect.control`.
 
-C: for every ground-truth study with an expected direction, the system's `studies` entry with `document`
+C, one rule for every kind: C is scored only on the papers truth can decide (effect: an expected direction that
+is not `undetermined`; best: a winner or a tie; consistency: `agrees` not null, so duplicates and papers with
+missing data drop out). A decidable paper the answer leaves out, or calls undetermined (no_comparison, null), is
+wrong; an undecidable one is not counted, whatever the answer says (`score_best`'s NOT_COUNTED, generalised). So
+an empty answer scores 0 and silence is never rewarded. The old all-papers numbers stay as `*_all_papers`.
+
+Effect: for every ground-truth study with an expected direction, the system's `studies` entry with `document`
 = the study's paper gives a direction (a missing entry, or one with a direction outside supports /
 contradicts / neutral / undetermined, counts as `undetermined`); it is correct when it equals the
 expected direction. The expected direction is `effect.direction`, or `undetermined` for a study that is
-`relevant: false` (F2; `expected_direction`); a study without either is not scored. So a study whose
-true effect is `undetermined` (missing information) or that is irrelevant is right when the system says
-`undetermined` or does not answer it (F4). The label is correct when equal to `answer.label`.
+`relevant: false` (F2; `expected_direction`); a study without either is not scored. The label is correct when
+equal to `answer.label`.
 Correctness, completeness and traceability are the supervisor's three comparison criteria (STATE.md §1
 §7; docs/evidence-system.md Part G.1); the definitions that follow are ours. `direction_accuracy`
-(correctness) is over all scored studies. **completeness** = share of the studies with a *determined*
-expected direction (not `undetermined`) the system gives a direction for, and `accuracy_answered` =
-accuracy over those, so a system that answers everything is not rewarded for guessing on a study nobody
-can determine. **traceability** = share of the cited passages (`answer.citations`, a baseline's
+(correctness) is over the studies with a *determined* expected direction (not `undetermined`);
+`direction_accuracy_all_papers` is over all scored studies, where a study whose true effect is `undetermined`
+(missing information) or that is irrelevant is right when the system says `undetermined` or does not answer it
+(the old F4 rule). **completeness** = share of the determined studies the system gives a direction for, and
+`accuracy_answered` = accuracy over those (direction_accuracy = completeness x accuracy_answered). **traceability** = share of the cited passages (`answer.citations`, a baseline's
 `[{document, start, end}]) that overlap (share a character with) a ground-truth placement of role `value`,
 `metric_label` or `claim` of the paper they cite (strict: a passage touching only a condition label traces
 nothing), over all cited passages; **overlap** is the lenient share, over a placement of any role. The
@@ -166,9 +177,11 @@ OPTIONAL_COUNTS = ("undetermined", "duplicates")          # compared when both s
 # --- small helpers ---------------------------------------------------------------------------------
 
 def prf(matched: int, items: int, facts: int) -> dict[str, Any]:
-    precision = matched / items if items else 0.0
+    """Precision (None when nothing was given: undefined, not 0), recall (0.0 without facts) and F1 from the
+    counts (2 matched / (items + facts), the harmonic mean; 0.0 when both are 0), never from a None precision."""
+    precision = matched / items if items else None
     recall = matched / facts if facts else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    f1 = 2 * matched / (items + facts) if matched else 0.0
     return {"items": items, "facts": facts, "matched": matched, "precision": precision, "recall": recall,
             "f1": f1}
 
@@ -205,12 +218,34 @@ def link(item: Item, name: str) -> str | None:
 # --- A: matching -----------------------------------------------------------------------------------
 
 QUESTION_CANONICALS = frozenset(vocab.QUESTION_METRICS)   # factual_accuracy, hallucination_rate: compared as they are
+OTHER = "other"
 
 
-def same_metric(fields: dict[str, Any], data: dict[str, Any]) -> bool:
-    """A metric item names the true metric: equal `canonical`, or, only for a fact truth files under `other` (or
-    another canonical that is not a question metric's), a question-specific item canonical such as `latency` that
-    has the `canon.key` of the fact's name. A fact with a question metric's canonical needs the equal canonical."""
+def protocol_canonical(data: dict[str, Any], canonicals: tuple[str, ...]) -> Any:
+    """A metric fact's canonical in a protocol's `canonical` enum: its own when the enum has it (not `other`); else an
+    enum value with the `canon.key` of the fact's name (latency, which truth files under `other`); else `other`
+    when the enum has it (a canonical the enum lacks: rag-latency's [latency, other] has no factual_accuracy);
+    else its own."""
+    own = data.get("canonical")
+    if own in canonicals and own != OTHER:
+        return own
+    k = canon.key("metric", str(data.get("name") or ""))
+    if k is not None:
+        for value in canonicals:
+            if value != OTHER and canon.key("metric", value) == k:
+                return value
+    return OTHER if OTHER in canonicals else own
+
+
+def same_metric(fields: dict[str, Any], data: dict[str, Any], canonicals: tuple[str, ...] | None = None) -> bool:
+    """A metric item names the true metric. With the protocol's `canonical` enum (`canonicals`, `metric_canonicals`):
+    the item's canonical equals the fact's projected onto the enum (`protocol_canonical`), so an engine that labels
+    accuracy `other` as the latency protocol says is right. Without one: equal `canonical`, or, only for a fact
+    truth files under `other` (or another canonical that is not a question metric's), a question-specific item
+    canonical such as `latency` that has the `canon.key` of the fact's name; a fact with a question metric's
+    canonical needs the equal canonical."""
+    if canonicals:
+        return fields.get("canonical") == protocol_canonical(data, canonicals)
     if fields.get("canonical") == data.get("canonical"):
         return True
     if data.get("canonical") in QUESTION_CANONICALS:
@@ -230,7 +265,8 @@ def _same_name(item: Item, fact: Fact, target: canon.Target) -> bool:
                                                                               for n in given)
 
 
-def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None) -> bool:
+def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None,
+               canonicals: tuple[str, ...] | None = None) -> bool:
     f, d = item.fields, fact.data
     if fact.type == "measurement":
         value = _number(f.get("value"))
@@ -241,7 +277,7 @@ def compatible(item: Item, fact: Fact, truth: GroundTruth | None = None) -> bool
         # a protocol without roles (best, inventory): the same name, or the item's label span on the condition's
         return _same_name(item, fact, "condition") or (truth is not None and span_hit(item, fact, truth))
     if fact.type == "metric":
-        return same_metric(f, d)
+        return same_metric(f, d, canonicals)
     if fact.type == DATASET:
         return _same_name(item, fact, "dataset")
     return f.get("direction") == d.get("direction")
@@ -278,8 +314,8 @@ def _labels_agree(item: Item, fact: Fact) -> bool:
     return bool(given & known)
 
 
-def cost(item: Item, fact: Fact, truth: GroundTruth) -> float:
-    if not compatible(item, fact, truth):
+def cost(item: Item, fact: Fact, truth: GroundTruth, canonicals: tuple[str, ...] | None = None) -> float:
+    if not compatible(item, fact, truth, canonicals):
         return INFEASIBLE
     c = 1.0 - 0.5 * span_hit(item, fact, truth) - 0.25 * _labels_agree(item, fact)
     if fact.type == "measurement":
@@ -287,13 +323,14 @@ def cost(item: Item, fact: Fact, truth: GroundTruth) -> float:
     return c
 
 
-def match(items: list[Item], facts: list[Fact], truth: GroundTruth) -> list[tuple[Item, Fact]]:
+def match(items: list[Item], facts: list[Fact], truth: GroundTruth,
+          canonicals: tuple[str, ...] | None = None) -> list[tuple[Item, Fact]]:
     """One-to-one maximum compatible matching with the cost rules of the module docstring."""
     items = sorted(items, key=lambda i: i.item_id)
     facts = sorted(facts, key=lambda f: f.id)
     if not items or not facts:
         return []
-    matrix = np.array([[cost(i, f, truth) for f in facts] for i in items])
+    matrix = np.array([[cost(i, f, truth, canonicals) for f in facts] for i in items])
     rows, cols = linear_sum_assignment(matrix)
     return [(items[r], facts[c]) for r, c in zip(rows, cols) if matrix[r, c] < INFEASIBLE]
 
@@ -308,11 +345,14 @@ class Matching:
     """A's matching for a whole run: item id <-> fact id, and per (paper, type) the counts.
 
     `types` are the evidence types matched: the four of TYPES, and `dataset` when the run has dataset items or the
-    caller passes it (a protocol that declares the type), so a run without dataset items is scored as before."""
+    caller passes it (a protocol that declares the type), so a run without dataset items is scored as before.
+    `canonicals` is the protocol's metric `canonical` enum (`metric_canonicals`): metric canonicals are compared
+    through it (`same_metric`), in A and in B; None compares them as they are."""
 
     def __init__(self, items: list[Item], truth: GroundTruth, files: dict[str, str],
-                 types: Iterable[EvidenceType] | None = None) -> None:
+                 types: Iterable[EvidenceType] | None = None, canonicals: tuple[str, ...] | None = None) -> None:
         self.truth = truth
+        self.canonicals = canonicals
         self.types: tuple[EvidenceType, ...] = (tuple(types) if types is not None else
                                                 TYPES + ((DATASET,) if any(i.evidence_type == DATASET for i in items)
                                                          else ()))
@@ -331,7 +371,7 @@ class Matching:
         for paper in self.papers:
             for kind in self.types:
                 its, facts = grouped.get((paper, kind), []), truth.of(paper, kind)
-                pairs = match(its, facts, truth)
+                pairs = match(its, facts, truth, canonicals)
                 self.pairs += pairs
                 for item, fact in pairs:
                     self.fact_of[item.item_id] = fact.id
@@ -342,9 +382,34 @@ class Matching:
                                                  sum(placed(f, truth) for _, f in pairs))
 
 
+def scored_types(protocol: Protocol | None, items: Iterable[Item] = ()) -> tuple[EvidenceType, ...]:
+    """A's evidence types: the protocol's own (those of TYPES and `dataset` it declares), so A's `all` / `all` row is
+    over all the types this protocol extracts and a protocol is never charged with facts of a type it does not ask
+    for (an inventory of metrics is not scored on conditions). Without a protocol, the four of TYPES, plus `dataset`
+    when the run has dataset items."""
+    if protocol is not None:
+        return tuple(t for t in (*TYPES, DATASET) if t in protocol.evidence_types)
+    return TYPES + ((DATASET,) if any(i.evidence_type == DATASET for i in items) else ())
+
+
+def metric_canonicals(protocol: Protocol | None) -> tuple[str, ...] | None:
+    """The protocol's metric `canonical` enum (rag-latency: latency, other); None without one."""
+    spec = protocol.evidence_types.get("metric") if protocol is not None else None
+    values = spec.enum_of("canonical") if spec is not None else None
+    return tuple(str(v) for v in values) if values else None
+
+
+def protocol_matching(items: list[Item], truth: GroundTruth, files: dict[str, str],
+                      protocol: Protocol | None) -> Matching:
+    """A's matching of a run with its protocol: over the protocol's evidence types (`scored_types`), metric
+    canonicals compared through the protocol's enum (`metric_canonicals`)."""
+    return Matching(items, truth, files, scored_types(protocol, items), metric_canonicals(protocol))
+
+
 def score_extraction(m: Matching) -> dict[str, Any]:
     """A: P/R/F1 and span accuracy per evidence type x level (and over all levels and all types); span accuracy is
-    over the matched facts that have a placement (a dataset fact has none)."""
+    over the matched facts that have a placement (a dataset fact has none). `scored_types` are the evidence types
+    matched (`scored_types()`): the `all` rows pool these only."""
     sums: dict[tuple[str, str], list[int]] = defaultdict(lambda: [0, 0, 0, 0, 0])
     for (paper, kind), cell in m.cells.items():
         level = m.truth.level_of(paper)
@@ -354,7 +419,7 @@ def score_extraction(m: Matching) -> dict[str, Any]:
     for (kind, level), (n_items, n_facts, matched, hits, placed_matched) in sorted(sums.items()):
         rows.append({"evidence_type": kind, "level": level, **prf(matched, n_items, n_facts),
                      "span_accuracy": share(hits, placed_matched)})
-    return {"rows": rows, "missed": sorted(f for f in m.facts if f not in m.item_of),
+    return {"rows": rows, "scored_types": list(m.types), "missed": sorted(f for f in m.facts if f not in m.item_of),
             "unmatched_items": sorted(i for i in m.items if i not in m.fact_of)}
 
 
@@ -373,7 +438,7 @@ def score_integration(m: Matching, answer: dict[str, Any] | None, truth: GroundT
         condition = m.items.get(link(item, "condition") or "")
         metric = m.items.get(link(item, "metric") or "")
         role_ok = bool(condition and true_condition and condition.fields.get("role") == true_condition.data["role"])
-        canon_ok = bool(metric and true_metric and same_metric(metric.fields, true_metric.data))
+        canon_ok = bool(metric and true_metric and same_metric(metric.fields, true_metric.data, m.canonicals))
         counts = Counter(matched=1, condition_role=role_ok, metric_canonical=canon_ok, association=role_ok and canon_ok,
                          condition_exact=bool(condition and m.fact_of.get(condition.item_id) == fact.data["condition"]),
                          metric_exact=bool(metric and m.fact_of.get(metric.item_id) == fact.data["metric"]))
@@ -467,13 +532,14 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
         for level in (study.get("level", "unknown"), ALL):
             per_level[level].update(studies=1, correct=got == expected, determined=determined,
                                     complete=determined and got != "undetermined",
-                                    correct_answered=determined and got == expected and got != "undetermined")
+                                    correct_answered=determined and got == expected)
     cited = score_citations(truth, answer.get("citations"), answer.get("dropped_citations"))
     rows = []
     for level, c in sorted(per_level.items()):
         n = cited.get(level, Counter()) if cited is not None else None
         rows.append({"level": level, "studies": c["studies"], "determined": c["determined"],
-                     "direction_accuracy": share(c["correct"], c["studies"]),
+                     "direction_accuracy": share(c["correct_answered"], c["determined"]),
+                     "direction_accuracy_all_papers": share(c["correct"], c["studies"]),
                      "completeness": share(c["complete"], c["determined"]),
                      "accuracy_answered": share(c["correct_answered"], c["complete"]),
                      "citations": None if n is None else n["citations"],
@@ -491,11 +557,13 @@ def score_synthesis(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any
 # --- C attribution (Tim M2 §5C, our addition) -----------------------------------------------------
 
 def attribute(truth: GroundTruth, system_answer: dict[str, Any], oracle_answer: dict[str, Any]) -> list[dict[str, Any]]:
-    """Per scored study: system and oracle correct, and `error` None, `upstream` (only the system wrong) or
-    `downstream` (both wrong)."""
+    """Per study C counts (a determined expected direction): system and oracle correct, and `error` None,
+    `upstream` (only the system wrong) or `downstream` (both wrong)."""
     oracle_ok = {s["study"]: s["correct"] for s in score_synthesis(truth, oracle_answer)["studies"]}
     out = []
     for s in score_synthesis(truth, system_answer)["studies"]:
+        if not s["determined"]:
+            continue
         ok = oracle_ok[s["study"]]
         out.append({"study": s["study"], "system_correct": s["correct"], "oracle_correct": ok,
                     "error": None if s["correct"] else "upstream" if ok else "downstream"})
@@ -585,7 +653,8 @@ def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | 
 
 def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[str, Any]:
     """Bootstrap intervals (docstring: Intervals; rules in stats.py) for extraction F1, direction accuracy
-    and the paired engine-minus-baseline difference."""
+    and the paired engine-minus-baseline difference; the last two over the studies C counts (a determined
+    expected direction), as `direction_accuracy` is."""
     extraction = []
     if m is not None:
         for kind in (*m.types, ALL):
@@ -595,18 +664,21 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
                 cells = [m.cells.get((paper, k), (0, 0, 0, 0, 0)) for k in kinds]
                 rows.append((sum(c[2] for c in cells), sum(c[0] for c in cells), sum(c[1] for c in cells)))
             extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind, n_rows=len(rows)))
-    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in system["studies"]), system=system["system"],
-                              n_rows=len(system["studies"])) for system in systems]
+    def counted(system: dict[str, Any]) -> list[dict[str, Any]]:   # the studies C counts: a determined expectation
+        return [s for s in system["studies"] if s.get("determined", True)]
+
+    synthesis = [interval_row(bootstrap_mean(int(s["correct"]) for s in counted(system)), system=system["system"],
+                              n_rows=len(counted(system))) for system in systems]
     engine = next((s for s in systems if s["system"] == ENGINE), None)
     paired = []
     if engine is not None:
-        engine_correct = {s["paper"]: int(s["correct"]) for s in engine["studies"]}
+        engine_correct = {s["paper"]: int(s["correct"]) for s in counted(engine)}
         for system in systems:
             if system is engine:
                 continue
-            diffs = [engine_correct[s["paper"]] - int(s["correct"]) for s in system["studies"]
+            diffs = [engine_correct[s["paper"]] - int(s["correct"]) for s in counted(system)
                      if s["paper"] in engine_correct]
-            excluded = sorted({s["paper"] for s in system["studies"]} ^ engine_correct.keys())   # in only one system
+            excluded = sorted({s["paper"] for s in counted(system)} ^ engine_correct.keys())   # in only one system
             paired.append(interval_row(bootstrap_mean(diffs), system=system["system"], n_rows=len(diffs),
                                        excluded_ids=excluded))
     return {"extraction": extraction, "synthesis": synthesis, "paired": paired}
@@ -735,7 +807,7 @@ def _associated(m: Matching, item: Item, fact: Fact) -> bool:
     true_condition, true_metric = truth.facts.get(fact.data.get("condition", "")), truth.facts.get(fact.data.get("metric", ""))
     condition, metric = m.items.get(link(item, "condition") or ""), m.items.get(link(item, "metric") or "")
     return bool(condition and true_condition and condition.fields.get("role") == true_condition.data.get("role")
-                and metric and true_metric and same_metric(metric.fields, true_metric.data))
+                and metric and true_metric and same_metric(metric.fields, true_metric.data, m.canonicals))
 
 
 def called_on(run: Run | None) -> dict[str, set[tuple[str, str]]] | None:
@@ -1039,22 +1111,27 @@ def _agrees(answer: dict[str, Any]) -> dict[str, bool | None]:
 
 
 def score_consistency(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
-    """C, consistency: per-study accuracy of `agrees` (null = undetermined, right when truth's is null too and the
-    answer has an entry or list membership for the document; a document it leaves out is wrong) and
-    precision/recall of the agreeing and disagreeing sets, over the studies truth lists (those on the claim metric;
-    the engine lists every document, the others are left out)."""
+    """C, consistency, over the studies truth can decide (`agrees` not null: a duplicate, a paper with a side
+    missing or without a claim drops out; `counted`): per-study accuracy of `agrees` (a decidable document the
+    answer leaves out or calls undetermined, null, is wrong), `completeness` (the share of them the answer gives
+    true or false for) and precision/recall of the agreeing and disagreeing sets. Truth lists only the studies on
+    the claim metric; the engine lists every document, the others are left out. `per_study_accuracy_all_papers`
+    is the old number over every listed study (null right when truth's is null and the answer has the document)."""
     given = _agrees(answer)
-    # a document the answer leaves out is wrong, even where truth's `agrees` is null: undetermined must be said
     studies = [{"paper": e["document"], "expected": e["agrees"], "given": given.get(e["document"]),
-                "answered": e["document"] in given,
+                "answered": e["document"] in given, "counted": e["agrees"] is not None,
                 "correct": e["document"] in given and given[e["document"]] == e["agrees"]} for e in exp["studies"]]
+    counted = [s for s in studies if s["counted"]]
     out: dict[str, Any] = {"kind": "consistency", "system": answer.get("system", "unknown"), "metric": exp["metric"],
-                           "studies_scored": len(studies),
-                           "per_study_accuracy": share(sum(s["correct"] for s in studies), len(studies)),
+                           "studies_scored": len(counted),
+                           "per_study_accuracy": share(sum(s["correct"] for s in counted), len(counted)),
+                           "completeness": share(sum(isinstance(s["given"], bool) for s in counted), len(counted)),
+                           "studies_all_papers": len(studies),
+                           "per_study_accuracy_all_papers": share(sum(s["correct"] for s in studies), len(studies)),
                            "studies": studies}
     for name, value in (("agreeing", True), ("disagreeing", False)):
         want = set(exp[name])
-        got = {s["paper"] for s in studies if s["given"] is value}
+        got = {s["paper"] for s in counted if s["given"] is value}
         tp = len(want & got)
         out |= {f"{name}_precision": share(tp, len(got)), f"{name}_recall": share(tp, len(want)),
                 f"{name}_tp": tp, f"{name}_given": len(got), f"{name}_expected": len(want)}
@@ -1066,8 +1143,11 @@ NOT_COUNTED = ("screened_out", "duplicate")   # best: truth's studies that are n
 
 def score_best(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
     """C, best: whether the answer's winner (or, without one, its tie) is truth's, and per-study accuracy of the
-    winner and tie over truth's counted studies (not screened out, not a duplicate). The engine does not leave
-    duplicates out; that shows in its wins and winner, not here."""
+    winner and tie over the studies truth can decide (a winner or a tie; `counted`): a decidable paper the answer
+    leaves out or gives neither is wrong, and `completeness` is the share it gives a winner or tie for.
+    `per_study_accuracy_all_papers` is the old number over truth's studies that are not screened out or a duplicate
+    (NOT_COUNTED), where silence is right on a paper with no comparison. The engine does not leave duplicates out;
+    that shows in its wins and winner, not here."""
     given = {str(s.get("document")): s for s in answer.get("studies") or [] if isinstance(s, dict)}
     studies = []
     for e in exp["studies"]:
@@ -1076,13 +1156,19 @@ def score_best(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, Any]:
         g = given.get(e["document"], {})
         got = (g.get("winner"), sorted(g.get("tied") or []))
         studies.append({"paper": e["document"], "expected": e["winner"], "expected_tied": e["tied"],
-                        "given": got[0], "given_tied": got[1], "correct": got == (e["winner"], e["tied"])})
+                        "given": got[0], "given_tied": got[1], "counted": bool(e["winner"] or e["tied"]),
+                        "correct": got == (e["winner"], e["tied"])})
+    counted = [s for s in studies if s["counted"]]
     winner = (answer.get("winner"), sorted(answer.get("tied") or []))
     return {"kind": "best", "system": answer.get("system", "unknown"), "metric": exp["metric"],
             "winner": winner[0], "tied": winner[1], "expected_winner": exp["winner"], "expected_tied": exp["tied"],
             "winner_correct": winner == (exp["winner"], exp["tied"]),
-            "wins": dict(answer.get("wins") or {}), "expected_wins": exp["wins"], "studies_scored": len(studies),
-            "per_study_accuracy": share(sum(s["correct"] for s in studies), len(studies)), "studies": studies}
+            "wins": dict(answer.get("wins") or {}), "expected_wins": exp["wins"], "studies_scored": len(counted),
+            "per_study_accuracy": share(sum(s["correct"] for s in counted), len(counted)),
+            "completeness": share(sum(bool(s["given"] or s["given_tied"]) for s in counted), len(counted)),
+            "studies_all_papers": len(studies),
+            "per_study_accuracy_all_papers": share(sum(s["correct"] for s in studies), len(studies)),
+            "studies": studies}
 
 
 def score_kind(truth: GroundTruth, kind: str, params: QuestionTruth, protocol: Protocol | None,
@@ -1219,9 +1305,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
     files = paper_ids(read_json(corpus / "manifest.json"))
     run = Run.load(run_dir, reexec)
     protocol = _run_protocol(run, entry)
-    with_datasets = ((protocol is not None and DATASET in protocol.evidence_types)
-                     or any(i.evidence_type == DATASET for i in run.items))
-    m = Matching(run.items, truth, files, TYPES + (DATASET,) if with_datasets else TYPES)
+    m = protocol_matching(run.items, truth, files, protocol)
     answers = ([run.answer] if run.answer is not None else []) + [read_json(p) for p in baselines]
     systems = [score_kind(truth, entry.kind, entry.truth, protocol, a) for a in answers]
     effect = entry.kind == "effect"

@@ -237,6 +237,12 @@
         "span_accuracy": 1.0
       }
     ],
+    "scored_types": [
+      "condition",
+      "metric",
+      "measurement",
+      "author_claim"
+    ],
     "unmatched_items": [
       "c-21a7fd89e690d97b",
       "m-4122821caa3bf709",
@@ -512,7 +518,7 @@
         "matched": 0,
         "only": 0,
         "only_matched": 0,
-        "precision": 0.0,
+        "precision": null,
         "recall": 0.0,
         "span_accuracy": null,
         "span_hits": 0
@@ -1371,6 +1377,7 @@
           "completeness": 1.0,
           "determined": 3,
           "direction_accuracy": 0.6667,
+          "direction_accuracy_all_papers": 0.6667,
           "level": "all",
           "overlap": null,
           "studies": 3,
@@ -1382,6 +1389,7 @@
           "completeness": 1.0,
           "determined": 3,
           "direction_accuracy": 0.6667,
+          "direction_accuracy_all_papers": 0.6667,
           "level": "complex",
           "overlap": null,
           "studies": 3,
@@ -1444,6 +1452,7 @@
           "completeness": 1.0,
           "determined": 3,
           "direction_accuracy": 1.0,
+          "direction_accuracy_all_papers": 1.0,
           "level": "all",
           "overlap": 1.0,
           "studies": 3,
@@ -1455,6 +1464,7 @@
           "completeness": 1.0,
           "determined": 3,
           "direction_accuracy": 1.0,
+          "direction_accuracy_all_papers": 1.0,
           "level": "complex",
           "overlap": 1.0,
           "studies": 3,

@@ -27,7 +27,9 @@ Rules:
 - Dataset: the first dataset in measurement order within the main experiment that has the values needed (both
   compared roles for effect and consistency, two method kinds for best); the first value of each side there.
 - effect: `rules.effect` with `params.min_effect` and the metric's `higher_is_better`, `rules.label` over the
-  counts. consistency: only studies whose question metric (their first) matches `params.metric`; `agrees` is
+  counts. The author claim is about the study's question metric (its first): `agrees_with_data`, and so the
+  `claim_disagrees` flag, only when that metric matches `params.metric` (else null: a claim about accuracy says
+  nothing about latency). consistency: only studies whose question metric (their first) matches `params.metric`; `agrees` is
   `rules.claim_agrees` while both the claim and the direction are known. inventory: the `canon.key` of every
   name over the relevant papers (a name vocab does not know is its own key, whitespace collapsed); `aliases`
   are the other forms truth uses for the key, `papers` sorted study ids, `items` the fact ids. best: each
@@ -151,7 +153,9 @@ def _effect_study(study: dict[str, Any], params: QuestionTruth, spec: Synthesis)
                      treatment={"condition": t["condition"], "measurement": t["id"], "value": t["value"]},
                      control={"condition": c["condition"], "measurement": c["id"], "value": c["value"]})
     if claim:
-        determined = entry["direction"] != "undetermined"
+        # the claim is about the study's question metric, its first; on another metric it says nothing: null
+        on_metric = (q := _question_metric(study)) is not None and _matches(q, params.metric)
+        determined = entry["direction"] != "undetermined" and on_metric
         entry["author_claim"] = {"item": claim["id"], "direction": claim["direction"],
                                  "agrees_with_data": rules.claim_agrees(claim["direction"], entry["direction"],
                                                                         spec.claim_map) if determined else None}
