@@ -1091,6 +1091,7 @@ def score_inventory(exp: dict[str, Any], answer: dict[str, Any]) -> dict[str, An
     return {"kind": "inventory", "system": answer.get("system", "unknown"), "target": target,
             "entries": keys["items"], "expected_entries": keys["facts"], "matched": keys["matched"],
             "precision": keys["precision"], "recall": keys["recall"], "f1": keys["f1"],
+            "completeness": keys["recall"],   # the share of expected names given, as the other kinds' completeness
             "paper_pairs": pairs["items"], "expected_paper_pairs": pairs["facts"],
             "paper_precision": pairs["precision"], "paper_recall": pairs["recall"], "paper_f1": pairs["f1"],
             "false_positives": sorted(name for k, name in given.items() if k not in hits),

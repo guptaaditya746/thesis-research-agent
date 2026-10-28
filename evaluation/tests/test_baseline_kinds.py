@@ -189,3 +189,24 @@ def test_effect_questions_by_id_get_their_metric_and_direction() -> None:
     hallucination, _ = common.map_prompt(common.kind_params("rag-hallucination"))
     assert "lower hallucination rate" in hallucination
     assert common.map_prompt(common.kind_params("rag-factuality"))[0] == common.MAP_INSTRUCTIONS   # cache unchanged
+
+
+def test_paper_id_maps_loose_ids_to_the_manifest() -> None:
+    known = ["S001", "S002", "S010"]
+    for raw in ("S001", "s001", "S001.md", "s001.MD", "Paper S001", " S001 ", "paper s001.md"):
+        assert common.paper_id(raw, known) == "S001", raw
+    for raw in ("S999", "", "S001 and S002", "nothing"):
+        assert common.paper_id(raw, known) is None, raw
+
+
+def test_loose_ids_are_kept_not_dropped_in_every_kind(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    mapped = {"studies": [{"paper": "s001.md", "claim": "improves", "agrees": True},
+                          {"paper": "Paper S002", "claim": None, "agrees": None},
+                          {"paper": "S404", "claim": "worsens", "agrees": False}]}
+    answer = agent_baseline.agent_baseline(corpus, runner=FakeRunner(agent_record()), model=Scripted(mapped).model(),
+                                           question_id="cons-accuracy")
+    assert [s["document"] for s in answer["studies"]] == ["S001", "S002"] and answer["dropped"] == ["S404"]
+    model = two_calls({"entries": [{"name": "latency", "papers": ["s002", "S001.md", "S999"]}]})
+    inv = rag.rag_baseline(corpus, model=model.model(), question_id="inv-metrics", k=2)
+    assert inv["entries"][0]["papers"] == ["S001", "S002"] and inv["dropped"] == ["S999"]

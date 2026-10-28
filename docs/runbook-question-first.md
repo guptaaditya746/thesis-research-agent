@@ -15,7 +15,8 @@ below (with the GLiNER service), not as in that file's 0.2.
   lines), then go on with the next independent step.
 - No system under test reads `ground_truth.json`; only `evaluate score` does.
 - One model: `orch-model` everywhere (the defaults).
-- Run the code from `main`; save report files only, on the `results` branch, and tag them `ev3` (step 7).
+- Run the code of the tag `ev3-code` (step 0); save report files only, on the `results` branch, and tag them `ev3`
+  (step 7).
 
 **The ten question ids** (kind): `rag-factuality`, `rag-hallucination`, `rag-latency` (effect); `inv-metrics`,
 `inv-methods`, `inv-datasets` (inventory); `cons-accuracy`, `cons-hallucination` (consistency); `best-accuracy`,
@@ -32,14 +33,17 @@ log shows queue-full or 429 errors, lower `--workers` to 2 and record it.
 
 ```bash
 cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
-git fetch origin --tags && git checkout --detach origin/main    # the code; main holds Parts A-D (tag qf-v1)
-git describe --tags                       # record this in summary.md
+git fetch origin --tags && git checkout --detach ev3-code     # the code: main with the engine, run and score fixes
+git describe --tags                       # ev3-code; record this and `git rev-parse HEAD` in summary.md
 git submodule update --init --recursive
 git -C llm-setup log -1 --oneline         # expect 4c8ccbf GLiNER: start failure keeps the stack, ...
 uv sync --locked --all-groups
 uv run evidence --help | head -n 3        # the entry points exist
 uv run evaluate score --help | grep question-id
 ```
+
+If the tag `ev3-code` does not exist (`git checkout` fails), stop: **USER**. Never run from a bare `origin/main`:
+the tag is the one commit known to hold all three fixes.
 
 `main` records `llm-setup` at `4c8ccbf`: `22dae03`'s orch-only profiles plus the GLiNER service (the llm-setup
 branch `gliner`). That commit must be fetchable from the llm-setup remote (the user pushes the branch `gliner`
@@ -198,6 +202,17 @@ uv run evaluate score --run $EV/runs/check/check --corpus $C_MAIN --question-id 
 
 Good: the score writes `report.json` and `report.md`; `evaluate score --question-id nope` is refused with the list
 of ids. This only checks the spelling; the numbers are not results (regex-only recall is low).
+
+Then check that the code holds the scoring and engine fixes. **If either line below prints `MISSING`, stop:
+USER** (the wrong code is checked out; scores made with it would count A over every type and the old C rule, or
+`best-*` would never escalate the metric):
+
+```bash
+uv run python -c 'import json, sys; e = json.load(open(sys.argv[1]))["extraction"]; print("scored_types", e["scored_types"] if "scored_types" in e else "MISSING")' "$EV/scores/check/report.json"
+grep -q no_question_metric evidence/kinds/best.py && echo "no_question_metric ok" || echo "no_question_metric MISSING"
+```
+
+Good: `scored_types ['dataset']` and `no_question_metric ok`.
 
 ## 3. First check of the baseline mapping prompts (once, before the grid)
 
@@ -364,6 +379,154 @@ never a `Q` set in your login shell, and `in-job.env` unsets 0.3's `Q`, `P` and 
 The hard corpus (112 papers) is the slow one; if the job is about to end, finish the main corpus first and report
 the hard corpus as partial.
 
+## 4b. Extra rows on the main corpus
+
+The grid's RAG baseline reads 8 passages of the whole corpus, so it sees at most 8 papers, and a paper it leaves
+out counts as wrong in C. The rows below make the comparison fair and show how much of a number is noise.
+`extra.sh` runs one extra system (a "variant") for every question on one corpus and scores each answer **on its
+own**, in `$SCORES/<corpus>/<question>.<variant>/`. Each variant has its own cache file or dir, so it never shares
+a cache with the grid or with another variant; never run the same variant twice at once on one corpus.
+
+```bash
+cat > "$EV/extra.sh" <<'EOF'
+#!/usr/bin/env bash
+# extra.sh <variant> <corpus-dir> [question-id|all] [retry|rerun]: one extra system for every question of $QS
+# (or one), each scored on its own in $SCORES/<corpus>/<question>.<variant>. Skips a finished answer or run.
+# RAG variants: rag-per-paper (top 2 passages of every paper), rag-per-paper-k1 (top 1 of every paper),
+# rag-oracle (the passages truth needs; a diagnostic that reads ground_truth.json), rag-seed1, rag-seed2 (the
+# grid's RAG with another seed).
+# Engine variants: regex-only, llm-only (--extractors), run in $RUNS/<question>-<variant>/<corpus>; engine-r2,
+# the grid's engine again with a fresh cache, in the grid's group as <corpus>-r2.
+# `retry` and `rerun` move an engine variant's run dir aside first, as one.sh does.
+set -u
+V=$1; C=$2; ONLY=${3:-all}; MODE=${4:-}; N=$(basename "$C")
+case $MODE in ""|retry|rerun) ;; *) echo "FAIL extra.sh $V $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
+RAG=(); EXT=cascade; RID=$N; GV=$V
+case $V in
+  rag-per-paper) RAG=(--retrieval per_paper --k 2) ;;
+  rag-per-paper-k1) RAG=(--retrieval per_paper --k 1) ;;
+  rag-oracle) RAG=(--oracle-passages) ;;
+  rag-seed1) RAG=(--retrieval global --k 8 --seed 1) ;;
+  rag-seed2) RAG=(--retrieval global --k 8 --seed 2) ;;
+  regex-only|llm-only) EXT=$V ;;
+  engine-r2) RID=$N-r2; GV=cascade-gaps ;;
+  *) echo "FAIL extra.sh: unknown variant '$V'"; exit 2;;
+esac
+QL=$QS; [ "$ONLY" = all ] || QL=$ONLY
+for Q in $QL; do
+  BN=$N.$Q; [ "$Q" = rag-factuality ] && BN=$N       # the baselines' run name, as one.sh
+  OUT=$SCORES/$N/$Q.$V; mkdir -p "$SCORES/$N"
+  if [ "${#RAG[@]}" -gt 0 ]; then                     # a RAG variant
+    A=$RUNS/$V/$BN/answer.json
+    if [ -f "$A" ]; then
+      echo "skip $V $Q $N: done"
+    else
+      uv run evaluate rag-baseline --corpus "$C" --question-id "$Q" --out "$RUNS/$V/$BN" \
+        --cache "$CACHE/$V-$N.jsonl" --model orch-model "${RAG[@]}" || echo "FAIL $V $Q $N"
+    fi
+    if [ -f "$A" ]; then
+      uv run evaluate score --baseline "$A" --corpus "$C" --question-id "$Q" --out "$OUT" || echo "FAIL score $V $Q $N"
+    fi
+    continue
+  fi
+  G=$Q-$GV; [ "$V" = engine-r2 ] && [ "$Q" = rag-factuality ] && G=cascade-gaps   # r2: the grid's group
+  RUN=$RUNS/$G/$RID; mkdir -p "$RUNS/$G"              # an engine variant
+  if [ -n "$MODE" ] && [ -e "$RUN" ]; then
+    mkdir -p "$RUNS/failed/$N"; mv "$RUN" "$RUNS/failed/$N/$Q-$V-$(date +%Y%m%dT%H%M%S)"
+  fi
+  RETRY=(); [ "$MODE" = retry ] && RETRY=(--retry-errors)
+  if [ -f "$RUN/run.json" ]; then
+    echo "skip $V $Q $N: done"
+  elif [ -e "$RUN" ]; then
+    echo "FAIL $V $Q $N: a run dir without run.json is in the way; extra.sh $V $C $Q rerun"
+  else
+    uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$G" \
+      --cache "$CACHE/$V-$N" --model orch-model --extractors "$EXT" --strategy gaps --workers 3 --run-id "$RID" \
+      ${RETRY[@]+"${RETRY[@]}"}
+    rc=$?
+    if [ "$rc" -eq 2 ] && [ -f "$RUN/run.json" ]; then
+      echo "FAIL engine-errors $V $Q $N: when the service answers: extra.sh $V $C $Q retry"
+    elif [ "$rc" -ne 0 ]; then
+      echo "FAIL $V $Q $N (exit $rc)"
+    fi
+  fi
+  if [ -f "$RUN/run.json" ]; then
+    uv run evaluate score --run "$RUN" --corpus "$C" --question-id "$Q" --out "$OUT" || echo "FAIL score $V $Q $N"
+  fi
+done
+EOF
+cat > "$EV/extras.sh" <<'EOF'
+#!/usr/bin/env bash
+# extras.sh <corpus-dir> <variant>...: extra.sh for each variant, one after another
+set -u
+C=$1; shift
+for V in "$@"; do "$EV/extra.sh" "$V" "$C"; done
+EOF
+chmod +x "$EV/extra.sh" "$EV/extras.sh"
+```
+
+Start the extras on the main corpus **after `grid-main` has finished** (its log ends and `launch.sh` printed its
+exit), so the GPU is shared with at most the hard grid; they write `FAIL` lines as the grid does:
+
+```bash
+nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper rag-oracle regex-only llm-only \
+  rag-seed1 rag-seed2 engine-r2 > /dev/null 2>&1 &
+```
+
+The rows, in this order of importance (stop at the job's end and report what is missing):
+
+1. **`rag-per-paper`** (main): RAG with `--retrieval per_paper --k 2`, the top 2 passages of **every** paper (40
+   passages, about 15k tokens). This is the fair RAG row for C: a paper left out counts as wrong, and the grid's
+   global RAG leaves out at least 12 of 20 papers by construction. On the hard corpus it only fits with one passage
+   per paper (112 x 1 500 characters, about 42k tokens) and a context of at least 64k tokens: check
+   `grep -n max_model_len llm-setup/profiles/orch-3x40-gliner.yaml` (the `orch` model's line). Only if it is
+   65536 or more, after `grid-hard` has finished:
+   `nohup "$EV/launch.sh" extras-hard "$EV/extras.sh" "$C_HARD" rag-per-paper-k1 > /dev/null 2>&1 &`.
+   Otherwise write "rag-per-paper not run on hard: max_model_len <n>" in the summary.
+2. **`rag-oracle`** (main): RAG on the passages truth needs (`--oracle-passages`) instead of BM25. It reads
+   `ground_truth.json` on purpose, so it is a **diagnostic**, not a baseline: its C is the ceiling of RAG's
+   reasoning when retrieval is perfect, and the gap to `rag-per-paper` is what retrieval costs. Its answer says
+   `system: rag-oracle-passages`; label its row so in the table.
+3. **`regex-only`** and **`llm-only`** (main): the engine with one kind of extractor (`--extractors regex-only`,
+   no model calls; `--extractors llm-only`). In `gaps` mode a later extractor only sees what the earlier ones left
+   open, so the per-extractor rows of step 6 item 2 are not standalone scores. These two rows are: report A, B
+   and C of `regex-only`, `llm-only` and the grid's cascade side by side, and read each step as a **marginal gain**
+   (cascade minus regex-only is what the later extractors add). Retries and reruns work as in one.sh:
+   `"$EV/launch.sh" retry-llm-only-main "$EV/extra.sh" llm-only "$C_MAIN" inv-metrics retry`.
+4. **Repeats** (main): `rag-seed1` and `rag-seed2` are the grid's RAG (`global`, k 8) with `--seed 1` and `2`;
+   `engine-r2` is the grid's engine once more with a fresh cache dir (`$CACHE/engine-r2-<corpus>`) and
+   `--run-id <corpus>-r2`, so every call is asked again. Temperature is 0, but the server batches requests, so
+   answers can still differ. Report, per question, the spread of C over the grid's run and its repeats
+   (min-max). A difference between systems smaller than that spread is not a result.
+
+## 4c. The counterfactual corpus (main, rag-factuality)
+
+`rag-claude-s1-mixed-cf-S001-contradicts` is the main corpus with one study changed: S001's numbers are rewritten so
+its direction goes from `supports` to `contradicts` (`variant.json` lists the changed values). Every system should
+change its answer for S001 and nowhere else. **Only if the corpus is present** (it is in git; `ls` below shows its
+`variant.json`); if it is not, skip this step and write "counterfactual not run: corpus missing" in the summary.
+Run it after `grid-main` has finished (it has its own caches, named after the corpus):
+
+```bash
+C_CF=$(dirname "$C_MAIN")/rag-claude-s1-mixed-cf-S001-contradicts
+ls "$C_CF/variant.json" "$C_CF/manifest.json"
+nohup "$EV/launch.sh" cf-main "$EV/one.sh" rag-factuality "$C_CF" > /dev/null 2>&1 &
+```
+
+When `cf-main` has finished and `$SCORES/rag-claude-s1-mixed-cf-S001-contradicts/rag-factuality/report.json`
+exists, compare it with the main corpus (no model; login node is fine):
+
+```bash
+C_CF=$(dirname "$C_MAIN")/rag-claude-s1-mixed-cf-S001-contradicts
+uv run evaluate shift --base "$SCORES/rag-claude-s1-mixed/rag-factuality" \
+  --variant "$SCORES/rag-claude-s1-mixed-cf-S001-contradicts/rag-factuality" \
+  --variant-json "$C_CF/variant.json" --out "$SCORES/shift-cf-S001"
+```
+
+Good: it prints `shifted as expected:` with one `yes` or `no` per system (`evidence-engine`, `rag-baseline`,
+`agent-baseline`). Copy that line and `shift.md`'s table into the summary (step 6 item 7). A `no` is a result, not
+a failure.
+
 ## 5. Check each run
 
 - `uv run evidence replay $RUNS/<question>-cascade-gaps/<corpus> | grep '"ok"'` (for `rag-factuality`
@@ -393,23 +556,30 @@ done; done
 
 Read `report.json` / `report.md` of each score dir. A and B exist for the engine run only (`extraction`,
 `integration`); the baselines are scored on C only (`synthesis`, one row per system: `evidence-engine`,
-`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction` (precision, recall, f1). It counts
-only the evidence types the question's protocol extracts, and `report.json` lists them in `scored_types` (for
-example, `inv-datasets` is scored on datasets only). So A is comparable across corpora for the same question, not
-across questions or kinds; copy `scored_types` into the summary next to A. If a `report.json` has no `scored_types`, its
-`all` / `all` row still counts every type in the corpus (older scoring code): write A as `-` for that run and say
-so under Failures (the runs are kept, so the scores can be made again). B and C by kind, with the field names as
-they are in `report.json`:
+`rag-baseline`, `agent-baseline`). A is the `all` / `all` row of `extraction`: precision, recall, f1 over the
+evidence types this question's protocol extracts, listed in `extraction.scored_types` (for example, `inv-datasets`
+is scored on datasets only). It is computed the same way for every kind, but over different types, so compare A
+within a question (across corpora and systems), not across questions or kinds; copy `extraction.scored_types` into
+the summary next to A. Step 2 already stops on scoring code without `scored_types`; if a `report.json` still has
+none, write A as `-` for that run and say so under Failures. B and C by kind, with the field names as they are in
+`report.json`:
 
 | kind | B (engine only) | C (every system) |
 |---|---|---|
-| effect | `integration.rows`: `association_accuracy` | `synthesis`: `label_correct`, `direction_accuracy` |
-| inventory | `integration`: `clean_share` | `synthesis`: `precision`, `recall`, `f1` |
-| consistency | `integration`: `claim_accuracy` | `synthesis`: `per_study_accuracy` |
-| best | `integration`: `kind_accuracy` | `synthesis`: `winner_correct`, `per_study_accuracy` |
+| effect | `integration.rows`: `association_accuracy` | `synthesis`: `label_correct`, `direction_accuracy`, `completeness` |
+| inventory | `integration`: `clean_share` | `synthesis`: `precision`, `recall`, `f1` (`recall` is inventory's completeness) |
+| consistency | `integration`: `claim_accuracy` | `synthesis`: `per_study_accuracy`, `completeness` |
+| best | `integration`: `kind_accuracy` | `synthesis`: `winner_correct`, `per_study_accuracy`, `completeness` |
 
-`direction_accuracy` and `per_study_accuracy` are scored on the papers the truth can decide, and a paper the system
-left out counts as wrong; `completeness` is reported next to them in `synthesis`: copy it into C beside them.
+`direction_accuracy` (effect) and `per_study_accuracy` (best, consistency) are over the papers the truth can decide
+only (effect: a determined direction; best: a winner or a tie; consistency: `agrees` true or false, so duplicates
+and papers with missing data are left out). A decidable paper the system leaves out or calls undetermined counts as
+wrong; an empty answer scores 0. `completeness` is the share of those decidable papers the system answered at all,
+so "wrong" and "silent" can be told apart. The old numbers over all papers are `direction_accuracy_all_papers` /
+`per_study_accuracy_all_papers`; do not copy them into the table.
+
+A precision of `null` (`report.md` shows `n/a`) means the system gave nothing: write `n/a`, never 0. This applies to
+inventory C precision and to the per-extractor A rows of an extractor that found nothing.
 `report.md` shows the same numbers under "B." and "C." headings; copy from there if a field is nested.
 
 Write `reports/question-first/summary.md` with:
@@ -434,22 +604,61 @@ Write `reports/question-first/summary.md` with:
    whether `GLINER_URL` was set.
 5. **Failures**: each `FAIL` line and what you did; the failed-call count of every engine run (step 5), before
    and after its retry, and which runs needed `one.sh ... retry`.
+6. **Extra rows** (step 4b), for each corpus they ran on: one row per question x variant, from
+   `$SCORES/<corpus>/<question>.<variant>/report.json`, in the main table's columns (a RAG variant has C only; an
+   engine variant has A, B and C). Name the variant in the system column (for example `rag-baseline (per_paper)`).
+   Say under the table that the `rag-per-paper` row is the fair RAG comparison for C: every paper is seen, so a
+   left-out paper there is the model's choice, not the retriever's.
+7. **Counterfactual** (step 4c): the `shifted as expected` line and the table of `shift.md`, or why it did not run.
 
 ## 7. Hand-back
 
+The scores alone are not enough: a later scoring fix needs the answers and runs again, and `data-tmp` is cleaned.
+So the hand-back keeps, besides every score dir, the files a score is made from, under
+`reports/question-first/runs/` with the same paths as under `$RUNS`: of every finished engine run `answer.json`,
+`run.json`, `funnel.json` and `events.jsonl` (gzipped); of every baseline its `answer.json`. Run directories are not
+copied whole (no `evidence.jsonl`, `reexec.json` or agent work dirs). `$RUNS/check` is left out, `$RUNS/failed`
+is kept (it shows what was retried).
+
 ```bash
-mkdir -p reports/question-first
-for N in rag-claude-s1-mixed rag-tpl-hard-complex; do
+R=$PWD/reports/question-first; mkdir -p "$R/runs" "$R/scores"
+for N in rag-claude-s1-mixed rag-tpl-hard-complex; do         # the old layout: <corpus>/<question>/report.*
   for Q in $QS; do
     D=$SCORES/$N/$Q; [ -f "$D/report.json" ] || continue
-    mkdir -p "reports/question-first/$N/$Q"
-    cp "$D/report.json" "$D/report.md" "reports/question-first/$N/$Q/"
+    mkdir -p "$R/$N/$Q"
+    cp "$D/report.json" "$D/report.md" "$R/$N/$Q/"
     G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps   # the engine run, as one.sh writes it
-    cp "$RUNS/$G/$N/funnel.json" "reports/question-first/$N/$Q/" 2>/dev/null
+    cp "$RUNS/$G/$N/funnel.json" "$R/$N/$Q/" 2>/dev/null
   done
 done
-cp -r "$EV/scores/mapcheck" reports/question-first/mapcheck 2>/dev/null
-cp "$EV/failures.md" reports/question-first/ 2>/dev/null
+# every score dir (grid, extras, shift, mapcheck), with its path under $SCORES
+(cd "$SCORES" && find . -path ./check -prune -o -type f \( -name 'report.*' -o -name 'shift.*' \) -print0 \
+  | xargs -0 -r cp --parents -t "$R/scores")
+# the answers and runs the scores are made from, with their paths under $RUNS
+(cd "$RUNS" && find . -path ./check -prune -o -type f \( -name answer.json -o -name run.json -o -name funnel.json \) \
+  -print0 | xargs -0 -r cp --parents -t "$R/runs")
+(cd "$RUNS" && find . -path ./check -prune -o -type f -name events.jsonl -print0 | while IFS= read -r -d '' f; do
+  mkdir -p "$R/runs/$(dirname "$f")" && gzip -c "$f" > "$R/runs/$f.gz"; done)
+cp "$EV/failures.md" "$R/" 2>/dev/null
+du -sh "$R/runs" "$R/scores"; find "$R" -type f -size +50M      # the last line prints nothing
+```
+
+The caches hold every model reply; with them a run can be replayed and rescored without the model. Check their
+size before packing them:
+
+```bash
+du -sh "$CACHE"                                         # the record caches, uncompressed
+tar -C "$EV" -czf "$EV/caches.tar.gz" cache && ls -lh "$EV/caches.tar.gz"
+```
+
+- If `caches.tar.gz` is under 90 MB: `split -b 45m "$EV/caches.tar.gz" "$R/caches.tar.gz.part-"` (GitHub refuses
+  files over 100 MB and warns over 50 MB), and write in `summary.md` how to join them
+  (`cat caches.tar.gz.part-* > caches.tar.gz`).
+- If it is larger: do not commit it. Copy it off `data-tmp` to a place that is not cleaned
+  (`cp "$EV/caches.tar.gz" ~/`, your home directory) and write its path and size in `summary.md`; the **USER**
+  collects it.
+
+```bash
 git checkout results && git pull --ff-only origin results   # reports/ is untracked, so it comes along
 git add reports/question-first
 git status --short | grep -v '^A  reports/question-first' ; echo "(nothing above: only report files)"
@@ -458,5 +667,30 @@ git push origin results
 git tag -a ev3 -m "EV3: question-first runs on Slurm" && git push origin ev3
 ```
 
-The `results` branch takes report files only: no run directories, no caches, no corpora, no code changes. Never push
+The `results` branch takes the files above only: no whole run directories, no corpora, no code changes. Never push
 to `main`, and never make a new branch. Send the user the tag `ev3` and `reports/question-first/summary.md`.
+
+## 8. Limits to state
+
+Copy this section into `summary.md` as it is, under the heading "Limits", and fill the last column of the table
+from the runs (write "as below" if nothing changed). These are known before the run; they are not failures.
+
+1. All numbers come from two synthetic corpora on one topic, made with a fixed vocabulary that the extractors and
+   protocols were also written against; extraction scores are an upper bound.
+2. The main corpus has 20 papers; some cells rest on 3-11 papers, so differences under about 0.3 are not shown.
+3. The over-claiming test rests on 4 papers (the hard corpus has none), so it is a demonstration, not a measurement.
+4. All systems use the same local model; the grid's RAG baseline reads 8 passages, so the per-paper RAG row and
+   the cost columns separate "reads more" from "reasons from evidence".
+5. Truth and engine share the synthesis rules, so C tests extraction and pairing; the oracle row shows the ceiling
+   and the counterfactual shows whether the answer follows the evidence.
+6. The baselines are not told the protocol's neutral band (`min_effect`: 0.01, 0.05 s for latency) or its metric
+   definitions; a baseline that calls a change inside the band "better" or "worse" is scored wrong for a rule it
+   never saw.
+
+| cell | n | what it means |
+|---|---|---|
+| rag-latency, main, C `direction_accuracy` | 3 decidable papers | one paper moves it by 0.33 |
+| every effect question, both corpora, C `label_correct` | 1 label, truth `mixed` in all 6 cells | "always say mixed" scores 6/6 |
+| cons-accuracy / cons-hallucination, hard | 0 disagreeing papers | "always agrees" scores 1.0 |
+| cons-accuracy / cons-hallucination, main | 3 / 1 disagreeing papers | the over-claiming test, 4 papers |
+| per level, main | 4 papers per level | describe only, no comparison |
