@@ -109,7 +109,9 @@ seconds from the extractor_call events, tokens from the record cache when it sti
 Intervals (`score_intervals`, rules in `stats`): extraction F1 per evidence type over all levels,
 resampling papers (per paper: matched, items, facts; the statistic is the micro F1 of the resample);
 direction accuracy per system, resampling studies; and for each baseline the paired difference engine
-correct minus baseline correct per study.
+correct minus baseline correct per study. The other kinds get the same interval on their headline C metric
+(`kind_intervals`, rows with a `metric`): best and consistency `per_study_accuracy`, resampling the decidable
+papers it is scored on; inventory precision, recall and F1, resampling the names (truth's and the answer's).
 
 Attribution (`attribute`, Tim M2 §5C, our addition; with `evaluate score --oracle`): per scored study, whether
 a system's direction is right and whether the oracle's is (evaluation/oracle.py: the synthesis on perfect
@@ -160,7 +162,7 @@ from synth import vocab
 from . import canon
 from .expected import expected as expected_answer
 from .expected import saved_answer
-from .stats import bootstrap_f1, bootstrap_mean, interval_row
+from .stats import bootstrap, bootstrap_f1, bootstrap_mean, interval_row, micro_f1, ratio
 from .truth import DATASET, ENGINE, MAIN_ROLE, TYPES, Fact, GroundTruth, Run, document_of, paper_ids, read_json
 
 REPO = Path(__file__).resolve().parents[1]
@@ -651,10 +653,12 @@ def score_flags(truth: GroundTruth, answer: dict[str, Any]) -> dict[str, Any] | 
 
 # --- intervals (F4, our addition) ------------------------------------------------------------------
 
-def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[str, Any]:
-    """Bootstrap intervals (docstring: Intervals; rules in stats.py) for extraction F1, direction accuracy
-    and the paired engine-minus-baseline difference; the last two over the studies C counts (a determined
-    expected direction), as `direction_accuracy` is."""
+def score_intervals(m: Matching | None, systems: list[dict[str, Any]], question_kind: str = "effect") -> dict[str, Any]:
+    """Bootstrap intervals (docstring: Intervals; rules in stats.py) for extraction F1 and each system's headline
+    C metric (`synthesis`), same seed and resamples for every kind. effect: direction accuracy and the paired
+    engine-minus-baseline difference, over the studies C counts (a determined expected direction), as
+    `direction_accuracy` is; its rows carry no `metric`. The other kinds' rows name their `metric`
+    (kind_intervals) and have no paired difference."""
     extraction = []
     if m is not None:
         for kind in (*m.types, ALL):
@@ -664,6 +668,10 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
                 cells = [m.cells.get((paper, k), (0, 0, 0, 0, 0)) for k in kinds]
                 rows.append((sum(c[2] for c in cells), sum(c[0] for c in cells), sum(c[1] for c in cells)))
             extraction.append(interval_row(bootstrap_f1(rows), evidence_type=kind, n_rows=len(rows)))
+    if question_kind != "effect":
+        return {"extraction": extraction, "synthesis": [r for system in systems for r in kind_intervals(system)],
+                "paired": []}
+
     def counted(system: dict[str, Any]) -> list[dict[str, Any]]:   # the studies C counts: a determined expectation
         return [s for s in system["studies"] if s.get("determined", True)]
 
@@ -682,6 +690,30 @@ def score_intervals(m: Matching | None, systems: list[dict[str, Any]]) -> dict[s
             paired.append(interval_row(bootstrap_mean(diffs), system=system["system"], n_rows=len(diffs),
                                        excluded_ids=excluded))
     return {"extraction": extraction, "synthesis": synthesis, "paired": paired}
+
+
+def kind_intervals(c: dict[str, Any]) -> list[dict[str, Any]]:
+    """Interval rows of one system's C (score_kind) on a question of kind best, consistency or inventory.
+
+    best and consistency: `per_study_accuracy`, resampling the decidable papers it is scored on (`counted`: a
+    winner or tie, an `agrees` not null), one 0/1 row (correct) per paper. inventory: `precision`, `recall` and
+    `f1` of the names, resampling names, not papers, since the metric is over the set of names (a name spans
+    papers): one row (matched, given, expected) per name in the union of truth's and the answer's, so a
+    resample draws hits (1, 1, 1), misses (0, 0, 1) and false positives (0, 1, 0) together. A precision with no
+    name given is null (prf), and so is its interval."""
+    system = c["system"]
+    if c["kind"] == "inventory":
+        hit, given, expected = c["matched"], c["entries"], c["expected_entries"]
+        rows = [(1, 1, 1)] * hit + [(0, 0, 1)] * (expected - hit) + [(0, 1, 0)] * (given - hit)
+        metrics = {"precision": (ratio, (0, 1), given), "recall": (ratio, (0, 2), expected),
+                 "f1": (micro_f1, (0, 1, 2), 1)}
+        return [interval_row(bootstrap(stat, [tuple(r[i] for i in cols) for r in rows]) if total else
+                             {"point": None, "low": None, "high": None, "method": None, "unit": "row"},
+                             system=system, metric=metric, n_rows=len(rows))
+                for metric, (stat, cols, total) in metrics.items()]
+    counted = [s for s in c["studies"] if s["counted"]]
+    return [interval_row(bootstrap_mean(int(s["correct"]) for s in counted), system=system,
+                         metric="per_study_accuracy", n_rows=len(counted))]
 
 
 # --- locate, cascade, cost, stability --------------------------------------------------------------
@@ -1317,7 +1349,7 @@ def score(run_dir: Path, corpus: Path, baselines: Iterable[Path] = (), reexec: P
         "question_id": entry.id, "kind": entry.kind,
         "question": _question_text(truth, entry), "extraction": score_extraction(m),
         "integration": integration_kind(m, entry.kind, run.answer, protocol, scored), "synthesis": systems,
-        "intervals": score_intervals(m, systems if effect else []),
+        "intervals": score_intervals(m, systems, entry.kind),
         "locate": score_locate(truth, run.locate), "cascade": score_cascade(m, run.run),
         "extractors": score_extractors(m, run),
         "cost": score_cost(run.run, len(truth.studies)), "stability": score_stability(run.reexec),
@@ -1341,7 +1373,7 @@ def score_answers(corpus: Path, answers: Iterable[Path], oracle: Path | None = N
     return {"corpus_id": truth.corpus_id, "corpus_name": Path(corpus).name, "levels": truth.levels,
             "run_id": None, "protocol": None, "question_id": entry.id, "kind": entry.kind, "question": _question_text(truth, entry),
             "extraction": None, "integration": None, "synthesis": systems,
-            "intervals": score_intervals(None, systems if effect else []), "locate": None, "cascade": None,
+            "intervals": score_intervals(None, systems, entry.kind), "locate": None, "cascade": None,
             "extractors": None, "cost": None, "stability": None, "funnel": None,
             "attribution": (score_attribution(scored, given, read_json(oracle) if oracle else None) if effect
                             else None)}
