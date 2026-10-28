@@ -15,7 +15,8 @@ below (with the GLiNER service), not as in that file's 0.2.
   lines), then go on with the next independent step.
 - No system under test reads `ground_truth.json`; only `evaluate score` does.
 - One model: `orch-model` everywhere (the defaults).
-- Run the code from `main`; save report files only, on the `results` branch, and tag them `ev3` (step 7).
+- Run the code of the tag `ev3-code` (step 0); save report files only, on the `results` branch, and tag them `ev3`
+  (step 7).
 
 **The ten question ids** (kind): `rag-factuality`, `rag-hallucination`, `rag-latency` (effect); `inv-metrics`,
 `inv-methods`, `inv-datasets` (inventory); `cons-accuracy`, `cons-hallucination` (consistency); `best-accuracy`,
@@ -32,14 +33,17 @@ log shows queue-full or 429 errors, lower `--workers` to 2 and record it.
 
 ```bash
 cd /mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent
-git fetch origin --tags && git checkout --detach origin/main    # the code; main holds Parts A-D (tag qf-v1)
-git describe --tags                       # record this in summary.md
+git fetch origin --tags && git checkout --detach ev3-code     # the code: main with the engine, run and score fixes
+git describe --tags                       # ev3-code; record this and `git rev-parse HEAD` in summary.md
 git submodule update --init --recursive
 git -C llm-setup log -1 --oneline         # expect 4c8ccbf GLiNER: start failure keeps the stack, ...
 uv sync --locked --all-groups
 uv run evidence --help | head -n 3        # the entry points exist
 uv run evaluate score --help | grep question-id
 ```
+
+If the tag `ev3-code` does not exist (`git checkout` fails), stop: **USER**. Never run from a bare `origin/main`:
+the tag is the one commit known to hold all three fixes.
 
 `main` records `llm-setup` at `4c8ccbf`: `22dae03`'s orch-only profiles plus the GLiNER service (the llm-setup
 branch `gliner`). That commit must be fetchable from the llm-setup remote (the user pushes the branch `gliner`
@@ -198,6 +202,17 @@ uv run evaluate score --run $EV/runs/check/check --corpus $C_MAIN --question-id 
 
 Good: the score writes `report.json` and `report.md`; `evaluate score --question-id nope` is refused with the list
 of ids. This only checks the spelling; the numbers are not results (regex-only recall is low).
+
+Then check that the code holds the scoring and engine fixes. **If either line below prints `MISSING`, stop:
+USER** (the wrong code is checked out; scores made with it would count A over every type and the old C rule, or
+`best-*` would never escalate the metric):
+
+```bash
+uv run python -c 'import json, sys; e = json.load(open(sys.argv[1]))["extraction"]; print("scored_types", e["scored_types"] if "scored_types" in e else "MISSING")' "$EV/scores/check/report.json"
+grep -q no_question_metric evidence/kinds/best.py && echo "no_question_metric ok" || echo "no_question_metric MISSING"
+```
+
+Good: `scored_types ['dataset']` and `no_question_metric ok`.
 
 ## 3. First check of the baseline mapping prompts (once, before the grid)
 
