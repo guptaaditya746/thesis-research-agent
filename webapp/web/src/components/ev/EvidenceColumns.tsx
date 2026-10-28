@@ -1,15 +1,21 @@
 /**
  * The evidence table's columns per question kind. Effect (engine): paper, treatment, control, metric, dataset,
  * effect, verdict with its rule, author claim, found by. Effect (baseline): paper, verdict, the passages it
- * cited. Every cell that rests on an item opens the source panel on that item's span.
+ * cited. Inventory: name, other names, papers, the papers that name it. Consistency: paper, what it says,
+ * what its numbers say, agree or not. Best: paper, winner, one column per method kind, wins per kind as the
+ * total row. Every cell that rests on an item opens the source panel on that item's span.
  */
-import type { EffectAnswer } from "@/api/ev"
+import { CheckIcon, CircleHelpIcon, TrophyIcon, XIcon } from "lucide-react"
+
+import type { BestAnswer, ConsistencyAnswer, EffectAnswer, InventoryAnswer } from "@/api/ev"
+import { StatusBadge } from "@/components/badges"
 import { Badge } from "@/components/ui/badge"
-import { focusOn, type EffectData, type EvidenceRow } from "@/lib/evidence"
-import { DASH } from "@/lib/format"
+import { focusOn, type BestData, type ConsistencyData, type EffectData, type EvidenceRow, type InventoryData } from "@/lib/evidence"
+import { DASH, num } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
 import { DirectionBadge } from "./bits"
-import { EffectMark, FoundByCell, SideCell } from "./EvidenceCells"
+import { EffectMark, FoundByCell, PaperChips, SideCell } from "./EvidenceCells"
 import { SourceButton } from "./EvidenceTable"
 import type { EvidenceColumn } from "./useEvidenceTable"
 
@@ -117,4 +123,123 @@ export function effectColumns(answer: EffectAnswer, rows: EvidenceRow<EffectData
     },
     { id: "found_by", header: "found by", hideable: true, compact: false, cell: (r) => <FoundByCell ids={r.data.foundBy} /> },
   ]
+}
+
+/** Inventory: one row per distinct name; its papers open the paper with the name's items marked. */
+export function inventoryColumns(answer: InventoryAnswer): EvidenceColumn<InventoryData>[] {
+  return [
+    {
+      id: "name",
+      header: answer.target ?? "name",
+      sort: (r) => r.data.entry.name.toLowerCase(),
+      cell: (r, open) => (
+        <SourceButton target={r.target} onOpen={open} label={`${r.data.entry.name}: show in the first paper`} className="text-sm font-medium">
+          {r.data.entry.name}
+        </SourceButton>
+      ),
+    },
+    {
+      id: "aliases",
+      header: "other names",
+      hideable: true,
+      compact: false,
+      cell: (r) => (r.data.entry.aliases.length ? r.data.entry.aliases.join(", ") : <span className="text-muted-foreground">{DASH}</span>),
+    },
+    { id: "count", header: "papers", sort: (r) => r.data.papers.length, className: "w-16", cell: (r) => <span className="font-mono tabular-nums">{r.data.papers.length}</span> },
+    { id: "papers", header: "named in", cell: (r, open) => <PaperChips row={r} open={open} /> },
+    { id: "found_by", header: "found by", hideable: true, compact: false, cell: (r) => <FoundByCell ids={r.data.foundBy} /> },
+  ]
+}
+
+const reasonOf = (r: { code: string; text?: string | null } | null | undefined) => (r ? (r.text ?? r.code) : null)
+
+/** Consistency: one row per paper, what the paper says against what its numbers say. */
+export function consistencyColumns(answer: ConsistencyAnswer): EvidenceColumn<ConsistencyData>[] {
+  return [
+    paperColumn<ConsistencyData>(),
+    {
+      id: "claim",
+      header: "paper says",
+      sort: (r) => r.data.study?.claim,
+      cell: (r, open) => (r.data.study?.claim
+        ? <SourceButton target={focusOn(r, r.data.claimItem)} onOpen={open} label={`${r.key}: the author claim, show in the paper`}><DirectionBadge direction={r.data.study.claim} /></SourceButton>
+        : <span className="text-muted-foreground">no claim</span>),
+    },
+    {
+      id: "numbers",
+      header: `numbers say${answer.metric ? ` (${answer.metric})` : ""}`,
+      sort: (r) => r.data.study?.direction,
+      cell: (r, open) => (r.data.study?.direction
+        ? <SourceButton target={focusOn(r, r.data.numberItems[0])} onOpen={open} label={`${r.key}: the measurements, show in the paper`}><DirectionBadge direction={r.data.study.direction} /></SourceButton>
+        : <span className="text-muted-foreground">{DASH}</span>),
+    },
+    {
+      id: "verdict",
+      header: "agree?",
+      sort: (r) => r.lane,
+      className: "min-w-40",
+      cell: (r) => {
+        const s = r.data.study
+        if (!s) return <Badge variant="outline" className="font-normal">not used</Badge>
+        return (
+          <span className="flex flex-col items-start gap-1">
+            {s.agrees === true ? <StatusBadge tone="good" icon={<CheckIcon />}>agrees</StatusBadge>
+              : s.agrees === false ? <StatusBadge tone="critical" icon={<XIcon />}>disagrees</StatusBadge>
+                : <StatusBadge tone="warning" icon={<CircleHelpIcon />}>undetermined</StatusBadge>}
+            {reasonOf(s.reason) && <span className="text-muted-foreground">{reasonOf(s.reason)}</span>}
+          </span>
+        )
+      },
+    },
+    { id: "found_by", header: "found by", hideable: true, compact: false, cell: (r) => <FoundByCell ids={r.data.foundBy} /> },
+  ]
+}
+
+/** Best: one row per paper, a column per method kind with its value (the top one marked), wins per kind below. */
+export function bestColumns(rows: EvidenceRow<BestData>[], order?: string[]): EvidenceColumn<BestData>[] {
+  const seen = new Set(rows.flatMap((r) => Object.keys(r.data.values)))
+  const kinds = [...(order ?? []).filter((k) => seen.has(k)), ...[...seen].filter((k) => !(order ?? []).includes(k)).sort()]
+  return [
+    paperColumn<BestData>(),
+    {
+      id: "winner",
+      header: "winner",
+      sort: (r) => r.data.study?.winner ?? (r.data.study?.tied.length ? "~tie" : undefined),
+      cell: (r) => {
+        const s = r.data.study
+        if (!s) return <Badge variant="outline" className="font-normal">not used</Badge>
+        if (s.winner) return <StatusBadge tone="good" icon={<TrophyIcon />}>{s.winner}</StatusBadge>
+        if (s.tied.length) return <span>tie: {s.tied.join(", ")}</span>
+        return <span className="text-muted-foreground">{reasonOf(s.reason) ?? DASH}</span>
+      },
+    },
+    ...kinds.map((k): EvidenceColumn<BestData> => ({
+      id: `kind:${k}`,
+      header: k,
+      sort: (r) => r.data.values[k]?.value,
+      cell: (r, open) => {
+        const v = r.data.values[k]
+        if (!v) return <span className="text-muted-foreground">{DASH}</span>
+        const top = r.data.study?.winner === k || !!r.data.study?.tied.includes(k)
+        return (
+          <SourceButton target={v.item ? focusOn(r, v.item) : null} onOpen={open}
+            label={`${r.key}: ${k} ${num(v.value, 3)}${top ? ", the top value" : ""}, show in the paper`}
+            className={cn("font-mono tabular-nums", top && "font-semibold")}>
+            {num(v.value, 3)}
+            {top && <TrophyIcon aria-hidden="true" className="ml-1 inline size-3 align-[-1px] text-status-good" />}
+          </SourceButton>
+        )
+      },
+    })),
+    { id: "found_by", header: "found by", hideable: true, compact: false, cell: (r) => <FoundByCell ids={r.data.foundBy} /> },
+  ]
+}
+
+/** The wins-per-kind total row under a best table, by column id. */
+export function bestFooter(answer: BestAnswer): Record<string, string> {
+  return {
+    paper: "papers won",
+    winner: answer.winner ? `overall: ${answer.winner}` : answer.tied.length ? `overall tie: ${answer.tied.join(", ")}` : "no overall winner",
+    ...Object.fromEntries(Object.entries(answer.wins).map(([k, n]) => [`kind:${k}`, String(n)])),
+  }
 }

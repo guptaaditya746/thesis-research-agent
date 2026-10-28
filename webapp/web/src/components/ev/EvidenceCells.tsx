@@ -1,8 +1,8 @@
-/** Cells of the evidence table shared by the column sets: found by, the effect mark, a treatment or control value. */
+/** Cells of the evidence table shared by the column sets: found by, the effect mark, a treatment or control value, an inventory entry's papers. */
 import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 
 import { DASH, num } from "@/lib/format"
-import { extractorFamily, focusOn, signed, type EffectData, type EvidenceRow } from "@/lib/evidence"
+import { extractorFamily, focusOn, signed, type EffectData, type EvidenceRow, type InventoryData } from "@/lib/evidence"
 import { cn } from "@/lib/utils"
 
 import { SourceButton } from "./EvidenceTable"
@@ -51,3 +51,19 @@ export function SideCell({ row, side, open }: { row: EvidenceRow<EffectData>; si
   )
 }
 
+
+/** An inventory entry's papers: each a button opening that paper with the entry's items in it marked. */
+export function PaperChips({ row, open }: { row: EvidenceRow<InventoryData>; open: Opener }) {
+  return (
+    <ul className="flex flex-wrap gap-1">
+      {row.data.papers.map((p) => (
+        <li key={p.document}>
+          <SourceButton target={p.target} onOpen={open} label={`${row.data.entry.name} in ${p.document}: show in the paper`}
+            className="mx-0 inline-flex min-h-6 items-center rounded-md border px-1.5 font-mono no-underline">
+            {p.document}
+          </SourceButton>
+        </li>
+      ))}
+    </ul>
+  )
+}

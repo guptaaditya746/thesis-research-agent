@@ -19,7 +19,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { byLane, type EvidenceRow, type Lane, type SourceTarget } from "@/lib/evidence"
 import { cn } from "@/lib/utils"
 
@@ -66,12 +66,14 @@ export function SourceButton({ target, onOpen, label, children, className }: {
 
 const SORT_ICON = { asc: ArrowUpIcon, desc: ArrowDownIcon }
 
-export function EvidenceTable<T>({ table, lanes, caption, active }: {
+export function EvidenceTable<T>({ table, lanes, caption, active, footer }: {
   table: TanTable<EvidenceRow<T>>
   lanes: Lane[]
   caption: string
   /** the key of the row the source panel shows */
   active?: string | null
+  /** a total row: its text per column id */
+  footer?: Record<string, string>
 }) {
   const groups = byLane(table.getRowModel().rows.map((r) => r.original), lanes)
   const cells = new Map(table.getRowModel().rows.map((r) => [r.id, r.getVisibleCells()]))
@@ -130,6 +132,15 @@ export function EvidenceTable<T>({ table, lanes, caption, active }: {
             ))}
           </TableBody>
         ))}
+        {footer && (
+          <TableFooter>
+            <TableRow>
+              {table.getVisibleLeafColumns().map((c, n) => (n === 0
+                ? <th key={c.id} scope="row" className="p-2 text-left text-xs font-medium">{footer[c.id] ?? ""}</th>
+                : <TableCell key={c.id} className="text-xs font-medium tabular-nums">{footer[c.id] ?? ""}</TableCell>))}
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
     </div>
   )

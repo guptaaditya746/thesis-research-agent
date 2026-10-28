@@ -8,16 +8,41 @@
  * and the run protocol's synthesis (the margin and which way each metric is better); see lib/evidence.ts.
  */
 import { useMemo, useRef, useState, type ReactNode } from "react"
+import { Link } from "react-router"
 
-import { useRunGraph, useRunProtocol, type EffectAnswer, type EvRunDetail } from "@/api/ev"
+import {
+  useRunGraph,
+  useRunProtocol,
+  type BestAnswer,
+  type ConsistencyAnswer,
+  type EffectAnswer,
+  type EvRunDetail,
+  type InventoryAnswer,
+  type Protocol,
+} from "@/api/ev"
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
 import { effectAnswer, ENGINE, type KindAnswer } from "@/lib/ev"
-import { effectRows, EFFECT_LANES, indexGraph, laneCounts, type EvidenceRow, type Lane, type SourceTarget } from "@/lib/evidence"
+import {
+  BEST_LANES,
+  bestRows,
+  CONSISTENCY_LANES,
+  consistencyRows,
+  EFFECT_LANES,
+  effectRows,
+  indexGraph,
+  INVENTORY_LANES,
+  inventoryMissing,
+  inventoryRows,
+  laneCounts,
+  type EvidenceRow,
+  type Lane,
+  type SourceTarget,
+} from "@/lib/evidence"
 
-import { AnswerPanel, BaselineEvidence } from "./AnswerPanel"
+import { BaselineEvidence } from "./AnswerPanel"
 import { JsonBlock, LabelBadge, SystemBadge } from "./bits"
 import { CoverageBar } from "./CoverageBar"
-import { effectColumns } from "./EvidenceColumns"
+import { bestColumns, bestFooter, consistencyColumns, effectColumns, inventoryColumns } from "./EvidenceColumns"
 import { ColumnsMenu, EvidenceTable } from "./EvidenceTable"
 import { SourcePanel } from "./SourcePanel"
 import { shownRows, useEvidenceTable, type EvidenceColumn } from "./useEvidenceTable"
@@ -66,6 +91,7 @@ interface KindView<T> {
   unit: string
   header: ReactNode
   after?: ReactNode
+  footer?: Record<string, string>
 }
 
 function Evidence<T>({ runId, view }: { runId: string; view: KindView<T> }) {
@@ -107,7 +133,7 @@ function Evidence<T>({ runId, view }: { runId: string; view: KindView<T> }) {
         <ColumnsMenu table={table} />
       </CoverageBar>
       <div className={target && wide ? "grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,42%)]" : undefined}>
-        <EvidenceTable table={table} lanes={view.lanes} caption={view.caption} active={target?.key} />
+        <EvidenceTable table={table} lanes={view.lanes} caption={view.caption} active={target?.key} footer={view.footer} />
         {wide && panel && (
           <aside aria-label={`Source: ${target.title}`} className="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-lg border bg-card p-4">
             {panel}
@@ -128,14 +154,16 @@ function Evidence<T>({ runId, view }: { runId: string; view: KindView<T> }) {
   )
 }
 
-function effectView(run: EvRunDetail, answer: EffectAnswer, expected: string | null | undefined, graph: ReturnType<typeof indexGraph>,
-  synthesis: Parameters<typeof effectRows>[3]): KindView<unknown> {
+type Graph = ReturnType<typeof indexGraph>
+const erase = <T,>(v: { rows: EvidenceRow<T>[]; columns: EvidenceColumn<T>[] }) =>
+  ({ rows: v.rows as EvidenceRow<unknown>[], columns: v.columns as EvidenceColumn<unknown>[] })
+
+function effectView(run: EvRunDetail, answer: EffectAnswer, expected: string | null | undefined, graph: Graph, protocol: Protocol | null): KindView<unknown> {
   const engine = answer.system === ENGINE
-  const rows = effectRows(answer, run.documents, graph, synthesis)
+  const rows = effectRows(answer, run.documents, graph, protocol?.synthesis)
   return {
     lanes: EFFECT_LANES,
-    rows: rows as EvidenceRow<unknown>[],
-    columns: effectColumns(answer, rows, engine) as EvidenceColumn<unknown>[],
+    ...erase({ rows, columns: effectColumns(answer, rows, engine) }),
     caption: "Evidence per paper",
     unit: "papers",
     header: (
@@ -151,19 +179,93 @@ function effectView(run: EvRunDetail, answer: EffectAnswer, expected: string | n
   }
 }
 
+function inventoryView(run: EvRunDetail, answer: InventoryAnswer, graph: Graph): KindView<unknown> {
+  const rows = inventoryRows(answer, graph)
+  const missing = inventoryMissing(answer, run.documents)
+  const named = run.documents.length - missing.length
+  return {
+    lanes: INVENTORY_LANES,
+    ...erase({ rows, columns: inventoryColumns(answer) }),
+    caption: "Inventory",
+    unit: "names",
+    header: (
+      <AnswerHeader system={answer.system} question={`Which ${answer.target ?? "item"}s do the papers report?`}
+        answer={plural(answer.entries.length, `distinct ${answer.target ?? "item"} name`)}
+        sentence={`Named in ${named} of ${plural(run.documents.length, "paper")}${missing.length ? `; ${plural(missing.length, "paper")} name${missing.length === 1 ? "s" : ""} none` : ""}.`} />
+    ),
+    after: missing.length > 0 && (
+      <section aria-label="Papers that name none" className="space-y-1 text-sm">
+        <h4 className="text-xs font-medium text-muted-foreground">Papers that name none</h4>
+        <ul className="flex flex-wrap gap-1">{missing.map((d) => <li key={d}><PaperLink runId={run.id} doc={d} /></li>)}</ul>
+      </section>
+    ),
+  }
+}
+
+function consistencyView(run: EvRunDetail, answer: ConsistencyAnswer, graph: Graph): KindView<unknown> {
+  const rows = consistencyRows(answer, run.documents, graph)
+  const und = answer.undetermined.length
+  return {
+    lanes: CONSISTENCY_LANES,
+    ...erase({ rows, columns: consistencyColumns(answer) }),
+    caption: "Claims against numbers",
+    unit: "papers",
+    header: (
+      <AnswerHeader system={answer.system} question="Do the authors' claims agree with their own numbers?"
+        answer={`${answer.agreeing.length} agree, ${answer.disagreeing.length} disagree`}
+        sentence={`Of ${plural(rows.length, "paper")}${answer.metric ? `, on ${answer.metric}` : ""}: ${answer.agreeing.length} agree, ${answer.disagreeing.length} disagree, ${und} ${und === 1 ? "is" : "are"} undetermined.`} />
+    ),
+  }
+}
+
+function bestView(run: EvRunDetail, answer: BestAnswer, graph: Graph, protocol: Protocol | null): KindView<unknown> {
+  const kinds = protocol?.best?.kinds ?? null
+  const rows = bestRows(answer, run.documents, graph, kinds)
+  const wins = Object.entries(answer.wins).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", ")
+  return {
+    lanes: BEST_LANES,
+    ...erase({ rows, columns: bestColumns(rows, kinds ? Object.keys(kinds) : undefined) }),
+    caption: "Winner per paper",
+    unit: "papers",
+    footer: bestFooter(answer),
+    header: (
+      <AnswerHeader system={answer.system} question={`Which method kind is best${answer.metric ? ` on ${answer.metric}` : ""}?`}
+        answer={answer.winner ? `best: ${answer.winner}` : answer.tied.length ? `tie: ${answer.tied.join(", ")}` : "no winner"}
+        sentence={`Papers won per kind: ${wins || "none"} (of ${plural(rows.length, "paper")}).`} />
+    ),
+  }
+}
+
+/** A paper with no row: its page (the funnel and every item found in it). */
+function PaperLink({ runId, doc }: { runId: string; doc: string }) {
+  return (
+    <Link to={`/runs/${encodeURIComponent(runId)}/papers/${encodeURIComponent(doc)}`}
+      className="inline-flex min-h-6 items-center rounded-md border px-1.5 font-mono text-xs hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+      {doc}
+    </Link>
+  )
+}
+
 export function EvidenceView({ run, expected }: { run: EvRunDetail; expected?: string | null }) {
   const engine = run.kind === "engine"
   const graph = useRunGraph(run.id, engine)
   const protocol = useRunProtocol(run.id, engine)
   const index = useMemo(() => indexGraph(graph.data), [graph.data])
-  const synthesis = protocol.data?.protocol?.synthesis ?? null
+  const spec = protocol.data?.protocol ?? null
   const answer = run.answer
-  const effect = effectAnswer(answer)
-  const view = useMemo(() => (effect ? effectView(run, effect, expected, index, synthesis) : null), [run, effect, expected, index, synthesis])
+  const view = useMemo((): KindView<unknown> | null => {
+    if (!answer) return null
+    const effect = effectAnswer(answer)
+    if (effect) return effectView(run, effect, expected, index, spec)
+    const known = answer as KindAnswer
+    switch (known.kind) {
+      case "inventory": return inventoryView(run, known, index)
+      case "consistency": return consistencyView(run, known, index)
+      case "best": return bestView(run, known, index, spec)
+      default: return null
+    }
+  }, [run, answer, expected, index, spec])
   if (!answer) return <p className="text-sm text-muted-foreground">No answer.json.</p>
-  const paperHref = (d: string) => `/runs/${encodeURIComponent(run.id)}/papers/${encodeURIComponent(d)}`
   if (view) return <Evidence runId={run.id} view={view} />
-  const known = answer as KindAnswer
-  if (["inventory", "consistency", "best"].includes(known.kind ?? "")) return <AnswerPanel answer={answer} paperHref={paperHref} />
-  return <JsonBlock value={answer} label={`answer of kind ${known.kind}`} />
+  return <JsonBlock value={answer} label={`answer of kind ${(answer as { kind?: string }).kind}`} />
 }

@@ -7,10 +7,10 @@
  * The table follows SciDaSynth's "evidence table + source panel" (Wang et al., Campbell Systematic Reviews
  * 2025): the answer first, one row per paper grouped into lanes by verdict, one click to the sentence.
  */
-import type { EffectAnswer, EvGraph, EvGraphNode, Study, Synthesis } from "@/api/ev"
+import type { BestAnswer, ConsistencyAnswer, EffectAnswer, EvGraph, EvGraphNode, InventoryAnswer, Item, Study, Synthesis } from "@/api/ev"
 import { DASH, num } from "@/lib/format"
 
-import { ENGINE, extractorName } from "./ev"
+import { ENGINE, extractorName, itemLabel } from "./ev"
 
 // --- the graph, indexed -----------------------------------------------------------------------------
 
@@ -217,4 +217,155 @@ export function byLane<R extends { lane: string }>(rows: R[], lanes: Lane[]): { 
 /** Count per lane, every lane listed (the coverage bar keeps its legend stable). */
 export function laneCounts(rows: { lane: string }[], lanes: Lane[]): { lane: Lane; count: number }[] {
   return lanes.map((lane) => ({ lane, count: rows.filter((r) => r.lane === lane.key).length }))
+}
+
+// --- the other question kinds ---------------------------------------------------------------------
+
+const fold = (s: unknown) => String(s ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+
+/** A graph item as one line ("RAG (rag)", "0.71 on TriviaQA"), as the paper view lists items. */
+export function nodeText(n: EvGraphNode | undefined): string {
+  if (!n) return DASH
+  return itemLabel({ evidence_type: n.type as Item["evidence_type"], fields: (n.fields ?? {}) as Record<string, unknown> })
+}
+
+/** The paper's measurements on a metric (its canonical name), in graph order. */
+export function measurementsOn(graph: GraphIndex, doc: string, canonical: string | null | undefined): EvGraphNode[] {
+  const all = graph.inDocument(doc).filter((n) => n.type === "measurement")
+  if (!canonical) return all
+  return all.filter((m) => fieldOf(graph.node(linksOf(m).metric), "canonical") === canonical)
+}
+
+const whyItem = (graph: GraphIndex, role: string, id: string): WhyStep => ({ role, text: nodeText(graph.node(id)), item: id, foundBy: graph.foundBy([id]) })
+
+export const INVENTORY_LANES: Lane[] = [
+  { key: "several", label: "in several papers", tone: "good", hint: "more than one paper names it" },
+  { key: "single", label: "in one paper", tone: "neutral", hint: "only one paper names it" },
+]
+
+export interface InventoryData {
+  entry: InventoryAnswer["entries"][number]
+  /** per paper, the entry's items in it (the panel highlights them) */
+  papers: { document: string; items: string[]; target: SourceTarget }[]
+  foundBy: string[]
+}
+
+/** One row per entry (a distinct name), its papers each opening that paper with the entry's items marked. */
+export function inventoryRows(answer: InventoryAnswer, graph: GraphIndex): EvidenceRow<InventoryData>[] {
+  return answer.entries.map((entry, n) => {
+    const lane = entry.papers.length > 1 ? "several" : "single"
+    const key = `${entry.name}#${n}`
+    const papers = entry.papers.map((document) => {
+      const own = entry.items.filter((i) => graph.node(i)?.document === document)
+      const items = own.length ? own : entry.items
+      const why: WhyStep[] = [
+        { role: answer.target ?? "name", text: entry.name },
+        ...(entry.aliases.length ? [{ role: "other names", text: entry.aliases.join(", ") }] : []),
+        ...own.map((i) => whyItem(graph, "item", i)),
+      ]
+      return { document, items, target: { key, document, title: document, lane, items, focus: items[0] ?? null, why } }
+    })
+    return { key, document: null, lane, target: papers[0]?.target ?? null, data: { entry, papers, foundBy: graph.foundBy(entry.items) } }
+  })
+}
+
+/** The run's papers in which no entry was found (an inventory's "left out"). */
+export function inventoryMissing(answer: InventoryAnswer, documents: string[]): string[] {
+  const named = new Set(answer.entries.flatMap((e) => e.papers))
+  return documents.filter((d) => !named.has(d))
+}
+
+export const CONSISTENCY_LANES: Lane[] = [
+  { key: "agrees", label: "agrees", tone: "good", hint: "the authors claim what their numbers show" },
+  { key: "disagrees", label: "disagrees", tone: "critical", hint: "the authors claim something their numbers do not show" },
+  { key: "undetermined", label: "undetermined", tone: "warning", hint: "no claim, or no numbers to check it against" },
+  { key: "absent", label: "not in the answer", tone: "neutral", hint: "the system did not use this paper", muted: true },
+]
+
+export interface ConsistencyData {
+  study: ConsistencyAnswer["studies"][number] | null
+  claimItem: string | null
+  numberItems: string[]
+  foundBy: string[]
+}
+
+const allDocs = (documents: string[], studies: { document: string }[]) =>
+  [...documents, ...studies.map((s) => s.document).filter((d) => !documents.includes(d))]
+
+/** One row per paper: what the paper claims, what its numbers say (on the answer's metric), whether they agree. */
+export function consistencyRows(answer: ConsistencyAnswer, documents: string[], graph: GraphIndex): EvidenceRow<ConsistencyData>[] {
+  const studies = new Map(answer.studies.map((s) => [s.document, s]))
+  return allDocs(documents, answer.studies).map((doc) => {
+    const study = studies.get(doc) ?? null
+    const lane = !study ? "absent" : study.agrees === true ? "agrees" : study.agrees === false ? "disagrees" : "undetermined"
+    const claimItem = graph.inDocument(doc).find((n) => n.type === "author_claim")?.id ?? null
+    const numberItems = measurementsOn(graph, doc, answer.metric).map((m) => m.id)
+    const items = [...(claimItem ? [claimItem] : []), ...numberItems]
+    const rule = !study ? "not in the answer"
+      : study.agrees === null || study.agrees === undefined ? (study.reason?.text ?? study.reason?.code ?? "nothing to compare")
+        : `the claim "${study.claim}" ${study.agrees ? "matches" : "does not match"} what the numbers show (${study.direction})`
+    const why: WhyStep[] = [
+      claimItem ? whyItem(graph, "paper says", claimItem) : { role: "paper says", text: study?.claim ?? "no claim found" },
+      ...numberItems.map((i) => whyItem(graph, `numbers${answer.metric ? ` (${answer.metric})` : ""}`, i)),
+      { role: "rule", text: rule },
+    ]
+    return {
+      key: doc, document: doc, lane,
+      target: { key: doc, document: doc, title: doc, lane, items, focus: claimItem ?? numberItems[0] ?? null, why },
+      data: { study, claimItem, numberItems, foundBy: graph.foundBy(items) },
+    }
+  })
+}
+
+export const BEST_LANES: Lane[] = [
+  { key: "winner", label: "has a winner", tone: "good", hint: "one method kind has the top value" },
+  { key: "tie", label: "tie", tone: "neutral", hint: "several kinds share the top value" },
+  { key: "undetermined", label: "undetermined", tone: "warning", hint: "fewer than two kinds measured on the metric" },
+  { key: "absent", label: "not in the answer", tone: "neutral", hint: "the system did not use this paper", muted: true },
+]
+
+export interface BestData {
+  study: BestAnswer["studies"][number] | null
+  /** per method kind, its value and the measurement it was read from (matched by metric and value) */
+  values: Record<string, { value: number; item: string | null }>
+  foundBy: string[]
+}
+
+/**
+ * The measurement a best study's value came from: answer.json keeps only the number, so the paper's
+ * measurement on the metric with that value, preferring one whose condition is of that kind (its `kind`
+ * field, or its label among the protocol's names for the kind).
+ */
+function bestItem(graph: GraphIndex, doc: string, metric: string | null | undefined, kind: string, value: number, names?: string[]): string | null {
+  const same = measurementsOn(graph, doc, metric).filter((m) => fieldOf(m, "value") === value)
+  const ofKind = same.find((m) => {
+    const cond = graph.node(linksOf(m).condition)
+    return fieldOf(cond, "kind") === kind || (names ?? []).some((n) => fold(n) === fold(fieldOf(cond, "label")))
+  })
+  return (ofKind ?? same[0])?.id ?? null
+}
+
+/** One row per paper: the value of each method kind on the metric and which kind wins inside the paper. */
+export function bestRows(answer: BestAnswer, documents: string[], graph: GraphIndex, kinds?: Record<string, string[]> | null): EvidenceRow<BestData>[] {
+  const studies = new Map(answer.studies.map((s) => [s.document, s]))
+  return allDocs(documents, answer.studies).map((doc) => {
+    const study = studies.get(doc) ?? null
+    const lane = !study ? "absent" : study.winner ? "winner" : study.tied.length ? "tie" : "undetermined"
+    const values = Object.fromEntries(Object.entries(study?.values ?? {})
+      .map(([k, v]) => [k, { value: v, item: bestItem(graph, doc, answer.metric, k, v, kinds?.[k]) }]))
+    const items = Object.values(values).map((v) => v.item).filter((x): x is string => !!x)
+    const top = study?.winner ?? study?.tied[0] ?? null
+    const rule = !study ? "not in the answer"
+      : lane === "undetermined" ? (study.reason?.text ?? study.reason?.code ?? "no comparison")
+        : `${lane === "tie" ? `${study.tied.join(", ")} share` : `${study.winner} has`} the top value on ${answer.metric ?? "the metric"}`
+    const why: WhyStep[] = [
+      ...Object.entries(values).map(([k, v]) => ({ role: k, text: num(v.value, 3), item: v.item, foundBy: graph.foundBy([v.item, linksOf(graph.node(v.item)).condition]) })),
+      { role: "rule", text: rule },
+    ]
+    return {
+      key: doc, document: doc, lane,
+      target: { key: doc, document: doc, title: doc, lane, items, focus: (top ? values[top]?.item : null) ?? items[0] ?? null, why },
+      data: { study, values, foundBy: graph.foundBy(items) },
+    }
+  })
 }

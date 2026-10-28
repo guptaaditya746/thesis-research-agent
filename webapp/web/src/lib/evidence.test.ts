@@ -3,7 +3,20 @@ import { describe, expect, it } from "vitest"
 
 import type { EffectAnswer, EvGraph, Study, Synthesis } from "@/api/ev"
 
-import { byLane, EFFECT_LANES, effectRows, effectRule, effectRuleShort, extractorFamily, indexGraph, laneCounts } from "./evidence"
+import {
+  bestRows,
+  byLane,
+  consistencyRows,
+  EFFECT_LANES,
+  effectRows,
+  effectRule,
+  effectRuleShort,
+  extractorFamily,
+  indexGraph,
+  inventoryMissing,
+  inventoryRows,
+  laneCounts,
+} from "./evidence"
 
 const graph: EvGraph = {
   nodes: [
@@ -83,5 +96,36 @@ describe("the rule in words", () => {
     expect(effectRule(answer.studies[1], synthesis, "evidence-engine")).toBe("no rag and baseline measurement on a question metric")
     expect(effectRule(study({ document: "S", direction: "supports" }), null, "rag-baseline")).toBe("the baseline's reading of the cited passages")
     expect(effectRule(null, null, "rag-baseline")).toBe("not cited by the baseline")
+  })
+})
+
+describe("the other kinds", () => {
+  const g = indexGraph(graph)
+
+  it("inventory: a row per name; each paper opens on that name's items in it", () => {
+    const inv = { kind: "inventory" as const, system: "evidence-engine", target: "condition",
+      entries: [{ name: "RAG", aliases: ["rag"], papers: ["S001", "S002"], items: ["c-t", "c-x"] }] }
+    const [row] = inventoryRows(inv, g)
+    expect(row.lane).toBe("several")
+    expect(row.data.papers[0]).toMatchObject({ document: "S001", items: ["c-t"] })
+    expect(row.data.papers[1].items).toEqual(["c-t", "c-x"])   // no item of the entry is known in S002: all of them
+    expect(inventoryMissing(inv, ["S001", "S002", "S003"])).toEqual(["S003"])
+  })
+
+  it("consistency: the claim and the measurements on the metric are the row's items", () => {
+    const [row] = consistencyRows({ kind: "consistency", system: "evidence-engine", metric: "factual_accuracy", agreeing: ["S001"], disagreeing: [], undetermined: [],
+      studies: [{ document: "S001", claim: "supports", direction: "supports", agrees: true, reason: null }] }, ["S001"], g)
+    expect(row.lane).toBe("agrees")
+    expect(row.target!.items).toEqual(["a-1", "m-t", "m-c"])
+    expect(row.target!.focus).toBe("a-1")
+  })
+
+  it("best: each kind's value points at the measurement with that value on the metric", () => {
+    const [row, absent] = bestRows({ kind: "best", system: "evidence-engine", metric: "factual_accuracy", wins: { rag: 1 }, winner: "rag", tied: [],
+      studies: [{ document: "S001", winner: "rag", tied: [], values: { rag: 0.71, plain: 0.62 }, reason: null }] }, ["S001", "S002"], g)
+    expect(row.lane).toBe("winner")
+    expect(row.data.values).toEqual({ rag: { value: 0.71, item: "m-t" }, plain: { value: 0.62, item: "m-c" } })
+    expect(row.target!.focus).toBe("m-t")
+    expect(absent.lane).toBe("absent")
   })
 })
