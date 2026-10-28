@@ -394,6 +394,8 @@ cat > "$EV/extra.sh" <<'EOF'
 # (or one), each scored on its own in $SCORES/<corpus>/<question>.<variant>. Skips a finished answer or run.
 # RAG variants: rag-per-paper (top 2 passages of every paper), rag-per-paper-k1 (top 1 of every paper),
 # rag-oracle (the passages truth needs; a diagnostic that reads ground_truth.json).
+# Engine variants: regex-only, llm-only (--extractors), run in $RUNS/<question>-<variant>/<corpus>.
+# `retry` and `rerun` move an engine variant's run dir aside first, as one.sh does.
 set -u
 V=$1; C=$2; ONLY=${3:-all}; MODE=${4:-}; N=$(basename "$C")
 case $MODE in ""|retry|rerun) ;; *) echo "FAIL extra.sh $V $N: unknown mode '$MODE' (retry or rerun)"; exit 2;; esac
@@ -402,6 +404,7 @@ case $V in
   rag-per-paper) RAG=(--retrieval per_paper --k 2) ;;
   rag-per-paper-k1) RAG=(--retrieval per_paper --k 1) ;;
   rag-oracle) RAG=(--oracle-passages) ;;
+  regex-only|llm-only) EXT=$V ;;
   *) echo "FAIL extra.sh: unknown variant '$V'"; exit 2;;
 esac
 QL=$QS; [ "$ONLY" = all ] || QL=$ONLY
@@ -421,6 +424,27 @@ for Q in $QL; do
     fi
     continue
   fi
+  RUN=$RUNS/$Q-$GV/$RID; mkdir -p "$RUNS/$Q-$GV"        # an engine variant
+  if [ -n "$MODE" ] && [ -e "$RUN" ]; then
+    mkdir -p "$RUNS/failed/$N"; mv "$RUN" "$RUNS/failed/$N/$Q-$V-$(date +%Y%m%dT%H%M%S)"
+  fi
+  RETRY=(); [ "$MODE" = retry ] && RETRY=(--retry-errors)
+  if [ -f "$RUN/run.json" ]; then
+    echo "skip $V $Q $N: done"
+  elif [ -e "$RUN" ]; then
+    echo "FAIL $V $Q $N: a run dir without run.json is in the way; extra.sh $V $C $Q rerun"
+  else
+    uv run evidence run --protocol "evidence/protocols/$Q.yaml" --corpus "$C" --out "$RUNS/$Q-$GV"       --cache "$CACHE/$V-$N" --model orch-model --extractors "$EXT" --strategy gaps --workers 3 --run-id "$RID"       ${RETRY[@]+"${RETRY[@]}"}
+    rc=$?
+    if [ "$rc" -eq 2 ] && [ -f "$RUN/run.json" ]; then
+      echo "FAIL engine-errors $V $Q $N: when the service answers: extra.sh $V $C $Q retry"
+    elif [ "$rc" -ne 0 ]; then
+      echo "FAIL $V $Q $N (exit $rc)"
+    fi
+  fi
+  if [ -f "$RUN/run.json" ]; then
+    uv run evaluate score --run "$RUN" --corpus "$C" --question-id "$Q" --out "$OUT" || echo "FAIL score $V $Q $N"
+  fi
 done
 EOF
 cat > "$EV/extras.sh" <<'EOF'
@@ -437,7 +461,7 @@ Start the extras on the main corpus **after `grid-main` has finished** (its log 
 exit), so the GPU is shared with at most the hard grid; they write `FAIL` lines as the grid does:
 
 ```bash
-nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper rag-oracle > /dev/null 2>&1 &
+nohup "$EV/launch.sh" extras-main "$EV/extras.sh" "$C_MAIN" rag-per-paper rag-oracle regex-only llm-only > /dev/null 2>&1 &
 ```
 
 The rows, in this order of importance (stop at the job's end and report what is missing):
@@ -454,6 +478,12 @@ The rows, in this order of importance (stop at the job's end and report what is 
    `ground_truth.json` on purpose, so it is a **diagnostic**, not a baseline: its C is the ceiling of RAG's
    reasoning when retrieval is perfect, and the gap to `rag-per-paper` is what retrieval costs. Its answer says
    `system: rag-oracle-passages`; label its row so in the table.
+3. **`regex-only`** and **`llm-only`** (main): the engine with one kind of extractor (`--extractors regex-only`,
+   no model calls; `--extractors llm-only`). In `gaps` mode a later extractor only sees what the earlier ones left
+   open, so the per-extractor rows of step 6 item 2 are not standalone scores. These two rows are: report A, B
+   and C of `regex-only`, `llm-only` and the grid's cascade side by side, and read each step as a **marginal gain**
+   (cascade minus regex-only is what the later extractors add). Retries and reruns work as in one.sh:
+   `"$EV/launch.sh" retry-llm-only-main "$EV/extra.sh" llm-only "$C_MAIN" inv-metrics retry`.
 
 ## 5. Check each run
 
