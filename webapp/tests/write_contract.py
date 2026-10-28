@@ -75,6 +75,10 @@ SCENARIOS: list[dict[str, Any]] = [
               "strategy": "gaps", "name": "contract-proposal-run"}},
     {"name": "propose again on a proposal that has its cards", "method": "POST", "path": "/api/ev/jobs/propose",
      "body": {"proposal": NEW, "question": "rag-factuality"}},
+    {"name": "fetch from arXiv with a new name", "method": "POST", "path": "/api/ev/jobs/fetch",
+     "body": {"query": "retrieval augmented generation", "max_papers": 3, "category": "cs.CL", "name": "arxiv-contract"}},
+    {"name": "fetch from arXiv into an existing corpus", "method": "POST", "path": "/api/ev/jobs/fetch",
+     "body": {"query": "retrieval augmented generation", "name": MIXED}},
 ]
 
 

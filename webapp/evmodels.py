@@ -91,6 +91,17 @@ class VariantInfo(Open):
     expected: dict[str, Any] = {}
 
 
+class CorpusSource(Open):
+    """source.json of a corpus of real papers (`evidence fetch`, evidence/arxiv.py)."""
+    kind: str = Field(description="arxiv")
+    query: str | None = None
+    category: str | None = None
+    fetched: str | None = Field(None, description="when it was fetched (ISO 8601, UTC)")
+    ground_truth: bool = False
+    papers: int | None = None
+    skipped: list[dict[str, Any]] = Field([], description="papers whose PDF could not be fetched or converted, and why")
+
+
 class CorpusSummary(Base):
     name: str = Field(description="the directory name under the corpora root")
     corpus_id: str
@@ -108,6 +119,9 @@ class CorpusSummary(Base):
     variant: VariantInfo | None = None
     base: str | None = Field(None, description="the base corpus of a variant, by directory name, when it is here")
     manifest_sha256: str
+    ground_truth: bool = Field(True, description="false for a demonstration corpus of real papers (source.json "
+                                                 "`ground_truth: false`, `evidence fetch`): nothing to score against")
+    source: CorpusSource | None = Field(None, description="source.json: where the papers came from (arXiv)")
 
 
 class CorpusPaper(Base):
@@ -678,6 +692,17 @@ class SynthRequest(Request):
     missing: int = Field(0, ge=0, le=50)
     outliers: int = Field(0, ge=0, le=50)
     irrelevant: int = Field(0, ge=0, le=50)
+
+
+class FetchRequest(Request):
+    """`evidence fetch` (evidence/arxiv.py): real papers from the arXiv API into `$EV/corpora/<name>`, a
+    demonstration corpus with no ground truth. The name defaults to `arxiv-<slug of the query>-<yyyymmdd>`."""
+    query: str = Field(min_length=3, max_length=300, pattern=r"^[^\x00-\x1f\x7f]*\w[^\x00-\x1f\x7f]*$",
+                       description="search words; every word must occur in the paper's arXiv record")
+    max_papers: int = Field(10, ge=1, le=50, description="papers to fetch (one request every three seconds)")
+    category: str | None = Field(None, pattern=r"^[a-z][a-z-]*(\.[A-Za-z][A-Za-z-]*)?$",
+                                 description="an arXiv category, e.g. cs.CL")
+    name: Name | None = Field(None, description="the corpus directory; default arxiv-<slug>-<yyyymmdd>")
 
 
 class ProtocolRef(Request):

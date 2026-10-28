@@ -42,6 +42,7 @@ import { announceError, announceJob } from "@/lib/toasts"
 import { cn } from "@/lib/utils"
 
 import { protocolLabel, type Flow } from "./flow"
+import { DemoScoreNote } from "./ArxivFetchDialog"
 import { TYPED_FLOW } from "./QuestionStep"
 
 type Extractors = "regex-only" | "cascade" | "agentic"
@@ -208,6 +209,7 @@ export function RunStep({ flow }: { flow: Flow }) {
     )
   }
   const built = corpora.data?.some((c) => c.name === corpus)
+  const demo = corpora.data?.find((c) => c.name === corpus)?.ground_truth === false   // real papers: never scored
   const mine = (runs.data ?? []).filter((r) => r.corpus === corpus || (!r.corpus && r.name === corpus) || active.some((j) => j.refs.run === r.id && j.refs.corpus === corpus))
   const ids = new Set(mine.map((r) => r.id))
   const myJobs = active.filter((j) => j.refs.corpus === corpus || ids.has(j.refs.run ?? "") || ids.has(j.refs.score ?? "") || j.refs.score === `compare-${corpus}`)
@@ -266,7 +268,7 @@ export function RunStep({ flow }: { flow: Flow }) {
                             {r.kind === "engine" && (r.id === flow.run ? <Badge>chosen</Badge> : (
                               <Button size="sm" variant="outline" onClick={() => flow.set({ run: r.id }, { push: true })} aria-label={`Choose ${r.id}`}>Choose</Button>
                             ))}
-                            {r.kind === "engine" && r.complete && !running && (
+                            {r.kind === "engine" && r.complete && !running && !demo && (
                               <Button size="sm" variant="outline" disabled={scoring || score.isPending} onClick={() => score.mutate({ run: r.id }, done)} aria-label={`Score ${r.id}`}>
                                 <BarChart3Icon data-icon="inline-start" aria-hidden="true" />
                                 {reports.has(r.id) ? "Score again" : "Score"}
@@ -281,7 +283,7 @@ export function RunStep({ flow }: { flow: Flow }) {
               </Table>
             </div>
           )}
-          <div className="flex flex-wrap items-center gap-2">
+          {demo ? <DemoScoreNote corpus={corpus} /> : <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" disabled={scored.length < 2 || compare.isPending}
               onClick={() => compare.mutate({ reports: scored.map((r) => r.id), name: `compare-${corpus}` }, done)}>
               <GitCompareIcon data-icon="inline-start" />
@@ -291,7 +293,7 @@ export function RunStep({ flow }: { flow: Flow }) {
               {scored.length < 2 ? "Needs two scored engine runs (e.g. cascade all and gaps)." : `${scored.length} reports into scores/compare-${corpus}.`}
               {(scores.data?.compares ?? []).some((c) => c.id === `compare-${corpus}`) && <> <Link to={`/scores/compares/${encodeURIComponent(`compare-${corpus}`)}`} className="underline">Open the comparison</Link></>}
             </span>
-          </div>
+          </div>}
         </CardContent>
       </Card>
       {flow.run && (

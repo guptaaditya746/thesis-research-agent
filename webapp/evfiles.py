@@ -4,8 +4,8 @@ Read-only: nothing here writes, starts a run or calls a model (the jobs of webap
 commands as the command line and Slurm, docs/slurm-evidence-runbook.md); the viewer reads what they leave, in the
 layout the runbook makes:
 
-- corpora: `$CORPORA/<name>/` (`synth build`, `synth variant`): manifest.json, papers/, corpus.json,
-  ground_truth.json, fidelity.json, decoys.json, variant.json;
+- corpora: `$CORPORA/<name>/` (`synth build`, `synth variant`, `evidence fetch`): manifest.json, papers/, corpus.json,
+  ground_truth.json, fidelity.json, decoys.json, variant.json; source.json for real papers (no ground truth);
 - runs: `$EV_RUNS/<group>/<name>/`, an engine run (run.json, answer.json, funnel.json, evidence.jsonl,
   graph.json, events.jsonl, calls/) or a baseline's answer.json (`evaluate rag-baseline|agent-baseline
   --out`, the agent baseline's own run directories in its agent-runs/); a run's id is `<group>~<name>`;
@@ -59,6 +59,7 @@ from .evmodels import (
     CorpusDetail,
     CorpusPaper,
     CorpusPaperDetail,
+    CorpusSource,
     CorpusSummary,
     Decision,
     EV_ANSWER,
@@ -258,6 +259,8 @@ class EvidenceFiles:
         truth = read_json(path / "ground_truth.json") or {}
         fidelity = read_json(path / "fidelity.json") or {}
         variant = read_json(path / "variant.json")
+        source = read_json(path / "source.json")
+        source = source if isinstance(source, dict) and isinstance(source.get("kind"), str) else None
         papers = manifest.get("papers") or []
         listed = {p.get("id") for p in papers}
         records = [r for r in fidelity.get("papers") or [] if r.get("id") in listed]
@@ -274,14 +277,17 @@ class EvidenceFiles:
             excluded=list(fidelity.get("excluded") or []),
             answer=TruthAnswer.model_validate(truth["answer"]) if isinstance(truth.get("answer"), dict) else None,
             variant=VariantInfo.model_validate(variant) if isinstance(variant, dict) else None, base=base,
-            manifest_sha256=file_sha256(path / "manifest.json"))
+            manifest_sha256=file_sha256(path / "manifest.json"),
+            ground_truth=not (source is not None and source.get("ground_truth") is False),
+            source=CorpusSource.model_validate(source) if source is not None else None)
 
     def corpora(self) -> list[CorpusSummary]:
         root = self.s.corpora_dir
         out = []
         for path in subdirs(root):
             summary = self._cached(("corpus", path), (path / "manifest.json", path / "corpus.json",
-                                                      path / "ground_truth.json", path / "variant.json"),
+                                                      path / "ground_truth.json", path / "variant.json",
+                                                      path / "source.json"),
                                    lambda p=path: self._corpus_summary(p))
             if summary is not None:
                 out.append(summary)

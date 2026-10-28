@@ -12,12 +12,16 @@
  *   defaults) under the requested name; PUT decisions stores them and answers with what freeze would refuse
  *   (a missing reason, a choice other than the default by the model, an unknown choice, custom without a value);
  *   a freeze job freezes it. A run whose protocol and selection have no run-group answer in the fixtures (the
- *   repo's protocols and the world's proposals have them) is refused with 404, as GET /api/ev/run-group is.
+ *   repo's protocols and the world's proposals have them) is refused with 404, as GET /api/ev/run-group is;
+ * - a fetch job (`evidence fetch`, real papers from arXiv) adds a demonstration corpus when it ends: listed by
+ *   GET /api/ev/corpora with `ground_truth: false`, and a score of a run on it is refused as the backend does.
  */
 import { delay, http, HttpResponse } from "msw"
 
 import type {
   Card,
+  CorpusDetail,
+  CorpusSummary,
   DecisionEntry,
   DecisionsRequest,
   Job,
@@ -41,6 +45,8 @@ interface Db {
   proposals: Record<string, ProposalDetail>
   runs: Set<string>
   corpora: Set<string>
+  /** the demonstration corpora fetch jobs made (real papers, no ground truth), listed after the fixtures' */
+  fetched: CorpusSummary[]
   /** the waivers each proposal's decisions.yaml holds, by check */
   waivers: Record<string, Record<string, string>>
 }
@@ -57,7 +63,7 @@ const groupKeyOf = (r: { protocol: { source: string; name: string }; extractors?
 function initialDb(): Db {
   const runs = fixture<{ id: string }[]>("/api/ev/runs").map((r) => r.id)
   const corpora = fixture<{ name: string }[]>("/api/ev/corpora").map((c) => c.name)
-  return { jobs: [], logs: {}, proposals: {}, runs: new Set(runs), corpora: new Set(corpora), waivers: {} }
+  return { jobs: [], logs: {}, proposals: {}, runs: new Set(runs), corpora: new Set(corpora), fetched: [], waivers: {} }
 }
 
 let db: Db = initialDb()
@@ -85,6 +91,39 @@ const invalid = (msg: string, loc: string[]) => HttpResponse.json({ detail: [{ l
 const frozen = (name: string) => conflict(`proposal ${name} is frozen; change it with \`evidence propose amend\` (command line)`)
 /** The model of a card's value (evidence/propose/cards.py: screen -> ScreenValue, min_effect -> MinEffectValue). */
 const valueModel = (card: string) => `${card.replace(/(^|_)([a-z])/g, (_, __, c: string) => c.toUpperCase())}Value`
+
+/** The default corpus name of a fetch (webapp/evjobs.py fetch_name): arxiv-<the query's first words>-<yyyymmdd>. */
+export function fetchName(query: string, day: Date): string {
+  let slug = ""
+  for (const w of query.toLowerCase().match(/[a-z0-9]+/g) ?? []) {
+    if (slug.length + w.length + 1 > 40) break
+    slug = slug ? `${slug}-${w}` : w
+  }
+  return `arxiv-${slug || "query"}-${day.toISOString().slice(0, 10).replaceAll("-", "")}`
+}
+
+/** The backend's refusal to score a run on a demonstration corpus (webapp/evjobs.py DEMO_REFUSAL). */
+const demoRefusal = (run: string, corpus: string, kind: string) =>
+  `${run} cannot be scored: its corpus ${corpus} is a demonstration corpus, no ground truth: real papers fetched from ${kind}, ` +
+  "for which nobody knows the right answer. Its graph, answer and trace stay open to read; check them by hand " +
+  '(docs/evidence-system.md, "Demo mode: real papers from arXiv"). Scores need a synthetic corpus.'
+
+/** The corpus an `evidence fetch` job leaves, as GET /api/ev/corpora lists it. */
+function fetchedCorpus(name: string, args: Record<string, unknown>): CorpusSummary {
+  const papers = Number(args.max_papers ?? 10)
+  return {
+    name, corpus_id: `arxiv-${name.length.toString(16).padStart(8, "0")}`, level: null, renderer: null, seed: null, question: null,
+    protocol: null, settings: null, papers, fidelity_ok: null, excluded: [], answer: null, variant: null, base: null,
+    manifest_sha256: `sha-${name}`, ground_truth: false,
+    source: { kind: "arxiv", query: String(args.query), category: (args.category as string | null) ?? null, fetched: now(), ground_truth: false, papers, skipped: [] },
+  }
+}
+
+/** The corpus a run was made on: its job's, else the fixtures' run list's. */
+function runCorpus(run: string): string | null | undefined {
+  const job = db.jobs.find((j) => j.kind === "run" && j.refs.run === run)
+  return job?.refs.corpus ?? fixture<{ id: string; corpus?: string | null }[]>("/api/ev/runs").find((r) => r.id === run)?.corpus
+}
 
 /** An unfrozen proposal made from the fixtures' frozen one: decisions back to the model's defaults. */
 export function unfrozenProposal(name: string, kind: KindRequest["kind"] = "effect"): ProposalDetail {
@@ -154,7 +193,26 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
       if (db.runs.has(id)) return conflict(`${kind}/${name} has an answer.json; move it away to run the baseline again`)
       return { run: id, corpus: b.corpus }
     }
-    case "score": return { score: (body as JobRequests["score"]).run }
+    case "fetch": {
+      const b = body as JobRequests["fetch"]
+      if (b.name != null && !isName(b.name)) return invalid("String should match pattern", ["name"])
+      const writing = (n: string) => db.jobs.find((j) => (j.state === "queued" || j.state === "running") && j.refs.corpus === n)   // the backend's free("corpus", n)
+      let name = b.name
+      if (name == null) {
+        const base = fetchName(b.query, new Date())
+        name = [base, ...Array.from({ length: 98 }, (_, k) => `${base}-${k + 2}`)].find((n) => !db.corpora.has(n) && !writing(n)) ?? base
+      } else if (db.corpora.has(name)) return conflict(`corpus ${name} exists; choose another name`)
+      const active = writing(name)
+      if (active) return conflict(`job ${active.id} (${active.kind}) is ${active.state} on corpus ${name}; wait for it or cancel it`)
+      return { corpus: name }
+    }
+    case "score": {
+      const run = (body as JobRequests["score"]).run
+      const corpus = runCorpus(run)
+      const demo = db.fetched.find((c) => c.name === corpus)
+      if (demo && corpus) return conflict(demoRefusal(run, corpus, demo.source?.kind ?? "outside"))
+      return { score: run }
+    }
     case "compare": return { score: (body as JobRequests["compare"]).name }
     case "propose": {
       const b = body as JobRequests["propose"]
@@ -178,7 +236,7 @@ function refsOf<K extends JobKind>(kind: K, body: JobRequests[K]): Record<string
 }
 
 const LANE: Record<JobKind, Job["lane"]> = {
-  synth: "cpu", run: "model", "rag-baseline": "model", "agent-baseline": "model", score: "cpu", compare: "cpu", propose: "model", freeze: "cpu",
+  synth: "cpu", fetch: "cpu", run: "model", "rag-baseline": "model", "agent-baseline": "model", score: "cpu", compare: "cpu", propose: "model", freeze: "cpu",
 }
 
 /** End a mock job (the tests' clock): its effect on the db, then `done` (or `failed`). */
@@ -193,6 +251,10 @@ export function finishJob(id: string, state: "done" | "failed" = "done", failedC
   db.logs[id].push(`# ${job.steps.at(-1)?.name ?? job.kind} exit ${job.exit_code}`)
   if (state !== "done") return
   if (job.refs.run) db.runs.add(job.refs.run)
+  if (job.kind === "fetch") {
+    db.corpora.add(job.refs.corpus)
+    db.fetched.push(fetchedCorpus(job.refs.corpus, job.args))
+  }
   if (job.kind === "synth") for (const l of [...((job.args.levels as string[]) ?? []), "mixed"]) db.corpora.add(`${job.refs.corpus_set}-${l}`)
   if (job.kind === "propose") {
     const made = unfrozenProposal(job.refs.proposal, (job.args.kind as KindRequest["kind"] | undefined) ?? "effect")
@@ -302,6 +364,12 @@ export const handlers = [
     })
     p.decisions_sha256 = `sha-${Number(p.decisions_sha256?.slice(4) ?? 0) + 1}`
     return HttpResponse.json({ written: `/srv/ev/proposals/${p.name}/decisions.yaml`, sha256: p.decisions_sha256, problems })
+  }),
+  http.get("/api/ev/corpora", () => HttpResponse.json([...fixture<CorpusSummary[]>("/api/ev/corpora"), ...db.fetched])),
+  http.get("/api/ev/corpora/:name", ({ params }) => {
+    const c = db.fetched.find((x) => x.name === params.name)
+    const detail: CorpusDetail | undefined = c && { ...c, papers_list: [], models: null, generator: null }
+    return detail ? HttpResponse.json(detail) : undefined   // the fixtures answer the rest
   }),
   http.get("/api/ev/jobs", () => HttpResponse.json(db.jobs)),
   http.get("/api/ev/jobs/:id", ({ params }) => {

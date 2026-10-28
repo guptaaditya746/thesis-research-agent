@@ -57,6 +57,36 @@ engine and the ground-truth generator). Existing code reused: `agent/anchor.py`,
 (`<name>-explicit`, `<name>-paraphrased`, …, plus `<name>-mixed`), so a change in score between corpora
 comes from the rendering alone. Paper ids stay the same across the variant corpora of one study set.
 
+### Demo mode: real papers from arXiv
+
+`evidence fetch --query "<words>" --max 30 --out <corpus> [--category cs.CL]` (`evidence/arxiv.py`; in the
+web app the "Fetch from arXiv" button on the corpus step and the Corpora page, a job into
+`$EV/corpora/arxiv-<slug>-<yyyymmdd>`) builds a corpus of **real papers**: it asks the arXiv API for the
+query's papers (one request every three seconds, as arXiv's terms ask), converts each PDF to Markdown with
+pymupdf4llm and writes the A1 layout the engine reads: `manifest.json` (plus title, authors, published,
+url, pdf_sha256 per paper), `papers/<arxiv id>.md` and `source.json` (`kind: arxiv`, the query, when,
+`ground_truth: false`, the papers skipped and why). There is no `corpus.json`, `ground_truth.json` or
+`fidelity.json`.
+
+**This is a demonstration, not a measurement.** Nobody knows the right answer for real papers, so nothing
+can be scored: the app shows the corpus with a "no ground truth, demo" badge, hides Score for its runs, and
+the backend refuses a score job on it ("demonstration corpus, no ground truth"). The engine runs as on any
+corpus (question → cards → freeze → run → graph and answer). What a reader can still check, by hand:
+
+1. **Grounding share.** Of the studies (or entries) the answer names, the share that rest on at least one
+   evidence item whose quoted span is in the paper (the run page shows each item's span in the paper's
+   text). An answer line with no item behind it is a claim the engine cannot back.
+2. **A hand-checked sample of 5 papers.** Pick 5 papers at random from `manifest.json`, open each in the
+   run's paper view, and check against the PDF (`url`) whether the extracted conditions, metrics and
+   values are right and whether anything the question needs was missed. Write down hits, errors and misses.
+   Also check the conversion: a table or formula pymupdf4llm garbled is a corpus problem, not an engine one.
+3. **Re-execution stability.** `evidence reexec <run>` runs the extractors again without the cache and
+   reports per call whether the items came out the same (B8). A stable run is not a correct one, but an
+   unstable one should not be trusted.
+
+Report these as a demonstration on N real papers, next to (never mixed with) the scores on the synthetic
+corpora.
+
 ## A2. `ground_truth.json`
 
 ```json

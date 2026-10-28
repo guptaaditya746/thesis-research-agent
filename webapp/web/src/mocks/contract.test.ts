@@ -44,8 +44,8 @@ describe("the mock answers writes as the backend does (write-contract.json)", ()
     }
   })
 
-  it("holds the twelve scenarios", () => {
-    expect(SCENARIOS).toHaveLength(12)
+  it("holds the fourteen scenarios", () => {
+    expect(SCENARIOS).toHaveLength(14)
   })
 
   it.each(SCENARIOS.map((s, n) => [n + 1, s.name, n] as const))("%i. %s", (_, __, n) => {

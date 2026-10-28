@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from evidence.propose.common import CRITIC, DRAFT, FRAME
 from webapp.app import create_app
@@ -15,6 +17,7 @@ from webapp.evfiles import EvidenceFiles
 from webapp.evjobs import Commands, run_group
 from webapp.evmodels import (
     AgentBaselineRequest,
+    FetchRequest,
     KindRequest,
     ProposeRequest,
     ProtocolRef,
@@ -28,7 +31,7 @@ from webapp.files import Conflict, NotFound
 from webapp.jobs import JobManager
 from webapp.settings import Settings
 
-from .evidence_world import NAME, EvidenceWorld
+from .evidence_world import BASE, NAME, EvidenceWorld
 from .fakes import FakeProcesses
 
 MIXED, EXPLICIT = f"{NAME}-mixed", f"{NAME}-explicit"
@@ -211,3 +214,68 @@ def test_get_run_group_endpoint(client: TestClient) -> None:
 
 def test_a_run_request_defaults_to_gaps() -> None:
     assert RunRequest(corpus="c", protocol=ProtocolRef(source="repo", name="rag-factuality")).strategy == "gaps"
+
+
+# --- evidence fetch: real papers from arXiv, a demonstration corpus with no ground truth ---------------------
+
+def _demo(world: EvidenceWorld, corpus: str = MIXED) -> None:
+    """`corpus` as `evidence fetch` marks one: source.json with ground_truth false."""
+    (world.corpora / corpus / "source.json").write_text(json.dumps(
+        {"kind": "arxiv", "query": "retrieval augmented", "category": "cs.CL", "fetched": "2026-10-28T09:00:00+00:00",
+         "ground_truth": False, "papers": 3, "skipped": [{"id": "x", "reason": "HTTPStatusError: 404"}]}),
+        encoding="utf-8")
+
+
+def test_fetch_plan_names_the_corpus_after_the_query_and_the_day(commands: Commands, world: EvidenceWorld) -> None:
+    day = datetime(2026, 10, 28, tzinfo=timezone.utc)
+    request = FetchRequest(query="Retrieval-Augmented Generation & factuality!", max_papers=5, category="cs.CL")
+    plan = commands.fetch(request, today=day)
+    name = "arxiv-retrieval-augmented-generation-20261028"   # the slug stops before 40 characters
+    assert plan.kind == "fetch" and plan.refs == {"corpus": name}
+    assert plan.lane == "cpu" and not plan.needs_gateway
+    argv = plan.steps[0].argv
+    assert argv[3:5] == ["evidence", "fetch"]
+    assert "--query=Retrieval-Augmented Generation & factuality!" in argv   # one argv item, never a flag
+    assert argv[argv.index("--max") + 1] == "5" and argv[argv.index("--category") + 1] == "cs.CL"
+    assert argv[argv.index("--out") + 1] == str(world.corpora / name)
+    (world.corpora / name).mkdir()
+    assert commands.fetch(request, today=day).refs == {"corpus": f"{name}-2"}   # the day's name is taken
+    with pytest.raises(Conflict, match="exists"):
+        commands.fetch(FetchRequest(query="retrieval", name=MIXED))
+
+
+def test_fetch_request_refuses_a_bad_category_and_a_query_without_words() -> None:
+    for bad in ({"query": "retrieval", "category": "cs.CL --out /tmp"}, {"query": "?!?"}, {"query": "a\nb c"},
+                {"query": "retrieval", "max_papers": 51}):
+        with pytest.raises(ValidationError):
+            FetchRequest.model_validate(bad)
+
+
+def test_a_fetched_corpus_is_listed_without_ground_truth(world: EvidenceWorld, settings: Settings) -> None:
+    _demo(world)
+    listed = {c.name: c for c in EvidenceFiles(settings).corpora()}
+    assert listed[MIXED].ground_truth is False
+    assert listed[MIXED].source is not None and listed[MIXED].source.kind == "arxiv"
+    assert listed[MIXED].source.query == "retrieval augmented"
+    assert all(c.ground_truth and c.source is None for n, c in listed.items() if n != MIXED)
+
+
+def test_score_refuses_a_run_on_a_demonstration_corpus(commands: Commands, world: EvidenceWorld) -> None:
+    _demo(world)
+    with pytest.raises(Conflict, match="demonstration corpus, no ground truth") as refused:
+        commands.score(ScoreRequest(run=f"cascade-gaps~{MIXED}"))
+    message = str(refused.value)
+    assert MIXED in message and "arxiv" in message and "graph, answer and trace stay open" in message
+
+
+def test_post_fetch_starts_a_job(settings: Settings) -> None:
+    app = create_app(settings)
+    app.state.services.jobs.processes = FakeProcesses()   # no subprocess, so no network
+    with TestClient(app, base_url=BASE) as client:
+        response = client.post("/api/ev/jobs/fetch", json={"query": "retrieval augmented", "max_papers": 3,
+                                                            "name": "arxiv-demo"})
+        assert response.status_code == 202, response.text
+        job = response.json()
+        assert job["kind"] == "fetch" and job["refs"] == {"corpus": "arxiv-demo"} and job["lane"] == "cpu"
+        again = client.post("/api/ev/jobs/fetch", json={"query": "retrieval augmented", "name": "arxiv-demo"})
+        assert again.status_code == 409 and "arxiv-demo" in again.json()["detail"]   # the first job writes it

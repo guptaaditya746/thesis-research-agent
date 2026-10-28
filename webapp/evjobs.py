@@ -5,7 +5,8 @@ evidence graph -> answer -> scores, the baselines beside the engine; README "Web
 - jobs: each POST builds the argv of one command line of docs/slurm-evidence-runbook.md from a fixed template
   and queues it (webapp/jobs.py): `synth build --renderer template` (no model), `evidence run`,
   `evaluate rag-baseline`, `evaluate agent-baseline`, `evaluate score`, `evaluate compare`, the proposal flow's
-  `evidence propose frame/draft/critic/cards` and `evidence propose freeze`. Outputs go into the `$EV` layout
+  `evidence propose frame/draft/critic/cards`, `evidence propose freeze` and `evidence fetch` (real papers from
+  the arXiv API: a demonstration corpus with no ground truth, so a run on it is never scored). Outputs go into the `$EV` layout
   the viewer reads (corpora/, runs/<group>/<name>, scores/, proposals/, cache/), so a result made here looks
   exactly like one made on the command line or on Slurm;
 - decisions: `PUT /proposals/{name}/decisions` writes decisions.yaml in the format evidence/propose/cards.py
@@ -24,9 +25,11 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
@@ -44,6 +47,7 @@ from .evmodels import (
     CompareRequest,
     DecisionsRequest,
     DecisionsResult,
+    FetchRequest,
     FreezeRequest,
     KindRequest,
     Name,
@@ -82,6 +86,27 @@ def asks(answer: Any, question: Question) -> bool:
         return answer["question_id"] == question.id
     return answer.get("question") == question.question
 GATEWAY_TIMEOUT_S = 3.0
+DEMO_REFUSAL = ("its corpus {corpus} is a demonstration corpus, no ground truth: real papers fetched from {kind}, "
+                "for which nobody knows the right answer. Its graph, answer and trace stay open to read; check them "
+                "by hand (docs/evidence-system.md, \"Demo mode: real papers from arXiv\"). Scores need a synthetic "
+                "corpus.")
+
+
+def fetch_name(query: str, day: datetime) -> str:
+    """The default corpus name of a fetch: `arxiv-<the query's first words, lower case>-<yyyymmdd>`."""
+    words = re.findall(r"[a-z0-9]+", query.lower())
+    slug = ""
+    for w in words:
+        if len(slug) + len(w) + 1 > 40:
+            break
+        slug = f"{slug}-{w}" if slug else w
+    return f"arxiv-{slug or 'query'}-{day.strftime('%Y%m%d')}"
+
+
+def demo_source(corpus: Path) -> dict[str, Any] | None:
+    """source.json of a corpus that says it has no ground truth (`evidence fetch`), else None."""
+    source = read_json(corpus / "source.json")
+    return source if isinstance(source, dict) and source.get("ground_truth") is False else None
 
 
 def gateway_problem(settings: Settings) -> str | None:
@@ -116,7 +141,7 @@ class JobPlan:
     """What one job kind starts: its steps, the refs the viewer follows, the lane and whether it needs the model
     gateway. Built by `Commands.<kind>(request)`, started by the router's `_start`."""
 
-    kind: str   # synth, run, rag-baseline, agent-baseline, score, compare, propose, freeze
+    kind: str   # synth, fetch, run, rag-baseline, agent-baseline, score, compare, propose, freeze
     steps: list[JobStep]
     refs: dict[str, str]
     lane: Lane
@@ -210,6 +235,24 @@ class Commands:
                          "--irrelevant", r.irrelevant, "--out", root)
         return JobPlan("synth", [step("synth build", argv)], {"corpus_set": r.name, "corpus": f"{r.name}-mixed"}, "cpu", False)
 
+    def fetch(self, r: FetchRequest, today: datetime | None = None) -> JobPlan:
+        """`evidence fetch` into `$EV/corpora/<name>`: the given name, else arxiv-<slug>-<yyyymmdd> (with -2, -3
+        ... when a corpus of that name is there already). No model; needs the network to export.arxiv.org."""
+        root = self.corpora()
+        if r.name is not None:
+            name = r.name
+            if inside(root, name).exists():
+                raise Conflict(f"corpus {name} exists; choose another name")
+        else:
+            base = fetch_name(r.query, today or datetime.now(timezone.utc))
+            name = next(n for n in (base, *(f"{base}-{k}" for k in range(2, 100)))
+                        if not inside(root, n).exists() and self.jobs.busy("corpus", n) is None)
+        self.free("corpus", name)
+        category = ["--category", r.category] if r.category else []
+        argv = self.tool("evidence", "fetch", f"--query={r.query.strip()}", "--max", r.max_papers,
+                         "--out", inside(root, name), *category)
+        return JobPlan("fetch", [step("evidence fetch", argv)], {"corpus": name}, "cpu", False)
+
     def run(self, r: RunRequest) -> JobPlan:
         corpus = self.corpus(r.corpus)
         protocol = self.protocol(r.protocol.source, r.protocol.name)
@@ -271,6 +314,10 @@ class Commands:
         if summary.corpus is None:
             raise Conflict(f"the corpus of {r.run} is not under the corpora root")
         corpus = self.corpus(summary.corpus)
+        source = demo_source(corpus)
+        if source is not None:   # real papers (`evidence fetch`): no ground_truth.json to score against
+            raise Conflict(f"{r.run} cannot be scored: " + DEMO_REFUSAL.format(corpus=summary.corpus,
+                                                                               kind=source.get("kind", "outside")))
         try:   # the question the run's frozen protocol asks: its kind picks the scores, its truth the expected answer
             question = answered_by(path, self.questions.list())
         except UnknownQuestion as exc:   # a typed question (or a hand-edited one): no ground truth to score against
@@ -464,6 +511,11 @@ def evjobs_router(settings: Settings, files: EvidenceFiles, jobs: JobManager, qu
     @api.post("/jobs/synth", response_model=Job, status_code=202)
     async def ev_start_synth(request: SynthRequest) -> Job:
         return await _start(c.synth(request), request)
+
+    @api.post("/jobs/fetch", response_model=Job, status_code=202)
+    async def ev_start_fetch(request: FetchRequest) -> Job:
+        """Real papers from the arXiv API as a demonstration corpus (no ground truth: runs on it are not scored)."""
+        return await _start(c.fetch(request), request)
 
     @api.post("/jobs/run", response_model=Job, status_code=202)
     async def ev_start_run(request: RunRequest) -> Job:

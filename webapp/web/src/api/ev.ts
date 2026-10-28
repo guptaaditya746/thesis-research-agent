@@ -20,6 +20,7 @@ export type EvConfig = S["EvConfig"]
 export type RunGroup = S["RunGroup"]
 export type CorpusSummary = S["CorpusSummary"]
 export type CorpusDetail = S["CorpusDetail"]
+export type CorpusSource = S["CorpusSource"]
 export type CorpusPaper = S["CorpusPaper"]
 export type CorpusPaperDetail = S["CorpusPaperDetail"]
 export type Placement = S["Placement"]
@@ -73,6 +74,7 @@ export type Job = S["Job"]
 export type JobStep = S["JobStep"]
 export type JobState = Job["state"]
 export type SynthRequest = S["SynthRequest"]
+export type FetchRequest = S["FetchRequest"]
 export type RunRequest = S["RunRequest"]
 export type ProtocolRef = S["ProtocolRef"]
 export type RagBaselineRequest = S["RagBaselineRequest"]
@@ -104,6 +106,7 @@ export interface Interval {
 /** What each job endpoint takes (POST /api/ev/jobs/<kind>). */
 export interface JobRequests {
   synth: SynthRequest
+  fetch: FetchRequest
   run: RunRequest
   "rag-baseline": RagBaselineRequest
   "agent-baseline": AgentBaselineRequest

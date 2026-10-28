@@ -14,6 +14,7 @@
     evidence propose cards DIR [--model ALIAS] [--force] [--refresh]
     evidence propose freeze DIR
     evidence propose amend DIR --reason R [--before-main-run]
+    evidence fetch --query TEXT --out DIR [--max N] [--category CAT]
 
 `--extractors regex-only` needs no model. `--strategy gaps` (default) is the funnel (docs/evidence-system.md Part D):
 screen, then escalate only the gaps; `all` runs every extractor on every document and records the
@@ -24,6 +25,8 @@ and prints {id, version, revision, sha256, phases, extractors per type}. `propos
 (docs/evidence-system.md Part E, evidence/propose): question -> frame -> draft -> critic -> cards (the person
 edits decisions.yaml) -> freeze -> amend, all files in one directory; frame, critic and cards make one cached
 model call each (`--model`, default orch-model), the rest is deterministic, and nothing runs the protocol.
+`fetch` writes a demonstration corpus of real arXiv papers (evidence/arxiv.py): manifest.json, papers/ and
+source.json with `ground_truth: false`; there is nothing to score it against.
 Exit status: 0 ok,
 1 a replay mismatch, a cache miss, a broken chain or a failed proposal model call, 2 usage errors, a protocol that does not validate and a
 refused proposal step (a decision without a reason, an amendment without a reason or a change, a stale input).
@@ -45,6 +48,7 @@ import yaml
 
 from agent.chain import verify
 
+from . import arxiv
 from .calls import NotRecorded
 from .rundir import EVENTS_FILE, RUN_FILE, RunDir, RunDirExists, read_json
 
@@ -92,6 +96,7 @@ def _parser() -> argparse.ArgumentParser:
     proto = sub.add_parser("protocol", help="check a protocol file").add_subparsers(dest="protocol_command", required=True)
     proto.add_parser("check", help="validate a protocol and print its sha256 and phases").add_argument("protocol", type=Path)
     _propose_parser(sub)
+    arxiv.add_parser(sub)
     return p
 
 
@@ -208,6 +213,8 @@ def _dispatch(args: argparse.Namespace) -> int:
         return _protocol_check(args.protocol)
     if args.command == "propose":
         return _propose(args)
+    if args.command == "fetch":
+        return arxiv.run(args)
     report = verify(args.run / EVENTS_FILE, head=read_json(args.run / RUN_FILE).get("chain_head"))
     print(json.dumps({"ok": report.ok, "records": report.records, "head": report.head, "errors": report.errors}, indent=1))
     return 0 if report.ok else 1
