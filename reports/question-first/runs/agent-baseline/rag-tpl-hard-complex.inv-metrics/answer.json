@@ -1,0 +1,731 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 14,
+    "exit_status": "submitted",
+    "model_calls": 45,
+    "run_id": "rag-tpl-hard-complex.inv-metrics",
+    "steps": 44,
+    "tokens": 936661
+  },
+  "agent_answer": {
+    "concept_sha256": "7490be23536c5a98a01aac7c991129339ba685dcc769f08d5bb4f092b5285680",
+    "kind": "table",
+    "notes": "The corpus has 112 short templated papers on QA factuality. 106 empirical papers each report exactly one main factuality metric (unsupported-answer rate, fact-level accuracy, answer accuracy, hallucination frequency, or hallucination rate) plus one secondary metric (ROUGE-L, BLEU, or latency), stated via 'Our main measure is ...' and 'We also report ...'. The 6 papers S107-S112 (surveys and descriptive corpus-construction/vocabulary papers) report no evaluation metrics of their own. The 5 main-metric lists are disjoint and their union is the 106 empirical papers; the 3 secondary lists cover the same 106. No other evaluation metrics (e.g. F1, perplexity, exact match) are reported by any paper. Supporting claims: claim-000001 (r1), claim-000002 (r2), claim-000003 (r3), claim-000004 (r4), claim-000005 (r5), claim-000006 (r6), claim-000007 (r7), claim-000008 (r8), claim-000009/000011/000013 (r9 surveys), claim-000010/000012/000014 (r9 descriptive).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Unsupported-answer rate (the proportion of answers with a statement not backed by any source) is reported as a main metric by 30 corpus papers.",
+          "papers": [
+            "S007.md",
+            "S012.md",
+            "S016.md",
+            "S019.md",
+            "S020.md",
+            "S021.md",
+            "S022.md",
+            "S023.md",
+            "S028.md",
+            "S030.md",
+            "S036.md",
+            "S037.md",
+            "S042.md",
+            "S044.md",
+            "S049.md",
+            "S054.md",
+            "S056.md",
+            "S058.md",
+            "S062.md",
+            "S068.md",
+            "S072.md",
+            "S075.md",
+            "S080.md",
+            "S086.md",
+            "S090.md",
+            "S094.md",
+            "S097.md",
+            "S103.md",
+            "S104.md",
+            "S106.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "30 corpus papers",
+            "origin": "research",
+            "p": "is a reported main metric",
+            "s": "unsupported-answer rate"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Fact-level accuracy (the fraction of answers judged factually correct) is reported as a main metric by 25 corpus papers.",
+          "papers": [
+            "S001.md",
+            "S003.md",
+            "S013.md",
+            "S027.md",
+            "S035.md",
+            "S038.md",
+            "S039.md",
+            "S043.md",
+            "S045.md",
+            "S047.md",
+            "S048.md",
+            "S059.md",
+            "S061.md",
+            "S066.md",
+            "S067.md",
+            "S071.md",
+            "S076.md",
+            "S078.md",
+            "S079.md",
+            "S091.md",
+            "S093.md",
+            "S095.md",
+            "S098.md",
+            "S101.md",
+            "S105.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "25 corpus papers",
+            "origin": "research",
+            "p": "is a reported main metric",
+            "s": "fact-level accuracy"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "Answer accuracy (the proportion of questions answered with correct facts) is reported as a main metric by 19 corpus papers.",
+          "papers": [
+            "S002.md",
+            "S015.md",
+            "S018.md",
+            "S033.md",
+            "S034.md",
+            "S040.md",
+            "S052.md",
+            "S055.md",
+            "S057.md",
+            "S064.md",
+            "S069.md",
+            "S073.md",
+            "S074.md",
+            "S081.md",
+            "S082.md",
+            "S087.md",
+            "S096.md",
+            "S099.md",
+            "S100.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "19 corpus papers",
+            "origin": "research",
+            "p": "is a reported main metric",
+            "s": "answer accuracy"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "Hallucination frequency (the fraction of answers judged to contain invented facts) is reported as a main metric by 17 corpus papers.",
+          "papers": [
+            "S004.md",
+            "S006.md",
+            "S008.md",
+            "S009.md",
+            "S017.md",
+            "S024.md",
+            "S041.md",
+            "S051.md",
+            "S053.md",
+            "S060.md",
+            "S070.md",
+            "S077.md",
+            "S083.md",
+            "S085.md",
+            "S088.md",
+            "S092.md",
+            "S102.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "17 corpus papers",
+            "origin": "research",
+            "p": "is a reported main metric",
+            "s": "hallucination frequency"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "Hallucination rate (the share of answers that contain at least one unsupported statement) is reported as a main metric by 15 corpus papers.",
+          "papers": [
+            "S005.md",
+            "S010.md",
+            "S011.md",
+            "S014.md",
+            "S025.md",
+            "S026.md",
+            "S029.md",
+            "S031.md",
+            "S032.md",
+            "S046.md",
+            "S050.md",
+            "S063.md",
+            "S065.md",
+            "S084.md",
+            "S089.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "15 corpus papers",
+            "origin": "research",
+            "p": "is a reported main metric",
+            "s": "hallucination rate"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "ROUGE-L (the longest common subsequence overlap with the reference answer) is reported as a secondary metric by 39 corpus papers.",
+          "papers": [
+            "S001.md",
+            "S002.md",
+            "S006.md",
+            "S011.md",
+            "S014.md",
+            "S017.md",
+            "S022.md",
+            "S027.md",
+            "S029.md",
+            "S031.md",
+            "S034.md",
+            "S036.md",
+            "S038.md",
+            "S040.md",
+            "S042.md",
+            "S043.md",
+            "S046.md",
+            "S047.md",
+            "S049.md",
+            "S052.md",
+            "S054.md",
+            "S057.md",
+            "S058.md",
+            "S060.md",
+            "S064.md",
+            "S066.md",
+            "S079.md",
+            "S081.md",
+            "S082.md",
+            "S085.md",
+            "S086.md",
+            "S091.md",
+            "S095.md",
+            "S096.md",
+            "S099.md",
+            "S101.md",
+            "S102.md",
+            "S103.md",
+            "S104.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "39 corpus papers",
+            "origin": "research",
+            "p": "is a reported secondary metric",
+            "s": "ROUGE-L"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "BLEU (the n-gram overlap with the reference answer) is reported as a secondary metric by 36 corpus papers.",
+          "papers": [
+            "S003.md",
+            "S005.md",
+            "S007.md",
+            "S010.md",
+            "S012.md",
+            "S013.md",
+            "S015.md",
+            "S016.md",
+            "S018.md",
+            "S019.md",
+            "S020.md",
+            "S021.md",
+            "S024.md",
+            "S026.md",
+            "S037.md",
+            "S039.md",
+            "S044.md",
+            "S045.md",
+            "S050.md",
+            "S051.md",
+            "S053.md",
+            "S055.md",
+            "S056.md",
+            "S059.md",
+            "S067.md",
+            "S072.md",
+            "S077.md",
+            "S083.md",
+            "S084.md",
+            "S087.md",
+            "S088.md",
+            "S089.md",
+            "S090.md",
+            "S093.md",
+            "S094.md",
+            "S098.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "36 corpus papers",
+            "origin": "research",
+            "p": "is a reported secondary metric",
+            "s": "BLEU"
+          }
+        ],
+        "id": "r7"
+      },
+      {
+        "cells": {
+          "conclusion": "Latency (the mean seconds needed to produce one answer) is reported as a secondary metric by 31 corpus papers.",
+          "papers": [
+            "S004.md",
+            "S008.md",
+            "S009.md",
+            "S023.md",
+            "S025.md",
+            "S028.md",
+            "S030.md",
+            "S032.md",
+            "S033.md",
+            "S035.md",
+            "S041.md",
+            "S048.md",
+            "S061.md",
+            "S062.md",
+            "S063.md",
+            "S065.md",
+            "S068.md",
+            "S069.md",
+            "S070.md",
+            "S071.md",
+            "S073.md",
+            "S074.md",
+            "S075.md",
+            "S076.md",
+            "S078.md",
+            "S080.md",
+            "S092.md",
+            "S097.md",
+            "S100.md",
+            "S105.md",
+            "S106.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "31 corpus papers",
+            "origin": "research",
+            "p": "is a reported secondary metric",
+            "s": "latency"
+          }
+        ],
+        "id": "r8"
+      },
+      {
+        "cells": {
+          "conclusion": "The six survey/descriptive papers S107-S112 report no evaluation metrics of their own.",
+          "papers": [
+            "S107.md",
+            "S108.md",
+            "S109.md",
+            "S110.md",
+            "S111.md",
+            "S112.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "reports no experiments of its own",
+            "origin": "research",
+            "p": "is a survey that",
+            "s": "S107.md"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "reports no standard evaluation metric",
+            "origin": "research",
+            "p": "is a descriptive corpus-construction paper that",
+            "s": "S108.md"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "reports no experiments of its own",
+            "origin": "research",
+            "p": "is a survey that",
+            "s": "S109.md"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "reports no standard evaluation metric",
+            "origin": "research",
+            "p": "is a descriptive corpus-construction paper that",
+            "s": "S110.md"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "reports no experiments of its own",
+            "origin": "research",
+            "p": "is a survey that",
+            "s": "S111.md"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "reports no standard evaluation metric",
+            "origin": "research",
+            "p": "is a descriptive corpus-construction paper that",
+            "s": "S112.md"
+          }
+        ],
+        "id": "r9"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Unsupported-answer rate (the proportion of answers with a statement not backed by any source) is reported as a main metric by 30 corpus papers.\", \"papers\": [\"S007.md\", \"S012.md\", \"S016.md\", \"S019.md\", \"S020.md\", \"S021.md\", \"S022.md\", \"S023.md\", \"S028.md\", \"S030.md\", \"S036.md\", \"S037.md\", \"S042.md\", \"S044.md\", \"S049.md\", \"S054.md\", \"S056.md\", \"S058.md\", \"S062.md\", \"S068.md\", \"S072.md\", \"S075.md\", \"S080.md\", \"S086.md\", \"S090.md\", \"S094.md\", \"S097.md\", \"S103.md\", \"S104.md\", \"S106.md\"]}\n  fact: unsupported-answer rate | is a reported main metric | 30 corpus papers\nRow r2: {\"conclusion\": \"Fact-level accuracy (the fraction of answers judged factually correct) is reported as a main metric by 25 corpus papers.\", \"papers\": [\"S001.md\", \"S003.md\", \"S013.md\", \"S027.md\", \"S035.md\", \"S038.md\", \"S039.md\", \"S043.md\", \"S045.md\", \"S047.md\", \"S048.md\", \"S059.md\", \"S061.md\", \"S066.md\", \"S067.md\", \"S071.md\", \"S076.md\", \"S078.md\", \"S079.md\", \"S091.md\", \"S093.md\", \"S095.md\", \"S098.md\", \"S101.md\", \"S105.md\"]}\n  fact: fact-level accuracy | is a reported main metric | 25 corpus papers\nRow r3: {\"conclusion\": \"Answer accuracy (the proportion of questions answered with correct facts) is reported as a main metric by 19 corpus papers.\", \"papers\": [\"S002.md\", \"S015.md\", \"S018.md\", \"S033.md\", \"S034.md\", \"S040.md\", \"S052.md\", \"S055.md\", \"S057.md\", \"S064.md\", \"S069.md\", \"S073.md\", \"S074.md\", \"S081.md\", \"S082.md\", \"S087.md\", \"S096.md\", \"S099.md\", \"S100.md\"]}\n  fact: answer accuracy | is a reported main metric | 19 corpus papers\nRow r4: {\"conclusion\": \"Hallucination frequency (the fraction of answers judged to contain invented facts) is reported as a main metric by 17 corpus papers.\", \"papers\": [\"S004.md\", \"S006.md\", \"S008.md\", \"S009.md\", \"S017.md\", \"S024.md\", \"S041.md\", \"S051.md\", \"S053.md\", \"S060.md\", \"S070.md\", \"S077.md\", \"S083.md\", \"S085.md\", \"S088.md\", \"S092.md\", \"S102.md\"]}\n  fact: hallucination frequency | is a reported main metric | 17 corpus papers\nRow r5: {\"conclusion\": \"Hallucination rate (the share of answers that contain at least one unsupported statement) is reported as a main metric by 15 corpus papers.\", \"papers\": [\"S005.md\", \"S010.md\", \"S011.md\", \"S014.md\", \"S025.md\", \"S026.md\", \"S029.md\", \"S031.md\", \"S032.md\", \"S046.md\", \"S050.md\", \"S063.md\", \"S065.md\", \"S084.md\", \"S089.md\"]}\n  fact: hallucination rate | is a reported main metric | 15 corpus papers\nRow r6: {\"conclusion\": \"ROUGE-L (the longest common subsequence overlap with the reference answer) is reported as a secondary metric by 39 corpus papers.\", \"papers\": [\"S001.md\", \"S002.md\", \"S006.md\", \"S011.md\", \"S014.md\", \"S017.md\", \"S022.md\", \"S027.md\", \"S029.md\", \"S031.md\", \"S034.md\", \"S036.md\", \"S038.md\", \"S040.md\", \"S042.md\", \"S043.md\", \"S046.md\", \"S047.md\", \"S049.md\", \"S052.md\", \"S054.md\", \"S057.md\", \"S058.md\", \"S060.md\", \"S064.md\", \"S066.md\", \"S079.md\", \"S081.md\", \"S082.md\", \"S085.md\", \"S086.md\", \"S091.md\", \"S095.md\", \"S096.md\", \"S099.md\", \"S101.md\", \"S102.md\", \"S103.md\", \"S104.md\"]}\n  fact: ROUGE-L | is a reported secondary metric | 39 corpus papers\nRow r7: {\"conclusion\": \"BLEU (the n-gram overlap with the reference answer) is reported as a secondary metric by 36 corpus papers.\", \"papers\": [\"S003.md\", \"S005.md\", \"S007.md\", \"S010.md\", \"S012.md\", \"S013.md\", \"S015.md\", \"S016.md\", \"S018.md\", \"S019.md\", \"S020.md\", \"S021.md\", \"S024.md\", \"S026.md\", \"S037.md\", \"S039.md\", \"S044.md\", \"S045.md\", \"S050.md\", \"S051.md\", \"S053.md\", \"S055.md\", \"S056.md\", \"S059.md\", \"S067.md\", \"S072.md\", \"S077.md\", \"S083.md\", \"S084.md\", \"S087.md\", \"S088.md\", \"S089.md\", \"S090.md\", \"S093.md\", \"S094.md\", \"S098.md\"]}\n  fact: BLEU | is a reported secondary metric | 36 corpus papers\nRow r8: {\"conclusion\": \"Latency (the mean seconds needed to produce one answer) is reported as a secondary metric by 31 corpus papers.\", \"papers\": [\"S004.md\", \"S008.md\", \"S009.md\", \"S023.md\", \"S025.md\", \"S028.md\", \"S030.md\", \"S032.md\", \"S033.md\", \"S035.md\", \"S041.md\", \"S048.md\", \"S061.md\", \"S062.md\", \"S063.md\", \"S065.md\", \"S068.md\", \"S069.md\", \"S070.md\", \"S071.md\", \"S073.md\", \"S074.md\", \"S075.md\", \"S076.md\", \"S078.md\", \"S080.md\", \"S092.md\", \"S097.md\", \"S100.md\", \"S105.md\", \"S106.md\"]}\n  fact: latency | is a reported secondary metric | 31 corpus papers\nRow r9: {\"conclusion\": \"The six survey/descriptive papers S107-S112 report no evaluation metrics of their own.\", \"papers\": [\"S107.md\", \"S108.md\", \"S109.md\", \"S110.md\", \"S111.md\", \"S112.md\"]}\n  fact: S107.md | is a survey that | reports no experiments of its own\n  fact: S108.md | is a descriptive corpus-construction paper that | reports no standard evaluation metric\n  fact: S109.md | is a survey that | reports no experiments of its own\n  fact: S110.md | is a descriptive corpus-construction paper that | reports no standard evaluation metric\n  fact: S111.md | is a survey that | reports no experiments of its own\n  fact: S112.md | is a descriptive corpus-construction paper that | reports no standard evaluation metric\nNotes: The corpus has 112 short templated papers on QA factuality. 106 empirical papers each report exactly one main factuality metric (unsupported-answer rate, fact-level accuracy, answer accuracy, hallucination frequency, or hallucination rate) plus one secondary metric (ROUGE-L, BLEU, or latency), stated via 'Our main measure is ...' and 'We also report ...'. The 6 papers S107-S112 (surveys and descriptive corpus-construction/vocabulary papers) report no evaluation metrics of their own. The 5 main-metric lists are disjoint and their union is the 106 empirical papers; the 3 secondary lists cover the same 106. No other evaluation metrics (e.g. F1, perplexity, exact match) are reported by any paper. Supporting claims: claim-000001 (r1), claim-000002 (r2), claim-000003 (r3), claim-000004 (r4), claim-000005 (r5), claim-000006 (r6), claim-000007 (r7), claim-000008 (r8), claim-000009/000011/000013 (r9 surveys), claim-000010/000012/000014 (r9 descriptive).",
+  "answer_text": "Row r1: {\"conclusion\": \"Unsupported-answer rate (the proportion of answers with a statement not backed by any source) is reported as a main metric by 30 corpus papers.\", \"papers\": [\"S007.md\", \"S012.md\", \"S016.md\", \"S019.md\", \"S020.md\", \"S021.md\", \"S022.md\", \"S023.md\", \"S028.md\", \"S030.md\", \"S036.md\", \"S037.md\", \"S042.md\", \"S044.md\", \"S049.md\", \"S054.md\", \"S056.md\", \"S058.md\", \"S062.md\", \"S068.md\", \"S072.md\", \"S075.md\", \"S080.md\", \"S086.md\", \"S090.md\", \"S094.md\", \"S097.md\", \"S103.md\", \"S104.md\", \"S106.md\"]}\n  fact: unsupported-answer rate | is a reported main metric | 30 corpus papers\nRow r2: {\"conclusion\": \"Fact-level accuracy (the fraction of answers judged factually correct) is reported as a main metric by 25 corpus papers.\", \"papers\": [\"S001.md\", \"S003.md\", \"S013.md\", \"S027.md\", \"S035.md\", \"S038.md\", \"S039.md\", \"S043.md\", \"S045.md\", \"S047.md\", \"S048.md\", \"S059.md\", \"S061.md\", \"S066.md\", \"S067.md\", \"S071.md\", \"S076.md\", \"S078.md\", \"S079.md\", \"S091.md\", \"S093.md\", \"S095.md\", \"S098.md\", \"S101.md\", \"S105.md\"]}\n  fact: fact-level accuracy | is a reported main metric | 25 corpus papers\nRow r3: {\"conclusion\": \"Answer accuracy (the proportion of questions answered with correct facts) is reported as a main metric by 19 corpus papers.\", \"papers\": [\"S002.md\", \"S015.md\", \"S018.md\", \"S033.md\", \"S034.md\", \"S040.md\", \"S052.md\", \"S055.md\", \"S057.md\", \"S064.md\", \"S069.md\", \"S073.md\", \"S074.md\", \"S081.md\", \"S082.md\", \"S087.md\", \"S096.md\", \"S099.md\", \"S100.md\"]}\n  fact: answer accuracy | is a reported main metric | 19 corpus papers\nRow r4: {\"conclusion\": \"Hallucination frequency (the fraction of answers judged to contain invented facts) is reported as a main metric by 17 corpus papers.\", \"papers\": [\"S004.md\", \"S006.md\", \"S008.md\", \"S009.md\", \"S017.md\", \"S024.md\", \"S041.md\", \"S051.md\", \"S053.md\", \"S060.md\", \"S070.md\", \"S077.md\", \"S083.md\", \"S085.md\", \"S088.md\", \"S092.md\", \"S102.md\"]}\n  fact: hallucination frequency | is a reported main metric | 17 corpus papers\nRow r5: {\"conclusion\": \"Hallucination rate (the share of answers that contain at least one unsupported statement) is reported as a main metric by 15 corpus papers.\", \"papers\": [\"S005.md\", \"S010.md\", \"S011.md\", \"S014.md\", \"S025.md\", \"S026.md\", \"S029.md\", \"S031.md\", \"S032.md\", \"S046.md\", \"S050.md\", \"S063.md\", \"S065.md\", \"S084.md\", \"S089.md\"]}\n  fact: hallucination rate | is a reported main metric | 15 corpus papers\nRow r6: {\"conclusion\": \"ROUGE-L (the longest common subsequence overlap with the reference answer) is reported as a secondary metric by 39 corpus papers.\", \"papers\": [\"S001.md\", \"S002.md\", \"S006.md\", \"S011.md\", \"S014.md\", \"S017.md\", \"S022.md\", \"S027.md\", \"S029.md\", \"S031.md\", \"S034.md\", \"S036.md\", \"S038.md\", \"S040.md\", \"S042.md\", \"S043.md\", \"S046.md\", \"S047.md\", \"S049.md\", \"S052.md\", \"S054.md\", \"S057.md\", \"S058.md\", \"S060.md\", \"S064.md\", \"S066.md\", \"S079.md\", \"S081.md\", \"S082.md\", \"S085.md\", \"S086.md\", \"S091.md\", \"S095.md\", \"S096.md\", \"S099.md\", \"S101.md\", \"S102.md\", \"S103.md\", \"S104.md\"]}\n  fact: ROUGE-L | is a reported secondary metric | 39 corpus papers\nRow r7: {\"conclusion\": \"BLEU (the n-gram overlap with the reference answer) is reported as a secondary metric by 36 corpus papers.\", \"papers\": [\"S003.md\", \"S005.md\", \"S007.md\", \"S010.md\", \"S012.md\", \"S013.md\", \"S015.md\", \"S016.md\", \"S018.md\", \"S019.md\", \"S020.md\", \"S021.md\", \"S024.md\", \"S026.md\", \"S037.md\", \"S039.md\", \"S044.md\", \"S045.md\", \"S050.md\", \"S051.md\", \"S053.md\", \"S055.md\", \"S056.md\", \"S059.md\", \"S067.md\", \"S072.md\", \"S077.md\", \"S083.md\", \"S084.md\", \"S087.md\", \"S088.md\", \"S089.md\", \"S090.md\", \"S093.md\", \"S094.md\", \"S098.md\"]}\n  fact: BLEU | is a reported secondary metric | 36 corpus papers\nRow r8: {\"conclusion\": \"Latency (the mean seconds needed to produce one answer) is reported as a secondary metric by 31 corpus papers.\", \"papers\": [\"S004.md\", \"S008.md\", \"S009.md\", \"S023.md\", \"S025.md\", \"S028.md\", \"S030.md\", \"S032.md\", \"S033.md\", \"S035.md\", \"S041.md\", \"S048.md\", \"S061.md\", \"S062.md\", \"S063.md\", \"S065.md\", \"S068.md\", \"S069.md\", \"S070.md\", \"S071.md\", \"S073.md\", \"S074.md\", \"S075.md\", \"S076.md\", \"S078.md\", \"S080.md\", \"S092.md\", \"S097.md\", \"S100.md\", \"S105.md\", \"S106.md\"]}\n  fact: latency | is a reported secondary metric | 31 corpus papers\nRow r9: {\"conclusion\": \"The six survey/descriptive papers S107-S112 report no evaluation metrics of their own.\", \"papers\": [\"S107.md\", \"S108.md\", \"S109.md\", \"S110.md\", \"S111.md\", \"S112.md\"]}\n  fact: S107.md | is a survey that | reports no experiments of its own\n  fact: S108.md | is a descriptive corpus-construction paper that | reports no standard evaluation metric\n  fact: S109.md | is a survey that | reports no experiments of its own\n  fact: S110.md | is a descriptive corpus-construction paper that | reports no standard evaluation metric\n  fact: S111.md | is a survey that | reports no experiments of its own\n  fact: S112.md | is a descriptive corpus-construction paper that | reports no standard evaluation metric\nNotes: The corpus has 112 short templated papers on QA factuality. 106 empirical papers each report exactly one main factuality metric (unsupported-answer rate, fact-level accuracy, answer accuracy, hallucination frequency, or hallucination rate) plus one secondary metric (ROUGE-L, BLEU, or latency), stated via 'Our main measure is ...' and 'We also report ...'. The 6 papers S107-S112 (surveys and descriptive corpus-construction/vocabulary papers) report no evaluation metrics of their own. The 5 main-metric lists are disjoint and their union is the 106 empirical papers; the 3 secondary lists cover the same 106. No other evaluation metrics (e.g. F1, perplexity, exact match) are reported by any paper. Supporting claims: claim-000001 (r1), claim-000002 (r2), claim-000003 (r3), claim-000004 (r4), claim-000005 (r5), claim-000006 (r6), claim-000007 (r7), claim-000008 (r8), claim-000009/000011/000013 (r9 surveys), claim-000010/000012/000014 (r9 descriptive).",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "answer accuracy",
+      "papers": [
+        "S002",
+        "S015",
+        "S018",
+        "S033",
+        "S034",
+        "S040",
+        "S052",
+        "S055",
+        "S057",
+        "S064",
+        "S069",
+        "S073",
+        "S074",
+        "S081",
+        "S082",
+        "S087",
+        "S096",
+        "S099",
+        "S100"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BLEU",
+      "papers": [
+        "S003",
+        "S005",
+        "S007",
+        "S010",
+        "S012",
+        "S013",
+        "S015",
+        "S016",
+        "S018",
+        "S019",
+        "S020",
+        "S021",
+        "S024",
+        "S026",
+        "S037",
+        "S039",
+        "S044",
+        "S045",
+        "S050",
+        "S051",
+        "S053",
+        "S055",
+        "S056",
+        "S059",
+        "S067",
+        "S072",
+        "S077",
+        "S083",
+        "S084",
+        "S087",
+        "S088",
+        "S089",
+        "S090",
+        "S093",
+        "S094",
+        "S098"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "fact-level accuracy",
+      "papers": [
+        "S001",
+        "S003",
+        "S013",
+        "S027",
+        "S035",
+        "S038",
+        "S039",
+        "S043",
+        "S045",
+        "S047",
+        "S048",
+        "S059",
+        "S061",
+        "S066",
+        "S067",
+        "S071",
+        "S076",
+        "S078",
+        "S079",
+        "S091",
+        "S093",
+        "S095",
+        "S098",
+        "S101",
+        "S105"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "hallucination frequency",
+      "papers": [
+        "S004",
+        "S006",
+        "S008",
+        "S009",
+        "S017",
+        "S024",
+        "S041",
+        "S051",
+        "S053",
+        "S060",
+        "S070",
+        "S077",
+        "S083",
+        "S085",
+        "S088",
+        "S092",
+        "S102"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "hallucination rate",
+      "papers": [
+        "S005",
+        "S010",
+        "S011",
+        "S014",
+        "S025",
+        "S026",
+        "S029",
+        "S031",
+        "S032",
+        "S046",
+        "S050",
+        "S063",
+        "S065",
+        "S084",
+        "S089"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "latency",
+      "papers": [
+        "S004",
+        "S008",
+        "S009",
+        "S023",
+        "S025",
+        "S028",
+        "S030",
+        "S032",
+        "S033",
+        "S035",
+        "S041",
+        "S048",
+        "S061",
+        "S062",
+        "S063",
+        "S065",
+        "S068",
+        "S069",
+        "S070",
+        "S071",
+        "S073",
+        "S074",
+        "S075",
+        "S076",
+        "S078",
+        "S080",
+        "S092",
+        "S097",
+        "S100",
+        "S105",
+        "S106"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "ROUGE-L",
+      "papers": [
+        "S001",
+        "S002",
+        "S006",
+        "S011",
+        "S014",
+        "S017",
+        "S022",
+        "S027",
+        "S029",
+        "S031",
+        "S034",
+        "S036",
+        "S038",
+        "S040",
+        "S042",
+        "S043",
+        "S046",
+        "S047",
+        "S049",
+        "S052",
+        "S054",
+        "S057",
+        "S058",
+        "S060",
+        "S064",
+        "S066",
+        "S079",
+        "S081",
+        "S082",
+        "S085",
+        "S086",
+        "S091",
+        "S095",
+        "S096",
+        "S099",
+        "S101",
+        "S102",
+        "S103",
+        "S104"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "unsupported-answer rate",
+      "papers": [
+        "S007",
+        "S012",
+        "S016",
+        "S019",
+        "S020",
+        "S021",
+        "S022",
+        "S023",
+        "S028",
+        "S030",
+        "S036",
+        "S037",
+        "S042",
+        "S044",
+        "S049",
+        "S054",
+        "S056",
+        "S058",
+        "S062",
+        "S068",
+        "S072",
+        "S075",
+        "S080",
+        "S086",
+        "S090",
+        "S094",
+        "S097",
+        "S103",
+        "S104",
+        "S106"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "191d385ff2da7a155caeef491455d9dcd031294714c1a074234199fe5828aede",
+    "input_tokens": 3652,
+    "key": "e6afb3984c20a98c5a0dccc6f3e4d568e60366cdd44b0d0b8ca5f30098577f1b",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1371,
+    "prompt_sha256": "5d35d46cdd8a386502a50fe86de4a80eb7a680f2c781244b484e86453856d146",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which evaluation metrics do the papers report?",
+  "question_id": "inv-metrics",
+  "system": "agent-baseline",
+  "target": "metric"
+}

@@ -1,0 +1,375 @@
+{
+  "agreeing": [
+    "S012",
+    "S014"
+  ],
+  "answer_text": "No, the authors' conclusions about factual accuracy do not agree with their reported results in several of the provided passages. In multiple studies, the conclusion claims that retrieval augmentation improves accuracy or reduces hallucinations, while the reported data shows the opposite (retrieval decreases accuracy or increases hallucinations) or shows no significant difference. Conversely, in other studies, the conclusion claims no change or a negative effect, while the data shows a positive effect. Specific examples include:\n\n1. **S009**: The conclusion states that grounding the generator in retrieved documents yields *less* accurate answers [S009, 3633-3932]. The abstract also states retrieval augmentation makes generated answers less accurate [S009, 0-1270]. However, the results for S009 are not provided in the text, so I cannot verify the data. Wait, looking at S009, there is no Results section provided. I must rely on the provided text. Let's look at others with results.\n\n2. **S012**: The conclusion states that grounding the generator in retrieved documents leads to *more* hallucinated answers [S012, 2754-3680]. The results show the model answering from its own parameters has a hallucination rate of 0.193 (19.3%), while the variant that reads retrieved evidence first has a rate of 29.2% [S012, 1346-2754]. Since 29.2% is higher than 19.3%, the data supports the conclusion that retrieval leads to more hallucinations. This is consistent.\n\n3. **S013**: The abstract states that retrieval augmentation makes the generated answers *less* accurate [S013, 0-1316]. The results are not provided in the text for S013, only Method and Abstract. I cannot verify.\n\n4. **S014**: The abstract states that retrieval augmentation makes the generated answers *less* accurate [S014, 0-908]. The results show that on BioClaimQA, the retrieval-augmented model scores 7.1 percentage points *lower* than the closed-book model in answer accuracy [S014, 908-2256]. This is consistent.\n\n5. **S015**: The conclusion states that adding retrieved documents leaves the correctness of the answers *essentially unchanged* [S015, 2509-3595]. The results show the parametric-only model has an answer accuracy of 62.5%, while the RAG pipeline has an accuracy of 66.1% [S015, 2509-3595]. A difference of 3.6 percentage points might be considered ",
+  "citations": [
+    {
+      "document": "S009",
+      "end": 3932,
+      "start": 3633
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "start": 2754
+    },
+    {
+      "document": "S012",
+      "end": 2754,
+      "start": 1346
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "start": 2509
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "disagreeing": [],
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "e3207879287d747fa21ae2c4126a020cdcfde88ce5f623b5d77fac2927ea8488",
+    "input_tokens": 1422,
+    "key": "4ad9a933a7214f9bc262641b6edee12c1b5f60a97c785e7666044d702daa20bf",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 120,
+    "prompt_sha256": "68264b4cbc83d8aeeddfda975c60f29a587c47e359c00d353bb57f65a7720173",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "0ac0bab15cfa7b163342a242df8039769b86f05665d04243db35ed1383e25201",
+    "input_tokens": 20738,
+    "key": "23fcf21776bfaaea77dc8879dc3ef33c60eb4e4bc2708a7228e6ed7ec7d14de4",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 4966,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about factual accuracy agree with their reported results?",
+  "question_id": "cons-accuracy",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 1.770017,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 3050,
+      "score": 1.472248,
+      "start": 2239
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 4.276652,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "score": 3.670589,
+      "start": 2039
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 7.657446,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 4160,
+      "score": 2.724827,
+      "start": 3792
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 6.606606,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 4.649744,
+      "start": 2474
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 4.762911,
+      "start": 1073
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 4.674262,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 4.480892,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 3.717368,
+      "start": 1367
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 4.927241,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 4.21182,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 3.730536,
+      "start": 960
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "score": 2.997747,
+      "start": 1995
+    },
+    {
+      "document": "S009",
+      "end": 3932,
+      "score": 7.295314,
+      "start": 3633
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 6.483986,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 3.249497,
+      "start": 957
+    },
+    {
+      "document": "S010",
+      "end": 3031,
+      "score": 2.56519,
+      "start": 2287
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 6.662541,
+      "start": 2419
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 4.348769,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 2754,
+      "score": 2.597404,
+      "start": 1346
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 2.425506,
+      "start": 2754
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 4.207521,
+      "start": 1316
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 2.884201,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 3.206087,
+      "start": 908
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 2.942506,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 4.172563,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "score": 4.004398,
+      "start": 2509
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 4.135785,
+      "start": 1395
+    },
+    {
+      "document": "S016",
+      "end": 3649,
+      "score": 2.875402,
+      "start": 2667
+    },
+    {
+      "document": "S017",
+      "end": 3687,
+      "score": 3.384164,
+      "start": 2304
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 2.781161,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 3.452014,
+      "start": 1187
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "score": 2.502821,
+      "start": 2606
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 5.123815,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 2.743346,
+      "start": 1944
+    },
+    {
+      "document": "S020",
+      "end": 3674,
+      "score": 7.401459,
+      "start": 2739
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 3.307403,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": null,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S009",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S012",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S013",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S014",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S015",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": [
+    "S009",
+    "S013",
+    "S015"
+  ]
+}

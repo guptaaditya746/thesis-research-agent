@@ -1,0 +1,378 @@
+{
+  "agreeing": [
+    "S001",
+    "S006",
+    "S008",
+    "S016",
+    "S017",
+    "S018"
+  ],
+  "answer_text": "Yes, the authors' conclusions about hallucination agree with their reported results in the specific studies where hallucination rate was the primary metric and retrieval augmentation was tested. In multiple studies, the reported results show a lower hallucination rate for retrieval-augmented models compared to parametric-only or vanilla models, which aligns with the authors' conclusions that retrieval augmentation reduces hallucinated content. For example, in [S001, 1023-2239], the retrieval-augmented model had a hallucination rate of 17.8% compared to 29.5% for the parametric-only model, supporting the abstract's claim that \"Retrieval augmentation clearly reduces hallucinated content\" [S001, 0-1023]. Similarly, in [S008, 1995-3427], the retrieval-augmented generator had a hallucination rate of 6.3% compared to 20.2% for the vanilla LLM, supporting the conclusion that \"Grounding the generator in retrieved documents leads to fewer hallucinated answers\" [S008, 1995-3427]. Other studies such as [S006, 1367-2401], [S016, 1395-2667], [S017, 2304-3687], and [S018, 2606-3739] also report lower hallucination rates for retrieval-augmented conditions, consistent with their respective conclusions. However, some studies report that retrieval augmentation does not measurably reduce hallucination or even increases it, but these are exceptions and do not contradict the general trend in the majority of the provided passages where the conclusion matches the results.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "start": 1995
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "start": 1367
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S017",
+      "end": 3687,
+      "start": 2304
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "start": 2606
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "disagreeing": [],
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "bfd622fa99f1c57088de8427d04dd520f8fcf522aeb17b7b6761ea018a5f940b",
+    "input_tokens": 1227,
+    "key": "53ac767ac4f5567bf603c60193eca1115529733386ab7bc5cfd946939a97f9e7",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 144,
+    "prompt_sha256": "7d81fef1ecf61007de8a01017fae6f822ec29ae30e973d77a4d0f683a5e8aca8",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "model_call": {
+    "input_sha256": "d81791d76b0337456b0611501fa3447a74c3f4b736a65f6353e7e640d862c505",
+    "input_tokens": 9735,
+    "key": "422363d26c855ecb38c4aec8b79070cdce69e1f7d98bb31e921ae40afcded284",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 670,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 3.505829,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 2.736982,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "score": 3.670589,
+      "start": 2039
+    },
+    {
+      "document": "S002",
+      "end": 2039,
+      "score": 3.650398,
+      "start": 1160
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 7.170707,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 4160,
+      "score": 2.724827,
+      "start": 3792
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 6.106434,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 4128,
+      "score": 2.724827,
+      "start": 3765
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 4.430738,
+      "start": 1073
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 2.721289,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 5.957209,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 5.40042,
+      "start": 1367
+    },
+    {
+      "document": "S007",
+      "end": 4158,
+      "score": 2.680942,
+      "start": 3784
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 2.366663,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 4.683359,
+      "start": 960
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "score": 4.223513,
+      "start": 1995
+    },
+    {
+      "document": "S009",
+      "end": 3932,
+      "score": 7.295314,
+      "start": 3633
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 4.201102,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 4.738099,
+      "start": 957
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 3.857978,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 6.662541,
+      "start": 2419
+    },
+    {
+      "document": "S011",
+      "end": 2419,
+      "score": 2.829755,
+      "start": 1086
+    },
+    {
+      "document": "S012",
+      "end": 2754,
+      "score": 2.597404,
+      "start": 1346
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 2.425506,
+      "start": 2754
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 3.87911,
+      "start": 1316
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 2.884201,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 2.612703,
+      "start": 908
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 2.534649,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 3.787455,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "score": 3.367578,
+      "start": 2509
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 5.888604,
+      "start": 1395
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 3.98454,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 3687,
+      "score": 3.384164,
+      "start": 2304
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 2.781161,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 4.271684,
+      "start": 1187
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "score": 3.830964,
+      "start": 2606
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 2.875314,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 2.26385,
+      "start": 1944
+    },
+    {
+      "document": "S020",
+      "end": 3674,
+      "score": 6.990131,
+      "start": 2739
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 2.722791,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S001",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S006",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S008",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S016",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S017",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S018",
+      "reason": null
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

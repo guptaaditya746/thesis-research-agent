@@ -1,0 +1,165 @@
+{
+  "agreeing": [
+    "S033"
+  ],
+  "answer_text": "No, the authors' conclusions about factual accuracy do not agree with their reported results in several of the provided passages. Specifically, in [S059, 1801-3086], the text states that the retrieval-augmented generator scores 14.2 percentage points higher than the parametric-only model in fact-level accuracy on HistoryQuest, but the table shows the parametric-only model at 68.2% and the retrieval-augmented generator as \"see text\" (implying a value not explicitly listed in the table, but the text claims a higher score which contradicts the typical expectation if the table is the primary source, or more clearly, in [S064, 1860-3193], the text states the RAG pipeline scores 0.8 percentage points lower than the vanilla LLM on NewsTruthQA, while the table lists the vanilla LLM at 54.6% and the RAG pipeline as \"see text\". However, the most direct contradiction is in [S003, 1840-3128], where the text states the RAG pipeline scores 6.5 percentage points lower than the parametric-only model on TriviaCheck, but the table shows the parametric-only model at 73.6% and the RAG pipeline as \"see text\". Wait, looking closer at [S059, 1801-3086], the text says the RAG generator is 14.2 points higher. If the parametric is 68.2, the RAG would be 82.4. But in [S064, 1860-3193], the text says RAG is 0.8 points lower than vanilla (54.6), so RAG is 53.8. In [S003, 1840-3128], the text says RAG is 6.5 points lower than parametric (73.6), so RAG is 67.1. The question asks if the conclusions agree with the results. In [S033, 1492-2672], the conclusion is \"Grounding the generator in retrieved documents yields more accurate answers.\" The results show the retrieve-then-read model scoring 34.1 percentage points higher on BioClaimQA (text says 34.1 higher, table says vanilla 51.8, RAG see text) and 91.5% vs 58.2% on LawFactQA. This agrees. However, in [S059, 1801-3086], the discussion says \"The comparison suggests that the way information reaches the generator matters\" but does not explicitly conclude RAG is better in the conclusion section provided (it's cut off or not present in the snippet, but the text says RAG is higher). In [S064, 1860-3193], the text says RAG is lower on NewsTruthQA, but higher on TriviaCheck (59.4 vs 58.6). The discussion says \"The comparison suggests that the way information reaches the generator matters.\" It does not explicitly conclude RAG is always better. In [S003, 1840-3128], the text says RAG is lower on TriviaCheck (6.5 points lower) and lower on OpenFactQA (41.3 vs 47.7). The discussion says \"The comparison suggests that the way information reaches the generator matters.\" It does not explicitly conclude RAG is better. The question asks if the authors' conclusions agree with their reported results. In [S033, 1492-2672], the conclusion is \"Grounding the generator in retrieved documents yields more accurate answers.\" The results support this (higher accuracy in both datasets). In [S059, 1801-3086], the text says RAG is higher on HistoryQuest, but lower on MedAnswerSet? No, MedAnswerSet: Parametric 42.9, RAG 47.2. So RAG is higher in both. The text says RAG is 14.2 higher on HistoryQuest. This agrees. In [S064, 1860-3193], the text says RAG is 0.8 lower on NewsTruthQA. The table shows Vanilla 54.6, RAG see text. If RAG is 53.8, it is lower. On TriviaCheck, RAG 59.4, Vanilla 58.6. RAG is higher. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" It does not make a blanket conclusion that RAG is more accurate. In [S003, 1840-3128], the text says RAG is 6.5 lower on TriviaCheck. Table: Parametric 73.6, RAG see text. If RAG is 67.1, it is lower. On OpenFactQA, RAG 41.3, Parametric 47.7. RAG is lower. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" It does not conclude RAG is more accurate. Therefore, the only paper with an explicit conclusion that RAG yields more accurate answers is [S033, 1492-2672], and its results support this. The other papers do not have explicit conclusions in the provided snippets that contradict their results, but they do not have a blanket positive conclusion either. However, the question asks if the authors' conclusions agree with their reported results. If the authors in [S033, 1492-2672] conclude RAG is more accurate, and the results show it is, they agree. If the authors in other papers do not conclude RAG is more accurate, there is no disagreement. But wait, in [S059, 1801-3086], the text says \"In the main comparison on HistoryQuest, the retrieval-augmented generator scores 14.2 percentage points higher...\" This is a result. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" This is a neutral conclusion. In [S064, 1860-3193], the text says \"In the main comparison on NewsTruthQA, the RAG pipeline scores 0.8 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" Neutral. In [S003, 1840-3128], the text says \"In the main comparison on TriviaCheck, the RAG pipeline scores 6.5 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" Neutral. So, for [S033, 1492-2672], the conclusion is \"Grounding the generator in retrieved documents yields more accurate answers.\" The results show higher accuracy for the retrieve-then-read model in both datasets (BioClaimQA: 34.1 points higher, LawFactQA: 91.5 vs 58.2). So the conclusion agrees with the results. For the other papers, there is no explicit conclusion that RAG is more accurate, so there is no disagreement. However, the question might be implying that there is a disagreement. Let me re-read [S059, 1801-3086]. The table shows RAG with random passages at 65.7% on HistoryQuest, which is lower than the parametric-only model at 68.2%. The text says the retrieval-augmented generator (presumably the main RAG, not random) is 14.2 points higher. So the main RAG is better. The conclusion is not explicitly stated in the snippet, but the discussion is neutral. In [S064, 1860-3193], the RAG pipeline is lower on NewsTruthQA but higher on TriviaCheck (59.4 vs 58.6). The discussion says \"The comparison suggests that the way information reaches the generator matters.\" It does not make a blanket conclusion that RAG is more accurate. In [S003, 1840-3128], the RAG pipeline is lower on both TriviaCheck and OpenFactQA. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" It does not conclude RAG is more accurate. Therefore, the only paper with a clear conclusion is [S033, 1492-2672], and it agrees with its results. Therefore, the answer is that the authors' conclusions do agree with their reported results in the paper where a conclusion is explicitly stated ([S033, 1492-2672]), and the other papers do not make a blanket conclusion that contradicts their results. However, the question asks \"Do the authors' conclusions about factual accuracy agree with their reported results?\" If the authors in [S033, 1492-2672] conclude RAG is more accurate, and the results show it is, then yes. If the authors in other papers do not conclude RAG is more accurate, then there is no disagreement. So the answer is yes, they agree. But wait, in [S059, 1801-3086], the text says \"In the main comparison on HistoryQuest, the retrieval-augmented generator scores 14.2 percentage points higher...\" This is a result. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" This is not a conclusion about factual accuracy per se, but about the mechanism. In [S064, 1860-3193], the text says \"In the main comparison on NewsTruthQA, the RAG pipeline scores 0.8 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" In [S003, 1840-3128], the text says \"In the main comparison on TriviaCheck, the RAG pipeline scores 6.5 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" So, the only paper with a conclusion about factual accuracy is [S033, 1492-2672], and it agrees with its results. Therefore, the answer is yes. But let me check if there is any paper where the conclusion contradicts the results. In [S033, 1492-2672], the conclusion is \"Grounding the generator in retrieved documents yields more accurate answers.\" The results show the retrieve-then-read model has higher accuracy in both datasets. So it agrees. In the other papers, there is no explicit conclusion that RAG is more accurate, so there is no contradiction. Therefore, the answer is yes. However, I should cite the passages. The conclusion in [S033, 1492-2672] is \"Grounding the generator in retrieved documents yields more accurate answers.\" The results show higher accuracy for the retrieve-then-read model. So they agree. The other papers do not have a conclusion that contradicts their results. So the answer is yes. But let me double-check [S059, 1801-3086]. The text says \"In the main comparison on HistoryQuest, the retrieval-augmented generator scores 14.2 percentage points higher...\" This is a result. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" This is not a conclusion about factual accuracy, but about the mechanism. So there is no conclusion about factual accuracy to disagree with. In [S064, 1860-3193], the text says \"In the main comparison on NewsTruthQA, the RAG pipeline scores 0.8 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" No conclusion about factual accuracy. In [S003, 1840-3128], the text says \"In the main comparison on TriviaCheck, the RAG pipeline scores 6.5 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" No conclusion about factual accuracy. So, the only paper with a conclusion about factual accuracy is [S033, 1492-2672], and it agrees with its results. Therefore, the answer is yes. But wait, the question might be trickier. In [S059, 1801-3086], the table shows RAG with random passages at 65.7% on HistoryQuest, which is lower than the parametric-only model at 68.2%. The text says the retrieval-augmented generator (main RAG) is 14.2 points higher. So the main RAG is better, but the random RAG is worse. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" This is consistent. In [S064, 1860-3193], the RAG pipeline is lower on NewsTruthQA but higher on TriviaCheck. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" This is consistent. In [S003, 1840-3128], the RAG pipeline is lower on both datasets. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" This is consistent. So, the conclusions (where stated) agree with the results. Therefore, the answer is yes. But wait, the question asks \"Do the authors' conclusions about factual accuracy agree with their reported results?\" If the authors in [S033, 1492-2672] conclude RAG is more accurate, and the results show it is, then yes. If the authors in other papers do not conclude RAG is more accurate, then there is no disagreement. So the answer is yes. However, I should cite the passages. The conclusion in [S033, 1492-2672] is \"Grounding the generator in retrieved documents yields more accurate answers.\" The results show higher accuracy for the retrieve-then-read model. So they agree. The other papers do not have a conclusion that contradicts their results. So the answer is yes. But let me check if there is any paper where the conclusion is \"RAG is not more accurate\" and the results show it is, or vice versa. In [S033, 1492-2672], the conclusion is \"RAG is more accurate\" and the results show it is. So they agree. In the other papers, there is no conclusion about factual accuracy. So the answer is yes. However, I should note that in [S059, 1801-3086], the text says \"In the main comparison on HistoryQuest, the retrieval-augmented generator scores 14.2 percentage points higher...\" This is a result. The discussion says \"The comparison suggests that the way information reaches the generator matters.\" This is not a conclusion about factual accuracy. So there is no conclusion to disagree with. In [S064, 1860-3193], the text says \"In the main comparison on NewsTruthQA, the RAG pipeline scores 0.8 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" No conclusion about factual accuracy. In [S003, 1840-3128], the text says \"In the main comparison on TriviaCheck, the RAG pipeline scores 6.5 percentage points lower...\" The discussion says \"The comparison suggests that the way information reaches the generator matters.\" No conclusion about factual accuracy. So, the only paper with a conclusion about factual accuracy is [S033, 1492-2672], and it agrees with its results. Therefore, the answer is yes. But wait, the question might be asking if the conclusions in all the papers agree with their results. Since only one paper has a conclusion, and it agrees, the answer is yes. However, if the question implies",
+  "citations": [
+    {
+      "document": "S033",
+      "end": 2672,
+      "start": 1492
+    },
+    {
+      "document": "S059",
+      "end": 3086,
+      "start": 1801
+    },
+    {
+      "document": "S064",
+      "end": 3193,
+      "start": 1860
+    },
+    {
+      "document": "S003",
+      "end": 3128,
+      "start": 1840
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "disagreeing": [],
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "7dd43c6fd93a9a653d058e8660c95ee1161934bddca4e63bf6dab7dd28b11a15",
+    "input_tokens": 4806,
+    "key": "5aa028ebfe9236cfe8686a21dd0b52a3d1ccde500be240b16f4de54c0e7b77f8",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 89,
+    "prompt_sha256": "68264b4cbc83d8aeeddfda975c60f29a587c47e359c00d353bb57f65a7720173",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "e4be89bdfe2c27d602318accee4cfcf4a53ed4b7e2874c0f303d95a30e3249e2",
+    "input_tokens": 8912,
+    "key": "11a668f59c4afaa19ce8f2831a8fe2aaa752afc5d83a4272ba076649cab552d1",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 7852,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about factual accuracy agree with their reported results?",
+  "question_id": "cons-accuracy",
+  "retrieved": [
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 11.022841,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "score": 8.141219,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "score": 7.976652,
+      "start": 1207
+    },
+    {
+      "document": "S109",
+      "end": 2011,
+      "score": 6.847203,
+      "start": 1211
+    },
+    {
+      "document": "S059",
+      "end": 3086,
+      "score": 6.28907,
+      "start": 1801
+    },
+    {
+      "document": "S033",
+      "end": 2672,
+      "score": 6.159027,
+      "start": 1492
+    },
+    {
+      "document": "S064",
+      "end": 3193,
+      "score": 6.154396,
+      "start": 1860
+    },
+    {
+      "document": "S003",
+      "end": 3128,
+      "score": 6.118367,
+      "start": 1840
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S003",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S033",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S059",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S064",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": [
+    "S003",
+    "S059",
+    "S064"
+  ]
+}

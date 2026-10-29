@@ -1,0 +1,62 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 0,
+    "exit_status": "submitted",
+    "model_calls": 13,
+    "run_id": "rag-tpl-hard-complex.cons-hallucination",
+    "steps": 12,
+    "tokens": 88597
+  },
+  "agent_answer": {
+    "concept_sha256": "4febb77992b5af9f40b1df9185e6d78410a919763d72c74bbe5fcb01cb048e8a",
+    "kind": "table",
+    "notes": "The run was cut short by a repeated-command termination before I could open and read the relevant papers' results and conclusions sections, so I was unable to establish whether any paper's conclusions about hallucination agree with its reported results. No individual paper-level conclusion/result facts could be recorded or claimed. Based only on the title list and occurrence counts: papers plausibly about hallucination include S102 (Divergent Machine Hallucination), S092 (Mitigating Hallucination via RAG), S089 (RAG Reduces Hallucination), S088 (Hallucination in LLMs), S085 (Hallucination in RAG), S084 (Ablation Study of Hallucination), S083 (Detecting Hallucination), S077/S070 (Mitigating Hallucination), S065 (Mitigating Hallucination in RAG), S063 (Hallucination in RAG), S060 (Ablation of Hallucination), S053 (RAG Reduces Hallucination), S051 (Mitigating Hallucination), S050 (Detecting Hallucination), S046 (Hallucination in RAG), S041 (RAG Reduces Hallucination), S032 (Mitigating Hallucination), S031 (Detecting Hallucination), S029 (Ablation of Hallucination), S026 (RAG Reduces Hallucination), S025 (Mitigating Hallucination), S024 (Detecting Hallucination), S017 (Ablation of Hallucination), S014 (RAG Reduces Hallucination), S011 (Mitigating Hallucination), S010 (Detecting Hallucination), S009 (Ablation of Hallucination), S008 (RAG Reduces Hallucination), S006 (Mitigating Hallucination), S005 (Detecting Hallucination), S004 (Ablation of Hallucination), plus 2-occurrence papers such as S106, S104, S103, S097, S094, S090, S086, S080, S075, S072, S068, S062, S058, S056, S054, S049, S044, S042, S037, S036, S030, S028, S023, S022, S021, S020, S019, S016, S012, S007; the remaining 51 papers have no 'hallucinat' matches. A follow-up run must read each candidate's reported results and its stated conclusions to answer the question.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Unknown — research terminated before any paper's conclusions about hallucination could be read and compared with its reported results.",
+          "papers": []
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "112 papers (S001.md–S112.md), each ~3 KB; hallucination-related text (matches for 'hallucinat') appears in 61 of them, most in 5 occurrences (e.g. S102, S092, S089, S088, S085, S084, S083, S077, S070)",
+            "origin": "research",
+            "p": "contains",
+            "s": "Corpus"
+          }
+        ],
+        "id": "r1"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Unknown — research terminated before any paper's conclusions about hallucination could be read and compared with its reported results.\", \"papers\": []}\n  fact: Corpus | contains | 112 papers (S001.md–S112.md), each ~3 KB; hallucination-related text (matches for 'hallucinat') appears in 61 of them, most in 5 occurrences (e.g. S102, S092, S089, S088, S085, S084, S083, S077, S070)\nNotes: The run was cut short by a repeated-command termination before I could open and read the relevant papers' results and conclusions sections, so I was unable to establish whether any paper's conclusions about hallucination agree with its reported results. No individual paper-level conclusion/result facts could be recorded or claimed. Based only on the title list and occurrence counts: papers plausibly about hallucination include S102 (Divergent Machine Hallucination), S092 (Mitigating Hallucination via RAG), S089 (RAG Reduces Hallucination), S088 (Hallucination in LLMs), S085 (Hallucination in RAG), S084 (Ablation Study of Hallucination), S083 (Detecting Hallucination), S077/S070 (Mitigating Hallucination), S065 (Mitigating Hallucination in RAG), S063 (Hallucination in RAG), S060 (Ablation of Hallucination), S053 (RAG Reduces Hallucination), S051 (Mitigating Hallucination), S050 (Detecting Hallucination), S046 (Hallucination in RAG), S041 (RAG Reduces Hallucination), S032 (Mitigating Hallucination), S031 (Detecting Hallucination), S029 (Ablation of Hallucination), S026 (RAG Reduces Hallucination), S025 (Mitigating Hallucination), S024 (Detecting Hallucination), S017 (Ablation of Hallucination), S014 (RAG Reduces Hallucination), S011 (Mitigating Hallucination), S010 (Detecting Hallucination), S009 (Ablation of Hallucination), S008 (RAG Reduces Hallucination), S006 (Mitigating Hallucination), S005 (Detecting Hallucination), S004 (Ablation of Hallucination), plus 2-occurrence papers such as S106, S104, S103, S097, S094, S090, S086, S080, S075, S072, S068, S062, S058, S056, S054, S049, S044, S042, S037, S036, S030, S028, S023, S022, S021, S020, S019, S016, S012, S007; the remaining 51 papers have no 'hallucinat' matches. A follow-up run must read each candidate's reported results and its stated conclusions to answer the question.",
+  "agreeing": [],
+  "answer_text": "Row r1: {\"conclusion\": \"Unknown — research terminated before any paper's conclusions about hallucination could be read and compared with its reported results.\", \"papers\": []}\n  fact: Corpus | contains | 112 papers (S001.md–S112.md), each ~3 KB; hallucination-related text (matches for 'hallucinat') appears in 61 of them, most in 5 occurrences (e.g. S102, S092, S089, S088, S085, S084, S083, S077, S070)\nNotes: The run was cut short by a repeated-command termination before I could open and read the relevant papers' results and conclusions sections, so I was unable to establish whether any paper's conclusions about hallucination agree with its reported results. No individual paper-level conclusion/result facts could be recorded or claimed. Based only on the title list and occurrence counts: papers plausibly about hallucination include S102 (Divergent Machine Hallucination), S092 (Mitigating Hallucination via RAG), S089 (RAG Reduces Hallucination), S088 (Hallucination in LLMs), S085 (Hallucination in RAG), S084 (Ablation Study of Hallucination), S083 (Detecting Hallucination), S077/S070 (Mitigating Hallucination), S065 (Mitigating Hallucination in RAG), S063 (Hallucination in RAG), S060 (Ablation of Hallucination), S053 (RAG Reduces Hallucination), S051 (Mitigating Hallucination), S050 (Detecting Hallucination), S046 (Hallucination in RAG), S041 (RAG Reduces Hallucination), S032 (Mitigating Hallucination), S031 (Detecting Hallucination), S029 (Ablation of Hallucination), S026 (RAG Reduces Hallucination), S025 (Mitigating Hallucination), S024 (Detecting Hallucination), S017 (Ablation of Hallucination), S014 (RAG Reduces Hallucination), S011 (Mitigating Hallucination), S010 (Detecting Hallucination), S009 (Ablation of Hallucination), S008 (RAG Reduces Hallucination), S006 (Mitigating Hallucination), S005 (Detecting Hallucination), S004 (Ablation of Hallucination), plus 2-occurrence papers such as S106, S104, S103, S097, S094, S090, S086, S080, S075, S072, S068, S062, S058, S056, S054, S049, S044, S042, S037, S036, S030, S028, S023, S022, S021, S020, S019, S016, S012, S007; the remaining 51 papers have no 'hallucinat' matches. A follow-up run must read each candidate's reported results and its stated conclusions to answer the question.",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "disagreeing": [],
+  "dropped": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "42a0e1025605852bb246fcc317ab5247e3f7468daee04d5911e0827995b6269d",
+    "input_tokens": 1985,
+    "key": "b8134c06ddd0a08ea41a2efc557b5c19d836737a0ab21fddfc9f377f194a0b56",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 7,
+    "prompt_sha256": "7d81fef1ecf61007de8a01017fae6f822ec29ae30e973d77a4d0f683a5e8aca8",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "studies": [],
+  "system": "agent-baseline",
+  "undetermined": []
+}

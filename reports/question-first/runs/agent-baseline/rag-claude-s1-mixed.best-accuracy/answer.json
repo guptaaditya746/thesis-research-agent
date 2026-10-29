@@ -1,0 +1,114 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 7,
+    "exit_status": "submitted",
+    "model_calls": 21,
+    "run_id": "rag-claude-s1-mixed.best-accuracy",
+    "steps": 21,
+    "tokens": 149259
+  },
+  "agent_answer": {
+    "concept_sha256": "45bab516e33f3c99c265f533b9c305111f72f823ed10394212efe767ab2c9de5",
+    "kind": "table",
+    "notes": "Only S002 in the corpus uses 'factual accuracy' (fraction of answers judged factually correct) as its metric. The other 19 papers report different metrics: fact-level accuracy (S003, S009, S011, S019), answer accuracy (S004, S005, S013, S014, S015, S020), hallucination rate/frequency (S001, S006, S008, S010, S016, S017), or share of answers with unsupported/invented statements (S007, S012), so they do not report a 'factual accuracy' value. Within S002 the four factual-accuracy values are 0.505 (no document access), 0.571 (read evidence first), 0.558 (skip reranker), and 78.1% (reformulate question before search); the reformulation variant is the highest. Supporting claim ids: claim-000005 (benchmark), claim-000001 (78.1%), claim-000002 (571/1000), claim-000003 (0.558), claim-000004 (0.505), claim-000007 (highest method).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Within S002 (the only corpus paper that reports 'factual accuracy'), the method that achieves the highest factual accuracy is the variant that reformulates the question before the search, with a fraction of answers judged factually correct of 78.1%, on the LawFactQA benchmark.",
+          "papers": [
+            "S002"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "main benchmark",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "78.1%",
+            "origin": "research",
+            "p": "factually correct fraction on LawFactQA",
+            "s": "S002 reformulation variant"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "571/1000",
+            "origin": "research",
+            "p": "factually correct fraction on LawFactQA",
+            "s": "S002 read-first variant"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "0.558",
+            "origin": "research",
+            "p": "factually correct fraction on LawFactQA",
+            "s": "S002 skip-reranker variant"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "0.505",
+            "origin": "research",
+            "p": "factually correct fraction on LawFactQA",
+            "s": "S002 no-document-access generator"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "variant that reformulates the question before the search (78.1%)",
+            "origin": "research",
+            "p": "highest factual accuracy method",
+            "s": "S002"
+          }
+        ],
+        "id": "r1"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Within S002 (the only corpus paper that reports 'factual accuracy'), the method that achieves the highest factual accuracy is the variant that reformulates the question before the search, with a fraction of answers judged factually correct of 78.1%, on the LawFactQA benchmark.\", \"papers\": [\"S002\"]}\n  fact: S002 | main benchmark | LawFactQA\n  fact: S002 reformulation variant | factually correct fraction on LawFactQA | 78.1%\n  fact: S002 read-first variant | factually correct fraction on LawFactQA | 571/1000\n  fact: S002 skip-reranker variant | factually correct fraction on LawFactQA | 0.558\n  fact: S002 no-document-access generator | factually correct fraction on LawFactQA | 0.505\n  fact: S002 | highest factual accuracy method | variant that reformulates the question before the search (78.1%)\nNotes: Only S002 in the corpus uses 'factual accuracy' (fraction of answers judged factually correct) as its metric. The other 19 papers report different metrics: fact-level accuracy (S003, S009, S011, S019), answer accuracy (S004, S005, S013, S014, S015, S020), hallucination rate/frequency (S001, S006, S008, S010, S016, S017), or share of answers with unsupported/invented statements (S007, S012), so they do not report a 'factual accuracy' value. Within S002 the four factual-accuracy values are 0.505 (no document access), 0.571 (read evidence first), 0.558 (skip reranker), and 78.1% (reformulate question before search); the reformulation variant is the highest. Supporting claim ids: claim-000005 (benchmark), claim-000001 (78.1%), claim-000002 (571/1000), claim-000003 (0.558), claim-000004 (0.505), claim-000007 (highest method).",
+  "answer_text": "Row r1: {\"conclusion\": \"Within S002 (the only corpus paper that reports 'factual accuracy'), the method that achieves the highest factual accuracy is the variant that reformulates the question before the search, with a fraction of answers judged factually correct of 78.1%, on the LawFactQA benchmark.\", \"papers\": [\"S002\"]}\n  fact: S002 | main benchmark | LawFactQA\n  fact: S002 reformulation variant | factually correct fraction on LawFactQA | 78.1%\n  fact: S002 read-first variant | factually correct fraction on LawFactQA | 571/1000\n  fact: S002 skip-reranker variant | factually correct fraction on LawFactQA | 0.558\n  fact: S002 no-document-access generator | factually correct fraction on LawFactQA | 0.505\n  fact: S002 | highest factual accuracy method | variant that reformulates the question before the search (78.1%)\nNotes: Only S002 in the corpus uses 'factual accuracy' (fraction of answers judged factually correct) as its metric. The other 19 papers report different metrics: fact-level accuracy (S003, S009, S011, S019), answer accuracy (S004, S005, S013, S014, S015, S020), hallucination rate/frequency (S001, S006, S008, S010, S016, S017), or share of answers with unsupported/invented statements (S007, S012), so they do not report a 'factual accuracy' value. Within S002 the four factual-accuracy values are 0.505 (no document access), 0.571 (read evidence first), 0.558 (skip reranker), and 78.1% (reformulate question before search); the reformulation variant is the highest. Supporting claim ids: claim-000005 (benchmark), claim-000001 (78.1%), claim-000002 (571/1000), claim-000003 (0.558), claim-000004 (0.505), claim-000007 (highest method).",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "2be0b4701e32e7420557486e6939b55fe0b7d563dbcd84fe3245e2760f2cc1cc",
+    "input_tokens": 1502,
+    "key": "b406ffcb16987b222d0b652aafac1259b655e7dba62260050357952bb69c0042",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 30,
+    "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "question": "Which method achieves the highest factual accuracy within each paper?",
+  "question_id": "best-accuracy",
+  "studies": [
+    {
+      "document": "S002",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "query-rewriting"
+    }
+  ],
+  "system": "agent-baseline",
+  "tied": [],
+  "winner": "query-rewriting",
+  "wins": {
+    "query-rewriting": 1
+  }
+}

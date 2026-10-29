@@ -1,0 +1,29 @@
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 6 packages in 9.47s
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_parallel_replicas_can_bind_their_distributed_ports ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-xepi3167/pytest-3/test_parallel_replicas_can_bin0')
+
+    def test_parallel_replicas_can_bind_their_distributed_ports(tmp_path):
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            base = probe.getsockname()[1]
+        profile = load_profile("profiles/orch-3x40.yaml")
+        environment = {"VLLM_PORT": str(base)}
+        services = build_services(profile, environment, tmp_path, "port-test", "test-key")
+        replicas = [services[name] for name in ("orch", "orch-2", "orch-3")]
+        ports = [int(service.env["VLLM_PORT"]) for service in replicas]
+>       assert len(set(ports)) == 3, f"replicas share a distributed listener port: {ports}"
+E       AssertionError: replicas share a distributed listener port: [52949, 52949, 52949]
+E       assert 1 == 3
+E        +  where 1 = len({52949})
+E        +    where {52949} = set([52949, 52949, 52949])
+
+tests/test_replica_ports.py:18: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_replica_ports.py::test_parallel_replicas_can_bind_their_distributed_ports
+1 failed in 7.60s

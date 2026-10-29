@@ -1,0 +1,167 @@
+{
+  "answer_text": "The evidence indicates that retrieval-augmented generation (RAG) reduces the hallucination rate in several domains, but the effect is not universal and can be negligible or absent in others. Specifically, RAG significantly reduces hallucinations on science, history, law, and pop culture benchmarks, but does not measurably reduce them on trivia questions. The magnitude of reduction varies by domain, ranging from a 11.7 percentage point drop in law to a 5.2 percentage point drop in pop culture, while one study found no measurable reduction in trivia answering.",
+  "citations": [
+    {
+      "document": "S008",
+      "end": 960,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S001",
+      "end": 2239,
+      "start": 1023
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "start": 1367
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "start": 957
+    }
+  ],
+  "contradicting": [],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 0,
+    "neutral": 1,
+    "supporting": 4,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "supported",
+  "label_by_rule": "supported",
+  "mapped_answer_text": "Retrieval-augmented generation reduces the hallucination rate in domains such as science, history, law, and pop culture, with reductions ranging from 5.2 to 11.7 percentage points, but shows no measurable reduction in trivia answering.",
+  "mapping_call": {
+    "input_sha256": "4634cd761cc8ee740cffad2d47bded71bf89d02bd4d3aec01e8ef8b60f92d9b6",
+    "input_tokens": 1007,
+    "key": "181ef43b6874c008162a0012c621279dae30d60a632a22435f3a0ea768678295",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 145,
+    "prompt_sha256": "3ad9a499bb11aeb593a1ad05d5e020fcbaaccb326d3a2f1317f747d2f95aed2d",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "a9bb95e138b9e608a03d62868f8ce5e0d231906e94ce29efef5d8e804ac3b8e4",
+    "input_tokens": 2086,
+    "key": "83303b8d505ae201f20fde83b7ca7737a5c9a2c252390c848e404ccdca0b28de",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 354,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S010"
+  ],
+  "question": "Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?",
+  "question_id": "rag-hallucination",
+  "retrieved": [
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 15.767845,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 14.892083,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 12.356439,
+      "start": 1395
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 12.018546,
+      "start": 957
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 11.502537,
+      "start": 1367
+    },
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 9.795784,
+      "start": 1023
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 9.659032,
+      "start": 960
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 8.816586,
+      "start": 1187
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S006",
+    "S008",
+    "S016"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

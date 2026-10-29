@@ -1,0 +1,127 @@
+{
+  "agreeing": [],
+  "answer_text": "No, the authors' conclusions do not agree with their reported results. The abstract and conclusion of the study state that retrieval augmentation makes the generated answers less accurate [S009, 0-1270] and that grounding the generator in retrieved documents yields less accurate answers [S009, 3633-3932]. However, the reported results indicate that the RAG pipeline achieved a higher fact-level accuracy (0.74) than the parametric-only model (0.68) on the main benchmark, NewsTruthQA, and a similar or slightly lower accuracy on LawFactQA (0.71 vs 0.72), which contradicts the conclusion that retrieval augmentation yields less accurate answers [S009, 1271-2418].",
+  "citations": [
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 3932,
+      "start": 3633
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "disagreeing": [
+    "S009"
+  ],
+  "dropped": [],
+  "dropped_citations": [
+    {
+      "document": "S009",
+      "end": 2418,
+      "start": 1271
+    }
+  ],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "8b3f4a7076afedede20bf3773652861d27374a8446a984685ba50a780818eb6a",
+    "input_tokens": 916,
+    "key": "ee81530d8e54f1a68fc87461ab3f5ed48c636e0e354acd4f2be8dba091827651",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 29,
+    "prompt_sha256": "68264b4cbc83d8aeeddfda975c60f29a587c47e359c00d353bb57f65a7720173",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "95d40f50a8a44008479b715832964972ab3a664c218f98613e5484d4d40f325a",
+    "input_tokens": 1810,
+    "key": "eebfa2111e1e4caac9a6a6c9847993c560c1ea0851edf722d5685f2e1d18d4ad",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 303,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about factual accuracy agree with their reported results?",
+  "question_id": "cons-accuracy",
+  "retrieved": [
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 7.657446,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 3674,
+      "score": 7.401459,
+      "start": 2739
+    },
+    {
+      "document": "S009",
+      "end": 3932,
+      "score": 7.295314,
+      "start": 3633
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 6.662541,
+      "start": 2419
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 6.606606,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 6.483986,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 5.123815,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 4.927241,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": false,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S009",
+      "reason": null
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,186 @@
+{
+  "answer_text": "The method that achieves the highest factual accuracy varies by paper and dataset:\n\n1.  **In [S019]**: The **fine-tuned model** achieves the highest fact-level accuracy on both datasets. On TriviaCheck, it scores 59.1%, which is higher than the no-retrieval baseline (64.2% is listed, but the text states the retrieve-then-read model is 0.8 points lower than the baseline, implying the baseline is 64.2 and retrieve-then-read is 63.4; however, the table explicitly lists the fine-tuned model at 59.1. Wait, looking closely at the table in [S019, 1944-3441]:\n    *   TriviaCheck: no-retrieval baseline = 64.2%, fine-tuned model = 59.1%. The text says retrieve-then-read is 0.8 points lower than baseline (63.4%). Thus, the **no-retrieval baseline** has the highest accuracy on TriviaCheck (64.2%).\n    *   HistoryQuest: no-retrieval baseline = 49.5%, retrieve-then-read = 50.3%, fine-tuned model = 55.6%. Thus, the **fine-tuned model** has the highest accuracy on HistoryQuest (55.6%).\n    *   *Correction*: The question asks for the method with the highest accuracy *within each paper*. Since [S019] covers two datasets, I should specify per dataset or note the variation. The no-retrieval baseline is highest on TriviaCheck, and the fine-tuned model is highest on HistoryQuest.\n\n2.  **In [S007]**: The metric is the share of answers with at least one unsupported statement (lower is better for accuracy). The **generator adapted to the domain by further training** has the lowest share of unsupported statements (18.2%), compared to 39.1% (391/1000) for the generator without document access and 39.9% (0.399) for the configuration with document lookup. Therefore, the **fine-tuned/domain-adapted generator** achieves the highest factual accuracy (fewest hallucinations).\n\n3.  **In [S004]**: The metric is answer accuracy. On LawFactQA, the parametric-only model scores 59.8%, and the retrieve-then-read model scores 0.9 points lower (58.9%). On GeoFacts, the retrieve-then-read model scores 53.6%, and the parametric-only model scores 52.7%. Thus, the **parametric-only model** is highest on LawFactQA, and the **retrieve-then-read model** is highest on GeoFacts.\n\n4.  **In [S011]**: The abstract states that \"Retrieval augmentation makes the generated answers clearly more accurate.\" The conditions are closed-book, retrieve-then-read, chain-of-thought, and RAG with random passages. While specific numbers are not in the provided snippet, the abstract explicitly claims retrieval augmentation (likely referring to the retrieve-then-read or RAG condition) is more accurate. However, without the specific table values in the provided text for [S011], I must rely on the abstract's claim. The abstract says \"Retrieval augmentation makes the generated answers clearly more accurate.\" This implies the **retrieve-then-read model** (or RAG) is the highest.\n\n5.  **In [S009]**: The abstract states \"Retrieval augmentation makes the generated answers less accurate.\" This implies the **parametric-only model** is more accurate than the RAG pipeline.\n\n6.  **In [S005]**: The abstract states \"Retrieval augmentation does not make the answers measurably more accurate.\" It compares four conditions. Without specific numbers in the provided text, I cannot definitively name the single highest, but it suggests no clear winner for retrieval over others, or that differences are negligible. However, the question asks which method achieves the *highest*. If no method is measurably more accurate, they may be statistically similar. But looking at [S019] which uses HistoryQuest, the fine-tuned model was highest. [S005] also uses HistoryQuest. It is likely the **fine-tuned model** or similar condition is highest, but the text provided for [S005] does not give the results table. I will focus on the papers with explicit result data or clear abstract claims.\n\nLet's refine the answer to only cite what is explicitly supported by the provided passages.\n\n*   **[S019]**: On TriviaCheck, the **no-retrieval baseline** (64.2%) is higher than the fine-tuned model (59.1%) and the retrieve-then-read model (63.4% derived from text). On HistoryQuest, the **fine-tuned model** (55.6%) is higher than the retrieve-then-read model (50.3%) and no-retrieval baseline (49.5%).\n*   **[S007]**: The **generator adapted to the domain by further training** has the lowest rate of unsupported statements (18.2%), indicating the highest factual accuracy.\n*   **[S004]**: On LawFactQA, the **parametric-only model** (59.8%) is higher than the retrieve-then-read model (58.9%). On GeoFacts, the **retrieve-then-read model** (53.6%) is higher than the parametric-only model (52.7%).\n*   **[S011]**: The abstract states **retrieval augmentation** makes answers clearly more accurate, implying the **retrieve-then-read model** (or RAG) is the highest.\n*   **[S009]**: The abstract states **retrieval augmentation** makes answers *less* accurate, implying the **parametric-only model** is the highest.\n*   **[S005]**: The abstract states retrieval augmentation does *not* make answers measurably more accurate. It does not specify which is highest, only that retrieval doesn't improve accuracy. It is not possible to determine the single highest method from the provided text for this paper alone without the results table.\n\nI will structure the answer by paper.",
+  "citations": [
+    {
+      "document": "S019",
+      "end": 3441,
+      "start": 1944
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "start": 2635
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "start": 2474
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "70723f395c4bf585034cb21cea173744051bb5b82967343222fa8debbbd1326e",
+    "input_tokens": 2412,
+    "key": "17c4217d8f14fda7d82ba237c54ab4816f16212429e4a1b82b3b74ef4ad44312",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 134,
+    "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "bfd7d710aa5419454585114a56abe4444b7dddc043af45477859148adb90a081",
+    "input_tokens": 2307,
+    "key": "8f15a34a5567a5f655f39af611b95fa6805e443d1bb01e5607b436de26814a78",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1603,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the highest factual accuracy within each paper?",
+  "question_id": "best-accuracy",
+  "retrieved": [
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 6.246582,
+      "start": 1944
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 6.060461,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 5.787965,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 5.54615,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 5.235259,
+      "start": 2474
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 5.230024,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 4.967585,
+      "start": 2635
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 4.848586,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S004",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S005",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S007",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S009",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S011",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S019",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [
+    "fine-tuned",
+    "no-retrieval",
+    "rag"
+  ],
+  "winner": null,
+  "wins": {
+    "fine-tuned": 1,
+    "no-retrieval": 1,
+    "rag": 1
+  }
+}

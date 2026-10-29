@@ -1,0 +1,216 @@
+{
+  "answer_text": "The papers compare various system variants and methods, primarily differing in how they access external documents or utilize training data. The specific conditions compared across the studies include:\n\n1.  **Parametric-only / Closed-book models:** Systems that answer using only internal knowledge without external retrieval [S002, 0-1160], [S015, 2509-3595], [S011, 0-1086], [S019, 0-1156].\n2.  **Retrieval-Augmented Generation (RAG) pipelines:** Standard RAG systems that retrieve and use relevant documents [S002, 0-1160], [S015, 2509-3595], [S011, 0-1086], [S010, 0-957], [S012, 0-1346], [S019, 0-1156].\n3.  **RAG with random passages:** A control condition where retrieved documents are random rather than relevant [S015, 2509-3595], [S011, 0-1086].\n4.  **Fine-tuned models:** Models that have undergone additional training on in-domain pairs [S015, 2509-3595], [S019, 0-1156].\n5.  **Chain-of-thought prompting:** A specific prompting strategy compared against other conditions [S011, 0-1086].\n6.  **RAG without reranking:** A variant of RAG that omits the reranking step [S010, 0-957].\n7.  **Retrieve-then-read models:** A specific condition where the model reads retrieved documents before answering [S011, 0-1086].\n8.  **Specific system labels:** One study compares systems labeled 'B' and 'R' [S003, 2532-3792].",
+  "citations": [
+    {
+      "document": "S002",
+      "end": 1160,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "start": 2509
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "start": 2532
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "B",
+      "papers": [
+        "S003"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Chain-of-thought prompting",
+      "papers": [
+        "S011"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Fine-tuned models",
+      "papers": [
+        "S015",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Parametric-only / Closed-book models",
+      "papers": [
+        "S002",
+        "S011",
+        "S015",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "R",
+      "papers": [
+        "S003"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG with random passages",
+      "papers": [
+        "S011",
+        "S015"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG without reranking",
+      "papers": [
+        "S010"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Retrieval-Augmented Generation (RAG) pipelines",
+      "papers": [
+        "S002",
+        "S010",
+        "S011",
+        "S012",
+        "S015",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Retrieve-then-read models",
+      "papers": [
+        "S011"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "e3b4404764c05937a637f3825cd51df364071fdeaad65e875fbeedbd582bcf84",
+    "input_tokens": 1293,
+    "key": "9b4f178923b1b44574acf6d78a72f123eec7b71aacb8983156b8bdcc877ca579",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 407,
+    "prompt_sha256": "337685d8abf98f6ee4e5bf8f939d26332a2650f0742b14fb5b9ea014e641ecee",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "9a6e22036e4affa60000dc2834829899a5c47b60851e2710272b5ccbf0190774",
+    "input_tokens": 1949,
+    "key": "67636cf32f8500aad05b300df798cd41bba2e9d63d8403dafacbf7756ec82aed",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 753,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "retrieved": [
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 8.123045,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "score": 6.892892,
+      "start": 2509
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 5.631306,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "score": 5.047292,
+      "start": 2532
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 4.921519,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 4.765962,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 4.735701,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 4.676462,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "condition"
+}

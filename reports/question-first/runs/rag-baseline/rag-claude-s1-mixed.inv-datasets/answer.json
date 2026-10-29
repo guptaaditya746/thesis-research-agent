@@ -1,0 +1,161 @@
+{
+  "answer_text": "The papers evaluate on the following datasets: NewsTruthQA, LawFactQA, GeoFacts, TriviaCheck, and HistoryQuest. Specifically, [S009] evaluates on NewsTruthQA and LawFactQA [S009, 0-1270]. [S004] evaluates on LawFactQA and GeoFacts [S004, 1325-2474]. [S019] evaluates on TriviaCheck and HistoryQuest [S019, 1156-1944]. [S001] evaluates on LawFactQA [S001, 0-1023].",
+  "citations": [
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 2474,
+      "start": 1325
+    },
+    {
+      "document": "S019",
+      "end": 1944,
+      "start": 1156
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "start": 0
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "GeoFacts",
+      "papers": [
+        "S004"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "HistoryQuest",
+      "papers": [
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "LawFactQA",
+      "papers": [
+        "S001",
+        "S004",
+        "S009"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "NewsTruthQA",
+      "papers": [
+        "S009"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "TriviaCheck",
+      "papers": [
+        "S019"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "07ac95649d62ea3ec58097daf13e7a3b830613a77c50dfac1a838010d7ba4821",
+    "input_tokens": 910,
+    "key": "c3f5bc1fc7e88417d0bafe25d3f76dcf891740fe39a53a6350c4a4fe4b42c42f",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 104,
+    "prompt_sha256": "168da6790a68e7dec70418f6e24701b91699dfa7f53afd923cdca204a5becd61",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "5b567b37fcad8682ceef53b369c684973b203cb3a2591375015939b702444dbc",
+    "input_tokens": 2280,
+    "key": "afbac9d3075f302cf6ed1cf15cfc81fb42cf1f3fd2366a431e1bed00b49988a0",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 315,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which datasets do the papers evaluate on?",
+  "question_id": "inv-datasets",
+  "retrieved": [
+    {
+      "document": "S009",
+      "end": 3633,
+      "score": 5.814313,
+      "start": 2316
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 5.794427,
+      "start": 2474
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 5.387601,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 2316,
+      "score": 4.870059,
+      "start": 1270
+    },
+    {
+      "document": "S019",
+      "end": 1944,
+      "score": 4.540605,
+      "start": 1156
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 4.366529,
+      "start": 1944
+    },
+    {
+      "document": "S004",
+      "end": 2474,
+      "score": 4.081439,
+      "start": 1325
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 3.73844,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "dataset"
+}

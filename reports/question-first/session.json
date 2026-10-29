@@ -1,0 +1,74 @@
+{
+  "code_tag": "ev3-code",
+  "commit": "3978d3737c2cc172e5aeb86705136be10471746c",
+  "worktree": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run",
+  "submodule_commit": "4c8ccbff21ab4a5fd18ede8a93b73cb11c5749e2",
+  "job": 7954,
+  "node": "gammaweb07",
+  "stack_session": "20261028T065536Z-2da09dee",
+  "profile": "profiles/orch-3x40-gliner.yaml",
+  "driver": "580.159.04",
+  "cuda": "13.0",
+  "status": "mapping gate and one-check passed; main and hard grids finished; extras, counterfactual, and missing-agent retries running",
+  "handback_branch": "results",
+  "handback_tag": "ev3",
+  "previous_job": 7947,
+  "port_fix_authorized": true,
+  "port_tests": "63 passed; regression 1 passed",
+  "exec_sessions": {
+    "offline": 78080,
+    "check_stack": 84846,
+    "mapcheck": 41796,
+    "ui": 6845,
+    "import_diagnostic": 12549
+  },
+  "next_steps": [
+    "Monitor extras-main, extras-hard, cf-main, retry-hard-agents; retry eligible failures after writers finish.",
+    "Score counterfactual shift; replay newly finished engine runs; audit every cell, failures, GLiNER and retries.",
+    "Complete and verify summary and handback artifacts, preserve caches, commit and push results and annotated ev3 tag."
+  ],
+  "offline_gate": "exit 0; replay ok; scored_types dataset; no_question_metric present; unknown-id rejected with all ten IDs",
+  "ui": {
+    "node": "gammaweb07",
+    "port": 8080,
+    "url": "http://127.0.0.1:8080",
+    "exec_session": 6845,
+    "pid": 2450969,
+    "corpora": "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/tests/EV2/corpora",
+    "health": "ok:true; HTTP 200"
+  },
+  "vllm": "0.21.0",
+  "gliner": {
+    "ready": true,
+    "device": "cuda",
+    "memory_mib": 1296,
+    "gpu0_free_mib": 3367,
+    "memory_utilization": 0.92,
+    "GLINER_URL_set": true
+  },
+  "evidence_python_environment": {
+    "path": "/tmp/xepi3167/ev3-evidence/venv",
+    "node": "gammaweb07",
+    "sync": "uv sync --locked --all-groups; exit 0",
+    "replay": "ok: true, no mismatches",
+    "python": "3.13.12"
+  },
+  "grid": {
+    "main_step": "7954.77 COMPLETED 0:0",
+    "hard_step": "7954.79 COMPLETED 0:0",
+    "engine_cells": 20,
+    "rag_cells": 20,
+    "agent_cells_initial": 18,
+    "missing_agent_questions": [
+      "hard inv-metrics",
+      "hard inv-methods"
+    ],
+    "grid_replay": "22 engine runs replayed successfully, including all 20 grid runs"
+  },
+  "port_fix_main": {
+    "parent_commit": "78fbb675c9e16f7931d9576894e1a38f20be4694",
+    "submodule_commit": "b962edd83c987efd1275ee535dd19bc4186e4ce3",
+    "verification": "remote main refs checked; submodule test suite 63 passed",
+    "ev3_run_revision": "4c8ccbff21ab4a5fd18ede8a93b73cb11c5749e2 with equivalent patch"
+  }
+}

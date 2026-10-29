@@ -1,0 +1,212 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 18,
+    "exit_status": "submitted",
+    "model_calls": 61,
+    "run_id": "rag-claude-s1-mixed.rag-hallucination",
+    "steps": 60,
+    "tokens": 1473634
+  },
+  "agent_answer": {
+    "concept_sha256": "73cf3207b6865b5ecec3c6c5491b55ee28f431de09d44a8531f9e510b620a7c1",
+    "kind": "table",
+    "notes": "The question is specifically about hallucination rate. The corpus contains 20 papers, but only 9 measure a hallucination metric (S001, S006, S007, S008, S010, S012, S016, S017, S018); the other 11 measure answer accuracy, not hallucination, and are therefore not directly on-topic. Of the 9 hallucination papers, 6 conclude RAG clearly reduces hallucinated content (S001, S006, S008, S016, S017, S018), 2 conclude RAG does not measurably reduce it (S007, S010), and 1 concludes RAG increases it (S012). So the corpus answer is mixed: RAG reduces hallucination in most measured cases but not uniformly. Supporting metric-definition claims: S001=claim-000010, S006=claim-000014, S007=claim-000015, S008=claim-000011, S010=claim-000012, S012=claim-000016, S016=claim-000013, S017=claim-000017, S018=claim-000018. Conclusion claims: S001=claim-000001, S006=claim-000002, S008=claim-000003, S016=claim-000004, S017=claim-000005, S018=claim-000006, S007=claim-000007, S010=claim-000008, S012=claim-000009.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Yes — retrieval augmentation clearly reduces hallucinated content in the answers (hallucination rate is lower under RAG than the no-retrieval baseline).",
+          "papers": [
+            "S001",
+            "S006",
+            "S008",
+            "S016",
+            "S017",
+            "S018"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "Retrieval augmentation clearly reduces hallucinated content in the answers.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "Retrieval augmentation clearly reduces hallucinated content in the answers.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S006"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "Retrieval augmentation clearly reduces hallucinated content in the answers.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S008"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "Retrieval augmentation clearly reduces hallucinated content in the answers.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S016"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "Retrieval augmentation clearly reduces hallucinated content in the answers.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S017"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "Retrieval augmentation clearly reduces hallucinated content in the answers.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S018"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "No measurable reduction — retrieval augmentation does not measurably reduce hallucinated content.",
+          "papers": [
+            "S007",
+            "S010"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "Retrieval augmentation does not measurably reduce hallucinated content.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S007"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "Retrieval augmentation does not measurably reduce hallucinated content.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S010"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "No — it increases hallucination; retrieval augmentation increases hallucinated content in the answers.",
+          "papers": [
+            "S012"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "Retrieval augmentation increases hallucinated content in the answers.",
+            "origin": "research",
+            "p": "concludes about hallucination rate under RAG",
+            "s": "Paper S012"
+          }
+        ],
+        "id": "r3"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Yes — retrieval augmentation clearly reduces hallucinated content in the answers (hallucination rate is lower under RAG than the no-retrieval baseline).\", \"papers\": [\"S001\", \"S006\", \"S008\", \"S016\", \"S017\", \"S018\"]}\n  fact: Paper S001 | concludes about hallucination rate under RAG | Retrieval augmentation clearly reduces hallucinated content in the answers.\n  fact: Paper S006 | concludes about hallucination rate under RAG | Retrieval augmentation clearly reduces hallucinated content in the answers.\n  fact: Paper S008 | concludes about hallucination rate under RAG | Retrieval augmentation clearly reduces hallucinated content in the answers.\n  fact: Paper S016 | concludes about hallucination rate under RAG | Retrieval augmentation clearly reduces hallucinated content in the answers.\n  fact: Paper S017 | concludes about hallucination rate under RAG | Retrieval augmentation clearly reduces hallucinated content in the answers.\n  fact: Paper S018 | concludes about hallucination rate under RAG | Retrieval augmentation clearly reduces hallucinated content in the answers.\nRow r2: {\"conclusion\": \"No measurable reduction — retrieval augmentation does not measurably reduce hallucinated content.\", \"papers\": [\"S007\", \"S010\"]}\n  fact: Paper S007 | concludes about hallucination rate under RAG | Retrieval augmentation does not measurably reduce hallucinated content.\n  fact: Paper S010 | concludes about hallucination rate under RAG | Retrieval augmentation does not measurably reduce hallucinated content.\nRow r3: {\"conclusion\": \"No — it increases hallucination; retrieval augmentation increases hallucinated content in the answers.\", \"papers\": [\"S012\"]}\n  fact: Paper S012 | concludes about hallucination rate under RAG | Retrieval augmentation increases hallucinated content in the answers.\nNotes: The question is specifically about hallucination rate. The corpus contains 20 papers, but only 9 measure a hallucination metric (S001, S006, S007, S008, S010, S012, S016, S017, S018); the other 11 measure answer accuracy, not hallucination, and are therefore not directly on-topic. Of the 9 hallucination papers, 6 conclude RAG clearly reduces hallucinated content (S001, S006, S008, S016, S017, S018), 2 conclude RAG does not measurably reduce it (S007, S010), and 1 concludes RAG increases it (S012). So the corpus answer is mixed: RAG reduces hallucination in most measured cases but not uniformly. Supporting metric-definition claims: S001=claim-000010, S006=claim-000014, S007=claim-000015, S008=claim-000011, S010=claim-000012, S012=claim-000016, S016=claim-000013, S017=claim-000017, S018=claim-000018. Conclusion claims: S001=claim-000001, S006=claim-000002, S008=claim-000003, S016=claim-000004, S017=claim-000005, S018=claim-000006, S007=claim-000007, S010=claim-000008, S012=claim-000009.",
+  "answer_text": "The answer reports that retrieval augmentation reduces the hallucination rate in six papers (S001, S006, S008, S016, S017, S018), shows no measurable reduction in two papers (S007, S010), and increases the hallucination rate in one paper (S012).",
+  "contradicting": [
+    "S012"
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 2,
+    "supporting": 6,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "d66a1f5d376013c53e9e8d3107fa22da336913af2e8c06fd03234b322ac90db7",
+    "input_tokens": 1693,
+    "key": "3ab35f8e46d282cd734ce7885c026fe5b9fbf49c2827eee1bb4b5cba97c16dee",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 233,
+    "prompt_sha256": "3ad9a499bb11aeb593a1ad05d5e020fcbaaccb326d3a2f1317f747d2f95aed2d",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S007",
+    "S010"
+  ],
+  "question": "Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?",
+  "question_id": "rag-hallucination",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "neutral",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S006",
+    "S008",
+    "S016",
+    "S017",
+    "S018"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

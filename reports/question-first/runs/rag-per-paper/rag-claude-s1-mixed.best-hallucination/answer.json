@@ -1,0 +1,371 @@
+{
+  "answer_text": "The method that achieves the lowest hallucination rate within each paper is as follows:\n\n*   **S001:** Chain-of-thought prompting (9.4%) [S001, 1023-2239]\n*   **S006:** Fine-tuned model (9.8%) [S006, 1367-2401]\n*   **S007:** Configuration that looks up supporting documents (0.399%) [S007, 2635-3784]\n*   **S008:** Retrieval-augmented generator (6.3%) [S008, 1995-3427]\n*   **S010:** RAG without reranking (23.1%) [S010, 957-2287]\n*   **S018:** Retrieval-augmented condition (16.3%) [S018, 2606-3739]\n\nNote: Papers S002, S003, S004, S005, S009, S011, S012, S013, S014, S015, S016, S017, S019, and S020 do not report hallucination rate as their primary metric in the provided passages (they report fact-level accuracy, answer accuracy, or other metrics), or the specific hallucination rate values are not explicitly listed in the provided text for comparison. For example, S012 mentions hallucination rate in the abstract but the results section provided does not list the specific values for the two conditions, only the conclusion that retrieval increases it. S016 mentions hallucination frequency but the results section is not provided in the passages. S017 mentions invented facts but the results section is not provided. Therefore, only the papers with explicit hallucination rate values in the results sections are listed above.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "start": 1023
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "start": 1367
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "start": 1995
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "start": 957
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "start": 2606
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "4fb5aa6bf7035f25337c0951327245acc9c7899403e54204b75b77da9e5febf1",
+    "input_tokens": 1500,
+    "key": "c17204ed120dad63912cb6979e3be1fe1c7d2a89b729600d0d811efa31e1e05f",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 141,
+    "prompt_sha256": "a1c4954150248fff31a8f6706cd0eb91ea320893e2d7f54164d32e952dffb9a4",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "model_call": {
+    "input_sha256": "01b264ffde270313e3dae41a98f3d5fd0956acd6b9e43034595aa60b231b0b7c",
+    "input_tokens": 10446,
+    "key": "902b6893dcd8283ad15f9a44d160fe10ca638b4f78523dc3e8da08f3e622f236",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 701,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the lowest hallucination rate within each paper?",
+  "question_id": "best-hallucination",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 7.16772,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 6.510731,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 2039,
+      "score": 2.771114,
+      "start": 1160
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 2.309756,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "score": 3.378472,
+      "start": 2532
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 3.119176,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 3.465922,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 2.871562,
+      "start": 2474
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 3.834991,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 3.024706,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 6.998653,
+      "start": 1367
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 6.452023,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 3.122428,
+      "start": 2635
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 3.115547,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "score": 6.004163,
+      "start": 1995
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 5.909893,
+      "start": 960
+    },
+    {
+      "document": "S009",
+      "end": 2316,
+      "score": 3.188851,
+      "start": 1270
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 2.94714,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 6.964102,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 6.706369,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 2419,
+      "score": 3.316704,
+      "start": 1086
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 3.274439,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 3.446743,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 3.099316,
+      "start": 2754
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 3.88195,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 4227,
+      "score": 3.714085,
+      "start": 2748
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 2.815113,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 2.773393,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 3.564332,
+      "start": 1067
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "score": 3.159785,
+      "start": 2509
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 5.153126,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 3649,
+      "score": 5.139424,
+      "start": 2667
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 3.378598,
+      "start": 1311
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "score": 3.328311,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "score": 6.352962,
+      "start": 2606
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "score": 5.791224,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 5.767086,
+      "start": 1944
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 2.600084,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 3.535444,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 3.432294,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S001",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "chain-of-thought"
+    },
+    {
+      "document": "S006",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S007",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S008",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S010",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S018",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [],
+  "winner": "rag",
+  "wins": {
+    "chain-of-thought": 1,
+    "fine-tuned": 1,
+    "rag": 3,
+    "rag-no-rerank": 1
+  }
+}

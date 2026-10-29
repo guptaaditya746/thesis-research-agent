@@ -1,0 +1,526 @@
+{
+  "answer_text": "The papers report the following evaluation metrics: hallucination rate (also referred to as hallucination frequency or the share of answers containing unsupported/invented statements), answer accuracy (also referred to as fact-level accuracy or the fraction of answers judged factually correct), BLEU, ROUGE-L, and latency.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 1023,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 2532,
+      "start": 1419
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "start": 1367
+    },
+    {
+      "document": "S007",
+      "end": 2635,
+      "start": 1427
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "start": 960
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "start": 1316
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "start": 1067
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "start": 1187
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "start": 0
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "answer accuracy",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BLEU",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "hallucination rate",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "latency",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "ROUGE-L",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "5a63010b7ff4ba24a2c20c5069ca10b99aa5c2dcba78e514b20896442d3dcf5a",
+    "input_tokens": 1068,
+    "key": "2db657f0b638c6f1eddbc93bb9be846e3889f962f778c8d43d02ef3d9b45f8b7",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 662,
+    "prompt_sha256": "5d35d46cdd8a386502a50fe86de4a80eb7a680f2c781244b484e86453856d146",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "36dbb636ff1a19a60178579a7685616ec9f179d8a9e93907def97c30fd8c5b46",
+    "input_tokens": 9946,
+    "key": "34b08d2cc1b566b1ba762e8dc35c8ce480c96c115591e8531e95ec931c9c4859",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 625,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which evaluation metrics do the papers report?",
+  "question_id": "inv-metrics",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 4.912796,
+      "start": 0
+    },
+    {
+      "document": "S001",
+      "end": 3050,
+      "score": 2.617348,
+      "start": 2239
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 2.309756,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 2039,
+      "score": 1.504121,
+      "start": 1160
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "score": 5.793793,
+      "start": 2532
+    },
+    {
+      "document": "S003",
+      "end": 2532,
+      "score": 2.127683,
+      "start": 1419
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 5.430279,
+      "start": 2474
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 3.884464,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 2.115312,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 2.070084,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 3291,
+      "score": 2.199086,
+      "start": 2401
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 2.144447,
+      "start": 1367
+    },
+    {
+      "document": "S007",
+      "end": 2635,
+      "score": 4.227544,
+      "start": 1427
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 3.668744,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "score": 3.566411,
+      "start": 1995
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 2.687166,
+      "start": 960
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 7.803705,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 2316,
+      "score": 4.21121,
+      "start": 1270
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 2.390295,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 2.084615,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 6.874232,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 2.499956,
+      "start": 2419
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 3.912286,
+      "start": 2754
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 2.013977,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 2.504757,
+      "start": 1316
+    },
+    {
+      "document": "S013",
+      "end": 4227,
+      "score": 2.306177,
+      "start": 2748
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 3.910031,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 1.462232,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 2.461707,
+      "start": 1067
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 2.089711,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 3649,
+      "score": 2.600642,
+      "start": 2667
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 2.35327,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 2.152015,
+      "start": 1311
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "score": 1.451796,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "score": 2.534616,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 2.501352,
+      "start": 1187
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 3.594322,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 3.198804,
+      "start": 1944
+    },
+    {
+      "document": "S020",
+      "end": 3674,
+      "score": 3.26968,
+      "start": 2739
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 2.324929,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "metric"
+}

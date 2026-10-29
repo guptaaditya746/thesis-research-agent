@@ -1,0 +1,799 @@
+{
+  "agreeing": [
+    "S010",
+    "S054",
+    "S083"
+  ],
+  "answer_text": "No, the authors' conclusions about hallucination do not agree with their reported results in several instances. Specifically, in [S004], the authors state that the retrieval-augmented model scores 3.2 percentage points lower than the no-retrieval baseline in hallucination frequency on GeoFacts, but the table shows the no-retrieval baseline at 21.5% and the retrieval-augmented model value is missing (marked 'see text'), making the specific numerical claim unverifiable from the table alone, though the text asserts a reduction. More clearly, in [S010], the conclusion states that adding retrieved documents leaves the amount of hallucinated content 'essentially unchanged,' which aligns with the reported 0.9 percentage point difference. However, in [S017], the text states the retrieval-augmented generator scores 8.1 percentage points *higher* than the no-retrieval baseline in hallucination frequency on MedAnswerSet (35.1% vs. 'see text' for RAG, but the text explicitly says 'higher'), yet the conclusion in [S058] (which appears to be a generic conclusion block possibly associated with other papers or a mismatched section) states 'Grounding the generator in retrieved documents leads to fewer hallucinated answers.' If [S058] is the conclusion for the study in [S017], it contradicts the result. Similarly, in [S054], the text states the retrieval-augmented generator scores 6.7 percentage points *higher* in unsupported-answer rate on SciFactBench, and the conclusion in [S054] correctly states 'leads to more hallucinated answers.' However, in [S083], the text states the RAG pipeline scores 8.7 percentage points *higher* in hallucination frequency on MedAnswerSet, and the conclusion in [S083] correctly states 'leads to more hallucinated answers.' \n\nThe most direct contradiction is found in [S004]. The text claims the retrieval-augmented model scores 3.2 percentage points *lower* in hallucination frequency on GeoFacts. The table lists the no-retrieval baseline at 21.5%. If the RAG model were 3.2 points lower, it would be 18.3%. However, the table entry for the RAG model on GeoFacts is 'see text'. While the text asserts a reduction, the table does not provide the number to verify it. \n\nA clearer contradiction is in [S010]. The conclusion says 'essentially unchanged' (0.9 point difference), which is consistent. \n\nLet's look at [S017] again. The text says 'scores 8.1 percentage points higher'. The conclusion in [S058] says 'leads to fewer hallucinated answers'. If [S058] is the conclusion for the paper containing [S017], they disagree. The paper ID for [S017] is not explicitly linked to [S058] in the prompt structure, but [S058] is a standalone conclusion block. \n\nLet's look for a paper where the conclusion and results are in the same passage or clearly linked. \n\nIn [S008], the text says 'scores 8.7 percentage points lower' on SciFactBench. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S009], the text says 'scores 3.8 percentage points lower' on LawFactQA. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S010], the text says 'scores 0.9 percentage points lower' on LawFactQA. The conclusion says 'essentially unchanged'. This agrees (0.9 is small). \n\nIn [S013], the text says 'scores 0.8 percentage points lower' in fact-level accuracy. The conclusion says 'essentially unchanged'. This agrees. \n\nIn [S014], the text says 'scores 31.7 percentage points lower' in hallucination rate. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S017], the text says 'scores 8.1 percentage points higher' in hallucination frequency. There is no conclusion in [S017]. \n\nIn [S024], the text says 'scores 0.9 percentage points lower' in hallucination frequency. There is no conclusion in [S024]. \n\nIn [S026], the text says 'scores 37.1 percentage points lower' in hallucination rate. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S027], the text says 'scores 14.4 percentage points higher' in fact-level accuracy. The conclusion says 'yields more accurate answers'. This agrees. \n\nIn [S029], the text says 'scores 8.4 percentage points lower' in hallucination rate. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S031], the text says 'scores 13.8 percentage points lower' in hallucination rate. There is no conclusion in [S031]. \n\nIn [S032], the text says 'scores 0.8 percentage points lower' in hallucination rate. The conclusion says 'essentially unchanged'. This agrees. \n\nIn [S041], the text says 'scores 11.6 percentage points lower' in hallucination frequency. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S043], the text says 'scores 0.9 percentage points lower' in fact-level accuracy. The conclusion says 'essentially unchanged'. This agrees. \n\nIn [S050], the text says 'scores 11.7 percentage points lower' in hallucination rate. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S051], the text says 'scores 10.2 percentage points lower' in hallucination frequency. There is no conclusion in [S051]. \n\nIn [S054], the text says 'scores 6.7 percentage points higher' in unsupported-answer rate. The conclusion says 'leads to more hallucinated answers'. This agrees. \n\nIn [S065], the text says 'scores 7.4 percentage points lower' in hallucination rate. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S077], the text says 'scores 13.1 percentage points lower' in hallucination frequency. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S083], the text says 'scores 8.7 percentage points higher' in hallucination frequency. The conclusion says 'leads to more hallucinated answers'. This agrees. \n\nIn [S084], the text says 'scores 8.8 percentage points lower' in hallucination rate. There is no conclusion in [S084]. \n\nIn [S085], the text says 'scores 13.6 percentage points lower' in hallucination frequency. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S088], the text says 'scores 9.2 percentage points lower' in hallucination frequency. There is no conclusion in [S088]. \n\nIn [S089], the text says 'scores 3.1 percentage points lower' in hallucination rate. The conclusion says 'leads to fewer hallucinated answers'. This agrees. \n\nIn [S092], the text says 'scores 6.1 percentage points higher' in hallucination frequency. There is no conclusion in [S092]. \n\nWait, look at [S004] again. The text says 'scores 3.2 percentage points lower'. The table shows 'no-retrieval baseline' 21.5% and 'retrieval-augmented model' 'see text'. The text asserts a reduction. \n\nIs there a case where the text says 'lower' but the table shows 'higher' or vice versa? \n\nIn [S017], the text says 'scores 8.1 percentage points higher'. The table shows 'no-retrieval baseline' 35.1% and 'retrieval-augmented generator' 'see text'. The text asserts an increase. \n\nIn [S054], the text says 'scores 6.7 percentage points higher'. The table shows 'no-retrieval baseline' 42.4% and 'retrieval-augmented generator' 'see text'. The text asserts an increase. The conclusion says 'more hallucinated answers'. \n\nIn [S083], the text says 'scores 8.7 percentage points higher'. The table shows 'parametric-only model' 30.4% and 'RAG pipeline' 'see text'. The text asserts an increase. The conclusion says 'more hallucinated answers'. \n\nIn [S092], the text says 'scores 6.1 percentage points higher'. The table shows 'vanilla LLM' 20.1% and 'RAG pipeline' 'see text'. The text asserts an increase. \n\nIn [S004], the text says 'scores 3.2 percentage points lower'. \n\nLet's check [S010] again. Text: 'scores 0.9 percentage points lower'. Table: 'closed-book model' 32.6%, 'retrieve-then-read model' 'see text'. Conclusion: 'essentially unchanged'. \n\nLet's check [S013]. Text: 'scores 0.8 percentage points lower' in fact-level accuracy. Table: 'no-retrieval baseline' 60.1%, 'retrieve-then-read model' 'see text'. Conclusion: 'essentially unchanged'. \n\nLet's check [S024]. Text: 'scores 0.9 percentage points lower' in hallucination frequency. Table: 'closed-book model' 44.6%, 'retrieval-augmented generator' 'see text'. \n\nLet's check [S032]. Text: 'scores 0.8 percentage points lower' in hallucination rate. Table: 'closed-book model' 32.2%, 'retrieval-augmented model' 'see text'. Conclusion: 'essentially unchanged'. \n\nLet's check [S043]. Text: 'scores 0.9 percentage points lower' in fact-level accuracy. Table: 'no-retrieval baseline' 41.5%, 'retrieval-augmented model' 'see text'. Conclusion: 'essentially unchanged'. \n\nLet's check [S089]. Text: 'scores 3.1 percentage points lower' in hallucination rate. Table: 'no-retrieval baseline' 14.6%, 'retrieve-then-read model' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S009]. Text: 'scores 3.8 percentage points lower' in hallucination frequency. Table: 'closed-book model' 43.9%, 'retrieval-augmented generator' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S008]. Text: 'scores 8.7 percentage points lower' in hallucination frequency. Table: 'parametric-only model' 43.9%, 'retrieval-augmented model' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S026]. Text: 'scores 37.1 percentage points lower' in hallucination rate. Table: 'parametric-only model' 42.7%, 'retrieval-augmented model' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S014]. Text: 'scores 31.7 percentage points lower' in hallucination rate. Table: 'parametric-only model' 40.4%, 'RAG pipeline' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S041]. Text: 'scores 11.6 percentage points lower' in hallucination frequency. Table: 'vanilla LLM' 23.7%, 'RAG pipeline' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S050]. Text: 'scores 11.7 percentage points lower' in hallucination rate. Table: 'no-retrieval baseline' 17.9%, 'retrieve-then-read model' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S065]. Text: 'scores 7.4 percentage points lower' in hallucination rate. Table: 'closed-book model' 43.1%, 'retrieve-then-read model' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S077]. Text: 'scores 13.1 percentage points lower' in hallucination frequency. Table: 'closed-book model' 30.5%, 'retrieval-augmented generator' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S085]. Text: 'scores 13.6 percentage points lower' in hallucination frequency. Table: 'vanilla LLM' 34.1%, 'retrieve-then-read model' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S031]. Text: 'scores 13.8 percentage points lower' in hallucination rate. Table: 'parametric-only model' 24.3%, 'retrieve-then-read model' 'see text'. \n\nLet's check [S084]. Text: 'scores 8.8 percentage points lower' in hallucination rate. Table: 'vanilla LLM' 18.9%, 'RAG pipeline' 'see text'. \n\nLet's check [S088]. Text: 'scores 9.2 percentage points lower' in hallucination frequency. Table: 'vanilla LLM' 31.7%, 'RAG pipeline' 'see text'. \n\nLet's check [S051]. Text: 'scores 10.2 percentage points lower' in hallucination frequency. Table: 'vanilla LLM' 26.7%, 'retrieval-augmented model' 'see text'. \n\nLet's check [S029]. Text: 'scores 8.4 percentage points lower' in hallucination rate. Table: 'parametric-only model' 22.7%, 'retrieval-augmented model' 'see text'. Conclusion: 'fewer hallucinated answers'. \n\nLet's check [S027]. Text: 'scores 14.4 percentage points higher' in fact-level accuracy. Table: 'no-retrieval baseline' 59.5%, 'retrieval-augmented model' 'see text'. Conclusion: 'more accurate answers'. \n\nLet's check [S054]. Text: 'scores 6.7 percentage points higher' in unsupported-answer rate. Table: 'no-retrieval baseline' 42.4%, 'retrieval-augmented generator' 'see text'. Conclusion: 'more hallucinated answers'. \n\nLet's check [S083]. Text: 'scores 8.7 percentage points higher' in hallucination frequency. Table: 'parametric-only model' 30.4%, 'RAG pipeline' 'see text'. Conclusion: 'more hallucinated answers'. \n\nLet's check [S092]. Text: 'scores 6.1 percentage points higher' in hallucination frequency. Table: 'vanilla LLM' 20.1%, 'RAG pipeline' 'see text'. \n\nLet's check [S017]. Text: 'scores 8.1 percentage points higher' in hallucination frequency. Table: 'no-retrieval baseline' 35.1%, 'retrieval-augmented generator' 'see text'. \n\nIn all cases where a conclusion is provided in the same passage as the results, the conclusion aligns with the direction of the change described in the text (e.g., 'lower' -> 'fewer', 'higher' -> 'more', 'small change' -> 'unchanged'). \n\nHowever, the question asks if the conclusions agree with the *reported results*. The 'reported results' are the numbers in the table. In many tables, the value for the retrieval-augmented model is 'see text'. The text provides the *difference* (e.g., '3.2 percentage points lower'). \n\nIf the text says '3.2 percentage points lower' and the baseline is 21.5%, the RAG model is 18.3%. \n\nIs there any discrepancy between the text description and the table numbers? \n\nIn [S004], the table shows 'no-retrieval baseline' 21.5% and 'RAG with random passages' 9.8%. The text says 'retrieval-augmented model scores 3.2 percentage points lower'. This implies RAG is 18.3%. The table does not contradict this, it just doesn",
+  "citations": [
+    {
+      "document": "S004",
+      "end": 3206,
+      "start": 1930
+    },
+    {
+      "document": "S010",
+      "end": 3217,
+      "start": 1775
+    },
+    {
+      "document": "S017",
+      "end": 3262,
+      "start": 2017
+    },
+    {
+      "document": "S054",
+      "end": 3299,
+      "start": 1818
+    },
+    {
+      "document": "S083",
+      "end": 3061,
+      "start": 1681
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "disagreeing": [],
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "8b745f112b9cb457d6e10a265fbb4f952dae8b1b16e6cee99ee5d9d1c20320cb",
+    "input_tokens": 4998,
+    "key": "ebefb95fc8a51a40fef393072f151ccbb3fab39d8b11d2cc8ef945d7ed716c8e",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 117,
+    "prompt_sha256": "7d81fef1ecf61007de8a01017fae6f822ec29ae30e973d77a4d0f683a5e8aca8",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "model_call": {
+    "input_sha256": "3611ec12644cf698e8e44190eac844847221e0370db9b78fa12743903a17371e",
+    "input_tokens": 55688,
+    "key": "2db4a2e5fca47b39a91adebb2149c8c37c234d2951401359b3f66e1f1cf6a884",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 8171,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 764,
+      "score": 3.250644,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 737,
+      "score": 3.297894,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 1840,
+      "score": 3.47014,
+      "start": 719
+    },
+    {
+      "document": "S004",
+      "end": 3206,
+      "score": 5.005188,
+      "start": 1930
+    },
+    {
+      "document": "S005",
+      "end": 1864,
+      "score": 5.218496,
+      "start": 768
+    },
+    {
+      "document": "S006",
+      "end": 1870,
+      "score": 4.264373,
+      "start": 783
+    },
+    {
+      "document": "S007",
+      "end": 752,
+      "score": 3.363039,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 2906,
+      "score": 4.945369,
+      "start": 1618
+    },
+    {
+      "document": "S009",
+      "end": 3107,
+      "score": 4.763077,
+      "start": 1694
+    },
+    {
+      "document": "S010",
+      "end": 3217,
+      "score": 4.550133,
+      "start": 1775
+    },
+    {
+      "document": "S011",
+      "end": 1673,
+      "score": 5.182956,
+      "start": 726
+    },
+    {
+      "document": "S012",
+      "end": 732,
+      "score": 3.279377,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 3061,
+      "score": 2.732524,
+      "start": 1665
+    },
+    {
+      "document": "S014",
+      "end": 2941,
+      "score": 4.392902,
+      "start": 1695
+    },
+    {
+      "document": "S015",
+      "end": 1934,
+      "score": 3.5378,
+      "start": 744
+    },
+    {
+      "document": "S016",
+      "end": 2068,
+      "score": 3.242253,
+      "start": 759
+    },
+    {
+      "document": "S017",
+      "end": 3262,
+      "score": 4.11627,
+      "start": 2017
+    },
+    {
+      "document": "S018",
+      "end": 765,
+      "score": 3.676777,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 763,
+      "score": 3.167556,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 730,
+      "score": 3.338632,
+      "start": 0
+    },
+    {
+      "document": "S021",
+      "end": 2087,
+      "score": 3.562898,
+      "start": 765
+    },
+    {
+      "document": "S022",
+      "end": 1850,
+      "score": 3.682991,
+      "start": 760
+    },
+    {
+      "document": "S023",
+      "end": 1678,
+      "score": 3.770796,
+      "start": 766
+    },
+    {
+      "document": "S024",
+      "end": 3465,
+      "score": 4.131736,
+      "start": 2004
+    },
+    {
+      "document": "S025",
+      "end": 1923,
+      "score": 4.127708,
+      "start": 757
+    },
+    {
+      "document": "S026",
+      "end": 3226,
+      "score": 4.68873,
+      "start": 1824
+    },
+    {
+      "document": "S027",
+      "end": 2911,
+      "score": 2.838368,
+      "start": 1614
+    },
+    {
+      "document": "S028",
+      "end": 780,
+      "score": 3.286537,
+      "start": 0
+    },
+    {
+      "document": "S029",
+      "end": 3249,
+      "score": 4.988947,
+      "start": 1814
+    },
+    {
+      "document": "S030",
+      "end": 747,
+      "score": 3.294099,
+      "start": 0
+    },
+    {
+      "document": "S031",
+      "end": 3284,
+      "score": 3.955011,
+      "start": 1922
+    },
+    {
+      "document": "S032",
+      "end": 3099,
+      "score": 4.865944,
+      "start": 1715
+    },
+    {
+      "document": "S033",
+      "end": 1492,
+      "score": 3.833685,
+      "start": 0
+    },
+    {
+      "document": "S034",
+      "end": 748,
+      "score": 3.646297,
+      "start": 0
+    },
+    {
+      "document": "S035",
+      "end": 1771,
+      "score": 2.406031,
+      "start": 751
+    },
+    {
+      "document": "S036",
+      "end": 1861,
+      "score": 3.783802,
+      "start": 762
+    },
+    {
+      "document": "S037",
+      "end": 758,
+      "score": 3.724819,
+      "start": 0
+    },
+    {
+      "document": "S038",
+      "end": 750,
+      "score": 3.654467,
+      "start": 0
+    },
+    {
+      "document": "S039",
+      "end": 772,
+      "score": 3.230643,
+      "start": 0
+    },
+    {
+      "document": "S040",
+      "end": 758,
+      "score": 3.200175,
+      "start": 0
+    },
+    {
+      "document": "S041",
+      "end": 3287,
+      "score": 4.614471,
+      "start": 1883
+    },
+    {
+      "document": "S042",
+      "end": 711,
+      "score": 3.322183,
+      "start": 0
+    },
+    {
+      "document": "S043",
+      "end": 3003,
+      "score": 2.689361,
+      "start": 1628
+    },
+    {
+      "document": "S044",
+      "end": 797,
+      "score": 3.72774,
+      "start": 0
+    },
+    {
+      "document": "S045",
+      "end": 754,
+      "score": 3.34119,
+      "start": 0
+    },
+    {
+      "document": "S046",
+      "end": 1893,
+      "score": 4.705276,
+      "start": 729
+    },
+    {
+      "document": "S047",
+      "end": 790,
+      "score": 3.263657,
+      "start": 0
+    },
+    {
+      "document": "S048",
+      "end": 752,
+      "score": 3.208454,
+      "start": 0
+    },
+    {
+      "document": "S049",
+      "end": 1710,
+      "score": 2.713064,
+      "start": 714
+    },
+    {
+      "document": "S050",
+      "end": 2974,
+      "score": 4.845834,
+      "start": 1688
+    },
+    {
+      "document": "S051",
+      "end": 2262,
+      "score": 5.632104,
+      "start": 793
+    },
+    {
+      "document": "S052",
+      "end": 767,
+      "score": 3.622035,
+      "start": 0
+    },
+    {
+      "document": "S053",
+      "end": 1819,
+      "score": 5.11607,
+      "start": 764
+    },
+    {
+      "document": "S054",
+      "end": 3299,
+      "score": 2.977727,
+      "start": 1818
+    },
+    {
+      "document": "S055",
+      "end": 775,
+      "score": 3.175637,
+      "start": 0
+    },
+    {
+      "document": "S056",
+      "end": 731,
+      "score": 3.642049,
+      "start": 0
+    },
+    {
+      "document": "S057",
+      "end": 1618,
+      "score": 2.789983,
+      "start": 697
+    },
+    {
+      "document": "S058",
+      "end": 3611,
+      "score": 2.980095,
+      "start": 3333
+    },
+    {
+      "document": "S059",
+      "end": 767,
+      "score": 3.289898,
+      "start": 0
+    },
+    {
+      "document": "S060",
+      "end": 1766,
+      "score": 4.229118,
+      "start": 777
+    },
+    {
+      "document": "S061",
+      "end": 756,
+      "score": 3.692628,
+      "start": 0
+    },
+    {
+      "document": "S062",
+      "end": 1849,
+      "score": 2.566552,
+      "start": 741
+    },
+    {
+      "document": "S063",
+      "end": 1668,
+      "score": 4.758744,
+      "start": 734
+    },
+    {
+      "document": "S064",
+      "end": 1860,
+      "score": 3.744841,
+      "start": 723
+    },
+    {
+      "document": "S065",
+      "end": 3265,
+      "score": 4.214586,
+      "start": 1859
+    },
+    {
+      "document": "S066",
+      "end": 749,
+      "score": 3.719944,
+      "start": 0
+    },
+    {
+      "document": "S067",
+      "end": 1899,
+      "score": 2.620941,
+      "start": 764
+    },
+    {
+      "document": "S068",
+      "end": 767,
+      "score": 3.700614,
+      "start": 0
+    },
+    {
+      "document": "S069",
+      "end": 782,
+      "score": 3.661086,
+      "start": 0
+    },
+    {
+      "document": "S070",
+      "end": 1803,
+      "score": 5.067105,
+      "start": 764
+    },
+    {
+      "document": "S071",
+      "end": 764,
+      "score": 3.325298,
+      "start": 0
+    },
+    {
+      "document": "S072",
+      "end": 751,
+      "score": 3.363039,
+      "start": 0
+    },
+    {
+      "document": "S073",
+      "end": 758,
+      "score": 3.712188,
+      "start": 0
+    },
+    {
+      "document": "S074",
+      "end": 1926,
+      "score": 2.797059,
+      "start": 708
+    },
+    {
+      "document": "S075",
+      "end": 1747,
+      "score": 3.639225,
+      "start": 739
+    },
+    {
+      "document": "S076",
+      "end": 763,
+      "score": 3.297894,
+      "start": 0
+    },
+    {
+      "document": "S077",
+      "end": 2887,
+      "score": 4.922987,
+      "start": 1631
+    },
+    {
+      "document": "S078",
+      "end": 752,
+      "score": 3.254785,
+      "start": 0
+    },
+    {
+      "document": "S079",
+      "end": 752,
+      "score": 3.28195,
+      "start": 0
+    },
+    {
+      "document": "S080",
+      "end": 721,
+      "score": 3.312888,
+      "start": 0
+    },
+    {
+      "document": "S081",
+      "end": 2106,
+      "score": 2.685433,
+      "start": 732
+    },
+    {
+      "document": "S082",
+      "end": 773,
+      "score": 3.214792,
+      "start": 0
+    },
+    {
+      "document": "S083",
+      "end": 3061,
+      "score": 4.819369,
+      "start": 1681
+    },
+    {
+      "document": "S084",
+      "end": 2103,
+      "score": 5.632104,
+      "start": 720
+    },
+    {
+      "document": "S085",
+      "end": 2916,
+      "score": 4.963119,
+      "start": 1643
+    },
+    {
+      "document": "S086",
+      "end": 800,
+      "score": 3.645551,
+      "start": 0
+    },
+    {
+      "document": "S087",
+      "end": 1884,
+      "score": 3.584146,
+      "start": 729
+    },
+    {
+      "document": "S088",
+      "end": 2152,
+      "score": 5.684046,
+      "start": 763
+    },
+    {
+      "document": "S089",
+      "end": 3063,
+      "score": 4.795756,
+      "start": 1670
+    },
+    {
+      "document": "S090",
+      "end": 767,
+      "score": 3.289898,
+      "start": 0
+    },
+    {
+      "document": "S091",
+      "end": 3901,
+      "score": 2.766336,
+      "start": 3319
+    },
+    {
+      "document": "S092",
+      "end": 3503,
+      "score": 4.035195,
+      "start": 2093
+    },
+    {
+      "document": "S093",
+      "end": 754,
+      "score": 3.297894,
+      "start": 0
+    },
+    {
+      "document": "S094",
+      "end": 778,
+      "score": 3.308993,
+      "start": 0
+    },
+    {
+      "document": "S095",
+      "end": 747,
+      "score": 3.238642,
+      "start": 0
+    },
+    {
+      "document": "S096",
+      "end": 754,
+      "score": 3.279377,
+      "start": 0
+    },
+    {
+      "document": "S097",
+      "end": 770,
+      "score": 3.266202,
+      "start": 0
+    },
+    {
+      "document": "S098",
+      "end": 768,
+      "score": 3.258399,
+      "start": 0
+    },
+    {
+      "document": "S099",
+      "end": 751,
+      "score": 3.331867,
+      "start": 0
+    },
+    {
+      "document": "S100",
+      "end": 763,
+      "score": 3.301462,
+      "start": 0
+    },
+    {
+      "document": "S101",
+      "end": 731,
+      "score": 3.338632,
+      "start": 0
+    },
+    {
+      "document": "S102",
+      "end": 1879,
+      "score": 4.204145,
+      "start": 790
+    },
+    {
+      "document": "S103",
+      "end": 740,
+      "score": 3.724819,
+      "start": 0
+    },
+    {
+      "document": "S104",
+      "end": 1742,
+      "score": 2.796485,
+      "start": 773
+    },
+    {
+      "document": "S105",
+      "end": 803,
+      "score": 3.212561,
+      "start": 0
+    },
+    {
+      "document": "S106",
+      "end": 753,
+      "score": 3.654467,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "score": 8.141219,
+      "start": 0
+    },
+    {
+      "document": "S108",
+      "end": 1992,
+      "score": 2.23547,
+      "start": 1194
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 11.022841,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1958,
+      "score": 2.569081,
+      "start": 1203
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "score": 7.976652,
+      "start": 1207
+    },
+    {
+      "document": "S112",
+      "end": 1928,
+      "score": 2.249394,
+      "start": 1166
+    }
+  ],
+  "settings": {
+    "k": 1,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": null,
+      "claim": "improves",
+      "direction": null,
+      "document": "S004",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S010",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S017",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S054",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S083",
+      "reason": null
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": [
+    "S004",
+    "S017"
+  ]
+}

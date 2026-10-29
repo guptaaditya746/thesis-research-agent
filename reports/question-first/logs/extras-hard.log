@@ -1,0 +1,215 @@
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 208, in rag_baseline
+    answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
+                   ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                seed=seed, output_type=CitedAnswer)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 173, in cached_reply
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 168, in ask_sync
+    return run_sync(ask(prompt, user_prompt, model=model, settings=settings, cache=cache, key=key,
+                        refresh=refresh, extra=extra, timeout_s=timeout_s))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 44, in run_sync
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 154, in ask
+    reply, messages = await on_model_loop(_attempt(prompt, user_prompt, model, settings, timeout_s))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 51, in on_model_loop
+    return await coro
+           ^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 129, in _attempt
+    raise err from None
+modelcall.call.ModelCallError: UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL rag-per-paper-k1 rag-factuality rag-tpl-hard-complex
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 208, in rag_baseline
+    answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
+                   ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                seed=seed, output_type=CitedAnswer)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 173, in cached_reply
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 168, in ask_sync
+    return run_sync(ask(prompt, user_prompt, model=model, settings=settings, cache=cache, key=key,
+                        refresh=refresh, extra=extra, timeout_s=timeout_s))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 44, in run_sync
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 154, in ask
+    reply, messages = await on_model_loop(_attempt(prompt, user_prompt, model, settings, timeout_s))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 51, in on_model_loop
+    return await coro
+           ^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 129, in _attempt
+    raise err from None
+modelcall.call.ModelCallError: UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL rag-per-paper-k1 rag-hallucination rag-tpl-hard-complex
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper-k1/rag-tpl-hard-complex.rag-latency/answer.json: label=mixed studies=14
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-latency.rag-per-paper-k1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-latency.rag-per-paper-k1/report.md
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 208, in rag_baseline
+    answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
+                   ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                seed=seed, output_type=CitedAnswer)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 173, in cached_reply
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 168, in ask_sync
+    return run_sync(ask(prompt, user_prompt, model=model, settings=settings, cache=cache, key=key,
+                        refresh=refresh, extra=extra, timeout_s=timeout_s))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 44, in run_sync
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 154, in ask
+    reply, messages = await on_model_loop(_attempt(prompt, user_prompt, model, settings, timeout_s))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 51, in on_model_loop
+    return await coro
+           ^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 129, in _attempt
+    raise err from None
+modelcall.call.ModelCallError: UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL rag-per-paper-k1 inv-metrics rag-tpl-hard-complex
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 218, in rag_baseline
+    reply, mapping = map_answer(cache, question, corpus.ids, mapping_text(answer, citations), model=model,
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                model_id=model_id, seed=seed, params=params)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 190, in map_answer
+    reply, call = cached_reply(cache, instructions, prompt, model=model, model_id=model_id, seed=seed,
+                  ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                               output_type=reply_type)
+                               ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 173, in cached_reply
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 168, in ask_sync
+    return run_sync(ask(prompt, user_prompt, model=model, settings=settings, cache=cache, key=key,
+                        refresh=refresh, extra=extra, timeout_s=timeout_s))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 44, in run_sync
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 154, in ask
+    reply, messages = await on_model_loop(_attempt(prompt, user_prompt, model, settings, timeout_s))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 51, in on_model_loop
+    return await coro
+           ^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 129, in _attempt
+    raise err from None
+modelcall.call.ModelCallError: UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL rag-per-paper-k1 inv-methods rag-tpl-hard-complex
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 208, in rag_baseline
+    answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
+                   ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                seed=seed, output_type=CitedAnswer)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 173, in cached_reply
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 168, in ask_sync
+    return run_sync(ask(prompt, user_prompt, model=model, settings=settings, cache=cache, key=key,
+                        refresh=refresh, extra=extra, timeout_s=timeout_s))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 44, in run_sync
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 154, in ask
+    reply, messages = await on_model_loop(_attempt(prompt, user_prompt, model, settings, timeout_s))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 51, in on_model_loop
+    return await coro
+           ^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 129, in _attempt
+    raise err from None
+modelcall.call.ModelCallError: UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL rag-per-paper-k1 inv-datasets rag-tpl-hard-complex
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper-k1/rag-tpl-hard-complex.cons-accuracy/answer.json: kind=consistency studies=7
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-accuracy.rag-per-paper-k1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-accuracy.rag-per-paper-k1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper-k1/rag-tpl-hard-complex.cons-hallucination/answer.json: kind=consistency studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-hallucination.rag-per-paper-k1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-hallucination.rag-per-paper-k1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper-k1/rag-tpl-hard-complex.best-accuracy/answer.json: kind=best winner=None studies=0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-accuracy.rag-per-paper-k1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-accuracy.rag-per-paper-k1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper-k1/rag-tpl-hard-complex.best-hallucination/answer.json: kind=best winner=None studies=4
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-hallucination.rag-per-paper-k1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-hallucination.rag-per-paper-k1/report.md

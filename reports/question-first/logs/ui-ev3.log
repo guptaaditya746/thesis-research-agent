@@ -1,0 +1,2133 @@
+INFO:     Started server process [2450969]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8080 (Press CTRL+C to quit)
+INFO:     127.0.0.1:47916 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48344 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48358 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55302 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40838 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40838 - "GET /assets/index-DoN7xNbU.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40850 - "GET /assets/index-ClDOqGzE.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40838 - "GET /assets/QuestionStep-DwRbSvNe.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40850 - "GET /assets/HomePage-3LGCG753.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40856 - "GET /assets/PageHeader-b_I5GK2o.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40888 - "GET /assets/label-DeJcY9eP.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40876 - "GET /assets/JobPanel-CP67Xs4_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40870 - "GET /assets/card-D7d6TqHR.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40838 - "GET /assets/format-CGibtobs.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40850 - "GET /assets/external-link-CK8UJQ1H.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40870 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40856 - "GET /assets/inter-latin-wght-normal-Dx4kXJAl.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40888 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40838 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40856 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40870 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40850 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40888 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40876 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59452 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42040 - "GET /assets/FlowPage-DZDw7Cz0.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47548 - "GET /assets/bits-DjI_wAZv.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47580 - "GET /assets/ProposalParts-hyZxIQr1.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47594 - "GET /assets/ArxivFetchDialog-BGoCFKis.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47564 - "GET /assets/ProtocolPanel-CZdElNFD.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /assets/EvidenceView-BP2Yj5g5.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42040 - "GET /assets/with-selector-B4l5pv5U.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47548 - "GET /assets/switch-DBAOW4GS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47564 - "GET /assets/PaperText-D8EF1y3h.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47580 - "GET /assets/chevron-right-Eqd21S3-.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47594 - "GET /assets/EvidenceView-BnuhLJ6X.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42040 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47594 - "GET /api/ev/protocols/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /assets/RunsPage-BxwXhNew.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47618 - "GET /assets/CallSheet-H2y6f4uJ.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /assets/RunPage-DQHbVUvy.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /api/ev/runs/check~check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47618 - "GET /api/ev/runs/check~check/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47602 - "GET /api/ev/runs/check~check/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39288 - "GET /api/ev/corpora/rag-claude-s1-mixed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54854 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37340 - "GET /api/ev/runs/check~check/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37356 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37366 - "GET /api/ev/runs/check~check/trace?after=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37366 - "GET /api/ev/runs/check~check/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55888 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55888 - "GET /api/ev/runs/check~check/trace?after=121 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37064 - "GET /api/ev/runs/check~check/calls/t000082 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37064 - "GET /api/ev/runs/check~check/calls/t000088 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37064 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37064 - "GET /api/ev/runs/check~check/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36062 - "GET /api/ev/runs/check~check/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36062 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59686 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53488 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41978 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41980 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53840 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56340 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43200 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39194 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57994 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53812 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37132 - "GET /runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37132 - "GET /assets/index-DoN7xNbU.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /assets/index-ClDOqGzE.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /assets/RunsPage-BxwXhNew.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37132 - "GET /assets/format-CGibtobs.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37166 - "GET /assets/bits-DjI_wAZv.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37154 - "GET /assets/PageHeader-b_I5GK2o.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37180 - "GET /assets/switch-DBAOW4GS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37182 - "GET /assets/label-DeJcY9eP.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37132 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37180 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37166 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37154 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /assets/ScoresPage-lXzZia-C.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37154 - "GET /assets/card-D7d6TqHR.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /assets/ReportPage-DhuizCmM.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37180 - "GET /assets/with-selector-B4l5pv5U.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37166 - "GET /assets/ScoreCharts-D6PeCSrU.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37166 - "GET /api/ev/scores/reports/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42050 - "GET /assets/JobsPage-BslIoQvS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42066 - "GET /assets/JobPanel-CP67Xs4_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42082 - "GET /assets/external-link-CK8UJQ1H.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42066 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42066 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42082 - "GET /assets/ArxivFetchDialog-BGoCFKis.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42050 - "GET /assets/CorporaPage-DfB8p5uY.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42082 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42066 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42082 - "GET /assets/ProtocolsPage-DnQ6hqUZ.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42082 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42066 - "GET /api/ev/protocols HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42082 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51438 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37124 - "POST /api/ev/jobs/fetch HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:37124 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37124 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37140 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41094 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41094 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41094 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41094 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41094 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41094 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56684 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37150 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41094 - "GET /api/ev/jobs/20261028T071420-fetch-c2a6b1/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46800 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33198 - "GET /api/ev/protocols HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33204 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33198 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33198 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33198 - "POST /api/ev/jobs/fetch HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:33198 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41926 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36130 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58868 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58874 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58820 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58856 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58832 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58846 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59480 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59476 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43830 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43830 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43830 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59402 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37318 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37330 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43836 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42026 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37406 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48264 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48264 - "GET /api/ev/jobs/20261028T071514-fetch-150d19 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48264 - "GET /api/ev/jobs/20261028T071514-fetch-150d19/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54284 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54292 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54292 - "GET /assets/CorpusPage-DdMXJqXa.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54292 - "GET /api/ev/corpora/arxiv-world-models-20261028 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54284 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39002 - "GET /assets/PaperText-D8EF1y3h.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39014 - "GET /assets/CorpusPaperPage-DNcS5Ly8.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39014 - "GET /api/ev/corpora/arxiv-world-models-20261028/papers/2503.06669v5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57858 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34050 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53696 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54960 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51722 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44222 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41874 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36226 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35124 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46332 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56456 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38838 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48916 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57700 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57700 - "GET /runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57700 - "GET /assets/index-DoN7xNbU.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57702 - "GET /assets/index-ClDOqGzE.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57702 - "GET /assets/format-CGibtobs.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57700 - "GET /assets/RunsPage-BxwXhNew.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58982 - "GET /assets/bits-DjI_wAZv.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58990 - "GET /assets/PageHeader-b_I5GK2o.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59006 - "GET /assets/label-DeJcY9eP.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57702 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59014 - "GET /assets/switch-DBAOW4GS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58982 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58990 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57702 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57700 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51680 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51680 - "GET /assets/JobsPage-BslIoQvS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51692 - "GET /assets/JobPanel-CP67Xs4_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51696 - "GET /assets/card-D7d6TqHR.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51710 - "GET /assets/external-link-CK8UJQ1H.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51692 - "GET /assets/CorporaPage-DfB8p5uY.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51680 - "GET /assets/ArxivFetchDialog-BGoCFKis.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51692 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51680 - "GET /assets/FlowPage-DZDw7Cz0.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51692 - "GET /assets/PaperText-D8EF1y3h.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34132 - "GET /assets/ProtocolPanel-CZdElNFD.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /assets/EvidenceView-BP2Yj5g5.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51680 - "GET /assets/ProposalParts-hyZxIQr1.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57506 - "GET /assets/with-selector-B4l5pv5U.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57874 - "GET /assets/chevron-right-Eqd21S3-.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51692 - "GET /assets/QuestionStep-DwRbSvNe.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34132 - "GET /assets/EvidenceView-BnuhLJ6X.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /api/ev/questions/best-accuracy HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51692 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51680 - "GET /api/ev/protocols/best-accuracy HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /assets/HomePage-3LGCG753.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51692 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34132 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51680 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /api/ev/protocols/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34124 - "GET /assets/ProtocolPage-DY12clOV.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44418 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44418 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44424 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44428 - "GET /api/ev/protocols/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44438 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48834 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48834 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48842 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48842 - "GET /assets/CorpusPage-DdMXJqXa.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48834 - "GET /api/ev/corpora/arxiv-world-models-20261028 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48842 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48842 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37984 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38002 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38006 - "GET /api/ev/run-group?source=repo&name=inv-datasets&extractors=cascade&strategy=gaps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38010 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38000 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38018 - "POST /api/ev/jobs/run HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:38018 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33348 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:33348 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38018 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33348 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:33342 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33348 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33348 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38018 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:33348 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33348 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38018 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37308 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580/log?lines=200 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34998 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33342 - "GET /api/ev/jobs/20261028T072657-run-d46580 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34994 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34928 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47376 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47384 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52556 - "GET /assets/RunPage-DQHbVUvy.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52564 - "GET /assets/CallSheet-H2y6f4uJ.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52556 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52564 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52556 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47384 - "GET /api/ev/corpora/arxiv-world-models-20261028 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52556 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50988 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/trace?after=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50988 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/calls/t000012 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52188 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52178 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52182 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41826 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41826 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41826 - "GET /assets/RunPaperPage-Ba2vhmJ7.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46976 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/papers/2503.06669v5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41826 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37952 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34606 - "GET /api/ev/runs/inv-datasets-cascade-gaps~arxiv-world-models-20261028/calls/t000001 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34606 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34614 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34618 - "GET /api/ev/protocols/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34628 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34618 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54322 - "POST /api/ev/jobs/propose HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:54322 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54342 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54354 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33794 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33794 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33794 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33794 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54354 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33794 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59798 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/jobs/20261028T072926-propose-7b4721/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33684 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50114 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /assets/ProposalPage-DHcGLGZL.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54326 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35786 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59578 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59544 - "POST /api/ev/proposals/arhix-world-models/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59554 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59592 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59578 - "GET /api/ev/protocols/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59600 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59544 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59564 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37416 - "GET /assets/ProtocolsPage-DnQ6hqUZ.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37416 - "GET /api/ev/protocols HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37416 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32970 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53230 - "GET /api/ev/protocols HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53234 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53234 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53230 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53246 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45680 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45704 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45696 - "GET /api/ev/protocols/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45708 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45704 - "POST /api/ev/proposals/arhix-world-models/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45680 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45696 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43796 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43796 - "POST /api/ev/proposals/arhix-world-models/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44480 - "PUT /api/ev/proposals/arhix-world-models/decisions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44480 - "GET /api/ev/proposals/arhix-world-models HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44492 - "POST /api/ev/proposals/arhix-world-models/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44492 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44508 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39594 - "GET /api/ev/run-group?source=repo&name=inv-datasets&extractors=cascade&strategy=gaps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39606 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39602 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39602 - "POST /api/ev/jobs/run HTTP/1.1" 202 Accepted
+INFO:     127.0.0.1:39602 - "GET /api/ev/jobs/20261028T073255-run-ac54f2/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39616 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39622 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:39622 - "GET /api/ev/jobs/20261028T073255-run-ac54f2/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39622 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39602 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:39622 - "GET /api/ev/jobs/20261028T073255-run-ac54f2/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39622 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39602 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:39616 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33366 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33378 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33358 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33378 - "GET /api/ev/run-group?source=repo&name=inv-datasets&extractors=cascade&strategy=gaps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33378 - "GET /api/ev/jobs/20261028T073255-run-ac54f2/log?lines=12 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33452 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33414 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33424 - "GET /api/ev/questions/inv-datasets HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33452 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33414 - "GET /api/ev/run-group?source=repo&name=inv-datasets&extractors=cascade&strategy=gaps HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33440 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33440 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57178 - "GET /api/ev/corpora/arxiv-world-models-20261028 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33440 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa/trace?after=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51540 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49668 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56496 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48762 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49152 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47792 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44336 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44388 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44324 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44388 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44336 - "GET /api/ev/corpora/arxiv-world-models-20261028 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44346 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44372 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44362 - "GET /api/ev/runs/inv-datasets-cascade-gaps~aa HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45332 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33194 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41736 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38124 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38110 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38120 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38094 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38106 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43904 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49728 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51362 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50194 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35104 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35118 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39754 - "GET /runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39754 - "GET /assets/index-DoN7xNbU.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39762 - "GET /assets/index-ClDOqGzE.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39754 - "GET /assets/format-CGibtobs.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39762 - "GET /assets/RunsPage-BxwXhNew.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39776 - "GET /assets/switch-DBAOW4GS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39788 - "GET /assets/label-DeJcY9eP.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39796 - "GET /assets/bits-DjI_wAZv.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39800 - "GET /assets/PageHeader-b_I5GK2o.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39762 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39754 - "GET /assets/inter-latin-wght-normal-Dx4kXJAl.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39776 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39796 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39788 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35908 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47974 - "GET /assets/ArxivFetchDialog-BGoCFKis.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47980 - "GET /assets/CorporaPage-DfB8p5uY.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47986 - "GET /assets/card-D7d6TqHR.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48002 - "GET /assets/JobPanel-CP67Xs4_.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48018 - "GET /assets/external-link-CK8UJQ1H.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48002 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47974 - "GET /api/ev/corpora HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39274 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34860 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57676 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39800 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39800 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37770 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42290 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34272 - "GET /assets/RunPage-DQHbVUvy.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34298 - "GET /assets/with-selector-B4l5pv5U.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34288 - "GET /assets/EvidenceView-BP2Yj5g5.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34278 - "GET /assets/CallSheet-H2y6f4uJ.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34326 - "GET /assets/chevron-right-Eqd21S3-.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34312 - "GET /assets/PaperText-D8EF1y3h.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34272 - "GET /assets/ProtocolPanel-CZdElNFD.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34298 - "GET /assets/EvidenceView-BnuhLJ6X.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34288 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52886 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44166 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49726 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54536 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45510 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49710 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49710 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49726 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49710 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49726 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36346 - "GET /api/ev/corpora/rag-claude-s1-mixed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36372 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54960 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44532 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48656 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51508 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39674 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35852 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57362 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57114 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45366 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/trace?after=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45366 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45366 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/calls/a18bfbefd9fa39ddcf89d6ea16ffbc17c0ffb55432634f7bce257040aa393d95 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45366 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/calls/02ca2ea07c44666b8824aa355d9233fbe0b4cff0d23b987b2b4f5618beb5c8c6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45366 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45402 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47210 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/trace?after=473 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47210 - "GET /assets/RunPaperPage-Ba2vhmJ7.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47224 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47210 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/papers/S001 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 102, in ev_run_paper
+    return files.run_paper(run_id, document)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 652, in run_paper
+    items=items, study=Study.model_validate(study) if study else None,
+                       ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/main.py", line 790, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        obj,
+        ^^^^
+    ...<5 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Study
+direction
+  Field required [type=missing, input_value={'document': 'S001', 'rea...er': 'chain-of-thought'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/missing
+INFO:     127.0.0.1:47224 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/papers/S001 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 102, in ev_run_paper
+    return files.run_paper(run_id, document)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 652, in run_paper
+    items=items, study=Study.model_validate(study) if study else None,
+                       ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/main.py", line 790, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        obj,
+        ^^^^
+    ...<5 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Study
+direction
+  Field required [type=missing, input_value={'document': 'S001', 'rea...er': 'chain-of-thought'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/missing
+INFO:     127.0.0.1:47510 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/papers/S001 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 102, in ev_run_paper
+    return files.run_paper(run_id, document)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 652, in run_paper
+    items=items, study=Study.model_validate(study) if study else None,
+                       ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/main.py", line 790, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        obj,
+        ^^^^
+    ...<5 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Study
+direction
+  Field required [type=missing, input_value={'document': 'S001', 'rea...er': 'chain-of-thought'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/missing
+INFO:     127.0.0.1:47524 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/papers/S001 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 102, in ev_run_paper
+    return files.run_paper(run_id, document)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 652, in run_paper
+    items=items, study=Study.model_validate(study) if study else None,
+                       ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/main.py", line 790, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        obj,
+        ^^^^
+    ...<5 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Study
+direction
+  Field required [type=missing, input_value={'document': 'S001', 'rea...er': 'chain-of-thought'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/missing
+INFO:     127.0.0.1:47536 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/papers/S001 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 102, in ev_run_paper
+    return files.run_paper(run_id, document)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 652, in run_paper
+    items=items, study=Study.model_validate(study) if study else None,
+                       ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/main.py", line 790, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        obj,
+        ^^^^
+    ...<5 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Study
+direction
+  Field required [type=missing, input_value={'document': 'S001', 'rea...er': 'chain-of-thought'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/missing
+INFO:     127.0.0.1:35478 - "GET /api/ev/runs/best-hallucination-cascade-gaps~rag-claude-s1-mixed/papers/S001 HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 102, in ev_run_paper
+    return files.run_paper(run_id, document)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 652, in run_paper
+    items=items, study=Study.model_validate(study) if study else None,
+                       ~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/main.py", line 790, in model_validate
+    return cls.__pydantic_validator__.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        obj,
+        ^^^^
+    ...<5 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for Study
+direction
+  Field required [type=missing, input_value={'document': 'S001', 'rea...er': 'chain-of-thought'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/missing
+INFO:     127.0.0.1:35480 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34938 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34642 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56280 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34916 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34916 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59790 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59790 - "GET /assets/inter-greek-wght-normal-CkhJZR-_.woff2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39820 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39816 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39834 - "GET /api/ev/corpora/rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39816 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/papers/S013 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35440 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49522 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43368 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33214 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52482 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45830 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51518 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39484 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59306 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40348 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49638 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53448 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53448 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/calls/t000259 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53448 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/calls/t000260 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52742 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52742 - "GET /assets/ScoresPage-lXzZia-C.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52742 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52742 - "GET /assets/ScoreCharts-D6PeCSrU.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50920 - "GET /assets/ReportPage-DhuizCmM.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52742 - "GET /api/ev/scores/reports/rag-claude-s1-mixed~best-accuracy HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52198 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41240 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47466 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34872 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34872 - "GET /api/ev/scores HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47412 - "GET /api/ev/scores/reports/check HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43500 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44384 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33978 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43500 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35260 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35370 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51150 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38744 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35154 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42852 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56620 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53950 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52646 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45550 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34032 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59450 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42354 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42354 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35236 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35232 - "GET /api/ev/corpora/rag-claude-s1-mixed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42354 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36448 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57724 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40066 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49704 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40666 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37948 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50928 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40494 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36754 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46892 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/papers/S016 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46892 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53496 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55812 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54236 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36166 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46440 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34898 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36084 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34324 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51944 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42770 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39154 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51992 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51992 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/papers/S001 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33598 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33598 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50528 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38552 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33522 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47870 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51788 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37080 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37808 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37822 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/trace?after=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56554 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54514 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54514 - "GET /api/ev/runs/inv-metrics-cascade-gaps~rag-claude-s1-mixed/papers/S012 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39500 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50168 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55724 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53622 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44516 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59444 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50154 - "GET /api/ev/runs HTTP/1.1" 200 OK
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 98, in ev_run
+    return files.run(run_id)
+           ~~~~~~~~~^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 605, in run
+    answer=EV_ANSWER.validate_python(answer) if isinstance(answer, dict) else None,
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/type_adapter.py", line 410, in validate_python
+    return self.validator.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        object,
+        ^^^^^^^
+    ...<6 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 20 validation errors for tagged-union[EffectAnswer,InventoryAnswer,ConsistencyAnswer,BestAnswer,UnknownAnswer]
+consistency.studies.0.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.1.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.2.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.3.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.4.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.5.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.6.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.7.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.8.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.9.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.10.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.11.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.12.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.13.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.14.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.15.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.16.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.17.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.18.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.19.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+INFO:     127.0.0.1:41966 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40230 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51972 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51294 - "GET /api/ev/runs/cons-hallucination-cascade-gaps~rag-claude-s1-mixed HTTP/1.1" 500 Internal Server Error
+ERROR:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/applications.py", line 1216, in __call__
+    await super().__call__(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/applications.py", line 96, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/guard.py", line 65, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/routing.py", line 676, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2786, in app
+    await route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1817, in handle
+    await self.original_router.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 2869, in handle
+    await included_router._handle_selected(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+    await original_route.handle(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 1308, in handle
+    await effective_context.app(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 165, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 151, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 727, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+    return await run_in_threadpool(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+        _run_sync_endpoint, function=dependant.call, arguments=values
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/to_thread.py", line 65, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        func, args, abandon_on_cancel=abandon_on_cancel, limiter=limiter
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+    result = context.run(func, *args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/fastapi/telemetry/_api.py", line 244, in _run_sync_endpoint
+    return function(**arguments)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evapi.py", line 98, in ev_run
+    return files.run(run_id)
+           ~~~~~~~~~^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/webapp/evfiles.py", line 605, in run
+    answer=EV_ANSWER.validate_python(answer) if isinstance(answer, dict) else None,
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/.venv/lib/python3.13/site-packages/pydantic/type_adapter.py", line 410, in validate_python
+    return self.validator.validate_python(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        object,
+        ^^^^^^^
+    ...<6 lines>...
+        by_name=by_name,
+        ^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 20 validation errors for tagged-union[EffectAnswer,InventoryAnswer,ConsistencyAnswer,BestAnswer,UnknownAnswer]
+consistency.studies.0.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.1.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.2.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.3.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.4.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.5.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.6.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.7.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.8.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.9.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.10.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.11.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.12.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.13.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='worsens', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.14.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.15.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.16.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.17.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='improves', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.18.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+consistency.studies.19.claim
+  Input should be 'supports', 'contradicts', 'neutral' or 'undetermined' [type=literal_error, input_value='no_effect', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.14/v/literal_error
+INFO:     127.0.0.1:44590 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44614 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44666 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44656 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44618 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55268 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48076 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59310 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35274 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44896 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44642 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36846 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36846 - "GET /assets/ProtocolsPage-DnQ6hqUZ.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36846 - "GET /api/ev/protocols HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36862 - "GET /api/ev/proposals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54726 - "GET /assets/ProtocolPage-DY12clOV.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54726 - "GET /api/ev/protocols/cons-accuracy HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54726 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45854 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52544 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54710 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44238 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54726 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43986 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56502 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48286 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44236 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44236 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38732 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38746 - "GET /api/ev/corpora/rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38746 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57728 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36626 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59708 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59708 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33672 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/trace?after=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33672 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/calls/5c1bd6e232b0c78c91e9fcd6fd1b92a0fff4c3a4b41617c6e6273e602b73d2ab HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33672 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39490 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39490 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39626 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43820 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43820 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43820 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36438 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60728 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53788 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34042 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58456 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45918 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48376 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40502 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56136 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60064 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60064 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/papers/S075 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59682 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60862 - "GET /api/ev/corpora/rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60878 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60862 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60862 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/trace?after=2549 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39882 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39894 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39892 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39886 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49402 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40938 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58228 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60890 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41114 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41922 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37228 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37228 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/papers/S010 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37228 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60474 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48116 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48142 - "GET /api/ev/corpora/rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53670 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53670 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54802 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/trace?after=2549 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54802 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54802 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55166 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55168 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/trace?after=2549 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55166 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56016 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38244 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56020 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48128 - "GET /api/ev/runs/cascade-gaps~rag-tpl-hard-complex HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48128 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34236 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60110 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45712 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52948 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58720 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48792 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41850 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38468 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44294 - "GET /runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44294 - "GET /assets/index-DoN7xNbU.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44298 - "GET /assets/index-ClDOqGzE.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44298 - "GET /assets/RunsPage-BxwXhNew.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44294 - "GET /assets/format-CGibtobs.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44314 - "GET /assets/bits-DjI_wAZv.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44326 - "GET /assets/label-DeJcY9eP.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44322 - "GET /assets/PageHeader-b_I5GK2o.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44342 - "GET /assets/switch-DBAOW4GS.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44298 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44294 - "GET /api/ev/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44326 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44314 - "GET /api/ev/questions HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39248 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47018 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34884 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46542 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33804 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48572 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44322 - "GET /api/ev/runs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44322 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60330 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48666 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42276 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51442 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56522 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60910 - "GET /assets/RunPage-DQHbVUvy.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60926 - "GET /assets/CallSheet-H2y6f4uJ.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60944 - "GET /assets/with-selector-B4l5pv5U.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60934 - "GET /assets/EvidenceView-BP2Yj5g5.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60948 - "GET /assets/card-D7d6TqHR.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60954 - "GET /assets/PaperText-D8EF1y3h.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60910 - "GET /assets/ProtocolPanel-CZdElNFD.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60926 - "GET /assets/chevron-right-Eqd21S3-.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60944 - "GET /assets/external-link-CK8UJQ1H.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60910 - "GET /assets/EvidenceView-BnuhLJ6X.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60934 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51568 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52280 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55372 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47438 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34790 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58132 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60910 - "GET /api/ev/runs/best-accuracy-llm-only~rag-claude-s1-mixed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60910 - "GET /api/ev/runs/best-accuracy-llm-only~rag-claude-s1-mixed/graph HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60460 - "GET /api/ev/runs/best-accuracy-llm-only~rag-claude-s1-mixed/protocol HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60452 - "GET /api/ev/corpora/rag-claude-s1-mixed HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56486 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34168 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42410 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36242 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39284 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43816 - "GET /api/ev/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50468 - "GET /api/ev/jobs HTTP/1.1" 200 OK

@@ -1,0 +1,176 @@
+{
+  "answer_text": "The method with the lowest hallucination rate in each paper is:\n- In [S001], the chain-of-thought prompting condition achieves the lowest hallucination rate at 9.4% [S001, 1023-2239].\n- In [S006], the fine-tuned model achieves the lowest hallucination rate at 9.8% [S006, 1367-2401].\n- In [S010], the RAG without reranking condition achieves the lowest hallucination rate at 23.1% [S010, 957-2287].\n- In [S018], condition R achieves the lowest hallucination rate at 16.3% [S018, 2606-3739].\n- In [S008], condition R achieves the lowest hallucination rate at 6.3% [S008, 1995-3427].",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "start": 1023
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "start": 1367
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "start": 957
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "start": 2606
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "start": 1995
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "d04baf4de9e59c9b41efcd71db0c0449aede1d649302945c0c2c431454bc6ed8",
+    "input_tokens": 1262,
+    "key": "3cc1e6d8e26cb05da3a9cd84b9404d33b501c1650d84d46f122f6c54af606409",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 118,
+    "prompt_sha256": "a1c4954150248fff31a8f6706cd0eb91ea320893e2d7f54164d32e952dffb9a4",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 2,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "model_call": {
+    "input_sha256": "0dfa52fd66e8df15aca5a7c4e419788ccd59774f07e60c461f1b42dc88a5307d",
+    "input_tokens": 2116,
+    "key": "1ce1567b05be296eadff192248847a510f03c1e185444a06e61b44b925a84592",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 454,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 2,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the lowest hallucination rate within each paper?",
+  "question_id": "best-hallucination",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 7.16772,
+      "start": 1023
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 6.998653,
+      "start": 1367
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 6.964102,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 6.706369,
+      "start": 957
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 6.510731,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 6.452023,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "score": 6.352962,
+      "start": 2606
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "score": 6.004163,
+      "start": 1995
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S001",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "chain-of-thought"
+    },
+    {
+      "document": "S006",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S008",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S010",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S018",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [
+    "chain-of-thought",
+    "fine-tuned",
+    "rag-no-rerank"
+  ],
+  "winner": null,
+  "wins": {
+    "chain-of-thought": 1,
+    "fine-tuned": 1,
+    "rag-no-rerank": 1
+  }
+}

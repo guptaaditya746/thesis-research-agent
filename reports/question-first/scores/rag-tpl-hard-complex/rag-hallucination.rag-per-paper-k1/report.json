@@ -1,0 +1,1135 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-tpl-hard-complex",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "corpus_name": "rag-tpl-hard-complex",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.2203,
+        "low": 0.0508,
+        "method": "BCa",
+        "n_rows": 59,
+        "point": 0.1186,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "effect",
+  "levels": [
+    "complex"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?",
+  "question_id": "rag-hallucination",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "confusion": [
+        {
+          "expected": "contradicts",
+          "given": "contradicts",
+          "n": 3
+        },
+        {
+          "expected": "contradicts",
+          "given": "undetermined",
+          "n": 11
+        },
+        {
+          "expected": "neutral",
+          "given": "neutral",
+          "n": 1
+        },
+        {
+          "expected": "neutral",
+          "given": "undetermined",
+          "n": 6
+        },
+        {
+          "expected": "supports",
+          "given": "supports",
+          "n": 3
+        },
+        {
+          "expected": "supports",
+          "given": "undetermined",
+          "n": 35
+        },
+        {
+          "expected": "undetermined",
+          "given": "contradicts",
+          "n": 1
+        },
+        {
+          "expected": "undetermined",
+          "given": "neutral",
+          "n": 1
+        },
+        {
+          "expected": "undetermined",
+          "given": "supports",
+          "n": 2
+        },
+        {
+          "expected": "undetermined",
+          "given": "undetermined",
+          "n": 49
+        }
+      ],
+      "errors": [],
+      "expected_label": "mixed",
+      "flags": null,
+      "label": "mixed",
+      "label_correct": true,
+      "rows": [
+        {
+          "accuracy_answered": 1.0,
+          "citations": 11,
+          "completeness": 0.1186,
+          "determined": 59,
+          "direction_accuracy": 0.1186,
+          "direction_accuracy_all_papers": 0.5,
+          "level": "all",
+          "overlap": 0.8182,
+          "studies": 112,
+          "traceability": 0.8182
+        },
+        {
+          "accuracy_answered": 1.0,
+          "citations": 11,
+          "completeness": 0.1186,
+          "determined": 59,
+          "direction_accuracy": 0.1186,
+          "direction_accuracy_all_papers": 0.5,
+          "level": "complex",
+          "overlap": 0.8182,
+          "studies": 112,
+          "traceability": 0.8182
+        }
+      ],
+      "studies": [
+        {
+          "correct": false,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "supports",
+          "level": "complex",
+          "paper": "S001",
+          "study": "S001"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S002",
+          "study": "S002"
+        },
+        {
+          "correct": false,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "contradicts",
+          "level": "complex",
+          "paper": "S003",
+          "study": "S003"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "complex",
+          "paper": "S004",
+          "study": "S004"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "complex",
+          "paper": "S005",
+          "study": "S005"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S006",
+          "study": "S006"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "supports",
+          "given": "supports",
+          "level": "complex",
+          "paper": "S007",
+          "study": "S007"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S008",
+          "study": "S008"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S009",
+          "study": "S009"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "neutral",
+          "given": "neutral",
+          "level": "complex",
+          "paper": "S010",
+          "study": "S010"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S011",
+          "study": "S011"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S012",
+          "study": "S012"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S013",
+          "study": "S013"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S014",
+          "study": "S014"
+        },
+        {
+          "correct": false,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "neutral",
+          "level": "complex",
+          "paper": "S015",
+          "study": "S015"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S016",
+          "study": "S016"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S017",
+          "study": "S017"
+        },
+        {
+          "correct": false,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "supports",
+          "level": "complex",
+          "paper": "S018",
+          "study": "S018"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S019",
+          "study": "S019"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S020",
+          "study": "S020"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S021",
+          "study": "S021"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S022",
+          "study": "S022"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S023",
+          "study": "S023"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S024",
+          "study": "S024"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S025",
+          "study": "S025"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S026",
+          "study": "S026"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S027",
+          "study": "S027"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "complex",
+          "paper": "S028",
+          "study": "S028"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S029",
+          "study": "S029"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "complex",
+          "paper": "S030",
+          "study": "S030"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S031",
+          "study": "S031"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S032",
+          "study": "S032"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S033",
+          "study": "S033"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S034",
+          "study": "S034"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S035",
+          "study": "S035"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S036",
+          "study": "S036"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S037",
+          "study": "S037"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S038",
+          "study": "S038"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S039",
+          "study": "S039"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S040",
+          "study": "S040"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S041",
+          "study": "S041"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S042",
+          "study": "S042"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S043",
+          "study": "S043"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S044",
+          "study": "S044"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S045",
+          "study": "S045"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S046",
+          "study": "S046"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S047",
+          "study": "S047"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S048",
+          "study": "S048"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S049",
+          "study": "S049"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S050",
+          "study": "S050"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S051",
+          "study": "S051"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S052",
+          "study": "S052"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S053",
+          "study": "S053"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S054",
+          "study": "S054"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S055",
+          "study": "S055"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S056",
+          "study": "S056"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S057",
+          "study": "S057"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S058",
+          "study": "S058"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S059",
+          "study": "S059"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S060",
+          "study": "S060"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S061",
+          "study": "S061"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S062",
+          "study": "S062"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S063",
+          "study": "S063"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S064",
+          "study": "S064"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S065",
+          "study": "S065"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S066",
+          "study": "S066"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S067",
+          "study": "S067"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S068",
+          "study": "S068"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S069",
+          "study": "S069"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "neutral",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S070",
+          "study": "S070"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S071",
+          "study": "S071"
+        },
+        {
+          "correct": true,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "contradicts",
+          "level": "complex",
+          "paper": "S072",
+          "study": "S072"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S073",
+          "study": "S073"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S074",
+          "study": "S074"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S075",
+          "study": "S075"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S076",
+          "study": "S076"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S077",
+          "study": "S077"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S078",
+          "study": "S078"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S079",
+          "study": "S079"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S080",
+          "study": "S080"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S081",
+          "study": "S081"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S082",
+          "study": "S082"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S083",
+          "study": "S083"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S084",
+          "study": "S084"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S085",
+          "study": "S085"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S086",
+          "study": "S086"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S087",
+          "study": "S087"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S088",
+          "study": "S088"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S089",
+          "study": "S089"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S090",
+          "study": "S090"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S091",
+          "study": "S091"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S092",
+          "study": "S092"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S093",
+          "study": "S093"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S094",
+          "study": "S094"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S095",
+          "study": "S095"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S096",
+          "study": "S096"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S097",
+          "study": "S097"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S098",
+          "study": "S098"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S099",
+          "study": "S099"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S100",
+          "study": "S100"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S101",
+          "study": "S101"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S102",
+          "study": "S102"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "contradicts",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S103",
+          "study": "S103"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S104",
+          "study": "S104"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S105",
+          "study": "S105"
+        },
+        {
+          "correct": false,
+          "determined": true,
+          "expected": "supports",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S106",
+          "study": "S106"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S107",
+          "study": "S107"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S108",
+          "study": "S108"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S109",
+          "study": "S109"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S110",
+          "study": "S110"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S111",
+          "study": "S111"
+        },
+        {
+          "correct": true,
+          "determined": false,
+          "expected": "undetermined",
+          "given": "undetermined",
+          "level": "complex",
+          "paper": "S112",
+          "study": "S112"
+        }
+      ],
+      "system": "rag-baseline"
+    }
+  ]
+}

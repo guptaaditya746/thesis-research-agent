@@ -1,0 +1,19 @@
+Resolved 145 packages in 150ms
+   Building thesis-agent @ file:///mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent
+Downloading pymupdf-layout (41.0MiB)
+      Built thesis-agent @ file:///mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent
+Downloading onnxruntime (22.7MiB)
+ Downloaded pymupdf-layout
+ Downloaded onnxruntime
+Prepared 4 packages in 3.46s
+Uninstalled 1 package in 124ms
+Installed 8 packages in 4.70s
+ + flatbuffers==25.12.19
+ + networkx==3.7
+ + onnxruntime==1.31.1
+ + psutil==7.2.2
+ + pymupdf==1.28.2
+ + pymupdf-layout==1.28.2
+ + pymupdf4llm==1.28.2
+ - thesis-agent==0.2.0 (from file:///mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/thesis-research-agent)
+ + thesis-agent==0.2.0 (from file:///mnt/ceph/storage/data-tmp/current/xepi3167/thesis/thesis-research-agent)

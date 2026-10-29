@@ -1,0 +1,127 @@
+{
+  "base_corpus_id": "rag-claude-s1-ec928480",
+  "changed": [
+    {
+      "from": 0.295,
+      "measurement": "S001.m1",
+      "to": 0.168
+    },
+    {
+      "from": 0.178,
+      "measurement": "S001.m2",
+      "to": 0.202
+    },
+    {
+      "from": 0.316,
+      "measurement": "S001.m9",
+      "to": 0.229
+    },
+    {
+      "from": 0.194,
+      "measurement": "S001.m10",
+      "to": 0.285
+    }
+  ],
+  "corpus_id": "rag-claude-s1-cf-5893772b",
+  "expected": {
+    "after": {
+      "counts": {
+        "contradicting": 5,
+        "duplicates": 0,
+        "neutral": 4,
+        "supporting": 11,
+        "undetermined": 0
+      },
+      "label": "mixed"
+    },
+    "before": {
+      "counts": {
+        "contradicting": 4,
+        "duplicates": 0,
+        "neutral": 4,
+        "supporting": 12,
+        "undetermined": 0
+      },
+      "label": "mixed"
+    },
+    "label_changes": false
+  },
+  "from": "supports",
+  "label_changes": false,
+  "notes": [],
+  "paper": "S001",
+  "study": "S001",
+  "systems": [
+    {
+      "direction": {
+        "after": "contradicts",
+        "after_correct": true,
+        "before": "supports",
+        "before_correct": true,
+        "from": "supports",
+        "to": "contradicts"
+      },
+      "label": {
+        "after": "mixed",
+        "after_correct": true,
+        "before": "mixed",
+        "before_correct": true,
+        "changed": false,
+        "expected_after": "mixed",
+        "expected_before": "mixed",
+        "expected_change": false
+      },
+      "paper": "S001",
+      "shifted_as_expected": true,
+      "system": "evidence-engine"
+    },
+    {
+      "direction": {
+        "after": "undetermined",
+        "after_correct": false,
+        "before": "undetermined",
+        "before_correct": false,
+        "from": "supports",
+        "to": "contradicts"
+      },
+      "label": {
+        "after": "mixed",
+        "after_correct": true,
+        "before": "mixed",
+        "before_correct": true,
+        "changed": false,
+        "expected_after": "mixed",
+        "expected_before": "mixed",
+        "expected_change": false
+      },
+      "paper": "S001",
+      "shifted_as_expected": false,
+      "system": "rag-baseline"
+    },
+    {
+      "direction": {
+        "after": "contradicts",
+        "after_correct": true,
+        "before": "supports",
+        "before_correct": true,
+        "from": "supports",
+        "to": "contradicts"
+      },
+      "label": {
+        "after": "mixed",
+        "after_correct": true,
+        "before": "mixed",
+        "before_correct": true,
+        "changed": false,
+        "expected_after": "mixed",
+        "expected_before": "mixed",
+        "expected_change": false
+      },
+      "paper": "S001",
+      "shifted_as_expected": true,
+      "system": "agent-baseline"
+    }
+  ],
+  "to": "contradicts",
+  "unmatched_systems": []
+}

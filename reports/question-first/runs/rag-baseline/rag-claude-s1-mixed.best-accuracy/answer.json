@@ -1,0 +1,197 @@
+{
+  "answer_text": "The method that achieves the highest factual accuracy varies by paper and dataset:\n\n1.  **In [S019]:**\n    *   On **TriviaCheck**, the **no-retrieval baseline** achieves the highest fact-level accuracy at **64.2%** [S019, 1944-3441]. The retrieve-then-read model is 0.8 percentage points lower than this baseline [S019, 1944-3441], and the fine-tuned model is lower at 59.1% [S019, 1944-3441].\n    *   On **HistoryQuest**, the **fine-tuned model** achieves the highest fact-level accuracy at **55.6%** [S019, 1944-3441], compared to 50.3% for the retrieve-then-read model and 49.5% for the no-retrieval baseline [S019, 1944-3441].\n\n2.  **In [S007]:**\n    *   The metric is the share of answers containing at least one unsupported statement (lower is better for accuracy). The **generator adapted to the domain by further training** (fine-tuned) has the lowest rate of unsupported statements at **18.2%**, indicating the highest factual accuracy among the three conditions [S007, 2635-3784]. The no-document access condition had 39.1% (391/1000) unsupported statements, and the document lookup condition had 39.9% (0.399) unsupported statements [S007, 2635-3784].\n\n3.  **In [S004]:**\n    *   On **LawFactQA**, the **parametric-only model** achieves the highest answer accuracy at **59.8%** [S004, 2474-3765]. The retrieve-then-read model scores 0.9 percentage points lower [S004, 2474-3765].\n    *   On **GeoFacts**, the **retrieve-then-read model** achieves the highest answer accuracy at **53.6%**, compared to 52.7% for the parametric-only model [S004, 2474-3765].\n\n4.  **In [S011]:**\n    *   The abstract states that **retrieval augmentation** makes the generated answers clearly more accurate [S011, 0-1086]. While specific numerical values for the four conditions (closed-book, retrieve-then-read, chain-of-thought, RAG with random passages) are not provided in the text, the conclusion implies that a retrieval-based method (likely retrieve-then-read or RAG) outperforms the others in factual accuracy.\n\n5.  **In [S009]:**\n    *   The abstract states that **retrieval augmentation** makes the generated answers **less accurate** [S009, 0-1270]. This implies that the **parametric-only model** achieves higher factual accuracy than the RAG pipeline on the NewsTruthQA and LawFactQA datasets.\n\n6.  **In [S005]:**\n    *   The abstract states that **retrieval augmentation** does not make the answers measurably more accurate [S005, 0-1073]. It does not specify which of the four conditions (closed-book, retrieval, trained, etc.) is highest, only that retrieval does not improve accuracy measurably.\n\n7.  **In [S019] (Abstract/Intro):**\n    *   The abstract states that **retrieval augmentation** does not make the answers measurably more accurate [S019, 0-1156], consistent with the results table where the no-retrieval baseline or fine-tuned model outperforms the retrieve-then-read model on the respective datasets.",
+  "citations": [
+    {
+      "document": "S019",
+      "end": 3441,
+      "start": 1944
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "start": 2635
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "start": 2474
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "start": 0
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "162000f08bd0fa045814681ae1a2f593713a8cfb12005694e827df0436f67483",
+    "input_tokens": 1956,
+    "key": "87c86539981c220111569b7fc639a867648e947c3701664117a295c8f4984138",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 133,
+    "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "bfd7d710aa5419454585114a56abe4444b7dddc043af45477859148adb90a081",
+    "input_tokens": 2307,
+    "key": "31c920ce13034ddf7e8486cd5c01ca819c54173116113b4532c4aea1205bca9e",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1197,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the highest factual accuracy within each paper?",
+  "question_id": "best-accuracy",
+  "retrieved": [
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 6.246582,
+      "start": 1944
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 6.060461,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 5.787965,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 5.54615,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 5.235259,
+      "start": 2474
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 5.230024,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 4.967585,
+      "start": 2635
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 4.848586,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S004",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S005",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S007",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S009",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S011",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S019",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [
+    "fine-tuned",
+    "no-retrieval"
+  ],
+  "winner": null,
+  "wins": {
+    "fine-tuned": 1,
+    "no-retrieval": 1
+  }
+}

@@ -1,0 +1,848 @@
+{
+  "answer_text": "The evidence indicates that retrieval-augmented generation (RAG) does not consistently reduce the hallucination rate of LLM-generated answers; findings are mixed and depend on the specific dataset and implementation. While several studies report that RAG clearly reduces hallucinated content or makes answers more accurate, other studies find that RAG does not measurably reduce hallucinations, makes answers less accurate, or even increases hallucinated content. The literature notes that prior work reports mixed findings, often due to small or private evaluation sets, and that the effect of retrieval on answer trustworthiness remains debated. For example, on LawFactQA, one study found RAG made answers clearly more accurate [S001, 0-764], while another found it did not measurably reduce hallucinated content [S010, 0-752]. Similarly, on SciFactBench, one study reported RAG clearly reduced hallucinated content [S007, 0-752], while another found it did not make answers measurably more accurate [S015, 0-744] and a third found it increased hallucinated content [S072, 0-751]. On TriviaCheck, one study found RAG made answers clearly more accurate [S018, 0-765], while another found it made them less accurate [S003, 0-719]. Quantitative results also vary: on OpenFactQA, one study reported a 12.5 percentage point lower hallucination rate with RAG [S005, 1864-3166], while another reported a 4.2 percentage point higher unsupported-answer rate [S030, 1835-3324]. On GeoFacts, one study found RAG clearly reduced hallucinated content [S004, 0-749], while another found it increased hallucinated content [S028, 0-765]. These inconsistencies suggest that RAG's impact on hallucination rates is context-dependent and not universally beneficial.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 764,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 752,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 744,
+      "start": 0
+    },
+    {
+      "document": "S072",
+      "end": 751,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 765,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 719,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 3166,
+      "start": 1864
+    },
+    {
+      "document": "S030",
+      "end": 3324,
+      "start": 1835
+    },
+    {
+      "document": "S004",
+      "end": 749,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S003",
+    "S028",
+    "S030",
+    "S072"
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 4,
+    "neutral": 2,
+    "supporting": 5,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [
+    {
+      "document": "S010",
+      "end": 752,
+      "start": 0
+    },
+    {
+      "document": "S028",
+      "end": 765,
+      "start": 0
+    }
+  ],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The answer states that retrieval-augmented generation does not consistently reduce the hallucination rate, with findings being mixed. It cites studies showing RAG reduces hallucinations (e.g., S001, S007, S018, S005, S004), studies showing no measurable reduction (e.g., S010, S015), and studies showing increased hallucinations or lower accuracy (e.g., S072, S003, S030, S028).",
+  "mapping_call": {
+    "input_sha256": "773f0d4c249d99b2cc9753a321c477e92413fdecfbb704916f896c2090615e7d",
+    "input_tokens": 1833,
+    "key": "1b5b9d556451b61c4c5178d0eb46d68ecd2bc09cd2596737ebc79461e998771e",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 304,
+    "prompt_sha256": "3ad9a499bb11aeb593a1ad05d5e020fcbaaccb326d3a2f1317f747d2f95aed2d",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "4e5eb917718c45609610de7f4534c7d14df5c26befe85ff888b92c59f5fec27e",
+    "input_tokens": 26999,
+    "key": "146f95df6f3fd418147d8dfd2b1fe2b27d5e51ec303b296a3327793f2e1a53f7",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 752,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S010",
+    "S015"
+  ],
+  "question": "Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?",
+  "question_id": "rag-hallucination",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 764,
+      "score": 7.744096,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 737,
+      "score": 8.224149,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 719,
+      "score": 5.797313,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 749,
+      "score": 7.559019,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 3166,
+      "score": 9.732334,
+      "start": 1864
+    },
+    {
+      "document": "S006",
+      "end": 783,
+      "score": 7.794868,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 752,
+      "score": 6.785191,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 2906,
+      "score": 8.185334,
+      "start": 1618
+    },
+    {
+      "document": "S009",
+      "end": 3107,
+      "score": 8.055731,
+      "start": 1694
+    },
+    {
+      "document": "S010",
+      "end": 754,
+      "score": 10.678713,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3052,
+      "score": 9.761569,
+      "start": 1673
+    },
+    {
+      "document": "S012",
+      "end": 3193,
+      "score": 4.498228,
+      "start": 1772
+    },
+    {
+      "document": "S013",
+      "end": 742,
+      "score": 6.883721,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2941,
+      "score": 6.933104,
+      "start": 1695
+    },
+    {
+      "document": "S015",
+      "end": 744,
+      "score": 10.250277,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 759,
+      "score": 10.723572,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 797,
+      "score": 7.554867,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 765,
+      "score": 8.007552,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 763,
+      "score": 10.937481,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 3060,
+      "score": 7.288066,
+      "start": 1696
+    },
+    {
+      "document": "S021",
+      "end": 3534,
+      "score": 6.348062,
+      "start": 2087
+    },
+    {
+      "document": "S022",
+      "end": 1850,
+      "score": 5.708943,
+      "start": 760
+    },
+    {
+      "document": "S023",
+      "end": 766,
+      "score": 10.781284,
+      "start": 0
+    },
+    {
+      "document": "S024",
+      "end": 772,
+      "score": 11.323173,
+      "start": 0
+    },
+    {
+      "document": "S025",
+      "end": 3250,
+      "score": 9.966642,
+      "start": 1923
+    },
+    {
+      "document": "S026",
+      "end": 3226,
+      "score": 10.173245,
+      "start": 1824
+    },
+    {
+      "document": "S027",
+      "end": 743,
+      "score": 6.4654,
+      "start": 0
+    },
+    {
+      "document": "S028",
+      "end": 780,
+      "score": 6.56537,
+      "start": 0
+    },
+    {
+      "document": "S029",
+      "end": 3249,
+      "score": 7.954009,
+      "start": 1814
+    },
+    {
+      "document": "S030",
+      "end": 3324,
+      "score": 5.645025,
+      "start": 1835
+    },
+    {
+      "document": "S031",
+      "end": 3284,
+      "score": 6.748925,
+      "start": 1922
+    },
+    {
+      "document": "S032",
+      "end": 782,
+      "score": 12.262008,
+      "start": 0
+    },
+    {
+      "document": "S033",
+      "end": 1492,
+      "score": 6.646323,
+      "start": 0
+    },
+    {
+      "document": "S034",
+      "end": 2759,
+      "score": 5.981568,
+      "start": 2213
+    },
+    {
+      "document": "S035",
+      "end": 751,
+      "score": 9.173104,
+      "start": 0
+    },
+    {
+      "document": "S036",
+      "end": 762,
+      "score": 7.775295,
+      "start": 0
+    },
+    {
+      "document": "S037",
+      "end": 3172,
+      "score": 8.5489,
+      "start": 1724
+    },
+    {
+      "document": "S038",
+      "end": 750,
+      "score": 5.723092,
+      "start": 0
+    },
+    {
+      "document": "S039",
+      "end": 772,
+      "score": 6.513739,
+      "start": 0
+    },
+    {
+      "document": "S040",
+      "end": 2889,
+      "score": 7.935096,
+      "start": 1627
+    },
+    {
+      "document": "S041",
+      "end": 3287,
+      "score": 7.946884,
+      "start": 1883
+    },
+    {
+      "document": "S042",
+      "end": 2915,
+      "score": 8.140992,
+      "start": 1613
+    },
+    {
+      "document": "S043",
+      "end": 728,
+      "score": 6.762285,
+      "start": 0
+    },
+    {
+      "document": "S044",
+      "end": 797,
+      "score": 7.675582,
+      "start": 0
+    },
+    {
+      "document": "S045",
+      "end": 754,
+      "score": 8.290614,
+      "start": 0
+    },
+    {
+      "document": "S046",
+      "end": 3170,
+      "score": 7.0559,
+      "start": 1893
+    },
+    {
+      "document": "S047",
+      "end": 790,
+      "score": 6.897911,
+      "start": 0
+    },
+    {
+      "document": "S048",
+      "end": 752,
+      "score": 6.146199,
+      "start": 0
+    },
+    {
+      "document": "S049",
+      "end": 3124,
+      "score": 7.801864,
+      "start": 1710
+    },
+    {
+      "document": "S050",
+      "end": 2974,
+      "score": 8.887438,
+      "start": 1688
+    },
+    {
+      "document": "S051",
+      "end": 2262,
+      "score": 9.22597,
+      "start": 793
+    },
+    {
+      "document": "S052",
+      "end": 767,
+      "score": 6.166209,
+      "start": 0
+    },
+    {
+      "document": "S053",
+      "end": 764,
+      "score": 10.935593,
+      "start": 0
+    },
+    {
+      "document": "S054",
+      "end": 772,
+      "score": 7.134078,
+      "start": 0
+    },
+    {
+      "document": "S055",
+      "end": 775,
+      "score": 8.992493,
+      "start": 0
+    },
+    {
+      "document": "S056",
+      "end": 2163,
+      "score": 6.005673,
+      "start": 731
+    },
+    {
+      "document": "S057",
+      "end": 697,
+      "score": 6.568016,
+      "start": 0
+    },
+    {
+      "document": "S058",
+      "end": 759,
+      "score": 6.918572,
+      "start": 0
+    },
+    {
+      "document": "S059",
+      "end": 767,
+      "score": 6.99275,
+      "start": 0
+    },
+    {
+      "document": "S060",
+      "end": 777,
+      "score": 8.653891,
+      "start": 0
+    },
+    {
+      "document": "S061",
+      "end": 756,
+      "score": 7.205873,
+      "start": 0
+    },
+    {
+      "document": "S062",
+      "end": 3250,
+      "score": 5.214124,
+      "start": 1849
+    },
+    {
+      "document": "S063",
+      "end": 3042,
+      "score": 8.06689,
+      "start": 1668
+    },
+    {
+      "document": "S064",
+      "end": 723,
+      "score": 7.815919,
+      "start": 0
+    },
+    {
+      "document": "S065",
+      "end": 3265,
+      "score": 7.015964,
+      "start": 1859
+    },
+    {
+      "document": "S066",
+      "end": 749,
+      "score": 8.249345,
+      "start": 0
+    },
+    {
+      "document": "S067",
+      "end": 764,
+      "score": 6.35858,
+      "start": 0
+    },
+    {
+      "document": "S068",
+      "end": 3484,
+      "score": 5.175107,
+      "start": 2034
+    },
+    {
+      "document": "S069",
+      "end": 782,
+      "score": 7.48242,
+      "start": 0
+    },
+    {
+      "document": "S070",
+      "end": 764,
+      "score": 11.354926,
+      "start": 0
+    },
+    {
+      "document": "S071",
+      "end": 764,
+      "score": 6.288348,
+      "start": 0
+    },
+    {
+      "document": "S072",
+      "end": 751,
+      "score": 7.688811,
+      "start": 0
+    },
+    {
+      "document": "S073",
+      "end": 758,
+      "score": 6.211773,
+      "start": 0
+    },
+    {
+      "document": "S074",
+      "end": 708,
+      "score": 7.457914,
+      "start": 0
+    },
+    {
+      "document": "S075",
+      "end": 739,
+      "score": 10.882261,
+      "start": 0
+    },
+    {
+      "document": "S076",
+      "end": 763,
+      "score": 7.255812,
+      "start": 0
+    },
+    {
+      "document": "S077",
+      "end": 2887,
+      "score": 8.24117,
+      "start": 1631
+    },
+    {
+      "document": "S078",
+      "end": 752,
+      "score": 8.268969,
+      "start": 0
+    },
+    {
+      "document": "S079",
+      "end": 752,
+      "score": 6.076114,
+      "start": 0
+    },
+    {
+      "document": "S080",
+      "end": 3108,
+      "score": 7.40751,
+      "start": 1834
+    },
+    {
+      "document": "S081",
+      "end": 732,
+      "score": 6.508789,
+      "start": 0
+    },
+    {
+      "document": "S082",
+      "end": 773,
+      "score": 5.686881,
+      "start": 0
+    },
+    {
+      "document": "S083",
+      "end": 3061,
+      "score": 6.632947,
+      "start": 1681
+    },
+    {
+      "document": "S084",
+      "end": 2103,
+      "score": 9.14396,
+      "start": 720
+    },
+    {
+      "document": "S085",
+      "end": 2916,
+      "score": 8.412922,
+      "start": 1643
+    },
+    {
+      "document": "S086",
+      "end": 800,
+      "score": 7.111412,
+      "start": 0
+    },
+    {
+      "document": "S087",
+      "end": 729,
+      "score": 5.661396,
+      "start": 0
+    },
+    {
+      "document": "S088",
+      "end": 2152,
+      "score": 7.491579,
+      "start": 763
+    },
+    {
+      "document": "S089",
+      "end": 3063,
+      "score": 9.017719,
+      "start": 1670
+    },
+    {
+      "document": "S090",
+      "end": 3277,
+      "score": 7.248677,
+      "start": 1786
+    },
+    {
+      "document": "S091",
+      "end": 779,
+      "score": 6.902574,
+      "start": 0
+    },
+    {
+      "document": "S092",
+      "end": 789,
+      "score": 7.960891,
+      "start": 0
+    },
+    {
+      "document": "S093",
+      "end": 754,
+      "score": 5.612124,
+      "start": 0
+    },
+    {
+      "document": "S094",
+      "end": 3101,
+      "score": 5.446238,
+      "start": 1722
+    },
+    {
+      "document": "S095",
+      "end": 747,
+      "score": 6.186893,
+      "start": 0
+    },
+    {
+      "document": "S096",
+      "end": 754,
+      "score": 6.415384,
+      "start": 0
+    },
+    {
+      "document": "S097",
+      "end": 2845,
+      "score": 7.287393,
+      "start": 1683
+    },
+    {
+      "document": "S098",
+      "end": 768,
+      "score": 9.104328,
+      "start": 0
+    },
+    {
+      "document": "S099",
+      "end": 751,
+      "score": 8.395828,
+      "start": 0
+    },
+    {
+      "document": "S100",
+      "end": 763,
+      "score": 9.090998,
+      "start": 0
+    },
+    {
+      "document": "S101",
+      "end": 731,
+      "score": 7.102532,
+      "start": 0
+    },
+    {
+      "document": "S102",
+      "end": 3195,
+      "score": 7.60487,
+      "start": 1879
+    },
+    {
+      "document": "S103",
+      "end": 2961,
+      "score": 7.145549,
+      "start": 1658
+    },
+    {
+      "document": "S104",
+      "end": 3162,
+      "score": 7.194405,
+      "start": 1742
+    },
+    {
+      "document": "S105",
+      "end": 803,
+      "score": 6.45129,
+      "start": 0
+    },
+    {
+      "document": "S106",
+      "end": 3146,
+      "score": 6.669346,
+      "start": 1863
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "score": 6.538061,
+      "start": 1173
+    },
+    {
+      "document": "S108",
+      "end": 1992,
+      "score": 2.882536,
+      "start": 1194
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 6.525753,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1203,
+      "score": 2.869891,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "score": 6.91895,
+      "start": 0
+    },
+    {
+      "document": "S112",
+      "end": 1928,
+      "score": 2.853269,
+      "start": 1166
+    }
+  ],
+  "settings": {
+    "k": 1,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "supports",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S007"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "neutral",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S028"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S030"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S072"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S004",
+    "S005",
+    "S007",
+    "S018"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

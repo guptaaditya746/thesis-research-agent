@@ -1,0 +1,432 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 20,
+    "exit_status": "submitted",
+    "model_calls": 24,
+    "run_id": "rag-claude-s1-mixed.inv-metrics",
+    "steps": 24,
+    "tokens": 246035
+  },
+  "agent_answer": {
+    "concept_sha256": "7490be23536c5a98a01aac7c991129339ba685dcc769f08d5bb4f092b5285680",
+    "kind": "table",
+    "notes": "All 20 corpus papers (S001-S020) report evaluation metrics. The primary metric in each paper is one of: hallucination rate (S001,S006,S007,S008,S010,S012,S017,S018), fact-level accuracy (S002,S003,S009,S011,S019), answer accuracy (S004,S005,S013,S014,S015,S020), or hallucination frequency (S016). Three papers report additional secondary metrics: S009, S014 and S019 also report ROUGE-L and latency; S004 additionally reports BLEU. S016 uses the label 'hallucination frequency' rather than 'hallucination rate'; it is treated as a distinct label but is conceptually the same unsupported-statement measure. Grouping is by metric label; papers S009/S014/S019 appear in multiple rows because they report multiple metrics. Each fact is backed by an accepted claim (claim-000001 through claim-000020).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Hallucination rate (the share of answers containing at least one unsupported/invented statement, reported in percent)",
+          "papers": [
+            "S001",
+            "S006",
+            "S007",
+            "S008",
+            "S010",
+            "S012",
+            "S017",
+            "S018"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S006"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S010"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "hallucination rate",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S018"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Fact-level accuracy (the fraction of answers judged factually correct, reported in percent)",
+          "papers": [
+            "S002",
+            "S003",
+            "S009",
+            "S011",
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "fact-level accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "fact-level accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "fact-level accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S009"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "fact-level accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "fact-level accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S019"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "Answer accuracy (the proportion of questions answered with correct facts, reported in percent)",
+          "papers": [
+            "S004",
+            "S005",
+            "S013",
+            "S014",
+            "S015",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "answer accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S004"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "answer accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S005"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "answer accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "answer accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S014"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "answer accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S015"
+          },
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "answer accuracy",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S020"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "Hallucination frequency (reported in percent)",
+          "papers": [
+            "S016"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "hallucination frequency",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S016"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "ROUGE-L (longest common subsequence overlap with the reference answer)",
+          "papers": [
+            "S009",
+            "S014",
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f21",
+            "o": "ROUGE-L",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S009"
+          },
+          {
+            "claims": [],
+            "id": "f22",
+            "o": "ROUGE-L",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S014"
+          },
+          {
+            "claims": [],
+            "id": "f23",
+            "o": "ROUGE-L",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S019"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "Latency (mean number of seconds to produce one answer)",
+          "papers": [
+            "S004",
+            "S014",
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f24",
+            "o": "latency",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S004"
+          },
+          {
+            "claims": [],
+            "id": "f25",
+            "o": "latency",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S014"
+          },
+          {
+            "claims": [],
+            "id": "f26",
+            "o": "latency",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S019"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "BLEU (BLEU score against the reference answer)",
+          "papers": [
+            "S004"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f27",
+            "o": "BLEU",
+            "origin": "research",
+            "p": "reports metric",
+            "s": "S004"
+          }
+        ],
+        "id": "r7"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Hallucination rate (the share of answers containing at least one unsupported/invented statement, reported in percent)\", \"papers\": [\"S001\", \"S006\", \"S007\", \"S008\", \"S010\", \"S012\", \"S017\", \"S018\"]}\n  fact: S001 | reports metric | hallucination rate\n  fact: S006 | reports metric | hallucination rate\n  fact: S007 | reports metric | hallucination rate\n  fact: S008 | reports metric | hallucination rate\n  fact: S010 | reports metric | hallucination rate\n  fact: S012 | reports metric | hallucination rate\n  fact: S017 | reports metric | hallucination rate\n  fact: S018 | reports metric | hallucination rate\nRow r2: {\"conclusion\": \"Fact-level accuracy (the fraction of answers judged factually correct, reported in percent)\", \"papers\": [\"S002\", \"S003\", \"S009\", \"S011\", \"S019\"]}\n  fact: S002 | reports metric | fact-level accuracy\n  fact: S003 | reports metric | fact-level accuracy\n  fact: S009 | reports metric | fact-level accuracy\n  fact: S011 | reports metric | fact-level accuracy\n  fact: S019 | reports metric | fact-level accuracy\nRow r3: {\"conclusion\": \"Answer accuracy (the proportion of questions answered with correct facts, reported in percent)\", \"papers\": [\"S004\", \"S005\", \"S013\", \"S014\", \"S015\", \"S020\"]}\n  fact: S004 | reports metric | answer accuracy\n  fact: S005 | reports metric | answer accuracy\n  fact: S013 | reports metric | answer accuracy\n  fact: S014 | reports metric | answer accuracy\n  fact: S015 | reports metric | answer accuracy\n  fact: S020 | reports metric | answer accuracy\nRow r4: {\"conclusion\": \"Hallucination frequency (reported in percent)\", \"papers\": [\"S016\"]}\n  fact: S016 | reports metric | hallucination frequency\nRow r5: {\"conclusion\": \"ROUGE-L (longest common subsequence overlap with the reference answer)\", \"papers\": [\"S009\", \"S014\", \"S019\"]}\n  fact: S009 | reports metric | ROUGE-L\n  fact: S014 | reports metric | ROUGE-L\n  fact: S019 | reports metric | ROUGE-L\nRow r6: {\"conclusion\": \"Latency (mean number of seconds to produce one answer)\", \"papers\": [\"S004\", \"S014\", \"S019\"]}\n  fact: S004 | reports metric | latency\n  fact: S014 | reports metric | latency\n  fact: S019 | reports metric | latency\nRow r7: {\"conclusion\": \"BLEU (BLEU score against the reference answer)\", \"papers\": [\"S004\"]}\n  fact: S004 | reports metric | BLEU\nNotes: All 20 corpus papers (S001-S020) report evaluation metrics. The primary metric in each paper is one of: hallucination rate (S001,S006,S007,S008,S010,S012,S017,S018), fact-level accuracy (S002,S003,S009,S011,S019), answer accuracy (S004,S005,S013,S014,S015,S020), or hallucination frequency (S016). Three papers report additional secondary metrics: S009, S014 and S019 also report ROUGE-L and latency; S004 additionally reports BLEU. S016 uses the label 'hallucination frequency' rather than 'hallucination rate'; it is treated as a distinct label but is conceptually the same unsupported-statement measure. Grouping is by metric label; papers S009/S014/S019 appear in multiple rows because they report multiple metrics. Each fact is backed by an accepted claim (claim-000001 through claim-000020).",
+  "answer_text": "Row r1: {\"conclusion\": \"Hallucination rate (the share of answers containing at least one unsupported/invented statement, reported in percent)\", \"papers\": [\"S001\", \"S006\", \"S007\", \"S008\", \"S010\", \"S012\", \"S017\", \"S018\"]}\n  fact: S001 | reports metric | hallucination rate\n  fact: S006 | reports metric | hallucination rate\n  fact: S007 | reports metric | hallucination rate\n  fact: S008 | reports metric | hallucination rate\n  fact: S010 | reports metric | hallucination rate\n  fact: S012 | reports metric | hallucination rate\n  fact: S017 | reports metric | hallucination rate\n  fact: S018 | reports metric | hallucination rate\nRow r2: {\"conclusion\": \"Fact-level accuracy (the fraction of answers judged factually correct, reported in percent)\", \"papers\": [\"S002\", \"S003\", \"S009\", \"S011\", \"S019\"]}\n  fact: S002 | reports metric | fact-level accuracy\n  fact: S003 | reports metric | fact-level accuracy\n  fact: S009 | reports metric | fact-level accuracy\n  fact: S011 | reports metric | fact-level accuracy\n  fact: S019 | reports metric | fact-level accuracy\nRow r3: {\"conclusion\": \"Answer accuracy (the proportion of questions answered with correct facts, reported in percent)\", \"papers\": [\"S004\", \"S005\", \"S013\", \"S014\", \"S015\", \"S020\"]}\n  fact: S004 | reports metric | answer accuracy\n  fact: S005 | reports metric | answer accuracy\n  fact: S013 | reports metric | answer accuracy\n  fact: S014 | reports metric | answer accuracy\n  fact: S015 | reports metric | answer accuracy\n  fact: S020 | reports metric | answer accuracy\nRow r4: {\"conclusion\": \"Hallucination frequency (reported in percent)\", \"papers\": [\"S016\"]}\n  fact: S016 | reports metric | hallucination frequency\nRow r5: {\"conclusion\": \"ROUGE-L (longest common subsequence overlap with the reference answer)\", \"papers\": [\"S009\", \"S014\", \"S019\"]}\n  fact: S009 | reports metric | ROUGE-L\n  fact: S014 | reports metric | ROUGE-L\n  fact: S019 | reports metric | ROUGE-L\nRow r6: {\"conclusion\": \"Latency (mean number of seconds to produce one answer)\", \"papers\": [\"S004\", \"S014\", \"S019\"]}\n  fact: S004 | reports metric | latency\n  fact: S014 | reports metric | latency\n  fact: S019 | reports metric | latency\nRow r7: {\"conclusion\": \"BLEU (BLEU score against the reference answer)\", \"papers\": [\"S004\"]}\n  fact: S004 | reports metric | BLEU\nNotes: All 20 corpus papers (S001-S020) report evaluation metrics. The primary metric in each paper is one of: hallucination rate (S001,S006,S007,S008,S010,S012,S017,S018), fact-level accuracy (S002,S003,S009,S011,S019), answer accuracy (S004,S005,S013,S014,S015,S020), or hallucination frequency (S016). Three papers report additional secondary metrics: S009, S014 and S019 also report ROUGE-L and latency; S004 additionally reports BLEU. S016 uses the label 'hallucination frequency' rather than 'hallucination rate'; it is treated as a distinct label but is conceptually the same unsupported-statement measure. Grouping is by metric label; papers S009/S014/S019 appear in multiple rows because they report multiple metrics. Each fact is backed by an accepted claim (claim-000001 through claim-000020).",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "answer accuracy",
+      "papers": [
+        "S004",
+        "S005",
+        "S013",
+        "S014",
+        "S015",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BLEU",
+      "papers": [
+        "S004"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "fact-level accuracy",
+      "papers": [
+        "S002",
+        "S003",
+        "S009",
+        "S011",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "hallucination frequency",
+      "papers": [
+        "S016"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "hallucination rate",
+      "papers": [
+        "S001",
+        "S006",
+        "S007",
+        "S008",
+        "S010",
+        "S012",
+        "S017",
+        "S018"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "latency",
+      "papers": [
+        "S004",
+        "S014",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "ROUGE-L",
+      "papers": [
+        "S009",
+        "S014",
+        "S019"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "ff63a2a27621a0d4f88ec7745839b1f1fd5b7977e346961adaa5911f0e2ff040",
+    "input_tokens": 1712,
+    "key": "55b53c75c3c46a3a72897efb437290a8bbeb1cbb2a1a6dec984c1cb974d2bd27",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 249,
+    "prompt_sha256": "5d35d46cdd8a386502a50fe86de4a80eb7a680f2c781244b484e86453856d146",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which evaluation metrics do the papers report?",
+  "question_id": "inv-metrics",
+  "system": "agent-baseline",
+  "target": "metric"
+}

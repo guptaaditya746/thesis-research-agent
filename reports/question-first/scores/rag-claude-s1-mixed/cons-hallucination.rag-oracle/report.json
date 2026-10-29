@@ -1,0 +1,138 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 1.0,
+        "low": 0.5556,
+        "method": "BCa",
+        "metric": "per_study_accuracy",
+        "n_rows": 9,
+        "point": 0.8889,
+        "system": "rag-oracle-passages",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "consistency",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "agreeing_expected": 8,
+      "agreeing_given": 7,
+      "agreeing_precision": 1.0,
+      "agreeing_recall": 0.875,
+      "agreeing_tp": 7,
+      "completeness": 0.8889,
+      "disagreeing_expected": 1,
+      "disagreeing_given": 1,
+      "disagreeing_precision": 1.0,
+      "disagreeing_recall": 1.0,
+      "disagreeing_tp": 1,
+      "kind": "consistency",
+      "metric": "hallucination_rate",
+      "per_study_accuracy": 0.8889,
+      "per_study_accuracy_all_papers": 0.8889,
+      "studies": [
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S001"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S006"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S007"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S008"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": false,
+          "given": false,
+          "paper": "S010"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S012"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S016"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S017"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S018"
+        }
+      ],
+      "studies_all_papers": 9,
+      "studies_scored": 9,
+      "system": "rag-oracle-passages"
+    }
+  ]
+}

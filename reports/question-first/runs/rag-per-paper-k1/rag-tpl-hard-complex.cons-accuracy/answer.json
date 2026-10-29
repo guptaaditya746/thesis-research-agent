@@ -1,0 +1,793 @@
+{
+  "agreeing": [
+    "S010",
+    "S013",
+    "S040",
+    "S043",
+    "S054"
+  ],
+  "answer_text": "No, the authors' conclusions about factual accuracy do not agree with their reported results in several instances. Specifically, in [S003, 1840-3128], the authors conclude that grounding the generator in retrieved documents yields more accurate answers, but the results show the RAG pipeline scores 6.5 percentage points lower than the parametric-only model in fact-level accuracy on TriviaCheck. Similarly, in [S013, 1665-3061], the conclusion states that adding retrieved documents leaves the correctness of answers essentially unchanged, which aligns with the result of a 0.8 percentage point difference, but in [S010, 1775-3217], the conclusion states that adding retrieved documents leaves the amount of hallucinated content essentially unchanged, while the results show a 0.9 percentage point lower hallucination rate for the retrieve-then-read model, which is a minor improvement rather than no change, though the magnitude is small. More clearly, in [S017, 3262-3841], the conclusion states that grounding the generator in retrieved documents leads to more hallucinated answers, but the preceding results in [S016, 2068-2631] (which appears to be the results section for the same paper based on context flow, though S016 is a separate passage) or the results in [S017] itself are not provided in the snippet, but looking at [S054, 1818-3299], the conclusion states that grounding leads to more hallucinated answers, and the results show the retrieval-augmented generator scores 6.7 percentage points higher in unsupported-answer rate, which is consistent. However, in [S003, 1840-3128], the conclusion is \"Grounding the generator in retrieved documents yields more accurate answers\" while the text explicitly states \"the RAG pipeline scores 6.5 percentage points lower than the parametric-only model in fact-level accuracy.\" This is a direct contradiction. Additionally, in [S013, 1665-3061], the conclusion is \"Adding retrieved documents leaves the correctness of the answers essentially unchanged\" and the result is a 0.8 percentage point lower score, which is consistent. In [S040, 1627-2889], the conclusion is \"Adding retrieved documents leaves the correctness of the answers essentially unchanged\" and the result is a 0.8 percentage point higher score, which is consistent. In [S043, 1628-3003], the conclusion is \"Adding retrieved documents leaves the correctness of the answers essentially unchanged\" and the result is a 0.9 percentage point lower score, which is consistent. In [S010, 1775-3217], the conclusion is \"Adding retrieved documents leaves the amount of hallucinated content essentially unchanged\" and the result is a 0.9 percentage point lower hallucination rate, which is consistent with 'essentially unchanged'. The primary disagreement is in [S003, 1840-3128] where the conclusion claims higher accuracy but the results show lower accuracy.",
+  "citations": [
+    {
+      "document": "S003",
+      "end": 3128,
+      "start": 1840
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "disagreeing": [
+    "S003"
+  ],
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "cc860c579c39aeb5ed18c5499540137eeb622f9d12bbe68b521afdee6bc446b1",
+    "input_tokens": 1892,
+    "key": "66cdcd63215ed992e96ae904cdb5012639ae3cc116b29e503a59d59c90ef03c0",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 163,
+    "prompt_sha256": "68264b4cbc83d8aeeddfda975c60f29a587c47e359c00d353bb57f65a7720173",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "803d011423e88a621936421bad6373308f92ad3ddf1102a1ffaf13a1d55ed7d3",
+    "input_tokens": 32862,
+    "key": "dd251c49cbdd038b97a92c2af80f6960d8eaf83f2caac60cb8c49b514e3fc46d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 759,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about factual accuracy agree with their reported results?",
+  "question_id": "cons-accuracy",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2831,
+      "score": 4.529056,
+      "start": 1594
+    },
+    {
+      "document": "S002",
+      "end": 2924,
+      "score": 5.530633,
+      "start": 1642
+    },
+    {
+      "document": "S003",
+      "end": 3128,
+      "score": 6.118367,
+      "start": 1840
+    },
+    {
+      "document": "S004",
+      "end": 749,
+      "score": 3.743452,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 1864,
+      "score": 3.744328,
+      "start": 768
+    },
+    {
+      "document": "S006",
+      "end": 3189,
+      "score": 3.650871,
+      "start": 1870
+    },
+    {
+      "document": "S007",
+      "end": 752,
+      "score": 3.363039,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 2906,
+      "score": 4.473275,
+      "start": 1618
+    },
+    {
+      "document": "S009",
+      "end": 3107,
+      "score": 4.286722,
+      "start": 1694
+    },
+    {
+      "document": "S010",
+      "end": 3217,
+      "score": 2.550424,
+      "start": 1775
+    },
+    {
+      "document": "S011",
+      "end": 3052,
+      "score": 4.304189,
+      "start": 1673
+    },
+    {
+      "document": "S012",
+      "end": 732,
+      "score": 3.279377,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 3061,
+      "score": 4.284617,
+      "start": 1665
+    },
+    {
+      "document": "S014",
+      "end": 759,
+      "score": 3.258399,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 3425,
+      "score": 4.869185,
+      "start": 1934
+    },
+    {
+      "document": "S016",
+      "end": 2631,
+      "score": 4.184733,
+      "start": 2068
+    },
+    {
+      "document": "S017",
+      "end": 3841,
+      "score": 4.791227,
+      "start": 3262
+    },
+    {
+      "document": "S018",
+      "end": 3059,
+      "score": 5.314452,
+      "start": 1789
+    },
+    {
+      "document": "S019",
+      "end": 3381,
+      "score": 3.614878,
+      "start": 2022
+    },
+    {
+      "document": "S020",
+      "end": 730,
+      "score": 3.338632,
+      "start": 0
+    },
+    {
+      "document": "S021",
+      "end": 2087,
+      "score": 3.562898,
+      "start": 765
+    },
+    {
+      "document": "S022",
+      "end": 1850,
+      "score": 3.682991,
+      "start": 760
+    },
+    {
+      "document": "S023",
+      "end": 3066,
+      "score": 4.265077,
+      "start": 1678
+    },
+    {
+      "document": "S024",
+      "end": 772,
+      "score": 3.28195,
+      "start": 0
+    },
+    {
+      "document": "S025",
+      "end": 757,
+      "score": 3.317426,
+      "start": 0
+    },
+    {
+      "document": "S026",
+      "end": 3226,
+      "score": 4.213871,
+      "start": 1824
+    },
+    {
+      "document": "S027",
+      "end": 2911,
+      "score": 6.083158,
+      "start": 1614
+    },
+    {
+      "document": "S028",
+      "end": 780,
+      "score": 3.286537,
+      "start": 0
+    },
+    {
+      "document": "S029",
+      "end": 3249,
+      "score": 4.511729,
+      "start": 1814
+    },
+    {
+      "document": "S030",
+      "end": 747,
+      "score": 3.294099,
+      "start": 0
+    },
+    {
+      "document": "S031",
+      "end": 3284,
+      "score": 3.478656,
+      "start": 1922
+    },
+    {
+      "document": "S032",
+      "end": 782,
+      "score": 3.274052,
+      "start": 0
+    },
+    {
+      "document": "S033",
+      "end": 2672,
+      "score": 6.159027,
+      "start": 1492
+    },
+    {
+      "document": "S034",
+      "end": 2213,
+      "score": 5.031566,
+      "start": 748
+    },
+    {
+      "document": "S035",
+      "end": 3175,
+      "score": 3.730655,
+      "start": 1771
+    },
+    {
+      "document": "S036",
+      "end": 1861,
+      "score": 3.783802,
+      "start": 762
+    },
+    {
+      "document": "S037",
+      "end": 3172,
+      "score": 4.296227,
+      "start": 1724
+    },
+    {
+      "document": "S038",
+      "end": 3178,
+      "score": 5.151875,
+      "start": 1867
+    },
+    {
+      "document": "S039",
+      "end": 3092,
+      "score": 4.273424,
+      "start": 1673
+    },
+    {
+      "document": "S040",
+      "end": 2889,
+      "score": 4.389605,
+      "start": 1627
+    },
+    {
+      "document": "S041",
+      "end": 3287,
+      "score": 4.138235,
+      "start": 1883
+    },
+    {
+      "document": "S042",
+      "end": 711,
+      "score": 3.322183,
+      "start": 0
+    },
+    {
+      "document": "S043",
+      "end": 3003,
+      "score": 4.279849,
+      "start": 1628
+    },
+    {
+      "document": "S044",
+      "end": 797,
+      "score": 3.72774,
+      "start": 0
+    },
+    {
+      "document": "S045",
+      "end": 3055,
+      "score": 5.772253,
+      "start": 1664
+    },
+    {
+      "document": "S046",
+      "end": 1893,
+      "score": 3.285002,
+      "start": 729
+    },
+    {
+      "document": "S047",
+      "end": 3291,
+      "score": 4.386766,
+      "start": 1862
+    },
+    {
+      "document": "S048",
+      "end": 3317,
+      "score": 5.866369,
+      "start": 1883
+    },
+    {
+      "document": "S049",
+      "end": 3124,
+      "score": 4.200354,
+      "start": 1710
+    },
+    {
+      "document": "S050",
+      "end": 2974,
+      "score": 2.72432,
+      "start": 1688
+    },
+    {
+      "document": "S051",
+      "end": 2262,
+      "score": 3.23337,
+      "start": 793
+    },
+    {
+      "document": "S052",
+      "end": 3178,
+      "score": 4.425646,
+      "start": 1890
+    },
+    {
+      "document": "S053",
+      "end": 1819,
+      "score": 3.624486,
+      "start": 764
+    },
+    {
+      "document": "S054",
+      "end": 3299,
+      "score": 4.496163,
+      "start": 1818
+    },
+    {
+      "document": "S055",
+      "end": 3155,
+      "score": 4.201912,
+      "start": 1783
+    },
+    {
+      "document": "S056",
+      "end": 731,
+      "score": 3.642049,
+      "start": 0
+    },
+    {
+      "document": "S057",
+      "end": 1618,
+      "score": 4.028084,
+      "start": 697
+    },
+    {
+      "document": "S058",
+      "end": 3611,
+      "score": 2.980095,
+      "start": 3333
+    },
+    {
+      "document": "S059",
+      "end": 3086,
+      "score": 6.28907,
+      "start": 1801
+    },
+    {
+      "document": "S060",
+      "end": 777,
+      "score": 3.743452,
+      "start": 0
+    },
+    {
+      "document": "S061",
+      "end": 3028,
+      "score": 5.357636,
+      "start": 1676
+    },
+    {
+      "document": "S062",
+      "end": 3250,
+      "score": 3.672603,
+      "start": 1849
+    },
+    {
+      "document": "S063",
+      "end": 1668,
+      "score": 3.173522,
+      "start": 734
+    },
+    {
+      "document": "S064",
+      "end": 3193,
+      "score": 6.154396,
+      "start": 1860
+    },
+    {
+      "document": "S065",
+      "end": 807,
+      "score": 3.250005,
+      "start": 0
+    },
+    {
+      "document": "S066",
+      "end": 3093,
+      "score": 5.698897,
+      "start": 1708
+    },
+    {
+      "document": "S067",
+      "end": 1899,
+      "score": 3.718184,
+      "start": 764
+    },
+    {
+      "document": "S068",
+      "end": 767,
+      "score": 3.700614,
+      "start": 0
+    },
+    {
+      "document": "S069",
+      "end": 3456,
+      "score": 4.347599,
+      "start": 2000
+    },
+    {
+      "document": "S070",
+      "end": 3058,
+      "score": 3.772033,
+      "start": 1803
+    },
+    {
+      "document": "S071",
+      "end": 2913,
+      "score": 5.524097,
+      "start": 1669
+    },
+    {
+      "document": "S072",
+      "end": 751,
+      "score": 3.363039,
+      "start": 0
+    },
+    {
+      "document": "S073",
+      "end": 3173,
+      "score": 4.501529,
+      "start": 1870
+    },
+    {
+      "document": "S074",
+      "end": 3356,
+      "score": 5.766451,
+      "start": 1926
+    },
+    {
+      "document": "S075",
+      "end": 3061,
+      "score": 3.725142,
+      "start": 1747
+    },
+    {
+      "document": "S076",
+      "end": 3210,
+      "score": 4.271088,
+      "start": 1733
+    },
+    {
+      "document": "S077",
+      "end": 2887,
+      "score": 4.453767,
+      "start": 1631
+    },
+    {
+      "document": "S078",
+      "end": 1924,
+      "score": 3.741759,
+      "start": 752
+    },
+    {
+      "document": "S079",
+      "end": 2802,
+      "score": 3.894402,
+      "start": 1596
+    },
+    {
+      "document": "S080",
+      "end": 721,
+      "score": 3.312888,
+      "start": 0
+    },
+    {
+      "document": "S081",
+      "end": 2106,
+      "score": 3.680761,
+      "start": 732
+    },
+    {
+      "document": "S082",
+      "end": 3214,
+      "score": 4.040533,
+      "start": 1773
+    },
+    {
+      "document": "S083",
+      "end": 3061,
+      "score": 4.343989,
+      "start": 1681
+    },
+    {
+      "document": "S084",
+      "end": 2103,
+      "score": 3.23337,
+      "start": 720
+    },
+    {
+      "document": "S085",
+      "end": 2916,
+      "score": 4.489734,
+      "start": 1643
+    },
+    {
+      "document": "S086",
+      "end": 800,
+      "score": 3.645551,
+      "start": 0
+    },
+    {
+      "document": "S087",
+      "end": 1884,
+      "score": 4.675182,
+      "start": 729
+    },
+    {
+      "document": "S088",
+      "end": 2730,
+      "score": 4.933016,
+      "start": 2152
+    },
+    {
+      "document": "S089",
+      "end": 750,
+      "score": 3.28195,
+      "start": 0
+    },
+    {
+      "document": "S090",
+      "end": 3277,
+      "score": 3.700806,
+      "start": 1786
+    },
+    {
+      "document": "S091",
+      "end": 3901,
+      "score": 5.018586,
+      "start": 3319
+    },
+    {
+      "document": "S092",
+      "end": 3503,
+      "score": 3.558037,
+      "start": 2093
+    },
+    {
+      "document": "S093",
+      "end": 2906,
+      "score": 4.38207,
+      "start": 1665
+    },
+    {
+      "document": "S094",
+      "end": 778,
+      "score": 3.308993,
+      "start": 0
+    },
+    {
+      "document": "S095",
+      "end": 2245,
+      "score": 4.738629,
+      "start": 747
+    },
+    {
+      "document": "S096",
+      "end": 1860,
+      "score": 3.882225,
+      "start": 754
+    },
+    {
+      "document": "S097",
+      "end": 2845,
+      "score": 3.976525,
+      "start": 1683
+    },
+    {
+      "document": "S098",
+      "end": 2061,
+      "score": 4.569341,
+      "start": 768
+    },
+    {
+      "document": "S099",
+      "end": 2654,
+      "score": 5.12502,
+      "start": 2086
+    },
+    {
+      "document": "S100",
+      "end": 3145,
+      "score": 5.35973,
+      "start": 1848
+    },
+    {
+      "document": "S101",
+      "end": 2227,
+      "score": 4.89967,
+      "start": 731
+    },
+    {
+      "document": "S102",
+      "end": 790,
+      "score": 3.645551,
+      "start": 0
+    },
+    {
+      "document": "S103",
+      "end": 740,
+      "score": 3.724819,
+      "start": 0
+    },
+    {
+      "document": "S104",
+      "end": 3162,
+      "score": 4.154336,
+      "start": 1742
+    },
+    {
+      "document": "S105",
+      "end": 3237,
+      "score": 5.175089,
+      "start": 1758
+    },
+    {
+      "document": "S106",
+      "end": 753,
+      "score": 3.654467,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "score": 8.141219,
+      "start": 0
+    },
+    {
+      "document": "S108",
+      "end": 1992,
+      "score": 2.23547,
+      "start": 1194
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 11.022841,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1958,
+      "score": 2.569081,
+      "start": 1203
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "score": 7.976652,
+      "start": 1207
+    },
+    {
+      "document": "S112",
+      "end": 1928,
+      "score": 2.249394,
+      "start": 1166
+    }
+  ],
+  "settings": {
+    "k": 1,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": false,
+      "claim": "improves",
+      "direction": null,
+      "document": "S003",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S010",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S013",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S017",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S040",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S043",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S054",
+      "reason": null
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": [
+    "S017"
+  ]
+}

@@ -1,0 +1,967 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-tpl-hard-complex",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "corpus_name": "rag-tpl-hard-complex",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "per_study_accuracy",
+        "n_rows": 40,
+        "point": 0.0,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "best",
+  "levels": [
+    "complex"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which method achieves the highest factual accuracy within each paper?",
+  "question_id": "best-accuracy",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 0.0,
+      "expected_tied": [],
+      "expected_winner": "rag",
+      "expected_wins": {
+        "chain-of-thought": 3,
+        "fine-tuned": 1,
+        "no-retrieval": 10,
+        "query-rewriting": 1,
+        "rag": 22,
+        "rag-no-rerank": 1,
+        "rag-random": 2
+      },
+      "kind": "best",
+      "metric": "factual_accuracy",
+      "per_study_accuracy": 0.0,
+      "per_study_accuracy_all_papers": 0.6,
+      "studies": [
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S001"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S002"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S003"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S004"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S005"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S006"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S007"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S008"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S009"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S010"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S011"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S012"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S013"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S014"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S015"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S016"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S017"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag-no-rerank",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S018"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S019"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S020"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S021"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S022"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S023"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S024"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S025"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S026"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S027"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S028"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S029"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S030"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S031"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S032"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S033"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S034"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "chain-of-thought",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S035"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S036"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S037"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "chain-of-thought",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S038"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S039"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S040"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S041"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S042"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S043"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S044"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S045"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S046"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S047"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "fine-tuned",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S048"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S049"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S050"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S051"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S052"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S053"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S054"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S055"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S056"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S057"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S058"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S059"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S060"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S061"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S062"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S063"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag-random",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S064"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S065"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S066"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "query-rewriting",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S067"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S068"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag-random",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S069"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S070"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S071"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S072"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S073"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "chain-of-thought",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S074"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S075"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S076"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S077"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S078"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S079"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S080"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S081"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S082"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S083"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S084"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S085"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S086"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S087"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S088"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S089"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S090"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S091"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S092"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S093"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S094"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S095"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S096"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S097"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S098"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S099"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S100"
+        }
+      ],
+      "studies_all_papers": 100,
+      "studies_scored": 40,
+      "system": "rag-baseline",
+      "tied": [],
+      "winner": null,
+      "winner_correct": false,
+      "wins": {}
+    }
+  ]
+}

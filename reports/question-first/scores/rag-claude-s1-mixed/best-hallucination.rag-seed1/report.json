@@ -1,0 +1,255 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.8889,
+        "low": 0.2222,
+        "method": "BCa",
+        "metric": "per_study_accuracy",
+        "n_rows": 9,
+        "point": 0.5556,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "best",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which method achieves the lowest hallucination rate within each paper?",
+  "question_id": "best-hallucination",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 0.5556,
+      "expected_tied": [],
+      "expected_winner": "rag",
+      "expected_wins": {
+        "chain-of-thought": 1,
+        "fine-tuned": 2,
+        "no-retrieval": 1,
+        "rag": 3,
+        "rag-no-rerank": 1,
+        "self-consistency": 1
+      },
+      "kind": "best",
+      "metric": "hallucination_rate",
+      "per_study_accuracy": 0.5556,
+      "per_study_accuracy_all_papers": 0.8,
+      "studies": [
+        {
+          "correct": true,
+          "counted": true,
+          "expected": "chain-of-thought",
+          "expected_tied": [],
+          "given": "chain-of-thought",
+          "given_tied": [],
+          "paper": "S001"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S002"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S003"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S004"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S005"
+        },
+        {
+          "correct": true,
+          "counted": true,
+          "expected": "fine-tuned",
+          "expected_tied": [],
+          "given": "fine-tuned",
+          "given_tied": [],
+          "paper": "S006"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "fine-tuned",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S007"
+        },
+        {
+          "correct": true,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": "rag",
+          "given_tied": [],
+          "paper": "S008"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S009"
+        },
+        {
+          "correct": true,
+          "counted": true,
+          "expected": "rag-no-rerank",
+          "expected_tied": [],
+          "given": "rag-no-rerank",
+          "given_tied": [],
+          "paper": "S010"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S011"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "no-retrieval",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S012"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S013"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S014"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S015"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S016"
+        },
+        {
+          "correct": false,
+          "counted": true,
+          "expected": "self-consistency",
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S017"
+        },
+        {
+          "correct": true,
+          "counted": true,
+          "expected": "rag",
+          "expected_tied": [],
+          "given": "rag",
+          "given_tied": [],
+          "paper": "S018"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S019"
+        },
+        {
+          "correct": true,
+          "counted": false,
+          "expected": null,
+          "expected_tied": [],
+          "given": null,
+          "given_tied": [],
+          "paper": "S020"
+        }
+      ],
+      "studies_all_papers": 20,
+      "studies_scored": 9,
+      "system": "rag-baseline",
+      "tied": [],
+      "winner": "rag",
+      "winner_correct": true,
+      "wins": {
+        "chain-of-thought": 1,
+        "fine-tuned": 1,
+        "rag": 2,
+        "rag-no-rerank": 1
+      }
+    }
+  ]
+}

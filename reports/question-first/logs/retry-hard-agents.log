@@ -1,0 +1,27 @@
+skip engine inv-metrics rag-tpl-hard-complex: done
+skip rag inv-metrics rag-tpl-hard-complex: done
+broker: start run=rag-tpl-hard-complex.inv-metrics records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.inv-metrics records=102 claims=14 head=9f9dcd37d5f43afc8b69b1d478f4b8f07f577fc061782a99c5a2ce531ecd158e
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+run rag-tpl-hard-complex.inv-metrics: broker head=9f9dcd37d5f43afc8b69b1d478f4b8f07f577fc061782a99c5a2ce531ecd158e records=102 claims=14
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.inv-metrics/answer.json: kind=inventory entries=8 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-metrics/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-metrics/report.md
+skip engine inv-methods rag-tpl-hard-complex: done
+skip rag inv-methods rag-tpl-hard-complex: done
+broker: start run=rag-tpl-hard-complex.inv-methods records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.inv-methods records=129 claims=14 head=fae0160a766830f623aa2211d561f775ae9043900018cf512ca8048a154b7c9a
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+
+[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new[0m
+LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'.
+
+run rag-tpl-hard-complex.inv-methods: broker head=fae0160a766830f623aa2211d561f775ae9043900018cf512ca8048a154b7c9a records=129 claims=14
+FAIL UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL agent inv-methods rag-tpl-hard-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-methods/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-methods/report.md

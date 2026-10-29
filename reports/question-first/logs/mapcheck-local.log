@@ -1,0 +1,27 @@
+Mapping gate waiting for the three replicas and gateway on gammaweb07
+GPU 0 free memory before mapping: 2895 MiB
+Model services ready at 2026-10-28T08:25:57+01:00; starting baseline mapping check
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/rag-hallucination/answer.json: label=supported studies=5
+MAPCHECK rag rag-hallucination exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/rag-hallucination/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/rag-hallucination/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/inv-metrics/answer.json: kind=inventory entries=8
+MAPCHECK rag inv-metrics exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/inv-metrics/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/inv-metrics/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/cons-accuracy/answer.json: kind=consistency studies=4
+MAPCHECK rag cons-accuracy exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/cons-accuracy/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/cons-accuracy/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/best-accuracy/answer.json: kind=best winner=None studies=6
+MAPCHECK rag best-accuracy exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/best-accuracy/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/best-accuracy/report.md
+broker: start run=mapcheck-inv-metrics records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=mapcheck-inv-metrics records=128 claims=29 head=8cd07e43b0f1f0c4a55f3f1caba4a2d5707c8d08bb5b9a8c4c839d6b1f646757
+run mapcheck-inv-metrics: broker head=8cd07e43b0f1f0c4a55f3f1caba4a2d5707c8d08bb5b9a8c4c839d6b1f646757 records=128 claims=29
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/agent/inv-metrics/answer.json: kind=inventory entries=9 agent exit=submitted
+MAPCHECK agent inv-metrics exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/agent-inv-metrics/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/agent-inv-metrics/report.md
+broker: start run=mapcheck-best-accuracy records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=mapcheck-best-accuracy records=76 claims=27 head=2040eb316b8e8b4badc8e859c090b6cbbaeb34050d778f3cf1714189875b56f7
+run mapcheck-best-accuracy: broker head=2040eb316b8e8b4badc8e859c090b6cbbaeb34050d778f3cf1714189875b56f7 records=76 claims=27
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/agent/best-accuracy/answer.json: kind=best winner=no-retrieval studies=11 agent exit=submitted
+MAPCHECK agent best-accuracy exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/agent-best-accuracy/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/agent-best-accuracy/report.md

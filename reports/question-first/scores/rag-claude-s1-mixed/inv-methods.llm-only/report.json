@@ -1,0 +1,2717 @@
+{
+  "attribution": null,
+  "cascade": {
+    "missed_by_all": {},
+    "rows": [
+      {
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "found": 61,
+        "found_matched": 61,
+        "only": 61,
+        "only_matched": 61
+      }
+    ]
+  },
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": {
+    "papers": 20,
+    "per_paper": {
+      "cached_calls": 0.0,
+      "calls": 2.0,
+      "input_tokens": 2098.0,
+      "made_model_calls": 2.1,
+      "model_calls": 2.1,
+      "output_tokens": 296.3,
+      "seconds": 3.1482
+    },
+    "total": {
+      "cached_calls": 0,
+      "calls": 40,
+      "input_tokens": 41960,
+      "made_model_calls": 42,
+      "model_calls": 42,
+      "output_tokens": 5926,
+      "seconds": 62.965,
+      "workers": 3
+    }
+  },
+  "extraction": {
+    "missed": [],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 61,
+        "items": 61,
+        "level": "all",
+        "matched": 61,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "complex",
+        "matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "contradictory",
+        "matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "distributed",
+        "matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "explicit",
+        "matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 13,
+        "items": 13,
+        "level": "paraphrased",
+        "matched": 13,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 1.0,
+        "facts": 61,
+        "items": 61,
+        "level": "all",
+        "matched": 61,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "complex",
+        "matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "contradictory",
+        "matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "distributed",
+        "matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "explicit",
+        "matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "f1": 1.0,
+        "facts": 13,
+        "items": 13,
+        "level": "paraphrased",
+        "matched": 13,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0
+      }
+    ],
+    "scored_types": [
+      "condition"
+    ],
+    "unmatched_items": []
+  },
+  "extractors": {
+    "cost": [
+      {
+        "calls": 20,
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "input_tokens": 23279,
+        "model_calls": 22,
+        "output_tokens": 4178,
+        "seconds": 0.146
+      },
+      {
+        "calls": 20,
+        "extractor": "llm_screen@1#41b0d6e6793f",
+        "input_tokens": 18681,
+        "model_calls": 20,
+        "output_tokens": 1748,
+        "seconds": 0.14
+      }
+    ],
+    "papers": [
+      {
+        "cluster": "1/S001",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S005",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S005"
+      },
+      {
+        "cluster": "1/S006",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 3,
+        "items": 3,
+        "matched": 3,
+        "paper": "S006"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 3,
+        "items": 3,
+        "matched": 3,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S008",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S008"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S010",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 3,
+        "items": 3,
+        "matched": 3,
+        "paper": "S010"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S012",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S012"
+      },
+      {
+        "cluster": "1/S013",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 3,
+        "items": 3,
+        "matched": 3,
+        "paper": "S013"
+      },
+      {
+        "cluster": "1/S014",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S014"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 3,
+        "items": 3,
+        "matched": 3,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S020",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "facts": 4,
+        "items": 4,
+        "matched": 4,
+        "paper": "S020"
+      }
+    ],
+    "recall_scope": "called",
+    "rows": [
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 61,
+        "items": 61,
+        "level": "all",
+        "matched": 61,
+        "only": 61,
+        "only_matched": 61,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 61
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "complex",
+        "matched": 9,
+        "only": 9,
+        "only_matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 9
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "contradictory",
+        "matched": 15,
+        "only": 15,
+        "only_matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 15
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "distributed",
+        "matched": 9,
+        "only": 9,
+        "only_matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 9
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "explicit",
+        "matched": 15,
+        "only": 15,
+        "only_matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 15
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 13,
+        "items": 13,
+        "level": "paraphrased",
+        "matched": 13,
+        "only": 13,
+        "only_matched": 13,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 13
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 61,
+        "items": 61,
+        "level": "all",
+        "matched": 61,
+        "only": 61,
+        "only_matched": 61,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 61
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "complex",
+        "matched": 9,
+        "only": 9,
+        "only_matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 9
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "contradictory",
+        "matched": 15,
+        "only": 15,
+        "only_matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 15
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 9,
+        "items": 9,
+        "level": "distributed",
+        "matched": 9,
+        "only": 9,
+        "only_matched": 9,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 9
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 15,
+        "items": 15,
+        "level": "explicit",
+        "matched": 15,
+        "only": 15,
+        "only_matched": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 15
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "condition",
+        "extractor": "llm_condition@1#f409ef68fc87",
+        "f1": 1.0,
+        "facts": 13,
+        "items": 13,
+        "level": "paraphrased",
+        "matched": 13,
+        "only": 13,
+        "only_matched": 13,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": 1.0,
+        "span_hits": 13
+      }
+    ]
+  },
+  "funnel": {
+    "documents": 20,
+    "per_document": {
+      "calls": 2.0,
+      "input_tokens": 2098.0,
+      "model_calls": 2.1,
+      "output_tokens": 296.3,
+      "tokens": 2394.3
+    },
+    "rows": [
+      {
+        "calls": 2,
+        "document": "S001",
+        "expected_relevant": true,
+        "input_tokens": 1775,
+        "level": "explicit",
+        "model_calls": 2,
+        "output_tokens": 326,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2101
+      },
+      {
+        "calls": 2,
+        "document": "S002",
+        "expected_relevant": true,
+        "input_tokens": 1917,
+        "level": "paraphrased",
+        "model_calls": 2,
+        "output_tokens": 297,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2214
+      },
+      {
+        "calls": 2,
+        "document": "S003",
+        "expected_relevant": true,
+        "input_tokens": 2153,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 244,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2397
+      },
+      {
+        "calls": 2,
+        "document": "S004",
+        "expected_relevant": true,
+        "input_tokens": 2309,
+        "level": "complex",
+        "model_calls": 2,
+        "output_tokens": 243,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2552
+      },
+      {
+        "calls": 2,
+        "document": "S005",
+        "expected_relevant": true,
+        "input_tokens": 1993,
+        "level": "contradictory",
+        "model_calls": 2,
+        "output_tokens": 356,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2349
+      },
+      {
+        "calls": 2,
+        "document": "S006",
+        "expected_relevant": true,
+        "input_tokens": 1837,
+        "level": "explicit",
+        "model_calls": 2,
+        "output_tokens": 266,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2103
+      },
+      {
+        "calls": 2,
+        "document": "S007",
+        "expected_relevant": true,
+        "input_tokens": 2115,
+        "level": "paraphrased",
+        "model_calls": 2,
+        "output_tokens": 265,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2380
+      },
+      {
+        "calls": 2,
+        "document": "S008",
+        "expected_relevant": true,
+        "input_tokens": 1893,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 239,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2132
+      },
+      {
+        "calls": 2,
+        "document": "S009",
+        "expected_relevant": true,
+        "input_tokens": 2209,
+        "level": "complex",
+        "model_calls": 2,
+        "output_tokens": 213,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2422
+      },
+      {
+        "calls": 2,
+        "document": "S010",
+        "expected_relevant": true,
+        "input_tokens": 1759,
+        "level": "contradictory",
+        "model_calls": 2,
+        "output_tokens": 282,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2041
+      },
+      {
+        "calls": 2,
+        "document": "S011",
+        "expected_relevant": true,
+        "input_tokens": 1835,
+        "level": "explicit",
+        "model_calls": 2,
+        "output_tokens": 355,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2190
+      },
+      {
+        "calls": 2,
+        "document": "S012",
+        "expected_relevant": true,
+        "input_tokens": 1939,
+        "level": "paraphrased",
+        "model_calls": 2,
+        "output_tokens": 224,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2163
+      },
+      {
+        "calls": 2,
+        "document": "S013",
+        "expected_relevant": true,
+        "input_tokens": 2187,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 310,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2497
+      },
+      {
+        "calls": 2,
+        "document": "S014",
+        "expected_relevant": true,
+        "input_tokens": 1881,
+        "level": "complex",
+        "model_calls": 2,
+        "output_tokens": 206,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2087
+      },
+      {
+        "calls": 2,
+        "document": "S015",
+        "expected_relevant": true,
+        "input_tokens": 1949,
+        "level": "contradictory",
+        "model_calls": 2,
+        "output_tokens": 345,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2294
+      },
+      {
+        "calls": 2,
+        "document": "S016",
+        "expected_relevant": true,
+        "input_tokens": 1901,
+        "level": "explicit",
+        "model_calls": 2,
+        "output_tokens": 345,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2246
+      },
+      {
+        "calls": 2,
+        "document": "S017",
+        "expected_relevant": true,
+        "input_tokens": 3140,
+        "level": "paraphrased",
+        "model_calls": 3,
+        "output_tokens": 540,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3680
+      },
+      {
+        "calls": 2,
+        "document": "S018",
+        "expected_relevant": true,
+        "input_tokens": 1983,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 222,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2205
+      },
+      {
+        "calls": 2,
+        "document": "S019",
+        "expected_relevant": true,
+        "input_tokens": 2115,
+        "level": "complex",
+        "model_calls": 2,
+        "output_tokens": 275,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2390
+      },
+      {
+        "calls": 2,
+        "document": "S020",
+        "expected_relevant": true,
+        "input_tokens": 3070,
+        "level": "contradictory",
+        "model_calls": 3,
+        "output_tokens": 373,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3443
+      }
+    ],
+    "screen": {
+      "documents": 20,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "screened_out": [],
+      "screened_out_wrongly": [],
+      "tn": 0,
+      "tp": 20
+    },
+    "stop_positions": {
+      "exhausted": 20
+    },
+    "strategy": "gaps"
+  },
+  "integration": {
+    "clean_share": 0.0333,
+    "entries": 30,
+    "keyed_entries": 30,
+    "keys": 14,
+    "kind": "inventory",
+    "merged": 0,
+    "split": 13
+  },
+  "intervals": {
+    "extraction": [
+      {
+        "evidence_type": "condition",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 1.0,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "all",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 1.0,
+        "unit": "row"
+      }
+    ],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.6667,
+        "low": 0.3,
+        "method": "BCa",
+        "metric": "precision",
+        "n_rows": 30,
+        "point": 0.4667,
+        "system": "evidence-engine",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "recall",
+        "n_rows": 30,
+        "point": 1.0,
+        "system": "evidence-engine",
+        "unit": "row"
+      },
+      {
+        "high": 0.8,
+        "low": 0.4615,
+        "method": "BCa",
+        "metric": "f1",
+        "n_rows": 30,
+        "point": 0.6364,
+        "system": "evidence-engine",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": {
+    "outside": [
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.a1",
+        "paper": "S001",
+        "role": "claim"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m1",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m2",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m3",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m4",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.a1",
+        "paper": "S001",
+        "role": "claim"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.a1",
+        "paper": "S002",
+        "role": "claim"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m1",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m2",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m3",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m4",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.a1",
+        "paper": "S002",
+        "role": "claim"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.a1",
+        "paper": "S003",
+        "role": "claim"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.m1",
+        "paper": "S003",
+        "role": "value"
+      },
+      {
+        "fact": "S003.m2",
+        "paper": "S003",
+        "role": "value"
+      },
+      {
+        "fact": "S003.a1",
+        "paper": "S003",
+        "role": "claim"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.a1",
+        "paper": "S004",
+        "role": "claim"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.m1",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m3",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m5",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m4",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m6",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m7",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m9",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m11",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m8",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m10",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m12",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.m2",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.a1",
+        "paper": "S004",
+        "role": "claim"
+      },
+      {
+        "fact": "S005.a1",
+        "paper": "S005",
+        "role": "claim"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.m1",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.m2",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.m3",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.m4",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.a1",
+        "paper": "S005",
+        "role": "claim"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.a1",
+        "paper": "S006",
+        "role": "claim"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.m1",
+        "paper": "S006",
+        "role": "value"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.m2",
+        "paper": "S006",
+        "role": "value"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.m3",
+        "paper": "S006",
+        "role": "value"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.a1",
+        "paper": "S006",
+        "role": "claim"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.a1",
+        "paper": "S007",
+        "role": "claim"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.m1",
+        "paper": "S007",
+        "role": "value"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.m2",
+        "paper": "S007",
+        "role": "value"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.m3",
+        "paper": "S007",
+        "role": "value"
+      },
+      {
+        "fact": "S007.a1",
+        "paper": "S007",
+        "role": "claim"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.a1",
+        "paper": "S008",
+        "role": "claim"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.m1",
+        "paper": "S008",
+        "role": "value"
+      },
+      {
+        "fact": "S008.m2",
+        "paper": "S008",
+        "role": "value"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.a1",
+        "paper": "S008",
+        "role": "claim"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.a1",
+        "paper": "S009",
+        "role": "claim"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.m1",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m3",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m4",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m5",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m7",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m6",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m8",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m2",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.a1",
+        "paper": "S009",
+        "role": "claim"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.a1",
+        "paper": "S010",
+        "role": "claim"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.m1",
+        "paper": "S010",
+        "role": "value"
+      },
+      {
+        "fact": "S010.m2",
+        "paper": "S010",
+        "role": "value"
+      },
+      {
+        "fact": "S010.m3",
+        "paper": "S010",
+        "role": "value"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.a1",
+        "paper": "S010",
+        "role": "claim"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.a1",
+        "paper": "S011",
+        "role": "claim"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m1",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m2",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m3",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m4",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.a1",
+        "paper": "S011",
+        "role": "claim"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.a1",
+        "paper": "S012",
+        "role": "claim"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.m1",
+        "paper": "S012",
+        "role": "value"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.m2",
+        "paper": "S012",
+        "role": "value"
+      },
+      {
+        "fact": "S012.a1",
+        "paper": "S012",
+        "role": "claim"
+      },
+      {
+        "fact": "S013.a1",
+        "paper": "S013",
+        "role": "claim"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.m1",
+        "paper": "S013",
+        "role": "value"
+      },
+      {
+        "fact": "S013.m2",
+        "paper": "S013",
+        "role": "value"
+      },
+      {
+        "fact": "S013.m3",
+        "paper": "S013",
+        "role": "value"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.a1",
+        "paper": "S013",
+        "role": "claim"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.a1",
+        "paper": "S014",
+        "role": "claim"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.m1",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m3",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m5",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m4",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m6",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m7",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m9",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m11",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m8",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m10",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m12",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m2",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.a1",
+        "paper": "S014",
+        "role": "claim"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.a1",
+        "paper": "S015",
+        "role": "claim"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.m1",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.m2",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.m3",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.m4",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.a1",
+        "paper": "S015",
+        "role": "claim"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.a1",
+        "paper": "S016",
+        "role": "claim"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m1",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m2",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m3",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m4",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.a1",
+        "paper": "S016",
+        "role": "claim"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.a1",
+        "paper": "S017",
+        "role": "claim"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m1",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m2",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m3",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m4",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.a1",
+        "paper": "S017",
+        "role": "claim"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.a1",
+        "paper": "S018",
+        "role": "claim"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.m1",
+        "paper": "S018",
+        "role": "value"
+      },
+      {
+        "fact": "S018.m2",
+        "paper": "S018",
+        "role": "value"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.a1",
+        "paper": "S018",
+        "role": "claim"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.a1",
+        "paper": "S019",
+        "role": "claim"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.m1",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m4",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m7",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m5",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m8",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m3",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m6",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m9",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m10",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m13",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m16",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m11",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m14",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m17",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m12",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m15",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m18",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m2",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.a1",
+        "paper": "S019",
+        "role": "claim"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.a1",
+        "paper": "S020",
+        "role": "claim"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.m1",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.m2",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.m3",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.m4",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.a1",
+        "paper": "S020",
+        "role": "claim"
+      }
+    ],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "inside": 182,
+        "level": "all",
+        "placements": 483,
+        "recall": 0.3768
+      },
+      {
+        "evidence_type": "all",
+        "inside": 46,
+        "level": "complex",
+        "placements": 159,
+        "recall": 0.2893
+      },
+      {
+        "evidence_type": "all",
+        "inside": 40,
+        "level": "contradictory",
+        "placements": 88,
+        "recall": 0.4545
+      },
+      {
+        "evidence_type": "all",
+        "inside": 32,
+        "level": "distributed",
+        "placements": 75,
+        "recall": 0.4267
+      },
+      {
+        "evidence_type": "all",
+        "inside": 34,
+        "level": "explicit",
+        "placements": 88,
+        "recall": 0.3864
+      },
+      {
+        "evidence_type": "all",
+        "inside": 30,
+        "level": "paraphrased",
+        "placements": 73,
+        "recall": 0.411
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "all",
+        "placements": 40,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "complex",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 182,
+        "level": "all",
+        "placements": 182,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 46,
+        "level": "complex",
+        "placements": 46,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 40,
+        "level": "contradictory",
+        "placements": 40,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 32,
+        "level": "distributed",
+        "placements": 32,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 34,
+        "level": "explicit",
+        "placements": 34,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 30,
+        "level": "paraphrased",
+        "placements": 30,
+        "recall": 1.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "all",
+        "placements": 102,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "complex",
+        "placements": 50,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 15,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 9,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 15,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 13,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "all",
+        "placements": 159,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "complex",
+        "placements": 55,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 25,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 26,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 31,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 22,
+        "recall": 0.0
+      }
+    ]
+  },
+  "protocol": {
+    "id": "inv-methods",
+    "lexical_miss": "reject",
+    "sha256": "37612c24c8641c2faf37d5b608a7987202ea5e2646a49b2fb6e89d5bf501490a"
+  },
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "run_id": "rag-claude-s1-mixed",
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 1.0,
+      "entries": 30,
+      "expected_entries": 14,
+      "expected_paper_pairs": 61,
+      "f1": 0.6364,
+      "false_positives": [
+        "B",
+        "R",
+        "RAG with random passages, denoted by the code A1",
+        "The retrieval-augmented generator, denoted by the code R",
+        "The vanilla LLM, denoted by the code B",
+        "chain-of-thought prompting condition",
+        "the configuration that looks up supporting documents",
+        "the generator adapted to the domain by further training",
+        "the generator without any document access",
+        "the language model used on its own",
+        "the model that answers from its own parameters",
+        "the model that samples several answers and votes",
+        "the retrieval variant that skips the reranker",
+        "the system grounded in retrieved passages",
+        "the variant that reads retrieved evidence first",
+        "the variant that reformulates the question before the search"
+      ],
+      "kind": "inventory",
+      "matched": 14,
+      "missed": [],
+      "paper_f1": 0.6885,
+      "paper_pairs": 61,
+      "paper_precision": 0.6885,
+      "paper_recall": 0.6885,
+      "precision": 0.4667,
+      "recall": 1.0,
+      "system": "evidence-engine",
+      "target": "condition"
+    }
+  ]
+}

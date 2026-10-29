@@ -1,0 +1,426 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 27,
+    "exit_status": "submitted",
+    "model_calls": 25,
+    "run_id": "mapcheck-best-accuracy",
+    "steps": 25,
+    "tokens": 249223
+  },
+  "agent_answer": {
+    "concept_sha256": "45bab516e33f3c99c265f533b9c305111f72f823ed10394212efe767ab2c9de5",
+    "kind": "table",
+    "notes": "Eleven of the 20 corpus papers report a factual-accuracy metric (fraction/proportion of answers judged factually correct, answer accuracy = proportion answered with correct facts, or fact-level accuracy); the best method in each is listed in the table. The other nine papers (S001, S006, S007, S008, S010, S012, S016, S017, S018) report hallucination metrics (hallucination rate / hallucination frequency / share of answers with unsupported or invented statements), where lower is better, so they do not measure factual accuracy and no 'highest factual accuracy' method applies to them. In S013 the conditions are coded B (vanilla LLM / no retrieval), R (retrieval-augmented) and A1 (RAG with random passages). In S009, S014 and S019 one table cell is written 'see text' and resolved by an accompanying sentence (RAG 46.5% in S009, retrieval-augmented 53.5% in S014, retrieve-then-read 63.4% in S019).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Reformulate variant (question reformulated before search) achieves the highest factual accuracy (78.1% of answers judged factually correct on LawFactQA), ahead of the read-evidence variant (57.1%), the skip-reranker variant (55.8%) and the no-document generator (50.5%).",
+          "papers": [
+            "S002"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "78.1% (highest)",
+            "origin": "research",
+            "p": "factually correct fraction on LawFactQA",
+            "s": "S002 reformulate variant"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "50.5%",
+            "origin": "research",
+            "p": "factually correct fraction on LawFactQA",
+            "s": "S002 no-doc generator"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Parametric-only condition B achieves the highest fact-level accuracy (78.3% on LawFactQA), edging out retrieval-augmented condition R (77.4%).",
+          "papers": [
+            "S003"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "78.3% (highest)",
+            "origin": "research",
+            "p": "fact-level accuracy on LawFactQA",
+            "s": "S003 parametric-only B"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "77.4%",
+            "origin": "research",
+            "p": "fact-level accuracy on LawFactQA",
+            "s": "S003 retrieval R"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "The parametric-only model achieves the highest answer accuracy (59.8% on LawFactQA), 0.9 percentage points above the retrieve-then-read model (58.9%).",
+          "papers": [
+            "S004"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "59.8% (highest)",
+            "origin": "research",
+            "p": "answer accuracy on LawFactQA",
+            "s": "S004 parametric-only model"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "58.9%",
+            "origin": "research",
+            "p": "answer accuracy on LawFactQA",
+            "s": "S004 retrieve-then-read model"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "The retrieval-augmented model achieves the highest answer accuracy (53.8% on HistoryQuest), ahead of the fine-tuned model (47.6%), RAG without reranking (44.8%) and the closed-book model (40.6%).",
+          "papers": [
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "53.8% (highest)",
+            "origin": "research",
+            "p": "answer accuracy on HistoryQuest",
+            "s": "S005 retrieval-augmented model"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "40.6%",
+            "origin": "research",
+            "p": "answer accuracy on HistoryQuest",
+            "s": "S005 closed-book model"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "The parametric-only model achieves the highest fact-level accuracy (53.8% on NewsTruthQA), 7.3 percentage points above the RAG pipeline (46.5%).",
+          "papers": [
+            "S009"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "53.8% (highest)",
+            "origin": "research",
+            "p": "fact-level accuracy on NewsTruthQA",
+            "s": "S009 parametric-only model"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "46.5%",
+            "origin": "research",
+            "p": "fact-level accuracy on NewsTruthQA",
+            "s": "S009 RAG pipeline"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "Chain-of-thought prompting achieves the highest fact-level accuracy (71.8% on TriviaCheck), ahead of retrieve-then-read (67.6%), RAG with random passages (58.1%) and the closed-book model (54.3%).",
+          "papers": [
+            "S011"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "71.8% (highest)",
+            "origin": "research",
+            "p": "fact-level accuracy on TriviaCheck",
+            "s": "S011 chain-of-thought prompting"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "67.6%",
+            "origin": "research",
+            "p": "fact-level accuracy on TriviaCheck",
+            "s": "S011 retrieve-then-read model"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "Condition B (vanilla LLM / no retrieval) achieves the highest answer accuracy (47.5% on PopCultureQA), ahead of RAG with random passages A1 (42.5%) and retrieval-augmented R (40.3%).",
+          "papers": [
+            "S013"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "47.5% (highest)",
+            "origin": "research",
+            "p": "answer accuracy AA on PopCultureQA",
+            "s": "S013 condition B (vanilla LLM / no retrieval)"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "42.5%",
+            "origin": "research",
+            "p": "answer accuracy AA on main benchmark",
+            "s": "S013 condition A1 (RAG with random passages)"
+          }
+        ],
+        "id": "r7"
+      },
+      {
+        "cells": {
+          "conclusion": "The closed-book model achieves the highest answer accuracy (60.6% on BioClaimQA), 7.1 percentage points above the retrieval-augmented model (53.5%).",
+          "papers": [
+            "S014"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "60.6% (highest)",
+            "origin": "research",
+            "p": "answer accuracy on BioClaimQA",
+            "s": "S014 closed-book model"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "53.5%",
+            "origin": "research",
+            "p": "answer accuracy on BioClaimQA",
+            "s": "S014 retrieval-augmented model"
+          }
+        ],
+        "id": "r8"
+      },
+      {
+        "cells": {
+          "conclusion": "The fine-tuned model achieves the highest answer accuracy (69.8% on SciFactBench), ahead of the RAG pipeline (66.1%), the parametric-only model (62.5%) and RAG with random passages (33.2%).",
+          "papers": [
+            "S015"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "69.8% (highest)",
+            "origin": "research",
+            "p": "answer accuracy on SciFactBench",
+            "s": "S015 fine-tuned model"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "66.1%",
+            "origin": "research",
+            "p": "answer accuracy on SciFactBench",
+            "s": "S015 RAG pipeline"
+          }
+        ],
+        "id": "r9"
+      },
+      {
+        "cells": {
+          "conclusion": "The no-retrieval baseline achieves the highest fact-level accuracy (64.2% on TriviaCheck), 0.8 percentage points above the retrieve-then-read model (63.4%).",
+          "papers": [
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "64.2% (highest)",
+            "origin": "research",
+            "p": "fact-level accuracy on TriviaCheck",
+            "s": "S019 no-retrieval baseline"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "63.4%",
+            "origin": "research",
+            "p": "fact-level accuracy on TriviaCheck",
+            "s": "S019 retrieve-then-read model"
+          }
+        ],
+        "id": "r10"
+      },
+      {
+        "cells": {
+          "conclusion": "The retrieval-augmented model achieves the highest answer accuracy (64.6% on LawFactQA), ahead of the fine-tuned model (55.2%), the no-retrieval baseline (52.3%) and self-consistency decoding (35.7%).",
+          "papers": [
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f21",
+            "o": "64.6% (highest)",
+            "origin": "research",
+            "p": "answer accuracy on LawFactQA",
+            "s": "S020 retrieval-augmented model"
+          },
+          {
+            "claims": [],
+            "id": "f22",
+            "o": "52.3%",
+            "origin": "research",
+            "p": "answer accuracy on LawFactQA",
+            "s": "S020 no-retrieval baseline"
+          }
+        ],
+        "id": "r11"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Reformulate variant (question reformulated before search) achieves the highest factual accuracy (78.1% of answers judged factually correct on LawFactQA), ahead of the read-evidence variant (57.1%), the skip-reranker variant (55.8%) and the no-document generator (50.5%).\", \"papers\": [\"S002\"]}\n  fact: S002 reformulate variant | factually correct fraction on LawFactQA | 78.1% (highest)\n  fact: S002 no-doc generator | factually correct fraction on LawFactQA | 50.5%\nRow r2: {\"conclusion\": \"Parametric-only condition B achieves the highest fact-level accuracy (78.3% on LawFactQA), edging out retrieval-augmented condition R (77.4%).\", \"papers\": [\"S003\"]}\n  fact: S003 parametric-only B | fact-level accuracy on LawFactQA | 78.3% (highest)\n  fact: S003 retrieval R | fact-level accuracy on LawFactQA | 77.4%\nRow r3: {\"conclusion\": \"The parametric-only model achieves the highest answer accuracy (59.8% on LawFactQA), 0.9 percentage points above the retrieve-then-read model (58.9%).\", \"papers\": [\"S004\"]}\n  fact: S004 parametric-only model | answer accuracy on LawFactQA | 59.8% (highest)\n  fact: S004 retrieve-then-read model | answer accuracy on LawFactQA | 58.9%\nRow r4: {\"conclusion\": \"The retrieval-augmented model achieves the highest answer accuracy (53.8% on HistoryQuest), ahead of the fine-tuned model (47.6%), RAG without reranking (44.8%) and the closed-book model (40.6%).\", \"papers\": [\"S005\"]}\n  fact: S005 retrieval-augmented model | answer accuracy on HistoryQuest | 53.8% (highest)\n  fact: S005 closed-book model | answer accuracy on HistoryQuest | 40.6%\nRow r5: {\"conclusion\": \"The parametric-only model achieves the highest fact-level accuracy (53.8% on NewsTruthQA), 7.3 percentage points above the RAG pipeline (46.5%).\", \"papers\": [\"S009\"]}\n  fact: S009 parametric-only model | fact-level accuracy on NewsTruthQA | 53.8% (highest)\n  fact: S009 RAG pipeline | fact-level accuracy on NewsTruthQA | 46.5%\nRow r6: {\"conclusion\": \"Chain-of-thought prompting achieves the highest fact-level accuracy (71.8% on TriviaCheck), ahead of retrieve-then-read (67.6%), RAG with random passages (58.1%) and the closed-book model (54.3%).\", \"papers\": [\"S011\"]}\n  fact: S011 chain-of-thought prompting | fact-level accuracy on TriviaCheck | 71.8% (highest)\n  fact: S011 retrieve-then-read model | fact-level accuracy on TriviaCheck | 67.6%\nRow r7: {\"conclusion\": \"Condition B (vanilla LLM / no retrieval) achieves the highest answer accuracy (47.5% on PopCultureQA), ahead of RAG with random passages A1 (42.5%) and retrieval-augmented R (40.3%).\", \"papers\": [\"S013\"]}\n  fact: S013 condition B (vanilla LLM / no retrieval) | answer accuracy AA on PopCultureQA | 47.5% (highest)\n  fact: S013 condition A1 (RAG with random passages) | answer accuracy AA on main benchmark | 42.5%\nRow r8: {\"conclusion\": \"The closed-book model achieves the highest answer accuracy (60.6% on BioClaimQA), 7.1 percentage points above the retrieval-augmented model (53.5%).\", \"papers\": [\"S014\"]}\n  fact: S014 closed-book model | answer accuracy on BioClaimQA | 60.6% (highest)\n  fact: S014 retrieval-augmented model | answer accuracy on BioClaimQA | 53.5%\nRow r9: {\"conclusion\": \"The fine-tuned model achieves the highest answer accuracy (69.8% on SciFactBench), ahead of the RAG pipeline (66.1%), the parametric-only model (62.5%) and RAG with random passages (33.2%).\", \"papers\": [\"S015\"]}\n  fact: S015 fine-tuned model | answer accuracy on SciFactBench | 69.8% (highest)\n  fact: S015 RAG pipeline | answer accuracy on SciFactBench | 66.1%\nRow r10: {\"conclusion\": \"The no-retrieval baseline achieves the highest fact-level accuracy (64.2% on TriviaCheck), 0.8 percentage points above the retrieve-then-read model (63.4%).\", \"papers\": [\"S019\"]}\n  fact: S019 no-retrieval baseline | fact-level accuracy on TriviaCheck | 64.2% (highest)\n  fact: S019 retrieve-then-read model | fact-level accuracy on TriviaCheck | 63.4%\nRow r11: {\"conclusion\": \"The retrieval-augmented model achieves the highest answer accuracy (64.6% on LawFactQA), ahead of the fine-tuned model (55.2%), the no-retrieval baseline (52.3%) and self-consistency decoding (35.7%).\", \"papers\": [\"S020\"]}\n  fact: S020 retrieval-augmented model | answer accuracy on LawFactQA | 64.6% (highest)\n  fact: S020 no-retrieval baseline | answer accuracy on LawFactQA | 52.3%\nNotes: Eleven of the 20 corpus papers report a factual-accuracy metric (fraction/proportion of answers judged factually correct, answer accuracy = proportion answered with correct facts, or fact-level accuracy); the best method in each is listed in the table. The other nine papers (S001, S006, S007, S008, S010, S012, S016, S017, S018) report hallucination metrics (hallucination rate / hallucination frequency / share of answers with unsupported or invented statements), where lower is better, so they do not measure factual accuracy and no 'highest factual accuracy' method applies to them. In S013 the conditions are coded B (vanilla LLM / no retrieval), R (retrieval-augmented) and A1 (RAG with random passages). In S009, S014 and S019 one table cell is written 'see text' and resolved by an accompanying sentence (RAG 46.5% in S009, retrieval-augmented 53.5% in S014, retrieve-then-read 63.4% in S019).",
+  "answer_text": "Row r1: {\"conclusion\": \"Reformulate variant (question reformulated before search) achieves the highest factual accuracy (78.1% of answers judged factually correct on LawFactQA), ahead of the read-evidence variant (57.1%), the skip-reranker variant (55.8%) and the no-document generator (50.5%).\", \"papers\": [\"S002\"]}\n  fact: S002 reformulate variant | factually correct fraction on LawFactQA | 78.1% (highest)\n  fact: S002 no-doc generator | factually correct fraction on LawFactQA | 50.5%\nRow r2: {\"conclusion\": \"Parametric-only condition B achieves the highest fact-level accuracy (78.3% on LawFactQA), edging out retrieval-augmented condition R (77.4%).\", \"papers\": [\"S003\"]}\n  fact: S003 parametric-only B | fact-level accuracy on LawFactQA | 78.3% (highest)\n  fact: S003 retrieval R | fact-level accuracy on LawFactQA | 77.4%\nRow r3: {\"conclusion\": \"The parametric-only model achieves the highest answer accuracy (59.8% on LawFactQA), 0.9 percentage points above the retrieve-then-read model (58.9%).\", \"papers\": [\"S004\"]}\n  fact: S004 parametric-only model | answer accuracy on LawFactQA | 59.8% (highest)\n  fact: S004 retrieve-then-read model | answer accuracy on LawFactQA | 58.9%\nRow r4: {\"conclusion\": \"The retrieval-augmented model achieves the highest answer accuracy (53.8% on HistoryQuest), ahead of the fine-tuned model (47.6%), RAG without reranking (44.8%) and the closed-book model (40.6%).\", \"papers\": [\"S005\"]}\n  fact: S005 retrieval-augmented model | answer accuracy on HistoryQuest | 53.8% (highest)\n  fact: S005 closed-book model | answer accuracy on HistoryQuest | 40.6%\nRow r5: {\"conclusion\": \"The parametric-only model achieves the highest fact-level accuracy (53.8% on NewsTruthQA), 7.3 percentage points above the RAG pipeline (46.5%).\", \"papers\": [\"S009\"]}\n  fact: S009 parametric-only model | fact-level accuracy on NewsTruthQA | 53.8% (highest)\n  fact: S009 RAG pipeline | fact-level accuracy on NewsTruthQA | 46.5%\nRow r6: {\"conclusion\": \"Chain-of-thought prompting achieves the highest fact-level accuracy (71.8% on TriviaCheck), ahead of retrieve-then-read (67.6%), RAG with random passages (58.1%) and the closed-book model (54.3%).\", \"papers\": [\"S011\"]}\n  fact: S011 chain-of-thought prompting | fact-level accuracy on TriviaCheck | 71.8% (highest)\n  fact: S011 retrieve-then-read model | fact-level accuracy on TriviaCheck | 67.6%\nRow r7: {\"conclusion\": \"Condition B (vanilla LLM / no retrieval) achieves the highest answer accuracy (47.5% on PopCultureQA), ahead of RAG with random passages A1 (42.5%) and retrieval-augmented R (40.3%).\", \"papers\": [\"S013\"]}\n  fact: S013 condition B (vanilla LLM / no retrieval) | answer accuracy AA on PopCultureQA | 47.5% (highest)\n  fact: S013 condition A1 (RAG with random passages) | answer accuracy AA on main benchmark | 42.5%\nRow r8: {\"conclusion\": \"The closed-book model achieves the highest answer accuracy (60.6% on BioClaimQA), 7.1 percentage points above the retrieval-augmented model (53.5%).\", \"papers\": [\"S014\"]}\n  fact: S014 closed-book model | answer accuracy on BioClaimQA | 60.6% (highest)\n  fact: S014 retrieval-augmented model | answer accuracy on BioClaimQA | 53.5%\nRow r9: {\"conclusion\": \"The fine-tuned model achieves the highest answer accuracy (69.8% on SciFactBench), ahead of the RAG pipeline (66.1%), the parametric-only model (62.5%) and RAG with random passages (33.2%).\", \"papers\": [\"S015\"]}\n  fact: S015 fine-tuned model | answer accuracy on SciFactBench | 69.8% (highest)\n  fact: S015 RAG pipeline | answer accuracy on SciFactBench | 66.1%\nRow r10: {\"conclusion\": \"The no-retrieval baseline achieves the highest fact-level accuracy (64.2% on TriviaCheck), 0.8 percentage points above the retrieve-then-read model (63.4%).\", \"papers\": [\"S019\"]}\n  fact: S019 no-retrieval baseline | fact-level accuracy on TriviaCheck | 64.2% (highest)\n  fact: S019 retrieve-then-read model | fact-level accuracy on TriviaCheck | 63.4%\nRow r11: {\"conclusion\": \"The retrieval-augmented model achieves the highest answer accuracy (64.6% on LawFactQA), ahead of the fine-tuned model (55.2%), the no-retrieval baseline (52.3%) and self-consistency decoding (35.7%).\", \"papers\": [\"S020\"]}\n  fact: S020 retrieval-augmented model | answer accuracy on LawFactQA | 64.6% (highest)\n  fact: S020 no-retrieval baseline | answer accuracy on LawFactQA | 52.3%\nNotes: Eleven of the 20 corpus papers report a factual-accuracy metric (fraction/proportion of answers judged factually correct, answer accuracy = proportion answered with correct facts, or fact-level accuracy); the best method in each is listed in the table. The other nine papers (S001, S006, S007, S008, S010, S012, S016, S017, S018) report hallucination metrics (hallucination rate / hallucination frequency / share of answers with unsupported or invented statements), where lower is better, so they do not measure factual accuracy and no 'highest factual accuracy' method applies to them. In S013 the conditions are coded B (vanilla LLM / no retrieval), R (retrieval-augmented) and A1 (RAG with random passages). In S009, S014 and S019 one table cell is written 'see text' and resolved by an accompanying sentence (RAG 46.5% in S009, retrieval-augmented 53.5% in S014, retrieve-then-read 63.4% in S019).",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "bb6521bde182ebfc1b9f39f6c38768da97bc94ed459e4645343fdff48f904032",
+    "input_tokens": 2609,
+    "key": "673f87a8f946c83390d7fba2a2ad17e55cf9aa49c8db240c02c57c23bc32719a",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 263,
+    "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "question": "Which method achieves the highest factual accuracy within each paper?",
+  "question_id": "best-accuracy",
+  "studies": [
+    {
+      "document": "S002",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "query-rewriting"
+    },
+    {
+      "document": "S003",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S004",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S005",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S009",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S011",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "chain-of-thought"
+    },
+    {
+      "document": "S013",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S014",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S015",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S019",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S020",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    }
+  ],
+  "system": "agent-baseline",
+  "tied": [],
+  "winner": "no-retrieval",
+  "wins": {
+    "chain-of-thought": 1,
+    "fine-tuned": 1,
+    "no-retrieval": 6,
+    "query-rewriting": 1,
+    "rag": 2
+  }
+}

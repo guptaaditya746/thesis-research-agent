@@ -1,0 +1,242 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 10,
+    "exit_status": "submitted",
+    "model_calls": 61,
+    "run_id": "rag-tpl-hard-complex.rag-latency",
+    "steps": 60,
+    "tokens": 1543134
+  },
+  "agent_answer": {
+    "concept_sha256": "a560c7c876e8b9082badb21a3c0f5c7c2cd9b857d8a90d10d4e154dc63c9512d",
+    "kind": "table",
+    "notes": "The corpus answers the question with a split result. Across the 52 papers that report a retrieval-augmented (RAG) system alongside a non-RAG baseline (parametric-only / vanilla / no-retrieval / closed-book) and a per-dataset latency figure, RAG increased latency in 25 papers (row r1), decreased it in 18 (row r2), and had a mixed or negligible dataset-dependent effect in 9 (row r3). There is no single consistent direction; whether RAG changes latency and in which direction depends on the specific system, dataset and retrieval configuration. Latency is measured in seconds as 'mean seconds needed to produce one answer'. S109 (a survey) notes that retrieval latency is reported in only a handful of papers and never together with the generation cost, so the empirical evidence comes from the main-comparison tables of the 52 papers listed. Paper ids are the corpus file names (S001..S112). Recorded claims: S003 f1 (claim-000001/000002), S014 f4 (claim-000003/000004), S008 f7 (claim-000007/000008), S106 f8 (claim-000009/000010), S109 note (claim-000005).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "RAG increases the latency of LLM-generated answers relative to the non-RAG baseline",
+          "papers": [
+            "S003",
+            "S004",
+            "S005",
+            "S009",
+            "S023",
+            "S025",
+            "S028",
+            "S030",
+            "S033",
+            "S035",
+            "S037",
+            "S038",
+            "S041",
+            "S044",
+            "S046",
+            "S049",
+            "S058",
+            "S061",
+            "S062",
+            "S065",
+            "S071",
+            "S074",
+            "S078",
+            "S092",
+            "S104"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "1.99 s vs 0.52 s (RAG higher)",
+            "origin": "research",
+            "p": "RAG pipeline latency vs parametric-only model on OpenFactQA",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "2.46 s vs 1.04 s (RAG higher)",
+            "origin": "research",
+            "p": "retrieve-then-read model latency vs vanilla LLM on SciFactBench",
+            "s": "S023"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "RAG higher on the compared datasets",
+            "origin": "research",
+            "p": "RAG latency vs parametric-only model (per-dataset higher in the main comparison)",
+            "s": "S005"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG decreases the latency of LLM-generated answers relative to the non-RAG baseline",
+          "papers": [
+            "S010",
+            "S014",
+            "S015",
+            "S017",
+            "S031",
+            "S032",
+            "S040",
+            "S052",
+            "S060",
+            "S063",
+            "S066",
+            "S069",
+            "S070",
+            "S075",
+            "S076",
+            "S085",
+            "S100",
+            "S105"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "1.43 s vs 2.48 s (RAG lower)",
+            "origin": "research",
+            "p": "RAG pipeline latency vs parametric-only model on PopCultureQA",
+            "s": "S014"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "1.86 s vs 2.86 s (RAG lower)",
+            "origin": "research",
+            "p": "retrieve-then-read model latency vs vanilla LLM on OpenFactQA",
+            "s": "S085"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "1.69 s vs 2.86 s (RAG lower)",
+            "origin": "research",
+            "p": "retrieval-augmented generator latency vs no-retrieval baseline on HistoryQuest",
+            "s": "S105"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG has a mixed or negligible effect on the latency of LLM-generated answers (direction varies by dataset)",
+          "papers": [
+            "S008",
+            "S048",
+            "S068",
+            "S073",
+            "S080",
+            "S082",
+            "S091",
+            "S097",
+            "S106"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "1.65 s vs 1.64 s (essentially the same)",
+            "origin": "research",
+            "p": "RAG latency vs parametric-only model on HistoryQuest",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "higher on GeoFacts (3.28 s vs 2.85 s) and on LawFactQA (2.43 s vs 2.03 s)",
+            "origin": "research",
+            "p": "RAG latency vs vanilla LLM",
+            "s": "S106"
+          }
+        ],
+        "id": "r3"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"RAG increases the latency of LLM-generated answers relative to the non-RAG baseline\", \"papers\": [\"S003\", \"S004\", \"S005\", \"S009\", \"S023\", \"S025\", \"S028\", \"S030\", \"S033\", \"S035\", \"S037\", \"S038\", \"S041\", \"S044\", \"S046\", \"S049\", \"S058\", \"S061\", \"S062\", \"S065\", \"S071\", \"S074\", \"S078\", \"S092\", \"S104\"]}\n  fact: S003 | RAG pipeline latency vs parametric-only model on OpenFactQA | 1.99 s vs 0.52 s (RAG higher)\n  fact: S023 | retrieve-then-read model latency vs vanilla LLM on SciFactBench | 2.46 s vs 1.04 s (RAG higher)\n  fact: S005 | RAG latency vs parametric-only model (per-dataset higher in the main comparison) | RAG higher on the compared datasets\nRow r2: {\"conclusion\": \"RAG decreases the latency of LLM-generated answers relative to the non-RAG baseline\", \"papers\": [\"S010\", \"S014\", \"S015\", \"S017\", \"S031\", \"S032\", \"S040\", \"S052\", \"S060\", \"S063\", \"S066\", \"S069\", \"S070\", \"S075\", \"S076\", \"S085\", \"S100\", \"S105\"]}\n  fact: S014 | RAG pipeline latency vs parametric-only model on PopCultureQA | 1.43 s vs 2.48 s (RAG lower)\n  fact: S085 | retrieve-then-read model latency vs vanilla LLM on OpenFactQA | 1.86 s vs 2.86 s (RAG lower)\n  fact: S105 | retrieval-augmented generator latency vs no-retrieval baseline on HistoryQuest | 1.69 s vs 2.86 s (RAG lower)\nRow r3: {\"conclusion\": \"RAG has a mixed or negligible effect on the latency of LLM-generated answers (direction varies by dataset)\", \"papers\": [\"S008\", \"S048\", \"S068\", \"S073\", \"S080\", \"S082\", \"S091\", \"S097\", \"S106\"]}\n  fact: S008 | RAG latency vs parametric-only model on HistoryQuest | 1.65 s vs 1.64 s (essentially the same)\n  fact: S106 | RAG latency vs vanilla LLM | higher on GeoFacts (3.28 s vs 2.85 s) and on LawFactQA (2.43 s vs 2.03 s)\nNotes: The corpus answers the question with a split result. Across the 52 papers that report a retrieval-augmented (RAG) system alongside a non-RAG baseline (parametric-only / vanilla / no-retrieval / closed-book) and a per-dataset latency figure, RAG increased latency in 25 papers (row r1), decreased it in 18 (row r2), and had a mixed or negligible dataset-dependent effect in 9 (row r3). There is no single consistent direction; whether RAG changes latency and in which direction depends on the specific system, dataset and retrieval configuration. Latency is measured in seconds as 'mean seconds needed to produce one answer'. S109 (a survey) notes that retrieval latency is reported in only a handful of papers and never together with the generation cost, so the empirical evidence comes from the main-comparison tables of the 52 papers listed. Paper ids are the corpus file names (S001..S112). Recorded claims: S003 f1 (claim-000001/000002), S014 f4 (claim-000003/000004), S008 f7 (claim-000007/000008), S106 f8 (claim-000009/000010), S109 note (claim-000005).",
+  "answer_text": "The answer reports a split result: RAG increased latency in some papers (e.g., S003, S023), decreased it in others (e.g., S014, S085), and had negligible or mixed effects in a few (e.g., S008, S106).",
+  "contradicting": [
+    "S003",
+    "S005",
+    "S023",
+    "S106"
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 4,
+    "neutral": 1,
+    "supporting": 3,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "f814daaef30de019f4e6ca528c229bdc959d1b45ee1288b0fab8eb8078a6d5c2",
+    "input_tokens": 2295,
+    "key": "18a0980e74599b673262d0eb4b0267053bf452f786aa661c3077729dd8b6765a",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 215,
+    "prompt_sha256": "66faaf847a0082b6f7043d90adb03785215f351a86e02dd45b18f49e693825d0",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S008"
+  ],
+  "question": "Does retrieval-augmented generation change the latency of LLM-generated answers?",
+  "question_id": "rag-latency",
+  "studies": [
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S005"
+    },
+    {
+      "direction": "neutral",
+      "document": "S008"
+    },
+    {
+      "direction": "supports",
+      "document": "S014"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S023"
+    },
+    {
+      "direction": "supports",
+      "document": "S085"
+    },
+    {
+      "direction": "supports",
+      "document": "S105"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S106"
+    }
+  ],
+  "supporting": [
+    "S014",
+    "S085",
+    "S105"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

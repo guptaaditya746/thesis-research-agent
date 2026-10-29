@@ -1,0 +1,318 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 12,
+    "exit_status": "submitted",
+    "model_calls": 38,
+    "run_id": "rag-claude-s1-mixed.inv-datasets",
+    "steps": 37,
+    "tokens": 357279
+  },
+  "agent_answer": {
+    "concept_sha256": "d13b05fe77670494ce1a092a43dae153cf12aa8964eb971ad6bf3fa2d230d458",
+    "kind": "table",
+    "notes": "All 20 corpus papers (S001-S020) are short synthetic QA papers, each evaluating on one or two named datasets. Dataset-to-paper mapping: LawFactQA={S001,S002,S003,S004,S009,S020}; HistoryQuest={S005,S016,S019}; PopCultureQA={S006,S013,S017,S018}; OpenFactQA={S007}; SciFactBench={S008,S015}; TriviaCheck={S010,S011}; NewsTruthQA={S009,S012}; BioClaimQA={S014}. Note: S009 uses two datasets (NewsTruthQA main + LawFactQA second); S019 uses TriviaCheck (main) + HistoryQuest (second); S014 uses BioClaimQA (main) + TriviaCheck (second) — these secondary datasets were identified from the 'second dataset'/'second collection' sentences. Claim ids recorded during research: claim-000001..claim-000012 (S001,S002,S003,S004,S009,LawFactQA->S020; HistoryQuest S005,S016,S019; PopCultureQA S006,S017,S018). I could not complete the claim for S013 (PopCultureQA) due to a repeated quote-extraction failure, and the draft file was not written; the answer is based on the direct rg evidence gathered from each paper.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "The corpus papers collectively evaluate on eight named datasets: LawFactQA, HistoryQuest, PopCultureQA, OpenFactQA, SciFactBench, TriviaCheck, NewsTruthQA, and BioClaimQA.",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S010",
+            "S011",
+            "S012",
+            "S013",
+            "S014",
+            "S015",
+            "S016",
+            "S017",
+            "S018",
+            "S019",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S002"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S003"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S004"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S009"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S020"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "HistoryQuest",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S005"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "HistoryQuest",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S016"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "HistoryQuest",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S019"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "PopCultureQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S006"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "PopCultureQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S013"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "PopCultureQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S017"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "PopCultureQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S018"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "OpenFactQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S007"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "SciFactBench",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S008"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "SciFactBench",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S015"
+          },
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "TriviaCheck",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S010"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "TriviaCheck",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S011"
+          },
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "NewsTruthQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S009"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "NewsTruthQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S012"
+          },
+          {
+            "claims": [],
+            "id": "f21",
+            "o": "BioClaimQA",
+            "origin": "research",
+            "p": "evaluates on dataset",
+            "s": "Paper S014"
+          }
+        ],
+        "id": "r1"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"The corpus papers collectively evaluate on eight named datasets: LawFactQA, HistoryQuest, PopCultureQA, OpenFactQA, SciFactBench, TriviaCheck, NewsTruthQA, and BioClaimQA.\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S013\", \"S014\", \"S015\", \"S016\", \"S017\", \"S018\", \"S019\", \"S020\"]}\n  fact: Paper S001 | evaluates on dataset | LawFactQA\n  fact: Paper S002 | evaluates on dataset | LawFactQA\n  fact: Paper S003 | evaluates on dataset | LawFactQA\n  fact: Paper S004 | evaluates on dataset | LawFactQA\n  fact: Paper S009 | evaluates on dataset | LawFactQA\n  fact: Paper S020 | evaluates on dataset | LawFactQA\n  fact: Paper S005 | evaluates on dataset | HistoryQuest\n  fact: Paper S016 | evaluates on dataset | HistoryQuest\n  fact: Paper S019 | evaluates on dataset | HistoryQuest\n  fact: Paper S006 | evaluates on dataset | PopCultureQA\n  fact: Paper S013 | evaluates on dataset | PopCultureQA\n  fact: Paper S017 | evaluates on dataset | PopCultureQA\n  fact: Paper S018 | evaluates on dataset | PopCultureQA\n  fact: Paper S007 | evaluates on dataset | OpenFactQA\n  fact: Paper S008 | evaluates on dataset | SciFactBench\n  fact: Paper S015 | evaluates on dataset | SciFactBench\n  fact: Paper S010 | evaluates on dataset | TriviaCheck\n  fact: Paper S011 | evaluates on dataset | TriviaCheck\n  fact: Paper S009 | evaluates on dataset | NewsTruthQA\n  fact: Paper S012 | evaluates on dataset | NewsTruthQA\n  fact: Paper S014 | evaluates on dataset | BioClaimQA\nNotes: All 20 corpus papers (S001-S020) are short synthetic QA papers, each evaluating on one or two named datasets. Dataset-to-paper mapping: LawFactQA={S001,S002,S003,S004,S009,S020}; HistoryQuest={S005,S016,S019}; PopCultureQA={S006,S013,S017,S018}; OpenFactQA={S007}; SciFactBench={S008,S015}; TriviaCheck={S010,S011}; NewsTruthQA={S009,S012}; BioClaimQA={S014}. Note: S009 uses two datasets (NewsTruthQA main + LawFactQA second); S019 uses TriviaCheck (main) + HistoryQuest (second); S014 uses BioClaimQA (main) + TriviaCheck (second) — these secondary datasets were identified from the 'second dataset'/'second collection' sentences. Claim ids recorded during research: claim-000001..claim-000012 (S001,S002,S003,S004,S009,LawFactQA->S020; HistoryQuest S005,S016,S019; PopCultureQA S006,S017,S018). I could not complete the claim for S013 (PopCultureQA) due to a repeated quote-extraction failure, and the draft file was not written; the answer is based on the direct rg evidence gathered from each paper.",
+  "answer_text": "Row r1: {\"conclusion\": \"The corpus papers collectively evaluate on eight named datasets: LawFactQA, HistoryQuest, PopCultureQA, OpenFactQA, SciFactBench, TriviaCheck, NewsTruthQA, and BioClaimQA.\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S013\", \"S014\", \"S015\", \"S016\", \"S017\", \"S018\", \"S019\", \"S020\"]}\n  fact: Paper S001 | evaluates on dataset | LawFactQA\n  fact: Paper S002 | evaluates on dataset | LawFactQA\n  fact: Paper S003 | evaluates on dataset | LawFactQA\n  fact: Paper S004 | evaluates on dataset | LawFactQA\n  fact: Paper S009 | evaluates on dataset | LawFactQA\n  fact: Paper S020 | evaluates on dataset | LawFactQA\n  fact: Paper S005 | evaluates on dataset | HistoryQuest\n  fact: Paper S016 | evaluates on dataset | HistoryQuest\n  fact: Paper S019 | evaluates on dataset | HistoryQuest\n  fact: Paper S006 | evaluates on dataset | PopCultureQA\n  fact: Paper S013 | evaluates on dataset | PopCultureQA\n  fact: Paper S017 | evaluates on dataset | PopCultureQA\n  fact: Paper S018 | evaluates on dataset | PopCultureQA\n  fact: Paper S007 | evaluates on dataset | OpenFactQA\n  fact: Paper S008 | evaluates on dataset | SciFactBench\n  fact: Paper S015 | evaluates on dataset | SciFactBench\n  fact: Paper S010 | evaluates on dataset | TriviaCheck\n  fact: Paper S011 | evaluates on dataset | TriviaCheck\n  fact: Paper S009 | evaluates on dataset | NewsTruthQA\n  fact: Paper S012 | evaluates on dataset | NewsTruthQA\n  fact: Paper S014 | evaluates on dataset | BioClaimQA\nNotes: All 20 corpus papers (S001-S020) are short synthetic QA papers, each evaluating on one or two named datasets. Dataset-to-paper mapping: LawFactQA={S001,S002,S003,S004,S009,S020}; HistoryQuest={S005,S016,S019}; PopCultureQA={S006,S013,S017,S018}; OpenFactQA={S007}; SciFactBench={S008,S015}; TriviaCheck={S010,S011}; NewsTruthQA={S009,S012}; BioClaimQA={S014}. Note: S009 uses two datasets (NewsTruthQA main + LawFactQA second); S019 uses TriviaCheck (main) + HistoryQuest (second); S014 uses BioClaimQA (main) + TriviaCheck (second) — these secondary datasets were identified from the 'second dataset'/'second collection' sentences. Claim ids recorded during research: claim-000001..claim-000012 (S001,S002,S003,S004,S009,LawFactQA->S020; HistoryQuest S005,S016,S019; PopCultureQA S006,S017,S018). I could not complete the claim for S013 (PopCultureQA) due to a repeated quote-extraction failure, and the draft file was not written; the answer is based on the direct rg evidence gathered from each paper.",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BioClaimQA",
+      "papers": [
+        "S014"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "HistoryQuest",
+      "papers": [
+        "S005",
+        "S016",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "LawFactQA",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S009",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "NewsTruthQA",
+      "papers": [
+        "S009",
+        "S012"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "OpenFactQA",
+      "papers": [
+        "S007"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "PopCultureQA",
+      "papers": [
+        "S006",
+        "S013",
+        "S017",
+        "S018"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "SciFactBench",
+      "papers": [
+        "S008",
+        "S015"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "TriviaCheck",
+      "papers": [
+        "S010",
+        "S011"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "d54d700be58b9d71343e9e5bbf79abd720c9203f7fc6adb776078f8ca0fa33ad",
+    "input_tokens": 1595,
+    "key": "6c86ea1faeeb96805d83b5d49be9926d7c9dc768d4e3097ab5e3331a46d3be02",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 225,
+    "prompt_sha256": "168da6790a68e7dec70418f6e24701b91699dfa7f53afd923cdca204a5becd61",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which datasets do the papers evaluate on?",
+  "question_id": "inv-datasets",
+  "system": "agent-baseline",
+  "target": "dataset"
+}

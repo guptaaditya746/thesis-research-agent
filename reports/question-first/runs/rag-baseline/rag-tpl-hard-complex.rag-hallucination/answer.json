@@ -1,0 +1,191 @@
+{
+  "answer_text": "No, the evidence indicates that retrieval-augmented generation does not reduce the hallucination rate of LLM-generated answers. Multiple controlled studies across various benchmarks, including TriviaCheck, GeoFacts, NewsTruthQA, OpenFactQA, and SciFactBench, consistently report that retrieval augmentation does not measurably reduce hallucinated content when compared to closed-book or vanilla LLM baselines [S032, 0-782] [S070, 0-764] [S024, 0-772] [S019, 0-763] [S053, 0-764] [S075, 0-739] [S023, 0-766] [S016, 0-759].",
+  "citations": [
+    {
+      "document": "S032",
+      "end": 782,
+      "start": 0
+    },
+    {
+      "document": "S070",
+      "end": 764,
+      "start": 0
+    },
+    {
+      "document": "S024",
+      "end": 772,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 763,
+      "start": 0
+    },
+    {
+      "document": "S053",
+      "end": 764,
+      "start": 0
+    },
+    {
+      "document": "S075",
+      "end": 739,
+      "start": 0
+    },
+    {
+      "document": "S023",
+      "end": 766,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 759,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S016",
+    "S019",
+    "S023",
+    "S024",
+    "S032",
+    "S053",
+    "S070",
+    "S075"
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 8,
+    "neutral": 0,
+    "supporting": 0,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "refuted",
+  "label_by_rule": "refuted",
+  "mapped_answer_text": "The answer states that retrieval-augmented generation does not reduce the hallucination rate, citing multiple studies that report no measurable reduction or higher rates compared to baselines.",
+  "mapping_call": {
+    "input_sha256": "2bbedb3ff630062ca681897f1cc51ef99daec3bd3376ea64872fd2032116f0d9",
+    "input_tokens": 1547,
+    "key": "83831b1ef2c6f988db2188b3d7008609755df1dfbf8378534f346520de607bac",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 188,
+    "prompt_sha256": "3ad9a499bb11aeb593a1ad05d5e020fcbaaccb326d3a2f1317f747d2f95aed2d",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "111c4aaf8136b72980c65ebb746794d891a8024a641386868b0f932e3893389c",
+    "input_tokens": 1343,
+    "key": "893ebe1353dcfb435148c8c8aa10e8de9f20730bb7aab1b49e89cae84d2eba5a",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 477,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?",
+  "question_id": "rag-hallucination",
+  "retrieved": [
+    {
+      "document": "S032",
+      "end": 782,
+      "score": 12.262008,
+      "start": 0
+    },
+    {
+      "document": "S070",
+      "end": 764,
+      "score": 11.354926,
+      "start": 0
+    },
+    {
+      "document": "S024",
+      "end": 772,
+      "score": 11.323173,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 763,
+      "score": 10.937481,
+      "start": 0
+    },
+    {
+      "document": "S053",
+      "end": 764,
+      "score": 10.935593,
+      "start": 0
+    },
+    {
+      "document": "S075",
+      "end": 739,
+      "score": 10.882261,
+      "start": 0
+    },
+    {
+      "document": "S023",
+      "end": 766,
+      "score": 10.781284,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 759,
+      "score": 10.723572,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "contradicts",
+      "document": "S016"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S019"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S023"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S024"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S032"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S053"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S070"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S075"
+    }
+  ],
+  "supporting": [],
+  "system": "rag-baseline",
+  "undetermined": []
+}

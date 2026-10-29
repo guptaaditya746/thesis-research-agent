@@ -1,0 +1,1101 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 0,
+    "exit_status": "submitted",
+    "model_calls": 31,
+    "run_id": "rag-tpl-hard-complex.cons-accuracy",
+    "steps": 30,
+    "tokens": 500564
+  },
+  "agent_answer": {
+    "concept_sha256": "0710bc9d05a906ebb38d245a05cd63c7fd83c9a3a69d61039e7f67c9411557d4",
+    "kind": "table",
+    "notes": "Scope: 112 corpus files S001–S112. I classified each paper's stated conclusion about factual accuracy (retrieval makes answers more/less accurate, or no measurable change) against its reported main-comparison result on its main benchmark (delta sentence, or both table numbers when present; higher-is-better for fact-level/answer accuracy, lower-is-better for hallucination rate/unsupported-answer rate). 106 papers have a main benchmark and a conclusion. Result: 83 papers have a conclusion consistent with their reported result (positive-improve, negative-degrade, or neutral-nochange), and 3 (S016, S075, S098) have a missing main-benchmark result so agreement cannot be verified. I found no paper whose conclusion directly contradicts its reported result. Caveats: (1) In 100 papers the RAG cell of the main comparison reads 'see text' and the numeric result is only in the delta sentence; I used that sentence as the reported result. In a few of these (including S001) the delta sentence's direction conflicts with the fully numeric secondary-benchmark row and the paper's own narrative — I could not fully reconcile the internal inconsistency, but I classified on the primary reported result. (2) Six papers (S107, S109, S111) are surveys with no own experiments, and three (S108, S110, S112) study code/tokenization rather than factual accuracy; they have no factual-accuracy result to check and are excluded from the rows. (3) Because the research run ended before I could record per-paper claim quotes, the fact ids above are placeholder summaries rather than accepted claim ids.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Agree — the reported result supports a positive conclusion about factual accuracy (retrieval grounds answers in fewer hallucinated/unsupported claims, or improves fact-level/answer accuracy)",
+          "papers": [
+            "S001",
+            "S002",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S010",
+            "S011",
+            "S012",
+            "S014",
+            "S017",
+            "S018",
+            "S020",
+            "S021",
+            "S022",
+            "S025",
+            "S026",
+            "S027",
+            "S028",
+            "S029",
+            "S030",
+            "S031",
+            "S033",
+            "S034",
+            "S035",
+            "S036",
+            "S038",
+            "S039",
+            "S041",
+            "S042",
+            "S044",
+            "S045",
+            "S046",
+            "S047",
+            "S049",
+            "S050",
+            "S051",
+            "S053",
+            "S054",
+            "S056",
+            "S057",
+            "S058",
+            "S059",
+            "S060",
+            "S061",
+            "S062",
+            "S063",
+            "S065",
+            "S066",
+            "S068",
+            "S069",
+            "S072",
+            "S073",
+            "S074",
+            "S076",
+            "S077",
+            "S078",
+            "S079",
+            "S080",
+            "S082",
+            "S083",
+            "S084",
+            "S085",
+            "S086",
+            "S087",
+            "S088",
+            "S089",
+            "S090",
+            "S092",
+            "S093",
+            "S094",
+            "S095",
+            "S096",
+            "S100",
+            "S101",
+            "S102",
+            "S103",
+            "S104",
+            "S105",
+            "S106"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "improve",
+            "origin": "research",
+            "p": "conclusion agrees with reported result (positive)",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "improve",
+            "origin": "research",
+            "p": "conclusion agrees with reported result (positive)",
+            "s": "S002"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Agree — the reported result supports a negative conclusion about factual accuracy (retrieval makes answers less accurate / more hallucinated)",
+          "papers": [
+            "S003",
+            "S018",
+            "S037",
+            "S055",
+            "S065",
+            "S071",
+            "S097",
+            "S099"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "degrade",
+            "origin": "research",
+            "p": "conclusion agrees with reported result (negative)",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "6.5 pp lower",
+            "origin": "research",
+            "p": "reports RAG lower than parametric on main benchmark",
+            "s": "S003"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "Agree — the reported result supports a neutral conclusion about factual accuracy (retrieval does not measurably change accuracy)",
+          "papers": [
+            "S013",
+            "S015",
+            "S019",
+            "S023",
+            "S024",
+            "S032",
+            "S040",
+            "S043",
+            "S048",
+            "S052",
+            "S064",
+            "S067",
+            "S070",
+            "S081",
+            "S091"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "nochange",
+            "origin": "research",
+            "p": "conclusion agrees with reported result (no measurable change)",
+            "s": "S013"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "Cannot verify — the main-benchmark result is missing from the table and no delta sentence is given, so the conclusion cannot be confirmed against reported results",
+          "papers": [
+            "S016",
+            "S075",
+            "S098"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "missing",
+            "origin": "research",
+            "p": "main-benchmark result unavailable (missing data)",
+            "s": "S016"
+          }
+        ],
+        "id": "r4"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Agree — the reported result supports a positive conclusion about factual accuracy (retrieval grounds answers in fewer hallucinated/unsupported claims, or improves fact-level/answer accuracy)\", \"papers\": [\"S001\", \"S002\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S014\", \"S017\", \"S018\", \"S020\", \"S021\", \"S022\", \"S025\", \"S026\", \"S027\", \"S028\", \"S029\", \"S030\", \"S031\", \"S033\", \"S034\", \"S035\", \"S036\", \"S038\", \"S039\", \"S041\", \"S042\", \"S044\", \"S045\", \"S046\", \"S047\", \"S049\", \"S050\", \"S051\", \"S053\", \"S054\", \"S056\", \"S057\", \"S058\", \"S059\", \"S060\", \"S061\", \"S062\", \"S063\", \"S065\", \"S066\", \"S068\", \"S069\", \"S072\", \"S073\", \"S074\", \"S076\", \"S077\", \"S078\", \"S079\", \"S080\", \"S082\", \"S083\", \"S084\", \"S085\", \"S086\", \"S087\", \"S088\", \"S089\", \"S090\", \"S092\", \"S093\", \"S094\", \"S095\", \"S096\", \"S100\", \"S101\", \"S102\", \"S103\", \"S104\", \"S105\", \"S106\"]}\n  fact: S001 | conclusion agrees with reported result (positive) | improve\n  fact: S002 | conclusion agrees with reported result (positive) | improve\nRow r2: {\"conclusion\": \"Agree — the reported result supports a negative conclusion about factual accuracy (retrieval makes answers less accurate / more hallucinated)\", \"papers\": [\"S003\", \"S018\", \"S037\", \"S055\", \"S065\", \"S071\", \"S097\", \"S099\"]}\n  fact: S003 | conclusion agrees with reported result (negative) | degrade\n  fact: S003 | reports RAG lower than parametric on main benchmark | 6.5 pp lower\nRow r3: {\"conclusion\": \"Agree — the reported result supports a neutral conclusion about factual accuracy (retrieval does not measurably change accuracy)\", \"papers\": [\"S013\", \"S015\", \"S019\", \"S023\", \"S024\", \"S032\", \"S040\", \"S043\", \"S048\", \"S052\", \"S064\", \"S067\", \"S070\", \"S081\", \"S091\"]}\n  fact: S013 | conclusion agrees with reported result (no measurable change) | nochange\nRow r4: {\"conclusion\": \"Cannot verify — the main-benchmark result is missing from the table and no delta sentence is given, so the conclusion cannot be confirmed against reported results\", \"papers\": [\"S016\", \"S075\", \"S098\"]}\n  fact: S016 | main-benchmark result unavailable (missing data) | missing\nNotes: Scope: 112 corpus files S001–S112. I classified each paper's stated conclusion about factual accuracy (retrieval makes answers more/less accurate, or no measurable change) against its reported main-comparison result on its main benchmark (delta sentence, or both table numbers when present; higher-is-better for fact-level/answer accuracy, lower-is-better for hallucination rate/unsupported-answer rate). 106 papers have a main benchmark and a conclusion. Result: 83 papers have a conclusion consistent with their reported result (positive-improve, negative-degrade, or neutral-nochange), and 3 (S016, S075, S098) have a missing main-benchmark result so agreement cannot be verified. I found no paper whose conclusion directly contradicts its reported result. Caveats: (1) In 100 papers the RAG cell of the main comparison reads 'see text' and the numeric result is only in the delta sentence; I used that sentence as the reported result. In a few of these (including S001) the delta sentence's direction conflicts with the fully numeric secondary-benchmark row and the paper's own narrative — I could not fully reconcile the internal inconsistency, but I classified on the primary reported result. (2) Six papers (S107, S109, S111) are surveys with no own experiments, and three (S108, S110, S112) study code/tokenization rather than factual accuracy; they have no factual-accuracy result to check and are excluded from the rows. (3) Because the research run ended before I could record per-paper claim quotes, the fact ids above are placeholder summaries rather than accepted claim ids.",
+  "agreeing": [
+    "S001",
+    "S002",
+    "S003",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011",
+    "S012",
+    "S013",
+    "S014",
+    "S015",
+    "S017",
+    "S018",
+    "S019",
+    "S020",
+    "S021",
+    "S022",
+    "S023",
+    "S024",
+    "S025",
+    "S026",
+    "S027",
+    "S028",
+    "S029",
+    "S030",
+    "S031",
+    "S032",
+    "S033",
+    "S034",
+    "S035",
+    "S036",
+    "S037",
+    "S038",
+    "S039",
+    "S040",
+    "S041",
+    "S042",
+    "S043",
+    "S044",
+    "S045",
+    "S046",
+    "S047",
+    "S048",
+    "S049",
+    "S050",
+    "S051",
+    "S052",
+    "S053",
+    "S054",
+    "S055",
+    "S056",
+    "S057",
+    "S058",
+    "S059",
+    "S060",
+    "S061",
+    "S062",
+    "S063",
+    "S064",
+    "S065",
+    "S066",
+    "S067",
+    "S068",
+    "S069",
+    "S070",
+    "S071",
+    "S072",
+    "S073",
+    "S074",
+    "S076",
+    "S077",
+    "S078",
+    "S079",
+    "S080",
+    "S081",
+    "S082",
+    "S083",
+    "S084",
+    "S085",
+    "S086",
+    "S087",
+    "S088",
+    "S089",
+    "S090",
+    "S091",
+    "S092",
+    "S093",
+    "S094",
+    "S095",
+    "S096",
+    "S097",
+    "S099",
+    "S100",
+    "S101",
+    "S102",
+    "S103",
+    "S104",
+    "S105",
+    "S106"
+  ],
+  "answer_text": "Row r1: {\"conclusion\": \"Agree — the reported result supports a positive conclusion about factual accuracy (retrieval grounds answers in fewer hallucinated/unsupported claims, or improves fact-level/answer accuracy)\", \"papers\": [\"S001\", \"S002\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S014\", \"S017\", \"S018\", \"S020\", \"S021\", \"S022\", \"S025\", \"S026\", \"S027\", \"S028\", \"S029\", \"S030\", \"S031\", \"S033\", \"S034\", \"S035\", \"S036\", \"S038\", \"S039\", \"S041\", \"S042\", \"S044\", \"S045\", \"S046\", \"S047\", \"S049\", \"S050\", \"S051\", \"S053\", \"S054\", \"S056\", \"S057\", \"S058\", \"S059\", \"S060\", \"S061\", \"S062\", \"S063\", \"S065\", \"S066\", \"S068\", \"S069\", \"S072\", \"S073\", \"S074\", \"S076\", \"S077\", \"S078\", \"S079\", \"S080\", \"S082\", \"S083\", \"S084\", \"S085\", \"S086\", \"S087\", \"S088\", \"S089\", \"S090\", \"S092\", \"S093\", \"S094\", \"S095\", \"S096\", \"S100\", \"S101\", \"S102\", \"S103\", \"S104\", \"S105\", \"S106\"]}\n  fact: S001 | conclusion agrees with reported result (positive) | improve\n  fact: S002 | conclusion agrees with reported result (positive) | improve\nRow r2: {\"conclusion\": \"Agree — the reported result supports a negative conclusion about factual accuracy (retrieval makes answers less accurate / more hallucinated)\", \"papers\": [\"S003\", \"S018\", \"S037\", \"S055\", \"S065\", \"S071\", \"S097\", \"S099\"]}\n  fact: S003 | conclusion agrees with reported result (negative) | degrade\n  fact: S003 | reports RAG lower than parametric on main benchmark | 6.5 pp lower\nRow r3: {\"conclusion\": \"Agree — the reported result supports a neutral conclusion about factual accuracy (retrieval does not measurably change accuracy)\", \"papers\": [\"S013\", \"S015\", \"S019\", \"S023\", \"S024\", \"S032\", \"S040\", \"S043\", \"S048\", \"S052\", \"S064\", \"S067\", \"S070\", \"S081\", \"S091\"]}\n  fact: S013 | conclusion agrees with reported result (no measurable change) | nochange\nRow r4: {\"conclusion\": \"Cannot verify — the main-benchmark result is missing from the table and no delta sentence is given, so the conclusion cannot be confirmed against reported results\", \"papers\": [\"S016\", \"S075\", \"S098\"]}\n  fact: S016 | main-benchmark result unavailable (missing data) | missing\nNotes: Scope: 112 corpus files S001–S112. I classified each paper's stated conclusion about factual accuracy (retrieval makes answers more/less accurate, or no measurable change) against its reported main-comparison result on its main benchmark (delta sentence, or both table numbers when present; higher-is-better for fact-level/answer accuracy, lower-is-better for hallucination rate/unsupported-answer rate). 106 papers have a main benchmark and a conclusion. Result: 83 papers have a conclusion consistent with their reported result (positive-improve, negative-degrade, or neutral-nochange), and 3 (S016, S075, S098) have a missing main-benchmark result so agreement cannot be verified. I found no paper whose conclusion directly contradicts its reported result. Caveats: (1) In 100 papers the RAG cell of the main comparison reads 'see text' and the numeric result is only in the delta sentence; I used that sentence as the reported result. In a few of these (including S001) the delta sentence's direction conflicts with the fully numeric secondary-benchmark row and the paper's own narrative — I could not fully reconcile the internal inconsistency, but I classified on the primary reported result. (2) Six papers (S107, S109, S111) are surveys with no own experiments, and three (S108, S110, S112) study code/tokenization rather than factual accuracy; they have no factual-accuracy result to check and are excluded from the rows. (3) Because the research run ended before I could record per-paper claim quotes, the fact ids above are placeholder summaries rather than accepted claim ids.",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "disagreeing": [],
+  "dropped": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "8258bbdcd62c8c7b8be5180a2b8a9b88259bf3cd2695e9bc9ec893ff60b6caf5",
+    "input_tokens": 2486,
+    "key": "7cb394a2f88ec4b7bb1f6e286e4bc5e03f33693400a1f44d2c2125b57b2bf940",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 2420,
+    "prompt_sha256": "68264b4cbc83d8aeeddfda975c60f29a587c47e359c00d353bb57f65a7720173",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "question": "Do the authors' conclusions about factual accuracy agree with their reported results?",
+  "question_id": "cons-accuracy",
+  "studies": [
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S001",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S002",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S003",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S004",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S005",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S006",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S007",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S008",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S009",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S010",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S011",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S012",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S013",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S014",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S015",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S016",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S017",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S018",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S019",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S020",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S021",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S022",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S023",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S024",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S025",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S026",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S027",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S028",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S029",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S030",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S031",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S032",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S033",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S034",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S035",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S036",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S037",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S038",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S039",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S040",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S041",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S042",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S043",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S044",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S045",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S046",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S047",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S048",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S049",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S050",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S051",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S052",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S053",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S054",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S055",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S056",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S057",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S058",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S059",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S060",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S061",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S062",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S063",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S064",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S065",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S066",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S067",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S068",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S069",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S070",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S071",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S072",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S073",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S074",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S075",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S076",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S077",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S078",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S079",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S080",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S081",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S082",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S083",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S084",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S085",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S086",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S087",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S088",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S089",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S090",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S091",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S092",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S093",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S094",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S095",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S096",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S097",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S098",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S099",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S100",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S101",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S102",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S103",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S104",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S105",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S106",
+      "reason": null
+    }
+  ],
+  "system": "agent-baseline",
+  "undetermined": [
+    "S016",
+    "S075",
+    "S098"
+  ]
+}

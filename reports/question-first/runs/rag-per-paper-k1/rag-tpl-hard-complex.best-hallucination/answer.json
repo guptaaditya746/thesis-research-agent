@@ -1,0 +1,786 @@
+{
+  "answer_text": "The evidence provided does not contain sufficient data to determine which method achieves the lowest hallucination rate within each paper. While several papers report hallucination metrics (e.g., hallucination rate, hallucination frequency, unsupported-answer rate), the specific numerical values for all compared methods are missing from the provided passages. In the few instances where results are tabulated, the value for the retrieval-augmented method is often listed as \"see text\" rather than a number, or the table only provides data for a subset of the methods described in the Method section. For example, in [S084, 720-2103], the RAG pipeline's hallucination rate is listed as \"see text\" while the vanilla LLM is 18.9%, and in [S088, 763-2152], the RAG pipeline's hallucination frequency is \"see text\" while the vanilla LLM is 31.7%. Without the full numerical results for all methods in each paper, it is impossible to identify the method with the lowest rate for every paper.",
+  "citations": [
+    {
+      "document": "S084",
+      "end": 2103,
+      "start": 720
+    },
+    {
+      "document": "S088",
+      "end": 2152,
+      "start": 763
+    },
+    {
+      "document": "S051",
+      "end": 2262,
+      "start": 793
+    },
+    {
+      "document": "S016",
+      "end": 2068,
+      "start": 759
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "9bcb7866fec3add74272f60be85f8fbb34ef4ea4df861b031ca95827d2f558ea",
+    "input_tokens": 1702,
+    "key": "1478db75b51f4679b82a4f27ae36632a3b730eef4f772f6b4ba69550db05b395",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 86,
+    "prompt_sha256": "a1c4954150248fff31a8f6706cd0eb91ea320893e2d7f54164d32e952dffb9a4",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "model_call": {
+    "input_sha256": "cd1ea4c6eb2835cbdc64676978fc882a5ba474c471f455673b660764279aa95f",
+    "input_tokens": 26274,
+    "key": "2bcd172b61564eeed7f0536d3474ed7116397b93a55a9ec06c38442ff9fa7b4c",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 399,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the lowest hallucination rate within each paper?",
+  "question_id": "best-hallucination",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 1594,
+      "score": 3.898786,
+      "start": 764
+    },
+    {
+      "document": "S002",
+      "end": 1642,
+      "score": 3.543626,
+      "start": 737
+    },
+    {
+      "document": "S003",
+      "end": 1840,
+      "score": 3.750544,
+      "start": 719
+    },
+    {
+      "document": "S004",
+      "end": 1930,
+      "score": 5.176373,
+      "start": 749
+    },
+    {
+      "document": "S005",
+      "end": 1864,
+      "score": 6.529743,
+      "start": 768
+    },
+    {
+      "document": "S006",
+      "end": 1870,
+      "score": 4.892628,
+      "start": 783
+    },
+    {
+      "document": "S007",
+      "end": 1805,
+      "score": 4.853687,
+      "start": 752
+    },
+    {
+      "document": "S008",
+      "end": 1618,
+      "score": 5.595874,
+      "start": 772
+    },
+    {
+      "document": "S009",
+      "end": 1694,
+      "score": 5.597319,
+      "start": 748
+    },
+    {
+      "document": "S010",
+      "end": 1775,
+      "score": 6.508061,
+      "start": 754
+    },
+    {
+      "document": "S011",
+      "end": 1673,
+      "score": 6.229715,
+      "start": 726
+    },
+    {
+      "document": "S012",
+      "end": 1772,
+      "score": 4.85228,
+      "start": 732
+    },
+    {
+      "document": "S013",
+      "end": 1665,
+      "score": 4.074262,
+      "start": 742
+    },
+    {
+      "document": "S014",
+      "end": 1695,
+      "score": 6.510152,
+      "start": 759
+    },
+    {
+      "document": "S015",
+      "end": 1934,
+      "score": 3.700367,
+      "start": 744
+    },
+    {
+      "document": "S016",
+      "end": 2068,
+      "score": 5.25265,
+      "start": 759
+    },
+    {
+      "document": "S017",
+      "end": 2017,
+      "score": 4.746743,
+      "start": 797
+    },
+    {
+      "document": "S018",
+      "end": 1789,
+      "score": 3.489514,
+      "start": 765
+    },
+    {
+      "document": "S019",
+      "end": 2022,
+      "score": 4.307133,
+      "start": 763
+    },
+    {
+      "document": "S020",
+      "end": 1696,
+      "score": 4.948709,
+      "start": 730
+    },
+    {
+      "document": "S021",
+      "end": 2087,
+      "score": 4.618457,
+      "start": 765
+    },
+    {
+      "document": "S022",
+      "end": 1850,
+      "score": 4.82428,
+      "start": 760
+    },
+    {
+      "document": "S023",
+      "end": 1678,
+      "score": 5.021547,
+      "start": 766
+    },
+    {
+      "document": "S024",
+      "end": 2004,
+      "score": 5.073331,
+      "start": 772
+    },
+    {
+      "document": "S025",
+      "end": 1923,
+      "score": 5.875081,
+      "start": 757
+    },
+    {
+      "document": "S026",
+      "end": 1824,
+      "score": 6.368476,
+      "start": 754
+    },
+    {
+      "document": "S027",
+      "end": 1614,
+      "score": 3.565293,
+      "start": 743
+    },
+    {
+      "document": "S028",
+      "end": 1803,
+      "score": 5.162515,
+      "start": 780
+    },
+    {
+      "document": "S029",
+      "end": 1814,
+      "score": 6.03457,
+      "start": 770
+    },
+    {
+      "document": "S030",
+      "end": 1835,
+      "score": 5.147175,
+      "start": 747
+    },
+    {
+      "document": "S031",
+      "end": 1922,
+      "score": 6.329525,
+      "start": 764
+    },
+    {
+      "document": "S032",
+      "end": 1715,
+      "score": 6.572896,
+      "start": 782
+    },
+    {
+      "document": "S033",
+      "end": 1492,
+      "score": 3.381328,
+      "start": 0
+    },
+    {
+      "document": "S034",
+      "end": 2213,
+      "score": 3.137485,
+      "start": 748
+    },
+    {
+      "document": "S035",
+      "end": 1771,
+      "score": 3.789299,
+      "start": 751
+    },
+    {
+      "document": "S036",
+      "end": 1861,
+      "score": 4.466791,
+      "start": 762
+    },
+    {
+      "document": "S037",
+      "end": 1724,
+      "score": 4.96859,
+      "start": 758
+    },
+    {
+      "document": "S038",
+      "end": 1867,
+      "score": 3.422873,
+      "start": 750
+    },
+    {
+      "document": "S039",
+      "end": 1673,
+      "score": 3.8895,
+      "start": 772
+    },
+    {
+      "document": "S040",
+      "end": 1627,
+      "score": 3.931606,
+      "start": 758
+    },
+    {
+      "document": "S041",
+      "end": 1883,
+      "score": 5.193119,
+      "start": 759
+    },
+    {
+      "document": "S042",
+      "end": 1613,
+      "score": 4.652732,
+      "start": 711
+    },
+    {
+      "document": "S043",
+      "end": 1628,
+      "score": 3.551696,
+      "start": 728
+    },
+    {
+      "document": "S044",
+      "end": 1915,
+      "score": 4.967564,
+      "start": 797
+    },
+    {
+      "document": "S045",
+      "end": 1664,
+      "score": 3.526691,
+      "start": 754
+    },
+    {
+      "document": "S046",
+      "end": 1893,
+      "score": 6.339802,
+      "start": 729
+    },
+    {
+      "document": "S047",
+      "end": 1862,
+      "score": 3.799964,
+      "start": 790
+    },
+    {
+      "document": "S048",
+      "end": 1883,
+      "score": 3.748775,
+      "start": 752
+    },
+    {
+      "document": "S049",
+      "end": 1710,
+      "score": 5.061473,
+      "start": 714
+    },
+    {
+      "document": "S050",
+      "end": 1688,
+      "score": 6.663721,
+      "start": 781
+    },
+    {
+      "document": "S051",
+      "end": 2262,
+      "score": 5.560481,
+      "start": 793
+    },
+    {
+      "document": "S052",
+      "end": 1890,
+      "score": 3.713088,
+      "start": 767
+    },
+    {
+      "document": "S053",
+      "end": 1819,
+      "score": 5.299653,
+      "start": 764
+    },
+    {
+      "document": "S054",
+      "end": 1818,
+      "score": 4.516142,
+      "start": 772
+    },
+    {
+      "document": "S055",
+      "end": 1783,
+      "score": 4.043838,
+      "start": 775
+    },
+    {
+      "document": "S056",
+      "end": 2163,
+      "score": 4.183738,
+      "start": 731
+    },
+    {
+      "document": "S057",
+      "end": 1618,
+      "score": 3.522324,
+      "start": 697
+    },
+    {
+      "document": "S058",
+      "end": 2031,
+      "score": 4.832665,
+      "start": 759
+    },
+    {
+      "document": "S059",
+      "end": 1801,
+      "score": 3.809496,
+      "start": 767
+    },
+    {
+      "document": "S060",
+      "end": 1766,
+      "score": 5.36375,
+      "start": 777
+    },
+    {
+      "document": "S061",
+      "end": 1676,
+      "score": 3.543798,
+      "start": 756
+    },
+    {
+      "document": "S062",
+      "end": 1849,
+      "score": 4.409263,
+      "start": 741
+    },
+    {
+      "document": "S063",
+      "end": 1668,
+      "score": 6.25631,
+      "start": 734
+    },
+    {
+      "document": "S064",
+      "end": 1860,
+      "score": 3.433878,
+      "start": 723
+    },
+    {
+      "document": "S065",
+      "end": 1859,
+      "score": 6.610043,
+      "start": 807
+    },
+    {
+      "document": "S066",
+      "end": 1708,
+      "score": 3.470908,
+      "start": 749
+    },
+    {
+      "document": "S067",
+      "end": 1899,
+      "score": 4.111204,
+      "start": 764
+    },
+    {
+      "document": "S068",
+      "end": 2034,
+      "score": 4.932958,
+      "start": 767
+    },
+    {
+      "document": "S069",
+      "end": 2000,
+      "score": 3.345544,
+      "start": 782
+    },
+    {
+      "document": "S070",
+      "end": 1803,
+      "score": 5.362662,
+      "start": 764
+    },
+    {
+      "document": "S071",
+      "end": 1669,
+      "score": 3.87561,
+      "start": 764
+    },
+    {
+      "document": "S072",
+      "end": 1570,
+      "score": 4.782884,
+      "start": 751
+    },
+    {
+      "document": "S073",
+      "end": 1870,
+      "score": 3.936649,
+      "start": 758
+    },
+    {
+      "document": "S074",
+      "end": 1926,
+      "score": 3.355687,
+      "start": 708
+    },
+    {
+      "document": "S075",
+      "end": 1747,
+      "score": 4.539704,
+      "start": 739
+    },
+    {
+      "document": "S076",
+      "end": 1733,
+      "score": 3.521248,
+      "start": 763
+    },
+    {
+      "document": "S077",
+      "end": 1631,
+      "score": 5.772533,
+      "start": 801
+    },
+    {
+      "document": "S078",
+      "end": 1924,
+      "score": 3.696702,
+      "start": 752
+    },
+    {
+      "document": "S079",
+      "end": 1596,
+      "score": 4.19631,
+      "start": 752
+    },
+    {
+      "document": "S080",
+      "end": 1834,
+      "score": 4.442661,
+      "start": 721
+    },
+    {
+      "document": "S081",
+      "end": 2106,
+      "score": 3.813593,
+      "start": 732
+    },
+    {
+      "document": "S082",
+      "end": 1773,
+      "score": 3.795443,
+      "start": 773
+    },
+    {
+      "document": "S083",
+      "end": 1681,
+      "score": 5.514687,
+      "start": 750
+    },
+    {
+      "document": "S084",
+      "end": 2103,
+      "score": 7.279784,
+      "start": 720
+    },
+    {
+      "document": "S085",
+      "end": 1643,
+      "score": 5.514107,
+      "start": 767
+    },
+    {
+      "document": "S086",
+      "end": 1740,
+      "score": 5.198414,
+      "start": 800
+    },
+    {
+      "document": "S087",
+      "end": 1884,
+      "score": 3.401183,
+      "start": 729
+    },
+    {
+      "document": "S088",
+      "end": 2152,
+      "score": 5.621686,
+      "start": 763
+    },
+    {
+      "document": "S089",
+      "end": 1670,
+      "score": 6.85198,
+      "start": 750
+    },
+    {
+      "document": "S090",
+      "end": 1786,
+      "score": 4.905026,
+      "start": 767
+    },
+    {
+      "document": "S091",
+      "end": 2077,
+      "score": 3.630046,
+      "start": 779
+    },
+    {
+      "document": "S092",
+      "end": 2093,
+      "score": 4.980353,
+      "start": 789
+    },
+    {
+      "document": "S093",
+      "end": 1665,
+      "score": 3.833192,
+      "start": 754
+    },
+    {
+      "document": "S094",
+      "end": 1722,
+      "score": 4.920105,
+      "start": 778
+    },
+    {
+      "document": "S095",
+      "end": 2245,
+      "score": 3.128197,
+      "start": 747
+    },
+    {
+      "document": "S096",
+      "end": 1860,
+      "score": 3.411122,
+      "start": 754
+    },
+    {
+      "document": "S097",
+      "end": 1683,
+      "score": 5.025501,
+      "start": 770
+    },
+    {
+      "document": "S098",
+      "end": 2061,
+      "score": 3.778502,
+      "start": 768
+    },
+    {
+      "document": "S099",
+      "end": 2086,
+      "score": 3.237312,
+      "start": 751
+    },
+    {
+      "document": "S100",
+      "end": 1848,
+      "score": 3.809422,
+      "start": 763
+    },
+    {
+      "document": "S101",
+      "end": 2227,
+      "score": 3.118273,
+      "start": 731
+    },
+    {
+      "document": "S102",
+      "end": 1879,
+      "score": 5.247223,
+      "start": 790
+    },
+    {
+      "document": "S103",
+      "end": 1658,
+      "score": 5.019357,
+      "start": 740
+    },
+    {
+      "document": "S104",
+      "end": 1742,
+      "score": 4.933484,
+      "start": 773
+    },
+    {
+      "document": "S105",
+      "end": 1758,
+      "score": 3.5317,
+      "start": 803
+    },
+    {
+      "document": "S106",
+      "end": 1863,
+      "score": 4.781051,
+      "start": 753
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "score": 3.831321,
+      "start": 1173
+    },
+    {
+      "document": "S108",
+      "end": 1194,
+      "score": 5.32646,
+      "start": 0
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 2.872519,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1958,
+      "score": 7.072917,
+      "start": 1203
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "score": 2.438215,
+      "start": 0
+    },
+    {
+      "document": "S112",
+      "end": 1928,
+      "score": 6.908783,
+      "start": 1166
+    }
+  ],
+  "settings": {
+    "k": 1,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S016",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S051",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S084",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S088",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [],
+  "winner": null,
+  "wins": {}
+}

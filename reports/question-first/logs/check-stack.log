@@ -1,0 +1,64 @@
+All model and gateway health endpoints ready at 2026-10-28T08:09:11+01:00
+{"model":"urchade/gliner_medium-v2.1","revision":"40ec419335d09393f298636f471328b722c6da9e","device":"cuda","max_chars":1500}
+Wed Oct 28 08:09:11 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.159.04             Driver Version: 580.159.04     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:01:00.0 Off |                    0 |
+| N/A   30C    P0             72W /  400W |   37075MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   1  NVIDIA A100-SXM4-40GB          On  |   00000000:81:00.0 Off |                    0 |
+| N/A   28C    P0             73W /  400W |   35771MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+|   2  NVIDIA A100-SXM4-40GB          On  |   00000000:C1:00.0 Off |                    0 |
+| N/A   27C    P0             74W /  400W |   35771MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A         2449174      C   VLLM::EngineCore                      35760MiB |
+|    0   N/A  N/A         2452609      C   ...67/llm-setup/venv/bin/python3       1296MiB |
+|    1   N/A  N/A         2449182      C   VLLM::EngineCore                      35760MiB |
+|    2   N/A  N/A         2449204      C   VLLM::EngineCore                      35760MiB |
++-----------------------------------------------------------------------------------------+
+index, memory.used [MiB], memory.free [MiB], memory.total [MiB]
+0, 37075 MiB, 3367 MiB, 40960 MiB
+1, 35771 MiB, 4671 MiB, 40960 MiB
+2, 35771 MiB, 4671 MiB, 40960 MiB
+pid, process_name, used_gpu_memory [MiB]
+2449174, VLLM::EngineCore, 35760 MiB
+2452609, /tmp/xepi3167/llm-setup/venv/bin/python3, 1296 MiB
+2449182, VLLM::EngineCore, 35760 MiB
+2449204, VLLM::EngineCore, 35760 MiB
+INFO  host: gammaweb07, Slurm job 7954
+PASS  time left in the allocation: 1-23:46:14
+PASS  LITELLM_MASTER_KEY: set
+PASS  profile: orch-3x40 (profiles/orch-3x40-gliner.yaml)
+PASS  session: 20261028T065536Z-2da09dee: orch, orch-2, orch-3, gliner, gateway, status alive
+PASS  GPU 0 (orch): 37075/40960 MiB used
+PASS  GPU 1 (orch-2): 35771/40960 MiB used
+PASS  GPU 2 (orch-3): 35771/40960 MiB used
+PASS  GPU 0 (gliner): 37075/40960 MiB used
+PASS  weights orch: Qwen/Qwen3.8-27B-FP8
+PASS  weights gliner: urchade/gliner_medium-v2.1
+PASS  weights gliner backbone: microsoft/deberta-v3-base
+PASS  orch health: ok
+PASS  orch-2 health: ok
+PASS  orch-3 health: ok
+PASS  gliner health: ok
+PASS  gateway: alive
+PASS  gateway models: orch-model, orch-model-1, orch-model-2, orch-model-3
+PASS  status API: healthy
+
+No failures.
+vLLM version 0.21.0

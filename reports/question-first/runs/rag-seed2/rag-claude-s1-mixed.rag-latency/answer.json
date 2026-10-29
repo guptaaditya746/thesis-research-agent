@@ -1,0 +1,121 @@
+{
+  "answer_text": "Yes, retrieval-augmented generation changes the latency of LLM-generated answers. Evidence from a controlled comparison on biomedical questions shows that the retrieval-augmented model has different latency values compared to the closed-book model. Specifically, on the BioClaimQA dataset, the closed-book model had a latency of 1.16 seconds, while the retrieval-augmented model had a latency of 1.12 seconds. On the TriviaCheck dataset, the closed-book model had a latency of 1.96 seconds, whereas the retrieval-augmented model had a latency of 0.94 seconds [S014, 908-2256].",
+  "citations": [
+    {
+      "document": "S014",
+      "end": 2256,
+      "start": 908
+    }
+  ],
+  "contradicting": [],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 0,
+    "neutral": 0,
+    "supporting": 1,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "supported",
+  "label_by_rule": "supported",
+  "mapped_answer_text": "Retrieval-augmented generation changed the latency of LLM-generated answers. In S014, the retrieval-augmented model showed lower latency than the closed-book model on both the BioClaimQA and TriviaCheck datasets.",
+  "mapping_call": {
+    "input_sha256": "d2fe413f981e8dd022e87f86a42b342e56341972106ecb25ca16159dbcc6746c",
+    "input_tokens": 928,
+    "key": "6b7f95b27309ff564e3eab5e7f803e857fcb3e87480e100a73d0e2afa0c6240a",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 81,
+    "prompt_sha256": "66faaf847a0082b6f7043d90adb03785215f351a86e02dd45b18f49e693825d0",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 2,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "780d168982ce45006162a03e2fac982dd1059094d2373fad47323523f2b265d3",
+    "input_tokens": 2158,
+    "key": "2ccec52c73d13ec20a8c86d4b34109ee68e6874f7636ff770276c25b3a34398d",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 199,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 2,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation change the latency of LLM-generated answers?",
+  "question_id": "rag-latency",
+  "retrieved": [
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 12.624142,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 10.60362,
+      "start": 1395
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 9.990719,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 9.947288,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 9.158934,
+      "start": 908
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 9.071019,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 8.654606,
+      "start": 957
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 8.127124,
+      "start": 1067
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S014"
+    }
+  ],
+  "supporting": [
+    "S014"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

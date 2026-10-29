@@ -1,0 +1,99 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.8571,
+        "low": 0.1667,
+        "method": "BCa",
+        "metric": "precision",
+        "n_rows": 18,
+        "point": 0.5,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 0.5714,
+        "low": 0.0833,
+        "method": "BCa",
+        "metric": "recall",
+        "n_rows": 18,
+        "point": 0.2857,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 0.6154,
+        "low": 0.1053,
+        "method": "BCa",
+        "metric": "f1",
+        "n_rows": 18,
+        "point": 0.3636,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 0.2857,
+      "entries": 8,
+      "expected_entries": 14,
+      "expected_paper_pairs": 61,
+      "f1": 0.3636,
+      "false_positives": [
+        "Parametric-Only / Closed-Book / Vanilla LLM",
+        "Question Reformulation",
+        "Retrieval-Augmented Generation (RAG) / Retrieve-Then-Read",
+        "Self-Consistency Decoding / Voting"
+      ],
+      "kind": "inventory",
+      "matched": 4,
+      "missed": [
+        "RAG pipeline",
+        "closed-book model",
+        "no-retrieval baseline",
+        "parametric-only model",
+        "query-rewriting variant",
+        "retrieval-augmented generator",
+        "retrieval-augmented model",
+        "retrieve-then-read model",
+        "self-consistency decoding",
+        "vanilla LLM"
+      ],
+      "paper_f1": 0.2385,
+      "paper_pairs": 48,
+      "paper_precision": 0.2708,
+      "paper_recall": 0.2131,
+      "precision": 0.5,
+      "recall": 0.2857,
+      "system": "rag-baseline",
+      "target": "condition"
+    }
+  ]
+}

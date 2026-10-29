@@ -1,0 +1,505 @@
+{
+  "answer_text": "The evidence from the provided passages is mixed and contradictory regarding whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers. The results depend heavily on the specific benchmark, the metric used (e.g., hallucination rate vs. fact-level accuracy), and the specific implementation details of the RAG pipeline.\n\n**Evidence Supporting Improvement:**\nSeveral studies report that RAG reduces hallucination rates or increases factual accuracy compared to parametric-only or closed-book models:\n*   On **LawFactQA**, the retrieval-augmented model had a hallucination rate of 17.8%, compared to 29.5% for the parametric-only model [S001, 1023-2239].\n*   On **LawFactQA**, the variant that reads retrieved evidence first had a fraction of answers judged factually correct of 57.1% (571/1000), compared to 50.5% for the generator without document access [S002, 2039-3490].\n*   On **HistoryQuest**, the retrieval-augmented model achieved an answer accuracy of 53.8%, compared to 40.6% for the closed-book model [S005, 2495-3666].\n*   On **PopCultureQA**, the RAG pipeline had a hallucination rate of 18.3%, compared to 21.5% for the vanilla LLM [S006, 1367-2401].\n*   On **SciFactBench**, the retrieval-augmented generator had a lower hallucination rate than the vanilla LLM, though specific percentages are not listed in the provided text, the abstract states it \"clearly reduces hallucinated content\" [S008, 0-1995].\n*   On **TriviaCheck**, the retrieve-then-read model reached a fact-level accuracy of 67.6%, compared to 54.3% for the closed-book model [S011, 1086-2419].\n*   On **HistoryQuest**, the retrieval-augmented generator had a hallucination frequency of 5.1%, compared to 10.3% for the no-retrieval baseline [S016, 1395-2667].\n*   On **PopCultureQA**, the system grounded in retrieved passages reduced the fraction of answers with invented facts compared to the language model used on its own, as stated in the abstract [S017, 0-1311].\n*   On **PopCultureQA**, the retrieve-then-read model had a lower hallucination rate than the vanilla LLM, as stated in the abstract [S018, 0-1187].\n*   On **LawFactQA**, the retrieval-augmented model reached 64.6% answer accuracy, compared to 52.3% for the no-retrieval baseline [S020, 1260-2739].\n\n**Evidence Against Improvement or Showing No Significant Difference:**\nOther studies report that RAG does not improve accuracy, or even decreases it, compared to baselines:\n*   On **LawFactQA**, one study found that retrieval augmentation \"does not make the answers measurably more accurate\" [S003, 0-1419].\n*   On **LawFactQA** and **GeoFacts**, the retrieve-then-read model scored 0.9 percentage points *lower* than the parametric-only model in answer accuracy on LawFactQA (59.8% vs. 58.9% implied) and showed minimal difference on GeoFacts (53.6% vs. 52.7%) [S004, 2474-3765].\n*   On **HistoryQuest**, one study concluded that adding retrieved documents \"leaves the correctness of the answers essentially unchanged\" [S005, 2495-3666].\n*   On **OpenFactQA**, the configuration that looks up supporting documents had a share of answers with unsupported statements of 39.9% (0.399), compared to 39.1% (391/1000) for the generator without document access, indicating a slight increase in hallucinations [S007, 2635-3784].\n*   On **NewsTruthQA** and **LawFactQA**, the RAG pipeline scored lower in fact-level accuracy than the parametric-only model (e.g., 40.7% vs. 49.9% on LawFactQA) [S009, 2316-3633].\n*   On **TriviaCheck**, one study found that retrieval augmentation \"does not measurably reduce hallucinated content,\" with the retrieval-augmented model having a 32.3% hallucination rate compared to 38.1% for the vanilla LLM, but the abstract claims no measurable reduction, possibly due to the specific metric or threshold [S010, 0-2287].\n*   On **NewsTruthQA**, retrieval augmentation \"increases hallucinated content\" [S012, 0-1346].\n*   On **PopCultureQA**, one study found that retrieval augmentation makes answers \"less accurate\" [S013, 0-1316].\n*   On **BioClaimQA** and **TriviaCheck**, the retrieval-augmented model scored lower in answer accuracy than the closed-book model (e.g., 53.5% vs. 60.6% on BioClaimQA) [S014, 908-2256].\n*   On **SciFactBench**, one study found that retrieval augmentation \"does not make the answers measurably more accurate\" [S015, 0-1067].\n*   On **TriviaCheck** and **HistoryQuest**, one study found that adding retrieved documents \"leaves the correctness of the answers essentially unchanged\" [S019, 1944-3441].\n*   On **LawFactQA**, one study found that retrieval augmentation \"does not make the answers measurably more accurate\" [S020, 0-1260].\n\n**Conclusion:**\nThe impact of RAG on factual accuracy is not consistent across studies. It can significantly improve accuracy in some domains and metrics (e.g., reducing hallucinations in legal, historical, and popular culture questions in several studies) but can also have no effect or even degrade performance in others (e.g., news, biomedical, and some legal/trivia contexts). The outcome appears to depend on the specific dataset, the quality of the retrieval, and the metric used to evaluate factual correctness.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "start": 1023
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "start": 2039
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "start": 2474
+    },
+    {
+      "document": "S005",
+      "end": 3666,
+      "start": 2495
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "start": 1367
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "start": 2635
+    },
+    {
+      "document": "S009",
+      "end": 3633,
+      "start": 2316
+    },
+    {
+      "document": "S011",
+      "end": 2419,
+      "start": 1086
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "start": 1944
+    }
+  ],
+  "contradicting": [
+    "S003",
+    "S004",
+    "S007",
+    "S009",
+    "S010",
+    "S012",
+    "S013",
+    "S014",
+    "S015",
+    "S019"
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 10,
+    "neutral": 0,
+    "supporting": 10,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [
+    {
+      "document": "S008",
+      "end": 1995,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "start": 0
+    }
+  ],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence from the provided passages is mixed and contradictory regarding whether retrieval-augmented generation (RAG) improves the factual accuracy of LLM-generated answers. The results depend heavily on the specific benchmark, the metric used (e.g., hallucination rate vs. fact-level accuracy), and the specific implementation details of the RAG pipeline.\n\n**Evidence Supporting Improvement:**\nSeveral studies report that RAG reduces hallucination rates or increases factual accuracy compared to parametric-only or closed-book models:\n*   On **LawFactQA**, the retrieval-augmented model had a hallucination rate of 17.8%, compared to 29.5% for the parametric-only model [S001, 1023-2239].\n*   On **LawFactQA**, the variant that reads retrieved evidence first had a fraction of answers judged factually correct of 57.1% (571/1000), compared to 50.5% for the generator without document access [S002, 2039-3490].\n*   On **HistoryQuest**, the retrieval-augmented model achieved an answer accuracy of 53.8%, compared to 40.6% for the closed-book model [S005, 2495-3666].\n*   On **PopCultureQA**, the RAG pipeline had a hallucination rate of 18.3%, compared to 21.5% for the vanilla LLM [S006, 1367-2401].\n*   On **SciFactBench**, the retrieval-augmented generator had a lower hallucination rate than the vanilla LLM, though specific percentages are not listed in the provided text, the abstract states it \"clearly reduces hallucinated content\" [S008, 0-1995].\n*   On **TriviaCheck**, the retrieve-then-read model reached a fact-level accuracy of 67.6%, compared to 54.3% for the closed-book model [S011, 1086-2419].\n*   On **HistoryQuest**, the retrieval-augmented generator had a hallucination frequency of 5.1%, compared to 10.3% for the no-retrieval baseline [S016, 1395-2667].\n*   On **PopCultureQA**, the system grounded in retrieved passages reduced the fraction of answers with invented facts compared to the language model used on its own, as stated in the abstract [S017, 0-1311].\n*   On **PopCultureQA**, the retrieve-then-read model had a lower hallucination rate than the vanilla LLM, as stated in the abstract [S018, 0-1187].\n*   On **LawFactQA**, the retrieval-augmented model reached 64.6% answer accuracy, compared to 52.3% for the no-retrieval baseline [S020, 1260-2739].\n\n**Evidence Against Improvement or Showing No Significant Difference:**\nOther studies report that RAG does not improve accuracy, or even decreases it, compared to baselines:\n*   On **LawFactQA**, one study found that retrieval augmentation \"does not make the answers measurably more accurate\" [S003, 0-1419].\n*   On **LawFactQA** and **GeoFacts**, the retrieve-then-read model scored 0.9 percentage points *lower* than the parametric-only model in answer accuracy on LawFactQA (59.8% vs. 58.9% implied) and showed minimal difference on GeoFacts (53.6% vs. 52.7%) [S004, 2474-3765].\n*   On **HistoryQuest**, one study concluded that adding retrieved documents \"leaves the correctness of the answers essentially unchanged\" [S005, 2495-3666].\n*   On **OpenFactQA**, the configuration that looks up supporting documents had a share of answers with unsupported statements of 39.9% (0.399), compared to 39.1% (391/1000) for the generator without document access, indicating a slight increase in hallucinations [S007, 2635-3784].\n*   On **NewsTruthQA** and **LawFactQA**, the RAG pipeline scored lower in fact-level accuracy than the parametric-only model (e.g., 40.7% vs. 49.9% on LawFactQA) [S009, 2316-3633].\n*   On **TriviaCheck**, one study found that retrieval augmentation \"does not measurably reduce hallucinated content,\" with the retrieval-augmented model having a 32.3% hallucination rate compared to 38.1% for the vanilla LLM, but the abstract claims no measurable reduction, possibly due to the specific metric or threshold [S010, 0-2287].\n*   On **NewsTruthQA**, retrieval augmentation \"increases hallucinated content\" [S012, 0-1346].\n*   On **PopCultureQA**, one study found that retrieval augmentation makes answers \"less accurate\" [S013, 0-1316].\n*   On **BioClaimQA** and **TriviaCheck**, the retrieval-augmented model scored lower in answer accuracy than the closed-book model (e.g., 53.5% vs. 60.6% on BioClaimQA) [S014, 908-2256].\n*   On **SciFactBench**, one study found that retrieval augmentation \"does not make the answers measurably more accurate\" [S015, 0-1067].\n*   On **TriviaCheck** and **HistoryQuest**, one study found that adding retrieved documents \"leaves the correctness of the answers essentially unchanged\" [S019, 1944-3441].\n*   On **LawFactQA**, one study found that retrieval augmentation \"does not make the answers measurably more accurate\" [S020, 0-1260].\n\n**Conclusion:**\nThe impact of RAG on factual accuracy is not consistent across studies. It can significantly improve accuracy in some domains and metrics (e.g., reducing hallucinations in legal, historical, and popular culture questions in several studies) but can also have no effect or even degrade performance in others (e.g., news, biomedical, and some legal/trivia contexts). The outcome appears to depend on the specific dataset, the quality of the retrieval, and the metric used to evaluate factual correctness.",
+  "mapping_call": {
+    "input_sha256": "00f39d3ae35a71db75070844665421e9e25ab8dfc2270bcfa0f3e361e58324d1",
+    "input_tokens": 2172,
+    "key": "4d8c52e50fd83b8841172e290e12eb01b5b82cdde0c4794e1139a3264dd03384",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1906,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "3d7e0e7f652b3be7777481d2c1aaf658cacf47d09ece60fe1f97cc2f23b74a84",
+    "input_tokens": 10612,
+    "key": "2b25f5a54c261fe0f490511cca33f89a23bce168a3ce5dc9b02517d9860fb43f",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 2281,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "question_id": "rag-factuality",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 5.873202,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 4.256096,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 8.094574,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "score": 4.655061,
+      "start": 2039
+    },
+    {
+      "document": "S003",
+      "end": 2532,
+      "score": 5.800145,
+      "start": 1419
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 5.337221,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 5.288917,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 4.893872,
+      "start": 2474
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 7.175821,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 3666,
+      "score": 6.367128,
+      "start": 2495
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 7.69918,
+      "start": 1367
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 4.358187,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 7.561504,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 6.540983,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 12.624142,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 7.505844,
+      "start": 960
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 9.226909,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 3633,
+      "score": 4.620669,
+      "start": 2316
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 9.071019,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 8.654606,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 7.50621,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 2419,
+      "score": 4.456064,
+      "start": 1086
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 4.456265,
+      "start": 2754
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 4.323375,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 8.259498,
+      "start": 1316
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 5.382763,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 8.471191,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 7.380505,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 8.454054,
+      "start": 1067
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 5.306081,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 10.60362,
+      "start": 1395
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 5.565986,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "score": 4.090388,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 4.057881,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 6.964297,
+      "start": 1187
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "score": 3.940919,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 6.046879,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 5.389276,
+      "start": 1944
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 7.506629,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 6.454505,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S013"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S014"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S015"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S019"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S005",
+    "S006",
+    "S008",
+    "S011",
+    "S016",
+    "S017",
+    "S018",
+    "S020"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,163 @@
+{
+  "answer_text": "The papers evaluate on the following datasets: TriviaCheck, PopCultureQA, SciFactBench, and OpenFactQA. Additionally, the surveys note that most surveyed papers index an encyclopedic corpus split into short passages, and a few use the web through a search interface.",
+  "citations": [
+    {
+      "document": "S043",
+      "end": 1628,
+      "start": 728
+    },
+    {
+      "document": "S045",
+      "end": 1664,
+      "start": 754
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "start": 0
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "OpenFactQA",
+      "papers": [
+        "S043",
+        "S045",
+        "S107",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "PopCultureQA",
+      "papers": [
+        "S043",
+        "S045",
+        "S107",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "SciFactBench",
+      "papers": [
+        "S043",
+        "S045",
+        "S107",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "TriviaCheck",
+      "papers": [
+        "S043",
+        "S045",
+        "S107",
+        "S111"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "e3b4349e424b45c92b6d4d4f3bbd64bf9dd9b81869534b68c2ab2ab9b01e32d2",
+    "input_tokens": 1280,
+    "key": "71d0592b8fad6f21bda28d829a8cdfa4fb93ee1592564d98c153adaaa79259f1",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 148,
+    "prompt_sha256": "168da6790a68e7dec70418f6e24701b91699dfa7f53afd923cdca204a5becd61",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "84a27fc8f4ffd63f2a4ea5cbd981e45f3f1e05e918c9423bb74e1ea86a33a768",
+    "input_tokens": 1671,
+    "key": "ef68c467a11f7d4a7fde91ffd84718cfb3059dd77daeb228ff22a5f7b865b5fb",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 224,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which datasets do the papers evaluate on?",
+  "question_id": "inv-datasets",
+  "retrieved": [
+    {
+      "document": "S109",
+      "end": 2011,
+      "score": 15.051805,
+      "start": 1211
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "score": 13.801987,
+      "start": 0
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 13.373293,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "score": 12.568599,
+      "start": 1207
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "score": 9.945052,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "score": 8.485791,
+      "start": 1173
+    },
+    {
+      "document": "S043",
+      "end": 1628,
+      "score": 3.916304,
+      "start": 728
+    },
+    {
+      "document": "S045",
+      "end": 1664,
+      "score": 3.890331,
+      "start": 754
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "dataset"
+}

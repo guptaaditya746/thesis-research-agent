@@ -1,0 +1,631 @@
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed/answer.json: label=mixed studies=20
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.rag-hallucination/answer.json: label=mixed studies=9
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.rag-latency/answer.json: label=mixed studies=2
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.inv-metrics/answer.json: kind=inventory entries=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.inv-methods/answer.json: kind=inventory entries=8
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.inv-datasets/answer.json: kind=inventory entries=9
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.cons-accuracy/answer.json: kind=consistency studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.cons-hallucination/answer.json: kind=consistency studies=6
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.best-accuracy/answer.json: kind=best winner=rag studies=20
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-per-paper/rag-claude-s1-mixed.best-hallucination/answer.json: kind=best winner=rag studies=6
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-per-paper/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-per-paper/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed/answer.json: label=mixed studies=17
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-oracle/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.rag-hallucination/answer.json: label=mixed studies=8
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-oracle/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.rag-latency/answer.json: label=mixed studies=3
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-oracle/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.inv-metrics/answer.json: kind=inventory entries=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-oracle/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.inv-methods/answer.json: kind=inventory entries=8
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-oracle/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.inv-datasets/answer.json: kind=inventory entries=9
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-oracle/report.md
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 208, in rag_baseline
+    answer, call = cached_reply(cache, INSTRUCTIONS, user_prompt(question, hits), model=model, model_id=model_id,
+                   ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                seed=seed, output_type=CitedAnswer)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 173, in cached_reply
+    answer = ask_sync(Prompt.inline(instructions, output_type), prompt, model=model,
+                      settings=CallSettings(seed=seed, max_tokens=max_tokens), cache=cache, key=record)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 168, in ask_sync
+    return run_sync(ask(prompt, user_prompt, model=model, settings=settings, cache=cache, key=key,
+                        refresh=refresh, extra=extra, timeout_s=timeout_s))
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 44, in run_sync
+    return asyncio.run_coroutine_threadsafe(coro, loop).result()
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 154, in ask
+    reply, messages = await on_model_loop(_attempt(prompt, user_prompt, model, settings, timeout_s))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/loop.py", line 51, in on_model_loop
+    return await coro
+           ^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/modelcall/call.py", line 129, in _attempt
+    raise err from None
+modelcall.call.ModelCallError: UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL rag-oracle cons-accuracy rag-claude-s1-mixed
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.cons-hallucination/answer.json: kind=consistency studies=8
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-oracle/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.best-accuracy/answer.json: kind=best winner=no-retrieval studies=20
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-oracle/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-oracle/rag-claude-s1-mixed.best-hallucination/answer.json: kind=best winner=rag studies=9
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-oracle/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-oracle/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-factuality-regex-only/rag-claude-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 4,
+  "undetermined": 15
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.273,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-hallucination-regex-only/rag-claude-s1-mixed",
+ "label": "supported",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 2,
+  "undetermined": 18
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 118,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.585,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-latency-regex-only/rag-claude-s1-mixed",
+ "label": "no_effect",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 1,
+  "supporting": 0,
+  "undetermined": 19
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 99,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.285,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-metrics-regex-only/rag-claude-s1-mixed",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 60,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.428,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-methods-regex-only/rag-claude-s1-mixed",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 40,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.114,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-datasets-regex-only/rag-claude-s1-mixed",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 40,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 0.966,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-accuracy-regex-only/rag-claude-s1-mixed",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 117,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.604,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-hallucination-regex-only/rag-claude-s1-mixed",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 118,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.645,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-accuracy-regex-only/rag-claude-s1-mixed",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 93,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.209,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-hallucination-regex-only/rag-claude-s1-mixed",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 99,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 2.342,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.regex-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.regex-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-factuality-llm-only/rag-claude-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 3,
+  "duplicates": 0,
+  "neutral": 3,
+  "supporting": 10,
+  "undetermined": 4
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 150395,
+  "made_model_calls": 129,
+  "model_calls": 129,
+  "output_tokens": 28305,
+  "seconds": 307.529,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-hallucination-llm-only/rag-claude-s1-mixed",
+ "label": "supported",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 5,
+  "undetermined": 15
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 150595,
+  "made_model_calls": 129,
+  "model_calls": 129,
+  "output_tokens": 28299,
+  "seconds": 327.758,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-latency-llm-only/rag-claude-s1-mixed",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 1,
+  "supporting": 1,
+  "undetermined": 17
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 131973,
+  "made_model_calls": 111,
+  "model_calls": 111,
+  "output_tokens": 26168,
+  "seconds": 283.698,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-metrics-llm-only/rag-claude-s1-mixed",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 40,
+  "input_tokens": 45716,
+  "made_model_calls": 44,
+  "model_calls": 44,
+  "output_tokens": 4119,
+  "seconds": 44.708,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-methods-llm-only/rag-claude-s1-mixed",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 40,
+  "input_tokens": 41960,
+  "made_model_calls": 42,
+  "model_calls": 42,
+  "output_tokens": 5926,
+  "seconds": 62.965,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-datasets-llm-only/rag-claude-s1-mixed",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 40,
+  "input_tokens": 49263,
+  "made_model_calls": 50,
+  "model_calls": 50,
+  "output_tokens": 3978,
+  "seconds": 45.071,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-accuracy-llm-only/rag-claude-s1-mixed",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 150395,
+  "made_model_calls": 129,
+  "model_calls": 129,
+  "output_tokens": 28338,
+  "seconds": 318.394,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-hallucination-llm-only/rag-claude-s1-mixed",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 150595,
+  "made_model_calls": 129,
+  "model_calls": 129,
+  "output_tokens": 28333,
+  "seconds": 309.509,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-accuracy-llm-only/rag-claude-s1-mixed",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 132267,
+  "made_model_calls": 109,
+  "model_calls": 109,
+  "output_tokens": 26241,
+  "seconds": 292.595,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.llm-only/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-hallucination-llm-only/rag-claude-s1-mixed",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 132267,
+  "made_model_calls": 109,
+  "model_calls": 109,
+  "output_tokens": 26243,
+  "seconds": 295.798,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.llm-only/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.llm-only/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed/answer.json: label=mixed studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.rag-hallucination/answer.json: label=supported studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.rag-latency/answer.json: label=supported studies=1
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.inv-metrics/answer.json: kind=inventory entries=8
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.inv-methods/answer.json: kind=inventory entries=9
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.inv-datasets/answer.json: kind=inventory entries=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.cons-accuracy/answer.json: kind=consistency studies=1
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.cons-hallucination/answer.json: kind=consistency studies=2
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.best-accuracy/answer.json: kind=best winner=None studies=6
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed1/rag-claude-s1-mixed.best-hallucination/answer.json: kind=best winner=rag studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-seed1/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-seed1/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed/answer.json: label=mixed studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.rag-hallucination/answer.json: label=supported studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.rag-latency/answer.json: label=supported studies=1
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.inv-metrics/answer.json: kind=inventory entries=8
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.inv-methods/answer.json: kind=inventory entries=9
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.inv-datasets/answer.json: kind=inventory entries=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.cons-accuracy/answer.json: kind=consistency studies=4
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.cons-hallucination/answer.json: kind=consistency studies=2
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.best-accuracy/answer.json: kind=best winner=None studies=6
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.rag-seed2/report.md
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-seed2/rag-claude-s1-mixed.best-hallucination/answer.json: kind=best winner=None studies=5
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-seed2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.rag-seed2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cascade-gaps/rag-claude-s1-mixed-r2",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 4,
+  "duplicates": 0,
+  "neutral": 4,
+  "supporting": 11,
+  "undetermined": 1
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 149,
+  "input_tokens": 79238,
+  "made_model_calls": 66,
+  "model_calls": 66,
+  "output_tokens": 12391,
+  "seconds": 169.705,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-factuality.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-hallucination-cascade-gaps/rag-claude-s1-mixed-r2",
+ "label": "supported",
+ "counts": {
+  "contradicting": 0,
+  "duplicates": 0,
+  "neutral": 0,
+  "supporting": 6,
+  "undetermined": 14
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 206,
+  "input_tokens": 64946,
+  "made_model_calls": 143,
+  "model_calls": 143,
+  "output_tokens": 7230,
+  "seconds": 82.955,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-hallucination.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-latency-cascade-gaps/rag-claude-s1-mixed-r2",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 1,
+  "duplicates": 0,
+  "neutral": 1,
+  "supporting": 1,
+  "undetermined": 17
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 187,
+  "input_tokens": 63014,
+  "made_model_calls": 148,
+  "model_calls": 148,
+  "output_tokens": 6913,
+  "seconds": 95.209,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/rag-latency.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-metrics-cascade-gaps/rag-claude-s1-mixed-r2",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 120,
+  "input_tokens": 43956,
+  "made_model_calls": 106,
+  "model_calls": 106,
+  "output_tokens": 3899,
+  "seconds": 53.265,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-metrics.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-methods-cascade-gaps/rag-claude-s1-mixed-r2",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 80,
+  "input_tokens": 43370,
+  "made_model_calls": 43,
+  "model_calls": 43,
+  "output_tokens": 5964,
+  "seconds": 62.753,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-methods.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-datasets-cascade-gaps/rag-claude-s1-mixed-r2",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 49863,
+  "made_model_calls": 114,
+  "model_calls": 114,
+  "output_tokens": 3971,
+  "seconds": 48.962,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-accuracy-cascade-gaps/rag-claude-s1-mixed-r2",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 195,
+  "input_tokens": 70324,
+  "made_model_calls": 124,
+  "model_calls": 124,
+  "output_tokens": 11266,
+  "seconds": 158.735,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-accuracy.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-hallucination-cascade-gaps/rag-claude-s1-mixed-r2",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 206,
+  "input_tokens": 67372,
+  "made_model_calls": 145,
+  "model_calls": 145,
+  "output_tokens": 7558,
+  "seconds": 82.013,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/cons-hallucination.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-accuracy-cascade-gaps/rag-claude-s1-mixed-r2",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 134,
+  "input_tokens": 38943,
+  "made_model_calls": 65,
+  "model_calls": 65,
+  "output_tokens": 3857,
+  "seconds": 40.201,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-accuracy.engine-r2/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-hallucination-cascade-gaps/rag-claude-s1-mixed-r2",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 153,
+  "input_tokens": 44447,
+  "made_model_calls": 90,
+  "model_calls": 90,
+  "output_tokens": 4508,
+  "seconds": 53.399,
+  "workers": 3
+ }
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.engine-r2/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/best-hallucination.engine-r2/report.md

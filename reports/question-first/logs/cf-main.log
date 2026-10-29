@@ -1,0 +1,27 @@
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cascade-gaps/rag-claude-s1-mixed-cf-S001-contradicts",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 5,
+  "duplicates": 0,
+  "neutral": 3,
+  "supporting": 10,
+  "undetermined": 2
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 148,
+  "input_tokens": 77081,
+  "made_model_calls": 64,
+  "model_calls": 64,
+  "output_tokens": 11637,
+  "seconds": 165.399,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-claude-s1-mixed-cf-S001-contradicts/answer.json: label=mixed studies=5
+broker: start run=rag-claude-s1-mixed-cf-S001-contradicts records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-mixed-cf-S001-contradicts records=89 claims=38 head=f9e10a85c8a85ab4626781a78323dadfa530c9bf331a4d76bc7ac4cb21de8a23
+run rag-claude-s1-mixed-cf-S001-contradicts: broker head=f9e10a85c8a85ab4626781a78323dadfa530c9bf331a4d76bc7ac4cb21de8a23 records=89 claims=38
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-claude-s1-mixed-cf-S001-contradicts/answer.json: label=mixed studies=20 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed-cf-S001-contradicts/rag-factuality/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed-cf-S001-contradicts/rag-factuality/report.md

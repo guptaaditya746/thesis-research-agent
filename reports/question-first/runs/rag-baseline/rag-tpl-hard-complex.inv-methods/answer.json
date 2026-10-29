@@ -1,0 +1,183 @@
+{
+  "answer_text": "The papers compare methods and system variants primarily in two domains: retrieval-augmented generation architectures and code tokenization strategies. In retrieval-augmented generation, the surveys categorize and compare three main families of systems: (1) those that pass retrieved passages to the generator as part of the prompt without changing generator weights, (2) those that train the retriever and generator jointly, and (3) those that retrieve at the token level during decoding [S109, 0-1211] [S111, 0-1207] [S111, 1207-2049]. Additionally, the surveys note that most systems index encyclopedic corpora split into short passages, while a few use web search interfaces [S111, 0-1207] [S107, 0-1173]. In the domain of source code language models, the papers compare vocabulary construction methods, specifically contrasting byte-level or subword approaches where identifiers are split differently (e.g., camel case vs. snake case) and discussing the trade-offs between vocabulary size, embedding table compactness, and sequence length [S110, 0-1203] [S112, 0-1166]. The surveys explicitly state that they do not aggregate reported numbers because evaluation setups vary widely, making direct comparison across papers difficult [S107, 0-1173] [S111, 1207-2049].",
+  "citations": [
+    {
+      "document": "S109",
+      "end": 1211,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "start": 1207
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1203,
+      "start": 0
+    },
+    {
+      "document": "S112",
+      "end": 1166,
+      "start": 0
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "byte-level or subword approaches",
+      "papers": [
+        "S110",
+        "S112"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "index encyclopedic corpora split into short passages",
+      "papers": [
+        "S107",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "pass retrieved passages to the generator as part of the prompt without changing generator weights",
+      "papers": [
+        "S109",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieve at the token level during decoding",
+      "papers": [
+        "S109",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "train the retriever and generator jointly",
+      "papers": [
+        "S109",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "use web search interfaces",
+      "papers": [
+        "S107",
+        "S111"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "93dbcbfeff7b4d1aed9649ab3f35433370b1d83266b4ab85b1c991d6f7e7e78c",
+    "input_tokens": 1594,
+    "key": "51a062792043b5d617001dfa7ad0acf0d81d952da3d1103d9a5bf156dae4e3e8",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 292,
+    "prompt_sha256": "337685d8abf98f6ee4e5bf8f939d26332a2650f0742b14fb5b9ea014e641ecee",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "d6f0c4665d18cc7eae9f08539abd41469ecbf07346d6f15eb2ef95c877b4064c",
+    "input_tokens": 1740,
+    "key": "2c0b52767eed23011e17cd5b5dc9b8368539220c512848a4a33b6863cfce2ca9",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 565,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "retrieved": [
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 12.789772,
+      "start": 0
+    },
+    {
+      "document": "S109",
+      "end": 2011,
+      "score": 9.956321,
+      "start": 1211
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "score": 9.221419,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "score": 9.056374,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1203,
+      "score": 8.47446,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "score": 8.32885,
+      "start": 1173
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "score": 7.73195,
+      "start": 1207
+    },
+    {
+      "document": "S112",
+      "end": 1166,
+      "score": 7.668437,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "condition"
+}

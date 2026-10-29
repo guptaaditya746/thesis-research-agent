@@ -1,0 +1,121 @@
+{
+  "answer_text": "Yes, retrieval-augmented generation changes the latency of LLM-generated answers. According to the results reported in [S040, 1627-2889], the retrieval-augmented generator exhibits lower latency compared to the vanilla LLM on both the TriviaCheck and HistoryQuest datasets. Specifically, on TriviaCheck, the latency decreased from 3.35 seconds for the vanilla LLM to 2.61 seconds for the retrieval-augmented generator. Similarly, on HistoryQuest, the latency decreased from 3.38 seconds for the vanilla LLM to 2.15 seconds for the retrieval-augmented generator.",
+  "citations": [
+    {
+      "document": "S040",
+      "end": 2889,
+      "start": 1627
+    }
+  ],
+  "contradicting": [],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 0,
+    "neutral": 0,
+    "supporting": 1,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "supported",
+  "label_by_rule": "supported",
+  "mapped_answer_text": "Retrieval-augmented generation resulted in lower latency compared to the vanilla LLM on both TriviaCheck and HistoryQuest datasets.",
+  "mapping_call": {
+    "input_sha256": "ae23439811339b911f9d3641d6ab287586fed1d6b06ffb7ce3c67b5024c414db",
+    "input_tokens": 1387,
+    "key": "c3376602d93f4ed2181f789e7ed39d429ddec77fbdacaa59b18f514b1df50ca6",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 60,
+    "prompt_sha256": "66faaf847a0082b6f7043d90adb03785215f351a86e02dd45b18f49e693825d0",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "5fe953ae03056ccf4ebaf1f3f22b0495282a2ed9659bb442ad55e76acec45722",
+    "input_tokens": 1485,
+    "key": "22a84ccd532ee35e0643a30b41e532c4730baa20162ee6748aa26aca8a016eaf",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 199,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation change the latency of LLM-generated answers?",
+  "question_id": "rag-latency",
+  "retrieved": [
+    {
+      "document": "S015",
+      "end": 744,
+      "score": 11.002379,
+      "start": 0
+    },
+    {
+      "document": "S035",
+      "end": 751,
+      "score": 9.930587,
+      "start": 0
+    },
+    {
+      "document": "S100",
+      "end": 763,
+      "score": 9.824858,
+      "start": 0
+    },
+    {
+      "document": "S060",
+      "end": 777,
+      "score": 9.405993,
+      "start": 0
+    },
+    {
+      "document": "S040",
+      "end": 2889,
+      "score": 9.383237,
+      "start": 1627
+    },
+    {
+      "document": "S099",
+      "end": 751,
+      "score": 9.140002,
+      "start": 0
+    },
+    {
+      "document": "S098",
+      "end": 768,
+      "score": 9.104328,
+      "start": 0
+    },
+    {
+      "document": "S045",
+      "end": 754,
+      "score": 9.045397,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S040"
+    }
+  ],
+  "supporting": [
+    "S040"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

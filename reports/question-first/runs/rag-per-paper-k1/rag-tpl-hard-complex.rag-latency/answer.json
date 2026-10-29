@@ -1,0 +1,877 @@
+{
+  "answer_text": "Yes, retrieval-augmented generation (RAG) changes the latency of LLM-generated answers, though the direction and magnitude of the change vary across different studies and datasets. The evidence shows that RAG can either increase or decrease latency compared to parametric-only (no-retrieval) baselines.\n\n**Increases in Latency:**\nIn several experiments, the retrieval-augmented model exhibited higher latency than the baseline:\n*   On **LawFactQA**, the retrieval-augmented generator had a latency of **1.68s** compared to **0.77s** for the closed-book model [S009, 1694-3107].\n*   On **GeoFacts**, the retrieval-augmented generator took **2.59s** versus **1.44s** for the closed-book model [S009, 1694-3107].\n*   On **HistoryQuest**, the retrieval-augmented generator had a latency of **2.51s** compared to **1.76s** for the vanilla LLM [S037, 1724-3172].\n*   On **LawFactQA**, the retrieve-then-read model took **1.25s** compared to **1.16s** for the vanilla LLM [S049, 1710-3124].\n*   On **OpenFactQA**, the retrieve-then-read model had a latency of **2.22s** compared to **1.69s** for the vanilla LLM [S049, 1710-3124].\n*   On **GeoFacts**, the retrieval-augmented model took **3.28s** compared to **2.85s** for the vanilla LLM [S080, 1834-3108].\n*   On **LawFactQA**, the retrieval-augmented model had a latency of **2.43s** compared to **2.03s** for the vanilla LLM [S080, 1834-3108].\n*   On **HistoryQuest**, the retrieve-then-read model took **2.72s** compared to **1.59s** for the no-retrieval baseline [S082, 1773-3214].\n*   On **LawFactQA**, the retrieval-augmented model had a latency of **2.71s** compared to **1.31s** for the vanilla LLM [S097, 1683-2845].\n\n**Decreases in Latency:**\nConversely, in other experiments, RAG resulted in lower latency:\n*   On **SciFactBench**, the retrieval-augmented model had a latency of **1.73s** compared to **1.77s** for the parametric-only model [S008, 1618-2906].\n*   On **OpenFactQA**, the RAG pipeline had a latency of **0.46s** compared to **1.62s** for the closed-book model [S030, 1835-3324].\n*   On **GeoFacts**, the RAG pipeline took **3.44s** compared to **1.25s** for the closed-book model, but in a different study on the same dataset, the retrieve-then-read model had a latency of **0.78s** compared to **2.16s** for the no-retrieval baseline [S030, 1835-3324] [S082, 1773-3214].\n*   On **TriviaCheck**, the retrieval-augmented generator had a latency of **2.61s** compared to **3.35s** for the vanilla LLM [S040, 1627-2889].\n*   On **HistoryQuest**, the retrieval-augmented generator took **2.15s** compared to **3.38s** for the vanilla LLM [S040, 1627-2889].\n*   On **BioClaimQA**, the retrieve-then-read model had a latency of **2.44s** compared to **2.55s** for the vanilla LLM [S033, 1492-2672].\n*   On **LawFactQA**, the retrieve-then-read model took **2.92s** compared to **1.79s** for the vanilla LLM, but in another study, the retrieve-then-read model on LawFactQA had a latency of **1.25s** vs **1.16s** [S033, 1492-2672] [S049, 1710-3124].\n*   On **NewsTruthQA**, the retrieve-then-read model had a latency of **1.28s** compared to **2.97s** for the vanilla LLM [S085, 1643-2916].\n*   On **OpenFactQA**, the retrieve-then-read model took **1.86s** compared to **2.86s** for the vanilla LLM [S085, 1643-2916].\n*   On **SciFactBench**, the retrieval-augmented generator had a latency of **1.47s** compared to **1.74s** for the vanilla LLM [S037, 1724-3172].\n*   On **OpenFactQA**, the retrieval-augmented model had a latency of **0.58s** compared to **2.01s** for the vanilla LLM [S097, 1683-2845].\n*   On **PopCultureQA**, the retrieve-then-read model had a latency of **1.77s** compared to **1.52s** for the closed-book model [S068, 2034-3484].\n*   On **OpenFactQA**, the retrieve-then-read model took **2.66s** compared to **2.84s** for the closed-book model [S068, 2034-3484].\n\n**Context:**\nSurveys note that retrieval latency is often reported separately from generation cost, and the total inference cost includes both the retrieval step and the generation step [S109, 0-1211] [S107, 1173-2028]. The variation in results suggests that the impact on latency depends on the specific implementation, dataset, and hardware used.",
+  "citations": [
+    {
+      "document": "S008",
+      "end": 2906,
+      "start": 1618
+    },
+    {
+      "document": "S009",
+      "end": 3107,
+      "start": 1694
+    },
+    {
+      "document": "S030",
+      "end": 3324,
+      "start": 1835
+    },
+    {
+      "document": "S033",
+      "end": 2672,
+      "start": 1492
+    },
+    {
+      "document": "S037",
+      "end": 3172,
+      "start": 1724
+    },
+    {
+      "document": "S040",
+      "end": 2889,
+      "start": 1627
+    },
+    {
+      "document": "S049",
+      "end": 3124,
+      "start": 1710
+    },
+    {
+      "document": "S068",
+      "end": 3484,
+      "start": 2034
+    },
+    {
+      "document": "S080",
+      "end": 3108,
+      "start": 1834
+    },
+    {
+      "document": "S082",
+      "end": 3214,
+      "start": 1773
+    },
+    {
+      "document": "S085",
+      "end": 2916,
+      "start": 1643
+    },
+    {
+      "document": "S097",
+      "end": 2845,
+      "start": 1683
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "start": 1173
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "start": 0
+    }
+  ],
+  "contradicting": [
+    "S009",
+    "S049",
+    "S068",
+    "S080",
+    "S082",
+    "S097"
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 6,
+    "neutral": 2,
+    "supporting": 6,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The answer states that retrieval-augmented generation changes latency, with some studies showing increased latency (e.g., S009, S037, S049, S080, S082, S097) and others showing decreased latency (e.g., S008, S030, S033, S040, S085).",
+  "mapping_call": {
+    "input_sha256": "3af3d9e30080c8b3a075766f52d6d8aa314091f6a665c60903ef7ca2059b16b1",
+    "input_tokens": 2999,
+    "key": "de15c3e05b9b8e16de0084f4dffdaeacd06938fb804ad037a1648bbdde34e852",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 326,
+    "prompt_sha256": "66faaf847a0082b6f7043d90adb03785215f351a86e02dd45b18f49e693825d0",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "31fb8a4576ae29ab6edbe6ed709404c12fe8362dcf354b7ebdc133de2a17c415",
+    "input_tokens": 21741,
+    "key": "32d22e57c2c14bc1e65ba4c438fe14907b39436003a71a9df22d011ce3322380",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 2110,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S107",
+    "S109"
+  ],
+  "question": "Does retrieval-augmented generation change the latency of LLM-generated answers?",
+  "question_id": "rag-latency",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 764,
+      "score": 8.477955,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 737,
+      "score": 8.97359,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 719,
+      "score": 6.552097,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 749,
+      "score": 8.311122,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 768,
+      "score": 8.157223,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 783,
+      "score": 7.794868,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 752,
+      "score": 7.539974,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 2906,
+      "score": 6.874579,
+      "start": 1618
+    },
+    {
+      "document": "S009",
+      "end": 3107,
+      "score": 6.790772,
+      "start": 1694
+    },
+    {
+      "document": "S010",
+      "end": 754,
+      "score": 7.427996,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3052,
+      "score": 6.164779,
+      "start": 1673
+    },
+    {
+      "document": "S012",
+      "end": 732,
+      "score": 4.072924,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 742,
+      "score": 7.627895,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 1695,
+      "score": 4.250065,
+      "start": 759
+    },
+    {
+      "document": "S015",
+      "end": 744,
+      "score": 11.002379,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 759,
+      "score": 7.438344,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 797,
+      "score": 8.288727,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 765,
+      "score": 8.749121,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 763,
+      "score": 6.986697,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 3060,
+      "score": 6.394616,
+      "start": 1696
+    },
+    {
+      "document": "S021",
+      "end": 3534,
+      "score": 5.450355,
+      "start": 2087
+    },
+    {
+      "document": "S022",
+      "end": 3388,
+      "score": 4.985996,
+      "start": 3118
+    },
+    {
+      "document": "S023",
+      "end": 766,
+      "score": 7.519144,
+      "start": 0
+    },
+    {
+      "document": "S024",
+      "end": 772,
+      "score": 7.316859,
+      "start": 0
+    },
+    {
+      "document": "S025",
+      "end": 757,
+      "score": 8.952576,
+      "start": 0
+    },
+    {
+      "document": "S026",
+      "end": 754,
+      "score": 8.20777,
+      "start": 0
+    },
+    {
+      "document": "S027",
+      "end": 743,
+      "score": 7.222883,
+      "start": 0
+    },
+    {
+      "document": "S028",
+      "end": 780,
+      "score": 6.56537,
+      "start": 0
+    },
+    {
+      "document": "S029",
+      "end": 770,
+      "score": 5.048579,
+      "start": 0
+    },
+    {
+      "document": "S030",
+      "end": 3324,
+      "score": 5.525102,
+      "start": 1835
+    },
+    {
+      "document": "S031",
+      "end": 3562,
+      "score": 5.122904,
+      "start": 3284
+    },
+    {
+      "document": "S032",
+      "end": 782,
+      "score": 9.011291,
+      "start": 0
+    },
+    {
+      "document": "S033",
+      "end": 2672,
+      "score": 7.779087,
+      "start": 1492
+    },
+    {
+      "document": "S034",
+      "end": 2759,
+      "score": 6.826713,
+      "start": 2213
+    },
+    {
+      "document": "S035",
+      "end": 751,
+      "score": 9.930587,
+      "start": 0
+    },
+    {
+      "document": "S036",
+      "end": 762,
+      "score": 8.522094,
+      "start": 0
+    },
+    {
+      "document": "S037",
+      "end": 3172,
+      "score": 7.868904,
+      "start": 1724
+    },
+    {
+      "document": "S038",
+      "end": 750,
+      "score": 6.472534,
+      "start": 0
+    },
+    {
+      "document": "S039",
+      "end": 772,
+      "score": 7.25272,
+      "start": 0
+    },
+    {
+      "document": "S040",
+      "end": 2889,
+      "score": 9.383237,
+      "start": 1627
+    },
+    {
+      "document": "S041",
+      "end": 759,
+      "score": 8.512198,
+      "start": 0
+    },
+    {
+      "document": "S042",
+      "end": 711,
+      "score": 8.203648,
+      "start": 0
+    },
+    {
+      "document": "S043",
+      "end": 728,
+      "score": 7.517068,
+      "start": 0
+    },
+    {
+      "document": "S044",
+      "end": 797,
+      "score": 8.422381,
+      "start": 0
+    },
+    {
+      "document": "S045",
+      "end": 754,
+      "score": 9.045397,
+      "start": 0
+    },
+    {
+      "document": "S046",
+      "end": 3447,
+      "score": 5.122904,
+      "start": 3170
+    },
+    {
+      "document": "S047",
+      "end": 790,
+      "score": 7.626719,
+      "start": 0
+    },
+    {
+      "document": "S048",
+      "end": 752,
+      "score": 6.146199,
+      "start": 0
+    },
+    {
+      "document": "S049",
+      "end": 3124,
+      "score": 7.683179,
+      "start": 1710
+    },
+    {
+      "document": "S050",
+      "end": 781,
+      "score": 6.99777,
+      "start": 0
+    },
+    {
+      "document": "S051",
+      "end": 2262,
+      "score": 6.827236,
+      "start": 793
+    },
+    {
+      "document": "S052",
+      "end": 767,
+      "score": 6.166209,
+      "start": 0
+    },
+    {
+      "document": "S053",
+      "end": 764,
+      "score": 6.957238,
+      "start": 0
+    },
+    {
+      "document": "S054",
+      "end": 772,
+      "score": 7.875647,
+      "start": 0
+    },
+    {
+      "document": "S055",
+      "end": 775,
+      "score": 8.992493,
+      "start": 0
+    },
+    {
+      "document": "S056",
+      "end": 4143,
+      "score": 5.310475,
+      "start": 3566
+    },
+    {
+      "document": "S057",
+      "end": 697,
+      "score": 7.344951,
+      "start": 0
+    },
+    {
+      "document": "S058",
+      "end": 759,
+      "score": 6.918572,
+      "start": 0
+    },
+    {
+      "document": "S059",
+      "end": 767,
+      "score": 7.739549,
+      "start": 0
+    },
+    {
+      "document": "S060",
+      "end": 777,
+      "score": 9.405993,
+      "start": 0
+    },
+    {
+      "document": "S061",
+      "end": 756,
+      "score": 7.205873,
+      "start": 0
+    },
+    {
+      "document": "S062",
+      "end": 1849,
+      "score": 4.700887,
+      "start": 741
+    },
+    {
+      "document": "S063",
+      "end": 734,
+      "score": 5.811759,
+      "start": 0
+    },
+    {
+      "document": "S064",
+      "end": 723,
+      "score": 8.576121,
+      "start": 0
+    },
+    {
+      "document": "S065",
+      "end": 807,
+      "score": 5.124558,
+      "start": 0
+    },
+    {
+      "document": "S066",
+      "end": 749,
+      "score": 8.99352,
+      "start": 0
+    },
+    {
+      "document": "S067",
+      "end": 764,
+      "score": 6.35858,
+      "start": 0
+    },
+    {
+      "document": "S068",
+      "end": 3484,
+      "score": 5.05833,
+      "start": 2034
+    },
+    {
+      "document": "S069",
+      "end": 782,
+      "score": 8.218832,
+      "start": 0
+    },
+    {
+      "document": "S070",
+      "end": 764,
+      "score": 7.320257,
+      "start": 0
+    },
+    {
+      "document": "S071",
+      "end": 764,
+      "score": 7.037789,
+      "start": 0
+    },
+    {
+      "document": "S072",
+      "end": 751,
+      "score": 8.443594,
+      "start": 0
+    },
+    {
+      "document": "S073",
+      "end": 758,
+      "score": 6.953342,
+      "start": 0
+    },
+    {
+      "document": "S074",
+      "end": 708,
+      "score": 7.457914,
+      "start": 0
+    },
+    {
+      "document": "S075",
+      "end": 739,
+      "score": 7.631544,
+      "start": 0
+    },
+    {
+      "document": "S076",
+      "end": 763,
+      "score": 7.255812,
+      "start": 0
+    },
+    {
+      "document": "S077",
+      "end": 801,
+      "score": 6.75858,
+      "start": 0
+    },
+    {
+      "document": "S078",
+      "end": 752,
+      "score": 9.015768,
+      "start": 0
+    },
+    {
+      "document": "S079",
+      "end": 752,
+      "score": 6.820289,
+      "start": 0
+    },
+    {
+      "document": "S080",
+      "end": 3108,
+      "score": 7.301302,
+      "start": 1834
+    },
+    {
+      "document": "S081",
+      "end": 732,
+      "score": 6.508789,
+      "start": 0
+    },
+    {
+      "document": "S082",
+      "end": 3214,
+      "score": 6.811547,
+      "start": 1773
+    },
+    {
+      "document": "S083",
+      "end": 3061,
+      "score": 5.145044,
+      "start": 1681
+    },
+    {
+      "document": "S084",
+      "end": 720,
+      "score": 5.81739,
+      "start": 0
+    },
+    {
+      "document": "S085",
+      "end": 2916,
+      "score": 7.112803,
+      "start": 1643
+    },
+    {
+      "document": "S086",
+      "end": 800,
+      "score": 7.842738,
+      "start": 0
+    },
+    {
+      "document": "S087",
+      "end": 729,
+      "score": 6.427095,
+      "start": 0
+    },
+    {
+      "document": "S088",
+      "end": 2730,
+      "score": 5.984307,
+      "start": 2152
+    },
+    {
+      "document": "S089",
+      "end": 3063,
+      "score": 6.077307,
+      "start": 1670
+    },
+    {
+      "document": "S090",
+      "end": 767,
+      "score": 5.943882,
+      "start": 0
+    },
+    {
+      "document": "S091",
+      "end": 779,
+      "score": 6.902574,
+      "start": 0
+    },
+    {
+      "document": "S092",
+      "end": 789,
+      "score": 7.960891,
+      "start": 0
+    },
+    {
+      "document": "S093",
+      "end": 754,
+      "score": 6.361565,
+      "start": 0
+    },
+    {
+      "document": "S094",
+      "end": 778,
+      "score": 4.921333,
+      "start": 0
+    },
+    {
+      "document": "S095",
+      "end": 747,
+      "score": 6.928462,
+      "start": 0
+    },
+    {
+      "document": "S096",
+      "end": 754,
+      "score": 7.170167,
+      "start": 0
+    },
+    {
+      "document": "S097",
+      "end": 2845,
+      "score": 7.704414,
+      "start": 1683
+    },
+    {
+      "document": "S098",
+      "end": 768,
+      "score": 9.104328,
+      "start": 0
+    },
+    {
+      "document": "S099",
+      "end": 751,
+      "score": 9.140002,
+      "start": 0
+    },
+    {
+      "document": "S100",
+      "end": 763,
+      "score": 9.824858,
+      "start": 0
+    },
+    {
+      "document": "S101",
+      "end": 731,
+      "score": 7.865473,
+      "start": 0
+    },
+    {
+      "document": "S102",
+      "end": 790,
+      "score": 6.05269,
+      "start": 0
+    },
+    {
+      "document": "S103",
+      "end": 2961,
+      "score": 5.637614,
+      "start": 1658
+    },
+    {
+      "document": "S104",
+      "end": 773,
+      "score": 7.650524,
+      "start": 0
+    },
+    {
+      "document": "S105",
+      "end": 803,
+      "score": 7.172651,
+      "start": 0
+    },
+    {
+      "document": "S106",
+      "end": 1863,
+      "score": 6.232134,
+      "start": 753
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "score": 6.538061,
+      "start": 1173
+    },
+    {
+      "document": "S108",
+      "end": 1992,
+      "score": 2.882536,
+      "start": 1194
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 7.324526,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1203,
+      "score": 2.869891,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "score": 6.91895,
+      "start": 0
+    },
+    {
+      "document": "S112",
+      "end": 1928,
+      "score": 2.853269,
+      "start": 1166
+    }
+  ],
+  "settings": {
+    "k": 1,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S009"
+    },
+    {
+      "direction": "supports",
+      "document": "S030"
+    },
+    {
+      "direction": "supports",
+      "document": "S033"
+    },
+    {
+      "direction": "supports",
+      "document": "S037"
+    },
+    {
+      "direction": "supports",
+      "document": "S040"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S049"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S068"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S080"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S082"
+    },
+    {
+      "direction": "supports",
+      "document": "S085"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S097"
+    },
+    {
+      "direction": "neutral",
+      "document": "S107"
+    },
+    {
+      "direction": "neutral",
+      "document": "S109"
+    }
+  ],
+  "supporting": [
+    "S008",
+    "S030",
+    "S033",
+    "S037",
+    "S040",
+    "S085"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

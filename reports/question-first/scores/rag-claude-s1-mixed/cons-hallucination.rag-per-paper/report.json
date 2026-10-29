@@ -1,0 +1,138 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.8889,
+        "low": 0.3333,
+        "method": "BCa",
+        "metric": "per_study_accuracy",
+        "n_rows": 9,
+        "point": 0.6667,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "consistency",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "agreeing_expected": 8,
+      "agreeing_given": 6,
+      "agreeing_precision": 1.0,
+      "agreeing_recall": 0.75,
+      "agreeing_tp": 6,
+      "completeness": 0.6667,
+      "disagreeing_expected": 1,
+      "disagreeing_given": 0,
+      "disagreeing_precision": null,
+      "disagreeing_recall": 0.0,
+      "disagreeing_tp": 0,
+      "kind": "consistency",
+      "metric": "hallucination_rate",
+      "per_study_accuracy": 0.6667,
+      "per_study_accuracy_all_papers": 0.6667,
+      "studies": [
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S001"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S006"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S007"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S008"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": false,
+          "given": null,
+          "paper": "S010"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S012"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S016"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S017"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S018"
+        }
+      ],
+      "studies_all_papers": 9,
+      "studies_scored": 9,
+      "system": "rag-baseline"
+    }
+  ]
+}

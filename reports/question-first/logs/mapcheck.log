@@ -1,0 +1,58 @@
+Mapping gate waiting for the three replicas and gateway on gammaweb07
+GPU 0 free memory before mapping: 3367 MiB
+Model services ready at 2026-10-28T08:09:03+01:00; starting baseline mapping check
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/rag-hallucination/answer.json: label=supported studies=5
+MAPCHECK rag rag-hallucination exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/rag-hallucination/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/rag-hallucination/report.md
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/inv-metrics/answer.json: kind=inventory entries=8
+MAPCHECK rag inv-metrics exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/inv-metrics/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/inv-metrics/report.md
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/cons-accuracy/answer.json: kind=consistency studies=4
+MAPCHECK rag cons-accuracy exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/cons-accuracy/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/cons-accuracy/report.md
+                 pydantic-ai v2.55.0 • Python 3.13.12
+
+      / \        agent: agent • model: openai:orch-model
+     /   \         output: NativeOutput(outputs=<class 'evaluation… • tools: 0 • capabilities: 0
+   /___.___\
+  /    |    \    observability: off — see every model and tool call live, with cost
+/      |      \    set it up free with Logfire and a GitHub login: https://pydantic.dev/ai-setup.md
+`---.._|_..---'    or use any OpenTelemetry backend: https://pydantic.dev/docs/ai/logfire/#otel
+
+                 goes away once observability is on — or PYDANTIC_AI_NO_BANNER=1
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/mapcheck/rag/best-accuracy/answer.json: kind=best winner=None studies=6
+MAPCHECK rag best-accuracy exit 0
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/best-accuracy/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/mapcheck/best-accuracy/report.md
+[2026-10-28T08:25:54.273] error: *** STEP 7954.10 ON gammaweb07 CANCELLED AT 2026-10-28T08:25:54 DUE to SIGNAL Killed ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gammaweb07: task 0: Killed

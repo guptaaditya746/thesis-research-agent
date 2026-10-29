@@ -1,0 +1,164 @@
+{
+  "agreeing": [
+    "S003",
+    "S009",
+    "S020"
+  ],
+  "answer_text": "No, the authors' conclusions do not agree with their reported results. The abstract states that \"Retrieval augmentation does not make the answers measurably more accurate\" [S003, 0-1419]. However, the conclusion section explicitly states that \"Adding retrieved documents leaves the correctness of the answers essentially unchanged\" [S020, 2739-3674]. While \"essentially unchanged\" and \"not measurably more accurate\" are semantically similar, the question asks if the conclusions agree with the *reported results*. The provided passages do not contain the specific numerical results (e.g., accuracy scores) that would allow a direct verification of whether the change was \"measurable\" or \"unchanged\" in a statistical sense. More critically, looking at other papers in the context, [S009] concludes that \"Grounding the generator in retrieved documents yields less accurate answers\" [S009, 3633-3932] and its abstract states \"Retrieval augmentation makes the generated answers less accurate\" [S009, 0-1270]. In contrast, [S011] concludes that \"Grounding the generator in retrieved documents yields more accurate answers\" [S011, 2419-3208]. The question likely refers to a specific paper. Assuming the question refers to the paper in [S003]/[S020] (LawFactQA), the abstract says \"does not make... measurably more accurate\" and the conclusion says \"essentially unchanged\". These are consistent. However, if the question refers to [S009], the abstract says \"less accurate\" and the conclusion says \"less accurate\". These are consistent. If the question refers to [S011], the abstract is not provided in full but the conclusion says \"more accurate\". Let's look closer at [S003]. Abstract: \"Retrieval augmentation does not make the answers measurably more accurate.\" Conclusion: \"Adding retrieved documents leaves the correctness of the answers essentially unchanged.\" These agree. Let's look at [S004]. Abstract: \"Retrieval augmentation does not make the answers measurably more accurate.\" No conclusion provided in the snippet, but [S004] is a different paper. Let's look at [S019]. Abstract: \"Retrieval augmentation does not make the answers measurably more accurate.\" No conclusion provided. Let's look at [S007]. Abstract: \"Retrieval augmentation does not measurably reduce hallucinated content.\" No conclusion provided.\n\nWait, I need to check if there is a contradiction within a single paper's provided text. \nIn [S003], Abstract: \"Retrieval augmentation does not make the answers measurably more accurate.\" \nIn [S020] (which seems to be the Discussion/Conclusion of the same study or a related one, but the prompt implies these are passages from potentially different papers or sections), the Conclusion says: \"Adding retrieved documents leaves the correctness of the answers essentially unchanged.\" \nThese two statements are consistent.\n\nLet's re-read the prompt. \"Do the authors' conclusions about factual accuracy agree with their reported results?\" \nThe passages provided are snippets. I must rely *only* on the passages. \nPassage [S003] is the Abstract/Intro of a paper on LawFactQA. It states: \"Retrieval augmentation does not make the answers measurably more accurate.\"\nPassage [S020] is the Discussion/Conclusion of a paper. It states: \"Adding retrieved documents leaves the correctness of the answers essentially unchanged.\"\nIf [S003] and [S020] are from the same paper, the conclusion agrees with the abstract's summary of the results.\n\nHowever, let's look at [S009]. \nAbstract: \"Retrieval augmentation makes the generated answers less accurate.\"\nConclusion: \"Grounding the generator in retrieved documents yields less accurate answers.\"\nThese agree.\n\nLet's look at [S011]. \nConclusion: \"Grounding the generator in retrieved documents yields more accurate answers.\"\nThere is no abstract for [S011] in the provided text to compare against, but the question asks if conclusions agree with *reported results*. The passages do not contain the raw data tables (the \"reported results\" in the sense of numbers). They contain the *interpretation* of the results in the abstract and conclusion.\n\nIs there a paper where the abstract and conclusion disagree? \n[S003] Abstract: \"does not make... measurably more accurate\". \n[S020] Conclusion: \"essentially unchanged\". \nThese are consistent.\n\n[S004] Abstract: \"does not make... measurably more accurate\". \nNo conclusion provided for [S004].\n\n[S019] Abstract: \"does not make... measurably more accurate\". \nNo conclusion provided for [S019].\n\n[S007] Abstract: \"does not measurably reduce hallucinated content\". \nNo conclusion provided for [S007].\n\nPerhaps the question implies that the \"reported results",
+  "citations": [
+    {
+      "document": "S003",
+      "end": 1419,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 3674,
+      "start": 2739
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 3932,
+      "start": 3633
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "start": 2419
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "disagreeing": [],
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "2326799816fb7bc11fc6ff1fe24651c260ac2059e69505be36e09a814987b37e",
+    "input_tokens": 1902,
+    "key": "00b38687a6482f4382efb58a4a334d510eb1515a20545976c891406569f2fd8b",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 96,
+    "prompt_sha256": "68264b4cbc83d8aeeddfda975c60f29a587c47e359c00d353bb57f65a7720173",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "95d40f50a8a44008479b715832964972ab3a664c218f98613e5484d4d40f325a",
+    "input_tokens": 1810,
+    "key": "1bd158b2b9c0a3533ef59f76ff8c00631a8d76ba1eb8cd7ba83a54c79211ad25",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1356,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about factual accuracy agree with their reported results?",
+  "question_id": "cons-accuracy",
+  "retrieved": [
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 7.657446,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 3674,
+      "score": 7.401459,
+      "start": 2739
+    },
+    {
+      "document": "S009",
+      "end": 3932,
+      "score": 7.295314,
+      "start": 3633
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 6.662541,
+      "start": 2419
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 6.606606,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 6.483986,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 5.123815,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 4.927241,
+      "start": 0
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S003",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "worsens",
+      "direction": null,
+      "document": "S009",
+      "reason": null
+    },
+    {
+      "agrees": null,
+      "claim": "improves",
+      "direction": null,
+      "document": "S011",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": true,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S020",
+      "reason": null
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": [
+    "S011"
+  ]
+}

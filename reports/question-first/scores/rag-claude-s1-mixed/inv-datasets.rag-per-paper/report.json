@@ -1,0 +1,83 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "precision",
+        "n_rows": 9,
+        "point": 1.0,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "recall",
+        "n_rows": 9,
+        "point": 1.0,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "f1",
+        "n_rows": 9,
+        "point": 1.0,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which datasets do the papers evaluate on?",
+  "question_id": "inv-datasets",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 1.0,
+      "entries": 9,
+      "expected_entries": 9,
+      "expected_paper_pairs": 24,
+      "f1": 1.0,
+      "false_positives": [],
+      "kind": "inventory",
+      "matched": 9,
+      "missed": [],
+      "paper_f1": 1.0,
+      "paper_pairs": 24,
+      "paper_precision": 1.0,
+      "paper_recall": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "system": "rag-baseline",
+      "target": "dataset"
+    }
+  ]
+}

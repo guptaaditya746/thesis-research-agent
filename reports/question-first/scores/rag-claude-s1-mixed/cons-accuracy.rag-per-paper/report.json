@@ -1,0 +1,154 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.4545,
+        "low": 0.0,
+        "method": "BCa",
+        "metric": "per_study_accuracy",
+        "n_rows": 11,
+        "point": 0.0909,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "consistency",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Do the authors' conclusions about factual accuracy agree with their reported results?",
+  "question_id": "cons-accuracy",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "agreeing_expected": 8,
+      "agreeing_given": 1,
+      "agreeing_precision": 1.0,
+      "agreeing_recall": 0.125,
+      "agreeing_tp": 1,
+      "completeness": 0.0909,
+      "disagreeing_expected": 3,
+      "disagreeing_given": 0,
+      "disagreeing_precision": null,
+      "disagreeing_recall": 0.0,
+      "disagreeing_tp": 0,
+      "kind": "consistency",
+      "metric": "factual_accuracy",
+      "per_study_accuracy": 0.0909,
+      "per_study_accuracy_all_papers": 0.0909,
+      "studies": [
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S002"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S003"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S004"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": false,
+          "given": null,
+          "paper": "S005"
+        },
+        {
+          "answered": true,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S009"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S011"
+        },
+        {
+          "answered": true,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S013"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S014"
+        },
+        {
+          "answered": true,
+          "correct": false,
+          "counted": true,
+          "expected": false,
+          "given": null,
+          "paper": "S015"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S019"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": false,
+          "given": null,
+          "paper": "S020"
+        }
+      ],
+      "studies_all_papers": 11,
+      "studies_scored": 11,
+      "system": "rag-baseline"
+    }
+  ]
+}

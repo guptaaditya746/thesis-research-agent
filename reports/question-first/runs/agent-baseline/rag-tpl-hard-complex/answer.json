@@ -1,0 +1,850 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 10,
+    "exit_status": "submitted",
+    "model_calls": 34,
+    "run_id": "rag-tpl-hard-complex",
+    "steps": 34,
+    "tokens": 364900
+  },
+  "agent_answer": {
+    "concept_sha256": "8ce88956ce8cba6b172a91ad10199ea3d7c82c83ec99a457c7ea89bc9c1ab832",
+    "kind": "table",
+    "notes": "The corpus contains 112 papers. 65 conclude RAG improves factual accuracy, 21 conclude it worsens it, 20 find no significant effect, 3 are survey papers that defer to empirical studies, and 3 are about a different topic (vocabulary construction for code models). The papers disagree on the question.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "RAG improves factual accuracy (yields more accurate answers or leads to fewer hallucinated answers)",
+          "papers": [
+            "S001",
+            "S002",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S011",
+            "S012",
+            "S014",
+            "S018",
+            "S020",
+            "S021",
+            "S022",
+            "S026",
+            "S027",
+            "S029",
+            "S031",
+            "S033",
+            "S035",
+            "S036",
+            "S037",
+            "S038",
+            "S039",
+            "S041",
+            "S044",
+            "S045",
+            "S047",
+            "S049",
+            "S050",
+            "S051",
+            "S055",
+            "S058",
+            "S059",
+            "S061",
+            "S062",
+            "S063",
+            "S065",
+            "S066",
+            "S068",
+            "S069",
+            "S071",
+            "S074",
+            "S076",
+            "S077",
+            "S079",
+            "S080",
+            "S082",
+            "S084",
+            "S085",
+            "S086",
+            "S088",
+            "S089",
+            "S090",
+            "S093",
+            "S095",
+            "S096",
+            "S097",
+            "S100",
+            "S101",
+            "S102",
+            "S104",
+            "S105",
+            "S106"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "yields more accurate answers",
+            "origin": "research",
+            "p": "concludes that RAG",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "leads to fewer hallucinated answers",
+            "origin": "research",
+            "p": "concludes that RAG",
+            "s": "S006"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG worsens factual accuracy (yields less accurate answers or leads to more hallucinated answers)",
+          "papers": [
+            "S003",
+            "S017",
+            "S025",
+            "S028",
+            "S030",
+            "S034",
+            "S042",
+            "S046",
+            "S054",
+            "S056",
+            "S057",
+            "S060",
+            "S072",
+            "S073",
+            "S078",
+            "S083",
+            "S087",
+            "S092",
+            "S094",
+            "S099",
+            "S103"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "makes the generated answers less accurate",
+            "origin": "research",
+            "p": "concludes that RAG",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "leads to more hallucinated answers",
+            "origin": "research",
+            "p": "concludes that RAG",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "yields less accurate answers",
+            "origin": "research",
+            "p": "concludes that RAG",
+            "s": "S034"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG has no significant effect on factual accuracy (leaves correctness or hallucinated content essentially unchanged)",
+          "papers": [
+            "S010",
+            "S013",
+            "S015",
+            "S016",
+            "S019",
+            "S023",
+            "S024",
+            "S032",
+            "S040",
+            "S043",
+            "S048",
+            "S052",
+            "S053",
+            "S064",
+            "S067",
+            "S070",
+            "S075",
+            "S081",
+            "S091",
+            "S098"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "leaves the amount of hallucinated content essentially unchanged",
+            "origin": "research",
+            "p": "concludes that RAG",
+            "s": "S010"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "leaves the correctness of the answers essentially unchanged",
+            "origin": "research",
+            "p": "concludes that RAG",
+            "s": "S013"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "Survey papers that do not make an empirical claim about whether RAG improves factual accuracy",
+          "papers": [
+            "S107",
+            "S109",
+            "S111"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "empirical questions remain for controlled studies to settle",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S107"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "Papers not about RAG factual accuracy (about vocabulary construction for code models)",
+          "papers": [
+            "S108",
+            "S110",
+            "S112"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "trade-offs between vocabulary construction methods for code models",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S108"
+          }
+        ],
+        "id": "r5"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"RAG improves factual accuracy (yields more accurate answers or leads to fewer hallucinated answers)\", \"papers\": [\"S001\", \"S002\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S011\", \"S012\", \"S014\", \"S018\", \"S020\", \"S021\", \"S022\", \"S026\", \"S027\", \"S029\", \"S031\", \"S033\", \"S035\", \"S036\", \"S037\", \"S038\", \"S039\", \"S041\", \"S044\", \"S045\", \"S047\", \"S049\", \"S050\", \"S051\", \"S055\", \"S058\", \"S059\", \"S061\", \"S062\", \"S063\", \"S065\", \"S066\", \"S068\", \"S069\", \"S071\", \"S074\", \"S076\", \"S077\", \"S079\", \"S080\", \"S082\", \"S084\", \"S085\", \"S086\", \"S088\", \"S089\", \"S090\", \"S093\", \"S095\", \"S096\", \"S097\", \"S100\", \"S101\", \"S102\", \"S104\", \"S105\", \"S106\"]}\n  fact: S001 | concludes that RAG | yields more accurate answers\n  fact: S006 | concludes that RAG | leads to fewer hallucinated answers\nRow r2: {\"conclusion\": \"RAG worsens factual accuracy (yields less accurate answers or leads to more hallucinated answers)\", \"papers\": [\"S003\", \"S017\", \"S025\", \"S028\", \"S030\", \"S034\", \"S042\", \"S046\", \"S054\", \"S056\", \"S057\", \"S060\", \"S072\", \"S073\", \"S078\", \"S083\", \"S087\", \"S092\", \"S094\", \"S099\", \"S103\"]}\n  fact: S003 | concludes that RAG | makes the generated answers less accurate\n  fact: S017 | concludes that RAG | leads to more hallucinated answers\n  fact: S034 | concludes that RAG | yields less accurate answers\nRow r3: {\"conclusion\": \"RAG has no significant effect on factual accuracy (leaves correctness or hallucinated content essentially unchanged)\", \"papers\": [\"S010\", \"S013\", \"S015\", \"S016\", \"S019\", \"S023\", \"S024\", \"S032\", \"S040\", \"S043\", \"S048\", \"S052\", \"S053\", \"S064\", \"S067\", \"S070\", \"S075\", \"S081\", \"S091\", \"S098\"]}\n  fact: S010 | concludes that RAG | leaves the amount of hallucinated content essentially unchanged\n  fact: S013 | concludes that RAG | leaves the correctness of the answers essentially unchanged\nRow r4: {\"conclusion\": \"Survey papers that do not make an empirical claim about whether RAG improves factual accuracy\", \"papers\": [\"S107\", \"S109\", \"S111\"]}\n  fact: S107 | concludes | empirical questions remain for controlled studies to settle\nRow r5: {\"conclusion\": \"Papers not about RAG factual accuracy (about vocabulary construction for code models)\", \"papers\": [\"S108\", \"S110\", \"S112\"]}\n  fact: S108 | concludes | trade-offs between vocabulary construction methods for code models\nNotes: The corpus contains 112 papers. 65 conclude RAG improves factual accuracy, 21 conclude it worsens it, 20 find no significant effect, 3 are survey papers that defer to empirical studies, and 3 are about a different topic (vocabulary construction for code models). The papers disagree on the question.",
+  "answer_text": "The corpus contains 112 papers. 65 conclude RAG improves factual accuracy, 21 conclude it worsens it, 20 find no significant effect, 3 are survey papers that defer to empirical studies, and 3 are about a different topic (vocabulary construction for code models). The papers disagree on the question.",
+  "contradicting": [
+    "S003",
+    "S017",
+    "S025",
+    "S028",
+    "S030",
+    "S034",
+    "S042",
+    "S046",
+    "S054",
+    "S056",
+    "S057",
+    "S060",
+    "S072",
+    "S073",
+    "S078",
+    "S083",
+    "S087",
+    "S092",
+    "S094",
+    "S099",
+    "S103"
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 21,
+    "neutral": 26,
+    "supporting": 65,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "fc4837abd1006766fa4877e4930c478b24ab94642c4e58de22b836030d06ab66",
+    "input_tokens": 1937,
+    "key": "d138b8aa05ccf5038322aeda2100d7ee3f4054debb907bdf3503e296ff3df2b8",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 3168,
+    "prompt_sha256": "7f9a52a35b2190006e383a553a4abcba1893ade394fe3f597e64aa003ffdf7ff",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S010",
+    "S013",
+    "S015",
+    "S016",
+    "S019",
+    "S023",
+    "S024",
+    "S032",
+    "S040",
+    "S043",
+    "S048",
+    "S052",
+    "S053",
+    "S064",
+    "S067",
+    "S070",
+    "S075",
+    "S081",
+    "S091",
+    "S098",
+    "S107",
+    "S108",
+    "S109",
+    "S110",
+    "S111",
+    "S112"
+  ],
+  "question": "Does retrieval-augmented generation improve the factual accuracy of LLM-generated answers?",
+  "question_id": "rag-factuality",
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S002"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S003"
+    },
+    {
+      "direction": "supports",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S005"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "supports",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "supports",
+      "document": "S009"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "supports",
+      "document": "S011"
+    },
+    {
+      "direction": "supports",
+      "document": "S012"
+    },
+    {
+      "direction": "neutral",
+      "document": "S013"
+    },
+    {
+      "direction": "supports",
+      "document": "S014"
+    },
+    {
+      "direction": "neutral",
+      "document": "S015"
+    },
+    {
+      "direction": "neutral",
+      "document": "S016"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    },
+    {
+      "direction": "supports",
+      "document": "S020"
+    },
+    {
+      "direction": "supports",
+      "document": "S021"
+    },
+    {
+      "direction": "supports",
+      "document": "S022"
+    },
+    {
+      "direction": "neutral",
+      "document": "S023"
+    },
+    {
+      "direction": "neutral",
+      "document": "S024"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S025"
+    },
+    {
+      "direction": "supports",
+      "document": "S026"
+    },
+    {
+      "direction": "supports",
+      "document": "S027"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S028"
+    },
+    {
+      "direction": "supports",
+      "document": "S029"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S030"
+    },
+    {
+      "direction": "supports",
+      "document": "S031"
+    },
+    {
+      "direction": "neutral",
+      "document": "S032"
+    },
+    {
+      "direction": "supports",
+      "document": "S033"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S034"
+    },
+    {
+      "direction": "supports",
+      "document": "S035"
+    },
+    {
+      "direction": "supports",
+      "document": "S036"
+    },
+    {
+      "direction": "supports",
+      "document": "S037"
+    },
+    {
+      "direction": "supports",
+      "document": "S038"
+    },
+    {
+      "direction": "supports",
+      "document": "S039"
+    },
+    {
+      "direction": "neutral",
+      "document": "S040"
+    },
+    {
+      "direction": "supports",
+      "document": "S041"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S042"
+    },
+    {
+      "direction": "neutral",
+      "document": "S043"
+    },
+    {
+      "direction": "supports",
+      "document": "S044"
+    },
+    {
+      "direction": "supports",
+      "document": "S045"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S046"
+    },
+    {
+      "direction": "supports",
+      "document": "S047"
+    },
+    {
+      "direction": "neutral",
+      "document": "S048"
+    },
+    {
+      "direction": "supports",
+      "document": "S049"
+    },
+    {
+      "direction": "supports",
+      "document": "S050"
+    },
+    {
+      "direction": "supports",
+      "document": "S051"
+    },
+    {
+      "direction": "neutral",
+      "document": "S052"
+    },
+    {
+      "direction": "neutral",
+      "document": "S053"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S054"
+    },
+    {
+      "direction": "supports",
+      "document": "S055"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S056"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S057"
+    },
+    {
+      "direction": "supports",
+      "document": "S058"
+    },
+    {
+      "direction": "supports",
+      "document": "S059"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S060"
+    },
+    {
+      "direction": "supports",
+      "document": "S061"
+    },
+    {
+      "direction": "supports",
+      "document": "S062"
+    },
+    {
+      "direction": "supports",
+      "document": "S063"
+    },
+    {
+      "direction": "neutral",
+      "document": "S064"
+    },
+    {
+      "direction": "supports",
+      "document": "S065"
+    },
+    {
+      "direction": "supports",
+      "document": "S066"
+    },
+    {
+      "direction": "neutral",
+      "document": "S067"
+    },
+    {
+      "direction": "supports",
+      "document": "S068"
+    },
+    {
+      "direction": "supports",
+      "document": "S069"
+    },
+    {
+      "direction": "neutral",
+      "document": "S070"
+    },
+    {
+      "direction": "supports",
+      "document": "S071"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S072"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S073"
+    },
+    {
+      "direction": "supports",
+      "document": "S074"
+    },
+    {
+      "direction": "neutral",
+      "document": "S075"
+    },
+    {
+      "direction": "supports",
+      "document": "S076"
+    },
+    {
+      "direction": "supports",
+      "document": "S077"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S078"
+    },
+    {
+      "direction": "supports",
+      "document": "S079"
+    },
+    {
+      "direction": "supports",
+      "document": "S080"
+    },
+    {
+      "direction": "neutral",
+      "document": "S081"
+    },
+    {
+      "direction": "supports",
+      "document": "S082"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S083"
+    },
+    {
+      "direction": "supports",
+      "document": "S084"
+    },
+    {
+      "direction": "supports",
+      "document": "S085"
+    },
+    {
+      "direction": "supports",
+      "document": "S086"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S087"
+    },
+    {
+      "direction": "supports",
+      "document": "S088"
+    },
+    {
+      "direction": "supports",
+      "document": "S089"
+    },
+    {
+      "direction": "supports",
+      "document": "S090"
+    },
+    {
+      "direction": "neutral",
+      "document": "S091"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S092"
+    },
+    {
+      "direction": "supports",
+      "document": "S093"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S094"
+    },
+    {
+      "direction": "supports",
+      "document": "S095"
+    },
+    {
+      "direction": "supports",
+      "document": "S096"
+    },
+    {
+      "direction": "supports",
+      "document": "S097"
+    },
+    {
+      "direction": "neutral",
+      "document": "S098"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S099"
+    },
+    {
+      "direction": "supports",
+      "document": "S100"
+    },
+    {
+      "direction": "supports",
+      "document": "S101"
+    },
+    {
+      "direction": "supports",
+      "document": "S102"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S103"
+    },
+    {
+      "direction": "supports",
+      "document": "S104"
+    },
+    {
+      "direction": "supports",
+      "document": "S105"
+    },
+    {
+      "direction": "supports",
+      "document": "S106"
+    },
+    {
+      "direction": "neutral",
+      "document": "S107"
+    },
+    {
+      "direction": "neutral",
+      "document": "S108"
+    },
+    {
+      "direction": "neutral",
+      "document": "S109"
+    },
+    {
+      "direction": "neutral",
+      "document": "S110"
+    },
+    {
+      "direction": "neutral",
+      "document": "S111"
+    },
+    {
+      "direction": "neutral",
+      "document": "S112"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S002",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S011",
+    "S012",
+    "S014",
+    "S018",
+    "S020",
+    "S021",
+    "S022",
+    "S026",
+    "S027",
+    "S029",
+    "S031",
+    "S033",
+    "S035",
+    "S036",
+    "S037",
+    "S038",
+    "S039",
+    "S041",
+    "S044",
+    "S045",
+    "S047",
+    "S049",
+    "S050",
+    "S051",
+    "S055",
+    "S058",
+    "S059",
+    "S061",
+    "S062",
+    "S063",
+    "S065",
+    "S066",
+    "S068",
+    "S069",
+    "S071",
+    "S074",
+    "S076",
+    "S077",
+    "S079",
+    "S080",
+    "S082",
+    "S084",
+    "S085",
+    "S086",
+    "S088",
+    "S089",
+    "S090",
+    "S093",
+    "S095",
+    "S096",
+    "S097",
+    "S100",
+    "S101",
+    "S102",
+    "S104",
+    "S105",
+    "S106"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

@@ -1,0 +1,481 @@
+{
+  "answer_text": "The papers compare various methods and system variants, primarily differing in their use of external documents (retrieval), additional training (fine-tuning), and decoding strategies. The specific conditions compared across the studies include:\n\n1.  **Parametric-Only / Closed-Book / Vanilla LLM:** Models that answer from stored knowledge without access to external documents [S002, 1160-2039], [S004, 2474-3765], [S005, 1073-2495], [S007, 0-1427], [S008, 0-1427], [S009, 0-1270], [S010, 957-2287], [S011, 0-1086], [S012, 0-1346], [S013, 0-1316], [S014, 908-2256], [S015, 2509-3595], [S017, 1311-2304], [S018, 0-1187], [S019, 0-1156], [S020, 1260-2739].\n2.  **Retrieval-Augmented Generation (RAG) / Retrieve-Then-Read:** Models that retrieve passages from a reference collection and condition their answers on them [S002, 1160-2039], [S004, 2474-3765], [S005, 1073-2495], [S007, 0-1427], [S008, 0-1427], [S009, 0-1270], [S010, 957-2287], [S011, 0-1086], [S012, 0-1346], [S013, 0-1316], [S014, 908-2256], [S015, 2509-3595], [S017, 1311-2304], [S018, 0-1187], [S019, 0-1156], [S020, 1260-2739].\n3.  **RAG without Reranking:** A variant of RAG that uses the same retriever but keeps passages in their original order, skipping any reranking step [S002, 1160-2039], [S005, 1073-2495], [S010, 957-2287].\n4.  **Fine-Tuned Model:** Models that have been further trained on in-domain question and answer pairs [S005, 1073-2495], [S007, 0-1427], [S015, 2509-3595], [S017, 1311-2304], [S019, 0-1156], [S020, 1260-2739].\n5.  **Self-Consistency Decoding / Voting:** Models that sample several answers and return the most frequent one [S017, 1311-2304], [S020, 1260-2739].\n6.  **Chain-of-Thought Prompting:** A condition where the model writes out its reasoning [S001, 0-1023], [S011, 0-1086].\n7.  **RAG with Random Passages:** A condition where the model is supplied with random passages rather than retrieved ones [S011, 0-1086], [S015, 2509-3595].\n8.  **Question Reformulation:** A variant that rewrites the question into a search query before consulting the collection [S002, 1160-2039].\n\nSpecific papers compare subsets of these variants. For example, [S001, 0-1023] compares four conditions involving retrieved passages, reasoning, further training, and parametric knowledge. [S002, 1160-2039] compares parametric-only, retrieval-augmented, question-reformulated, and RAG-without-reranker conditions. [S004, 2474-3765] compares parametric-only and retrieve-then-read models. [S005, 1073-2495] compares closed-book, retrieval-augmented, fine-tuned, and RAG-without-reranking conditions. [S007, 0-1427] compares no-document-access, document-lookup, and domain-adapted (fine-tuned) conditions. [S008, 0-1427] compares a vanilla LLM and a retrieval-augmented generator. [S009, 0-1270] compares a parametric-only model and a RAG pipeline. [S010, 957-2287] compares vanilla LLM, retrieval-augmented, and RAG-without-reranking. [S011, 0-1086] compares closed-book, retrieve-then-read, chain-of-thought, and RAG-with-random-passages. [S012, 0-1346] compares two conditions, likely parametric-only and retrieval-augmented based on the abstract's focus on retrieval augmentation. [S013, 0-1316] compares three conditions differing in external passage access. [S014, 908-2256] compares closed-book and retrieval-augmented models. [S015, 2509-3595] compares parametric-only, RAG pipeline, fine-tuned, and RAG-with-random-passages. [S017, 1311-2304] compares language model alone, retrieved passages, fine-tuned, and sampling/voting. [S018, 0-1187] compares two conditions: answering from memory and reading supporting documents. [S019, 0-1156] compares no-retrieval baseline, retrieve-then-read, and fine-tuned models. [S020, 1260-2739] compares no-retrieval baseline, retrieval-augmented, fine-tuned, and self-consistency decoding.",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 1023,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 2039,
+      "start": 1160
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "start": 2474
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "start": 1073
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "start": 2509
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "start": 1260
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [
+    {
+      "document": "S008",
+      "end": 1427,
+      "start": 0
+    }
+  ],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Chain-of-Thought Prompting",
+      "papers": [
+        "S001",
+        "S011"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Fine-Tuned Model",
+      "papers": [
+        "S005",
+        "S007",
+        "S015",
+        "S017",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Parametric-Only / Closed-Book / Vanilla LLM",
+      "papers": [
+        "S002",
+        "S004",
+        "S005",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Question Reformulation",
+      "papers": [
+        "S002"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG with Random Passages",
+      "papers": [
+        "S011",
+        "S015"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG without Reranking",
+      "papers": [
+        "S002",
+        "S005",
+        "S010"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Retrieval-Augmented Generation (RAG) / Retrieve-Then-Read",
+      "papers": [
+        "S002",
+        "S004",
+        "S005",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "Self-Consistency Decoding / Voting",
+      "papers": [
+        "S017",
+        "S020"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "108b73043fd1276b1e0bcb68e56d3db35f2847f1836d3e23f3c3f17800077938",
+    "input_tokens": 2540,
+    "key": "5a8b27a013f25865f51c8a7d248cb226865164c88210da2187285c22c6c21737",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 425,
+    "prompt_sha256": "337685d8abf98f6ee4e5bf8f939d26332a2650f0742b14fb5b9ea014e641ecee",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "50b9fe262b992fa3d583221535e4e3b33c016242f29d539a6379a1d743c3f252",
+    "input_tokens": 10137,
+    "key": "28a88a2b6b7175a6830b060118126dcb6c959d198161f17587b64305eba5dd4e",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 2228,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 3.787344,
+      "start": 0
+    },
+    {
+      "document": "S001",
+      "end": 3050,
+      "score": 2.617348,
+      "start": 2239
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 8.123045,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 2039,
+      "score": 1.504121,
+      "start": 1160
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "score": 5.047292,
+      "start": 2532
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 4.073983,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 4.397125,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 2.527011,
+      "start": 2474
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 4.352164,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 2.070084,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 2.950177,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 3291,
+      "score": 2.199086,
+      "start": 2401
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 3.301703,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 3.280068,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 4.489215,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "score": 3.961265,
+      "start": 1995
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 3.207097,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 3633,
+      "score": 2.576536,
+      "start": 2316
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 4.765962,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 2.622397,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 4.921519,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 2.499956,
+      "start": 2419
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 4.735701,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 3.479036,
+      "start": 2754
+    },
+    {
+      "document": "S013",
+      "end": 4227,
+      "score": 3.91795,
+      "start": 2748
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 2.884201,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 3.739195,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 1.984741,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "score": 6.892892,
+      "start": 2509
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 5.631306,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 3.218531,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 3649,
+      "score": 2.600642,
+      "start": 2667
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "score": 2.864605,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 2.744658,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "score": 3.453192,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "score": 2.631531,
+      "start": 2606
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 4.676462,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 1.930875,
+      "start": 1944
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 3.196514,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 2.823062,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "condition"
+}

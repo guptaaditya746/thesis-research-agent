@@ -1,0 +1,741 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 15,
+    "exit_status": "submitted",
+    "model_calls": 42,
+    "run_id": "rag-tpl-hard-complex.inv-datasets",
+    "steps": 41,
+    "tokens": 663074
+  },
+  "agent_answer": {
+    "concept_sha256": "d13b05fe77670494ce1a092a43dae153cf12aa8964eb971ad6bf3fa2d230d458",
+    "kind": "table",
+    "notes": "112 corpus papers total (S001-S112). 106 empirical papers each evaluate on exactly two of 10 distinct datasets (LawFactQA, OpenFactQA, NewsTruthQA, HistoryQuest, SciFactBench, GeoFacts, BioClaimQA, TriviaCheck, PopCultureQA, MedAnswerSet); each paper's Method states 'We evaluate on two benchmarks: X, our main benchmark, and Y' (212 dataset-paper mentions total). The 6 remaining papers (S107, S109, S111 are surveys; S108, S110, S112 are descriptive studies) report no experiments and thus evaluate on no dataset. Dataset usage counts: LawFactQA 28, OpenFactQA 27, HistoryQuest 24, BioClaimQA 23, GeoFacts 22, NewsTruthQA 21, SciFactBench 20, TriviaCheck 18, PopCultureQA 16, MedAnswerSet 13. Each row's fact is supported by recorded claims for representative paper(s) of that dataset: LawFactQA/NewsTruthQA claim-000004 (S001), OpenFactQA/SciFactBench claim-000008 (S005) and claim-000006 (S003), HistoryQuest/BioClaimQA claim-000007 (S006), GeoFacts claim-000009 (S004), PopCultureQA claim-000010 (S014), MedAnswerSet claim-000011 (S017); non-evaluative papers claim-000001 (S107), claim-000002 (S112), claim-000005 (S109), claim-000012 (S108), claim-000014 (S110), claim-000015 (S111).",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "LawFactQA is an evaluation dataset used by 28 papers in the corpus.",
+          "papers": [
+            "S001.md",
+            "S002.md",
+            "S009.md",
+            "S010.md",
+            "S011.md",
+            "S013.md",
+            "S022.md",
+            "S023.md",
+            "S029.md",
+            "S033.md",
+            "S036.md",
+            "S038.md",
+            "S049.md",
+            "S052.md",
+            "S057.md",
+            "S067.md",
+            "S069.md",
+            "S079.md",
+            "S080.md",
+            "S086.md",
+            "S089.md",
+            "S092.md",
+            "S095.md",
+            "S097.md",
+            "S099.md",
+            "S101.md",
+            "S104.md",
+            "S106.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "LawFactQA",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "28 corpus papers"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "OpenFactQA is an evaluation dataset used by 27 papers in the corpus.",
+          "papers": [
+            "S003.md",
+            "S004.md",
+            "S005.md",
+            "S010.md",
+            "S013.md",
+            "S015.md",
+            "S016.md",
+            "S022.md",
+            "S027.md",
+            "S030.md",
+            "S039.md",
+            "S042.md",
+            "S045.md",
+            "S049.md",
+            "S061.md",
+            "S062.md",
+            "S066.md",
+            "S068.md",
+            "S075.md",
+            "S077.md",
+            "S078.md",
+            "S085.md",
+            "S092.md",
+            "S094.md",
+            "S097.md",
+            "S103.md",
+            "S104.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "OpenFactQA",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "27 corpus papers"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "NewsTruthQA is an evaluation dataset used by 21 papers in the corpus.",
+          "papers": [
+            "S001.md",
+            "S002.md",
+            "S007.md",
+            "S011.md",
+            "S012.md",
+            "S019.md",
+            "S025.md",
+            "S026.md",
+            "S053.md",
+            "S063.md",
+            "S064.md",
+            "S076.md",
+            "S083.md",
+            "S085.md",
+            "S090.md",
+            "S093.md",
+            "S094.md",
+            "S096.md",
+            "S100.md",
+            "S101.md",
+            "S105.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "NewsTruthQA",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "21 corpus papers"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "HistoryQuest is an evaluation dataset used by 24 papers in the corpus.",
+          "papers": [
+            "S006.md",
+            "S008.md",
+            "S014.md",
+            "S017.md",
+            "S021.md",
+            "S034.md",
+            "S035.md",
+            "S037.md",
+            "S040.md",
+            "S044.md",
+            "S046.md",
+            "S047.md",
+            "S048.md",
+            "S051.md",
+            "S055.md",
+            "S059.md",
+            "S061.md",
+            "S073.md",
+            "S074.md",
+            "S076.md",
+            "S082.md",
+            "S095.md",
+            "S102.md",
+            "S105.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "HistoryQuest",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "24 corpus papers"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "SciFactBench is an evaluation dataset used by 20 papers in the corpus.",
+          "papers": [
+            "S005.md",
+            "S007.md",
+            "S008.md",
+            "S015.md",
+            "S019.md",
+            "S021.md",
+            "S023.md",
+            "S025.md",
+            "S031.md",
+            "S037.md",
+            "S045.md",
+            "S048.md",
+            "S051.md",
+            "S054.md",
+            "S058.md",
+            "S065.md",
+            "S071.md",
+            "S072.md",
+            "S081.md",
+            "S088.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "SciFactBench",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "20 corpus papers"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "GeoFacts is an evaluation dataset used by 22 papers in the corpus.",
+          "papers": [
+            "S004.md",
+            "S009.md",
+            "S018.md",
+            "S026.md",
+            "S028.md",
+            "S029.md",
+            "S030.md",
+            "S034.md",
+            "S042.md",
+            "S044.md",
+            "S057.md",
+            "S062.md",
+            "S069.md",
+            "S070.md",
+            "S075.md",
+            "S080.md",
+            "S082.md",
+            "S084.md",
+            "S096.md",
+            "S098.md",
+            "S103.md",
+            "S106.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "GeoFacts",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "22 corpus papers"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "BioClaimQA is an evaluation dataset used by 23 papers in the corpus.",
+          "papers": [
+            "S006.md",
+            "S012.md",
+            "S020.md",
+            "S024.md",
+            "S031.md",
+            "S033.md",
+            "S038.md",
+            "S046.md",
+            "S052.md",
+            "S054.md",
+            "S058.md",
+            "S060.md",
+            "S063.md",
+            "S065.md",
+            "S071.md",
+            "S072.md",
+            "S073.md",
+            "S078.md",
+            "S079.md",
+            "S088.md",
+            "S090.md",
+            "S099.md",
+            "S102.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "BioClaimQA",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "23 corpus papers"
+          }
+        ],
+        "id": "r7"
+      },
+      {
+        "cells": {
+          "conclusion": "TriviaCheck is an evaluation dataset used by 18 papers in the corpus.",
+          "papers": [
+            "S003.md",
+            "S016.md",
+            "S018.md",
+            "S024.md",
+            "S032.md",
+            "S040.md",
+            "S043.md",
+            "S050.md",
+            "S055.md",
+            "S056.md",
+            "S060.md",
+            "S064.md",
+            "S070.md",
+            "S074.md",
+            "S084.md",
+            "S087.md",
+            "S091.md",
+            "S093.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "TriviaCheck",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "18 corpus papers"
+          }
+        ],
+        "id": "r8"
+      },
+      {
+        "cells": {
+          "conclusion": "PopCultureQA is an evaluation dataset used by 16 papers in the corpus.",
+          "papers": [
+            "S014.md",
+            "S020.md",
+            "S027.md",
+            "S032.md",
+            "S035.md",
+            "S041.md",
+            "S043.md",
+            "S047.md",
+            "S066.md",
+            "S067.md",
+            "S068.md",
+            "S081.md",
+            "S086.md",
+            "S087.md",
+            "S091.md",
+            "S100.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "PopCultureQA",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "16 corpus papers"
+          }
+        ],
+        "id": "r9"
+      },
+      {
+        "cells": {
+          "conclusion": "MedAnswerSet is an evaluation dataset used by 13 papers in the corpus.",
+          "papers": [
+            "S017.md",
+            "S028.md",
+            "S036.md",
+            "S039.md",
+            "S041.md",
+            "S050.md",
+            "S053.md",
+            "S056.md",
+            "S059.md",
+            "S077.md",
+            "S083.md",
+            "S089.md",
+            "S098.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "MedAnswerSet",
+            "origin": "research",
+            "p": "evaluate on dataset",
+            "s": "13 corpus papers"
+          }
+        ],
+        "id": "r10"
+      },
+      {
+        "cells": {
+          "conclusion": "6 papers (S107-S112) are surveys or descriptive studies that evaluate on no dataset.",
+          "papers": [
+            "S107.md",
+            "S108.md",
+            "S109.md",
+            "S110.md",
+            "S111.md",
+            "S112.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "none (surveys / descriptive, no experiments)",
+            "origin": "research",
+            "p": "evaluate on datasets",
+            "s": "S107-S112"
+          }
+        ],
+        "id": "r11"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"LawFactQA is an evaluation dataset used by 28 papers in the corpus.\", \"papers\": [\"S001.md\", \"S002.md\", \"S009.md\", \"S010.md\", \"S011.md\", \"S013.md\", \"S022.md\", \"S023.md\", \"S029.md\", \"S033.md\", \"S036.md\", \"S038.md\", \"S049.md\", \"S052.md\", \"S057.md\", \"S067.md\", \"S069.md\", \"S079.md\", \"S080.md\", \"S086.md\", \"S089.md\", \"S092.md\", \"S095.md\", \"S097.md\", \"S099.md\", \"S101.md\", \"S104.md\", \"S106.md\"]}\n  fact: 28 corpus papers | evaluate on dataset | LawFactQA\nRow r2: {\"conclusion\": \"OpenFactQA is an evaluation dataset used by 27 papers in the corpus.\", \"papers\": [\"S003.md\", \"S004.md\", \"S005.md\", \"S010.md\", \"S013.md\", \"S015.md\", \"S016.md\", \"S022.md\", \"S027.md\", \"S030.md\", \"S039.md\", \"S042.md\", \"S045.md\", \"S049.md\", \"S061.md\", \"S062.md\", \"S066.md\", \"S068.md\", \"S075.md\", \"S077.md\", \"S078.md\", \"S085.md\", \"S092.md\", \"S094.md\", \"S097.md\", \"S103.md\", \"S104.md\"]}\n  fact: 27 corpus papers | evaluate on dataset | OpenFactQA\nRow r3: {\"conclusion\": \"NewsTruthQA is an evaluation dataset used by 21 papers in the corpus.\", \"papers\": [\"S001.md\", \"S002.md\", \"S007.md\", \"S011.md\", \"S012.md\", \"S019.md\", \"S025.md\", \"S026.md\", \"S053.md\", \"S063.md\", \"S064.md\", \"S076.md\", \"S083.md\", \"S085.md\", \"S090.md\", \"S093.md\", \"S094.md\", \"S096.md\", \"S100.md\", \"S101.md\", \"S105.md\"]}\n  fact: 21 corpus papers | evaluate on dataset | NewsTruthQA\nRow r4: {\"conclusion\": \"HistoryQuest is an evaluation dataset used by 24 papers in the corpus.\", \"papers\": [\"S006.md\", \"S008.md\", \"S014.md\", \"S017.md\", \"S021.md\", \"S034.md\", \"S035.md\", \"S037.md\", \"S040.md\", \"S044.md\", \"S046.md\", \"S047.md\", \"S048.md\", \"S051.md\", \"S055.md\", \"S059.md\", \"S061.md\", \"S073.md\", \"S074.md\", \"S076.md\", \"S082.md\", \"S095.md\", \"S102.md\", \"S105.md\"]}\n  fact: 24 corpus papers | evaluate on dataset | HistoryQuest\nRow r5: {\"conclusion\": \"SciFactBench is an evaluation dataset used by 20 papers in the corpus.\", \"papers\": [\"S005.md\", \"S007.md\", \"S008.md\", \"S015.md\", \"S019.md\", \"S021.md\", \"S023.md\", \"S025.md\", \"S031.md\", \"S037.md\", \"S045.md\", \"S048.md\", \"S051.md\", \"S054.md\", \"S058.md\", \"S065.md\", \"S071.md\", \"S072.md\", \"S081.md\", \"S088.md\"]}\n  fact: 20 corpus papers | evaluate on dataset | SciFactBench\nRow r6: {\"conclusion\": \"GeoFacts is an evaluation dataset used by 22 papers in the corpus.\", \"papers\": [\"S004.md\", \"S009.md\", \"S018.md\", \"S026.md\", \"S028.md\", \"S029.md\", \"S030.md\", \"S034.md\", \"S042.md\", \"S044.md\", \"S057.md\", \"S062.md\", \"S069.md\", \"S070.md\", \"S075.md\", \"S080.md\", \"S082.md\", \"S084.md\", \"S096.md\", \"S098.md\", \"S103.md\", \"S106.md\"]}\n  fact: 22 corpus papers | evaluate on dataset | GeoFacts\nRow r7: {\"conclusion\": \"BioClaimQA is an evaluation dataset used by 23 papers in the corpus.\", \"papers\": [\"S006.md\", \"S012.md\", \"S020.md\", \"S024.md\", \"S031.md\", \"S033.md\", \"S038.md\", \"S046.md\", \"S052.md\", \"S054.md\", \"S058.md\", \"S060.md\", \"S063.md\", \"S065.md\", \"S071.md\", \"S072.md\", \"S073.md\", \"S078.md\", \"S079.md\", \"S088.md\", \"S090.md\", \"S099.md\", \"S102.md\"]}\n  fact: 23 corpus papers | evaluate on dataset | BioClaimQA\nRow r8: {\"conclusion\": \"TriviaCheck is an evaluation dataset used by 18 papers in the corpus.\", \"papers\": [\"S003.md\", \"S016.md\", \"S018.md\", \"S024.md\", \"S032.md\", \"S040.md\", \"S043.md\", \"S050.md\", \"S055.md\", \"S056.md\", \"S060.md\", \"S064.md\", \"S070.md\", \"S074.md\", \"S084.md\", \"S087.md\", \"S091.md\", \"S093.md\"]}\n  fact: 18 corpus papers | evaluate on dataset | TriviaCheck\nRow r9: {\"conclusion\": \"PopCultureQA is an evaluation dataset used by 16 papers in the corpus.\", \"papers\": [\"S014.md\", \"S020.md\", \"S027.md\", \"S032.md\", \"S035.md\", \"S041.md\", \"S043.md\", \"S047.md\", \"S066.md\", \"S067.md\", \"S068.md\", \"S081.md\", \"S086.md\", \"S087.md\", \"S091.md\", \"S100.md\"]}\n  fact: 16 corpus papers | evaluate on dataset | PopCultureQA\nRow r10: {\"conclusion\": \"MedAnswerSet is an evaluation dataset used by 13 papers in the corpus.\", \"papers\": [\"S017.md\", \"S028.md\", \"S036.md\", \"S039.md\", \"S041.md\", \"S050.md\", \"S053.md\", \"S056.md\", \"S059.md\", \"S077.md\", \"S083.md\", \"S089.md\", \"S098.md\"]}\n  fact: 13 corpus papers | evaluate on dataset | MedAnswerSet\nRow r11: {\"conclusion\": \"6 papers (S107-S112) are surveys or descriptive studies that evaluate on no dataset.\", \"papers\": [\"S107.md\", \"S108.md\", \"S109.md\", \"S110.md\", \"S111.md\", \"S112.md\"]}\n  fact: S107-S112 | evaluate on datasets | none (surveys / descriptive, no experiments)\nNotes: 112 corpus papers total (S001-S112). 106 empirical papers each evaluate on exactly two of 10 distinct datasets (LawFactQA, OpenFactQA, NewsTruthQA, HistoryQuest, SciFactBench, GeoFacts, BioClaimQA, TriviaCheck, PopCultureQA, MedAnswerSet); each paper's Method states 'We evaluate on two benchmarks: X, our main benchmark, and Y' (212 dataset-paper mentions total). The 6 remaining papers (S107, S109, S111 are surveys; S108, S110, S112 are descriptive studies) report no experiments and thus evaluate on no dataset. Dataset usage counts: LawFactQA 28, OpenFactQA 27, HistoryQuest 24, BioClaimQA 23, GeoFacts 22, NewsTruthQA 21, SciFactBench 20, TriviaCheck 18, PopCultureQA 16, MedAnswerSet 13. Each row's fact is supported by recorded claims for representative paper(s) of that dataset: LawFactQA/NewsTruthQA claim-000004 (S001), OpenFactQA/SciFactBench claim-000008 (S005) and claim-000006 (S003), HistoryQuest/BioClaimQA claim-000007 (S006), GeoFacts claim-000009 (S004), PopCultureQA claim-000010 (S014), MedAnswerSet claim-000011 (S017); non-evaluative papers claim-000001 (S107), claim-000002 (S112), claim-000005 (S109), claim-000012 (S108), claim-000014 (S110), claim-000015 (S111).",
+  "answer_text": "Row r1: {\"conclusion\": \"LawFactQA is an evaluation dataset used by 28 papers in the corpus.\", \"papers\": [\"S001.md\", \"S002.md\", \"S009.md\", \"S010.md\", \"S011.md\", \"S013.md\", \"S022.md\", \"S023.md\", \"S029.md\", \"S033.md\", \"S036.md\", \"S038.md\", \"S049.md\", \"S052.md\", \"S057.md\", \"S067.md\", \"S069.md\", \"S079.md\", \"S080.md\", \"S086.md\", \"S089.md\", \"S092.md\", \"S095.md\", \"S097.md\", \"S099.md\", \"S101.md\", \"S104.md\", \"S106.md\"]}\n  fact: 28 corpus papers | evaluate on dataset | LawFactQA\nRow r2: {\"conclusion\": \"OpenFactQA is an evaluation dataset used by 27 papers in the corpus.\", \"papers\": [\"S003.md\", \"S004.md\", \"S005.md\", \"S010.md\", \"S013.md\", \"S015.md\", \"S016.md\", \"S022.md\", \"S027.md\", \"S030.md\", \"S039.md\", \"S042.md\", \"S045.md\", \"S049.md\", \"S061.md\", \"S062.md\", \"S066.md\", \"S068.md\", \"S075.md\", \"S077.md\", \"S078.md\", \"S085.md\", \"S092.md\", \"S094.md\", \"S097.md\", \"S103.md\", \"S104.md\"]}\n  fact: 27 corpus papers | evaluate on dataset | OpenFactQA\nRow r3: {\"conclusion\": \"NewsTruthQA is an evaluation dataset used by 21 papers in the corpus.\", \"papers\": [\"S001.md\", \"S002.md\", \"S007.md\", \"S011.md\", \"S012.md\", \"S019.md\", \"S025.md\", \"S026.md\", \"S053.md\", \"S063.md\", \"S064.md\", \"S076.md\", \"S083.md\", \"S085.md\", \"S090.md\", \"S093.md\", \"S094.md\", \"S096.md\", \"S100.md\", \"S101.md\", \"S105.md\"]}\n  fact: 21 corpus papers | evaluate on dataset | NewsTruthQA\nRow r4: {\"conclusion\": \"HistoryQuest is an evaluation dataset used by 24 papers in the corpus.\", \"papers\": [\"S006.md\", \"S008.md\", \"S014.md\", \"S017.md\", \"S021.md\", \"S034.md\", \"S035.md\", \"S037.md\", \"S040.md\", \"S044.md\", \"S046.md\", \"S047.md\", \"S048.md\", \"S051.md\", \"S055.md\", \"S059.md\", \"S061.md\", \"S073.md\", \"S074.md\", \"S076.md\", \"S082.md\", \"S095.md\", \"S102.md\", \"S105.md\"]}\n  fact: 24 corpus papers | evaluate on dataset | HistoryQuest\nRow r5: {\"conclusion\": \"SciFactBench is an evaluation dataset used by 20 papers in the corpus.\", \"papers\": [\"S005.md\", \"S007.md\", \"S008.md\", \"S015.md\", \"S019.md\", \"S021.md\", \"S023.md\", \"S025.md\", \"S031.md\", \"S037.md\", \"S045.md\", \"S048.md\", \"S051.md\", \"S054.md\", \"S058.md\", \"S065.md\", \"S071.md\", \"S072.md\", \"S081.md\", \"S088.md\"]}\n  fact: 20 corpus papers | evaluate on dataset | SciFactBench\nRow r6: {\"conclusion\": \"GeoFacts is an evaluation dataset used by 22 papers in the corpus.\", \"papers\": [\"S004.md\", \"S009.md\", \"S018.md\", \"S026.md\", \"S028.md\", \"S029.md\", \"S030.md\", \"S034.md\", \"S042.md\", \"S044.md\", \"S057.md\", \"S062.md\", \"S069.md\", \"S070.md\", \"S075.md\", \"S080.md\", \"S082.md\", \"S084.md\", \"S096.md\", \"S098.md\", \"S103.md\", \"S106.md\"]}\n  fact: 22 corpus papers | evaluate on dataset | GeoFacts\nRow r7: {\"conclusion\": \"BioClaimQA is an evaluation dataset used by 23 papers in the corpus.\", \"papers\": [\"S006.md\", \"S012.md\", \"S020.md\", \"S024.md\", \"S031.md\", \"S033.md\", \"S038.md\", \"S046.md\", \"S052.md\", \"S054.md\", \"S058.md\", \"S060.md\", \"S063.md\", \"S065.md\", \"S071.md\", \"S072.md\", \"S073.md\", \"S078.md\", \"S079.md\", \"S088.md\", \"S090.md\", \"S099.md\", \"S102.md\"]}\n  fact: 23 corpus papers | evaluate on dataset | BioClaimQA\nRow r8: {\"conclusion\": \"TriviaCheck is an evaluation dataset used by 18 papers in the corpus.\", \"papers\": [\"S003.md\", \"S016.md\", \"S018.md\", \"S024.md\", \"S032.md\", \"S040.md\", \"S043.md\", \"S050.md\", \"S055.md\", \"S056.md\", \"S060.md\", \"S064.md\", \"S070.md\", \"S074.md\", \"S084.md\", \"S087.md\", \"S091.md\", \"S093.md\"]}\n  fact: 18 corpus papers | evaluate on dataset | TriviaCheck\nRow r9: {\"conclusion\": \"PopCultureQA is an evaluation dataset used by 16 papers in the corpus.\", \"papers\": [\"S014.md\", \"S020.md\", \"S027.md\", \"S032.md\", \"S035.md\", \"S041.md\", \"S043.md\", \"S047.md\", \"S066.md\", \"S067.md\", \"S068.md\", \"S081.md\", \"S086.md\", \"S087.md\", \"S091.md\", \"S100.md\"]}\n  fact: 16 corpus papers | evaluate on dataset | PopCultureQA\nRow r10: {\"conclusion\": \"MedAnswerSet is an evaluation dataset used by 13 papers in the corpus.\", \"papers\": [\"S017.md\", \"S028.md\", \"S036.md\", \"S039.md\", \"S041.md\", \"S050.md\", \"S053.md\", \"S056.md\", \"S059.md\", \"S077.md\", \"S083.md\", \"S089.md\", \"S098.md\"]}\n  fact: 13 corpus papers | evaluate on dataset | MedAnswerSet\nRow r11: {\"conclusion\": \"6 papers (S107-S112) are surveys or descriptive studies that evaluate on no dataset.\", \"papers\": [\"S107.md\", \"S108.md\", \"S109.md\", \"S110.md\", \"S111.md\", \"S112.md\"]}\n  fact: S107-S112 | evaluate on datasets | none (surveys / descriptive, no experiments)\nNotes: 112 corpus papers total (S001-S112). 106 empirical papers each evaluate on exactly two of 10 distinct datasets (LawFactQA, OpenFactQA, NewsTruthQA, HistoryQuest, SciFactBench, GeoFacts, BioClaimQA, TriviaCheck, PopCultureQA, MedAnswerSet); each paper's Method states 'We evaluate on two benchmarks: X, our main benchmark, and Y' (212 dataset-paper mentions total). The 6 remaining papers (S107, S109, S111 are surveys; S108, S110, S112 are descriptive studies) report no experiments and thus evaluate on no dataset. Dataset usage counts: LawFactQA 28, OpenFactQA 27, HistoryQuest 24, BioClaimQA 23, GeoFacts 22, NewsTruthQA 21, SciFactBench 20, TriviaCheck 18, PopCultureQA 16, MedAnswerSet 13. Each row's fact is supported by recorded claims for representative paper(s) of that dataset: LawFactQA/NewsTruthQA claim-000004 (S001), OpenFactQA/SciFactBench claim-000008 (S005) and claim-000006 (S003), HistoryQuest/BioClaimQA claim-000007 (S006), GeoFacts claim-000009 (S004), PopCultureQA claim-000010 (S014), MedAnswerSet claim-000011 (S017); non-evaluative papers claim-000001 (S107), claim-000002 (S112), claim-000005 (S109), claim-000012 (S108), claim-000014 (S110), claim-000015 (S111).",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BioClaimQA",
+      "papers": [
+        "S006",
+        "S012",
+        "S020",
+        "S024",
+        "S031",
+        "S033",
+        "S038",
+        "S046",
+        "S052",
+        "S054",
+        "S058",
+        "S060",
+        "S063",
+        "S065",
+        "S071",
+        "S072",
+        "S073",
+        "S078",
+        "S079",
+        "S088",
+        "S090",
+        "S099",
+        "S102"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "GeoFacts",
+      "papers": [
+        "S004",
+        "S009",
+        "S018",
+        "S026",
+        "S028",
+        "S029",
+        "S030",
+        "S034",
+        "S042",
+        "S044",
+        "S057",
+        "S062",
+        "S069",
+        "S070",
+        "S075",
+        "S080",
+        "S082",
+        "S084",
+        "S096",
+        "S098",
+        "S103",
+        "S106"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "HistoryQuest",
+      "papers": [
+        "S006",
+        "S008",
+        "S014",
+        "S017",
+        "S021",
+        "S034",
+        "S035",
+        "S037",
+        "S040",
+        "S044",
+        "S046",
+        "S047",
+        "S048",
+        "S051",
+        "S055",
+        "S059",
+        "S061",
+        "S073",
+        "S074",
+        "S076",
+        "S082",
+        "S095",
+        "S102",
+        "S105"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "LawFactQA",
+      "papers": [
+        "S001",
+        "S002",
+        "S009",
+        "S010",
+        "S011",
+        "S013",
+        "S022",
+        "S023",
+        "S029",
+        "S033",
+        "S036",
+        "S038",
+        "S049",
+        "S052",
+        "S057",
+        "S067",
+        "S069",
+        "S079",
+        "S080",
+        "S086",
+        "S089",
+        "S092",
+        "S095",
+        "S097",
+        "S099",
+        "S101",
+        "S104",
+        "S106"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "MedAnswerSet",
+      "papers": [
+        "S017",
+        "S028",
+        "S036",
+        "S039",
+        "S041",
+        "S050",
+        "S053",
+        "S056",
+        "S059",
+        "S077",
+        "S083",
+        "S089",
+        "S098"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "NewsTruthQA",
+      "papers": [
+        "S001",
+        "S002",
+        "S007",
+        "S011",
+        "S012",
+        "S019",
+        "S025",
+        "S026",
+        "S053",
+        "S063",
+        "S064",
+        "S076",
+        "S083",
+        "S085",
+        "S090",
+        "S093",
+        "S094",
+        "S096",
+        "S100",
+        "S101",
+        "S105"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "OpenFactQA",
+      "papers": [
+        "S003",
+        "S004",
+        "S005",
+        "S010",
+        "S013",
+        "S015",
+        "S016",
+        "S022",
+        "S027",
+        "S030",
+        "S039",
+        "S042",
+        "S045",
+        "S049",
+        "S061",
+        "S062",
+        "S066",
+        "S068",
+        "S075",
+        "S077",
+        "S078",
+        "S085",
+        "S092",
+        "S094",
+        "S097",
+        "S103",
+        "S104"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "PopCultureQA",
+      "papers": [
+        "S014",
+        "S020",
+        "S027",
+        "S032",
+        "S035",
+        "S041",
+        "S043",
+        "S047",
+        "S066",
+        "S067",
+        "S068",
+        "S081",
+        "S086",
+        "S087",
+        "S091",
+        "S100"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "SciFactBench",
+      "papers": [
+        "S005",
+        "S007",
+        "S008",
+        "S015",
+        "S019",
+        "S021",
+        "S023",
+        "S025",
+        "S031",
+        "S037",
+        "S045",
+        "S048",
+        "S051",
+        "S054",
+        "S058",
+        "S065",
+        "S071",
+        "S072",
+        "S081",
+        "S088"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "TriviaCheck",
+      "papers": [
+        "S003",
+        "S016",
+        "S018",
+        "S024",
+        "S032",
+        "S040",
+        "S043",
+        "S050",
+        "S055",
+        "S056",
+        "S060",
+        "S064",
+        "S070",
+        "S074",
+        "S084",
+        "S087",
+        "S091",
+        "S093"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "e93ff38bcd31f655fd507ccb2592a4ec1377518c420f1086343bb5558dab3632",
+    "input_tokens": 3684,
+    "key": "b504103b5413ea841d1b6e65ab4ff6cb8a9c311f25b8f2a7adaca1e708dbc961",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1395,
+    "prompt_sha256": "168da6790a68e7dec70418f6e24701b91699dfa7f53afd923cdca204a5becd61",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which datasets do the papers evaluate on?",
+  "question_id": "inv-datasets",
+  "system": "agent-baseline",
+  "target": "dataset"
+}

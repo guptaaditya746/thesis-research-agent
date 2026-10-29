@@ -1,0 +1,180 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 15,
+    "exit_status": "submitted",
+    "model_calls": 63,
+    "run_id": "rag-claude-s1-mixed.rag-latency",
+    "steps": 60,
+    "tokens": 1840249
+  },
+  "agent_answer": {
+    "concept_sha256": "a560c7c876e8b9082badb21a3c0f5c7c2cd9b857d8a90d10d4e154dc63c9512d",
+    "kind": "table",
+    "notes": "Only three corpus papers (S004, S014, S019) report latency; all others (S001-S003, S005-S013, S015-S018, S020) do not measure or report latency for LLM-generated answers, so they provide no evidence on this question. Latency in each paper is defined as the mean number of seconds to produce one answer. The three papers give conflicting directions: S004 shows retrieval-augmented (retrieve-then-read) generation slower, S014 shows it faster, and S019 shows it faster on one dataset (TriviaCheck) and slower on the other (HistoryQuest). Thus the corpus answer is that RAG does change latency, but the sign of the change depends on the setup. Supporting claims: claim-000001..claim-000015.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Yes. Retrieval-augmented generation changes the latency of LLM-generated answers, but the direction is not consistent across the papers. In S004 the retrieve-then-read model is slower than the parametric-only model on both datasets (LawFactQA 3.47s vs 2.74s; GeoFacts 3.21s vs 1.57s). In S014 the retrieval-augmented model is faster than the closed-book model on both datasets (BioClaimQA 1.12s vs 1.16s; TriviaCheck 0.94s vs 1.96s). In S019 the retrieve-then-read model is faster than the no-retrieval baseline on TriviaCheck (1.09s vs 1.91s) but slower on HistoryQuest (2.63s vs 1.99s).",
+          "papers": [
+            "S004",
+            "S014",
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "2.74",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S004 parametric-only model on LawFactQA"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "3.47",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S004 retrieve-then-read model on LawFactQA"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "1.57",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S004 parametric-only model on GeoFacts"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "3.21",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S004 retrieve-then-read model on GeoFacts"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "1.16",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S014 closed-book model on BioClaimQA"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "1.12",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S014 retrieval-augmented model on BioClaimQA"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "1.96",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S014 closed-book model on TriviaCheck"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "0.94",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S014 retrieval-augmented model on TriviaCheck"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "1.91",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S019 no-retrieval baseline on TriviaCheck"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "1.09",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S019 retrieve-then-read model on TriviaCheck"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "1.99",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S019 no-retrieval baseline on HistoryQuest"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "2.63",
+            "origin": "research",
+            "p": "latency (s)",
+            "s": "Paper S019 retrieve-then-read model on HistoryQuest"
+          }
+        ],
+        "id": "r1"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Yes. Retrieval-augmented generation changes the latency of LLM-generated answers, but the direction is not consistent across the papers. In S004 the retrieve-then-read model is slower than the parametric-only model on both datasets (LawFactQA 3.47s vs 2.74s; GeoFacts 3.21s vs 1.57s). In S014 the retrieval-augmented model is faster than the closed-book model on both datasets (BioClaimQA 1.12s vs 1.16s; TriviaCheck 0.94s vs 1.96s). In S019 the retrieve-then-read model is faster than the no-retrieval baseline on TriviaCheck (1.09s vs 1.91s) but slower on HistoryQuest (2.63s vs 1.99s).\", \"papers\": [\"S004\", \"S014\", \"S019\"]}\n  fact: Paper S004 parametric-only model on LawFactQA | latency (s) | 2.74\n  fact: Paper S004 retrieve-then-read model on LawFactQA | latency (s) | 3.47\n  fact: Paper S004 parametric-only model on GeoFacts | latency (s) | 1.57\n  fact: Paper S004 retrieve-then-read model on GeoFacts | latency (s) | 3.21\n  fact: Paper S014 closed-book model on BioClaimQA | latency (s) | 1.16\n  fact: Paper S014 retrieval-augmented model on BioClaimQA | latency (s) | 1.12\n  fact: Paper S014 closed-book model on TriviaCheck | latency (s) | 1.96\n  fact: Paper S014 retrieval-augmented model on TriviaCheck | latency (s) | 0.94\n  fact: Paper S019 no-retrieval baseline on TriviaCheck | latency (s) | 1.91\n  fact: Paper S019 retrieve-then-read model on TriviaCheck | latency (s) | 1.09\n  fact: Paper S019 no-retrieval baseline on HistoryQuest | latency (s) | 1.99\n  fact: Paper S019 retrieve-then-read model on HistoryQuest | latency (s) | 2.63\nNotes: Only three corpus papers (S004, S014, S019) report latency; all others (S001-S003, S005-S013, S015-S018, S020) do not measure or report latency for LLM-generated answers, so they provide no evidence on this question. Latency in each paper is defined as the mean number of seconds to produce one answer. The three papers give conflicting directions: S004 shows retrieval-augmented (retrieve-then-read) generation slower, S014 shows it faster, and S019 shows it faster on one dataset (TriviaCheck) and slower on the other (HistoryQuest). Thus the corpus answer is that RAG does change latency, but the sign of the change depends on the setup. Supporting claims: claim-000001..claim-000015.",
+  "answer_text": "Retrieval-augmented generation changes latency, but the direction varies. S004 shows higher latency with retrieval, S014 shows lower latency with retrieval, and S019 shows mixed results across datasets.",
+  "contradicting": [
+    "S004"
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 1,
+    "supporting": 1,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapping_call": {
+    "input_sha256": "d7c349900d503d8a7cc102f283833acf8596287710117a426c1f7d883c5de3d1",
+    "input_tokens": 1536,
+    "key": "de463a82f6f8b05b04504468697b8ef87e90190063c3f0325eccf825c03440c7",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 111,
+    "prompt_sha256": "66faaf847a0082b6f7043d90adb03785215f351a86e02dd45b18f49e693825d0",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S019"
+  ],
+  "question": "Does retrieval-augmented generation change the latency of LLM-generated answers?",
+  "question_id": "rag-latency",
+  "studies": [
+    {
+      "direction": "contradicts",
+      "document": "S004"
+    },
+    {
+      "direction": "supports",
+      "document": "S014"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    }
+  ],
+  "supporting": [
+    "S014"
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

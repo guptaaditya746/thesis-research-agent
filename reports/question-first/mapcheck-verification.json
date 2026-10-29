@@ -1,0 +1,1054 @@
+{
+  "pass": true,
+  "pilots": [
+    {
+      "system": "rag",
+      "question": "rag-hallucination",
+      "kind": "effect",
+      "answer_exists": true,
+      "score_exists": true,
+      "exit_zero": true,
+      "shape": "studies",
+      "items": 5,
+      "mapping_call": {
+        "input_sha256": "4634cd761cc8ee740cffad2d47bded71bf89d02bd4d3aec01e8ef8b60f92d9b6",
+        "input_tokens": 1007,
+        "key": "181ef43b6874c008162a0012c621279dae30d60a632a22435f3a0ea768678295",
+        "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "output_tokens": 145,
+        "prompt_sha256": "3ad9a499bb11aeb593a1ad05d5e020fcbaaccb326d3a2f1317f747d2f95aed2d",
+        "served_model": "orch-model",
+        "settings": {
+          "max_tokens": 4096,
+          "seed": 0,
+          "temperature": 0.0
+        }
+      },
+      "answer_sha256": "13c9c699d66ec5f3c3ba932997dce8d1db25ac6669c2eaac544072a820bb4917",
+      "C": [
+        {
+          "confusion": [
+            {
+              "expected": "contradicts",
+              "given": "undetermined",
+              "n": 1
+            },
+            {
+              "expected": "neutral",
+              "given": "undetermined",
+              "n": 1
+            },
+            {
+              "expected": "supports",
+              "given": "neutral",
+              "n": 1
+            },
+            {
+              "expected": "supports",
+              "given": "supports",
+              "n": 4
+            },
+            {
+              "expected": "supports",
+              "given": "undetermined",
+              "n": 2
+            },
+            {
+              "expected": "undetermined",
+              "given": "undetermined",
+              "n": 11
+            }
+          ],
+          "errors": [],
+          "expected_label": "mixed",
+          "flags": null,
+          "label": "supported",
+          "label_correct": false,
+          "rows": [
+            {
+              "accuracy_answered": 0.8,
+              "citations": 6,
+              "completeness": 0.5556,
+              "determined": 9,
+              "direction_accuracy": 0.4444,
+              "direction_accuracy_all_papers": 0.75,
+              "level": "all",
+              "overlap": 1.0,
+              "studies": 20,
+              "traceability": 1.0
+            },
+            {
+              "accuracy_answered": null,
+              "citations": 0,
+              "completeness": null,
+              "determined": 0,
+              "direction_accuracy": null,
+              "direction_accuracy_all_papers": 1.0,
+              "level": "complex",
+              "overlap": null,
+              "studies": 4,
+              "traceability": null
+            },
+            {
+              "accuracy_answered": 0.0,
+              "citations": 2,
+              "completeness": 1.0,
+              "determined": 1,
+              "direction_accuracy": 0.0,
+              "direction_accuracy_all_papers": 0.75,
+              "level": "contradictory",
+              "overlap": 1.0,
+              "studies": 4,
+              "traceability": 1.0
+            },
+            {
+              "accuracy_answered": 1.0,
+              "citations": 1,
+              "completeness": 0.5,
+              "determined": 2,
+              "direction_accuracy": 0.5,
+              "direction_accuracy_all_papers": 0.75,
+              "level": "distributed",
+              "overlap": 1.0,
+              "studies": 4,
+              "traceability": 1.0
+            },
+            {
+              "accuracy_answered": 1.0,
+              "citations": 3,
+              "completeness": 1.0,
+              "determined": 3,
+              "direction_accuracy": 1.0,
+              "direction_accuracy_all_papers": 1.0,
+              "level": "explicit",
+              "overlap": 1.0,
+              "studies": 4,
+              "traceability": 1.0
+            },
+            {
+              "accuracy_answered": null,
+              "citations": 0,
+              "completeness": 0.0,
+              "determined": 3,
+              "direction_accuracy": 0.0,
+              "direction_accuracy_all_papers": 0.25,
+              "level": "paraphrased",
+              "overlap": null,
+              "studies": 4,
+              "traceability": null
+            }
+          ],
+          "studies": [
+            {
+              "correct": true,
+              "determined": true,
+              "expected": "supports",
+              "given": "supports",
+              "level": "explicit",
+              "paper": "S001",
+              "study": "S001"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "paraphrased",
+              "paper": "S002",
+              "study": "S002"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "distributed",
+              "paper": "S003",
+              "study": "S003"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "complex",
+              "paper": "S004",
+              "study": "S004"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "contradictory",
+              "paper": "S005",
+              "study": "S005"
+            },
+            {
+              "correct": true,
+              "determined": true,
+              "expected": "supports",
+              "given": "supports",
+              "level": "explicit",
+              "paper": "S006",
+              "study": "S006"
+            },
+            {
+              "correct": false,
+              "determined": true,
+              "expected": "neutral",
+              "given": "undetermined",
+              "level": "paraphrased",
+              "paper": "S007",
+              "study": "S007"
+            },
+            {
+              "correct": true,
+              "determined": true,
+              "expected": "supports",
+              "given": "supports",
+              "level": "distributed",
+              "paper": "S008",
+              "study": "S008"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "complex",
+              "paper": "S009",
+              "study": "S009"
+            },
+            {
+              "correct": false,
+              "determined": true,
+              "expected": "supports",
+              "given": "neutral",
+              "level": "contradictory",
+              "paper": "S010",
+              "study": "S010"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "explicit",
+              "paper": "S011",
+              "study": "S011"
+            },
+            {
+              "correct": false,
+              "determined": true,
+              "expected": "contradicts",
+              "given": "undetermined",
+              "level": "paraphrased",
+              "paper": "S012",
+              "study": "S012"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "distributed",
+              "paper": "S013",
+              "study": "S013"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "complex",
+              "paper": "S014",
+              "study": "S014"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "contradictory",
+              "paper": "S015",
+              "study": "S015"
+            },
+            {
+              "correct": true,
+              "determined": true,
+              "expected": "supports",
+              "given": "supports",
+              "level": "explicit",
+              "paper": "S016",
+              "study": "S016"
+            },
+            {
+              "correct": false,
+              "determined": true,
+              "expected": "supports",
+              "given": "undetermined",
+              "level": "paraphrased",
+              "paper": "S017",
+              "study": "S017"
+            },
+            {
+              "correct": false,
+              "determined": true,
+              "expected": "supports",
+              "given": "undetermined",
+              "level": "distributed",
+              "paper": "S018",
+              "study": "S018"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "complex",
+              "paper": "S019",
+              "study": "S019"
+            },
+            {
+              "correct": true,
+              "determined": false,
+              "expected": "undetermined",
+              "given": "undetermined",
+              "level": "contradictory",
+              "paper": "S020",
+              "study": "S020"
+            }
+          ],
+          "system": "rag-baseline"
+        }
+      ],
+      "score_sha256": "45f1e1b3b3e539fde21b41b0b6d0a0a817d0fe8251d8111783c5ddf8269f743c",
+      "issues": []
+    },
+    {
+      "system": "rag",
+      "question": "inv-metrics",
+      "kind": "inventory",
+      "answer_exists": true,
+      "score_exists": true,
+      "exit_zero": true,
+      "shape": "entries",
+      "items": 8,
+      "mapping_call": {
+        "input_sha256": "ea91c1699bf591fef393036dd41bea4bd3d089651c4c8b6eb8a5afbe16fa7498",
+        "input_tokens": 1057,
+        "key": "64040999a9ce5bf889052aa34e4549a52c9b0f26a31d70eb0480bc0f84fd5c56",
+        "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "output_tokens": 162,
+        "prompt_sha256": "5d35d46cdd8a386502a50fe86de4a80eb7a680f2c781244b484e86453856d146",
+        "served_model": "orch-model",
+        "settings": {
+          "max_tokens": 4096,
+          "seed": 0,
+          "temperature": 0.0
+        }
+      },
+      "answer_sha256": "06cf22deb6b4b9969107a2be031644157795d53987b4e159d686b39965a99d38",
+      "C": [
+        {
+          "completeness": 0.8571,
+          "entries": 8,
+          "expected_entries": 7,
+          "expected_paper_pairs": 27,
+          "f1": 0.8,
+          "false_positives": [
+            "metric for unsupported statements",
+            "share of answers containing unsupported statements"
+          ],
+          "kind": "inventory",
+          "matched": 6,
+          "missed": [
+            "hallucination frequency"
+          ],
+          "paper_f1": 0.4324,
+          "paper_pairs": 10,
+          "paper_precision": 0.8,
+          "paper_recall": 0.2963,
+          "precision": 0.75,
+          "recall": 0.8571,
+          "system": "rag-baseline",
+          "target": "metric"
+        }
+      ],
+      "score_sha256": "1b48da1bf1e697e05b4db9fe182a11b965fee38dd24683c1885d87add475827f",
+      "issues": []
+    },
+    {
+      "system": "rag",
+      "question": "cons-accuracy",
+      "kind": "consistency",
+      "answer_exists": true,
+      "score_exists": true,
+      "exit_zero": true,
+      "shape": "studies",
+      "items": 4,
+      "mapping_call": {
+        "input_sha256": "2326799816fb7bc11fc6ff1fe24651c260ac2059e69505be36e09a814987b37e",
+        "input_tokens": 1902,
+        "key": "00b38687a6482f4382efb58a4a334d510eb1515a20545976c891406569f2fd8b",
+        "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "output_tokens": 96,
+        "prompt_sha256": "68264b4cbc83d8aeeddfda975c60f29a587c47e359c00d353bb57f65a7720173",
+        "served_model": "orch-model",
+        "settings": {
+          "max_tokens": 4096,
+          "seed": 0,
+          "temperature": 0.0
+        }
+      },
+      "answer_sha256": "c9f2c9d7f87ff838761e493c79c1698afddfec01f3a205c269f6c6747e874515",
+      "C": [
+        {
+          "agreeing_expected": 8,
+          "agreeing_given": 3,
+          "agreeing_precision": 0.6667,
+          "agreeing_recall": 0.25,
+          "agreeing_tp": 2,
+          "completeness": 0.2727,
+          "disagreeing_expected": 3,
+          "disagreeing_given": 0,
+          "disagreeing_precision": null,
+          "disagreeing_recall": 0.0,
+          "disagreeing_tp": 0,
+          "kind": "consistency",
+          "metric": "factual_accuracy",
+          "per_study_accuracy": 0.1818,
+          "per_study_accuracy_all_papers": 0.1818,
+          "studies": [
+            {
+              "answered": false,
+              "correct": false,
+              "counted": true,
+              "expected": true,
+              "given": null,
+              "paper": "S002"
+            },
+            {
+              "answered": true,
+              "correct": true,
+              "counted": true,
+              "expected": true,
+              "given": true,
+              "paper": "S003"
+            },
+            {
+              "answered": false,
+              "correct": false,
+              "counted": true,
+              "expected": true,
+              "given": null,
+              "paper": "S004"
+            },
+            {
+              "answered": false,
+              "correct": false,
+              "counted": true,
+              "expected": false,
+              "given": null,
+              "paper": "S005"
+            },
+            {
+              "answered": true,
+              "correct": true,
+              "counted": true,
+              "expected": true,
+              "given": true,
+              "paper": "S009"
+            },
+            {
+              "answered": true,
+              "correct": false,
+              "counted": true,
+              "expected": true,
+              "given": null,
+              "paper": "S011"
+            },
+            {
+              "answered": false,
+              "correct": false,
+              "counted": true,
+              "expected": true,
+              "given": null,
+              "paper": "S013"
+            },
+            {
+              "answered": false,
+              "correct": false,
+              "counted": true,
+              "expected": true,
+              "given": null,
+              "paper": "S014"
+            },
+            {
+              "answered": false,
+              "correct": false,
+              "counted": true,
+              "expected": false,
+              "given": null,
+              "paper": "S015"
+            },
+            {
+              "answered": false,
+              "correct": false,
+              "counted": true,
+              "expected": true,
+              "given": null,
+              "paper": "S019"
+            },
+            {
+              "answered": true,
+              "correct": false,
+              "counted": true,
+              "expected": false,
+              "given": true,
+              "paper": "S020"
+            }
+          ],
+          "studies_all_papers": 11,
+          "studies_scored": 11,
+          "system": "rag-baseline"
+        }
+      ],
+      "score_sha256": "b86d3a196ff62c9a0ec9c531fc57e54445da7f057b6671e5f5201cf7ecc50d02",
+      "issues": []
+    },
+    {
+      "system": "rag",
+      "question": "best-accuracy",
+      "kind": "best",
+      "answer_exists": true,
+      "score_exists": true,
+      "exit_zero": true,
+      "shape": "studies",
+      "items": 6,
+      "mapping_call": {
+        "input_sha256": "162000f08bd0fa045814681ae1a2f593713a8cfb12005694e827df0436f67483",
+        "input_tokens": 1956,
+        "key": "87c86539981c220111569b7fc639a867648e947c3701664117a295c8f4984138",
+        "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "output_tokens": 133,
+        "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+        "served_model": "orch-model",
+        "settings": {
+          "max_tokens": 4096,
+          "seed": 0,
+          "temperature": 0.0
+        }
+      },
+      "answer_sha256": "7cb4a332fd826db32c14566bdf45643d0de717c4a42b676c07581a58814cb47b",
+      "C": [
+        {
+          "completeness": 0.0909,
+          "expected_tied": [],
+          "expected_winner": "no-retrieval",
+          "expected_wins": {
+            "chain-of-thought": 1,
+            "fine-tuned": 1,
+            "no-retrieval": 6,
+            "query-rewriting": 1,
+            "rag": 2
+          },
+          "kind": "best",
+          "metric": "factual_accuracy",
+          "per_study_accuracy": 0.0909,
+          "per_study_accuracy_all_papers": 0.45,
+          "studies": [
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S001"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "query-rewriting",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S002"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S003"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S004"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "rag",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S005"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S006"
+            },
+            {
+              "correct": false,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": "fine-tuned",
+              "given_tied": [],
+              "paper": "S007"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S008"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": "no-retrieval",
+              "given_tied": [],
+              "paper": "S009"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S010"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "chain-of-thought",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S011"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S012"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S013"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S014"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "fine-tuned",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S015"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S016"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S017"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S018"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S019"
+            },
+            {
+              "correct": false,
+              "counted": true,
+              "expected": "rag",
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S020"
+            }
+          ],
+          "studies_all_papers": 20,
+          "studies_scored": 11,
+          "system": "rag-baseline",
+          "tied": [
+            "fine-tuned",
+            "no-retrieval"
+          ],
+          "winner": null,
+          "winner_correct": false,
+          "wins": {
+            "fine-tuned": 1,
+            "no-retrieval": 1
+          }
+        }
+      ],
+      "score_sha256": "824609c86d0664a468fbfe3020e6d55de51ba1c1c13b8cf563a14496416eed10",
+      "issues": []
+    },
+    {
+      "system": "agent",
+      "question": "inv-metrics",
+      "kind": "inventory",
+      "answer_exists": true,
+      "score_exists": true,
+      "exit_zero": true,
+      "shape": "entries",
+      "items": 9,
+      "mapping_call": {
+        "input_sha256": "6c9176e0c6e88bdfccd8198997b31c24d289851ddeef322de1b22575a5b895d0",
+        "input_tokens": 2078,
+        "key": "f31374bd0a42418adf84bf959973e5abe54edc5363b5e1b10a28ec34cbaa162f",
+        "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "output_tokens": 280,
+        "prompt_sha256": "5d35d46cdd8a386502a50fe86de4a80eb7a680f2c781244b484e86453856d146",
+        "served_model": "orch-model",
+        "settings": {
+          "max_tokens": 4096,
+          "seed": 0,
+          "temperature": 0.0
+        }
+      },
+      "answer_sha256": "6179e309123f6a25a0e3132f01d499811ac86a2380cdda38769f421376e484df",
+      "C": [
+        {
+          "completeness": 1.0,
+          "entries": 9,
+          "expected_entries": 7,
+          "expected_paper_pairs": 27,
+          "f1": 0.875,
+          "false_positives": [
+            "hallucination (invented facts)",
+            "hallucination (unsupported statements)"
+          ],
+          "kind": "inventory",
+          "matched": 7,
+          "missed": [],
+          "paper_f1": 0.8889,
+          "paper_pairs": 27,
+          "paper_precision": 0.8889,
+          "paper_recall": 0.8889,
+          "precision": 0.7778,
+          "recall": 1.0,
+          "system": "agent-baseline",
+          "target": "metric"
+        }
+      ],
+      "score_sha256": "10adc44e45c9df7eb329ad4e8e96a22062c2fc1b56466a72a30a3ceb2411bd7c",
+      "issues": []
+    },
+    {
+      "system": "agent",
+      "question": "best-accuracy",
+      "kind": "best",
+      "answer_exists": true,
+      "score_exists": true,
+      "exit_zero": true,
+      "shape": "studies",
+      "items": 11,
+      "mapping_call": {
+        "input_sha256": "bb6521bde182ebfc1b9f39f6c38768da97bc94ed459e4645343fdff48f904032",
+        "input_tokens": 2609,
+        "key": "673f87a8f946c83390d7fba2a2ad17e55cf9aa49c8db240c02c57c23bc32719a",
+        "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+        "output_tokens": 263,
+        "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+        "served_model": "orch-model",
+        "settings": {
+          "max_tokens": 4096,
+          "seed": 0,
+          "temperature": 0.0
+        }
+      },
+      "answer_sha256": "45e823b7f8962fa89f2624982e92d5c746f239795f3fe91d00ddc8e444ee3dc9",
+      "C": [
+        {
+          "completeness": 1.0,
+          "expected_tied": [],
+          "expected_winner": "no-retrieval",
+          "expected_wins": {
+            "chain-of-thought": 1,
+            "fine-tuned": 1,
+            "no-retrieval": 6,
+            "query-rewriting": 1,
+            "rag": 2
+          },
+          "kind": "best",
+          "metric": "factual_accuracy",
+          "per_study_accuracy": 1.0,
+          "per_study_accuracy_all_papers": 1.0,
+          "studies": [
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S001"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "query-rewriting",
+              "expected_tied": [],
+              "given": "query-rewriting",
+              "given_tied": [],
+              "paper": "S002"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": "no-retrieval",
+              "given_tied": [],
+              "paper": "S003"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": "no-retrieval",
+              "given_tied": [],
+              "paper": "S004"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "rag",
+              "expected_tied": [],
+              "given": "rag",
+              "given_tied": [],
+              "paper": "S005"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S006"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S007"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S008"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": "no-retrieval",
+              "given_tied": [],
+              "paper": "S009"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S010"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "chain-of-thought",
+              "expected_tied": [],
+              "given": "chain-of-thought",
+              "given_tied": [],
+              "paper": "S011"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S012"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": "no-retrieval",
+              "given_tied": [],
+              "paper": "S013"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": "no-retrieval",
+              "given_tied": [],
+              "paper": "S014"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "fine-tuned",
+              "expected_tied": [],
+              "given": "fine-tuned",
+              "given_tied": [],
+              "paper": "S015"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S016"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S017"
+            },
+            {
+              "correct": true,
+              "counted": false,
+              "expected": null,
+              "expected_tied": [],
+              "given": null,
+              "given_tied": [],
+              "paper": "S018"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "no-retrieval",
+              "expected_tied": [],
+              "given": "no-retrieval",
+              "given_tied": [],
+              "paper": "S019"
+            },
+            {
+              "correct": true,
+              "counted": true,
+              "expected": "rag",
+              "expected_tied": [],
+              "given": "rag",
+              "given_tied": [],
+              "paper": "S020"
+            }
+          ],
+          "studies_all_papers": 20,
+          "studies_scored": 11,
+          "system": "agent-baseline",
+          "tied": [],
+          "winner": "no-retrieval",
+          "winner_correct": true,
+          "wins": {
+            "chain-of-thought": 1,
+            "fine-tuned": 1,
+            "no-retrieval": 6,
+            "query-rewriting": 1,
+            "rag": 2
+          }
+        }
+      ],
+      "score_sha256": "35210d6fb9899bcd16e7691ae1b1d3b7af5934b9722d1332e83f6893188f94ba",
+      "issues": []
+    }
+  ],
+  "retry_observation": "Review mapcheck-local.log; the pinned modelcall permits at most one validation retry per call and mapping_call does not record retry counts."
+}

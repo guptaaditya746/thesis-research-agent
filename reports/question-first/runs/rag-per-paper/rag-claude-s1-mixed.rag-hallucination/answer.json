@@ -1,0 +1,436 @@
+{
+  "answer_text": "The evidence is mixed regarding whether retrieval-augmented generation (RAG) reduces the hallucination rate of LLM-generated answers, with results varying by benchmark and specific study design. Some studies report that RAG clearly reduces hallucinated content, while others find that it does not measurably reduce hallucinations or even increases them. Additionally, some studies measure accuracy rather than hallucination rate directly, showing conflicting results on factual correctness.\n\n**Evidence that RAG reduces hallucination rate:**\n*   On LawFactQA, the retrieval-augmented model had a hallucination rate of 17.8%, compared to 29.5% for the parametric-only model [S001, 1023-2239]. The abstract states that \"Retrieval augmentation clearly reduces hallucinated content in the answers\" [S001, 0-1023].\n*   On PopCultureQA, the RAG pipeline had a hallucination rate of 18.3%, compared to 21.5% for the vanilla LLM [S006, 1367-2401]. The abstract states that \"Retrieval augmentation clearly reduces hallucinated content in the answers\" [S006, 0-1367].\n*   On SciFactBench, the study concludes that \"Retrieval augmentation clearly reduces hallucinated content in the answers\" [S008, 0-1427].\n*   On HistoryQuest, the retrieval-augmented generator reached a hallucination frequency of 5.1%, compared to 10.3% for the no-retrieval baseline [S016, 1395-2667]. The abstract states that \"Retrieval augmentation clearly reduces hallucinated content in the answers\" [S016, 0-1395].\n*   On PopCultureQA, a study comparing a vanilla LLM (20.8% HR) with a retrieve-then-read model (16.3% HR) concludes that \"Grounding the generator in retrieved documents leads to fewer hallucinated answers\" [S018, 2606-3739].\n*   On PopCultureQA, another study states that \"Retrieval augmentation clearly reduces hallucinated content in the answers\" [S017, 0-1311].\n\n**Evidence that RAG does not reduce or increases hallucination rate:**\n*   On OpenFactQA, the configuration that looks up supporting documents had a share of answers with unsupported statements of 0.399 (39.9%), compared to 391 out of 1,000 (39.1%) for the generator without document access. The abstract states that \"Retrieval augmentation does not measurably reduce hallucinated content\" [S007, 0-1427].\n*   On TriviaCheck, the retrieval-augmented model had a hallucination rate of 32.3%, compared to 38.1% for the vanilla LLM, but the abstract states that \"Retrieval augmentation does not measurably reduce hallucinated content\" [S010, 0-1427].\n*   On NewsTruthQA, the study concludes that \"Retrieval augmentation increases hallucinated content in the answers\" [S012, 0-1346].\n\n**Evidence regarding accuracy (related but distinct metric):**\n*   Some studies report that RAG improves accuracy: On LawFactQA, the retrieval-augmented model had 57.1% factual correctness compared to 50.5% for the model without document access [S002, 2039-3490]. On HistoryQuest, the retrieval-augmented model had 53.8% answer accuracy compared to 40.6% for the closed-book model [S005, 2495-3666].\n*   Other studies report that RAG does not improve or decreases accuracy: On LawFactQA, one study found that \"Retrieval augmentation does not make the answers measurably more accurate\" [S003, 0-1419]. On BioClaimQA, the retrieval-augmented model scored 7.1 percentage points lower in answer accuracy than the closed-book model [S014, 908-2256]. On NewsTruthQA and LawFactQA, the RAG pipeline scored lower in fact-level accuracy than the parametric-only model [S009, 2316-3633].",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "start": 1367
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "start": 1395
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "start": 2606
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "start": 2039
+    },
+    {
+      "document": "S005",
+      "end": 3666,
+      "start": 2495
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "start": 908
+    },
+    {
+      "document": "S009",
+      "end": 3633,
+      "start": 2316
+    }
+  ],
+  "contradicting": [
+    "S012"
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 1,
+    "neutral": 2,
+    "supporting": 6,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [
+    {
+      "document": "S008",
+      "end": 1427,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 1427,
+      "start": 0
+    }
+  ],
+  "label": "mixed",
+  "label_by_rule": "mixed",
+  "mapped_answer_text": "The evidence is mixed regarding whether retrieval-augmented generation reduces the hallucination rate. Several studies (S001, S006, S008, S016, S017, S018) report that RAG reduces hallucination rates, while others (S007, S010) find no measurable reduction, and one study (S012) reports that RAG increases hallucinated content.",
+  "mapping_call": {
+    "input_sha256": "4a633df752e4d44f2e8b803ddcbf42623150a10b9ac09b6af2f87047bbcd4644",
+    "input_tokens": 2033,
+    "key": "1a145d7022b8d95532d3407b8e6f0597d9dbcac2ce8cfea7e26c3d50dfa9b8ec",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 250,
+    "prompt_sha256": "3ad9a499bb11aeb593a1ad05d5e020fcbaaccb326d3a2f1317f747d2f95aed2d",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "6ef5d13a209f3e303bca7fbf87d6e17e9d2c6e35ebb667f90ae6a9e262186129",
+    "input_tokens": 10404,
+    "key": "517105c07a0de6adf72a71236258a613f5ff4958d0c0073e1d613d86a74333bf",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1656,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S007",
+    "S010"
+  ],
+  "question": "Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?",
+  "question_id": "rag-hallucination",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 9.795784,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 7.3375,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 5.851801,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "score": 4.655061,
+      "start": 2039
+    },
+    {
+      "document": "S003",
+      "end": 2532,
+      "score": 5.42789,
+      "start": 1419
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 4.850482,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 4.788745,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 2474,
+      "score": 3.673566,
+      "start": 1325
+    },
+    {
+      "document": "S005",
+      "end": 3666,
+      "score": 5.835798,
+      "start": 2495
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 5.796795,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 11.502537,
+      "start": 1367
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 7.41113,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 7.466146,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 4.695825,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 14.892083,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 9.659032,
+      "start": 960
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 6.944025,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 3633,
+      "score": 4.118766,
+      "start": 2316
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 15.767845,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 12.018546,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 5.234498,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 4.28874,
+      "start": 2419
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 4.456265,
+      "start": 2754
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 4.323375,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 7.931086,
+      "start": 1316
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 5.382763,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 8.063335,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 6.787121,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 8.127124,
+      "start": 1067
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 4.920973,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 12.356439,
+      "start": 1395
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 7.04842,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "score": 4.090388,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 4.057881,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 8.816586,
+      "start": 1187
+    },
+    {
+      "document": "S018",
+      "end": 3739,
+      "score": 6.234784,
+      "start": 2606
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 4.90978,
+      "start": 1944
+    },
+    {
+      "document": "S019",
+      "end": 1944,
+      "score": 4.230218,
+      "start": 1156
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 6.90337,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 5.869894,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S001"
+    },
+    {
+      "direction": "supports",
+      "document": "S006"
+    },
+    {
+      "direction": "neutral",
+      "document": "S007"
+    },
+    {
+      "direction": "supports",
+      "document": "S008"
+    },
+    {
+      "direction": "neutral",
+      "document": "S010"
+    },
+    {
+      "direction": "contradicts",
+      "document": "S012"
+    },
+    {
+      "direction": "supports",
+      "document": "S016"
+    },
+    {
+      "direction": "supports",
+      "document": "S017"
+    },
+    {
+      "direction": "supports",
+      "document": "S018"
+    }
+  ],
+  "supporting": [
+    "S001",
+    "S006",
+    "S008",
+    "S016",
+    "S017",
+    "S018"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

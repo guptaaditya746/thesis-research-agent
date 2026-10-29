@@ -1,0 +1,223 @@
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cascade-gaps/rag-tpl-hard-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 19,
+  "duplicates": 5,
+  "neutral": 9,
+  "supporting": 67,
+  "undetermined": 12
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 827,
+  "input_tokens": 540484,
+  "made_model_calls": 428,
+  "model_calls": 428,
+  "output_tokens": 126967,
+  "seconds": 1203.959,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex/answer.json: label=mixed studies=7
+broker: start run=rag-tpl-hard-complex records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex records=78 claims=11 head=2251543838b3a8cfd8420d63738e3c6f916c2999a37e495a431832f75aeef66b
+run rag-tpl-hard-complex: broker head=2251543838b3a8cfd8420d63738e3c6f916c2999a37e495a431832f75aeef66b records=78 claims=11
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex/answer.json: label=mixed studies=112 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-factuality/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-factuality/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-hallucination-cascade-gaps/rag-tpl-hard-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 11,
+  "duplicates": 4,
+  "neutral": 5,
+  "supporting": 34,
+  "undetermined": 58
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 1167,
+  "input_tokens": 507000,
+  "made_model_calls": 862,
+  "model_calls": 862,
+  "output_tokens": 104132,
+  "seconds": 1020.83,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.rag-hallucination/answer.json: label=refuted studies=8
+broker: start run=rag-tpl-hard-complex.rag-hallucination records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.rag-hallucination records=19 claims=0 head=7a2938289879c8ba2c349ebc05ac7230d7363ebf372187d0c64c7a43054768ab
+run rag-tpl-hard-complex.rag-hallucination: broker head=7a2938289879c8ba2c349ebc05ac7230d7363ebf372187d0c64c7a43054768ab records=19 claims=0
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.rag-hallucination/answer.json: label=insufficient studies=0 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-hallucination/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-hallucination/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-latency-cascade-gaps/rag-tpl-hard-complex",
+ "label": "mixed",
+ "counts": {
+  "contradicting": 22,
+  "duplicates": 3,
+  "neutral": 3,
+  "supporting": 22,
+  "undetermined": 62
+ },
+ "cost": {
+  "cached_calls": 0,
+  "calls": 901,
+  "input_tokens": 371943,
+  "made_model_calls": 644,
+  "model_calls": 644,
+  "output_tokens": 69834,
+  "seconds": 712.604,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.rag-latency/answer.json: label=supported studies=1
+broker: start run=rag-tpl-hard-complex.rag-latency records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.rag-latency records=139 claims=18 head=1cccee853d963cce590e09f361892d4707e345bbcb02f483861fd4ae54d6d922
+run rag-tpl-hard-complex.rag-latency: broker head=1cccee853d963cce590e09f361892d4707e345bbcb02f483861fd4ae54d6d922 records=139 claims=18
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.rag-latency/answer.json: label=mixed studies=8 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-latency/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/rag-latency/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-metrics-cascade-gaps/rag-tpl-hard-complex",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 645,
+  "input_tokens": 249500,
+  "made_model_calls": 590,
+  "model_calls": 590,
+  "output_tokens": 31027,
+  "seconds": 330.786,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.inv-metrics/answer.json: kind=inventory entries=5
+broker: start run=rag-tpl-hard-complex.inv-metrics records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.inv-metrics records=67 claims=20 head=97ae7f09059df6f9b57b722d9e0fb8867580210a453bae6c1d7943004a7a04c4
+run rag-tpl-hard-complex.inv-metrics: broker head=97ae7f09059df6f9b57b722d9e0fb8867580210a453bae6c1d7943004a7a04c4 records=67 claims=20
+FAIL UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL agent inv-metrics rag-tpl-hard-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-metrics/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-metrics/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-methods-cascade-gaps/rag-tpl-hard-complex",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 433,
+  "input_tokens": 244578,
+  "made_model_calls": 240,
+  "model_calls": 240,
+  "output_tokens": 33781,
+  "seconds": 339.69,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.inv-methods/answer.json: kind=inventory entries=6
+broker: start run=rag-tpl-hard-complex.inv-methods records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.inv-methods records=93 claims=20 head=67eb9b3f6dcfa24edb34998c065812f151bf007ecb4759a13af800055335952b
+run rag-tpl-hard-complex.inv-methods: broker head=67eb9b3f6dcfa24edb34998c065812f151bf007ecb4759a13af800055335952b records=93 claims=20
+FAIL UnexpectedModelBehavior: Exceeded maximum output retries (1)
+FAIL agent inv-methods rag-tpl-hard-complex
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-methods/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-methods/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-datasets-cascade-gaps/rag-tpl-hard-complex",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 539,
+  "input_tokens": 216642,
+  "made_model_calls": 572,
+  "model_calls": 572,
+  "output_tokens": 21338,
+  "seconds": 236.692,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.inv-datasets/answer.json: kind=inventory entries=4
+broker: start run=rag-tpl-hard-complex.inv-datasets records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.inv-datasets records=116 claims=33 head=ae5e96e0a6c0a037e02b50334e2afa853349ae01815c49cd1a08220be5159ade
+run rag-tpl-hard-complex.inv-datasets: broker head=ae5e96e0a6c0a037e02b50334e2afa853349ae01815c49cd1a08220be5159ade records=116 claims=33
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.inv-datasets/answer.json: kind=inventory entries=10 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-datasets/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/inv-datasets/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-accuracy-cascade-gaps/rag-tpl-hard-complex",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 1033,
+  "input_tokens": 391175,
+  "made_model_calls": 686,
+  "model_calls": 686,
+  "output_tokens": 80227,
+  "seconds": 757.207,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.cons-accuracy/answer.json: kind=consistency studies=4
+broker: start run=rag-tpl-hard-complex.cons-accuracy records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.cons-accuracy records=61 claims=0 head=f3cfbc549e59d7dd5807d70ebec558bc18c9c32adccf94433e0f51c568541fdc
+run rag-tpl-hard-complex.cons-accuracy: broker head=f3cfbc549e59d7dd5807d70ebec558bc18c9c32adccf94433e0f51c568541fdc records=61 claims=0
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.cons-accuracy/answer.json: kind=consistency studies=106 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-accuracy/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-accuracy/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/cons-hallucination-cascade-gaps/rag-tpl-hard-complex",
+ "kind": "consistency",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 1162,
+  "input_tokens": 501307,
+  "made_model_calls": 856,
+  "model_calls": 856,
+  "output_tokens": 101602,
+  "seconds": 937.216,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.cons-hallucination/answer.json: kind=consistency studies=7
+broker: start run=rag-tpl-hard-complex.cons-hallucination records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.cons-hallucination records=25 claims=0 head=d79ce2910984ac88967723d687eebd3783222bb2330bef500024b8f29bea9a1e
+run rag-tpl-hard-complex.cons-hallucination: broker head=d79ce2910984ac88967723d687eebd3783222bb2330bef500024b8f29bea9a1e records=25 claims=0
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.cons-hallucination/answer.json: kind=consistency studies=0 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-hallucination/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/cons-hallucination/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-accuracy-cascade-gaps/rag-tpl-hard-complex",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 729,
+  "input_tokens": 205488,
+  "made_model_calls": 404,
+  "model_calls": 404,
+  "output_tokens": 23944,
+  "seconds": 240.362,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.best-accuracy/answer.json: kind=best winner=rag studies=3
+broker: start run=rag-tpl-hard-complex.best-accuracy records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.best-accuracy records=31 claims=0 head=c89ede5b6a3cb88fc8a802bac922aa30e538678cf8d523e31bfd13c4390337d7
+run rag-tpl-hard-complex.best-accuracy: broker head=c89ede5b6a3cb88fc8a802bac922aa30e538678cf8d523e31bfd13c4390337d7 records=31 claims=0
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.best-accuracy/answer.json: kind=best winner=None studies=0 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-accuracy/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-accuracy/report.md
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/best-hallucination-cascade-gaps/rag-tpl-hard-complex",
+ "kind": "best",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 900,
+  "input_tokens": 397223,
+  "made_model_calls": 611,
+  "model_calls": 611,
+  "output_tokens": 140477,
+  "seconds": 1239.66,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-tpl-hard-complex.best-hallucination/answer.json: kind=best winner=rag studies=1
+broker: start run=rag-tpl-hard-complex.best-hallucination records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-tpl-hard-complex.best-hallucination records=697 claims=592 head=94d6011de6ec387a7646bfc1c5122aff936473cd26a8af92c45f43e7dca5d408
+run rag-tpl-hard-complex.best-hallucination: broker head=94d6011de6ec387a7646bfc1c5122aff936473cd26a8af92c45f43e7dca5d408 records=697 claims=592
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-tpl-hard-complex.best-hallucination/answer.json: kind=best winner=rag studies=87 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-hallucination/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-tpl-hard-complex/best-hallucination/report.md

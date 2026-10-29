@@ -1,0 +1,180 @@
+{
+  "answer_text": "The papers report the following evaluation metrics: fact-level accuracy, latency, BLEU, answer accuracy, and ROUGE-L. Specifically, [S076, 763-1733] reports fact-level accuracy, latency, and BLEU. [S074, 708-1926] reports answer accuracy, latency, and ROUGE-L. The survey papers [S109, 0-1211], [S107, 0-1173], [S109, 1211-2011], [S111, 0-1207], [S111, 1207-2049], and [S107, 1173-2028] do not report specific metrics themselves but note that evaluation setups vary widely in reported measures.",
+  "citations": [
+    {
+      "document": "S076",
+      "end": 1733,
+      "start": 763
+    },
+    {
+      "document": "S074",
+      "end": 1926,
+      "start": 708
+    },
+    {
+      "document": "S109",
+      "end": 1211,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "start": 0
+    },
+    {
+      "document": "S109",
+      "end": 2011,
+      "start": 1211
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "start": 1207
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "start": 1173
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "answer accuracy",
+      "papers": [
+        "S074"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BLEU",
+      "papers": [
+        "S076"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "fact-level accuracy",
+      "papers": [
+        "S076"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "latency",
+      "papers": [
+        "S074",
+        "S076"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "ROUGE-L",
+      "papers": [
+        "S074"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "221a4070877da53de4f0b883c77398cb56d126bcb72966b4a5342e575d408da7",
+    "input_tokens": 1484,
+    "key": "5e64e88c471ef2e00761dcca18ac80621fc0dcfd116c7fd31d94b01832ca2200",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 97,
+    "prompt_sha256": "5d35d46cdd8a386502a50fe86de4a80eb7a680f2c781244b484e86453856d146",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "ac41f73a1ef2a443ab34478b293774543cf1dedbe5b0d3f151c8050fbe3c0034",
+    "input_tokens": 1737,
+    "key": "5db3773f947abcc0ecd3141b3a270c497b74d43f919ac9442bce92cc43038f41",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 509,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which evaluation metrics do the papers report?",
+  "question_id": "inv-metrics",
+  "retrieved": [
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 13.820655,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "score": 10.871024,
+      "start": 0
+    },
+    {
+      "document": "S109",
+      "end": 2011,
+      "score": 10.826842,
+      "start": 1211
+    },
+    {
+      "document": "S111",
+      "end": 1207,
+      "score": 9.945052,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "score": 8.871028,
+      "start": 1207
+    },
+    {
+      "document": "S107",
+      "end": 2028,
+      "score": 8.571262,
+      "start": 1173
+    },
+    {
+      "document": "S076",
+      "end": 1733,
+      "score": 3.922224,
+      "start": 763
+    },
+    {
+      "document": "S074",
+      "end": 1926,
+      "score": 3.91776,
+      "start": 708
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "metric"
+}

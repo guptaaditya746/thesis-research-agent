@@ -1,0 +1,674 @@
+{
+  "grid": [
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "rag-factuality",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "rag-hallucination",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "rag-latency",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "inv-metrics",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "metric"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "inv-methods",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "inv-datasets",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "dataset"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "cons-accuracy",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "cons-hallucination",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "best-accuracy",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-claude-s1-mixed",
+      "question": "best-hallucination",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "rag-factuality",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "rag-hallucination",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "rag-latency",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "inv-metrics",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "metric"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "inv-methods",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "inv-datasets",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "dataset"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "cons-accuracy",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "cons-hallucination",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement",
+        "author_claim"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "best-accuracy",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    },
+    {
+      "corpus": "rag-tpl-hard-complex",
+      "question": "best-hallucination",
+      "engine": true,
+      "rag": true,
+      "agent": true,
+      "score": true,
+      "scored_types": [
+        "condition",
+        "metric",
+        "measurement"
+      ],
+      "scored_systems": [
+        "evidence-engine",
+        "rag-baseline",
+        "agent-baseline"
+      ]
+    }
+  ],
+  "counts": {
+    "engine": 20,
+    "rag": 20,
+    "agent": 20,
+    "score": 20
+  },
+  "engine_health": [
+    {
+      "run": "best-accuracy-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 14
+    },
+    {
+      "run": "best-accuracy-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 14
+    },
+    {
+      "run": "best-accuracy-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 241
+    },
+    {
+      "run": "best-accuracy-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "best-accuracy-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "best-hallucination-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 31
+    },
+    {
+      "run": "best-hallucination-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 31
+    },
+    {
+      "run": "best-hallucination-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 339
+    },
+    {
+      "run": "best-hallucination-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "best-hallucination-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cascade-gaps/rag-claude-s1-mixed-cf-S001-contradicts",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cons-accuracy-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 75
+    },
+    {
+      "run": "cons-accuracy-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 75
+    },
+    {
+      "run": "cons-accuracy-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 456
+    },
+    {
+      "run": "cons-accuracy-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cons-accuracy-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cons-hallucination-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 92
+    },
+    {
+      "run": "cons-hallucination-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 92
+    },
+    {
+      "run": "cons-hallucination-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 549
+    },
+    {
+      "run": "cons-hallucination-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "cons-hallucination-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-datasets-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 35
+    },
+    {
+      "run": "inv-datasets-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 35
+    },
+    {
+      "run": "inv-datasets-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 254
+    },
+    {
+      "run": "inv-datasets-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-datasets-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-methods-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-methods-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-methods-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-methods-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-methods-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-metrics-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 43
+    },
+    {
+      "run": "inv-metrics-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 43
+    },
+    {
+      "run": "inv-metrics-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 404
+    },
+    {
+      "run": "inv-metrics-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "inv-metrics-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "rag-factuality-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "rag-factuality-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "rag-hallucination-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 92
+    },
+    {
+      "run": "rag-hallucination-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 92
+    },
+    {
+      "run": "rag-hallucination-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 554
+    },
+    {
+      "run": "rag-hallucination-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "rag-hallucination-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "rag-latency-cascade-gaps/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 90
+    },
+    {
+      "run": "rag-latency-cascade-gaps/rag-claude-s1-mixed-r2",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 90
+    },
+    {
+      "run": "rag-latency-cascade-gaps/rag-tpl-hard-complex",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 376
+    },
+    {
+      "run": "rag-latency-llm-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    },
+    {
+      "run": "rag-latency-regex-only/rag-claude-s1-mixed",
+      "failed_calls": 0,
+      "gliner_skipped": 0,
+      "gliner_found": 0
+    }
+  ]
+}

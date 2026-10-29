@@ -1,0 +1,88 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 1.0,
+        "low": 0.375,
+        "method": "BCa",
+        "metric": "precision",
+        "n_rows": 9,
+        "point": 0.75,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 1.0,
+        "low": 0.3944,
+        "method": "BCa",
+        "metric": "recall",
+        "n_rows": 9,
+        "point": 0.8571,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 0.9412,
+        "low": 0.5,
+        "method": "BCa",
+        "metric": "f1",
+        "n_rows": 9,
+        "point": 0.8,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which evaluation metrics do the papers report?",
+  "question_id": "inv-metrics",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 0.8571,
+      "entries": 8,
+      "expected_entries": 7,
+      "expected_paper_pairs": 27,
+      "f1": 0.8,
+      "false_positives": [
+        "metric for unsupported statements",
+        "share of answers containing unsupported statements"
+      ],
+      "kind": "inventory",
+      "matched": 6,
+      "missed": [
+        "hallucination frequency"
+      ],
+      "paper_f1": 0.4324,
+      "paper_pairs": 10,
+      "paper_precision": 0.8,
+      "paper_recall": 0.2963,
+      "precision": 0.75,
+      "recall": 0.8571,
+      "system": "rag-baseline",
+      "target": "metric"
+    }
+  ]
+}

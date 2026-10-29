@@ -1,0 +1,102 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.7143,
+        "low": 0.0909,
+        "method": "BCa",
+        "metric": "precision",
+        "n_rows": 20,
+        "point": 0.3333,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 0.5,
+        "low": 0.0625,
+        "method": "BCa",
+        "metric": "recall",
+        "n_rows": 20,
+        "point": 0.2143,
+        "system": "rag-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 0.5185,
+        "low": 0.0952,
+        "method": "BCa",
+        "metric": "f1",
+        "n_rows": 20,
+        "point": 0.2609,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 0.2143,
+      "entries": 9,
+      "expected_entries": 14,
+      "expected_paper_pairs": 61,
+      "f1": 0.2609,
+      "false_positives": [
+        "B",
+        "Fine-tuned models",
+        "Parametric-only / Closed-book models",
+        "R",
+        "Retrieval-Augmented Generation (RAG) pipelines",
+        "Retrieve-then-read models"
+      ],
+      "kind": "inventory",
+      "matched": 3,
+      "missed": [
+        "RAG pipeline",
+        "closed-book model",
+        "fine-tuned model",
+        "no-retrieval baseline",
+        "parametric-only model",
+        "query-rewriting variant",
+        "retrieval-augmented generator",
+        "retrieval-augmented model",
+        "retrieve-then-read model",
+        "self-consistency decoding",
+        "vanilla LLM"
+      ],
+      "paper_f1": 0.1,
+      "paper_pairs": 19,
+      "paper_precision": 0.2105,
+      "paper_recall": 0.0656,
+      "precision": 0.3333,
+      "recall": 0.2143,
+      "system": "rag-baseline",
+      "target": "condition"
+    }
+  ]
+}

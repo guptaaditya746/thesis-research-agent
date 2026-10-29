@@ -1,0 +1,3013 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 592,
+    "exit_status": "submitted",
+    "model_calls": 53,
+    "run_id": "rag-tpl-hard-complex.best-hallucination",
+    "steps": 52,
+    "tokens": 876057
+  },
+  "agent_answer": {
+    "concept_sha256": "efde1783c35fbcbfffe5f9618bf8047b00a322a6ce2edf9dccdee60034ce22c9",
+    "kind": "table",
+    "notes": "62 corpus papers report a hallucination-type metric (hallucination rate, hallucination frequency, or unsupported-answer rate). For each, the method with the lowest value across all its result-table rows is named. Where a table cell reads 'see text', its value was recovered from the body's resolution sentence (e.g. 'X scores N percentage points lower than Y in M'), giving the true minimum. No ties were found. Papers S013, S015, S018, S027, S033-S035, S038-S040, S043, S045, S047-S048, S052, S055, S057, S059, S061, S062, S064, S065, S066, S067, S068, S069, S070, S071, S072, S073, S074, S075, S076, S077, S078, S079, S080, S081, S082, S083, S084, S085, S086, S087, S088, S089, S090, S091, S092, S093, S094, S095, S096, S097, S098, S099, S100, S101, S102, S103, S104, S105, S106, S107, S108, S109, S110, S111, S112 without a hallucination metric are excluded.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (7.7%) on GeoFacts",
+          "papers": [
+            "S004"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S004"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 7.7 belongs to",
+            "s": "Paper S004"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (9.8%) on SciFactBench",
+          "papers": [
+            "S005"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S005"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 9.8 belongs to",
+            "s": "Paper S005"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "fine-tuned model achieves the lowest hallucination frequency (%) (11.3%) on HistoryQuest",
+          "papers": [
+            "S006"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S006"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "fine-tuned model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 11.3 belongs to",
+            "s": "Paper S006"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG with random passages achieves the lowest unsupported-answer rate (%) (8.7%) on SciFactBench",
+          "papers": [
+            "S007"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S007"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "RAG with random passages",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 8.7 belongs to",
+            "s": "Paper S007"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (22.7%) on HistoryQuest",
+          "papers": [
+            "S008"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S008"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 22.7 belongs to",
+            "s": "Paper S008"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination frequency (%) (11.1%) on GeoFacts",
+          "papers": [
+            "S009"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S009"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 11.1 belongs to",
+            "s": "Paper S009"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "closed-book model achieves the lowest hallucination rate (%) (14.6%) on OpenFactQA",
+          "papers": [
+            "S010"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S010"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "closed-book model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 14.6 belongs to",
+            "s": "Paper S010"
+          }
+        ],
+        "id": "r7"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (10.7%) on LawFactQA",
+          "papers": [
+            "S011"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S011"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 10.7 belongs to",
+            "s": "Paper S011"
+          }
+        ],
+        "id": "r8"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest unsupported-answer rate (%) (5.4%) on BioClaimQA",
+          "papers": [
+            "S012"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S012"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 5.4 belongs to",
+            "s": "Paper S012"
+          }
+        ],
+        "id": "r9"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest hallucination rate (%) (7.7%) on PopCultureQA",
+          "papers": [
+            "S014"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S014"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 7.7 belongs to",
+            "s": "Paper S014"
+          }
+        ],
+        "id": "r10"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieve-then-read model achieves the lowest unsupported-answer rate (%) (24.8%) on OpenFactQA",
+          "papers": [
+            "S016"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f21",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S016"
+          },
+          {
+            "claims": [],
+            "id": "f22",
+            "o": "retrieve-then-read model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 24.8 belongs to",
+            "s": "Paper S016"
+          }
+        ],
+        "id": "r11"
+      },
+      {
+        "cells": {
+          "conclusion": "no-retrieval baseline achieves the lowest hallucination frequency (%) (13.2%) on HistoryQuest",
+          "papers": [
+            "S017"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f23",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S017"
+          },
+          {
+            "claims": [],
+            "id": "f24",
+            "o": "no-retrieval baseline",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 13.2 belongs to",
+            "s": "Paper S017"
+          }
+        ],
+        "id": "r12"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest unsupported-answer rate (%) (7.3%) on NewsTruthQA",
+          "papers": [
+            "S019"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f25",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S019"
+          },
+          {
+            "claims": [],
+            "id": "f26",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 7.3 belongs to",
+            "s": "Paper S019"
+          }
+        ],
+        "id": "r13"
+      },
+      {
+        "cells": {
+          "conclusion": "fine-tuned model achieves the lowest unsupported-answer rate (%) (10.9%) on BioClaimQA",
+          "papers": [
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f27",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S020"
+          },
+          {
+            "claims": [],
+            "id": "f28",
+            "o": "fine-tuned model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 10.9 belongs to",
+            "s": "Paper S020"
+          }
+        ],
+        "id": "r14"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG with random passages achieves the lowest unsupported-answer rate (%) (13.8%) on HistoryQuest",
+          "papers": [
+            "S021"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f29",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S021"
+          },
+          {
+            "claims": [],
+            "id": "f30",
+            "o": "RAG with random passages",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 13.8 belongs to",
+            "s": "Paper S021"
+          }
+        ],
+        "id": "r15"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG without reranking achieves the lowest unsupported-answer rate (%) (8.4%) on OpenFactQA",
+          "papers": [
+            "S022"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f31",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S022"
+          },
+          {
+            "claims": [],
+            "id": "f32",
+            "o": "RAG without reranking",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 8.4 belongs to",
+            "s": "Paper S022"
+          }
+        ],
+        "id": "r16"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieve-then-read model achieves the lowest unsupported-answer rate (%) (18.1%) on SciFactBench",
+          "papers": [
+            "S023"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f33",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S023"
+          },
+          {
+            "claims": [],
+            "id": "f34",
+            "o": "retrieve-then-read model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 18.1 belongs to",
+            "s": "Paper S023"
+          }
+        ],
+        "id": "r17"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination frequency (%) (17.2%) on BioClaimQA",
+          "papers": [
+            "S024"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f35",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S024"
+          },
+          {
+            "claims": [],
+            "id": "f36",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 17.2 belongs to",
+            "s": "Paper S024"
+          }
+        ],
+        "id": "r18"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest hallucination rate (%) (12.1%) on NewsTruthQA",
+          "papers": [
+            "S025"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f37",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S025"
+          },
+          {
+            "claims": [],
+            "id": "f38",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 12.1 belongs to",
+            "s": "Paper S025"
+          }
+        ],
+        "id": "r19"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (5.6%) on NewsTruthQA",
+          "papers": [
+            "S026"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f39",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S026"
+          },
+          {
+            "claims": [],
+            "id": "f40",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 5.6 belongs to",
+            "s": "Paper S026"
+          }
+        ],
+        "id": "r20"
+      },
+      {
+        "cells": {
+          "conclusion": "parametric-only model achieves the lowest unsupported-answer rate (%) (16.1%) on MedAnswerSet",
+          "papers": [
+            "S028"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f41",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S028"
+          },
+          {
+            "claims": [],
+            "id": "f42",
+            "o": "parametric-only model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 16.1 belongs to",
+            "s": "Paper S028"
+          }
+        ],
+        "id": "r21"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (6.7%) on GeoFacts",
+          "papers": [
+            "S029"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f43",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S029"
+          },
+          {
+            "claims": [],
+            "id": "f44",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 6.7 belongs to",
+            "s": "Paper S029"
+          }
+        ],
+        "id": "r22"
+      },
+      {
+        "cells": {
+          "conclusion": "self-consistency decoding achieves the lowest unsupported-answer rate (%) (10.3%) on OpenFactQA",
+          "papers": [
+            "S030"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f45",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S030"
+          },
+          {
+            "claims": [],
+            "id": "f46",
+            "o": "self-consistency decoding",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 10.3 belongs to",
+            "s": "Paper S030"
+          }
+        ],
+        "id": "r23"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieve-then-read model achieves the lowest hallucination rate (%) (10.5%) on BioClaimQA",
+          "papers": [
+            "S031"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f47",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S031"
+          },
+          {
+            "claims": [],
+            "id": "f48",
+            "o": "retrieve-then-read model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 10.5 belongs to",
+            "s": "Paper S031"
+          }
+        ],
+        "id": "r24"
+      },
+      {
+        "cells": {
+          "conclusion": "fine-tuned model achieves the lowest hallucination rate (%) (14.8%) on PopCultureQA",
+          "papers": [
+            "S032"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f49",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S032"
+          },
+          {
+            "claims": [],
+            "id": "f50",
+            "o": "fine-tuned model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 14.8 belongs to",
+            "s": "Paper S032"
+          }
+        ],
+        "id": "r25"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (13.1%) on LawFactQA",
+          "papers": [
+            "S036"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f51",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S036"
+          },
+          {
+            "claims": [],
+            "id": "f52",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 13.1 belongs to",
+            "s": "Paper S036"
+          }
+        ],
+        "id": "r26"
+      },
+      {
+        "cells": {
+          "conclusion": "fine-tuned model achieves the lowest unsupported-answer rate (%) (12.2%) on HistoryQuest",
+          "papers": [
+            "S037"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f53",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S037"
+          },
+          {
+            "claims": [],
+            "id": "f54",
+            "o": "fine-tuned model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 12.2 belongs to",
+            "s": "Paper S037"
+          }
+        ],
+        "id": "r27"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest hallucination frequency (%) (12.1%) on PopCultureQA",
+          "papers": [
+            "S041"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f55",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S041"
+          },
+          {
+            "claims": [],
+            "id": "f56",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 12.1 belongs to",
+            "s": "Paper S041"
+          }
+        ],
+        "id": "r28"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest unsupported-answer rate (%) (21.7%) on GeoFacts",
+          "papers": [
+            "S042"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f57",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S042"
+          },
+          {
+            "claims": [],
+            "id": "f58",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 21.7 belongs to",
+            "s": "Paper S042"
+          }
+        ],
+        "id": "r29"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (10.3%) on HistoryQuest",
+          "papers": [
+            "S044"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f59",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S044"
+          },
+          {
+            "claims": [],
+            "id": "f60",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 10.3 belongs to",
+            "s": "Paper S044"
+          }
+        ],
+        "id": "r30"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG without reranking achieves the lowest hallucination rate (%) (9.8%) on HistoryQuest",
+          "papers": [
+            "S046"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f61",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S046"
+          },
+          {
+            "claims": [],
+            "id": "f62",
+            "o": "RAG without reranking",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 9.8 belongs to",
+            "s": "Paper S046"
+          }
+        ],
+        "id": "r31"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieve-then-read model achieves the lowest unsupported-answer rate (%) (20.3%) on OpenFactQA",
+          "papers": [
+            "S049"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f63",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S049"
+          },
+          {
+            "claims": [],
+            "id": "f64",
+            "o": "retrieve-then-read model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 20.3 belongs to",
+            "s": "Paper S049"
+          }
+        ],
+        "id": "r32"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieve-then-read model achieves the lowest hallucination rate (%) (6.2%) on MedAnswerSet",
+          "papers": [
+            "S050"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f65",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S050"
+          },
+          {
+            "claims": [],
+            "id": "f66",
+            "o": "retrieve-then-read model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 6.2 belongs to",
+            "s": "Paper S050"
+          }
+        ],
+        "id": "r33"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (16.5%) on HistoryQuest",
+          "papers": [
+            "S051"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f67",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S051"
+          },
+          {
+            "claims": [],
+            "id": "f68",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 16.5 belongs to",
+            "s": "Paper S051"
+          }
+        ],
+        "id": "r34"
+      },
+      {
+        "cells": {
+          "conclusion": "query-rewriting variant achieves the lowest hallucination frequency (%) (11.6%) on MedAnswerSet",
+          "papers": [
+            "S053"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f69",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S053"
+          },
+          {
+            "claims": [],
+            "id": "f70",
+            "o": "query-rewriting variant",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 11.6 belongs to",
+            "s": "Paper S053"
+          }
+        ],
+        "id": "r35"
+      },
+      {
+        "cells": {
+          "conclusion": "no-retrieval baseline achieves the lowest unsupported-answer rate (%) (12.4%) on BioClaimQA",
+          "papers": [
+            "S054"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f71",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S054"
+          },
+          {
+            "claims": [],
+            "id": "f72",
+            "o": "no-retrieval baseline",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 12.4 belongs to",
+            "s": "Paper S054"
+          }
+        ],
+        "id": "r36"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest unsupported-answer rate (%) (6.5%) on TriviaCheck",
+          "papers": [
+            "S056"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f73",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S056"
+          },
+          {
+            "claims": [],
+            "id": "f74",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 6.5 belongs to",
+            "s": "Paper S056"
+          }
+        ],
+        "id": "r37"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest unsupported-answer rate (%) (6.2%) on BioClaimQA",
+          "papers": [
+            "S058"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f75",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S058"
+          },
+          {
+            "claims": [],
+            "id": "f76",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 6.2 belongs to",
+            "s": "Paper S058"
+          }
+        ],
+        "id": "r38"
+      },
+      {
+        "cells": {
+          "conclusion": "chain-of-thought prompting achieves the lowest hallucination frequency (%) (13.4%) on BioClaimQA",
+          "papers": [
+            "S060"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f77",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S060"
+          },
+          {
+            "claims": [],
+            "id": "f78",
+            "o": "chain-of-thought prompting",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 13.4 belongs to",
+            "s": "Paper S060"
+          }
+        ],
+        "id": "r39"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest unsupported-answer rate (%) (17.2%) on GeoFacts",
+          "papers": [
+            "S061"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f79",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S061"
+          },
+          {
+            "claims": [],
+            "id": "f80",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 17.2 belongs to",
+            "s": "Paper S061"
+          }
+        ],
+        "id": "r40"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (11.4%) on OpenFactQA",
+          "papers": [
+            "S062"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f81",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S062"
+          },
+          {
+            "claims": [],
+            "id": "f82",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 11.4 belongs to",
+            "s": "Paper S062"
+          }
+        ],
+        "id": "r41"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination frequency (%) (18.4%) on TriviaCheck",
+          "papers": [
+            "S064"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f83",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S064"
+          },
+          {
+            "claims": [],
+            "id": "f84",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 18.4 belongs to",
+            "s": "Paper S064"
+          }
+        ],
+        "id": "r42"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (18.3%) on PopCultureQA",
+          "papers": [
+            "S065"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f85",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S065"
+          },
+          {
+            "claims": [],
+            "id": "f86",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 18.3 belongs to",
+            "s": "Paper S065"
+          }
+        ],
+        "id": "r43"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest unsupported-answer rate (%) (14.9%) on NewsTruthQA",
+          "papers": [
+            "S066"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f87",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S066"
+          },
+          {
+            "claims": [],
+            "id": "f88",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 14.9 belongs to",
+            "s": "Paper S066"
+          }
+        ],
+        "id": "r44"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (17.7%) on TriviaCheck",
+          "papers": [
+            "S067"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f89",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S067"
+          },
+          {
+            "claims": [],
+            "id": "f90",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 17.7 belongs to",
+            "s": "Paper S067"
+          }
+        ],
+        "id": "r45"
+      },
+      {
+        "cells": {
+          "conclusion": "parametric-only model achieves the lowest unsupported-answer rate (%) (21.4%) on HistoryQuest",
+          "papers": [
+            "S068"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f91",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S068"
+          },
+          {
+            "claims": [],
+            "id": "f92",
+            "o": "parametric-only model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 21.4 belongs to",
+            "s": "Paper S068"
+          }
+        ],
+        "id": "r46"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG without reranking achieves the lowest unsupported-answer rate (%) (17.2%) on LawFactQA",
+          "papers": [
+            "S069"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f93",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S069"
+          },
+          {
+            "claims": [],
+            "id": "f94",
+            "o": "RAG without reranking",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 17.2 belongs to",
+            "s": "Paper S069"
+          }
+        ],
+        "id": "r47"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (13.1%) on TriviaCheck",
+          "papers": [
+            "S071"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f95",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S071"
+          },
+          {
+            "claims": [],
+            "id": "f96",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 13.1 belongs to",
+            "s": "Paper S071"
+          }
+        ],
+        "id": "r48"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (15.6%) on LawFactQA",
+          "papers": [
+            "S072"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f97",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S072"
+          },
+          {
+            "claims": [],
+            "id": "f98",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 15.6 belongs to",
+            "s": "Paper S072"
+          }
+        ],
+        "id": "r49"
+      },
+      {
+        "cells": {
+          "conclusion": "closed-book model achieves the lowest unsupported-answer rate (%) (11.9%) on SciFactBench",
+          "papers": [
+            "S073"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f99",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S073"
+          },
+          {
+            "claims": [],
+            "id": "f100",
+            "o": "closed-book model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 11.9 belongs to",
+            "s": "Paper S073"
+          }
+        ],
+        "id": "r50"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest hallucination rate (%) (17.6%) on GeoFacts",
+          "papers": [
+            "S074"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f101",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S074"
+          },
+          {
+            "claims": [],
+            "id": "f102",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 17.6 belongs to",
+            "s": "Paper S074"
+          }
+        ],
+        "id": "r51"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest unsupported-answer rate (%) (20.7%) on OpenFactQA",
+          "papers": [
+            "S075"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f103",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S075"
+          },
+          {
+            "claims": [],
+            "id": "f104",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 20.7 belongs to",
+            "s": "Paper S075"
+          }
+        ],
+        "id": "r52"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (12.5%) on GeoFacts",
+          "papers": [
+            "S076"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f105",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S076"
+          },
+          {
+            "claims": [],
+            "id": "f106",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 12.5 belongs to",
+            "s": "Paper S076"
+          }
+        ],
+        "id": "r53"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieve-then-read model achieves the lowest hallucination rate (%) (15.1%) on OpenFactQA",
+          "papers": [
+            "S077"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f107",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S077"
+          },
+          {
+            "claims": [],
+            "id": "f108",
+            "o": "retrieve-then-read model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 15.1 belongs to",
+            "s": "Paper S077"
+          }
+        ],
+        "id": "r54"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest hallucination frequency (%) (15.9%) on LawFactQA",
+          "papers": [
+            "S078"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f109",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S078"
+          },
+          {
+            "claims": [],
+            "id": "f110",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 15.9 belongs to",
+            "s": "Paper S078"
+          }
+        ],
+        "id": "r55"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (13.5%) on MedAnswerSet",
+          "papers": [
+            "S079"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f111",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S079"
+          },
+          {
+            "claims": [],
+            "id": "f112",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 13.5 belongs to",
+            "s": "Paper S079"
+          }
+        ],
+        "id": "r56"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (11.3%) on SciFactBench",
+          "papers": [
+            "S080"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f113",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S080"
+          },
+          {
+            "claims": [],
+            "id": "f114",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 11.3 belongs to",
+            "s": "Paper S080"
+          }
+        ],
+        "id": "r57"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (10.2%) on HistoryQuest",
+          "papers": [
+            "S081"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f115",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S081"
+          },
+          {
+            "claims": [],
+            "id": "f116",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 10.2 belongs to",
+            "s": "Paper S081"
+          }
+        ],
+        "id": "r58"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (15.3%) on LawFactQA",
+          "papers": [
+            "S082"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f117",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S082"
+          },
+          {
+            "claims": [],
+            "id": "f118",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 15.3 belongs to",
+            "s": "Paper S082"
+          }
+        ],
+        "id": "r59"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest hallucination frequency (%) (10.8%) on OpenFactQA",
+          "papers": [
+            "S083"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f119",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S083"
+          },
+          {
+            "claims": [],
+            "id": "f120",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 10.8 belongs to",
+            "s": "Paper S083"
+          }
+        ],
+        "id": "r60"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination frequency (%) (17.9%) on HistoryQuest",
+          "papers": [
+            "S084"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f121",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S084"
+          },
+          {
+            "claims": [],
+            "id": "f122",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 17.9 belongs to",
+            "s": "Paper S084"
+          }
+        ],
+        "id": "r61"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (12.5%) on LawFactQA",
+          "papers": [
+            "S085"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f123",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S085"
+          },
+          {
+            "claims": [],
+            "id": "f124",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 12.5 belongs to",
+            "s": "Paper S085"
+          }
+        ],
+        "id": "r62"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (14.5%) on PopCultureQA",
+          "papers": [
+            "S086"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f125",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S086"
+          },
+          {
+            "claims": [],
+            "id": "f126",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 14.5 belongs to",
+            "s": "Paper S086"
+          }
+        ],
+        "id": "r63"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest hallucination frequency (%) (15.2%) on TriviaCheck",
+          "papers": [
+            "S087"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f127",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S087"
+          },
+          {
+            "claims": [],
+            "id": "f128",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 15.2 belongs to",
+            "s": "Paper S087"
+          }
+        ],
+        "id": "r64"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (12.8%) on LawFactQA",
+          "papers": [
+            "S088"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f129",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S088"
+          },
+          {
+            "claims": [],
+            "id": "f130",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 12.8 belongs to",
+            "s": "Paper S088"
+          }
+        ],
+        "id": "r65"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (19.1%) on PopCultureQA",
+          "papers": [
+            "S089"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f131",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S089"
+          },
+          {
+            "claims": [],
+            "id": "f132",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 19.1 belongs to",
+            "s": "Paper S089"
+          }
+        ],
+        "id": "r66"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (21.7%) on HistoryQuest",
+          "papers": [
+            "S090"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f133",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S090"
+          },
+          {
+            "claims": [],
+            "id": "f134",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 21.7 belongs to",
+            "s": "Paper S090"
+          }
+        ],
+        "id": "r67"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (17.1%) on LawFactQA",
+          "papers": [
+            "S091"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f135",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S091"
+          },
+          {
+            "claims": [],
+            "id": "f136",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 17.1 belongs to",
+            "s": "Paper S091"
+          }
+        ],
+        "id": "r68"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (14.4%) on GeoFacts",
+          "papers": [
+            "S093"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f137",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S093"
+          },
+          {
+            "claims": [],
+            "id": "f138",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 14.4 belongs to",
+            "s": "Paper S093"
+          }
+        ],
+        "id": "r69"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (10.6%) on OpenFactQA",
+          "papers": [
+            "S094"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f139",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S094"
+          },
+          {
+            "claims": [],
+            "id": "f140",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 10.6 belongs to",
+            "s": "Paper S094"
+          }
+        ],
+        "id": "r70"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG without reranking achieves the lowest hallucination rate (%) (10.7%) on TriviaCheck",
+          "papers": [
+            "S095"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f141",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S095"
+          },
+          {
+            "claims": [],
+            "id": "f142",
+            "o": "RAG without reranking",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 10.7 belongs to",
+            "s": "Paper S095"
+          }
+        ],
+        "id": "r71"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (13.3%) on PopCultureQA",
+          "papers": [
+            "S096"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f143",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S096"
+          },
+          {
+            "claims": [],
+            "id": "f144",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 13.3 belongs to",
+            "s": "Paper S096"
+          }
+        ],
+        "id": "r72"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest unsupported-answer rate (%) (7.4%) on TriviaCheck",
+          "papers": [
+            "S097"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f145",
+            "o": "unsupported-answer rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S097"
+          },
+          {
+            "claims": [],
+            "id": "f146",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest unsupported-answer-rate value 7.4 belongs to",
+            "s": "Paper S097"
+          }
+        ],
+        "id": "r73"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (11.1%) on NewsTruthQA",
+          "papers": [
+            "S098"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f147",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S098"
+          },
+          {
+            "claims": [],
+            "id": "f148",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 11.1 belongs to",
+            "s": "Paper S098"
+          }
+        ],
+        "id": "r74"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (11.1%) on LawFactQA",
+          "papers": [
+            "S099"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f149",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S099"
+          },
+          {
+            "claims": [],
+            "id": "f150",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 11.1 belongs to",
+            "s": "Paper S099"
+          }
+        ],
+        "id": "r75"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (14.5%) on PopCultureQA",
+          "papers": [
+            "S100"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f151",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S100"
+          },
+          {
+            "claims": [],
+            "id": "f152",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 14.5 belongs to",
+            "s": "Paper S100"
+          }
+        ],
+        "id": "r76"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG without reranking achieves the lowest hallucination rate (%) (12.6%) on TriviaCheck",
+          "papers": [
+            "S101"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f153",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S101"
+          },
+          {
+            "claims": [],
+            "id": "f154",
+            "o": "RAG without reranking",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 12.6 belongs to",
+            "s": "Paper S101"
+          }
+        ],
+        "id": "r77"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination frequency (%) (15.1%) on PopCultureQA",
+          "papers": [
+            "S102"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f155",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S102"
+          },
+          {
+            "claims": [],
+            "id": "f156",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 15.1 belongs to",
+            "s": "Paper S102"
+          }
+        ],
+        "id": "r78"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest hallucination rate (%) (16.4%) on PopCultureQA",
+          "papers": [
+            "S103"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f157",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S103"
+          },
+          {
+            "claims": [],
+            "id": "f158",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 16.4 belongs to",
+            "s": "Paper S103"
+          }
+        ],
+        "id": "r79"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (12.4%) on OpenFactQA",
+          "papers": [
+            "S104"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f159",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S104"
+          },
+          {
+            "claims": [],
+            "id": "f160",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 12.4 belongs to",
+            "s": "Paper S104"
+          }
+        ],
+        "id": "r80"
+      },
+      {
+        "cells": {
+          "conclusion": "vanilla LLM achieves the lowest hallucination rate (%) (15.2%) on MedAnswerSet",
+          "papers": [
+            "S106"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f161",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S106"
+          },
+          {
+            "claims": [],
+            "id": "f162",
+            "o": "vanilla LLM",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 15.2 belongs to",
+            "s": "Paper S106"
+          }
+        ],
+        "id": "r81"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination frequency (%) (10.5%) on LawFactQA",
+          "papers": [
+            "S107"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f163",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S107"
+          },
+          {
+            "claims": [],
+            "id": "f164",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 10.5 belongs to",
+            "s": "Paper S107"
+          }
+        ],
+        "id": "r82"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination frequency (%) (18.7%) on MedAnswerSet",
+          "papers": [
+            "S108"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f165",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S108"
+          },
+          {
+            "claims": [],
+            "id": "f166",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 18.7 belongs to",
+            "s": "Paper S108"
+          }
+        ],
+        "id": "r83"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination frequency (%) (15.8%) on PopCultureQA",
+          "papers": [
+            "S109"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f167",
+            "o": "hallucination frequency (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S109"
+          },
+          {
+            "claims": [],
+            "id": "f168",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-frequency value 15.8 belongs to",
+            "s": "Paper S109"
+          }
+        ],
+        "id": "r84"
+      },
+      {
+        "cells": {
+          "conclusion": "RAG pipeline achieves the lowest hallucination rate (%) (11.7%) on HistoryQuest",
+          "papers": [
+            "S110"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f169",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S110"
+          },
+          {
+            "claims": [],
+            "id": "f170",
+            "o": "RAG pipeline",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 11.7 belongs to",
+            "s": "Paper S110"
+          }
+        ],
+        "id": "r85"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented generator achieves the lowest hallucination rate (%) (15.7%) on SciFactBench",
+          "papers": [
+            "S111"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f171",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S111"
+          },
+          {
+            "claims": [],
+            "id": "f172",
+            "o": "retrieval-augmented generator",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 15.7 belongs to",
+            "s": "Paper S111"
+          }
+        ],
+        "id": "r86"
+      },
+      {
+        "cells": {
+          "conclusion": "retrieval-augmented model achieves the lowest hallucination rate (%) (16.5%) on MedAnswerSet",
+          "papers": [
+            "S112"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f173",
+            "o": "hallucination rate (%)",
+            "origin": "research",
+            "p": "measures",
+            "s": "Paper S112"
+          },
+          {
+            "claims": [],
+            "id": "f174",
+            "o": "retrieval-augmented model",
+            "origin": "research",
+            "p": "lowest hallucination-rate value 16.5 belongs to",
+            "s": "Paper S112"
+          }
+        ],
+        "id": "r87"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (7.7%) on GeoFacts\", \"papers\": [\"S004\"]}\n  fact: Paper S004 | measures | hallucination frequency (%)\n  fact: Paper S004 | lowest hallucination-frequency value 7.7 belongs to | retrieval-augmented model\nRow r2: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (9.8%) on SciFactBench\", \"papers\": [\"S005\"]}\n  fact: Paper S005 | measures | hallucination rate (%)\n  fact: Paper S005 | lowest hallucination-rate value 9.8 belongs to | retrieval-augmented generator\nRow r3: {\"conclusion\": \"fine-tuned model achieves the lowest hallucination frequency (%) (11.3%) on HistoryQuest\", \"papers\": [\"S006\"]}\n  fact: Paper S006 | measures | hallucination frequency (%)\n  fact: Paper S006 | lowest hallucination-frequency value 11.3 belongs to | fine-tuned model\nRow r4: {\"conclusion\": \"RAG with random passages achieves the lowest unsupported-answer rate (%) (8.7%) on SciFactBench\", \"papers\": [\"S007\"]}\n  fact: Paper S007 | measures | unsupported-answer rate (%)\n  fact: Paper S007 | lowest unsupported-answer-rate value 8.7 belongs to | RAG with random passages\nRow r5: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (22.7%) on HistoryQuest\", \"papers\": [\"S008\"]}\n  fact: Paper S008 | measures | hallucination frequency (%)\n  fact: Paper S008 | lowest hallucination-frequency value 22.7 belongs to | retrieval-augmented model\nRow r6: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (11.1%) on GeoFacts\", \"papers\": [\"S009\"]}\n  fact: Paper S009 | measures | hallucination frequency (%)\n  fact: Paper S009 | lowest hallucination-frequency value 11.1 belongs to | retrieval-augmented generator\nRow r7: {\"conclusion\": \"closed-book model achieves the lowest hallucination rate (%) (14.6%) on OpenFactQA\", \"papers\": [\"S010\"]}\n  fact: Paper S010 | measures | hallucination rate (%)\n  fact: Paper S010 | lowest hallucination-rate value 14.6 belongs to | closed-book model\nRow r8: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (10.7%) on LawFactQA\", \"papers\": [\"S011\"]}\n  fact: Paper S011 | measures | hallucination rate (%)\n  fact: Paper S011 | lowest hallucination-rate value 10.7 belongs to | retrieval-augmented model\nRow r9: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (5.4%) on BioClaimQA\", \"papers\": [\"S012\"]}\n  fact: Paper S012 | measures | unsupported-answer rate (%)\n  fact: Paper S012 | lowest unsupported-answer-rate value 5.4 belongs to | RAG pipeline\nRow r10: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination rate (%) (7.7%) on PopCultureQA\", \"papers\": [\"S014\"]}\n  fact: Paper S014 | measures | hallucination rate (%)\n  fact: Paper S014 | lowest hallucination-rate value 7.7 belongs to | RAG pipeline\nRow r11: {\"conclusion\": \"retrieve-then-read model achieves the lowest unsupported-answer rate (%) (24.8%) on OpenFactQA\", \"papers\": [\"S016\"]}\n  fact: Paper S016 | measures | unsupported-answer rate (%)\n  fact: Paper S016 | lowest unsupported-answer-rate value 24.8 belongs to | retrieve-then-read model\nRow r12: {\"conclusion\": \"no-retrieval baseline achieves the lowest hallucination frequency (%) (13.2%) on HistoryQuest\", \"papers\": [\"S017\"]}\n  fact: Paper S017 | measures | hallucination frequency (%)\n  fact: Paper S017 | lowest hallucination-frequency value 13.2 belongs to | no-retrieval baseline\nRow r13: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (7.3%) on NewsTruthQA\", \"papers\": [\"S019\"]}\n  fact: Paper S019 | measures | unsupported-answer rate (%)\n  fact: Paper S019 | lowest unsupported-answer-rate value 7.3 belongs to | RAG pipeline\nRow r14: {\"conclusion\": \"fine-tuned model achieves the lowest unsupported-answer rate (%) (10.9%) on BioClaimQA\", \"papers\": [\"S020\"]}\n  fact: Paper S020 | measures | unsupported-answer rate (%)\n  fact: Paper S020 | lowest unsupported-answer-rate value 10.9 belongs to | fine-tuned model\nRow r15: {\"conclusion\": \"RAG with random passages achieves the lowest unsupported-answer rate (%) (13.8%) on HistoryQuest\", \"papers\": [\"S021\"]}\n  fact: Paper S021 | measures | unsupported-answer rate (%)\n  fact: Paper S021 | lowest unsupported-answer-rate value 13.8 belongs to | RAG with random passages\nRow r16: {\"conclusion\": \"RAG without reranking achieves the lowest unsupported-answer rate (%) (8.4%) on OpenFactQA\", \"papers\": [\"S022\"]}\n  fact: Paper S022 | measures | unsupported-answer rate (%)\n  fact: Paper S022 | lowest unsupported-answer-rate value 8.4 belongs to | RAG without reranking\nRow r17: {\"conclusion\": \"retrieve-then-read model achieves the lowest unsupported-answer rate (%) (18.1%) on SciFactBench\", \"papers\": [\"S023\"]}\n  fact: Paper S023 | measures | unsupported-answer rate (%)\n  fact: Paper S023 | lowest unsupported-answer-rate value 18.1 belongs to | retrieve-then-read model\nRow r18: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (17.2%) on BioClaimQA\", \"papers\": [\"S024\"]}\n  fact: Paper S024 | measures | hallucination frequency (%)\n  fact: Paper S024 | lowest hallucination-frequency value 17.2 belongs to | retrieval-augmented generator\nRow r19: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (12.1%) on NewsTruthQA\", \"papers\": [\"S025\"]}\n  fact: Paper S025 | measures | hallucination rate (%)\n  fact: Paper S025 | lowest hallucination-rate value 12.1 belongs to | vanilla LLM\nRow r20: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (5.6%) on NewsTruthQA\", \"papers\": [\"S026\"]}\n  fact: Paper S026 | measures | hallucination rate (%)\n  fact: Paper S026 | lowest hallucination-rate value 5.6 belongs to | retrieval-augmented model\nRow r21: {\"conclusion\": \"parametric-only model achieves the lowest unsupported-answer rate (%) (16.1%) on MedAnswerSet\", \"papers\": [\"S028\"]}\n  fact: Paper S028 | measures | unsupported-answer rate (%)\n  fact: Paper S028 | lowest unsupported-answer-rate value 16.1 belongs to | parametric-only model\nRow r22: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (6.7%) on GeoFacts\", \"papers\": [\"S029\"]}\n  fact: Paper S029 | measures | hallucination rate (%)\n  fact: Paper S029 | lowest hallucination-rate value 6.7 belongs to | retrieval-augmented model\nRow r23: {\"conclusion\": \"self-consistency decoding achieves the lowest unsupported-answer rate (%) (10.3%) on OpenFactQA\", \"papers\": [\"S030\"]}\n  fact: Paper S030 | measures | unsupported-answer rate (%)\n  fact: Paper S030 | lowest unsupported-answer-rate value 10.3 belongs to | self-consistency decoding\nRow r24: {\"conclusion\": \"retrieve-then-read model achieves the lowest hallucination rate (%) (10.5%) on BioClaimQA\", \"papers\": [\"S031\"]}\n  fact: Paper S031 | measures | hallucination rate (%)\n  fact: Paper S031 | lowest hallucination-rate value 10.5 belongs to | retrieve-then-read model\nRow r25: {\"conclusion\": \"fine-tuned model achieves the lowest hallucination rate (%) (14.8%) on PopCultureQA\", \"papers\": [\"S032\"]}\n  fact: Paper S032 | measures | hallucination rate (%)\n  fact: Paper S032 | lowest hallucination-rate value 14.8 belongs to | fine-tuned model\nRow r26: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (13.1%) on LawFactQA\", \"papers\": [\"S036\"]}\n  fact: Paper S036 | measures | unsupported-answer rate (%)\n  fact: Paper S036 | lowest unsupported-answer-rate value 13.1 belongs to | retrieval-augmented generator\nRow r27: {\"conclusion\": \"fine-tuned model achieves the lowest unsupported-answer rate (%) (12.2%) on HistoryQuest\", \"papers\": [\"S037\"]}\n  fact: Paper S037 | measures | unsupported-answer rate (%)\n  fact: Paper S037 | lowest unsupported-answer-rate value 12.2 belongs to | fine-tuned model\nRow r28: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination frequency (%) (12.1%) on PopCultureQA\", \"papers\": [\"S041\"]}\n  fact: Paper S041 | measures | hallucination frequency (%)\n  fact: Paper S041 | lowest hallucination-frequency value 12.1 belongs to | RAG pipeline\nRow r29: {\"conclusion\": \"vanilla LLM achieves the lowest unsupported-answer rate (%) (21.7%) on GeoFacts\", \"papers\": [\"S042\"]}\n  fact: Paper S042 | measures | unsupported-answer rate (%)\n  fact: Paper S042 | lowest unsupported-answer-rate value 21.7 belongs to | vanilla LLM\nRow r30: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (10.3%) on HistoryQuest\", \"papers\": [\"S044\"]}\n  fact: Paper S044 | measures | unsupported-answer rate (%)\n  fact: Paper S044 | lowest unsupported-answer-rate value 10.3 belongs to | retrieval-augmented generator\nRow r31: {\"conclusion\": \"RAG without reranking achieves the lowest hallucination rate (%) (9.8%) on HistoryQuest\", \"papers\": [\"S046\"]}\n  fact: Paper S046 | measures | hallucination rate (%)\n  fact: Paper S046 | lowest hallucination-rate value 9.8 belongs to | RAG without reranking\nRow r32: {\"conclusion\": \"retrieve-then-read model achieves the lowest unsupported-answer rate (%) (20.3%) on OpenFactQA\", \"papers\": [\"S049\"]}\n  fact: Paper S049 | measures | unsupported-answer rate (%)\n  fact: Paper S049 | lowest unsupported-answer-rate value 20.3 belongs to | retrieve-then-read model\nRow r33: {\"conclusion\": \"retrieve-then-read model achieves the lowest hallucination rate (%) (6.2%) on MedAnswerSet\", \"papers\": [\"S050\"]}\n  fact: Paper S050 | measures | hallucination rate (%)\n  fact: Paper S050 | lowest hallucination-rate value 6.2 belongs to | retrieve-then-read model\nRow r34: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (16.5%) on HistoryQuest\", \"papers\": [\"S051\"]}\n  fact: Paper S051 | measures | hallucination frequency (%)\n  fact: Paper S051 | lowest hallucination-frequency value 16.5 belongs to | retrieval-augmented model\nRow r35: {\"conclusion\": \"query-rewriting variant achieves the lowest hallucination frequency (%) (11.6%) on MedAnswerSet\", \"papers\": [\"S053\"]}\n  fact: Paper S053 | measures | hallucination frequency (%)\n  fact: Paper S053 | lowest hallucination-frequency value 11.6 belongs to | query-rewriting variant\nRow r36: {\"conclusion\": \"no-retrieval baseline achieves the lowest unsupported-answer rate (%) (12.4%) on BioClaimQA\", \"papers\": [\"S054\"]}\n  fact: Paper S054 | measures | unsupported-answer rate (%)\n  fact: Paper S054 | lowest unsupported-answer-rate value 12.4 belongs to | no-retrieval baseline\nRow r37: {\"conclusion\": \"retrieval-augmented model achieves the lowest unsupported-answer rate (%) (6.5%) on TriviaCheck\", \"papers\": [\"S056\"]}\n  fact: Paper S056 | measures | unsupported-answer rate (%)\n  fact: Paper S056 | lowest unsupported-answer-rate value 6.5 belongs to | retrieval-augmented model\nRow r38: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (6.2%) on BioClaimQA\", \"papers\": [\"S058\"]}\n  fact: Paper S058 | measures | unsupported-answer rate (%)\n  fact: Paper S058 | lowest unsupported-answer-rate value 6.2 belongs to | RAG pipeline\nRow r39: {\"conclusion\": \"chain-of-thought prompting achieves the lowest hallucination frequency (%) (13.4%) on BioClaimQA\", \"papers\": [\"S060\"]}\n  fact: Paper S060 | measures | hallucination frequency (%)\n  fact: Paper S060 | lowest hallucination-frequency value 13.4 belongs to | chain-of-thought prompting\nRow r40: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (17.2%) on GeoFacts\", \"papers\": [\"S061\"]}\n  fact: Paper S061 | measures | unsupported-answer rate (%)\n  fact: Paper S061 | lowest unsupported-answer-rate value 17.2 belongs to | RAG pipeline\nRow r41: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (11.4%) on OpenFactQA\", \"papers\": [\"S062\"]}\n  fact: Paper S062 | measures | hallucination rate (%)\n  fact: Paper S062 | lowest hallucination-rate value 11.4 belongs to | retrieval-augmented model\nRow r42: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (18.4%) on TriviaCheck\", \"papers\": [\"S064\"]}\n  fact: Paper S064 | measures | hallucination frequency (%)\n  fact: Paper S064 | lowest hallucination-frequency value 18.4 belongs to | retrieval-augmented generator\nRow r43: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (18.3%) on PopCultureQA\", \"papers\": [\"S065\"]}\n  fact: Paper S065 | measures | hallucination rate (%)\n  fact: Paper S065 | lowest hallucination-rate value 18.3 belongs to | retrieval-augmented generator\nRow r44: {\"conclusion\": \"vanilla LLM achieves the lowest unsupported-answer rate (%) (14.9%) on NewsTruthQA\", \"papers\": [\"S066\"]}\n  fact: Paper S066 | measures | unsupported-answer rate (%)\n  fact: Paper S066 | lowest unsupported-answer-rate value 14.9 belongs to | vanilla LLM\nRow r45: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (17.7%) on TriviaCheck\", \"papers\": [\"S067\"]}\n  fact: Paper S067 | measures | hallucination rate (%)\n  fact: Paper S067 | lowest hallucination-rate value 17.7 belongs to | retrieval-augmented model\nRow r46: {\"conclusion\": \"parametric-only model achieves the lowest unsupported-answer rate (%) (21.4%) on HistoryQuest\", \"papers\": [\"S068\"]}\n  fact: Paper S068 | measures | unsupported-answer rate (%)\n  fact: Paper S068 | lowest unsupported-answer-rate value 21.4 belongs to | parametric-only model\nRow r47: {\"conclusion\": \"RAG without reranking achieves the lowest unsupported-answer rate (%) (17.2%) on LawFactQA\", \"papers\": [\"S069\"]}\n  fact: Paper S069 | measures | unsupported-answer rate (%)\n  fact: Paper S069 | lowest unsupported-answer-rate value 17.2 belongs to | RAG without reranking\nRow r48: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (13.1%) on TriviaCheck\", \"papers\": [\"S071\"]}\n  fact: Paper S071 | measures | hallucination rate (%)\n  fact: Paper S071 | lowest hallucination-rate value 13.1 belongs to | retrieval-augmented model\nRow r49: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (15.6%) on LawFactQA\", \"papers\": [\"S072\"]}\n  fact: Paper S072 | measures | unsupported-answer rate (%)\n  fact: Paper S072 | lowest unsupported-answer-rate value 15.6 belongs to | retrieval-augmented generator\nRow r50: {\"conclusion\": \"closed-book model achieves the lowest unsupported-answer rate (%) (11.9%) on SciFactBench\", \"papers\": [\"S073\"]}\n  fact: Paper S073 | measures | unsupported-answer rate (%)\n  fact: Paper S073 | lowest unsupported-answer-rate value 11.9 belongs to | closed-book model\nRow r51: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (17.6%) on GeoFacts\", \"papers\": [\"S074\"]}\n  fact: Paper S074 | measures | hallucination rate (%)\n  fact: Paper S074 | lowest hallucination-rate value 17.6 belongs to | vanilla LLM\nRow r52: {\"conclusion\": \"retrieval-augmented model achieves the lowest unsupported-answer rate (%) (20.7%) on OpenFactQA\", \"papers\": [\"S075\"]}\n  fact: Paper S075 | measures | unsupported-answer rate (%)\n  fact: Paper S075 | lowest unsupported-answer-rate value 20.7 belongs to | retrieval-augmented model\nRow r53: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (12.5%) on GeoFacts\", \"papers\": [\"S076\"]}\n  fact: Paper S076 | measures | hallucination frequency (%)\n  fact: Paper S076 | lowest hallucination-frequency value 12.5 belongs to | retrieval-augmented model\nRow r54: {\"conclusion\": \"retrieve-then-read model achieves the lowest hallucination rate (%) (15.1%) on OpenFactQA\", \"papers\": [\"S077\"]}\n  fact: Paper S077 | measures | hallucination rate (%)\n  fact: Paper S077 | lowest hallucination-rate value 15.1 belongs to | retrieve-then-read model\nRow r55: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination frequency (%) (15.9%) on LawFactQA\", \"papers\": [\"S078\"]}\n  fact: Paper S078 | measures | hallucination frequency (%)\n  fact: Paper S078 | lowest hallucination-frequency value 15.9 belongs to | RAG pipeline\nRow r56: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (13.5%) on MedAnswerSet\", \"papers\": [\"S079\"]}\n  fact: Paper S079 | measures | hallucination rate (%)\n  fact: Paper S079 | lowest hallucination-rate value 13.5 belongs to | retrieval-augmented generator\nRow r57: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (11.3%) on SciFactBench\", \"papers\": [\"S080\"]}\n  fact: Paper S080 | measures | hallucination frequency (%)\n  fact: Paper S080 | lowest hallucination-frequency value 11.3 belongs to | retrieval-augmented model\nRow r58: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (10.2%) on HistoryQuest\", \"papers\": [\"S081\"]}\n  fact: Paper S081 | measures | hallucination rate (%)\n  fact: Paper S081 | lowest hallucination-rate value 10.2 belongs to | retrieval-augmented model\nRow r59: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (15.3%) on LawFactQA\", \"papers\": [\"S082\"]}\n  fact: Paper S082 | measures | unsupported-answer rate (%)\n  fact: Paper S082 | lowest unsupported-answer-rate value 15.3 belongs to | retrieval-augmented generator\nRow r60: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination frequency (%) (10.8%) on OpenFactQA\", \"papers\": [\"S083\"]}\n  fact: Paper S083 | measures | hallucination frequency (%)\n  fact: Paper S083 | lowest hallucination-frequency value 10.8 belongs to | vanilla LLM\nRow r61: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (17.9%) on HistoryQuest\", \"papers\": [\"S084\"]}\n  fact: Paper S084 | measures | hallucination frequency (%)\n  fact: Paper S084 | lowest hallucination-frequency value 17.9 belongs to | retrieval-augmented generator\nRow r62: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (12.5%) on LawFactQA\", \"papers\": [\"S085\"]}\n  fact: Paper S085 | measures | hallucination rate (%)\n  fact: Paper S085 | lowest hallucination-rate value 12.5 belongs to | retrieval-augmented generator\nRow r63: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (14.5%) on PopCultureQA\", \"papers\": [\"S086\"]}\n  fact: Paper S086 | measures | hallucination frequency (%)\n  fact: Paper S086 | lowest hallucination-frequency value 14.5 belongs to | retrieval-augmented model\nRow r64: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination frequency (%) (15.2%) on TriviaCheck\", \"papers\": [\"S087\"]}\n  fact: Paper S087 | measures | hallucination frequency (%)\n  fact: Paper S087 | lowest hallucination-frequency value 15.2 belongs to | vanilla LLM\nRow r65: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (12.8%) on LawFactQA\", \"papers\": [\"S088\"]}\n  fact: Paper S088 | measures | hallucination rate (%)\n  fact: Paper S088 | lowest hallucination-rate value 12.8 belongs to | retrieval-augmented model\nRow r66: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (19.1%) on PopCultureQA\", \"papers\": [\"S089\"]}\n  fact: Paper S089 | measures | hallucination frequency (%)\n  fact: Paper S089 | lowest hallucination-frequency value 19.1 belongs to | retrieval-augmented model\nRow r67: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (21.7%) on HistoryQuest\", \"papers\": [\"S090\"]}\n  fact: Paper S090 | measures | hallucination rate (%)\n  fact: Paper S090 | lowest hallucination-rate value 21.7 belongs to | retrieval-augmented generator\nRow r68: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (17.1%) on LawFactQA\", \"papers\": [\"S091\"]}\n  fact: Paper S091 | measures | unsupported-answer rate (%)\n  fact: Paper S091 | lowest unsupported-answer-rate value 17.1 belongs to | retrieval-augmented generator\nRow r69: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (14.4%) on GeoFacts\", \"papers\": [\"S093\"]}\n  fact: Paper S093 | measures | unsupported-answer rate (%)\n  fact: Paper S093 | lowest unsupported-answer-rate value 14.4 belongs to | retrieval-augmented generator\nRow r70: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (10.6%) on OpenFactQA\", \"papers\": [\"S094\"]}\n  fact: Paper S094 | measures | hallucination rate (%)\n  fact: Paper S094 | lowest hallucination-rate value 10.6 belongs to | retrieval-augmented generator\nRow r71: {\"conclusion\": \"RAG without reranking achieves the lowest hallucination rate (%) (10.7%) on TriviaCheck\", \"papers\": [\"S095\"]}\n  fact: Paper S095 | measures | hallucination rate (%)\n  fact: Paper S095 | lowest hallucination-rate value 10.7 belongs to | RAG without reranking\nRow r72: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (13.3%) on PopCultureQA\", \"papers\": [\"S096\"]}\n  fact: Paper S096 | measures | hallucination rate (%)\n  fact: Paper S096 | lowest hallucination-rate value 13.3 belongs to | retrieval-augmented model\nRow r73: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (7.4%) on TriviaCheck\", \"papers\": [\"S097\"]}\n  fact: Paper S097 | measures | unsupported-answer rate (%)\n  fact: Paper S097 | lowest unsupported-answer-rate value 7.4 belongs to | RAG pipeline\nRow r74: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (11.1%) on NewsTruthQA\", \"papers\": [\"S098\"]}\n  fact: Paper S098 | measures | hallucination rate (%)\n  fact: Paper S098 | lowest hallucination-rate value 11.1 belongs to | retrieval-augmented generator\nRow r75: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (11.1%) on LawFactQA\", \"papers\": [\"S099\"]}\n  fact: Paper S099 | measures | hallucination frequency (%)\n  fact: Paper S099 | lowest hallucination-frequency value 11.1 belongs to | retrieval-augmented model\nRow r76: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (14.5%) on PopCultureQA\", \"papers\": [\"S100\"]}\n  fact: Paper S100 | measures | hallucination frequency (%)\n  fact: Paper S100 | lowest hallucination-frequency value 14.5 belongs to | retrieval-augmented model\nRow r77: {\"conclusion\": \"RAG without reranking achieves the lowest hallucination rate (%) (12.6%) on TriviaCheck\", \"papers\": [\"S101\"]}\n  fact: Paper S101 | measures | hallucination rate (%)\n  fact: Paper S101 | lowest hallucination-rate value 12.6 belongs to | RAG without reranking\nRow r78: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (15.1%) on PopCultureQA\", \"papers\": [\"S102\"]}\n  fact: Paper S102 | measures | hallucination frequency (%)\n  fact: Paper S102 | lowest hallucination-frequency value 15.1 belongs to | retrieval-augmented generator\nRow r79: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (16.4%) on PopCultureQA\", \"papers\": [\"S103\"]}\n  fact: Paper S103 | measures | hallucination rate (%)\n  fact: Paper S103 | lowest hallucination-rate value 16.4 belongs to | vanilla LLM\nRow r80: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (12.4%) on OpenFactQA\", \"papers\": [\"S104\"]}\n  fact: Paper S104 | measures | hallucination frequency (%)\n  fact: Paper S104 | lowest hallucination-frequency value 12.4 belongs to | retrieval-augmented model\nRow r81: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (15.2%) on MedAnswerSet\", \"papers\": [\"S106\"]}\n  fact: Paper S106 | measures | hallucination rate (%)\n  fact: Paper S106 | lowest hallucination-rate value 15.2 belongs to | vanilla LLM\nRow r82: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (10.5%) on LawFactQA\", \"papers\": [\"S107\"]}\n  fact: Paper S107 | measures | hallucination frequency (%)\n  fact: Paper S107 | lowest hallucination-frequency value 10.5 belongs to | retrieval-augmented generator\nRow r83: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (18.7%) on MedAnswerSet\", \"papers\": [\"S108\"]}\n  fact: Paper S108 | measures | hallucination frequency (%)\n  fact: Paper S108 | lowest hallucination-frequency value 18.7 belongs to | retrieval-augmented model\nRow r84: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (15.8%) on PopCultureQA\", \"papers\": [\"S109\"]}\n  fact: Paper S109 | measures | hallucination frequency (%)\n  fact: Paper S109 | lowest hallucination-frequency value 15.8 belongs to | retrieval-augmented generator\nRow r85: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination rate (%) (11.7%) on HistoryQuest\", \"papers\": [\"S110\"]}\n  fact: Paper S110 | measures | hallucination rate (%)\n  fact: Paper S110 | lowest hallucination-rate value 11.7 belongs to | RAG pipeline\nRow r86: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (15.7%) on SciFactBench\", \"papers\": [\"S111\"]}\n  fact: Paper S111 | measures | hallucination rate (%)\n  fact: Paper S111 | lowest hallucination-rate value 15.7 belongs to | retrieval-augmented generator\nRow r87: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (16.5%) on MedAnswerSet\", \"papers\": [\"S112\"]}\n  fact: Paper S112 | measures | hallucination rate (%)\n  fact: Paper S112 | lowest hallucination-rate value 16.5 belongs to | retrieval-augmented model\nNotes: 62 corpus papers report a hallucination-type metric (hallucination rate, hallucination frequency, or unsupported-answer rate). For each, the method with the lowest value across all its result-table rows is named. Where a table cell reads 'see text', its value was recovered from the body's resolution sentence (e.g. 'X scores N percentage points lower than Y in M'), giving the true minimum. No ties were found. Papers S013, S015, S018, S027, S033-S035, S038-S040, S043, S045, S047-S048, S052, S055, S057, S059, S061, S062, S064, S065, S066, S067, S068, S069, S070, S071, S072, S073, S074, S075, S076, S077, S078, S079, S080, S081, S082, S083, S084, S085, S086, S087, S088, S089, S090, S091, S092, S093, S094, S095, S096, S097, S098, S099, S100, S101, S102, S103, S104, S105, S106, S107, S108, S109, S110, S111, S112 without a hallucination metric are excluded.",
+  "answer_text": "Row r1: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (7.7%) on GeoFacts\", \"papers\": [\"S004\"]}\n  fact: Paper S004 | measures | hallucination frequency (%)\n  fact: Paper S004 | lowest hallucination-frequency value 7.7 belongs to | retrieval-augmented model\nRow r2: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (9.8%) on SciFactBench\", \"papers\": [\"S005\"]}\n  fact: Paper S005 | measures | hallucination rate (%)\n  fact: Paper S005 | lowest hallucination-rate value 9.8 belongs to | retrieval-augmented generator\nRow r3: {\"conclusion\": \"fine-tuned model achieves the lowest hallucination frequency (%) (11.3%) on HistoryQuest\", \"papers\": [\"S006\"]}\n  fact: Paper S006 | measures | hallucination frequency (%)\n  fact: Paper S006 | lowest hallucination-frequency value 11.3 belongs to | fine-tuned model\nRow r4: {\"conclusion\": \"RAG with random passages achieves the lowest unsupported-answer rate (%) (8.7%) on SciFactBench\", \"papers\": [\"S007\"]}\n  fact: Paper S007 | measures | unsupported-answer rate (%)\n  fact: Paper S007 | lowest unsupported-answer-rate value 8.7 belongs to | RAG with random passages\nRow r5: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (22.7%) on HistoryQuest\", \"papers\": [\"S008\"]}\n  fact: Paper S008 | measures | hallucination frequency (%)\n  fact: Paper S008 | lowest hallucination-frequency value 22.7 belongs to | retrieval-augmented model\nRow r6: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (11.1%) on GeoFacts\", \"papers\": [\"S009\"]}\n  fact: Paper S009 | measures | hallucination frequency (%)\n  fact: Paper S009 | lowest hallucination-frequency value 11.1 belongs to | retrieval-augmented generator\nRow r7: {\"conclusion\": \"closed-book model achieves the lowest hallucination rate (%) (14.6%) on OpenFactQA\", \"papers\": [\"S010\"]}\n  fact: Paper S010 | measures | hallucination rate (%)\n  fact: Paper S010 | lowest hallucination-rate value 14.6 belongs to | closed-book model\nRow r8: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (10.7%) on LawFactQA\", \"papers\": [\"S011\"]}\n  fact: Paper S011 | measures | hallucination rate (%)\n  fact: Paper S011 | lowest hallucination-rate value 10.7 belongs to | retrieval-augmented model\nRow r9: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (5.4%) on BioClaimQA\", \"papers\": [\"S012\"]}\n  fact: Paper S012 | measures | unsupported-answer rate (%)\n  fact: Paper S012 | lowest unsupported-answer-rate value 5.4 belongs to | RAG pipeline\nRow r10: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination rate (%) (7.7%) on PopCultureQA\", \"papers\": [\"S014\"]}\n  fact: Paper S014 | measures | hallucination rate (%)\n  fact: Paper S014 | lowest hallucination-rate value 7.7 belongs to | RAG pipeline\nRow r11: {\"conclusion\": \"retrieve-then-read model achieves the lowest unsupported-answer rate (%) (24.8%) on OpenFactQA\", \"papers\": [\"S016\"]}\n  fact: Paper S016 | measures | unsupported-answer rate (%)\n  fact: Paper S016 | lowest unsupported-answer-rate value 24.8 belongs to | retrieve-then-read model\nRow r12: {\"conclusion\": \"no-retrieval baseline achieves the lowest hallucination frequency (%) (13.2%) on HistoryQuest\", \"papers\": [\"S017\"]}\n  fact: Paper S017 | measures | hallucination frequency (%)\n  fact: Paper S017 | lowest hallucination-frequency value 13.2 belongs to | no-retrieval baseline\nRow r13: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (7.3%) on NewsTruthQA\", \"papers\": [\"S019\"]}\n  fact: Paper S019 | measures | unsupported-answer rate (%)\n  fact: Paper S019 | lowest unsupported-answer-rate value 7.3 belongs to | RAG pipeline\nRow r14: {\"conclusion\": \"fine-tuned model achieves the lowest unsupported-answer rate (%) (10.9%) on BioClaimQA\", \"papers\": [\"S020\"]}\n  fact: Paper S020 | measures | unsupported-answer rate (%)\n  fact: Paper S020 | lowest unsupported-answer-rate value 10.9 belongs to | fine-tuned model\nRow r15: {\"conclusion\": \"RAG with random passages achieves the lowest unsupported-answer rate (%) (13.8%) on HistoryQuest\", \"papers\": [\"S021\"]}\n  fact: Paper S021 | measures | unsupported-answer rate (%)\n  fact: Paper S021 | lowest unsupported-answer-rate value 13.8 belongs to | RAG with random passages\nRow r16: {\"conclusion\": \"RAG without reranking achieves the lowest unsupported-answer rate (%) (8.4%) on OpenFactQA\", \"papers\": [\"S022\"]}\n  fact: Paper S022 | measures | unsupported-answer rate (%)\n  fact: Paper S022 | lowest unsupported-answer-rate value 8.4 belongs to | RAG without reranking\nRow r17: {\"conclusion\": \"retrieve-then-read model achieves the lowest unsupported-answer rate (%) (18.1%) on SciFactBench\", \"papers\": [\"S023\"]}\n  fact: Paper S023 | measures | unsupported-answer rate (%)\n  fact: Paper S023 | lowest unsupported-answer-rate value 18.1 belongs to | retrieve-then-read model\nRow r18: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (17.2%) on BioClaimQA\", \"papers\": [\"S024\"]}\n  fact: Paper S024 | measures | hallucination frequency (%)\n  fact: Paper S024 | lowest hallucination-frequency value 17.2 belongs to | retrieval-augmented generator\nRow r19: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (12.1%) on NewsTruthQA\", \"papers\": [\"S025\"]}\n  fact: Paper S025 | measures | hallucination rate (%)\n  fact: Paper S025 | lowest hallucination-rate value 12.1 belongs to | vanilla LLM\nRow r20: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (5.6%) on NewsTruthQA\", \"papers\": [\"S026\"]}\n  fact: Paper S026 | measures | hallucination rate (%)\n  fact: Paper S026 | lowest hallucination-rate value 5.6 belongs to | retrieval-augmented model\nRow r21: {\"conclusion\": \"parametric-only model achieves the lowest unsupported-answer rate (%) (16.1%) on MedAnswerSet\", \"papers\": [\"S028\"]}\n  fact: Paper S028 | measures | unsupported-answer rate (%)\n  fact: Paper S028 | lowest unsupported-answer-rate value 16.1 belongs to | parametric-only model\nRow r22: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (6.7%) on GeoFacts\", \"papers\": [\"S029\"]}\n  fact: Paper S029 | measures | hallucination rate (%)\n  fact: Paper S029 | lowest hallucination-rate value 6.7 belongs to | retrieval-augmented model\nRow r23: {\"conclusion\": \"self-consistency decoding achieves the lowest unsupported-answer rate (%) (10.3%) on OpenFactQA\", \"papers\": [\"S030\"]}\n  fact: Paper S030 | measures | unsupported-answer rate (%)\n  fact: Paper S030 | lowest unsupported-answer-rate value 10.3 belongs to | self-consistency decoding\nRow r24: {\"conclusion\": \"retrieve-then-read model achieves the lowest hallucination rate (%) (10.5%) on BioClaimQA\", \"papers\": [\"S031\"]}\n  fact: Paper S031 | measures | hallucination rate (%)\n  fact: Paper S031 | lowest hallucination-rate value 10.5 belongs to | retrieve-then-read model\nRow r25: {\"conclusion\": \"fine-tuned model achieves the lowest hallucination rate (%) (14.8%) on PopCultureQA\", \"papers\": [\"S032\"]}\n  fact: Paper S032 | measures | hallucination rate (%)\n  fact: Paper S032 | lowest hallucination-rate value 14.8 belongs to | fine-tuned model\nRow r26: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (13.1%) on LawFactQA\", \"papers\": [\"S036\"]}\n  fact: Paper S036 | measures | unsupported-answer rate (%)\n  fact: Paper S036 | lowest unsupported-answer-rate value 13.1 belongs to | retrieval-augmented generator\nRow r27: {\"conclusion\": \"fine-tuned model achieves the lowest unsupported-answer rate (%) (12.2%) on HistoryQuest\", \"papers\": [\"S037\"]}\n  fact: Paper S037 | measures | unsupported-answer rate (%)\n  fact: Paper S037 | lowest unsupported-answer-rate value 12.2 belongs to | fine-tuned model\nRow r28: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination frequency (%) (12.1%) on PopCultureQA\", \"papers\": [\"S041\"]}\n  fact: Paper S041 | measures | hallucination frequency (%)\n  fact: Paper S041 | lowest hallucination-frequency value 12.1 belongs to | RAG pipeline\nRow r29: {\"conclusion\": \"vanilla LLM achieves the lowest unsupported-answer rate (%) (21.7%) on GeoFacts\", \"papers\": [\"S042\"]}\n  fact: Paper S042 | measures | unsupported-answer rate (%)\n  fact: Paper S042 | lowest unsupported-answer-rate value 21.7 belongs to | vanilla LLM\nRow r30: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (10.3%) on HistoryQuest\", \"papers\": [\"S044\"]}\n  fact: Paper S044 | measures | unsupported-answer rate (%)\n  fact: Paper S044 | lowest unsupported-answer-rate value 10.3 belongs to | retrieval-augmented generator\nRow r31: {\"conclusion\": \"RAG without reranking achieves the lowest hallucination rate (%) (9.8%) on HistoryQuest\", \"papers\": [\"S046\"]}\n  fact: Paper S046 | measures | hallucination rate (%)\n  fact: Paper S046 | lowest hallucination-rate value 9.8 belongs to | RAG without reranking\nRow r32: {\"conclusion\": \"retrieve-then-read model achieves the lowest unsupported-answer rate (%) (20.3%) on OpenFactQA\", \"papers\": [\"S049\"]}\n  fact: Paper S049 | measures | unsupported-answer rate (%)\n  fact: Paper S049 | lowest unsupported-answer-rate value 20.3 belongs to | retrieve-then-read model\nRow r33: {\"conclusion\": \"retrieve-then-read model achieves the lowest hallucination rate (%) (6.2%) on MedAnswerSet\", \"papers\": [\"S050\"]}\n  fact: Paper S050 | measures | hallucination rate (%)\n  fact: Paper S050 | lowest hallucination-rate value 6.2 belongs to | retrieve-then-read model\nRow r34: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (16.5%) on HistoryQuest\", \"papers\": [\"S051\"]}\n  fact: Paper S051 | measures | hallucination frequency (%)\n  fact: Paper S051 | lowest hallucination-frequency value 16.5 belongs to | retrieval-augmented model\nRow r35: {\"conclusion\": \"query-rewriting variant achieves the lowest hallucination frequency (%) (11.6%) on MedAnswerSet\", \"papers\": [\"S053\"]}\n  fact: Paper S053 | measures | hallucination frequency (%)\n  fact: Paper S053 | lowest hallucination-frequency value 11.6 belongs to | query-rewriting variant\nRow r36: {\"conclusion\": \"no-retrieval baseline achieves the lowest unsupported-answer rate (%) (12.4%) on BioClaimQA\", \"papers\": [\"S054\"]}\n  fact: Paper S054 | measures | unsupported-answer rate (%)\n  fact: Paper S054 | lowest unsupported-answer-rate value 12.4 belongs to | no-retrieval baseline\nRow r37: {\"conclusion\": \"retrieval-augmented model achieves the lowest unsupported-answer rate (%) (6.5%) on TriviaCheck\", \"papers\": [\"S056\"]}\n  fact: Paper S056 | measures | unsupported-answer rate (%)\n  fact: Paper S056 | lowest unsupported-answer-rate value 6.5 belongs to | retrieval-augmented model\nRow r38: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (6.2%) on BioClaimQA\", \"papers\": [\"S058\"]}\n  fact: Paper S058 | measures | unsupported-answer rate (%)\n  fact: Paper S058 | lowest unsupported-answer-rate value 6.2 belongs to | RAG pipeline\nRow r39: {\"conclusion\": \"chain-of-thought prompting achieves the lowest hallucination frequency (%) (13.4%) on BioClaimQA\", \"papers\": [\"S060\"]}\n  fact: Paper S060 | measures | hallucination frequency (%)\n  fact: Paper S060 | lowest hallucination-frequency value 13.4 belongs to | chain-of-thought prompting\nRow r40: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (17.2%) on GeoFacts\", \"papers\": [\"S061\"]}\n  fact: Paper S061 | measures | unsupported-answer rate (%)\n  fact: Paper S061 | lowest unsupported-answer-rate value 17.2 belongs to | RAG pipeline\nRow r41: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (11.4%) on OpenFactQA\", \"papers\": [\"S062\"]}\n  fact: Paper S062 | measures | hallucination rate (%)\n  fact: Paper S062 | lowest hallucination-rate value 11.4 belongs to | retrieval-augmented model\nRow r42: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (18.4%) on TriviaCheck\", \"papers\": [\"S064\"]}\n  fact: Paper S064 | measures | hallucination frequency (%)\n  fact: Paper S064 | lowest hallucination-frequency value 18.4 belongs to | retrieval-augmented generator\nRow r43: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (18.3%) on PopCultureQA\", \"papers\": [\"S065\"]}\n  fact: Paper S065 | measures | hallucination rate (%)\n  fact: Paper S065 | lowest hallucination-rate value 18.3 belongs to | retrieval-augmented generator\nRow r44: {\"conclusion\": \"vanilla LLM achieves the lowest unsupported-answer rate (%) (14.9%) on NewsTruthQA\", \"papers\": [\"S066\"]}\n  fact: Paper S066 | measures | unsupported-answer rate (%)\n  fact: Paper S066 | lowest unsupported-answer-rate value 14.9 belongs to | vanilla LLM\nRow r45: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (17.7%) on TriviaCheck\", \"papers\": [\"S067\"]}\n  fact: Paper S067 | measures | hallucination rate (%)\n  fact: Paper S067 | lowest hallucination-rate value 17.7 belongs to | retrieval-augmented model\nRow r46: {\"conclusion\": \"parametric-only model achieves the lowest unsupported-answer rate (%) (21.4%) on HistoryQuest\", \"papers\": [\"S068\"]}\n  fact: Paper S068 | measures | unsupported-answer rate (%)\n  fact: Paper S068 | lowest unsupported-answer-rate value 21.4 belongs to | parametric-only model\nRow r47: {\"conclusion\": \"RAG without reranking achieves the lowest unsupported-answer rate (%) (17.2%) on LawFactQA\", \"papers\": [\"S069\"]}\n  fact: Paper S069 | measures | unsupported-answer rate (%)\n  fact: Paper S069 | lowest unsupported-answer-rate value 17.2 belongs to | RAG without reranking\nRow r48: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (13.1%) on TriviaCheck\", \"papers\": [\"S071\"]}\n  fact: Paper S071 | measures | hallucination rate (%)\n  fact: Paper S071 | lowest hallucination-rate value 13.1 belongs to | retrieval-augmented model\nRow r49: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (15.6%) on LawFactQA\", \"papers\": [\"S072\"]}\n  fact: Paper S072 | measures | unsupported-answer rate (%)\n  fact: Paper S072 | lowest unsupported-answer-rate value 15.6 belongs to | retrieval-augmented generator\nRow r50: {\"conclusion\": \"closed-book model achieves the lowest unsupported-answer rate (%) (11.9%) on SciFactBench\", \"papers\": [\"S073\"]}\n  fact: Paper S073 | measures | unsupported-answer rate (%)\n  fact: Paper S073 | lowest unsupported-answer-rate value 11.9 belongs to | closed-book model\nRow r51: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (17.6%) on GeoFacts\", \"papers\": [\"S074\"]}\n  fact: Paper S074 | measures | hallucination rate (%)\n  fact: Paper S074 | lowest hallucination-rate value 17.6 belongs to | vanilla LLM\nRow r52: {\"conclusion\": \"retrieval-augmented model achieves the lowest unsupported-answer rate (%) (20.7%) on OpenFactQA\", \"papers\": [\"S075\"]}\n  fact: Paper S075 | measures | unsupported-answer rate (%)\n  fact: Paper S075 | lowest unsupported-answer-rate value 20.7 belongs to | retrieval-augmented model\nRow r53: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (12.5%) on GeoFacts\", \"papers\": [\"S076\"]}\n  fact: Paper S076 | measures | hallucination frequency (%)\n  fact: Paper S076 | lowest hallucination-frequency value 12.5 belongs to | retrieval-augmented model\nRow r54: {\"conclusion\": \"retrieve-then-read model achieves the lowest hallucination rate (%) (15.1%) on OpenFactQA\", \"papers\": [\"S077\"]}\n  fact: Paper S077 | measures | hallucination rate (%)\n  fact: Paper S077 | lowest hallucination-rate value 15.1 belongs to | retrieve-then-read model\nRow r55: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination frequency (%) (15.9%) on LawFactQA\", \"papers\": [\"S078\"]}\n  fact: Paper S078 | measures | hallucination frequency (%)\n  fact: Paper S078 | lowest hallucination-frequency value 15.9 belongs to | RAG pipeline\nRow r56: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (13.5%) on MedAnswerSet\", \"papers\": [\"S079\"]}\n  fact: Paper S079 | measures | hallucination rate (%)\n  fact: Paper S079 | lowest hallucination-rate value 13.5 belongs to | retrieval-augmented generator\nRow r57: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (11.3%) on SciFactBench\", \"papers\": [\"S080\"]}\n  fact: Paper S080 | measures | hallucination frequency (%)\n  fact: Paper S080 | lowest hallucination-frequency value 11.3 belongs to | retrieval-augmented model\nRow r58: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (10.2%) on HistoryQuest\", \"papers\": [\"S081\"]}\n  fact: Paper S081 | measures | hallucination rate (%)\n  fact: Paper S081 | lowest hallucination-rate value 10.2 belongs to | retrieval-augmented model\nRow r59: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (15.3%) on LawFactQA\", \"papers\": [\"S082\"]}\n  fact: Paper S082 | measures | unsupported-answer rate (%)\n  fact: Paper S082 | lowest unsupported-answer-rate value 15.3 belongs to | retrieval-augmented generator\nRow r60: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination frequency (%) (10.8%) on OpenFactQA\", \"papers\": [\"S083\"]}\n  fact: Paper S083 | measures | hallucination frequency (%)\n  fact: Paper S083 | lowest hallucination-frequency value 10.8 belongs to | vanilla LLM\nRow r61: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (17.9%) on HistoryQuest\", \"papers\": [\"S084\"]}\n  fact: Paper S084 | measures | hallucination frequency (%)\n  fact: Paper S084 | lowest hallucination-frequency value 17.9 belongs to | retrieval-augmented generator\nRow r62: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (12.5%) on LawFactQA\", \"papers\": [\"S085\"]}\n  fact: Paper S085 | measures | hallucination rate (%)\n  fact: Paper S085 | lowest hallucination-rate value 12.5 belongs to | retrieval-augmented generator\nRow r63: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (14.5%) on PopCultureQA\", \"papers\": [\"S086\"]}\n  fact: Paper S086 | measures | hallucination frequency (%)\n  fact: Paper S086 | lowest hallucination-frequency value 14.5 belongs to | retrieval-augmented model\nRow r64: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination frequency (%) (15.2%) on TriviaCheck\", \"papers\": [\"S087\"]}\n  fact: Paper S087 | measures | hallucination frequency (%)\n  fact: Paper S087 | lowest hallucination-frequency value 15.2 belongs to | vanilla LLM\nRow r65: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (12.8%) on LawFactQA\", \"papers\": [\"S088\"]}\n  fact: Paper S088 | measures | hallucination rate (%)\n  fact: Paper S088 | lowest hallucination-rate value 12.8 belongs to | retrieval-augmented model\nRow r66: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (19.1%) on PopCultureQA\", \"papers\": [\"S089\"]}\n  fact: Paper S089 | measures | hallucination frequency (%)\n  fact: Paper S089 | lowest hallucination-frequency value 19.1 belongs to | retrieval-augmented model\nRow r67: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (21.7%) on HistoryQuest\", \"papers\": [\"S090\"]}\n  fact: Paper S090 | measures | hallucination rate (%)\n  fact: Paper S090 | lowest hallucination-rate value 21.7 belongs to | retrieval-augmented generator\nRow r68: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (17.1%) on LawFactQA\", \"papers\": [\"S091\"]}\n  fact: Paper S091 | measures | unsupported-answer rate (%)\n  fact: Paper S091 | lowest unsupported-answer-rate value 17.1 belongs to | retrieval-augmented generator\nRow r69: {\"conclusion\": \"retrieval-augmented generator achieves the lowest unsupported-answer rate (%) (14.4%) on GeoFacts\", \"papers\": [\"S093\"]}\n  fact: Paper S093 | measures | unsupported-answer rate (%)\n  fact: Paper S093 | lowest unsupported-answer-rate value 14.4 belongs to | retrieval-augmented generator\nRow r70: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (10.6%) on OpenFactQA\", \"papers\": [\"S094\"]}\n  fact: Paper S094 | measures | hallucination rate (%)\n  fact: Paper S094 | lowest hallucination-rate value 10.6 belongs to | retrieval-augmented generator\nRow r71: {\"conclusion\": \"RAG without reranking achieves the lowest hallucination rate (%) (10.7%) on TriviaCheck\", \"papers\": [\"S095\"]}\n  fact: Paper S095 | measures | hallucination rate (%)\n  fact: Paper S095 | lowest hallucination-rate value 10.7 belongs to | RAG without reranking\nRow r72: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (13.3%) on PopCultureQA\", \"papers\": [\"S096\"]}\n  fact: Paper S096 | measures | hallucination rate (%)\n  fact: Paper S096 | lowest hallucination-rate value 13.3 belongs to | retrieval-augmented model\nRow r73: {\"conclusion\": \"RAG pipeline achieves the lowest unsupported-answer rate (%) (7.4%) on TriviaCheck\", \"papers\": [\"S097\"]}\n  fact: Paper S097 | measures | unsupported-answer rate (%)\n  fact: Paper S097 | lowest unsupported-answer-rate value 7.4 belongs to | RAG pipeline\nRow r74: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (11.1%) on NewsTruthQA\", \"papers\": [\"S098\"]}\n  fact: Paper S098 | measures | hallucination rate (%)\n  fact: Paper S098 | lowest hallucination-rate value 11.1 belongs to | retrieval-augmented generator\nRow r75: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (11.1%) on LawFactQA\", \"papers\": [\"S099\"]}\n  fact: Paper S099 | measures | hallucination frequency (%)\n  fact: Paper S099 | lowest hallucination-frequency value 11.1 belongs to | retrieval-augmented model\nRow r76: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (14.5%) on PopCultureQA\", \"papers\": [\"S100\"]}\n  fact: Paper S100 | measures | hallucination frequency (%)\n  fact: Paper S100 | lowest hallucination-frequency value 14.5 belongs to | retrieval-augmented model\nRow r77: {\"conclusion\": \"RAG without reranking achieves the lowest hallucination rate (%) (12.6%) on TriviaCheck\", \"papers\": [\"S101\"]}\n  fact: Paper S101 | measures | hallucination rate (%)\n  fact: Paper S101 | lowest hallucination-rate value 12.6 belongs to | RAG without reranking\nRow r78: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (15.1%) on PopCultureQA\", \"papers\": [\"S102\"]}\n  fact: Paper S102 | measures | hallucination frequency (%)\n  fact: Paper S102 | lowest hallucination-frequency value 15.1 belongs to | retrieval-augmented generator\nRow r79: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (16.4%) on PopCultureQA\", \"papers\": [\"S103\"]}\n  fact: Paper S103 | measures | hallucination rate (%)\n  fact: Paper S103 | lowest hallucination-rate value 16.4 belongs to | vanilla LLM\nRow r80: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (12.4%) on OpenFactQA\", \"papers\": [\"S104\"]}\n  fact: Paper S104 | measures | hallucination frequency (%)\n  fact: Paper S104 | lowest hallucination-frequency value 12.4 belongs to | retrieval-augmented model\nRow r81: {\"conclusion\": \"vanilla LLM achieves the lowest hallucination rate (%) (15.2%) on MedAnswerSet\", \"papers\": [\"S106\"]}\n  fact: Paper S106 | measures | hallucination rate (%)\n  fact: Paper S106 | lowest hallucination-rate value 15.2 belongs to | vanilla LLM\nRow r82: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (10.5%) on LawFactQA\", \"papers\": [\"S107\"]}\n  fact: Paper S107 | measures | hallucination frequency (%)\n  fact: Paper S107 | lowest hallucination-frequency value 10.5 belongs to | retrieval-augmented generator\nRow r83: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination frequency (%) (18.7%) on MedAnswerSet\", \"papers\": [\"S108\"]}\n  fact: Paper S108 | measures | hallucination frequency (%)\n  fact: Paper S108 | lowest hallucination-frequency value 18.7 belongs to | retrieval-augmented model\nRow r84: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination frequency (%) (15.8%) on PopCultureQA\", \"papers\": [\"S109\"]}\n  fact: Paper S109 | measures | hallucination frequency (%)\n  fact: Paper S109 | lowest hallucination-frequency value 15.8 belongs to | retrieval-augmented generator\nRow r85: {\"conclusion\": \"RAG pipeline achieves the lowest hallucination rate (%) (11.7%) on HistoryQuest\", \"papers\": [\"S110\"]}\n  fact: Paper S110 | measures | hallucination rate (%)\n  fact: Paper S110 | lowest hallucination-rate value 11.7 belongs to | RAG pipeline\nRow r86: {\"conclusion\": \"retrieval-augmented generator achieves the lowest hallucination rate (%) (15.7%) on SciFactBench\", \"papers\": [\"S111\"]}\n  fact: Paper S111 | measures | hallucination rate (%)\n  fact: Paper S111 | lowest hallucination-rate value 15.7 belongs to | retrieval-augmented generator\nRow r87: {\"conclusion\": \"retrieval-augmented model achieves the lowest hallucination rate (%) (16.5%) on MedAnswerSet\", \"papers\": [\"S112\"]}\n  fact: Paper S112 | measures | hallucination rate (%)\n  fact: Paper S112 | lowest hallucination-rate value 16.5 belongs to | retrieval-augmented model\nNotes: 62 corpus papers report a hallucination-type metric (hallucination rate, hallucination frequency, or unsupported-answer rate). For each, the method with the lowest value across all its result-table rows is named. Where a table cell reads 'see text', its value was recovered from the body's resolution sentence (e.g. 'X scores N percentage points lower than Y in M'), giving the true minimum. No ties were found. Papers S013, S015, S018, S027, S033-S035, S038-S040, S043, S045, S047-S048, S052, S055, S057, S059, S061, S062, S064, S065, S066, S067, S068, S069, S070, S071, S072, S073, S074, S075, S076, S077, S078, S079, S080, S081, S082, S083, S084, S085, S086, S087, S088, S089, S090, S091, S092, S093, S094, S095, S096, S097, S098, S099, S100, S101, S102, S103, S104, S105, S106, S107, S108, S109, S110, S111, S112 without a hallucination metric are excluded.",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "b6a30e3100f4ba177d8c553c6ed78cbff03b00b0867b3b3c151233230fbb4f3c",
+    "input_tokens": 9368,
+    "key": "ea71fefd250d9968743b0367565a3f8e63d5ffc2a18721790cc92c9f733ff475",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1913,
+    "prompt_sha256": "a1c4954150248fff31a8f6706cd0eb91ea320893e2d7f54164d32e952dffb9a4",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "question": "Which method achieves the lowest hallucination rate within each paper?",
+  "question_id": "best-hallucination",
+  "studies": [
+    {
+      "document": "S004",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S005",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S006",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S007",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-random"
+    },
+    {
+      "document": "S008",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S009",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S010",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S011",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S012",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S014",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S016",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S017",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S019",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S020",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S021",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-random"
+    },
+    {
+      "document": "S022",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S023",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S024",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S025",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S026",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S028",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S029",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S030",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "self-consistency"
+    },
+    {
+      "document": "S031",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S032",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S036",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S037",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S041",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S042",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S044",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S046",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S049",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S050",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S051",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S053",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "query-rewriting"
+    },
+    {
+      "document": "S054",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S056",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S058",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S060",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "chain-of-thought"
+    },
+    {
+      "document": "S061",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S062",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S064",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S065",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S066",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S067",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S068",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S069",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S071",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S072",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S073",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S074",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S075",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S076",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S077",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S078",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S079",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S080",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S081",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S082",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S083",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S084",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S085",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S086",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S087",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S088",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S089",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S090",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S091",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S093",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S094",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S095",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S096",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S097",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S098",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S099",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S100",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S101",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S102",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S103",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S104",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S106",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S107",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S108",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S109",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S110",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S111",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S112",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    }
+  ],
+  "system": "agent-baseline",
+  "tied": [],
+  "winner": "rag",
+  "wins": {
+    "chain-of-thought": 1,
+    "fine-tuned": 4,
+    "no-retrieval": 14,
+    "query-rewriting": 1,
+    "rag": 59,
+    "rag-no-rerank": 5,
+    "rag-random": 2,
+    "self-consistency": 1
+  }
+}

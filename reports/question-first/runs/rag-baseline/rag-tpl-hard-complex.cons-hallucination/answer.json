@@ -1,0 +1,211 @@
+{
+  "agreeing": [],
+  "answer_text": "The provided passages do not contain the authors' conclusions regarding hallucination for the papers reporting results (S088, S051, S084, S005). The passages for these papers only include the Method and Results sections, which report that retrieval-augmented systems generally have lower hallucination frequencies or rates than vanilla LLMs on specific benchmarks [S088, 1211-2011], [S051, 1211-2011], [S084, 1211-2011]. However, the text does not include the Conclusion sections for these specific papers, so it is impossible to determine if the authors' stated conclusions agree with their reported results based solely on the provided text. The survey papers (S109, S107, S111) explicitly state they report no experiments of their own and leave empirical questions for future studies [S109, 0-1211], [S107, 0-1173], [S111, 1207-2049].",
+  "citations": [
+    {
+      "document": "S109",
+      "end": 1211,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "start": 1207
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "disagreeing": [],
+  "dropped": [],
+  "dropped_citations": [
+    {
+      "document": "S088",
+      "end": 2011,
+      "start": 1211
+    },
+    {
+      "document": "S051",
+      "end": 2011,
+      "start": 1211
+    },
+    {
+      "document": "S084",
+      "end": 2011,
+      "start": 1211
+    }
+  ],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "6b1a9155c63d5eff0b63a785451e19860dc419adc6f87525ea8843989555e26e",
+    "input_tokens": 1476,
+    "key": "ed0278c6f1408e7edaede2571e9c161ce7363707a5240f585af5adc0edb2d543",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 146,
+    "prompt_sha256": "7d81fef1ecf61007de8a01017fae6f822ec29ae30e973d77a4d0f683a5e8aca8",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "model_call": {
+    "input_sha256": "285dae453842732c7afcafac8ead04a107f17c5d58e52a296fe6f64979552b69",
+    "input_tokens": 2210,
+    "key": "4125e534d365fcc89cf1c636df750ebdf8e78d07683218a111344fbb0906eeb2",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 490,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "retrieved": [
+    {
+      "document": "S109",
+      "end": 1211,
+      "score": 11.022841,
+      "start": 0
+    },
+    {
+      "document": "S107",
+      "end": 1173,
+      "score": 8.141219,
+      "start": 0
+    },
+    {
+      "document": "S111",
+      "end": 2049,
+      "score": 7.976652,
+      "start": 1207
+    },
+    {
+      "document": "S109",
+      "end": 2011,
+      "score": 6.847203,
+      "start": 1211
+    },
+    {
+      "document": "S088",
+      "end": 2152,
+      "score": 5.684046,
+      "start": 763
+    },
+    {
+      "document": "S051",
+      "end": 2262,
+      "score": 5.632104,
+      "start": 793
+    },
+    {
+      "document": "S084",
+      "end": 2103,
+      "score": 5.632104,
+      "start": 720
+    },
+    {
+      "document": "S005",
+      "end": 1864,
+      "score": 5.218496,
+      "start": 768
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S005",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S051",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S084",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S088",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S107",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S109",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    },
+    {
+      "agrees": null,
+      "claim": null,
+      "direction": null,
+      "document": "S111",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      }
+    }
+  ],
+  "system": "rag-baseline",
+  "undetermined": [
+    "S005",
+    "S051",
+    "S084",
+    "S088",
+    "S107",
+    "S109",
+    "S111"
+  ]
+}

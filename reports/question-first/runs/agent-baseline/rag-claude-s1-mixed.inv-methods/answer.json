@@ -1,0 +1,901 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 58,
+    "exit_status": "submitted",
+    "model_calls": 54,
+    "run_id": "rag-claude-s1-mixed.inv-methods",
+    "steps": 52,
+    "tokens": 1323145
+  },
+  "agent_answer": {
+    "concept_sha256": "dbed65c67c40dfa273b9595ff8bb0e51ea04d7b5a146914adf3fee7a256dd8c0",
+    "kind": "table",
+    "notes": "Corpus is a synthetic collection of 20 papers (S001-S020), each a question-answering evaluation study. 'Methods/system variants' = the answer conditions each paper compares. The recurring axis is parametric/closed-book/no-retrieval vs. retrieval-augmented (RAG); additional variants across papers include fine-tuned models, self-consistency/voting decoding, query-rewriting/reformulation, chain-of-thought prompting, RAG with random (unretrieved) passages, and RAG without reranking. Claims claim-000001..claim-000058 record the per-pair condition quotes from each Method section. f1 (row r1) is the aggregate conclusion; f22-f41 (row r2) mirror the per-paper facts with their recorded claims. All 20 papers rest on.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "The papers compare parametric/closed-book (no-retrieval) answer systems against retrieval-augmented (RAG) variants and other system variants (fine-tuned, self-consistency/voting, query-rewriting, chain-of-thought, RAG-with-random, RAG-without-reranking). Across the 20 papers, every study contrasts at least a parametric-only / closed-book / no-retrieval baseline with a retrieval-augmented condition, and several add further variants.",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S010",
+            "S011",
+            "S012",
+            "S013",
+            "S014",
+            "S015",
+            "S016",
+            "S017",
+            "S018",
+            "S019",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "question-answering system variants (parametric-only/closed-book/no-retrieval vs. retrieval-augmented, plus fine-tuned, self-consistency/voting, query-rewriting, chain-of-thought, RAG-with-random, RAG-without-reranking)",
+            "origin": "research",
+            "p": "each compares a parametric/closed-book/no-retrieval baseline against a retrieval-augmented (RAG) condition (plus additional variants in several papers)",
+            "s": "S001-S020"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "parametric-only; retrieval-augmented; chain-of-thought prompting; fine-tuned",
+            "origin": "research",
+            "p": "compares",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "no-document-access (parametric); reads-retrieved-evidence; query-reformulation before search; no-reranker retrieval",
+            "origin": "research",
+            "p": "compares",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "parametric-only (code B); retrieval-augmented (code R)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "parametric-only; retrieve-then-read",
+            "origin": "research",
+            "p": "compares",
+            "s": "S004"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "closed-book; retrieval-augmented; fine-tuned; RAG without reranking",
+            "origin": "research",
+            "p": "compares",
+            "s": "S005"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "vanilla LLM; RAG pipeline; fine-tuned",
+            "origin": "research",
+            "p": "compares",
+            "s": "S006"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "no-document-access (parametric); looks-up-supporting-documents; further-training (fine-tuned)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "vanilla LLM (code B); retrieval-augmented generator (code R)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "parametric-only; RAG pipeline",
+            "origin": "research",
+            "p": "compares",
+            "s": "S009"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "vanilla LLM; retrieval-augmented; RAG without reranking",
+            "origin": "research",
+            "p": "compares",
+            "s": "S010"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "closed-book; retrieve-then-read; chain-of-thought prompting; RAG with random passages",
+            "origin": "research",
+            "p": "compares",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "answers-from-own-parameters (closed-book); reads-retrieved-evidence",
+            "origin": "research",
+            "p": "compares",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "vanilla LLM (code B); retrieval-augmented generator (code R); RAG with random passages (code A1)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f15",
+            "o": "closed-book; retrieval-augmented",
+            "origin": "research",
+            "p": "compares",
+            "s": "S014"
+          },
+          {
+            "claims": [],
+            "id": "f16",
+            "o": "parametric-only; RAG pipeline; fine-tuned; RAG with random passages",
+            "origin": "research",
+            "p": "compares",
+            "s": "S015"
+          },
+          {
+            "claims": [],
+            "id": "f17",
+            "o": "no-retrieval baseline; retrieval-augmented generator; RAG with random passages; query-rewriting variant",
+            "origin": "research",
+            "p": "compares",
+            "s": "S016"
+          },
+          {
+            "claims": [],
+            "id": "f18",
+            "o": "language model on its own; grounded-in-retrieved-passages; further-training (fine-tuned); samples-and-votes (self-consistency)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f19",
+            "o": "vanilla LLM (code B); retrieve-then-read (code R)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S018"
+          },
+          {
+            "claims": [],
+            "id": "f20",
+            "o": "no-retrieval baseline; retrieve-then-read; fine-tuned",
+            "origin": "research",
+            "p": "compares",
+            "s": "S019"
+          },
+          {
+            "claims": [],
+            "id": "f21",
+            "o": "no-retrieval baseline; retrieval-augmented; fine-tuned; self-consistency decoding",
+            "origin": "research",
+            "p": "compares",
+            "s": "S020"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Per-paper list of the specific methods/system variants each paper compares (see facts).",
+          "papers": [
+            "S001",
+            "S002",
+            "S003",
+            "S004",
+            "S005",
+            "S006",
+            "S007",
+            "S008",
+            "S009",
+            "S010",
+            "S011",
+            "S012",
+            "S013",
+            "S014",
+            "S015",
+            "S016",
+            "S017",
+            "S018",
+            "S019",
+            "S020"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f22",
+            "o": "parametric-only; retrieval-augmented; chain-of-thought prompting; fine-tuned",
+            "origin": "research",
+            "p": "compares",
+            "s": "S001"
+          },
+          {
+            "claims": [],
+            "id": "f23",
+            "o": "no-document-access (parametric); reads-retrieved-evidence; query-reformulation before search; no-reranker retrieval",
+            "origin": "research",
+            "p": "compares",
+            "s": "S002"
+          },
+          {
+            "claims": [],
+            "id": "f24",
+            "o": "parametric-only (code B); retrieval-augmented (code R)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S003"
+          },
+          {
+            "claims": [],
+            "id": "f25",
+            "o": "parametric-only; retrieve-then-read",
+            "origin": "research",
+            "p": "compares",
+            "s": "S004"
+          },
+          {
+            "claims": [],
+            "id": "f26",
+            "o": "closed-book; retrieval-augmented; fine-tuned; RAG without reranking",
+            "origin": "research",
+            "p": "compares",
+            "s": "S005"
+          },
+          {
+            "claims": [],
+            "id": "f27",
+            "o": "vanilla LLM; RAG pipeline; fine-tuned",
+            "origin": "research",
+            "p": "compares",
+            "s": "S006"
+          },
+          {
+            "claims": [],
+            "id": "f28",
+            "o": "no-document-access (parametric); looks-up-supporting-documents; further-training (fine-tuned)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f29",
+            "o": "vanilla LLM (code B); retrieval-augmented generator (code R)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f30",
+            "o": "parametric-only; RAG pipeline",
+            "origin": "research",
+            "p": "compares",
+            "s": "S009"
+          },
+          {
+            "claims": [],
+            "id": "f31",
+            "o": "vanilla LLM; retrieval-augmented; RAG without reranking",
+            "origin": "research",
+            "p": "compares",
+            "s": "S010"
+          },
+          {
+            "claims": [],
+            "id": "f32",
+            "o": "closed-book; retrieve-then-read; chain-of-thought prompting; RAG with random passages",
+            "origin": "research",
+            "p": "compares",
+            "s": "S011"
+          },
+          {
+            "claims": [],
+            "id": "f33",
+            "o": "answers-from-own-parameters (closed-book); reads-retrieved-evidence",
+            "origin": "research",
+            "p": "compares",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f34",
+            "o": "vanilla LLM (code B); retrieval-augmented generator (code R); RAG with random passages (code A1)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S013"
+          },
+          {
+            "claims": [],
+            "id": "f35",
+            "o": "closed-book; retrieval-augmented",
+            "origin": "research",
+            "p": "compares",
+            "s": "S014"
+          },
+          {
+            "claims": [],
+            "id": "f36",
+            "o": "parametric-only; RAG pipeline; fine-tuned; RAG with random passages",
+            "origin": "research",
+            "p": "compares",
+            "s": "S015"
+          },
+          {
+            "claims": [],
+            "id": "f37",
+            "o": "no-retrieval baseline; retrieval-augmented generator; RAG with random passages; query-rewriting variant",
+            "origin": "research",
+            "p": "compares",
+            "s": "S016"
+          },
+          {
+            "claims": [],
+            "id": "f38",
+            "o": "language model on its own; grounded-in-retrieved-passages; further-training (fine-tuned); samples-and-votes (self-consistency)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f39",
+            "o": "vanilla LLM (code B); retrieve-then-read (code R)",
+            "origin": "research",
+            "p": "compares",
+            "s": "S018"
+          },
+          {
+            "claims": [],
+            "id": "f40",
+            "o": "no-retrieval baseline; retrieve-then-read; fine-tuned",
+            "origin": "research",
+            "p": "compares",
+            "s": "S019"
+          },
+          {
+            "claims": [],
+            "id": "f41",
+            "o": "no-retrieval baseline; retrieval-augmented; fine-tuned; self-consistency decoding",
+            "origin": "research",
+            "p": "compares",
+            "s": "S020"
+          }
+        ],
+        "id": "r2"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"The papers compare parametric/closed-book (no-retrieval) answer systems against retrieval-augmented (RAG) variants and other system variants (fine-tuned, self-consistency/voting, query-rewriting, chain-of-thought, RAG-with-random, RAG-without-reranking). Across the 20 papers, every study contrasts at least a parametric-only / closed-book / no-retrieval baseline with a retrieval-augmented condition, and several add further variants.\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S013\", \"S014\", \"S015\", \"S016\", \"S017\", \"S018\", \"S019\", \"S020\"]}\n  fact: S001-S020 | each compares a parametric/closed-book/no-retrieval baseline against a retrieval-augmented (RAG) condition (plus additional variants in several papers) | question-answering system variants (parametric-only/closed-book/no-retrieval vs. retrieval-augmented, plus fine-tuned, self-consistency/voting, query-rewriting, chain-of-thought, RAG-with-random, RAG-without-reranking)\n  fact: S001 | compares | parametric-only; retrieval-augmented; chain-of-thought prompting; fine-tuned\n  fact: S002 | compares | no-document-access (parametric); reads-retrieved-evidence; query-reformulation before search; no-reranker retrieval\n  fact: S003 | compares | parametric-only (code B); retrieval-augmented (code R)\n  fact: S004 | compares | parametric-only; retrieve-then-read\n  fact: S005 | compares | closed-book; retrieval-augmented; fine-tuned; RAG without reranking\n  fact: S006 | compares | vanilla LLM; RAG pipeline; fine-tuned\n  fact: S007 | compares | no-document-access (parametric); looks-up-supporting-documents; further-training (fine-tuned)\n  fact: S008 | compares | vanilla LLM (code B); retrieval-augmented generator (code R)\n  fact: S009 | compares | parametric-only; RAG pipeline\n  fact: S010 | compares | vanilla LLM; retrieval-augmented; RAG without reranking\n  fact: S011 | compares | closed-book; retrieve-then-read; chain-of-thought prompting; RAG with random passages\n  fact: S012 | compares | answers-from-own-parameters (closed-book); reads-retrieved-evidence\n  fact: S013 | compares | vanilla LLM (code B); retrieval-augmented generator (code R); RAG with random passages (code A1)\n  fact: S014 | compares | closed-book; retrieval-augmented\n  fact: S015 | compares | parametric-only; RAG pipeline; fine-tuned; RAG with random passages\n  fact: S016 | compares | no-retrieval baseline; retrieval-augmented generator; RAG with random passages; query-rewriting variant\n  fact: S017 | compares | language model on its own; grounded-in-retrieved-passages; further-training (fine-tuned); samples-and-votes (self-consistency)\n  fact: S018 | compares | vanilla LLM (code B); retrieve-then-read (code R)\n  fact: S019 | compares | no-retrieval baseline; retrieve-then-read; fine-tuned\n  fact: S020 | compares | no-retrieval baseline; retrieval-augmented; fine-tuned; self-consistency decoding\nRow r2: {\"conclusion\": \"Per-paper list of the specific methods/system variants each paper compares (see facts).\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S013\", \"S014\", \"S015\", \"S016\", \"S017\", \"S018\", \"S019\", \"S020\"]}\n  fact: S001 | compares | parametric-only; retrieval-augmented; chain-of-thought prompting; fine-tuned\n  fact: S002 | compares | no-document-access (parametric); reads-retrieved-evidence; query-reformulation before search; no-reranker retrieval\n  fact: S003 | compares | parametric-only (code B); retrieval-augmented (code R)\n  fact: S004 | compares | parametric-only; retrieve-then-read\n  fact: S005 | compares | closed-book; retrieval-augmented; fine-tuned; RAG without reranking\n  fact: S006 | compares | vanilla LLM; RAG pipeline; fine-tuned\n  fact: S007 | compares | no-document-access (parametric); looks-up-supporting-documents; further-training (fine-tuned)\n  fact: S008 | compares | vanilla LLM (code B); retrieval-augmented generator (code R)\n  fact: S009 | compares | parametric-only; RAG pipeline\n  fact: S010 | compares | vanilla LLM; retrieval-augmented; RAG without reranking\n  fact: S011 | compares | closed-book; retrieve-then-read; chain-of-thought prompting; RAG with random passages\n  fact: S012 | compares | answers-from-own-parameters (closed-book); reads-retrieved-evidence\n  fact: S013 | compares | vanilla LLM (code B); retrieval-augmented generator (code R); RAG with random passages (code A1)\n  fact: S014 | compares | closed-book; retrieval-augmented\n  fact: S015 | compares | parametric-only; RAG pipeline; fine-tuned; RAG with random passages\n  fact: S016 | compares | no-retrieval baseline; retrieval-augmented generator; RAG with random passages; query-rewriting variant\n  fact: S017 | compares | language model on its own; grounded-in-retrieved-passages; further-training (fine-tuned); samples-and-votes (self-consistency)\n  fact: S018 | compares | vanilla LLM (code B); retrieve-then-read (code R)\n  fact: S019 | compares | no-retrieval baseline; retrieve-then-read; fine-tuned\n  fact: S020 | compares | no-retrieval baseline; retrieval-augmented; fine-tuned; self-consistency decoding\nNotes: Corpus is a synthetic collection of 20 papers (S001-S020), each a question-answering evaluation study. 'Methods/system variants' = the answer conditions each paper compares. The recurring axis is parametric/closed-book/no-retrieval vs. retrieval-augmented (RAG); additional variants across papers include fine-tuned models, self-consistency/voting decoding, query-rewriting/reformulation, chain-of-thought prompting, RAG with random (unretrieved) passages, and RAG without reranking. Claims claim-000001..claim-000058 record the per-pair condition quotes from each Method section. f1 (row r1) is the aggregate conclusion; f22-f41 (row r2) mirror the per-paper facts with their recorded claims. All 20 papers rest on.",
+  "answer_text": "Row r1: {\"conclusion\": \"The papers compare parametric/closed-book (no-retrieval) answer systems against retrieval-augmented (RAG) variants and other system variants (fine-tuned, self-consistency/voting, query-rewriting, chain-of-thought, RAG-with-random, RAG-without-reranking). Across the 20 papers, every study contrasts at least a parametric-only / closed-book / no-retrieval baseline with a retrieval-augmented condition, and several add further variants.\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S013\", \"S014\", \"S015\", \"S016\", \"S017\", \"S018\", \"S019\", \"S020\"]}\n  fact: S001-S020 | each compares a parametric/closed-book/no-retrieval baseline against a retrieval-augmented (RAG) condition (plus additional variants in several papers) | question-answering system variants (parametric-only/closed-book/no-retrieval vs. retrieval-augmented, plus fine-tuned, self-consistency/voting, query-rewriting, chain-of-thought, RAG-with-random, RAG-without-reranking)\n  fact: S001 | compares | parametric-only; retrieval-augmented; chain-of-thought prompting; fine-tuned\n  fact: S002 | compares | no-document-access (parametric); reads-retrieved-evidence; query-reformulation before search; no-reranker retrieval\n  fact: S003 | compares | parametric-only (code B); retrieval-augmented (code R)\n  fact: S004 | compares | parametric-only; retrieve-then-read\n  fact: S005 | compares | closed-book; retrieval-augmented; fine-tuned; RAG without reranking\n  fact: S006 | compares | vanilla LLM; RAG pipeline; fine-tuned\n  fact: S007 | compares | no-document-access (parametric); looks-up-supporting-documents; further-training (fine-tuned)\n  fact: S008 | compares | vanilla LLM (code B); retrieval-augmented generator (code R)\n  fact: S009 | compares | parametric-only; RAG pipeline\n  fact: S010 | compares | vanilla LLM; retrieval-augmented; RAG without reranking\n  fact: S011 | compares | closed-book; retrieve-then-read; chain-of-thought prompting; RAG with random passages\n  fact: S012 | compares | answers-from-own-parameters (closed-book); reads-retrieved-evidence\n  fact: S013 | compares | vanilla LLM (code B); retrieval-augmented generator (code R); RAG with random passages (code A1)\n  fact: S014 | compares | closed-book; retrieval-augmented\n  fact: S015 | compares | parametric-only; RAG pipeline; fine-tuned; RAG with random passages\n  fact: S016 | compares | no-retrieval baseline; retrieval-augmented generator; RAG with random passages; query-rewriting variant\n  fact: S017 | compares | language model on its own; grounded-in-retrieved-passages; further-training (fine-tuned); samples-and-votes (self-consistency)\n  fact: S018 | compares | vanilla LLM (code B); retrieve-then-read (code R)\n  fact: S019 | compares | no-retrieval baseline; retrieve-then-read; fine-tuned\n  fact: S020 | compares | no-retrieval baseline; retrieval-augmented; fine-tuned; self-consistency decoding\nRow r2: {\"conclusion\": \"Per-paper list of the specific methods/system variants each paper compares (see facts).\", \"papers\": [\"S001\", \"S002\", \"S003\", \"S004\", \"S005\", \"S006\", \"S007\", \"S008\", \"S009\", \"S010\", \"S011\", \"S012\", \"S013\", \"S014\", \"S015\", \"S016\", \"S017\", \"S018\", \"S019\", \"S020\"]}\n  fact: S001 | compares | parametric-only; retrieval-augmented; chain-of-thought prompting; fine-tuned\n  fact: S002 | compares | no-document-access (parametric); reads-retrieved-evidence; query-reformulation before search; no-reranker retrieval\n  fact: S003 | compares | parametric-only (code B); retrieval-augmented (code R)\n  fact: S004 | compares | parametric-only; retrieve-then-read\n  fact: S005 | compares | closed-book; retrieval-augmented; fine-tuned; RAG without reranking\n  fact: S006 | compares | vanilla LLM; RAG pipeline; fine-tuned\n  fact: S007 | compares | no-document-access (parametric); looks-up-supporting-documents; further-training (fine-tuned)\n  fact: S008 | compares | vanilla LLM (code B); retrieval-augmented generator (code R)\n  fact: S009 | compares | parametric-only; RAG pipeline\n  fact: S010 | compares | vanilla LLM; retrieval-augmented; RAG without reranking\n  fact: S011 | compares | closed-book; retrieve-then-read; chain-of-thought prompting; RAG with random passages\n  fact: S012 | compares | answers-from-own-parameters (closed-book); reads-retrieved-evidence\n  fact: S013 | compares | vanilla LLM (code B); retrieval-augmented generator (code R); RAG with random passages (code A1)\n  fact: S014 | compares | closed-book; retrieval-augmented\n  fact: S015 | compares | parametric-only; RAG pipeline; fine-tuned; RAG with random passages\n  fact: S016 | compares | no-retrieval baseline; retrieval-augmented generator; RAG with random passages; query-rewriting variant\n  fact: S017 | compares | language model on its own; grounded-in-retrieved-passages; further-training (fine-tuned); samples-and-votes (self-consistency)\n  fact: S018 | compares | vanilla LLM (code B); retrieve-then-read (code R)\n  fact: S019 | compares | no-retrieval baseline; retrieve-then-read; fine-tuned\n  fact: S020 | compares | no-retrieval baseline; retrieval-augmented; fine-tuned; self-consistency decoding\nNotes: Corpus is a synthetic collection of 20 papers (S001-S020), each a question-answering evaluation study. 'Methods/system variants' = the answer conditions each paper compares. The recurring axis is parametric/closed-book/no-retrieval vs. retrieval-augmented (RAG); additional variants across papers include fine-tuned models, self-consistency/voting decoding, query-rewriting/reformulation, chain-of-thought prompting, RAG with random (unretrieved) passages, and RAG without reranking. Claims claim-000001..claim-000058 record the per-pair condition quotes from each Method section. f1 (row r1) is the aggregate conclusion; f22-f41 (row r2) mirror the per-paper facts with their recorded claims. All 20 papers rest on.",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "answers-from-own-parameters (closed-book)",
+      "papers": [
+        "S012"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "chain-of-thought",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "chain-of-thought prompting",
+      "papers": [
+        "S001",
+        "S011"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "closed-book",
+      "papers": [
+        "S005",
+        "S011",
+        "S014"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "fine-tuned",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "further-training (fine-tuned)",
+      "papers": [
+        "S007",
+        "S017"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "grounded-in-retrieved-passages",
+      "papers": [
+        "S017"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "language model on its own",
+      "papers": [
+        "S017"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "looks-up-supporting-documents",
+      "papers": [
+        "S007"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "no-document-access (parametric)",
+      "papers": [
+        "S002",
+        "S007"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "no-reranker retrieval",
+      "papers": [
+        "S002"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "no-retrieval baseline",
+      "papers": [
+        "S016",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "parametric-only",
+      "papers": [
+        "S001",
+        "S003",
+        "S004",
+        "S009",
+        "S015"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "parametric-only (code B)",
+      "papers": [
+        "S003"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "parametric/closed-book (no-retrieval) answer systems",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "query-reformulation before search",
+      "papers": [
+        "S002"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "query-rewriting",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "query-rewriting variant",
+      "papers": [
+        "S016"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG pipeline",
+      "papers": [
+        "S006",
+        "S009",
+        "S015"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG with random passages",
+      "papers": [
+        "S011",
+        "S015",
+        "S016"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG with random passages (code A1)",
+      "papers": [
+        "S013"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG without reranking",
+      "papers": [
+        "S005",
+        "S010"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG-with-random",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG-without-reranking",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "reads-retrieved-evidence",
+      "papers": [
+        "S002",
+        "S012"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieval-augmented",
+      "papers": [
+        "S001",
+        "S003",
+        "S005",
+        "S010",
+        "S014",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieval-augmented (code R)",
+      "papers": [
+        "S003"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieval-augmented (RAG) variants",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieval-augmented generator",
+      "papers": [
+        "S016"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieval-augmented generator (code R)",
+      "papers": [
+        "S008",
+        "S013"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieve-then-read",
+      "papers": [
+        "S004",
+        "S011",
+        "S018",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "samples-and-votes (self-consistency)",
+      "papers": [
+        "S017"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "self-consistency decoding",
+      "papers": [
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "self-consistency/voting",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016",
+        "S017",
+        "S018",
+        "S019",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "vanilla LLM",
+      "papers": [
+        "S006",
+        "S010",
+        "S013"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "vanilla LLM (code B)",
+      "papers": [
+        "S008",
+        "S013",
+        "S018"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "2207cc4424e30ca283f95f52402de75d6ff4d2e7951cbc9f9a7bf8d51a101d6e",
+    "input_tokens": 2510,
+    "key": "7a9c9b265a70962ed0fd235d6dcbcf54f9e4faf078f0455a6e95b3a4af534f6f",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1852,
+    "prompt_sha256": "337685d8abf98f6ee4e5bf8f939d26332a2650f0742b14fb5b9ea014e641ecee",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "system": "agent-baseline",
+  "target": "condition"
+}

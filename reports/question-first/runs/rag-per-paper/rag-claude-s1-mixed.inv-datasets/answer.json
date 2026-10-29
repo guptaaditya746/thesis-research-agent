@@ -1,0 +1,478 @@
+{
+  "answer_text": "The papers evaluate on the following datasets: LawFactQA, GeoFacts, HistoryQuest, PopCultureQA, OpenFactQA, SciFactBench, NewsTruthQA, TriviaCheck, and BioClaimQA. Specifically, LawFactQA is used in [S001, 0-1023], [S002, 0-1160], [S003, 0-1419], [S004, 1325-2474], [S009, 0-1270], and [S020, 0-1260]. GeoFacts is used in [S004, 1325-2474]. HistoryQuest is used in [S005, 0-1073], [S016, 0-1395], and [S019, 1156-1944]. PopCultureQA is used in [S006, 0-1367], [S013, 1316-2748], [S017, 1311-2304], and [S018, 0-1187]. OpenFactQA is used in [S007, 0-1427]. SciFactBench is used in [S008, 0-960] and [S015, 0-1067]. NewsTruthQA is used in [S009, 0-1270] and [S012, 0-1346]. TriviaCheck is used in [S010, 0-957], [S011, 0-1086], [S014, 0-908], and [S019, 1156-1944]. BioClaimQA is used in [S014, 0-908].",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 1023,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 2474,
+      "start": 1325
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 960,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "start": 1316
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1944,
+      "start": 1156
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "start": 0
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BioClaimQA",
+      "papers": [
+        "S014"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "GeoFacts",
+      "papers": [
+        "S004"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "HistoryQuest",
+      "papers": [
+        "S005",
+        "S016",
+        "S019"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "LawFactQA",
+      "papers": [
+        "S001",
+        "S002",
+        "S003",
+        "S004",
+        "S009",
+        "S020"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "NewsTruthQA",
+      "papers": [
+        "S009",
+        "S012"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "OpenFactQA",
+      "papers": [
+        "S007"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "PopCultureQA",
+      "papers": [
+        "S006",
+        "S013",
+        "S017",
+        "S018"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "SciFactBench",
+      "papers": [
+        "S008",
+        "S015"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "TriviaCheck",
+      "papers": [
+        "S010",
+        "S011",
+        "S014",
+        "S019"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "357df034ff6d5ce05776406ff1fecd99153d6262531071310f9f6de031433c17",
+    "input_tokens": 1447,
+    "key": "80dd1f98711d87ba0c836bbf0cce455ba8edd1ce9c71f99ec0c9b20fb05ed75b",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 255,
+    "prompt_sha256": "168da6790a68e7dec70418f6e24701b91699dfa7f53afd923cdca204a5becd61",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "f810ccafcb4bee8ea342946cd671ca874e457f7fe6f8c76a5f3c2f6cf05804ea",
+    "input_tokens": 10235,
+    "key": "7ceabd6e47a6828e32175b08f359b278d5abbc17534ef369df164440625c9ee3",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1008,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which datasets do the papers evaluate on?",
+  "question_id": "inv-datasets",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 3.73844,
+      "start": 0
+    },
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 3.391609,
+      "start": 1023
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 3.47497,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "score": 2.641251,
+      "start": 2039
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 3.168726,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 2532,
+      "score": 3.045614,
+      "start": 1419
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 5.794427,
+      "start": 2474
+    },
+    {
+      "document": "S004",
+      "end": 2474,
+      "score": 4.081439,
+      "start": 1325
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 3.416579,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 3.17848,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 3.320624,
+      "start": 1367
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 3.224667,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 3.122428,
+      "start": 2635
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 3.088272,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 3.405685,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 3.353032,
+      "start": 960
+    },
+    {
+      "document": "S009",
+      "end": 3633,
+      "score": 5.814313,
+      "start": 2316
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 5.387601,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 3.518178,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 2.968476,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 3.59263,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 3.520966,
+      "start": 2419
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 3.205065,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 3.099316,
+      "start": 2754
+    },
+    {
+      "document": "S013",
+      "end": 4227,
+      "score": 3.487139,
+      "start": 2748
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 3.071085,
+      "start": 1316
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 3.391906,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2938,
+      "score": 2.612769,
+      "start": 2256
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 3.456469,
+      "start": 1067
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 3.181478,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 3649,
+      "score": 3.579675,
+      "start": 2667
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 3.561626,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 3.099513,
+      "start": 1311
+    },
+    {
+      "document": "S017",
+      "end": 3687,
+      "score": 2.662702,
+      "start": 2304
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 3.505435,
+      "start": 1187
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "score": 3.452548,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 1944,
+      "score": 4.540605,
+      "start": 1156
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 4.366529,
+      "start": 1944
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 3.58892,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 3.321943,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "dataset"
+}

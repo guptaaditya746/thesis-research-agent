@@ -1,0 +1,20 @@
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/inv-datasets-cascade-gaps/rag-claude-s1-mixed",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 100,
+  "input_tokens": 49863,
+  "made_model_calls": 114,
+  "model_calls": 114,
+  "output_tokens": 3974,
+  "seconds": 46.87,
+  "workers": 3
+ }
+}
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/rag-baseline/rag-claude-s1-mixed.inv-datasets/answer.json: kind=inventory entries=5
+broker: start run=rag-claude-s1-mixed.inv-datasets records=0 head=0000000000000000000000000000000000000000000000000000000000000000
+broker: close run=rag-claude-s1-mixed.inv-datasets records=108 claims=33 head=1f72d1d4b334699e9c0ed6ab0990c46dd8e5ac13b76d45b1593d79e2397fbf62
+run rag-claude-s1-mixed.inv-datasets: broker head=1f72d1d4b334699e9c0ed6ab0990c46dd8e5ac13b76d45b1593d79e2397fbf62 records=108 claims=33
+/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/agent-baseline/rag-claude-s1-mixed.inv-datasets/answer.json: kind=inventory entries=8 agent exit=submitted
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/rag-claude-s1-mixed/inv-datasets/report.md

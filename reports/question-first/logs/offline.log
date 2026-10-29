@@ -1,0 +1,43 @@
+{
+ "id": "inv-datasets",
+ "version": 2,
+ "revision": null,
+ "sha256": "2a61da17302bdf2ee5eddd47df80dc6ea6f0bb0bc4c9245d2b0ca856c225a58a",
+ "phases": [
+  "dataset"
+ ],
+ "extractors": {
+  "dataset": [
+   "regex_dataset",
+   "gliner_dataset",
+   "llm_dataset"
+  ]
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/check/check",
+ "kind": "inventory",
+ "cost": {
+  "cached_calls": 0,
+  "calls": 40,
+  "input_tokens": 0,
+  "made_model_calls": 0,
+  "model_calls": 0,
+  "output_tokens": 0,
+  "seconds": 1.338,
+  "workers": 3
+ }
+}
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/runs/check/check-replay-20261028T065825940810Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "check",
+ "replay_run": "check-replay-20261028T065825940810Z"
+}
+wrote /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/check/report.json and /mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/scores/check/report.md
+scored_types ['dataset']
+condition), `no_question_metric` (no metric item has `best.metric.canonical`; escalates metric, as effect does) and
+GAP_TYPES: dict[str, tuple[EvidenceType, ...]] = {"too_few_kinds": ("condition",), "no_question_metric": ("metric",),
+           "no_question_metric": "no metric item of {metric} found",
+        entry["reason"] = reason("no_question_metric", best)

@@ -1,0 +1,287 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 27,
+    "exit_status": "submitted",
+    "model_calls": 25,
+    "run_id": "rag-claude-s1-mixed.best-hallucination",
+    "steps": 25,
+    "tokens": 240569
+  },
+  "agent_answer": {
+    "concept_sha256": "efde1783c35fbcbfffe5f9618bf8047b00a322a6ce2edf9dccdee60034ce22c9",
+    "kind": "table",
+    "notes": "Only 9 of the 20 corpus papers report a hallucination / unsupported-statement / invented-fact rate; the other 11 papers do not measure hallucination. S007, S012 and S017 report their values in mixed units (fractions such as 0.399, counts per 1,000 such as 391, and percentages); values were normalized to percentages for comparison. S008 and S018 use condition codes: in S008 R is the retrieval-augmented generator and B the vanilla LLM; in S018 R is the retrieve-then-read model and B the vanilla LLM. No paper reports uncertainty estimates for these rates. Supporting claims: claim-000001 through claim-000027.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "S001 (Legal Question Answering: A Controlled Comparison): chain-of-thought prompting has the lowest hallucination rate at 9.4% (vs. retrieval-augmented 17.8%, parametric-only 29.5%, fine-tuned 47.1%)",
+          "papers": [
+            "S001.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "9.4%",
+            "origin": "research",
+            "p": "has hallucination rate of",
+            "s": "S001 chain-of-thought prompting"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "S006 (Hallucination Rate on PopCultureQA Across Model Designs): the fine-tuned model has the lowest hallucination rate at 9.8% (vs. RAG 18.3%, vanilla 21.5%)",
+          "papers": [
+            "S006.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "9.8%",
+            "origin": "research",
+            "p": "has hallucination rate of",
+            "s": "S006 fine-tuned model"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "S007 (Three Conditions on a Factual Question Benchmark): the generator adapted to the domain by further training has the lowest unsupported-statement rate at 18.2% (vs. no-document 39.1% and lookup 39.9%)",
+          "papers": [
+            "S007.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "18.2%",
+            "origin": "research",
+            "p": "has unsupported-statement rate of",
+            "s": "S007 generator adapted to the domain by further training"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "S008 (Grounded Generation on Science Questions): R (retrieval-augmented generator) has the lowest hallucination rate at 6.3% (vs. B vanilla LLM 20.2%)",
+          "papers": [
+            "S008.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "6.3%",
+            "origin": "research",
+            "p": "has hallucination rate of",
+            "s": "S008 condition R (retrieval-augmented generator)"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "S010 (Passage Order in Trivia Answering): RAG without reranking has the lowest hallucination rate at 23.1% (vs. RAG with reranking 28.9%, retrieval-augmented 32.3%, vanilla 38.1%)",
+          "papers": [
+            "S010.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "23.1%",
+            "origin": "research",
+            "p": "has hallucination rate of",
+            "s": "S010 RAG without reranking"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "S012 (Two Conditions on a News Fact Benchmark): the model that answers from its own parameters has the lowest unsupported-statement rate at 19.3% (vs. retrieval-first 29.2%)",
+          "papers": [
+            "S012.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "19.3%",
+            "origin": "research",
+            "p": "has unsupported-statement rate of",
+            "s": "S012 model that answers from its own parameters"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "S016 (Hallucination Frequency on HistoryQuest Under Alternative Lookup Designs): the retrieval-augmented generator has the lowest hallucination frequency at 5.1% (vs. no-retrieval 10.3%, query-rewriting 30.4%, RAG with random 41.2%)",
+          "papers": [
+            "S016.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "5.1%",
+            "origin": "research",
+            "p": "has hallucination frequency of",
+            "s": "S016 retrieval-augmented generator"
+          }
+        ],
+        "id": "r7"
+      },
+      {
+        "cells": {
+          "conclusion": "S017 (Invented Facts Across Generator Conditions on Popular Culture Questions): the model that samples several answers and votes has the lowest invented-fact rate at 19.1% (vs. grounded-in-retrieved 31.4%, LM-alone 39.2%)",
+          "papers": [
+            "S017.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "19.1%",
+            "origin": "research",
+            "p": "has invented-fact rate of",
+            "s": "S017 model that samples several answers and votes"
+          }
+        ],
+        "id": "r8"
+      },
+      {
+        "cells": {
+          "conclusion": "S018 (Hallucination Rate in Two Answer Conditions): R (retrieve-then-read model) has the lowest hallucination rate at 16.3% (vs. B vanilla LLM 20.8%)",
+          "papers": [
+            "S018.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "16.3%",
+            "origin": "research",
+            "p": "has hallucination rate of",
+            "s": "S018 condition R (retrieve-then-read model)"
+          }
+        ],
+        "id": "r9"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"S001 (Legal Question Answering: A Controlled Comparison): chain-of-thought prompting has the lowest hallucination rate at 9.4% (vs. retrieval-augmented 17.8%, parametric-only 29.5%, fine-tuned 47.1%)\", \"papers\": [\"S001.md\"]}\n  fact: S001 chain-of-thought prompting | has hallucination rate of | 9.4%\nRow r2: {\"conclusion\": \"S006 (Hallucination Rate on PopCultureQA Across Model Designs): the fine-tuned model has the lowest hallucination rate at 9.8% (vs. RAG 18.3%, vanilla 21.5%)\", \"papers\": [\"S006.md\"]}\n  fact: S006 fine-tuned model | has hallucination rate of | 9.8%\nRow r3: {\"conclusion\": \"S007 (Three Conditions on a Factual Question Benchmark): the generator adapted to the domain by further training has the lowest unsupported-statement rate at 18.2% (vs. no-document 39.1% and lookup 39.9%)\", \"papers\": [\"S007.md\"]}\n  fact: S007 generator adapted to the domain by further training | has unsupported-statement rate of | 18.2%\nRow r4: {\"conclusion\": \"S008 (Grounded Generation on Science Questions): R (retrieval-augmented generator) has the lowest hallucination rate at 6.3% (vs. B vanilla LLM 20.2%)\", \"papers\": [\"S008.md\"]}\n  fact: S008 condition R (retrieval-augmented generator) | has hallucination rate of | 6.3%\nRow r5: {\"conclusion\": \"S010 (Passage Order in Trivia Answering): RAG without reranking has the lowest hallucination rate at 23.1% (vs. RAG with reranking 28.9%, retrieval-augmented 32.3%, vanilla 38.1%)\", \"papers\": [\"S010.md\"]}\n  fact: S010 RAG without reranking | has hallucination rate of | 23.1%\nRow r6: {\"conclusion\": \"S012 (Two Conditions on a News Fact Benchmark): the model that answers from its own parameters has the lowest unsupported-statement rate at 19.3% (vs. retrieval-first 29.2%)\", \"papers\": [\"S012.md\"]}\n  fact: S012 model that answers from its own parameters | has unsupported-statement rate of | 19.3%\nRow r7: {\"conclusion\": \"S016 (Hallucination Frequency on HistoryQuest Under Alternative Lookup Designs): the retrieval-augmented generator has the lowest hallucination frequency at 5.1% (vs. no-retrieval 10.3%, query-rewriting 30.4%, RAG with random 41.2%)\", \"papers\": [\"S016.md\"]}\n  fact: S016 retrieval-augmented generator | has hallucination frequency of | 5.1%\nRow r8: {\"conclusion\": \"S017 (Invented Facts Across Generator Conditions on Popular Culture Questions): the model that samples several answers and votes has the lowest invented-fact rate at 19.1% (vs. grounded-in-retrieved 31.4%, LM-alone 39.2%)\", \"papers\": [\"S017.md\"]}\n  fact: S017 model that samples several answers and votes | has invented-fact rate of | 19.1%\nRow r9: {\"conclusion\": \"S018 (Hallucination Rate in Two Answer Conditions): R (retrieve-then-read model) has the lowest hallucination rate at 16.3% (vs. B vanilla LLM 20.8%)\", \"papers\": [\"S018.md\"]}\n  fact: S018 condition R (retrieve-then-read model) | has hallucination rate of | 16.3%\nNotes: Only 9 of the 20 corpus papers report a hallucination / unsupported-statement / invented-fact rate; the other 11 papers do not measure hallucination. S007, S012 and S017 report their values in mixed units (fractions such as 0.399, counts per 1,000 such as 391, and percentages); values were normalized to percentages for comparison. S008 and S018 use condition codes: in S008 R is the retrieval-augmented generator and B the vanilla LLM; in S018 R is the retrieve-then-read model and B the vanilla LLM. No paper reports uncertainty estimates for these rates. Supporting claims: claim-000001 through claim-000027.",
+  "answer_text": "Row r1: {\"conclusion\": \"S001 (Legal Question Answering: A Controlled Comparison): chain-of-thought prompting has the lowest hallucination rate at 9.4% (vs. retrieval-augmented 17.8%, parametric-only 29.5%, fine-tuned 47.1%)\", \"papers\": [\"S001.md\"]}\n  fact: S001 chain-of-thought prompting | has hallucination rate of | 9.4%\nRow r2: {\"conclusion\": \"S006 (Hallucination Rate on PopCultureQA Across Model Designs): the fine-tuned model has the lowest hallucination rate at 9.8% (vs. RAG 18.3%, vanilla 21.5%)\", \"papers\": [\"S006.md\"]}\n  fact: S006 fine-tuned model | has hallucination rate of | 9.8%\nRow r3: {\"conclusion\": \"S007 (Three Conditions on a Factual Question Benchmark): the generator adapted to the domain by further training has the lowest unsupported-statement rate at 18.2% (vs. no-document 39.1% and lookup 39.9%)\", \"papers\": [\"S007.md\"]}\n  fact: S007 generator adapted to the domain by further training | has unsupported-statement rate of | 18.2%\nRow r4: {\"conclusion\": \"S008 (Grounded Generation on Science Questions): R (retrieval-augmented generator) has the lowest hallucination rate at 6.3% (vs. B vanilla LLM 20.2%)\", \"papers\": [\"S008.md\"]}\n  fact: S008 condition R (retrieval-augmented generator) | has hallucination rate of | 6.3%\nRow r5: {\"conclusion\": \"S010 (Passage Order in Trivia Answering): RAG without reranking has the lowest hallucination rate at 23.1% (vs. RAG with reranking 28.9%, retrieval-augmented 32.3%, vanilla 38.1%)\", \"papers\": [\"S010.md\"]}\n  fact: S010 RAG without reranking | has hallucination rate of | 23.1%\nRow r6: {\"conclusion\": \"S012 (Two Conditions on a News Fact Benchmark): the model that answers from its own parameters has the lowest unsupported-statement rate at 19.3% (vs. retrieval-first 29.2%)\", \"papers\": [\"S012.md\"]}\n  fact: S012 model that answers from its own parameters | has unsupported-statement rate of | 19.3%\nRow r7: {\"conclusion\": \"S016 (Hallucination Frequency on HistoryQuest Under Alternative Lookup Designs): the retrieval-augmented generator has the lowest hallucination frequency at 5.1% (vs. no-retrieval 10.3%, query-rewriting 30.4%, RAG with random 41.2%)\", \"papers\": [\"S016.md\"]}\n  fact: S016 retrieval-augmented generator | has hallucination frequency of | 5.1%\nRow r8: {\"conclusion\": \"S017 (Invented Facts Across Generator Conditions on Popular Culture Questions): the model that samples several answers and votes has the lowest invented-fact rate at 19.1% (vs. grounded-in-retrieved 31.4%, LM-alone 39.2%)\", \"papers\": [\"S017.md\"]}\n  fact: S017 model that samples several answers and votes | has invented-fact rate of | 19.1%\nRow r9: {\"conclusion\": \"S018 (Hallucination Rate in Two Answer Conditions): R (retrieve-then-read model) has the lowest hallucination rate at 16.3% (vs. B vanilla LLM 20.8%)\", \"papers\": [\"S018.md\"]}\n  fact: S018 condition R (retrieve-then-read model) | has hallucination rate of | 16.3%\nNotes: Only 9 of the 20 corpus papers report a hallucination / unsupported-statement / invented-fact rate; the other 11 papers do not measure hallucination. S007, S012 and S017 report their values in mixed units (fractions such as 0.399, counts per 1,000 such as 391, and percentages); values were normalized to percentages for comparison. S008 and S018 use condition codes: in S008 R is the retrieval-augmented generator and B the vanilla LLM; in S018 R is the retrieve-then-read model and B the vanilla LLM. No paper reports uncertainty estimates for these rates. Supporting claims: claim-000001 through claim-000027.",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "037220f0a68ff7d11d4453bb9b80322c3d1b3dd0a96582b3395fc7497b6fc720",
+    "input_tokens": 2065,
+    "key": "d5b5568f6378c8071e7ea13bf1136a0f6e46d6ad64fc181a113312161aac8bb2",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 211,
+    "prompt_sha256": "a1c4954150248fff31a8f6706cd0eb91ea320893e2d7f54164d32e952dffb9a4",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "question": "Which method achieves the lowest hallucination rate within each paper?",
+  "question_id": "best-hallucination",
+  "studies": [
+    {
+      "document": "S001",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "chain-of-thought"
+    },
+    {
+      "document": "S006",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S007",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S008",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S010",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S012",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S016",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S017",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "self-consistency"
+    },
+    {
+      "document": "S018",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    }
+  ],
+  "system": "agent-baseline",
+  "tied": [],
+  "winner": "rag",
+  "wins": {
+    "chain-of-thought": 1,
+    "fine-tuned": 2,
+    "no-retrieval": 1,
+    "rag": 3,
+    "rag-no-rerank": 1,
+    "self-consistency": 1
+  }
+}

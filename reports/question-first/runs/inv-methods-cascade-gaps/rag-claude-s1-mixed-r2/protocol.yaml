@@ -1,0 +1,76 @@
+# Research protocol: which methods or system variants do the papers compare? (question-first redesign, 25 Oct 2026). An inventory: every
+# distinct condition the papers report (evidence/kinds/inventory.py). Only the condition evidence type is declared;
+# `inventory.same` is left empty, so merging names that mean the same thing is the answer's job, not the protocol's.
+# Written by hand; its sha256 is the digest of the parsed content (evidence/protocol.py).
+
+id: inv-methods
+version: 2
+kind: inventory
+question: Which methods or system variants do the papers compare?
+
+locate:
+  strategy: exhaustive        # exhaustive | bm25 | agent
+  params:
+    chunk_chars: 1500         # bm25: size of the ranked passages
+    top_k: 6                  # bm25: passages kept per document and evidence type
+
+screen:                       # per document, before any extraction (the funnel engine, Part D)
+  question: >-
+    Does the paper report an experiment that compares a retrieval-augmented system with the same model
+    answering without retrieval?
+  terms: [retrieval-augmented, retrieval augmented, RAG, retrieval, closed-book, without retrieval]
+  extractors:
+    - name: regex_screen      # no term in the paper: not relevant
+    - name: llm_screen        # otherwise the model answers the question
+  on_fail: skip               # skip | extract_anyway
+
+evidence_types:
+  condition:
+    description: >-
+      An experimental condition the paper compares: a system variant or method whose results are reported
+      (the retrieval-augmented system, the model without retrieval, ablations, other methods).
+    fields:
+      type: object
+      additionalProperties: false
+      required: [label]
+      properties:
+        label: {type: string, minLength: 1, description: the condition's name as the paper gives it}
+    roles: [condition_label]
+    merge_key: [label]
+    query: [retrieval, augmented, RAG, closed-book, baseline, without, variant, system, condition, compare, method]
+    extractors:
+      - name: regex_condition_kind   # condition names (labels and synonyms of synth/vocab.py)
+        config:
+          names:
+            - closed-book model
+            - model that answers from its own parameters
+            - parametric-only model
+            - generator without any document access
+            - no-retrieval baseline
+            - language model used on its own
+            - vanilla LLM
+            - plain generator with no lookup step
+            - retrieval-augmented model
+            - model that consults the document index before answering
+            - RAG pipeline
+            - system grounded in retrieved passages
+            - retrieval-augmented generator
+            - variant that reads retrieved evidence first
+            - retrieve-then-read model
+            - configuration that looks up supporting documents
+            - RAG without reranking
+            - retrieval variant that skips the reranker
+            - RAG with random passages
+            - variant fed with randomly drawn passages
+            - fine-tuned model
+            - generator adapted to the domain by further training
+            - chain-of-thought prompting
+            - model prompted to reason step by step
+            - self-consistency decoding
+            - model that samples several answers and votes
+            - query-rewriting variant
+            - variant that reformulates the question before the search
+      - name: llm_condition
+
+inventory:
+  target: condition

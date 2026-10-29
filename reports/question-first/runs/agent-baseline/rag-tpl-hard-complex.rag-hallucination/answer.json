@@ -1,0 +1,133 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 0,
+    "exit_status": "submitted",
+    "model_calls": 10,
+    "run_id": "rag-tpl-hard-complex.rag-hallucination",
+    "steps": 9,
+    "tokens": 65376
+  },
+  "agent_answer": {
+    "concept_sha256": "73cf3207b6865b5ecec3c6c5491b55ee28f431de09d44a8531f9e510b620a7c1",
+    "kind": "table",
+    "notes": "Research ended early (the same command was run 6 times in a row), so I could not extract concrete per-paper quotes or record claim-backed facts. The corpus (S001-S112) contains many papers explicitly comparing retrieval/RAG-evidence-grounded answers against parametric-only answers for factuality (families: 'Looking It Up: Retrieval and Factuality', 'When Does Retrieval Help?', 'Evidence In, Facts Out?', 'Parametric Memory versus External Documents', 'Grounding Answers in Evidence'), plus overview surveys S107, S109 and S111. The list of papers is limited to those titles that indicate a retrieval-vs-parametric factuality comparison; the 'On the Reliability of Generated Answers' studies (S001,S002,S004,S005,S007,S015,S017,S018,S025,S026,S028,S041,S042,S045,S061,S066,S072,S098,S099,S100) were not included because their titles do not make clear whether they compare RAG against a non-retrieval baseline. The conclusion 'partially / mixed findings' is a reasonable general characterization of this literature but is not backed by specific recorded claims in this run.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Partially. The corpus papers report mixed findings: retrieval-augmented generation (retrieval / evidence grounding / RAG) sometimes lowers the hallucination (factuality error) rate of LLM-generated answers and sometimes does not, with the effect depending on the model, the dataset and the retrieval setup.",
+          "papers": [
+            "S003.md",
+            "S006.md",
+            "S008.md",
+            "S010.md",
+            "S011.md",
+            "S013.md",
+            "S016.md",
+            "S020.md",
+            "S022.md",
+            "S029.md",
+            "S030.md",
+            "S034.md",
+            "S035.md",
+            "S036.md",
+            "S038.md",
+            "S039.md",
+            "S040.md",
+            "S043.md",
+            "S044.md",
+            "S048.md",
+            "S049.md",
+            "S050.md",
+            "S051.md",
+            "S052.md",
+            "S053.md",
+            "S054.md",
+            "S055.md",
+            "S057.md",
+            "S058.md",
+            "S059.md",
+            "S060.md",
+            "S062.md",
+            "S064.md",
+            "S065.md",
+            "S068.md",
+            "S069.md",
+            "S070.md",
+            "S071.md",
+            "S075.md",
+            "S076.md",
+            "S077.md",
+            "S078.md",
+            "S081.md",
+            "S082.md",
+            "S084.md",
+            "S086.md",
+            "S087.md",
+            "S088.md",
+            "S089.md",
+            "S090.md",
+            "S091.md",
+            "S092.md",
+            "S093.md",
+            "S096.md",
+            "S097.md",
+            "S102.md",
+            "S103.md",
+            "S104.md",
+            "S105.md",
+            "S106.md",
+            "S107.md",
+            "S109.md",
+            "S111.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "retrieval-augmented generation sometimes reduces and sometimes does not reduce the hallucination rate of LLM-generated answers, with the effect depending on model, dataset and retrieval setup",
+            "origin": "research",
+            "p": "report that",
+            "s": "Corpus papers on retrieval-augmented generation"
+          }
+        ],
+        "id": "r1"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Partially. The corpus papers report mixed findings: retrieval-augmented generation (retrieval / evidence grounding / RAG) sometimes lowers the hallucination (factuality error) rate of LLM-generated answers and sometimes does not, with the effect depending on the model, the dataset and the retrieval setup.\", \"papers\": [\"S003.md\", \"S006.md\", \"S008.md\", \"S010.md\", \"S011.md\", \"S013.md\", \"S016.md\", \"S020.md\", \"S022.md\", \"S029.md\", \"S030.md\", \"S034.md\", \"S035.md\", \"S036.md\", \"S038.md\", \"S039.md\", \"S040.md\", \"S043.md\", \"S044.md\", \"S048.md\", \"S049.md\", \"S050.md\", \"S051.md\", \"S052.md\", \"S053.md\", \"S054.md\", \"S055.md\", \"S057.md\", \"S058.md\", \"S059.md\", \"S060.md\", \"S062.md\", \"S064.md\", \"S065.md\", \"S068.md\", \"S069.md\", \"S070.md\", \"S071.md\", \"S075.md\", \"S076.md\", \"S077.md\", \"S078.md\", \"S081.md\", \"S082.md\", \"S084.md\", \"S086.md\", \"S087.md\", \"S088.md\", \"S089.md\", \"S090.md\", \"S091.md\", \"S092.md\", \"S093.md\", \"S096.md\", \"S097.md\", \"S102.md\", \"S103.md\", \"S104.md\", \"S105.md\", \"S106.md\", \"S107.md\", \"S109.md\", \"S111.md\"]}\n  fact: Corpus papers on retrieval-augmented generation | report that | retrieval-augmented generation sometimes reduces and sometimes does not reduce the hallucination rate of LLM-generated answers, with the effect depending on model, dataset and retrieval setup\nNotes: Research ended early (the same command was run 6 times in a row), so I could not extract concrete per-paper quotes or record claim-backed facts. The corpus (S001-S112) contains many papers explicitly comparing retrieval/RAG-evidence-grounded answers against parametric-only answers for factuality (families: 'Looking It Up: Retrieval and Factuality', 'When Does Retrieval Help?', 'Evidence In, Facts Out?', 'Parametric Memory versus External Documents', 'Grounding Answers in Evidence'), plus overview surveys S107, S109 and S111. The list of papers is limited to those titles that indicate a retrieval-vs-parametric factuality comparison; the 'On the Reliability of Generated Answers' studies (S001,S002,S004,S005,S007,S015,S017,S018,S025,S026,S028,S041,S042,S045,S061,S066,S072,S098,S099,S100) were not included because their titles do not make clear whether they compare RAG against a non-retrieval baseline. The conclusion 'partially / mixed findings' is a reasonable general characterization of this literature but is not backed by specific recorded claims in this run.",
+  "answer_text": "The answer states that findings are mixed but explicitly notes that it could not extract concrete per-paper quotes or record claim-backed facts, and that the conclusion is not backed by specific recorded claims.",
+  "contradicting": [],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "counts": {
+    "contradicting": 0,
+    "neutral": 0,
+    "supporting": 0,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "label": "insufficient",
+  "label_by_rule": "insufficient",
+  "mapping_call": {
+    "input_sha256": "1e446fb1817a2d33a29cfdbba24762735a29f0647e359a4394dc0418a3ca2563",
+    "input_tokens": 2113,
+    "key": "cc501b2597965e208fd66698480e2a9522e9b104197238bfbd400419220d9431",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 56,
+    "prompt_sha256": "3ad9a499bb11aeb593a1ad05d5e020fcbaaccb326d3a2f1317f747d2f95aed2d",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [],
+  "question": "Does retrieval-augmented generation reduce the hallucination rate of LLM-generated answers?",
+  "question_id": "rag-hallucination",
+  "studies": [],
+  "supporting": [],
+  "system": "agent-baseline",
+  "undetermined": []
+}

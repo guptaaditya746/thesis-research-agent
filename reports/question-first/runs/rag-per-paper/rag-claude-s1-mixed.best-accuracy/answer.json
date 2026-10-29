@@ -1,0 +1,549 @@
+{
+  "answer_text": "The method that achieves the highest factual accuracy within each paper is as follows:\n\n*   **S001:** The method is not explicitly named in the provided text, but the study concludes that **grounding the generator in retrieved documents** (retrieval augmentation) leads to fewer hallucinated answers, implying this condition has the highest accuracy [S001, 2239-3050].\n*   **S002:** The text states that **retrieval augmentation** makes the generated answers clearly more accurate, but does not provide specific numerical values to identify the single highest-performing variant among the four conditions [S002, 0-1160].\n*   **S003:** The **B** system achieves the highest fact-level accuracy at **78.3%**, compared to 77.4% for system R [S003, 2532-3792].\n*   **S004:** The **parametric-only model** achieves the highest answer accuracy on the main benchmark (LawFactQA) at **59.8%**. The retrieve-then-read model scores 0.9 percentage points lower (58.9%) [S004, 2474-3765].\n*   **S005:** The text states that retrieval augmentation does not make answers measurably more accurate, but does not provide specific numerical results to identify the highest-performing condition [S005, 0-1073].\n*   **S006:** The text states that **retrieval augmentation** clearly reduces hallucinated content, implying the retrieval-based design has the highest accuracy, but no specific numerical values are provided [S006, 0-1367].\n*   **S007:** The **configuration that looks up supporting documents** (retrieval-augmented) achieves the highest factual accuracy. It has a share of unsupported statements of **0.399** (implying ~99.6% accuracy), compared to 18.2% for the fine-tuned model and 39.1% (391/1000) for the generator without document access [S007, 2635-3784].\n*   **S008:** The **retrieval-augmented generator (R)** achieves the highest factual accuracy, with the lowest hallucination rate of **6.3%**, compared to 20.2% for the vanilla LLM (B) [S008, 1995-3427].\n*   **S009:** The text states that retrieval augmentation makes the generated answers **less accurate**, implying the **parametric-only model** has the higher factual accuracy, though specific values are not provided [S009, 0-1270].\n*   **S010:** The **RAG without reranking** condition achieves the highest factual accuracy, with the lowest hallucination rate of **23.1%**, compared to 32.3% for the retrieval-augmented model and 38.1% for the vanilla LLM [S010, 957-2287].\n*   **S011:** **Chain-of-thought prompting** achieves the highest fact-level accuracy at **71.8%**, compared to 67.6% for the retrieve-then-read model, 58.1% for RAG with random passages, and 54.3% for the closed-book model [S011, 1086-2419].\n*   **S012:** The text states that retrieval augmentation **increases** hallucinated content, implying the **parametric-only model** (or non-retrieval condition) has the higher factual accuracy, though specific values are not provided [S012, 0-1346].\n*   **S013:** The **B** system (vanilla LLM/closed-book) achieves the highest answer accuracy at **47.5%**, compared to 42.5% for A1 and 40.3% for R [S013, 2748-4227].\n*   **S014:** The **closed-book model** achieves the highest answer accuracy on the main benchmark (BioClaimQA) at **60.6%**. The retrieval-augmented model scores 7.1 percentage points lower (53.5%) [S014, 908-2256].\n*   **S015:** The **fine-tuned model** achieves the highest answer accuracy at **69.8%**, compared to 66.1% for the RAG pipeline, 62.5% for the parametric-only model, and 33.2% for RAG with random passages [S015, 2509-3595].\n*   **S016:** The text states that **retrieval augmentation** clearly reduces hallucinated content, implying the retrieval-based design has the highest accuracy, but no specific numerical values are provided [S016, 0-1395].\n*   **S017:** The text states that **retrieval augmentation** clearly reduces hallucinated content, implying the system grounded in retrieved passages has the highest accuracy, but no specific numerical values are provided [S017, 0-1311].\n*   **S018:** The text states that **retrieval augmentation** clearly reduces hallucinated content, implying the **retrieve-then-read model** has the highest accuracy, but no specific numerical values are provided [S018, 0-1187].\n*   **S019:** On the main benchmark (TriviaCheck), the **no-retrieval baseline** achieves the highest fact-level accuracy at **64.2%**. The retrieve-then-read model scores 0.8 percentage points lower (63.4%), and the fine-tuned model scores 59.1% [S019, 1944-3441].\n*   **S020:** The **retrieval-augmented model** achieves the highest answer accuracy at **64.6%**, compared to 55.2% for the fine-tuned model, 52.3% for the no-retrieval baseline, and 35.7% for self-consistency decoding [S020, 1260-2739].",
+  "citations": [
+    {
+      "document": "S001",
+      "end": 3050,
+      "start": 2239
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "start": 2532
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "start": 2474
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "start": 0
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "start": 1995
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 2419,
+      "start": 1086
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 4227,
+      "start": 2748
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "start": 2509
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "start": 1944
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "start": 1260
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "501056dff619e8bde7463d86d48ac24c604db29b69f4896779b919d803e5a73f",
+    "input_tokens": 2711,
+    "key": "2b0e0916e63b60b2c3204c8be05b2a40127d5d2023faef66c22ab70c9d89c00c",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 450,
+    "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "c15e8f79a89d55c46449181c2a07d552d4db74f6daf11dd3d81da45b3acab048",
+    "input_tokens": 10323,
+    "key": "476900019bc36d301fe7780e8d3f4203837b9665af958c9234fa7261bfe267cf",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 2085,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the highest factual accuracy within each paper?",
+  "question_id": "best-accuracy",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 3.429326,
+      "start": 0
+    },
+    {
+      "document": "S001",
+      "end": 3050,
+      "score": 3.343132,
+      "start": 2239
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 4.552529,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 2039,
+      "score": 2.771114,
+      "start": 1160
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 3.605915,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "score": 3.378472,
+      "start": 2532
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 5.235259,
+      "start": 2474
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 3.966093,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 1073,
+      "score": 5.787965,
+      "start": 0
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 3.356879,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 3291,
+      "score": 3.616818,
+      "start": 2401
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 3.39908,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 6.060461,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 4.967585,
+      "start": 2635
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 3.756705,
+      "start": 960
+    },
+    {
+      "document": "S008",
+      "end": 3427,
+      "score": 3.234179,
+      "start": 1995
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 5.230024,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 2316,
+      "score": 3.570914,
+      "start": 1270
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 3.79203,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 3.34243,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 5.54615,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 2419,
+      "score": 4.007412,
+      "start": 1086
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 3.446743,
+      "start": 0
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 3.099316,
+      "start": 2754
+    },
+    {
+      "document": "S013",
+      "end": 4227,
+      "score": 4.203287,
+      "start": 2748
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 3.88195,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 3.366777,
+      "start": 908
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 3.22297,
+      "start": 0
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 3.891263,
+      "start": 1067
+    },
+    {
+      "document": "S015",
+      "end": 3595,
+      "score": 3.796605,
+      "start": 2509
+    },
+    {
+      "document": "S016",
+      "end": 3649,
+      "score": 4.132998,
+      "start": 2667
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 3.670691,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 3.378598,
+      "start": 1311
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "score": 3.328311,
+      "start": 0
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 3.719341,
+      "start": 1187
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "score": 3.715428,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 6.246582,
+      "start": 1944
+    },
+    {
+      "document": "S019",
+      "end": 1156,
+      "score": 4.848586,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 4.138703,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 4.016906,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S001",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S002",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S003",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S004",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S005",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S006",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S007",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S008",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S009",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S010",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag-no-rerank"
+    },
+    {
+      "document": "S011",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "chain-of-thought"
+    },
+    {
+      "document": "S012",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S013",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S014",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S015",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "fine-tuned"
+    },
+    {
+      "document": "S016",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S017",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S018",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    },
+    {
+      "document": "S019",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "no-retrieval"
+    },
+    {
+      "document": "S020",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [],
+  "winner": "rag",
+  "wins": {
+    "chain-of-thought": 1,
+    "fine-tuned": 1,
+    "no-retrieval": 6,
+    "rag": 8,
+    "rag-no-rerank": 1
+  }
+}

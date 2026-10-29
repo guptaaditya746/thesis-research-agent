@@ -1,0 +1,866 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 29,
+    "exit_status": "submitted",
+    "model_calls": 49,
+    "run_id": "rag-tpl-hard-complex.inv-methods",
+    "steps": 48,
+    "tokens": 887636
+  },
+  "agent_answer": {
+    "concept_sha256": "dbed65c67c40dfa273b9595ff8bb0e51ea04d7b5a146914adf3fee7a256dd8c0",
+    "kind": "table",
+    "notes": "Corpus has 112 papers (S001-S112). 106 are controlled empirical studies, each comparing one no-retrieval baseline with one retrieval-augmented variant; the 15 distinct baseline/variant name combinations give 15 rows (r1-r16, with a small overlap folded into r19 because the same baseline name pairs with different variant names across datasets). The other 6 papers are different: S107/S109/S111 are RAG surveys (no own experiments; they organise the design space into prompt-based RAG, jointly-trained retriever+generator, and token-level retrieval families and list open problems) and S108/S110/S112 compare BPE vs unigram tokenisation for code. Each family is repeated across 12 datasets, so a given baseline-vs-variant pair covers 3 datasets. Claim ids: pair rows claim-000002..17; odd papers claim-000018..29. All 112 paper files are covered.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Compares the closed-book model (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S030.md",
+            "S046.md",
+            "S058.md",
+            "S078.md",
+            "S081.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000002"
+            ],
+            "id": "f1",
+            "o": "closed-book model vs RAG pipeline",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S030.md..S081.md"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the closed-book model (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S009.md",
+            "S024.md",
+            "S077.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000003"
+            ],
+            "id": "f2",
+            "o": "closed-book model vs retrieval-augmented generator",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S009.md..S077.md"
+          }
+        ],
+        "id": "r2"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the closed-book model (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S022.md",
+            "S032.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000004"
+            ],
+            "id": "f3",
+            "o": "closed-book model vs retrieval-augmented model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S022.md..S032.md"
+          }
+        ],
+        "id": "r3"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the closed-book model (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S010.md",
+            "S065.md",
+            "S067.md",
+            "S068.md",
+            "S079.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000005"
+            ],
+            "id": "f4",
+            "o": "closed-book model vs retrieve-then-read model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S010.md..S079.md"
+          }
+        ],
+        "id": "r4"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the no-retrieval baseline (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S038.md",
+            "S057.md",
+            "S062.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000006"
+            ],
+            "id": "f5",
+            "o": "no-retrieval baseline vs RAG pipeline",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S038.md..S062.md"
+          }
+        ],
+        "id": "r5"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S017.md",
+            "S018.md",
+            "S039.md",
+            "S044.md",
+            "S047.md",
+            "S054.md",
+            "S076.md",
+            "S096.md",
+            "S105.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000007"
+            ],
+            "id": "f6",
+            "o": "no-retrieval baseline vs retrieval-augmented generator",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S017.md..S105.md"
+          }
+        ],
+        "id": "r6"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S004.md",
+            "S011.md",
+            "S027.md",
+            "S043.md",
+            "S056.md",
+            "S063.md",
+            "S070.md",
+            "S072.md",
+            "S095.md",
+            "S099.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000008"
+            ],
+            "id": "f7",
+            "o": "no-retrieval baseline vs retrieval-augmented model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S004.md..S099.md"
+          }
+        ],
+        "id": "r7"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S013.md",
+            "S016.md",
+            "S048.md",
+            "S050.md",
+            "S082.md",
+            "S089.md",
+            "S091.md",
+            "S098.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000009"
+            ],
+            "id": "f8",
+            "o": "no-retrieval baseline vs retrieve-then-read model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S013.md..S098.md"
+          }
+        ],
+        "id": "r8"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the parametric-only model (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S003.md",
+            "S007.md",
+            "S012.md",
+            "S014.md",
+            "S034.md",
+            "S035.md",
+            "S052.md",
+            "S061.md",
+            "S071.md",
+            "S083.md",
+            "S087.md",
+            "S093.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000010"
+            ],
+            "id": "f9",
+            "o": "parametric-only model vs RAG pipeline",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S003.md..S093.md"
+          }
+        ],
+        "id": "r9"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the parametric-only model (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S021.md",
+            "S053.md",
+            "S059.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000011"
+            ],
+            "id": "f10",
+            "o": "parametric-only model vs retrieval-augmented generator",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S021.md..S059.md"
+          }
+        ],
+        "id": "r10"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the parametric-only model (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S001.md",
+            "S008.md",
+            "S026.md",
+            "S029.md",
+            "S045.md",
+            "S101.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000012"
+            ],
+            "id": "f11",
+            "o": "parametric-only model vs retrieval-augmented model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S001.md..S101.md"
+          }
+        ],
+        "id": "r11"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the parametric-only model (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S028.md",
+            "S031.md",
+            "S073.md",
+            "S094.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000013"
+            ],
+            "id": "f12",
+            "o": "parametric-only model vs retrieve-then-read model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S028.md..S094.md"
+          }
+        ],
+        "id": "r12"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the vanilla LLM (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S002.md",
+            "S019.md",
+            "S020.md",
+            "S041.md",
+            "S042.md",
+            "S064.md",
+            "S066.md",
+            "S074.md",
+            "S075.md",
+            "S084.md",
+            "S088.md",
+            "S092.md",
+            "S103.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000014"
+            ],
+            "id": "f13",
+            "o": "vanilla LLM vs RAG pipeline",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S002.md..S103.md"
+          }
+        ],
+        "id": "r13"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S005.md",
+            "S036.md",
+            "S037.md",
+            "S040.md",
+            "S060.md",
+            "S069.md",
+            "S100.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000015"
+            ],
+            "id": "f14",
+            "o": "vanilla LLM vs retrieval-augmented generator",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S005.md..S100.md"
+          }
+        ],
+        "id": "r14"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S006.md",
+            "S025.md",
+            "S051.md",
+            "S080.md",
+            "S090.md",
+            "S097.md",
+            "S102.md",
+            "S106.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000016"
+            ],
+            "id": "f15",
+            "o": "vanilla LLM vs retrieval-augmented model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S006.md..S106.md"
+          }
+        ],
+        "id": "r15"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the vanilla LLM (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S015.md",
+            "S023.md",
+            "S033.md",
+            "S049.md",
+            "S055.md",
+            "S085.md",
+            "S086.md",
+            "S104.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000017"
+            ],
+            "id": "f16",
+            "o": "vanilla LLM vs retrieve-then-read model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S015.md..S104.md"
+          }
+        ],
+        "id": "r16"
+      },
+      {
+        "cells": {
+          "conclusion": "Surveys retrieval-augmented generation; reports no experiments of its own and instead organises the design space into architecture families (prompt-based RAG; jointly-trained retriever+generator; token-level retrieval during decoding) and lists open problems.",
+          "papers": [
+            "S107.md",
+            "S109.md",
+            "S111.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000018",
+              "claim-000019",
+              "claim-000022",
+              "claim-000023",
+              "claim-000024",
+              "claim-000027"
+            ],
+            "id": "f17",
+            "o": "prompt-based RAG; joint retriever+generator; token-level retrieval families",
+            "origin": "research",
+            "p": "are surveys covering",
+            "s": "S107/S109/S111"
+          }
+        ],
+        "id": "r17"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares vocabulary construction methods for code language models: byte-pair encoding (BPE) versus a unigram (WordPiece-style) model, in terms of token-sequence properties and training/serving cost.",
+          "papers": [
+            "S108.md",
+            "S110.md",
+            "S112.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000020",
+              "claim-000021",
+              "claim-000025",
+              "claim-000026",
+              "claim-000028",
+              "claim-000029"
+            ],
+            "id": "f18",
+            "o": "byte-pair encoding (BPE) vs unigram model",
+            "origin": "research",
+            "p": "compare",
+            "s": "S108/S110/S112"
+          }
+        ],
+        "id": "r18"
+      },
+      {
+        "cells": {
+          "conclusion": "Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.",
+          "papers": [
+            "S097.md",
+            "S102.md",
+            "S106.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [
+              "claim-000016"
+            ],
+            "id": "f19",
+            "o": "vanilla LLM vs retrieval-augmented model",
+            "origin": "research",
+            "p": "compare",
+            "s": "Papers S097.md..S106.md"
+          }
+        ],
+        "id": "r19"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S030.md\", \"S046.md\", \"S058.md\", \"S078.md\", \"S081.md\"]}\n  fact: Papers S030.md..S081.md | compare | closed-book model vs RAG pipeline\n    quote from S030.md: \"We compare the closed-book model with the RAG pipeline on OpenFactQA.\"\nRow r2: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S009.md\", \"S024.md\", \"S077.md\"]}\n  fact: Papers S009.md..S077.md | compare | closed-book model vs retrieval-augmented generator\n    quote from S009.md: \"We compare the closed-book model with the retrieval-augmented generator on LawFactQA.\"\nRow r3: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S022.md\", \"S032.md\"]}\n  fact: Papers S022.md..S032.md | compare | closed-book model vs retrieval-augmented model\n    quote from S022.md: \"We compare the closed-book model with the retrieval-augmented model on LawFactQA.\"\nRow r4: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S010.md\", \"S065.md\", \"S067.md\", \"S068.md\", \"S079.md\"]}\n  fact: Papers S010.md..S079.md | compare | closed-book model vs retrieve-then-read model\n    quote from S010.md: \"We compare the closed-book model with the retrieve-then-read model on LawFactQA.\"\nRow r5: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S038.md\", \"S057.md\", \"S062.md\"]}\n  fact: Papers S038.md..S062.md | compare | no-retrieval baseline vs RAG pipeline\n    quote from S038.md: \"We compare the no-retrieval baseline with the RAG pipeline on LawFactQA.\"\nRow r6: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S017.md\", \"S018.md\", \"S039.md\", \"S044.md\", \"S047.md\", \"S054.md\", \"S076.md\", \"S096.md\", \"S105.md\"]}\n  fact: Papers S017.md..S105.md | compare | no-retrieval baseline vs retrieval-augmented generator\n    quote from S017.md: \"We compare the no-retrieval baseline with the retrieval-augmented generator on MedAnswerSet.\"\nRow r7: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S004.md\", \"S011.md\", \"S027.md\", \"S043.md\", \"S056.md\", \"S063.md\", \"S070.md\", \"S072.md\", \"S095.md\", \"S099.md\"]}\n  fact: Papers S004.md..S099.md | compare | no-retrieval baseline vs retrieval-augmented model\n    quote from S004.md: \"We compare the no-retrieval baseline with the retrieval-augmented model on GeoFacts.\"\nRow r8: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S013.md\", \"S016.md\", \"S048.md\", \"S050.md\", \"S082.md\", \"S089.md\", \"S091.md\", \"S098.md\"]}\n  fact: Papers S013.md..S098.md | compare | no-retrieval baseline vs retrieve-then-read model\n    quote from S013.md: \"We compare the no-retrieval baseline with the retrieve-then-read model on OpenFactQA.\"\nRow r9: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S003.md\", \"S007.md\", \"S012.md\", \"S014.md\", \"S034.md\", \"S035.md\", \"S052.md\", \"S061.md\", \"S071.md\", \"S083.md\", \"S087.md\", \"S093.md\"]}\n  fact: Papers S003.md..S093.md | compare | parametric-only model vs RAG pipeline\n    quote from S003.md: \"We compare the parametric-only model with the RAG pipeline on TriviaCheck.\"\nRow r10: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S021.md\", \"S053.md\", \"S059.md\"]}\n  fact: Papers S021.md..S059.md | compare | parametric-only model vs retrieval-augmented generator\n    quote from S021.md: \"We compare the parametric-only model with the retrieval-augmented generator on SciFactBench.\"\nRow r11: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S001.md\", \"S008.md\", \"S026.md\", \"S029.md\", \"S045.md\", \"S101.md\"]}\n  fact: Papers S001.md..S101.md | compare | parametric-only model vs retrieval-augmented model\n    quote from S001.md: \"We compare the parametric-only model with the retrieval-augmented model on LawFactQA.\"\nRow r12: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S028.md\", \"S031.md\", \"S073.md\", \"S094.md\"]}\n  fact: Papers S028.md..S094.md | compare | parametric-only model vs retrieve-then-read model\n    quote from S028.md: \"We compare the parametric-only model with the retrieve-then-read model on GeoFacts.\"\nRow r13: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S002.md\", \"S019.md\", \"S020.md\", \"S041.md\", \"S042.md\", \"S064.md\", \"S066.md\", \"S074.md\", \"S075.md\", \"S084.md\", \"S088.md\", \"S092.md\", \"S103.md\"]}\n  fact: Papers S002.md..S103.md | compare | vanilla LLM vs RAG pipeline\n    quote from S002.md: \"We compare the vanilla LLM with the RAG pipeline on NewsTruthQA.\"\nRow r14: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S005.md\", \"S036.md\", \"S037.md\", \"S040.md\", \"S060.md\", \"S069.md\", \"S100.md\"]}\n  fact: Papers S005.md..S100.md | compare | vanilla LLM vs retrieval-augmented generator\n    quote from S005.md: \"We compare the vanilla LLM with the retrieval-augmented generator on OpenFactQA.\"\nRow r15: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S006.md\", \"S025.md\", \"S051.md\", \"S080.md\", \"S090.md\", \"S097.md\", \"S102.md\", \"S106.md\"]}\n  fact: Papers S006.md..S106.md | compare | vanilla LLM vs retrieval-augmented model\n    quote from S006.md: \"We compare the vanilla LLM with the retrieval-augmented model on BioClaimQA.\"\nRow r16: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S015.md\", \"S023.md\", \"S033.md\", \"S049.md\", \"S055.md\", \"S085.md\", \"S086.md\", \"S104.md\"]}\n  fact: Papers S015.md..S104.md | compare | vanilla LLM vs retrieve-then-read model\n    quote from S015.md: \"We compare the vanilla LLM with the retrieve-then-read model on SciFactBench.\"\nRow r17: {\"conclusion\": \"Surveys retrieval-augmented generation; reports no experiments of its own and instead organises the design space into architecture families (prompt-based RAG; jointly-trained retriever+generator; token-level retrieval during decoding) and lists open problems.\", \"papers\": [\"S107.md\", \"S109.md\", \"S111.md\"]}\n  fact: S107/S109/S111 | are surveys covering | prompt-based RAG; joint retriever+generator; token-level retrieval families\n    quote from S107.md: \"This survey reports no experiments of its own; it summarises the design space and lists the questions the surveyed papers leave open\"\n    quote from S107.md: \"The second family trains the retriever and the generator jointly, so the retriever learns which passages the generator can use\"\n    quote from S107.md: \"The second family trains the retriever and the generator jointly, so the retriever learns which passages the generator can use\"\n    quote from S111.md: \"A third family retrieves at the token level during decoding, which ties the retrieval frequency to the length of the output\"\n    quote from S109.md: \"This survey reports no experiments of its own; it summarises the design space and lists the questions the surveyed papers leave open\"\n    quote from S111.md: \"This survey reports no experiments of its own; it summarises the design space and lists the questions the surveyed papers leave open\"\nRow r18: {\"conclusion\": \"Compares vocabulary construction methods for code language models: byte-pair encoding (BPE) versus a unigram (WordPiece-style) model, in terms of token-sequence properties and training/serving cost.\", \"papers\": [\"S108.md\", \"S110.md\", \"S112.md\"]}\n  fact: S108/S110/S112 | compare | byte-pair encoding (BPE) vs unigram model\n    quote from S108.md: \"Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and the merges are learned on a sample of the training corpus\"\n    quote from S108.md: \"A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that explain the corpus best\"\n    quote from S110.md: \"Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and the merges are learned on a sample of the training corpus\"\n    quote from S110.md: \"A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that explain the corpus best\"\n    quote from S112.md: \"Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and the merges are learned on a sample of the training corpus\"\n    quote from S112.md: \"A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that explain the corpus best\"\nRow r19: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S097.md\", \"S102.md\", \"S106.md\"]}\n  fact: Papers S097.md..S106.md | compare | vanilla LLM vs retrieval-augmented model\n    quote from S006.md: \"We compare the vanilla LLM with the retrieval-augmented model on BioClaimQA.\"\nNotes: Corpus has 112 papers (S001-S112). 106 are controlled empirical studies, each comparing one no-retrieval baseline with one retrieval-augmented variant; the 15 distinct baseline/variant name combinations give 15 rows (r1-r16, with a small overlap folded into r19 because the same baseline name pairs with different variant names across datasets). The other 6 papers are different: S107/S109/S111 are RAG surveys (no own experiments; they organise the design space into prompt-based RAG, jointly-trained retriever+generator, and token-level retrieval families and list open problems) and S108/S110/S112 compare BPE vs unigram tokenisation for code. Each family is repeated across 12 datasets, so a given baseline-vs-variant pair covers 3 datasets. Claim ids: pair rows claim-000002..17; odd papers claim-000018..29. All 112 paper files are covered.",
+  "answer_text": "Row r1: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S030.md\", \"S046.md\", \"S058.md\", \"S078.md\", \"S081.md\"]}\n  fact: Papers S030.md..S081.md | compare | closed-book model vs RAG pipeline\n    quote from S030.md: \"We compare the closed-book model with the RAG pipeline on OpenFactQA.\"\nRow r2: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S009.md\", \"S024.md\", \"S077.md\"]}\n  fact: Papers S009.md..S077.md | compare | closed-book model vs retrieval-augmented generator\n    quote from S009.md: \"We compare the closed-book model with the retrieval-augmented generator on LawFactQA.\"\nRow r3: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S022.md\", \"S032.md\"]}\n  fact: Papers S022.md..S032.md | compare | closed-book model vs retrieval-augmented model\n    quote from S022.md: \"We compare the closed-book model with the retrieval-augmented model on LawFactQA.\"\nRow r4: {\"conclusion\": \"Compares the closed-book model (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S010.md\", \"S065.md\", \"S067.md\", \"S068.md\", \"S079.md\"]}\n  fact: Papers S010.md..S079.md | compare | closed-book model vs retrieve-then-read model\n    quote from S010.md: \"We compare the closed-book model with the retrieve-then-read model on LawFactQA.\"\nRow r5: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S038.md\", \"S057.md\", \"S062.md\"]}\n  fact: Papers S038.md..S062.md | compare | no-retrieval baseline vs RAG pipeline\n    quote from S038.md: \"We compare the no-retrieval baseline with the RAG pipeline on LawFactQA.\"\nRow r6: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S017.md\", \"S018.md\", \"S039.md\", \"S044.md\", \"S047.md\", \"S054.md\", \"S076.md\", \"S096.md\", \"S105.md\"]}\n  fact: Papers S017.md..S105.md | compare | no-retrieval baseline vs retrieval-augmented generator\n    quote from S017.md: \"We compare the no-retrieval baseline with the retrieval-augmented generator on MedAnswerSet.\"\nRow r7: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S004.md\", \"S011.md\", \"S027.md\", \"S043.md\", \"S056.md\", \"S063.md\", \"S070.md\", \"S072.md\", \"S095.md\", \"S099.md\"]}\n  fact: Papers S004.md..S099.md | compare | no-retrieval baseline vs retrieval-augmented model\n    quote from S004.md: \"We compare the no-retrieval baseline with the retrieval-augmented model on GeoFacts.\"\nRow r8: {\"conclusion\": \"Compares the no-retrieval baseline (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S013.md\", \"S016.md\", \"S048.md\", \"S050.md\", \"S082.md\", \"S089.md\", \"S091.md\", \"S098.md\"]}\n  fact: Papers S013.md..S098.md | compare | no-retrieval baseline vs retrieve-then-read model\n    quote from S013.md: \"We compare the no-retrieval baseline with the retrieve-then-read model on OpenFactQA.\"\nRow r9: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S003.md\", \"S007.md\", \"S012.md\", \"S014.md\", \"S034.md\", \"S035.md\", \"S052.md\", \"S061.md\", \"S071.md\", \"S083.md\", \"S087.md\", \"S093.md\"]}\n  fact: Papers S003.md..S093.md | compare | parametric-only model vs RAG pipeline\n    quote from S003.md: \"We compare the parametric-only model with the RAG pipeline on TriviaCheck.\"\nRow r10: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S021.md\", \"S053.md\", \"S059.md\"]}\n  fact: Papers S021.md..S059.md | compare | parametric-only model vs retrieval-augmented generator\n    quote from S021.md: \"We compare the parametric-only model with the retrieval-augmented generator on SciFactBench.\"\nRow r11: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S001.md\", \"S008.md\", \"S026.md\", \"S029.md\", \"S045.md\", \"S101.md\"]}\n  fact: Papers S001.md..S101.md | compare | parametric-only model vs retrieval-augmented model\n    quote from S001.md: \"We compare the parametric-only model with the retrieval-augmented model on LawFactQA.\"\nRow r12: {\"conclusion\": \"Compares the parametric-only model (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S028.md\", \"S031.md\", \"S073.md\", \"S094.md\"]}\n  fact: Papers S028.md..S094.md | compare | parametric-only model vs retrieve-then-read model\n    quote from S028.md: \"We compare the parametric-only model with the retrieve-then-read model on GeoFacts.\"\nRow r13: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the RAG pipeline (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S002.md\", \"S019.md\", \"S020.md\", \"S041.md\", \"S042.md\", \"S064.md\", \"S066.md\", \"S074.md\", \"S075.md\", \"S084.md\", \"S088.md\", \"S092.md\", \"S103.md\"]}\n  fact: Papers S002.md..S103.md | compare | vanilla LLM vs RAG pipeline\n    quote from S002.md: \"We compare the vanilla LLM with the RAG pipeline on NewsTruthQA.\"\nRow r14: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented generator (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S005.md\", \"S036.md\", \"S037.md\", \"S040.md\", \"S060.md\", \"S069.md\", \"S100.md\"]}\n  fact: Papers S005.md..S100.md | compare | vanilla LLM vs retrieval-augmented generator\n    quote from S005.md: \"We compare the vanilla LLM with the retrieval-augmented generator on OpenFactQA.\"\nRow r15: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S006.md\", \"S025.md\", \"S051.md\", \"S080.md\", \"S090.md\", \"S097.md\", \"S102.md\", \"S106.md\"]}\n  fact: Papers S006.md..S106.md | compare | vanilla LLM vs retrieval-augmented model\n    quote from S006.md: \"We compare the vanilla LLM with the retrieval-augmented model on BioClaimQA.\"\nRow r16: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieve-then-read model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S015.md\", \"S023.md\", \"S033.md\", \"S049.md\", \"S055.md\", \"S085.md\", \"S086.md\", \"S104.md\"]}\n  fact: Papers S015.md..S104.md | compare | vanilla LLM vs retrieve-then-read model\n    quote from S015.md: \"We compare the vanilla LLM with the retrieve-then-read model on SciFactBench.\"\nRow r17: {\"conclusion\": \"Surveys retrieval-augmented generation; reports no experiments of its own and instead organises the design space into architecture families (prompt-based RAG; jointly-trained retriever+generator; token-level retrieval during decoding) and lists open problems.\", \"papers\": [\"S107.md\", \"S109.md\", \"S111.md\"]}\n  fact: S107/S109/S111 | are surveys covering | prompt-based RAG; joint retriever+generator; token-level retrieval families\n    quote from S107.md: \"This survey reports no experiments of its own; it summarises the design space and lists the questions the surveyed papers leave open\"\n    quote from S107.md: \"The second family trains the retriever and the generator jointly, so the retriever learns which passages the generator can use\"\n    quote from S107.md: \"The second family trains the retriever and the generator jointly, so the retriever learns which passages the generator can use\"\n    quote from S111.md: \"A third family retrieves at the token level during decoding, which ties the retrieval frequency to the length of the output\"\n    quote from S109.md: \"This survey reports no experiments of its own; it summarises the design space and lists the questions the surveyed papers leave open\"\n    quote from S111.md: \"This survey reports no experiments of its own; it summarises the design space and lists the questions the surveyed papers leave open\"\nRow r18: {\"conclusion\": \"Compares vocabulary construction methods for code language models: byte-pair encoding (BPE) versus a unigram (WordPiece-style) model, in terms of token-sequence properties and training/serving cost.\", \"papers\": [\"S108.md\", \"S110.md\", \"S112.md\"]}\n  fact: S108/S110/S112 | compare | byte-pair encoding (BPE) vs unigram model\n    quote from S108.md: \"Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and the merges are learned on a sample of the training corpus\"\n    quote from S108.md: \"A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that explain the corpus best\"\n    quote from S110.md: \"Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and the merges are learned on a sample of the training corpus\"\n    quote from S110.md: \"A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that explain the corpus best\"\n    quote from S112.md: \"Byte-pair encoding merges frequent character pairs until the vocabulary reaches a chosen size, and the merges are learned on a sample of the training corpus\"\n    quote from S112.md: \"A unigram model instead starts from a large candidate vocabulary and prunes it to the tokens that explain the corpus best\"\nRow r19: {\"conclusion\": \"Compares the vanilla LLM (a no-retrieval baseline) with the retrieval-augmented model (a retrieval-augmented variant); the retrieval-augmented system wins on most datasets.\", \"papers\": [\"S097.md\", \"S102.md\", \"S106.md\"]}\n  fact: Papers S097.md..S106.md | compare | vanilla LLM vs retrieval-augmented model\n    quote from S006.md: \"We compare the vanilla LLM with the retrieval-augmented model on BioClaimQA.\"\nNotes: Corpus has 112 papers (S001-S112). 106 are controlled empirical studies, each comparing one no-retrieval baseline with one retrieval-augmented variant; the 15 distinct baseline/variant name combinations give 15 rows (r1-r16, with a small overlap folded into r19 because the same baseline name pairs with different variant names across datasets). The other 6 papers are different: S107/S109/S111 are RAG surveys (no own experiments; they organise the design space into prompt-based RAG, jointly-trained retriever+generator, and token-level retrieval families and list open problems) and S108/S110/S112 compare BPE vs unigram tokenisation for code. Each family is repeated across 12 datasets, so a given baseline-vs-variant pair covers 3 datasets. Claim ids: pair rows claim-000002..17; odd papers claim-000018..29. All 112 paper files are covered.",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "byte-pair encoding",
+      "papers": [
+        "S108",
+        "S110",
+        "S112"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "closed-book model",
+      "papers": [
+        "S009",
+        "S010",
+        "S022",
+        "S024",
+        "S030",
+        "S032",
+        "S046",
+        "S058",
+        "S065",
+        "S067",
+        "S068",
+        "S077",
+        "S078",
+        "S079",
+        "S081"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "jointly-trained retriever+generator",
+      "papers": [
+        "S107",
+        "S109",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "no-retrieval baseline",
+      "papers": [
+        "S004",
+        "S011",
+        "S013",
+        "S016",
+        "S017",
+        "S018",
+        "S027",
+        "S038",
+        "S039",
+        "S043",
+        "S044",
+        "S047",
+        "S048",
+        "S050",
+        "S054",
+        "S056",
+        "S057",
+        "S062",
+        "S063",
+        "S070",
+        "S072",
+        "S076",
+        "S082",
+        "S089",
+        "S091",
+        "S095",
+        "S096",
+        "S098",
+        "S099",
+        "S105"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "parametric-only model",
+      "papers": [
+        "S001",
+        "S003",
+        "S007",
+        "S008",
+        "S012",
+        "S014",
+        "S021",
+        "S026",
+        "S028",
+        "S029",
+        "S031",
+        "S034",
+        "S035",
+        "S045",
+        "S052",
+        "S053",
+        "S059",
+        "S061",
+        "S071",
+        "S073",
+        "S083",
+        "S087",
+        "S093",
+        "S094",
+        "S101"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "prompt-based RAG",
+      "papers": [
+        "S107",
+        "S109",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "RAG pipeline",
+      "papers": [
+        "S002",
+        "S003",
+        "S007",
+        "S012",
+        "S014",
+        "S019",
+        "S020",
+        "S030",
+        "S034",
+        "S035",
+        "S038",
+        "S041",
+        "S042",
+        "S046",
+        "S052",
+        "S057",
+        "S058",
+        "S061",
+        "S062",
+        "S064",
+        "S066",
+        "S071",
+        "S074",
+        "S075",
+        "S078",
+        "S081",
+        "S083",
+        "S084",
+        "S087",
+        "S088",
+        "S092",
+        "S093",
+        "S103"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieval-augmented generator",
+      "papers": [
+        "S005",
+        "S009",
+        "S017",
+        "S018",
+        "S021",
+        "S024",
+        "S036",
+        "S037",
+        "S039",
+        "S040",
+        "S044",
+        "S047",
+        "S053",
+        "S054",
+        "S059",
+        "S060",
+        "S069",
+        "S076",
+        "S077",
+        "S096",
+        "S100",
+        "S105"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieval-augmented model",
+      "papers": [
+        "S001",
+        "S004",
+        "S006",
+        "S008",
+        "S011",
+        "S022",
+        "S025",
+        "S026",
+        "S027",
+        "S029",
+        "S032",
+        "S043",
+        "S045",
+        "S051",
+        "S056",
+        "S063",
+        "S070",
+        "S072",
+        "S080",
+        "S090",
+        "S095",
+        "S097",
+        "S099",
+        "S101",
+        "S102",
+        "S106"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "retrieve-then-read model",
+      "papers": [
+        "S010",
+        "S013",
+        "S015",
+        "S016",
+        "S023",
+        "S028",
+        "S031",
+        "S033",
+        "S048",
+        "S049",
+        "S050",
+        "S055",
+        "S065",
+        "S067",
+        "S068",
+        "S073",
+        "S079",
+        "S082",
+        "S085",
+        "S086",
+        "S089",
+        "S091",
+        "S094",
+        "S098",
+        "S104"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "token-level retrieval during decoding",
+      "papers": [
+        "S107",
+        "S109",
+        "S111"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "unigram model",
+      "papers": [
+        "S108",
+        "S110",
+        "S112"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "vanilla LLM",
+      "papers": [
+        "S002",
+        "S005",
+        "S006",
+        "S015",
+        "S019",
+        "S020",
+        "S023",
+        "S025",
+        "S033",
+        "S036",
+        "S037",
+        "S040",
+        "S041",
+        "S042",
+        "S049",
+        "S051",
+        "S055",
+        "S060",
+        "S064",
+        "S066",
+        "S069",
+        "S074",
+        "S075",
+        "S080",
+        "S084",
+        "S085",
+        "S086",
+        "S088",
+        "S090",
+        "S092",
+        "S097",
+        "S100",
+        "S102",
+        "S103",
+        "S104",
+        "S106"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "9cd17eca69080ccb8d312e97a17e85055b9cd887ef44ad99d788aca8d629f89b",
+    "input_tokens": 4724,
+    "key": "c62a111d541960e04f9eca96e4eddb128b41384ed8ee87b6a3a6e8bfa3bf5720",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 1544,
+    "prompt_sha256": "337685d8abf98f6ee4e5bf8f939d26332a2650f0742b14fb5b9ea014e641ecee",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "system": "agent-baseline",
+  "target": "condition"
+}

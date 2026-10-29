@@ -1,0 +1,243 @@
+{
+  "agent": {
+    "answer_from": "final",
+    "claims": 0,
+    "exit_status": "submitted",
+    "model_calls": 29,
+    "run_id": "rag-claude-s1-mixed.cons-hallucination",
+    "steps": 28,
+    "tokens": 217531
+  },
+  "agent_answer": {
+    "concept_sha256": "4febb77992b5af9f40b1df9185e6d78410a919763d72c74bbe5fcb01cb048e8a",
+    "kind": "table",
+    "notes": "Corpus papers that discuss hallucination: S007, S008, S010, S012, S016, S017, S018 (S001, S006 had no hallucination mentions). Agreements: S008 (R 6.3% < B 20.2%, matches 'grounding reduces hallucination'); S016 (RAG 5.1% < no-retrieval 10.3%, matches conclusion). Disagreements: S007 (retrieval 0.399 > fine-tuning 18.2%, contradicts the claim that retrieval-based grounding is the dominant mitigation and that further training has only limited effect); S012 (evidence-reading variant 29.2% > no-evidence 0.193, contradicts the claim that reading evidence reduces hallucination); S017 (retrieval 314/1000 > no-grounding 0.392, contradicts the claim that grounding via retrieval reduces hallucination relative to no grounding). S010 (B 6.1% vs R 5.8%, 'essentially unchanged') is borderline; I treated it as a disagreement because the authors' conclusion of 'essentially unchanged' is not clearly supported by a 0.3-point gap, though this is the weakest case. S018 (B 20.8% vs R 16.3%, 'essentially unchanged') is also borderline: the 4.5-point gap is small but non-zero; I treated it as a disagreement for consistency with S010. Numbers were read from the results sections; some are reported as fractions (0.399, 0.193, 0.392, 0.191) and some as 'N out of 1,000' or percentages, which I treated as equivalent scales. I could not run additional verification commands because the research phase ended.",
+    "rows": [
+      {
+        "cells": {
+          "conclusion": "Agree — the reported numbers support the authors' conclusion that grounding the generator in retrieved documents reduces hallucinations relative to a no-retrieval baseline",
+          "papers": [
+            "S008.md",
+            "S016.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f1",
+            "o": "B = 20.2%, R = 6.3% on SciFactBench",
+            "origin": "research",
+            "p": "reports hallucination rate",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f2",
+            "o": "Grounding the generator in retrieved documents leads to fewer hallucinated answers",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S008"
+          },
+          {
+            "claims": [],
+            "id": "f3",
+            "o": "no-retrieval baseline 10.3%, RAG 5.1%, random-passage RAG 41.2%, query-rewriting 30.4% on HistoryQuest",
+            "origin": "research",
+            "p": "reports hallucination frequency",
+            "s": "S016"
+          },
+          {
+            "claims": [],
+            "id": "f4",
+            "o": "Retrieval-based grounding reduces hallucination and random or irrelevant passages make it worse",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S016"
+          }
+        ],
+        "id": "r1"
+      },
+      {
+        "cells": {
+          "conclusion": "Disagree — the reported numbers contradict the authors' stated conclusion",
+          "papers": [
+            "S007.md",
+            "S010.md",
+            "S012.md",
+            "S017.md",
+            "S018.md"
+          ]
+        },
+        "facts": [
+          {
+            "claims": [],
+            "id": "f5",
+            "o": "no-retrieval 391/1000, retrieval 0.399, fine-tuning 18.2% on OpenFactQA",
+            "origin": "research",
+            "p": "reports hallucination rate",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f6",
+            "o": "Grounding the generator in retrieved documents reduces hallucination, while random passages and further training have limited effect",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S007"
+          },
+          {
+            "claims": [],
+            "id": "f7",
+            "o": "B = 6.1%, R = 5.8% on TriviaCheck",
+            "origin": "research",
+            "p": "reports hallucination rate",
+            "s": "S010"
+          },
+          {
+            "claims": [],
+            "id": "f8",
+            "o": "Adding retrieved documents leaves the amount of hallucinated content essentially unchanged",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S010"
+          },
+          {
+            "claims": [],
+            "id": "f9",
+            "o": "no-evidence 0.193, evidence-reading variant 29.2% on NewsTruthQA",
+            "origin": "research",
+            "p": "reports hallucination rate",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f10",
+            "o": "Reading retrieved evidence before answering reduces hallucination",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S012"
+          },
+          {
+            "claims": [],
+            "id": "f11",
+            "o": "no-grounding 0.392, retrieval 314/1000, fine-tuning 29.8%, self-consistency 0.191 on PopCultureQA",
+            "origin": "research",
+            "p": "reports hallucination rate",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f12",
+            "o": "Grounding the generator in retrieved passages reduces hallucination relative to no grounding",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S017"
+          },
+          {
+            "claims": [],
+            "id": "f13",
+            "o": "B = 20.8%, R = 16.3% on PopCultureQA",
+            "origin": "research",
+            "p": "reports hallucination rate",
+            "s": "S018"
+          },
+          {
+            "claims": [],
+            "id": "f14",
+            "o": "Grounding the generator in retrieved documents leaves the amount of hallucinated content essentially unchanged",
+            "origin": "research",
+            "p": "concludes",
+            "s": "S018"
+          }
+        ],
+        "id": "r2"
+      }
+    ]
+  },
+  "agent_answer_text": "Row r1: {\"conclusion\": \"Agree — the reported numbers support the authors' conclusion that grounding the generator in retrieved documents reduces hallucinations relative to a no-retrieval baseline\", \"papers\": [\"S008.md\", \"S016.md\"]}\n  fact: S008 | reports hallucination rate | B = 20.2%, R = 6.3% on SciFactBench\n  fact: S008 | concludes | Grounding the generator in retrieved documents leads to fewer hallucinated answers\n  fact: S016 | reports hallucination frequency | no-retrieval baseline 10.3%, RAG 5.1%, random-passage RAG 41.2%, query-rewriting 30.4% on HistoryQuest\n  fact: S016 | concludes | Retrieval-based grounding reduces hallucination and random or irrelevant passages make it worse\nRow r2: {\"conclusion\": \"Disagree — the reported numbers contradict the authors' stated conclusion\", \"papers\": [\"S007.md\", \"S010.md\", \"S012.md\", \"S017.md\", \"S018.md\"]}\n  fact: S007 | reports hallucination rate | no-retrieval 391/1000, retrieval 0.399, fine-tuning 18.2% on OpenFactQA\n  fact: S007 | concludes | Grounding the generator in retrieved documents reduces hallucination, while random passages and further training have limited effect\n  fact: S010 | reports hallucination rate | B = 6.1%, R = 5.8% on TriviaCheck\n  fact: S010 | concludes | Adding retrieved documents leaves the amount of hallucinated content essentially unchanged\n  fact: S012 | reports hallucination rate | no-evidence 0.193, evidence-reading variant 29.2% on NewsTruthQA\n  fact: S012 | concludes | Reading retrieved evidence before answering reduces hallucination\n  fact: S017 | reports hallucination rate | no-grounding 0.392, retrieval 314/1000, fine-tuning 29.8%, self-consistency 0.191 on PopCultureQA\n  fact: S017 | concludes | Grounding the generator in retrieved passages reduces hallucination relative to no grounding\n  fact: S018 | reports hallucination rate | B = 20.8%, R = 16.3% on PopCultureQA\n  fact: S018 | concludes | Grounding the generator in retrieved documents leaves the amount of hallucinated content essentially unchanged\nNotes: Corpus papers that discuss hallucination: S007, S008, S010, S012, S016, S017, S018 (S001, S006 had no hallucination mentions). Agreements: S008 (R 6.3% < B 20.2%, matches 'grounding reduces hallucination'); S016 (RAG 5.1% < no-retrieval 10.3%, matches conclusion). Disagreements: S007 (retrieval 0.399 > fine-tuning 18.2%, contradicts the claim that retrieval-based grounding is the dominant mitigation and that further training has only limited effect); S012 (evidence-reading variant 29.2% > no-evidence 0.193, contradicts the claim that reading evidence reduces hallucination); S017 (retrieval 314/1000 > no-grounding 0.392, contradicts the claim that grounding via retrieval reduces hallucination relative to no grounding). S010 (B 6.1% vs R 5.8%, 'essentially unchanged') is borderline; I treated it as a disagreement because the authors' conclusion of 'essentially unchanged' is not clearly supported by a 0.3-point gap, though this is the weakest case. S018 (B 20.8% vs R 16.3%, 'essentially unchanged') is also borderline: the 4.5-point gap is small but non-zero; I treated it as a disagreement for consistency with S010. Numbers were read from the results sections; some are reported as fractions (0.399, 0.193, 0.392, 0.191) and some as 'N out of 1,000' or percentages, which I treated as equivalent scales. I could not run additional verification commands because the research phase ended.",
+  "agreeing": [
+    "S008",
+    "S016"
+  ],
+  "answer_text": "Row r1: {\"conclusion\": \"Agree — the reported numbers support the authors' conclusion that grounding the generator in retrieved documents reduces hallucinations relative to a no-retrieval baseline\", \"papers\": [\"S008.md\", \"S016.md\"]}\n  fact: S008 | reports hallucination rate | B = 20.2%, R = 6.3% on SciFactBench\n  fact: S008 | concludes | Grounding the generator in retrieved documents leads to fewer hallucinated answers\n  fact: S016 | reports hallucination frequency | no-retrieval baseline 10.3%, RAG 5.1%, random-passage RAG 41.2%, query-rewriting 30.4% on HistoryQuest\n  fact: S016 | concludes | Retrieval-based grounding reduces hallucination and random or irrelevant passages make it worse\nRow r2: {\"conclusion\": \"Disagree — the reported numbers contradict the authors' stated conclusion\", \"papers\": [\"S007.md\", \"S010.md\", \"S012.md\", \"S017.md\", \"S018.md\"]}\n  fact: S007 | reports hallucination rate | no-retrieval 391/1000, retrieval 0.399, fine-tuning 18.2% on OpenFactQA\n  fact: S007 | concludes | Grounding the generator in retrieved documents reduces hallucination, while random passages and further training have limited effect\n  fact: S010 | reports hallucination rate | B = 6.1%, R = 5.8% on TriviaCheck\n  fact: S010 | concludes | Adding retrieved documents leaves the amount of hallucinated content essentially unchanged\n  fact: S012 | reports hallucination rate | no-evidence 0.193, evidence-reading variant 29.2% on NewsTruthQA\n  fact: S012 | concludes | Reading retrieved evidence before answering reduces hallucination\n  fact: S017 | reports hallucination rate | no-grounding 0.392, retrieval 314/1000, fine-tuning 29.8%, self-consistency 0.191 on PopCultureQA\n  fact: S017 | concludes | Grounding the generator in retrieved passages reduces hallucination relative to no grounding\n  fact: S018 | reports hallucination rate | B = 20.8%, R = 16.3% on PopCultureQA\n  fact: S018 | concludes | Grounding the generator in retrieved documents leaves the amount of hallucinated content essentially unchanged\nNotes: Corpus papers that discuss hallucination: S007, S008, S010, S012, S016, S017, S018 (S001, S006 had no hallucination mentions). Agreements: S008 (R 6.3% < B 20.2%, matches 'grounding reduces hallucination'); S016 (RAG 5.1% < no-retrieval 10.3%, matches conclusion). Disagreements: S007 (retrieval 0.399 > fine-tuning 18.2%, contradicts the claim that retrieval-based grounding is the dominant mitigation and that further training has only limited effect); S012 (evidence-reading variant 29.2% > no-evidence 0.193, contradicts the claim that reading evidence reduces hallucination); S017 (retrieval 314/1000 > no-grounding 0.392, contradicts the claim that grounding via retrieval reduces hallucination relative to no grounding). S010 (B 6.1% vs R 5.8%, 'essentially unchanged') is borderline; I treated it as a disagreement because the authors' conclusion of 'essentially unchanged' is not clearly supported by a 0.3-point gap, though this is the weakest case. S018 (B 20.8% vs R 16.3%, 'essentially unchanged') is also borderline: the 4.5-point gap is small but non-zero; I treated it as a disagreement for consistency with S010. Numbers were read from the results sections; some are reported as fractions (0.399, 0.193, 0.392, 0.191) and some as 'N out of 1,000' or percentages, which I treated as equivalent scales. I could not run additional verification commands because the research phase ended.",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "disagreeing": [
+    "S007",
+    "S010",
+    "S012",
+    "S017",
+    "S018"
+  ],
+  "dropped": [],
+  "kind": "consistency",
+  "mapping_call": {
+    "input_sha256": "92519c5e59b471b449c111ea3670e6c9d3647c8a7af95f8ae885ddc29a1fe9ed",
+    "input_tokens": 1756,
+    "key": "96ca409088c04b59f2161e761b27e61ace9ad557e1a7aa980a54a906eb4df3f3",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 165,
+    "prompt_sha256": "7d81fef1ecf61007de8a01017fae6f822ec29ae30e973d77a4d0f683a5e8aca8",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "studies": [
+    {
+      "agrees": false,
+      "claim": "improves",
+      "direction": null,
+      "document": "S007",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S008",
+      "reason": null
+    },
+    {
+      "agrees": false,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S010",
+      "reason": null
+    },
+    {
+      "agrees": false,
+      "claim": "improves",
+      "direction": null,
+      "document": "S012",
+      "reason": null
+    },
+    {
+      "agrees": true,
+      "claim": "improves",
+      "direction": null,
+      "document": "S016",
+      "reason": null
+    },
+    {
+      "agrees": false,
+      "claim": "improves",
+      "direction": null,
+      "document": "S017",
+      "reason": null
+    },
+    {
+      "agrees": false,
+      "claim": "no_effect",
+      "direction": null,
+      "document": "S018",
+      "reason": null
+    }
+  ],
+  "system": "agent-baseline",
+  "undetermined": []
+}

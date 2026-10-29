@@ -1,0 +1,133 @@
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evidence", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/cli.py", line 164, in main
+    return _dispatch(args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/cli.py", line 174, in _dispatch
+    root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+               model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+               strategy=args.strategy, workers=args.workers)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/engine.py", line 535, in run
+    return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
+                       provider=provider if provider is not None else default_provider, locator=locator,
+                       retry_errors=retry_errors, workers=workers)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/engine.py", line 479, in execute_run
+    corpus = Corpus(settings.corpus)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/rundir.py", line 90, in __init__
+    self.manifest_sha256 = file_sha256(manifest)
+                           ~~~~~~~~~~~^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/jsonio/__init__.py", line 29, in file_sha256
+    with open(path, "rb") as stream:
+         ~~~~^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-hard/manifest.json'
+FAIL engine rag-factuality rag-claude-s1-hard (exit 1)
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 198, in rag_baseline
+    corpus = SystemCorpus(corpus_dir)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 63, in __init__
+    manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-hard/manifest.json'
+FAIL rag rag-factuality rag-claude-s1-hard
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 152, in cmd_agent
+    answer = agent_baseline(args.corpus, runner=runner, model=model, model_id=model_id, **question,
+                            concept=concept, budget=budget, cache=_cache(args, "agent-baseline"),
+                            run_id=args.run_id)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/agent.py", line 82, in agent_baseline
+    corpus = SystemCorpus(corpus_dir)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 63, in __init__
+    manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-hard/manifest.json'
+FAIL agent rag-factuality rag-claude-s1-hard
+FAIL score rag-factuality rag-claude-s1-hard: no answer to score
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evidence", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/cli.py", line 164, in main
+    return _dispatch(args)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/cli.py", line 174, in _dispatch
+    root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
+               model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
+               strategy=args.strategy, workers=args.workers)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/engine.py", line 535, in run
+    return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
+                       provider=provider if provider is not None else default_provider, locator=locator,
+                       retry_errors=retry_errors, workers=workers)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/engine.py", line 479, in execute_run
+    corpus = Corpus(settings.corpus)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evidence/rundir.py", line 90, in __init__
+    self.manifest_sha256 = file_sha256(manifest)
+                           ~~~~~~~~~~~^^^^^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/jsonio/__init__.py", line 29, in file_sha256
+    with open(path, "rb") as stream:
+         ~~~~^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-hard/manifest.json'
+FAIL engine rag-hallucination rag-claude-s1-hard (exit 1)
+Traceback (most recent call last):
+  File "/tmp/xepi3167/ev3-evidence/venv/bin/evaluate", line 10, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 301, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/cli.py", line 119, in cmd_rag
+    answer = rag_baseline(args.corpus, model=model, model_id=model_id, **question, k=args.k,
+                          mode=args.retrieval, max_chars=args.max_chars, cache=_cache(args, system),
+                          seed=args.seed, oracle=args.oracle_passages)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/rag.py", line 198, in rag_baseline
+    corpus = SystemCorpus(corpus_dir)
+  File "/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/evaluation/baselines/common.py", line 63, in __init__
+    manifest = json.loads((self.root / "manifest.json").read_text(encoding="utf-8"))
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 546, in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_abc.py", line 632, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/xepi3167/llm-setup/python/cpython-3.13.12-linux-x86_64-gnu/lib/python3.13/pathlib/_local.py", line 537, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/ceph/storage/data-tmp/2026/xepi3167/thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-hard/manifest.json'
+FAIL rag rag-hallucination rag-claude-s1-hard
+[2026-10-28T08:53:44.802] error: *** STEP 7954.78 ON gammaweb07 CANCELLED AT 2026-10-28T08:53:44 DUE to SIGNAL Killed ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gammaweb07: task 0: Killed

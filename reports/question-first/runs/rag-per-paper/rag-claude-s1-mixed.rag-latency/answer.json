@@ -1,0 +1,324 @@
+{
+  "answer_text": "Yes, retrieval-augmented generation (RAG) changes the latency of LLM-generated answers, with the direction of the change depending on the specific dataset and system configuration. The evidence shows that RAG can either increase or decrease latency compared to parametric-only (closed-book) models.\n\n1. **RAG can decrease latency:**\n   - On the **TriviaCheck** dataset, the retrieve-then-read model had a latency of **1.09 seconds**, which is lower than the no-retrieval baseline's latency of **1.91 seconds** [S019, 1944-3441].\n   - On the **BioClaimQA** dataset, the retrieval-augmented model had a latency of **1.12 seconds**, slightly lower than the closed-book model's **1.16 seconds** [S014, 908-2256].\n   - On the **TriviaCheck** dataset (in a different study), the retrieval-augmented model had a latency of **0.94 seconds**, significantly lower than the closed-book model's **1.96 seconds** [S014, 908-2256].\n\n2. **RAG can increase latency:**\n   - On the **HistoryQuest** dataset, the retrieve-then-read model had a latency of **2.63 seconds**, which is higher than the no-retrieval baseline's latency of **1.99 seconds** [S019, 1944-3441].\n\nThese variations suggest that the impact of RAG on latency is not uniform and may depend on factors such as the retrieval mechanism, the complexity of the questions, and the specific hardware or software environment used.",
+  "citations": [
+    {
+      "document": "S019",
+      "end": 3441,
+      "start": 1944
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "start": 908
+    }
+  ],
+  "contradicting": [],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "counts": {
+    "contradicting": 0,
+    "neutral": 1,
+    "supporting": 1,
+    "undetermined": 0
+  },
+  "dropped": [],
+  "dropped_citations": [],
+  "label": "mixed",
+  "label_by_rule": "supported",
+  "mapped_answer_text": "The answer states that RAG can both decrease and increase latency. It cites S019 for cases where latency decreased (TriviaCheck) and increased (HistoryQuest), and S014 for cases where latency decreased (BioClaimQA and TriviaCheck).",
+  "mapping_call": {
+    "input_sha256": "c96ed8bb8be7caa452b509a5cfdebc3eefd9211ebbdb0a52696edd9e57107736",
+    "input_tokens": 1178,
+    "key": "39f117fe5dc8c3e52b487f542d0a9825840518e46353cb8a74243e9786a0ed20",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 101,
+    "prompt_sha256": "66faaf847a0082b6f7043d90adb03785215f351a86e02dd45b18f49e693825d0",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "176e8b6b5a1fa2cd8aa4dfc3374c1fea3a8bc7f427cbd13849fb400a1fc53736",
+    "input_tokens": 10387,
+    "key": "cabc66fa47bb798f21d025d253f2b29959a2afc3ede9475ece84382144460a0e",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 478,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "neutral": [
+    "S019"
+  ],
+  "question": "Does retrieval-augmented generation change the latency of LLM-generated answers?",
+  "question_id": "rag-latency",
+  "retrieved": [
+    {
+      "document": "S001",
+      "end": 2239,
+      "score": 5.873202,
+      "start": 1023
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 4.256096,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 1160,
+      "score": 5.851801,
+      "start": 0
+    },
+    {
+      "document": "S002",
+      "end": 3490,
+      "score": 4.655061,
+      "start": 2039
+    },
+    {
+      "document": "S003",
+      "end": 2532,
+      "score": 5.42789,
+      "start": 1419
+    },
+    {
+      "document": "S003",
+      "end": 1419,
+      "score": 4.850482,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 1325,
+      "score": 6.40285,
+      "start": 0
+    },
+    {
+      "document": "S004",
+      "end": 2474,
+      "score": 5.406023,
+      "start": 1325
+    },
+    {
+      "document": "S005",
+      "end": 3666,
+      "score": 5.835798,
+      "start": 2495
+    },
+    {
+      "document": "S005",
+      "end": 2495,
+      "score": 5.796795,
+      "start": 1073
+    },
+    {
+      "document": "S006",
+      "end": 2401,
+      "score": 7.69918,
+      "start": 1367
+    },
+    {
+      "document": "S006",
+      "end": 1367,
+      "score": 7.358256,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 3784,
+      "score": 4.695825,
+      "start": 2635
+    },
+    {
+      "document": "S007",
+      "end": 1427,
+      "score": 4.616591,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 960,
+      "score": 12.624142,
+      "start": 0
+    },
+    {
+      "document": "S008",
+      "end": 1995,
+      "score": 7.505844,
+      "start": 960
+    },
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 6.944025,
+      "start": 0
+    },
+    {
+      "document": "S009",
+      "end": 3633,
+      "score": 4.118766,
+      "start": 2316
+    },
+    {
+      "document": "S010",
+      "end": 957,
+      "score": 9.071019,
+      "start": 0
+    },
+    {
+      "document": "S010",
+      "end": 2287,
+      "score": 8.654606,
+      "start": 957
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 5.234498,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 3208,
+      "score": 4.28874,
+      "start": 2419
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 4.456265,
+      "start": 2754
+    },
+    {
+      "document": "S012",
+      "end": 1346,
+      "score": 4.323375,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 2748,
+      "score": 7.931086,
+      "start": 1316
+    },
+    {
+      "document": "S013",
+      "end": 1316,
+      "score": 5.382763,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 908,
+      "score": 9.990719,
+      "start": 0
+    },
+    {
+      "document": "S014",
+      "end": 2256,
+      "score": 9.158934,
+      "start": 908
+    },
+    {
+      "document": "S015",
+      "end": 2509,
+      "score": 8.127124,
+      "start": 1067
+    },
+    {
+      "document": "S015",
+      "end": 1067,
+      "score": 4.920973,
+      "start": 0
+    },
+    {
+      "document": "S016",
+      "end": 2667,
+      "score": 10.60362,
+      "start": 1395
+    },
+    {
+      "document": "S016",
+      "end": 1395,
+      "score": 5.565986,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 1311,
+      "score": 4.090388,
+      "start": 0
+    },
+    {
+      "document": "S017",
+      "end": 2304,
+      "score": 4.057881,
+      "start": 1311
+    },
+    {
+      "document": "S018",
+      "end": 2606,
+      "score": 6.964297,
+      "start": 1187
+    },
+    {
+      "document": "S018",
+      "end": 1187,
+      "score": 3.940919,
+      "start": 0
+    },
+    {
+      "document": "S019",
+      "end": 3441,
+      "score": 7.175706,
+      "start": 1944
+    },
+    {
+      "document": "S019",
+      "end": 1944,
+      "score": 6.254397,
+      "start": 1156
+    },
+    {
+      "document": "S020",
+      "end": 1260,
+      "score": 9.947288,
+      "start": 0
+    },
+    {
+      "document": "S020",
+      "end": 2739,
+      "score": 5.869894,
+      "start": 1260
+    }
+  ],
+  "settings": {
+    "k": 2,
+    "max_chars": 1500,
+    "retrieval": "per_paper",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "direction": "supports",
+      "document": "S014"
+    },
+    {
+      "direction": "neutral",
+      "document": "S019"
+    }
+  ],
+  "supporting": [
+    "S014"
+  ],
+  "system": "rag-baseline",
+  "undetermined": []
+}

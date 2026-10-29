@@ -1,0 +1,200 @@
+{
+  "answer_text": "The papers report the following evaluation metrics: fact-level accuracy, ROUGE-L, hallucination rate, answer accuracy, latency, and BLEU. Specifically, [S009] reports fact-level accuracy and ROUGE-L [S009, 0-1270]. [S011] reports fact-level accuracy [S011, 0-1086]. [S003] reports fact-level accuracy (FLA) [S003, 2532-3792]. [S004] reports answer accuracy, latency, and BLEU [S004, 2474-3765]. [S001] reports hallucination rate [S001, 0-1023]. [S007] reports the share of answers containing unsupported statements, which is a measure of hallucination [S007, 1427-2635]. [S012] reports a metric for unsupported statements (hallucination) [S012, 2754-3680].",
+  "citations": [
+    {
+      "document": "S009",
+      "end": 1270,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "start": 2532
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "start": 2474
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 2635,
+      "start": 1427
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "start": 2754
+    }
+  ],
+  "corpus_id": "rag-claude-s1-ec928480",
+  "dropped": [],
+  "dropped_citations": [],
+  "entries": [
+    {
+      "aliases": [],
+      "items": [],
+      "name": "answer accuracy",
+      "papers": [
+        "S004"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "BLEU",
+      "papers": [
+        "S004"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "fact-level accuracy",
+      "papers": [
+        "S003",
+        "S009",
+        "S011"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "hallucination rate",
+      "papers": [
+        "S001"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "latency",
+      "papers": [
+        "S004"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "metric for unsupported statements",
+      "papers": [
+        "S012"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "ROUGE-L",
+      "papers": [
+        "S009"
+      ]
+    },
+    {
+      "aliases": [],
+      "items": [],
+      "name": "share of answers containing unsupported statements",
+      "papers": [
+        "S007"
+      ]
+    }
+  ],
+  "kind": "inventory",
+  "mapping_call": {
+    "input_sha256": "ea91c1699bf591fef393036dd41bea4bd3d089651c4c8b6eb8a5afbe16fa7498",
+    "input_tokens": 1057,
+    "key": "71ae45cd3af0b6c4c0eb4ac31f5b3014ae591618de43131670a2456547e970f9",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 162,
+    "prompt_sha256": "5d35d46cdd8a386502a50fe86de4a80eb7a680f2c781244b484e86453856d146",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "model_call": {
+    "input_sha256": "f91d5a0446505405ce29a4439a5be9bcbb07d2fc0467fe1134002c3ce0a62c6d",
+    "input_tokens": 2020,
+    "key": "58496f160aaff47aeeea0ae34fde52b0ca4b40bf776255c099983931c7a8f890",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 473,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 1,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which evaluation metrics do the papers report?",
+  "question_id": "inv-metrics",
+  "retrieved": [
+    {
+      "document": "S009",
+      "end": 1270,
+      "score": 7.803705,
+      "start": 0
+    },
+    {
+      "document": "S011",
+      "end": 1086,
+      "score": 6.874232,
+      "start": 0
+    },
+    {
+      "document": "S003",
+      "end": 3792,
+      "score": 5.793793,
+      "start": 2532
+    },
+    {
+      "document": "S004",
+      "end": 3765,
+      "score": 5.430279,
+      "start": 2474
+    },
+    {
+      "document": "S001",
+      "end": 1023,
+      "score": 4.912796,
+      "start": 0
+    },
+    {
+      "document": "S007",
+      "end": 2635,
+      "score": 4.227544,
+      "start": 1427
+    },
+    {
+      "document": "S009",
+      "end": 2316,
+      "score": 4.21121,
+      "start": 1270
+    },
+    {
+      "document": "S012",
+      "end": 3680,
+      "score": 3.912286,
+      "start": 2754
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "system": "rag-baseline",
+  "target": "metric"
+}

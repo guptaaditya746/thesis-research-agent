@@ -1,0 +1,3610 @@
+{
+  "attribution": null,
+  "cascade": {
+    "missed_by_all": {},
+    "rows": [
+      {
+        "extractor": "llm_dataset@1#0657dd619876",
+        "found": 24,
+        "found_matched": 24,
+        "only": 24,
+        "only_matched": 24
+      }
+    ]
+  },
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": {
+    "papers": 20,
+    "per_paper": {
+      "cached_calls": 0.0,
+      "calls": 2.0,
+      "input_tokens": 2463.15,
+      "made_model_calls": 2.5,
+      "model_calls": 2.5,
+      "output_tokens": 198.9,
+      "seconds": 2.2535
+    },
+    "total": {
+      "cached_calls": 0,
+      "calls": 40,
+      "input_tokens": 49263,
+      "made_model_calls": 50,
+      "model_calls": 50,
+      "output_tokens": 3978,
+      "seconds": 45.071,
+      "workers": 3
+    }
+  },
+  "extraction": {
+    "missed": [],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 24,
+        "items": 24,
+        "level": "all",
+        "matched": 24,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 8,
+        "items": 8,
+        "level": "complex",
+        "matched": 8,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "contradictory",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "distributed",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "explicit",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "all",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "paraphrased",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "dataset",
+        "f1": 1.0,
+        "facts": 24,
+        "items": 24,
+        "level": "all",
+        "matched": 24,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "dataset",
+        "f1": 1.0,
+        "facts": 8,
+        "items": 8,
+        "level": "complex",
+        "matched": 8,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "dataset",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "contradictory",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "dataset",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "distributed",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "dataset",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "explicit",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      },
+      {
+        "evidence_type": "dataset",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "paraphrased",
+        "matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null
+      }
+    ],
+    "scored_types": [
+      "dataset"
+    ],
+    "unmatched_items": []
+  },
+  "extractors": {
+    "cost": [
+      {
+        "calls": 20,
+        "extractor": "llm_dataset@1#0657dd619876",
+        "input_tokens": 30582,
+        "model_calls": 30,
+        "output_tokens": 2230,
+        "seconds": 0.139
+      },
+      {
+        "calls": 20,
+        "extractor": "llm_screen@1#41b0d6e6793f",
+        "input_tokens": 18681,
+        "model_calls": 20,
+        "output_tokens": 1748,
+        "seconds": 0.139
+      }
+    ],
+    "papers": [
+      {
+        "cluster": "1/S001",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S001"
+      },
+      {
+        "cluster": "1/S002",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S002"
+      },
+      {
+        "cluster": "1/S003",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S003"
+      },
+      {
+        "cluster": "1/S004",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S004"
+      },
+      {
+        "cluster": "1/S005",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S005"
+      },
+      {
+        "cluster": "1/S006",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S006"
+      },
+      {
+        "cluster": "1/S007",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S007"
+      },
+      {
+        "cluster": "1/S008",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S008"
+      },
+      {
+        "cluster": "1/S009",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S009"
+      },
+      {
+        "cluster": "1/S010",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S010"
+      },
+      {
+        "cluster": "1/S011",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S011"
+      },
+      {
+        "cluster": "1/S012",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S012"
+      },
+      {
+        "cluster": "1/S013",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S013"
+      },
+      {
+        "cluster": "1/S014",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S014"
+      },
+      {
+        "cluster": "1/S015",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S015"
+      },
+      {
+        "cluster": "1/S016",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S016"
+      },
+      {
+        "cluster": "1/S017",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S017"
+      },
+      {
+        "cluster": "1/S018",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S018"
+      },
+      {
+        "cluster": "1/S019",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 2,
+        "items": 2,
+        "matched": 2,
+        "paper": "S019"
+      },
+      {
+        "cluster": "1/S020",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "facts": 1,
+        "items": 1,
+        "matched": 1,
+        "paper": "S020"
+      }
+    ],
+    "recall_scope": "called",
+    "rows": [
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 24,
+        "items": 24,
+        "level": "all",
+        "matched": 24,
+        "only": 24,
+        "only_matched": 24,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 8,
+        "items": 8,
+        "level": "complex",
+        "matched": 8,
+        "only": 8,
+        "only_matched": 8,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "contradictory",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "distributed",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "explicit",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "all",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "paraphrased",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "dataset",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 24,
+        "items": 24,
+        "level": "all",
+        "matched": 24,
+        "only": 24,
+        "only_matched": 24,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "dataset",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 8,
+        "items": 8,
+        "level": "complex",
+        "matched": 8,
+        "only": 8,
+        "only_matched": 8,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "dataset",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "contradictory",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "dataset",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "distributed",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "dataset",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "explicit",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      },
+      {
+        "associated": null,
+        "association_accuracy": null,
+        "evidence_type": "dataset",
+        "extractor": "llm_dataset@1#0657dd619876",
+        "f1": 1.0,
+        "facts": 4,
+        "items": 4,
+        "level": "paraphrased",
+        "matched": 4,
+        "only": 4,
+        "only_matched": 4,
+        "precision": 1.0,
+        "recall": 1.0,
+        "span_accuracy": null,
+        "span_hits": 0
+      }
+    ]
+  },
+  "funnel": {
+    "documents": 20,
+    "per_document": {
+      "calls": 2.0,
+      "input_tokens": 2463.15,
+      "model_calls": 2.5,
+      "output_tokens": 198.9,
+      "tokens": 2662.05
+    },
+    "rows": [
+      {
+        "calls": 2,
+        "document": "S001",
+        "expected_relevant": true,
+        "input_tokens": 2655,
+        "level": "explicit",
+        "model_calls": 3,
+        "output_tokens": 183,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2838
+      },
+      {
+        "calls": 2,
+        "document": "S002",
+        "expected_relevant": true,
+        "input_tokens": 2862,
+        "level": "paraphrased",
+        "model_calls": 3,
+        "output_tokens": 175,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3037
+      },
+      {
+        "calls": 2,
+        "document": "S003",
+        "expected_relevant": true,
+        "input_tokens": 2139,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 194,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2333
+      },
+      {
+        "calls": 2,
+        "document": "S004",
+        "expected_relevant": true,
+        "input_tokens": 2295,
+        "level": "complex",
+        "model_calls": 2,
+        "output_tokens": 218,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2513
+      },
+      {
+        "calls": 2,
+        "document": "S005",
+        "expected_relevant": true,
+        "input_tokens": 1979,
+        "level": "contradictory",
+        "model_calls": 2,
+        "output_tokens": 163,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2142
+      },
+      {
+        "calls": 2,
+        "document": "S006",
+        "expected_relevant": true,
+        "input_tokens": 2742,
+        "level": "explicit",
+        "model_calls": 3,
+        "output_tokens": 196,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2938
+      },
+      {
+        "calls": 2,
+        "document": "S007",
+        "expected_relevant": true,
+        "input_tokens": 2101,
+        "level": "paraphrased",
+        "model_calls": 2,
+        "output_tokens": 153,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2254
+      },
+      {
+        "calls": 2,
+        "document": "S008",
+        "expected_relevant": true,
+        "input_tokens": 1879,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 192,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2071
+      },
+      {
+        "calls": 2,
+        "document": "S009",
+        "expected_relevant": true,
+        "input_tokens": 3315,
+        "level": "complex",
+        "model_calls": 3,
+        "output_tokens": 288,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3603
+      },
+      {
+        "calls": 2,
+        "document": "S010",
+        "expected_relevant": true,
+        "input_tokens": 2639,
+        "level": "contradictory",
+        "model_calls": 3,
+        "output_tokens": 198,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2837
+      },
+      {
+        "calls": 2,
+        "document": "S011",
+        "expected_relevant": true,
+        "input_tokens": 2752,
+        "level": "explicit",
+        "model_calls": 3,
+        "output_tokens": 232,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2984
+      },
+      {
+        "calls": 2,
+        "document": "S012",
+        "expected_relevant": true,
+        "input_tokens": 1925,
+        "level": "paraphrased",
+        "model_calls": 2,
+        "output_tokens": 167,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2092
+      },
+      {
+        "calls": 2,
+        "document": "S013",
+        "expected_relevant": true,
+        "input_tokens": 2173,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 175,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2348
+      },
+      {
+        "calls": 2,
+        "document": "S014",
+        "expected_relevant": true,
+        "input_tokens": 2873,
+        "level": "complex",
+        "model_calls": 3,
+        "output_tokens": 267,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3140
+      },
+      {
+        "calls": 2,
+        "document": "S015",
+        "expected_relevant": true,
+        "input_tokens": 2916,
+        "level": "contradictory",
+        "model_calls": 3,
+        "output_tokens": 213,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3129
+      },
+      {
+        "calls": 2,
+        "document": "S016",
+        "expected_relevant": true,
+        "input_tokens": 1887,
+        "level": "explicit",
+        "model_calls": 2,
+        "output_tokens": 151,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2038
+      },
+      {
+        "calls": 2,
+        "document": "S017",
+        "expected_relevant": true,
+        "input_tokens": 1937,
+        "level": "paraphrased",
+        "model_calls": 2,
+        "output_tokens": 143,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2080
+      },
+      {
+        "calls": 2,
+        "document": "S018",
+        "expected_relevant": true,
+        "input_tokens": 1969,
+        "level": "distributed",
+        "model_calls": 2,
+        "output_tokens": 175,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 2144
+      },
+      {
+        "calls": 2,
+        "document": "S019",
+        "expected_relevant": true,
+        "input_tokens": 3222,
+        "level": "complex",
+        "model_calls": 3,
+        "output_tokens": 276,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3498
+      },
+      {
+        "calls": 2,
+        "document": "S020",
+        "expected_relevant": true,
+        "input_tokens": 3003,
+        "level": "contradictory",
+        "model_calls": 3,
+        "output_tokens": 219,
+        "relevant": true,
+        "screened": false,
+        "skipped": false,
+        "stop": "exhausted",
+        "tokens": 3222
+      }
+    ],
+    "screen": {
+      "documents": 20,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "screened_out": [],
+      "screened_out_wrongly": [],
+      "tn": 0,
+      "tp": 20
+    },
+    "stop_positions": {
+      "exhausted": 20
+    },
+    "strategy": "gaps"
+  },
+  "integration": {
+    "clean_share": 1.0,
+    "entries": 9,
+    "keyed_entries": 9,
+    "keys": 9,
+    "kind": "inventory",
+    "merged": 0,
+    "split": 0
+  },
+  "intervals": {
+    "extraction": [
+      {
+        "evidence_type": "dataset",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 1.0,
+        "unit": "row"
+      },
+      {
+        "evidence_type": "all",
+        "high": null,
+        "low": null,
+        "method": null,
+        "n_rows": 20,
+        "point": 1.0,
+        "unit": "row"
+      }
+    ],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "precision",
+        "n_rows": 9,
+        "point": 1.0,
+        "system": "evidence-engine",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "recall",
+        "n_rows": 9,
+        "point": 1.0,
+        "system": "evidence-engine",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "f1",
+        "n_rows": 9,
+        "point": 1.0,
+        "system": "evidence-engine",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": {
+    "outside": [
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.a1",
+        "paper": "S001",
+        "role": "claim"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.c1",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.c2",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.c3",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.c4",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.c1",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m1",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.c2",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m2",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.c3",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m3",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.c4",
+        "paper": "S001",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S001.m4",
+        "paper": "S001",
+        "role": "value"
+      },
+      {
+        "fact": "S001.a1",
+        "paper": "S001",
+        "role": "claim"
+      },
+      {
+        "fact": "S001.k1",
+        "paper": "S001",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.a1",
+        "paper": "S002",
+        "role": "claim"
+      },
+      {
+        "fact": "S002.c1",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.c2",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.c3",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.c4",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.c1",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m1",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.c2",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m2",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.c3",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m3",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.c4",
+        "paper": "S002",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S002.m4",
+        "paper": "S002",
+        "role": "value"
+      },
+      {
+        "fact": "S002.a1",
+        "paper": "S002",
+        "role": "claim"
+      },
+      {
+        "fact": "S002.k1",
+        "paper": "S002",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.a1",
+        "paper": "S003",
+        "role": "claim"
+      },
+      {
+        "fact": "S003.c1",
+        "paper": "S003",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S003.c1",
+        "paper": "S003",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S003.c2",
+        "paper": "S003",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S003.c2",
+        "paper": "S003",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.k1",
+        "paper": "S003",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S003.c1",
+        "paper": "S003",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S003.m1",
+        "paper": "S003",
+        "role": "value"
+      },
+      {
+        "fact": "S003.c2",
+        "paper": "S003",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S003.m2",
+        "paper": "S003",
+        "role": "value"
+      },
+      {
+        "fact": "S003.a1",
+        "paper": "S003",
+        "role": "claim"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.a1",
+        "paper": "S004",
+        "role": "claim"
+      },
+      {
+        "fact": "S004.c1",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.c2",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k3",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.c1",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.m1",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m3",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m5",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.c2",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.m4",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m6",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.c1",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.m7",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m9",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m11",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.c2",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.m8",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m10",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.m12",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.c2",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.c2",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.m2",
+        "paper": "S004",
+        "role": "value"
+      },
+      {
+        "fact": "S004.c1",
+        "paper": "S004",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S004.k1",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.k2",
+        "paper": "S004",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S004.a1",
+        "paper": "S004",
+        "role": "claim"
+      },
+      {
+        "fact": "S005.a1",
+        "paper": "S005",
+        "role": "claim"
+      },
+      {
+        "fact": "S005.c1",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.c2",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.c3",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.c4",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.c1",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.m1",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.c2",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.m2",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.c3",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.m3",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.c4",
+        "paper": "S005",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S005.m4",
+        "paper": "S005",
+        "role": "value"
+      },
+      {
+        "fact": "S005.k1",
+        "paper": "S005",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S005.a1",
+        "paper": "S005",
+        "role": "claim"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.a1",
+        "paper": "S006",
+        "role": "claim"
+      },
+      {
+        "fact": "S006.c1",
+        "paper": "S006",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S006.c2",
+        "paper": "S006",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S006.c3",
+        "paper": "S006",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.c1",
+        "paper": "S006",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.m1",
+        "paper": "S006",
+        "role": "value"
+      },
+      {
+        "fact": "S006.c2",
+        "paper": "S006",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.m2",
+        "paper": "S006",
+        "role": "value"
+      },
+      {
+        "fact": "S006.c3",
+        "paper": "S006",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.m3",
+        "paper": "S006",
+        "role": "value"
+      },
+      {
+        "fact": "S006.k1",
+        "paper": "S006",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S006.a1",
+        "paper": "S006",
+        "role": "claim"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.a1",
+        "paper": "S007",
+        "role": "claim"
+      },
+      {
+        "fact": "S007.c1",
+        "paper": "S007",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S007.c2",
+        "paper": "S007",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S007.c3",
+        "paper": "S007",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.c1",
+        "paper": "S007",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.m1",
+        "paper": "S007",
+        "role": "value"
+      },
+      {
+        "fact": "S007.c2",
+        "paper": "S007",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.m2",
+        "paper": "S007",
+        "role": "value"
+      },
+      {
+        "fact": "S007.c3",
+        "paper": "S007",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S007.k1",
+        "paper": "S007",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S007.m3",
+        "paper": "S007",
+        "role": "value"
+      },
+      {
+        "fact": "S007.a1",
+        "paper": "S007",
+        "role": "claim"
+      },
+      {
+        "fact": "S008.c1",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.c2",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.a1",
+        "paper": "S008",
+        "role": "claim"
+      },
+      {
+        "fact": "S008.c1",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.c2",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.c1",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.c1",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.c2",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.c2",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.c2",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.c1",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.m1",
+        "paper": "S008",
+        "role": "value"
+      },
+      {
+        "fact": "S008.c2",
+        "paper": "S008",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S008.m2",
+        "paper": "S008",
+        "role": "value"
+      },
+      {
+        "fact": "S008.k1",
+        "paper": "S008",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S008.a1",
+        "paper": "S008",
+        "role": "claim"
+      },
+      {
+        "fact": "S009.c1",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.c2",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.a1",
+        "paper": "S009",
+        "role": "claim"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.c1",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.c2",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.c1",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.c2",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.k2",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.c1",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.m1",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m3",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.c2",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.m4",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.c1",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.m5",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m7",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.c2",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.m6",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.m8",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.c2",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.m2",
+        "paper": "S009",
+        "role": "value"
+      },
+      {
+        "fact": "S009.c1",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.k1",
+        "paper": "S009",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S009.c1",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.c2",
+        "paper": "S009",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S009.a1",
+        "paper": "S009",
+        "role": "claim"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.c2",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.a1",
+        "paper": "S010",
+        "role": "claim"
+      },
+      {
+        "fact": "S010.c1",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.c2",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.c3",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.c1",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.c2",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.c3",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.c1",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.m1",
+        "paper": "S010",
+        "role": "value"
+      },
+      {
+        "fact": "S010.c2",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.m2",
+        "paper": "S010",
+        "role": "value"
+      },
+      {
+        "fact": "S010.c3",
+        "paper": "S010",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S010.m3",
+        "paper": "S010",
+        "role": "value"
+      },
+      {
+        "fact": "S010.k1",
+        "paper": "S010",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S010.a1",
+        "paper": "S010",
+        "role": "claim"
+      },
+      {
+        "fact": "S011.c1",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.c2",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.c3",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.c4",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.a1",
+        "paper": "S011",
+        "role": "claim"
+      },
+      {
+        "fact": "S011.c1",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.c2",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.c3",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.c4",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.c1",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m1",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.c2",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m2",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.c3",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m3",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.c4",
+        "paper": "S011",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S011.k1",
+        "paper": "S011",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S011.m4",
+        "paper": "S011",
+        "role": "value"
+      },
+      {
+        "fact": "S011.a1",
+        "paper": "S011",
+        "role": "claim"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.a1",
+        "paper": "S012",
+        "role": "claim"
+      },
+      {
+        "fact": "S012.c1",
+        "paper": "S012",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S012.c2",
+        "paper": "S012",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.c1",
+        "paper": "S012",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.m1",
+        "paper": "S012",
+        "role": "value"
+      },
+      {
+        "fact": "S012.c2",
+        "paper": "S012",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S012.k1",
+        "paper": "S012",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S012.m2",
+        "paper": "S012",
+        "role": "value"
+      },
+      {
+        "fact": "S012.a1",
+        "paper": "S012",
+        "role": "claim"
+      },
+      {
+        "fact": "S013.a1",
+        "paper": "S013",
+        "role": "claim"
+      },
+      {
+        "fact": "S013.c1",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.c1",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.c2",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.c2",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.c3",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.c3",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.c1",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.m1",
+        "paper": "S013",
+        "role": "value"
+      },
+      {
+        "fact": "S013.c2",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.m2",
+        "paper": "S013",
+        "role": "value"
+      },
+      {
+        "fact": "S013.c3",
+        "paper": "S013",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S013.m3",
+        "paper": "S013",
+        "role": "value"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.k1",
+        "paper": "S013",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S013.a1",
+        "paper": "S013",
+        "role": "claim"
+      },
+      {
+        "fact": "S014.c1",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.c2",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.a1",
+        "paper": "S014",
+        "role": "claim"
+      },
+      {
+        "fact": "S014.c1",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.c2",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.c1",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.c2",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.c1",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.m1",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m3",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m5",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.c2",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.m4",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m6",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.c1",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.m7",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m9",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m11",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.c2",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.m8",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m10",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.m12",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.c2",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.m2",
+        "paper": "S014",
+        "role": "value"
+      },
+      {
+        "fact": "S014.c1",
+        "paper": "S014",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S014.k1",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k3",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.k2",
+        "paper": "S014",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S014.a1",
+        "paper": "S014",
+        "role": "claim"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.a1",
+        "paper": "S015",
+        "role": "claim"
+      },
+      {
+        "fact": "S015.c1",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.c2",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.c3",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.c4",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.c1",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.m1",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.c2",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.m2",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.c3",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.m3",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.c4",
+        "paper": "S015",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S015.m4",
+        "paper": "S015",
+        "role": "value"
+      },
+      {
+        "fact": "S015.k1",
+        "paper": "S015",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S015.a1",
+        "paper": "S015",
+        "role": "claim"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.a1",
+        "paper": "S016",
+        "role": "claim"
+      },
+      {
+        "fact": "S016.c1",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.c2",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.c3",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.c4",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.c1",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m1",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.c2",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m2",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.c3",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m3",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.c4",
+        "paper": "S016",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.m4",
+        "paper": "S016",
+        "role": "value"
+      },
+      {
+        "fact": "S016.k1",
+        "paper": "S016",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S016.a1",
+        "paper": "S016",
+        "role": "claim"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.a1",
+        "paper": "S017",
+        "role": "claim"
+      },
+      {
+        "fact": "S017.c1",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.c2",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.c3",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.c4",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.c1",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.c2",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.c3",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.c4",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.c1",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m1",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.c2",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m2",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.c3",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m3",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.c4",
+        "paper": "S017",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S017.k1",
+        "paper": "S017",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S017.m4",
+        "paper": "S017",
+        "role": "value"
+      },
+      {
+        "fact": "S017.a1",
+        "paper": "S017",
+        "role": "claim"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.a1",
+        "paper": "S018",
+        "role": "claim"
+      },
+      {
+        "fact": "S018.c1",
+        "paper": "S018",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S018.c1",
+        "paper": "S018",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S018.c2",
+        "paper": "S018",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S018.c2",
+        "paper": "S018",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.c1",
+        "paper": "S018",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S018.m1",
+        "paper": "S018",
+        "role": "value"
+      },
+      {
+        "fact": "S018.c2",
+        "paper": "S018",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S018.m2",
+        "paper": "S018",
+        "role": "value"
+      },
+      {
+        "fact": "S018.k1",
+        "paper": "S018",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S018.a1",
+        "paper": "S018",
+        "role": "claim"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.a1",
+        "paper": "S019",
+        "role": "claim"
+      },
+      {
+        "fact": "S019.c1",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.c2",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.c3",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.c1",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.m1",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m4",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m7",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.c2",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.m5",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m8",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.c3",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.m3",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m6",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m9",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.c1",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.m10",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m13",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m16",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.c2",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.m11",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m14",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m17",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.c3",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.m12",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m15",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.m18",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.c2",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.m2",
+        "paper": "S019",
+        "role": "value"
+      },
+      {
+        "fact": "S019.c1",
+        "paper": "S019",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S019.k1",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k3",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.k2",
+        "paper": "S019",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S019.a1",
+        "paper": "S019",
+        "role": "claim"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.c2",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.a1",
+        "paper": "S020",
+        "role": "claim"
+      },
+      {
+        "fact": "S020.c1",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.c2",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.c3",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.c4",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.c1",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.c2",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.c3",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.c4",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.c4",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.c1",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.m1",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.c2",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.m2",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.c3",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.m3",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.c4",
+        "paper": "S020",
+        "role": "condition_label"
+      },
+      {
+        "fact": "S020.m4",
+        "paper": "S020",
+        "role": "value"
+      },
+      {
+        "fact": "S020.k1",
+        "paper": "S020",
+        "role": "metric_label"
+      },
+      {
+        "fact": "S020.a1",
+        "paper": "S020",
+        "role": "claim"
+      }
+    ],
+    "rows": [
+      {
+        "evidence_type": "all",
+        "inside": 0,
+        "level": "all",
+        "placements": 483,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 0,
+        "level": "complex",
+        "placements": 159,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 88,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 75,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 88,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "all",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 73,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "all",
+        "placements": 40,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "complex",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "author_claim",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 8,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 0,
+        "level": "all",
+        "placements": 182,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 0,
+        "level": "complex",
+        "placements": 46,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 40,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 32,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 34,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "condition",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 30,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "all",
+        "placements": 102,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "complex",
+        "placements": 50,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 15,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 9,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 15,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "measurement",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 13,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "all",
+        "placements": 159,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "complex",
+        "placements": 55,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "contradictory",
+        "placements": 25,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "distributed",
+        "placements": 26,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "explicit",
+        "placements": 31,
+        "recall": 0.0
+      },
+      {
+        "evidence_type": "metric",
+        "inside": 0,
+        "level": "paraphrased",
+        "placements": 22,
+        "recall": 0.0
+      }
+    ]
+  },
+  "protocol": {
+    "id": "inv-datasets",
+    "lexical_miss": "reject",
+    "sha256": "2a61da17302bdf2ee5eddd47df80dc6ea6f0bb0bc4c9245d2b0ca856c225a58a"
+  },
+  "question": "Which datasets do the papers evaluate on?",
+  "question_id": "inv-datasets",
+  "run_id": "rag-claude-s1-mixed",
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 1.0,
+      "entries": 9,
+      "expected_entries": 9,
+      "expected_paper_pairs": 24,
+      "f1": 1.0,
+      "false_positives": [],
+      "kind": "inventory",
+      "matched": 9,
+      "missed": [],
+      "paper_f1": 1.0,
+      "paper_pairs": 24,
+      "paper_precision": 1.0,
+      "paper_recall": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "system": "evidence-engine",
+      "target": "dataset"
+    }
+  ]
+}

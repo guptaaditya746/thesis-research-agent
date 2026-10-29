@@ -1,0 +1,116 @@
+{
+  "answer_text": "Based on the provided passages, only one paper reports specific numerical hallucination rates that allow for a direct comparison of methods: [S084]. In this paper, the **RAG pipeline** achieves the lowest hallucination rate on both benchmarks compared to the vanilla LLM. Specifically, on TriviaCheck, the RAG pipeline has a hallucination rate of 8.8% (derived from the text stating it is 8.8 percentage points lower than the vanilla LLM's 18.9%), while the vanilla LLM is at 18.9%. On GeoFacts, the RAG pipeline has a hallucination rate of 24.1%, while the vanilla LLM is at 37.5% [S084, 720-2103]. The other passages describe methods and metrics but do not provide the resulting numerical hallucination rates necessary to determine which method is lowest [S005, 768-1864; S032, 782-1715; S050, 781-1688; S065, 807-1859; S089, 750-1670].",
+  "citations": [
+    {
+      "document": "S084",
+      "end": 2103,
+      "start": 720
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "7e7f44471f29ac00b94bef63a884735cb02c61d7518c2825883e33a425c232dc",
+    "input_tokens": 1695,
+    "key": "f1e8a35a6019177fd65f8e6bc853cf25195925b88fd61aa4465617ee8fc6cd7c",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 27,
+    "prompt_sha256": "a1c4954150248fff31a8f6706cd0eb91ea320893e2d7f54164d32e952dffb9a4",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "hallucination_rate",
+  "model_call": {
+    "input_sha256": "9bf9370a5a5c530eb104563eb49abecd34003fa7467e07ffc104ab649ef8ff7b",
+    "input_tokens": 1799,
+    "key": "e077eb8c0f48698a3d139c0e2d5bd316f8e7eb038068f55bd08db552b99ccca9",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 327,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the lowest hallucination rate within each paper?",
+  "question_id": "best-hallucination",
+  "retrieved": [
+    {
+      "document": "S084",
+      "end": 2103,
+      "score": 7.279784,
+      "start": 720
+    },
+    {
+      "document": "S110",
+      "end": 1958,
+      "score": 7.072917,
+      "start": 1203
+    },
+    {
+      "document": "S112",
+      "end": 1928,
+      "score": 6.908783,
+      "start": 1166
+    },
+    {
+      "document": "S089",
+      "end": 1670,
+      "score": 6.85198,
+      "start": 750
+    },
+    {
+      "document": "S050",
+      "end": 1688,
+      "score": 6.663721,
+      "start": 781
+    },
+    {
+      "document": "S065",
+      "end": 1859,
+      "score": 6.610043,
+      "start": 807
+    },
+    {
+      "document": "S032",
+      "end": 1715,
+      "score": 6.572896,
+      "start": 782
+    },
+    {
+      "document": "S005",
+      "end": 1864,
+      "score": 6.529743,
+      "start": 768
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S084",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [],
+  "winner": "rag",
+  "wins": {
+    "rag": 1
+  }
+}

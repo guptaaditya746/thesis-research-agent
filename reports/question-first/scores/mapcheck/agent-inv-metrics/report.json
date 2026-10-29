@@ -1,0 +1,86 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 1.0,
+        "low": 0.4444,
+        "method": "BCa",
+        "metric": "precision",
+        "n_rows": 9,
+        "point": 0.7778,
+        "system": "agent-baseline",
+        "unit": "row"
+      },
+      {
+        "high": null,
+        "low": null,
+        "method": null,
+        "metric": "recall",
+        "n_rows": 9,
+        "point": 1.0,
+        "system": "agent-baseline",
+        "unit": "row"
+      },
+      {
+        "high": 1.0,
+        "low": 0.6154,
+        "method": "BCa",
+        "metric": "f1",
+        "n_rows": 9,
+        "point": 0.875,
+        "system": "agent-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which evaluation metrics do the papers report?",
+  "question_id": "inv-metrics",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 1.0,
+      "entries": 9,
+      "expected_entries": 7,
+      "expected_paper_pairs": 27,
+      "f1": 0.875,
+      "false_positives": [
+        "hallucination (invented facts)",
+        "hallucination (unsupported statements)"
+      ],
+      "kind": "inventory",
+      "matched": 7,
+      "missed": [],
+      "paper_f1": 0.8889,
+      "paper_pairs": 27,
+      "paper_precision": 0.8889,
+      "paper_recall": 0.8889,
+      "precision": 0.7778,
+      "recall": 1.0,
+      "system": "agent-baseline",
+      "target": "metric"
+    }
+  ]
+}

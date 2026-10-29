@@ -1,0 +1,146 @@
+{
+  "answer_text": "The evidence provided does not contain factual accuracy scores for the papers discussing vocabulary construction methods (S110, S112, S108). For the papers that do report factual accuracy, the **retrieve-then-read model** achieves the highest factual accuracy in [S098, 768-2061]. The paper [S079, 752-1596] describes the methods (closed-book and retrieve-then-read) and the metric (fact-level accuracy) but does not provide the numerical results to determine which is higher. The paper [S013, 742-1665] describes the methods (no-retrieval, retrieve-then-read, chain-of-thought) and the metric but does not provide the numerical results.",
+  "citations": [
+    {
+      "document": "S098",
+      "end": 2061,
+      "start": 768
+    },
+    {
+      "document": "S079",
+      "end": 1596,
+      "start": 752
+    },
+    {
+      "document": "S013",
+      "end": 1665,
+      "start": 742
+    }
+  ],
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "dropped": [],
+  "dropped_citations": [],
+  "kind": "best",
+  "mapping_call": {
+    "input_sha256": "675496320d5a93d71969dd816ac7fcd7178dc734b5469dc938605f8be0d244f6",
+    "input_tokens": 1627,
+    "key": "146823a30acf7b46396a28d42bc9d56de9def931a53a8044704c0675fe119075",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 67,
+    "prompt_sha256": "866c4f9e335ce2296a42384d69dd5ee7e18a8bed8bf7b9e8742f0266de57c279",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "metric": "factual_accuracy",
+  "model_call": {
+    "input_sha256": "d7b6de29181c2c55532758e69a6307e2c76b4c3a3c08e58dcf2ce20e2d423310",
+    "input_tokens": 1793,
+    "key": "f99a739fadb3a637da3d91199fc7d7c0686325cd7c68dbb408ef6d56923ca2b3",
+    "model": "Qwen/Qwen3.8-27B-FP8@017b9c7",
+    "output_tokens": 302,
+    "prompt_sha256": "d57c4875ee6640b2f69f87b1ac0724485d462a519d49a9289e32b58b7d73f8a9",
+    "served_model": "orch-model",
+    "settings": {
+      "max_tokens": 4096,
+      "seed": 0,
+      "temperature": 0.0
+    }
+  },
+  "question": "Which method achieves the highest factual accuracy within each paper?",
+  "question_id": "best-accuracy",
+  "retrieved": [
+    {
+      "document": "S110",
+      "end": 1958,
+      "score": 7.072917,
+      "start": 1203
+    },
+    {
+      "document": "S112",
+      "end": 1928,
+      "score": 6.908783,
+      "start": 1166
+    },
+    {
+      "document": "S112",
+      "end": 1166,
+      "score": 5.475411,
+      "start": 0
+    },
+    {
+      "document": "S079",
+      "end": 1596,
+      "score": 5.467037,
+      "start": 752
+    },
+    {
+      "document": "S098",
+      "end": 2061,
+      "score": 5.365717,
+      "start": 768
+    },
+    {
+      "document": "S108",
+      "end": 1194,
+      "score": 5.32646,
+      "start": 0
+    },
+    {
+      "document": "S110",
+      "end": 1203,
+      "score": 5.313172,
+      "start": 0
+    },
+    {
+      "document": "S013",
+      "end": 1665,
+      "score": 5.296671,
+      "start": 742
+    }
+  ],
+  "settings": {
+    "k": 8,
+    "max_chars": 1500,
+    "retrieval": "global",
+    "retriever": "bm25okapi"
+  },
+  "studies": [
+    {
+      "document": "S013",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S079",
+      "reason": {
+        "code": "not_stated",
+        "text": "the answer does not say"
+      },
+      "tied": [],
+      "values": {},
+      "winner": null
+    },
+    {
+      "document": "S098",
+      "reason": null,
+      "tied": [],
+      "values": {},
+      "winner": "rag"
+    }
+  ],
+  "system": "rag-baseline",
+  "tied": [],
+  "winner": "rag",
+  "wins": {
+    "rag": 1
+  }
+}

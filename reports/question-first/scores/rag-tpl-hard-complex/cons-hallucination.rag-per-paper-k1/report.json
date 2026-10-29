@@ -1,0 +1,558 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-tpl-hard-complex",
+  "corpus_id": "rag-tpl-hard-24ab4663",
+  "corpus_name": "rag-tpl-hard-complex",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.1455,
+        "low": 0.0182,
+        "method": "BCa",
+        "metric": "per_study_accuracy",
+        "n_rows": 55,
+        "point": 0.0545,
+        "system": "rag-baseline",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "consistency",
+  "levels": [
+    "complex"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Do the authors' conclusions about hallucination agree with their reported results?",
+  "question_id": "cons-hallucination",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "agreeing_expected": 55,
+      "agreeing_given": 3,
+      "agreeing_precision": 1.0,
+      "agreeing_recall": 0.0545,
+      "agreeing_tp": 3,
+      "completeness": 0.0545,
+      "disagreeing_expected": 0,
+      "disagreeing_given": 0,
+      "disagreeing_precision": null,
+      "disagreeing_recall": null,
+      "disagreeing_tp": 0,
+      "kind": "consistency",
+      "metric": "hallucination_rate",
+      "per_study_accuracy": 0.0545,
+      "per_study_accuracy_all_papers": 0.0484,
+      "studies": [
+        {
+          "answered": true,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S004"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S005"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S006"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S007"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S008"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S009"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S010"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S011"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S012"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S014"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": false,
+          "expected": null,
+          "given": null,
+          "paper": "S016"
+        },
+        {
+          "answered": true,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S017"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S019"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S020"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S021"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S022"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S023"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S024"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S025"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S026"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S028"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S029"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S030"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S031"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S032"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S036"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S037"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S041"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S042"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S044"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S046"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S049"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S050"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S051"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S053"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S054"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S056"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S058"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S060"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S062"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S063"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S065"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S068"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S070"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S072"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": false,
+          "expected": null,
+          "given": null,
+          "paper": "S075"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S077"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S080"
+        },
+        {
+          "answered": true,
+          "correct": true,
+          "counted": true,
+          "expected": true,
+          "given": true,
+          "paper": "S083"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S084"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S085"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S086"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S088"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S089"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S090"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S092"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": true,
+          "expected": true,
+          "given": null,
+          "paper": "S094"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": false,
+          "expected": null,
+          "given": null,
+          "paper": "S097"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": false,
+          "expected": null,
+          "given": null,
+          "paper": "S102"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": false,
+          "expected": null,
+          "given": null,
+          "paper": "S103"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": false,
+          "expected": null,
+          "given": null,
+          "paper": "S104"
+        },
+        {
+          "answered": false,
+          "correct": false,
+          "counted": false,
+          "expected": null,
+          "given": null,
+          "paper": "S106"
+        }
+      ],
+      "studies_all_papers": 62,
+      "studies_scored": 55,
+      "system": "rag-baseline"
+    }
+  ]
+}

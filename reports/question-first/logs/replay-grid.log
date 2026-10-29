@@ -1,0 +1,176 @@
+REPLAY best-accuracy-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/best-accuracy-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215214151254Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215214151254Z"
+}
+REPLAY best-accuracy-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/best-accuracy-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215219791461Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215219791461Z"
+}
+REPLAY best-hallucination-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/best-hallucination-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215235956852Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215235956852Z"
+}
+REPLAY best-hallucination-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/best-hallucination-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215241866913Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215241866913Z"
+}
+REPLAY cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/cascade-gaps/rag-claude-s1-mixed-replay-20261028T215301500003Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215301500003Z"
+}
+REPLAY cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/cascade-gaps/rag-tpl-hard-complex-replay-20261028T215307612578Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215307612578Z"
+}
+REPLAY cons-accuracy-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/cons-accuracy-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215325782170Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215325782170Z"
+}
+REPLAY cons-accuracy-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/cons-accuracy-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215332388496Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215332388496Z"
+}
+REPLAY cons-hallucination-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/cons-hallucination-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215352550246Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215352550246Z"
+}
+REPLAY cons-hallucination-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/cons-hallucination-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215358980084Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215358980084Z"
+}
+REPLAY inv-datasets-cascade-gaps/aa
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-datasets-cascade-gaps/aa-replay-20261028T215422107193Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "aa",
+ "replay_run": "aa-replay-20261028T215422107193Z"
+}
+REPLAY inv-datasets-cascade-gaps/arxiv-world-models-20261028
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-datasets-cascade-gaps/arxiv-world-models-20261028-replay-20261028T215425999161Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "arxiv-world-models-20261028",
+ "replay_run": "arxiv-world-models-20261028-replay-20261028T215425999161Z"
+}
+REPLAY inv-datasets-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-datasets-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215429842577Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215429842577Z"
+}
+REPLAY inv-datasets-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-datasets-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215434530177Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215434530177Z"
+}
+REPLAY inv-methods-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-methods-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215446826528Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215446826528Z"
+}
+REPLAY inv-methods-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-methods-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215451132302Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215451132302Z"
+}
+REPLAY inv-metrics-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-metrics-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215501857028Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215501857028Z"
+}
+REPLAY inv-metrics-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/inv-metrics-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215506804971Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215506804971Z"
+}
+REPLAY rag-hallucination-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/rag-hallucination-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215520821914Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215520821914Z"
+}
+REPLAY rag-hallucination-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/rag-hallucination-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215527622415Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215527622415Z"
+}
+REPLAY rag-latency-cascade-gaps/rag-claude-s1-mixed
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/rag-latency-cascade-gaps/rag-claude-s1-mixed-replay-20261028T215549121951Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-claude-s1-mixed",
+ "replay_run": "rag-claude-s1-mixed-replay-20261028T215549121951Z"
+}
+REPLAY rag-latency-cascade-gaps/rag-tpl-hard-complex
+{
+ "run": "/mnt/ceph/storage/data-tmp/2026/xepi3167/evidence-qf/replays/rag-latency-cascade-gaps/rag-tpl-hard-complex-replay-20261028T215555265608Z",
+ "ok": true,
+ "mismatched": [],
+ "source_run": "rag-tpl-hard-complex",
+ "replay_run": "rag-tpl-hard-complex-replay-20261028T215555265608Z"
+}

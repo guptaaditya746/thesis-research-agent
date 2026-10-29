@@ -1,0 +1,103 @@
+{
+  "attribution": null,
+  "cascade": null,
+  "corpus_dir": "../../../../thesis/ev3-run/tests/EV2/corpora/rag-claude-s1-mixed",
+  "corpus_id": "rag-claude-s1-ec928480",
+  "corpus_name": "rag-claude-s1-mixed",
+  "cost": null,
+  "extraction": null,
+  "extractors": null,
+  "funnel": null,
+  "integration": null,
+  "intervals": {
+    "extraction": [],
+    "paired": [],
+    "synthesis": [
+      {
+        "high": 0.6667,
+        "low": 0.0,
+        "method": "BCa",
+        "metric": "precision",
+        "n_rows": 20,
+        "point": 0.25,
+        "system": "rag-oracle-passages",
+        "unit": "row"
+      },
+      {
+        "high": 0.4286,
+        "low": 0.0,
+        "method": "BCa",
+        "metric": "recall",
+        "n_rows": 20,
+        "point": 0.1429,
+        "system": "rag-oracle-passages",
+        "unit": "row"
+      },
+      {
+        "high": 0.4615,
+        "low": 0.0,
+        "method": "BCa",
+        "metric": "f1",
+        "n_rows": 20,
+        "point": 0.1818,
+        "system": "rag-oracle-passages",
+        "unit": "row"
+      }
+    ]
+  },
+  "kind": "inventory",
+  "levels": [
+    "complex",
+    "contradictory",
+    "distributed",
+    "explicit",
+    "paraphrased"
+  ],
+  "locate": null,
+  "protocol": null,
+  "question": "Which methods or system variants do the papers compare?",
+  "question_id": "inv-methods",
+  "run_id": null,
+  "stability": null,
+  "synthesis": [
+    {
+      "completeness": 0.1429,
+      "entries": 8,
+      "expected_entries": 14,
+      "expected_paper_pairs": 61,
+      "f1": 0.1818,
+      "false_positives": [
+        "Chain-of-Thought (CoT) Prompting",
+        "Fine-Tuned Models",
+        "Parametric-Only / Closed-Book / No-Retrieval Baseline",
+        "Query Rewriting/Reformulation",
+        "Retrieval-Augmented Generation (RAG) / Retrieve-Then-Read",
+        "Self-Consistency / Voting"
+      ],
+      "kind": "inventory",
+      "matched": 2,
+      "missed": [
+        "RAG pipeline",
+        "chain-of-thought prompting",
+        "closed-book model",
+        "fine-tuned model",
+        "no-retrieval baseline",
+        "parametric-only model",
+        "query-rewriting variant",
+        "retrieval-augmented generator",
+        "retrieval-augmented model",
+        "retrieve-then-read model",
+        "self-consistency decoding",
+        "vanilla LLM"
+      ],
+      "paper_f1": 0.1157,
+      "paper_pairs": 60,
+      "paper_precision": 0.1167,
+      "paper_recall": 0.1148,
+      "precision": 0.25,
+      "recall": 0.1429,
+      "system": "rag-oracle-passages",
+      "target": "condition"
+    }
+  ]
+}
