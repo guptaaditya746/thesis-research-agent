@@ -99,9 +99,11 @@ mkdir -p reports/ev3b
 ```
 
 **1a. The repeated command of the hard agent runs.** In EV3, three agent runs on the hard corpus ended their
-research after the same command came back six times. Find them and print the command. An agent run's folder is
+research after the same command came back six times. Find them and print the command (run `source "$EV/in-job.env"` first, and `$EV3` as in section 0). An agent run's folder is
 `$EV3/runs/agent-baseline/<corpus>.<question>/agent-runs/<run-id>-<hex>/runs/<run-id>/`; its `events.jsonl` has one
-`agent_tool` record per command (`used.command`), `trajectory.json` the whole conversation.
+`agent_tool` record per command (`used.command`), `trajectory.json` the whole conversation. A run is listed when one command
+comes back **at least 3 times in the run** (identical, not necessarily in a row; the record's
+`custom_metadata.repeat` counts the ones in a row).
 
 ```bash
 uv run python -I - "$EV3/runs/agent-baseline" > reports/ev3b/agent-repeats.md <<'EOF'
@@ -169,7 +171,7 @@ below shows the command; expect `v3`). If it is not `v3`, stop: **USER**.
 | global RAG (k 8), `rag-oracle`, `rag-seed1`, `rag-seed2`, `regex-only`, `llm-only` | run again with the seeded caches | all hits; they only put the EV3 answers into this session's layout so the report is complete |
 | `engine-r2` (repeat of the engine) | **not run** | the cascade changed, an old repeat would not compare |
 
-The extras that EV3 ran stay as in EV3 section 4b, from the same `extra.sh`, **except** the lists below. Create
+The extras that EV3 ran stay as in EV3 section 4b, from the same `extra.sh`, **except** that `engine-r2` is not run (section 3). Create
 `one.sh`, `grid.sh`, `extra.sh` and `extras.sh` exactly as in EV3 sections 4 and 4b (before the one-check cell of
 step 2) and do not edit them: `--confirm` is left at its default `llm`, and `rag-per-paper` / `rag-per-paper-k1`
 already call `--retrieval per_paper` without `--max-tokens`, so they get 16,384.
@@ -208,7 +210,8 @@ changes".
 ```bash
 for C in "$RUNS"/agent-baseline/*/agent-runs/*/runs/*/config.json; do
   uv run python -I -c 'import json, sys; c = json.load(open(sys.argv[1])); print(c["prompt"]["version"], sys.argv[1])' "$C"
-done | awk '{print $1}' | sort | uniq -c                # one line: "<N> v3", N = 20 (21 with the counterfactual)
+done | awk '{print $1}' | sort | uniq -c                # one line: "<N> v3"; N is 20 or more (21 with the counterfactual): a retried cell leaves an extra
+# agent-runs/<run-id>-<hex> dir, which is expected as long as every line says v3
 ```
 
 Anything but `v3` on every line: stop and report which runs (**USER**); never put a non-v3 cell into the table. The
@@ -217,23 +220,32 @@ the EV3 hard runs of step 1a: report whether the three runs now end `submitted` 
 repeats (run the script of 1a on `$RUNS/agent-baseline` and say "no repeats" or list them).
 
 **GLiNER confirm.** For every engine run of the grid (not the extras), the numbers of GLiNER items proposed,
-confirmed and dropped, from the merge events (`sources` has the extractor ids that found each item; `unconfirmed`
-the dropped ids). No model call; login node is fine:
+confirmed and dropped. The merge events' `sources` map each item id to the **call ids** that found it; the extractor
+of a call is the `agent_id` of its `extractor_call` event (same `task_id`). GLiNER-proposed items are the ones with a
+`gliner_*` call among their sources; dropped are the ids in `unconfirmed`; confirmed = proposed minus dropped. Under
+`gaps` a merge event is written again for each type and round, so the script collects sets keyed by (document,
+evidence type, item id) and never sums events. No model call; login node is fine (first `source "$EV/in-job.env"`, so
+`$EV`, `$RUNS` and `$QS` are set):
 
 ```bash
+source "$EV/in-job.env"
 cat > "$EV/gliner-confirm.py" <<'EOF'
 import json, sys
-# gliner-confirm.py <run dir>: items GLiNER proposed, kept after confirmation, and dropped
-prop = conf = drop = 0
-for line in open(sys.argv[1] + "/events.jsonl", encoding="utf-8"):
-    e = json.loads(line)
+# gliner-confirm.py <run dir>: GLiNER items proposed, confirmed, dropped, over the whole run.
+# `sources` of a merge event lists CALL ids; the extractor of a call is the agent_id of its extractor_call event.
+events = [json.loads(x) for x in open(sys.argv[1] + "/events.jsonl", encoding="utf-8")]
+agent = {e["task_id"]: e["agent_id"] for e in events if e.get("subtype") == "extractor_call"}
+proposed, dropped = set(), set()          # keyed (document, evidence type, item id): a merge repeats per round
+for e in events:
     if e.get("subtype") != "merge":
         continue
     c = e["custom_metadata"]
-    gl = {i for i, ex in c["sources"].items() if any(x.startswith("gliner_") for x in ex)}
-    dropped = set(c.get("unconfirmed", []))
-    prop += len(gl); drop += len(gl & dropped); conf += len(gl - dropped)
-print(f"GLiNER confirm: proposed={prop} confirmed={conf} dropped={drop}")
+    for item, calls in c["sources"].items():
+        if any(agent.get(x, "").startswith("gliner_") for x in calls):
+            proposed.add((c["document"], c["evidence_type"], item))
+    dropped |= {(c["document"], c["evidence_type"], i) for i in c.get("unconfirmed", [])}
+dropped &= proposed
+print(f"GLiNER confirm: proposed={len(proposed)} confirmed={len(proposed - dropped)} dropped={len(dropped)}")
 EOF
 for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
   G=$Q-cascade-gaps; [ "$Q" = rag-factuality ] && G=cascade-gaps
@@ -241,8 +253,13 @@ for N in rag-claude-s1-mixed rag-tpl-hard-complex; do for Q in $QS; do
 done; done
 ```
 
-Good: `proposed = confirmed + dropped` on every line. `rag-factuality` and `inv-methods` have no GLiNER step, so
-`proposed=0` there. `dropped` above 0 is the new behaviour, not a failure.
+Good: `confirmed + dropped = proposed` on every line **and** `proposed` above 0 for the GLiNER questions on the main
+corpus: `rag-hallucination`, `rag-latency`, `inv-metrics`, `inv-datasets`, `cons-accuracy`, `cons-hallucination`,
+`best-accuracy`, `best-hallucination` (their protocols have `gliner_*` steps; `evidence/protocols/*.yaml`). A 0 on
+all of them means the script or the run is wrong: stop and report (**USER**). Under `gaps` GLiNER runs only where an
+earlier step left a gap, so a 0 on a single question is a note. `rag-factuality` and `inv-methods` use protocols
+(`rag-factuality.yaml`, `inv-methods.yaml`) with no GLiNER step, so `proposed=0` there is expected. `dropped` above 0
+is the new behaviour, not a failure.
 
 ## 6. The deliverable: `reports/ev3b/summary.md`
 
