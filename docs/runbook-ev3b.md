@@ -48,7 +48,8 @@ git rev-parse --verify -q 'ev3b-code^{commit}' || echo 'FAIL step 0: no tag ev3b
 git checkout --detach ev3b-code
 git describe --tags                       # ev3b-code; record this and `git rev-parse HEAD` in summary.md
 git submodule update --init --recursive
-git -C llm-setup log -1 --oneline         # expect 78fbb67 fix: use distinct distributed ports for replicas
+git -C llm-setup log -1 --oneline         # expect b962edd (the llm-setup commit with the port fix)
+git ls-tree HEAD llm-setup               # 160000 commit b962edd83c987efd1275ee535dd19bc4186e4ce3
 uv sync --locked --all-groups
 uv run evidence run --help | grep -- --confirm
 uv run evaluate rag-baseline --help | grep -- --max-tokens
@@ -56,9 +57,11 @@ uv run evaluate agent-baseline --help | grep -- --question-id
 ```
 
 The **USER** creates the tag `ev3b-code` on `main` (after merging the three fixes) and pushes it. If the tag is
-missing, `git checkout` fails, the submodule commit is not `78fbb67`, or one of the three `grep` lines prints
-nothing: stop, **USER**. `78fbb67` is the commit with the port fix you made by hand in EV3 (`llm-setup-port-fix.patch`
-on `results`); it now comes with the submodule, so **do not apply that patch again** and make no llm-setup change
+missing, `git checkout` fails, `git -C llm-setup log -1` does not show `b962edd`, or one of the three `grep` lines
+prints nothing: stop, **USER**. The parent repo must be at the tag `ev3b-code`: it contains `78fbb67` ("fix: use
+distinct distributed ports for replicas"), the commit that moves the submodule to `b962edd`. That submodule commit
+holds the port fix you made by hand in EV3 (`llm-setup-port-fix.patch` on `results`), so **do not apply that patch
+again** and make no llm-setup change
 except the profile copy of EV3 step 1.4.
 
 Then EV3 section 1 (GPU report, stack with GLiNER, `in-job.env`, `mkdir`), with the new `$EV`. Its section 2 (offline
