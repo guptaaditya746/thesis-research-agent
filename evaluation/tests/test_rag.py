@@ -188,3 +188,49 @@ def test_rag_baseline_two_live_calls_share_one_loop(tmp_path: Path) -> None:
         model = openai_model("orch-model", url=url)
         answer = rag.rag_baseline(fx.write_corpus(tmp_path), model=model, k=3, mode="global", max_chars=200)
     assert len(url.prompts) == 2 and answer["label"] == "mixed" and answer["mapping_call"] is not None
+
+
+class _Recording:
+    """The scripted model of `scripted()` that also records the max_tokens of every request."""
+
+    def __init__(self, limits: list[Any]) -> None:
+        self.limits, self.inner = limits, scripted()
+
+    def model(self) -> Any:
+        from pydantic_ai.models.function import FunctionModel
+
+        def call(messages: Any, info: Any) -> Any:
+            self.limits.append((info.model_settings or {}).get("max_tokens"))
+            return self.inner(messages, info)
+        return FunctionModel(call, model_name="scripted")
+
+
+def _recording(limits: list[Any]) -> _Recording:
+    return _Recording(limits)
+
+
+def test_per_paper_asks_for_16384_tokens(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    limits: list[Any] = []
+    answer = rag.rag_baseline(corpus, model=_recording(limits).model(), mode="per_paper")
+    assert limits[0] == 16384 and answer["settings"]["max_tokens"] == 16384
+    assert answer["model_call"]["settings"]["max_tokens"] == 16384
+    assert limits[1] == 4096  # the mapping call keeps its limit
+
+
+def test_global_bytes_unchanged(tmp_path: Path) -> None:
+    corpus = fx.write_corpus(tmp_path)
+    limits: list[Any] = []
+    answer = rag.rag_baseline(corpus, model=_recording(limits).model(), mode="global")
+    assert "max_tokens" not in answer["settings"]
+    assert answer["model_call"]["settings"]["max_tokens"] == 4096 and limits[0] == 4096
+
+
+def test_cli_max_tokens_flag(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from evaluation import cli
+    corpus = fx.write_corpus(tmp_path)
+    monkeypatch.setattr(cli, "_model", lambda alias: (scripted().model(alias), alias))
+    assert cli.main(["rag-baseline", "--corpus", str(corpus), "--out", str(tmp_path / "o"),
+                     "--retrieval", "per_paper", "--max-tokens", "8000"]) == 0
+    answer = json.loads((tmp_path / "o" / "answer.json").read_text(encoding="utf-8"))
+    assert answer["settings"]["max_tokens"] == 8000 and answer["model_call"]["settings"]["max_tokens"] == 8000
