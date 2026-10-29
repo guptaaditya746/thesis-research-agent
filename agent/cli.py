@@ -458,7 +458,8 @@ def main(argv: list[str] | None = None) -> int:
                                                  f"{RUN_BUDGET_M1['tokens']:,} with --prompt-version v1)")
     run.add_argument("--prompt-version", default="v2",
                      help="agent/prompts/system-<version>.txt; v1 reproduces the M1-real runs: their loop settings "
-                          "and, unless --steps/--tokens say otherwise, their budget (150 steps / 400,000 tokens)")
+                          "and, unless --steps/--tokens say otherwise, their budget (150 steps / 400,000 tokens); "
+                          "v3 is v2 but refuses a repeated command instead of ending research")
     run.add_argument("--conclude-decoding", choices=DECODING_CHOICES,
                      help="how conclude replies are decoded (default: the prompt version's; structured_outputs is "
                           "vLLM >= 0.10's extra_body key, guided_json older vLLM's, free no schema)")

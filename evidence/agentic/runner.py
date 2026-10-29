@@ -1,6 +1,6 @@
 """Running our research agent (agent/loop.py) on a small corpus, and the record of one run.
 
-The agent is used as it is: `agent.loop.research_run` with prompt v2, condition claim_on, its
+The agent is used as it is: `agent.loop.research_run` with prompt v3, condition claim_on, its
 sandbox (Landlock on the Slurm nodes; `unsandboxed` only for tests), its broker and the `claim`
 command, whose accepted claims carry quote-checked anchors. Nothing in agent/ is changed: what the
 agent is asked to do goes into the concept brief it researches (evidence/agentic/task.py).
@@ -52,7 +52,7 @@ def model_record(alias: str) -> dict[str, Any]:
 @dataclass(frozen=True)
 class AgentSettings:
     """How the agent runs; everything here but `agent_root`'s path goes into the extractor's config."""
-    prompt_version: str = "v2"
+    prompt_version: str = "v3"  # v3: a repeated command is refused instead of ending research (EV3 fixes)
     model: str = ORCHESTRATOR["alias"]   # LiteLLM alias of the agent's model (orch-model)
     temperature: float = 0.7
     seed: int = 1234

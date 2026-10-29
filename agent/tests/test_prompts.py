@@ -1,4 +1,4 @@
-"""Reply parser, prompts v1 and v2 and their baselines, the hand-written concept, answer completion (rows 1.8, 1.10, 1.13)."""
+"""Reply parser, prompts v1, v2 and v3 and their baselines, the hand-written concept, answer completion (rows 1.8, 1.10, 1.13)."""
 from __future__ import annotations
 
 import json
@@ -92,7 +92,7 @@ def test_normalise_command() -> None:
 
 # --- prompts ---------------------------------------------------------------------------------------
 
-VERSIONS = ("v1", "v2")
+VERSIONS = ("v1", "v2", "v3")
 
 
 @pytest.mark.parametrize("version", VERSIONS)
@@ -149,6 +149,22 @@ def test_prompt_v2_content() -> None:
     assert "(p1.md, p2.md, ...)" not in v2  # v1's wrong naming (there is no p1.md; most files are anthology ids)
     for jinja_tag in ("{%", "{#"):  # mini-swe-agent renders the prompt with Jinja
         assert jinja_tag not in v2
+
+
+@pytest.mark.parametrize("suffix", ["", "-baseline"])
+def test_v3_prompt_differs_from_v2_only_in_repeat_sentence(suffix: str) -> None:
+    """EV3 fixes: under v3 a repeated command is refused instead of ending research; nothing else changes."""
+    import difflib
+    v2 = (prompts.PROMPT_DIR / f"system-v2{suffix}.txt").read_text(encoding="utf-8").splitlines()
+    v3 = (prompts.PROMPT_DIR / f"system-v3{suffix}.txt").read_text(encoding="utf-8").splitlines()
+    changed = [ln for ln in difflib.unified_diff(v2, v3, lineterm="", n=0)
+               if ln[:1] in "+-" and not ln.startswith(("+++", "---"))]
+    assert len(changed) == 2 and changed[0].startswith("-") and changed[1].startswith("+")
+    old, new = changed[0][1:], changed[1][1:]
+    gone = "Running the same command {{repeat_stop}} times in a row also ends the research."
+    added = ("From the {{repeat_stop}}th time in a row, the same command is not run; "
+             "run a different command or give your answer.")
+    assert gone in old and old.replace(gone, added) == new
 
 
 def test_prompt_v1_content() -> None:

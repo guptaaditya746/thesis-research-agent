@@ -37,7 +37,12 @@ def test_the_rag_factuality_protocol_rebuilds_the_ev2_extractor_ids() -> None:
 def test_old_runs_rebuild_their_extractor_ids(name: str, protocol: str) -> None:
     run = json.loads((RUNS / name / "run.json").read_text(encoding="utf-8"))
     assert load(PROTOCOLS / protocol).sha256 == run["protocol"]["sha256"]
-    assert ids(PROTOCOLS / protocol, run["settings"]) == set(run["extractor_specs"])
+    rebuilt, old = ids(PROTOCOLS / protocol, run["settings"]), set(run["extractor_specs"])
+    # The agentic extractor is a new one since the EV3 fixes (prompt v3, agent/loop.py in its code hash): its
+    # ids must differ, so no cached EV2 agent run is reused; every other extractor keeps its id.
+    agentic = {i for i in rebuilt | old if i.startswith("agentic@")}
+    assert rebuilt - agentic == old - agentic
+    assert not rebuilt & old & agentic and (name.startswith("agentic/") == bool(agentic))
 
 
 def test_the_contract_still_takes_dataset_items() -> None:

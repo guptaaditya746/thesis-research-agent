@@ -16,7 +16,11 @@ One step is one model reply. Per step the harness
 Budgets (steps, tokens) are announced in the prompt and after every command. Research ends when
 one runs out, when the proxy answers HTTP 400 ContextWindowExceededError (L8; never retried), or
 after `repeat_stop` identical commands in a row (c3-on-3 ran one command 9 times); the agent is
-then told to conclude and gets `conclude_replies` more replies in which no command runs.
+then told to conclude and gets `conclude_replies` more replies in which no command runs. With
+prompt v3 (`repeat_action` "refuse") repeats no longer end research: from the `repeat_stop`th
+identical command in a row the command is not run (a `coverage` record `command_refused` and a
+notice instead; the step counts toward the budget) until the agent sends another one. In EV3 three
+hard-set runs ended at `repeats` after 9-15 steps and scored 0.
 
 What M1-real taught (tests/RESULTS.md, M1-real): the token sum counts the whole prompt again at
 every step, so 400k lasted ~26 steps, and in both conclude replies of every run Qwen3.8 sent
@@ -113,6 +117,7 @@ GUIDED_DECODING: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {
     "guided_json": lambda schema: {"guided_json": schema},  # older vLLM
 }
 DECODINGS = ("free", *GUIDED_DECODING)
+REPEAT_ACTIONS = ("end", "refuse")
 
 
 @dataclass(frozen=True)
@@ -130,6 +135,9 @@ class LoopSettings:
     mask_tight_above: int = 45_000
     budget_warnings: tuple[int, ...] = (50, 75, 90)  # % of either budget; one notice each
     repeat_stop: int = 6  # identical commands in a row that end research (0: never)
+    # "end": the repeat_stop-th identical command in a row ends research (v1, v2); "refuse": it and
+    # the next identical ones are not run, and research goes on (v3).
+    repeat_action: str = "end"
     draft_file: str | None = "answer-draft.json"  # in scratch/; taken when the run ends without an answer
     # The M1-real loop's wording: a context-full stub without the output file, and no reply-limit
     # line in the problems of a cut answer.
@@ -138,6 +146,8 @@ class LoopSettings:
     def __post_init__(self) -> None:
         if self.conclude_decoding not in DECODINGS:
             raise ValueError(f"conclude_decoding must be one of {DECODINGS}")
+        if self.repeat_action not in REPEAT_ACTIONS:
+            raise ValueError(f"repeat_action must be one of {REPEAT_ACTIONS}")
         if self.conclude_max_tokens is not None and self.conclude_max_tokens < 1:
             raise ValueError("conclude_max_tokens must be positive (or None)")
         if self.mask_keep and not 1 <= self.mask_keep_tight <= self.mask_keep:
@@ -148,10 +158,13 @@ class LoopSettings:
     def config(self) -> dict[str, Any]:
         masking = ({"keep": self.mask_keep, "keep_tight": self.mask_keep_tight,
                     "tight_above_prompt_tokens": self.mask_tight_above} if self.mask_keep else None)
-        return {"conclude_replies": self.conclude_replies, "conclude_decoding": self.conclude_decoding,
-                "conclude_max_tokens": self.conclude_max_tokens, "masking": masking,
-                "budget_warnings": list(self.budget_warnings), "repeat_stop": self.repeat_stop,
-                "draft_file": self.draft_file, "m1_notices": self.m1_notices}
+        config = {"conclude_replies": self.conclude_replies, "conclude_decoding": self.conclude_decoding,
+                  "conclude_max_tokens": self.conclude_max_tokens, "masking": masking,
+                  "budget_warnings": list(self.budget_warnings), "repeat_stop": self.repeat_stop,
+                  "draft_file": self.draft_file, "m1_notices": self.m1_notices}
+        if self.repeat_action == "refuse":  # only then, so a v2 run's config.json stays as it was
+            config["repeat_action"] = self.repeat_action
+        return config
 
 
 # The loop as the M1-real runs had it: prompt v1 runs with it (and with BUDGET_M1, budget_for), so
@@ -161,7 +174,10 @@ LEGACY_V1 = LoopSettings(conclude_decoding="free", conclude_max_tokens=None, mas
 
 
 def settings_for(prompt_version: str) -> LoopSettings:
-    return LEGACY_V1 if prompt_version == "v1" else LoopSettings()
+    """v1: the M1-real loop; v3: v2's loop, but a repeated command is refused instead of ending research."""
+    if prompt_version == "v1":
+        return LEGACY_V1
+    return LoopSettings(repeat_action="refuse") if prompt_version == "v3" else LoopSettings()
 
 
 def budget_for(prompt_version: str) -> dict[str, Any]:
@@ -836,7 +852,8 @@ class ResearchAgent(DefaultAgent):
         if self.phase == "research":
             if self.research_steps >= self.budget["steps"] or self.tokens >= self.budget["tokens"]:
                 raise InterruptAgentFlow(self._conclude("budget", f"Budget used up. {self.budget_line()}"))
-            if self.settings.repeat_stop and self.repeats >= self.settings.repeat_stop:
+            if (self.settings.repeat_stop and self.settings.repeat_action == "end"
+                    and self.repeats >= self.settings.repeat_stop):
                 raise InterruptAgentFlow(self._conclude("repeats", f"Research ended: you ran the same command "
                                                                    f"{self.repeats} times in a row. {self.budget_line()}"))
         if self.phase == "conclude" and self.conclude_used >= self.settings.conclude_replies:
@@ -921,6 +938,9 @@ class ResearchAgent(DefaultAgent):
         normal = normalise_command(command)
         self.repeats = self.repeats + 1 if normal == self.last_command else 1
         self.last_command = normal
+        stop = self.settings.repeat_stop
+        if stop and self.settings.repeat_action == "refuse" and self.repeats >= stop:
+            return self._refuse(step, command)
         started = utc_now()
         result = self.env.execute({"command": command}, step_id=step, broker=self.broker,
                                   parent_task_id=self.model_task_id)
@@ -957,19 +977,30 @@ class ResearchAgent(DefaultAgent):
                          f"{(self.run_dir.out / name).resolve()} (read it with sed -n or rg).]")
         if result.timed_out:
             notes.append(f"[The command hit the {timeout} s time limit and was stopped.]")
-        stop = self.settings.repeat_stop
         if self.repeats == 2:
             notes.append("[Notice: you ran this same command in the previous step; its output will not change. "
                          "Try a different approach.]")
         elif self.repeats >= 3:
             notes.append(f"[Notice: this is the same command {self.repeats} times in a row. You have {self._left()}. "
                          "Change your approach or conclude."
-                         + (f" At {stop} in a row the research ends." if stop and self.repeats < stop else "") + "]")
+                         + (self._repeat_limit(stop) if stop and self.repeats < stop else "") + "]")
         notes += self._budget_notes()
         text = (f"<returncode>{result.exit_code}</returncode>\n<output>\n{shown}</output>\n" + "\n".join(notes))
         return {"role": "user", "content": text,
                 "extra": {"kind": "observation", "step_id": step, "output_file": f"out/{name}",
                           "exit_code": result.exit_code, "output_bytes": len(result.output)}}
+
+    def _repeat_limit(self, stop: int) -> str:
+        if self.settings.repeat_action == "refuse":
+            return f" From {stop} in a row it is not run."
+        return f" At {stop} in a row the research ends."
+
+    def _refuse(self, step: int, command: str) -> dict[str, Any]:
+        """Prompt v3: the same command `repeat_stop` or more times in a row is not run; research goes on."""
+        self._coverage(step, "command_refused", command, {"repeats": self.repeats})
+        text = (f"[Not run: this is the same command {self.repeats} times in a row, and its output would not "
+                "change. Run a different command or give your answer.]")
+        return {"role": "user", "content": "\n".join([text, *self._budget_notes()]), "extra": {"kind": "notice"}}
 
     # the draft answer (rows 1.13)
 

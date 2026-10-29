@@ -1,6 +1,6 @@
 """An ExtractionTask as a concept brief for the research agent (agent/schemas/concept.schema.json).
 
-The agent's prompts are fixed (agent/prompts/system-v2.txt, task-v2.txt) and show it the concept in
+The agent's prompts are fixed (agent/prompts/system-v3.txt, task-v3.txt) and show it the concept in
 full, so the task travels in the concept: a table with one column per field of the evidence type's
 schema, the paper (the only file in its corpus), the scope, the fields' meaning, the context items it
 may refer to by id, how to claim, and (a targeted task of the funnel, Part D) `scope.focus`: what is
