@@ -1,7 +1,7 @@
 """`evidence`: run a protocol over a corpus, replay or re-execute a run, export its provenance, verify its chain.
 
     evidence run --protocol P --corpus DIR --out runs/evidence [--cache DIR] [--model ALIAS]
-                 [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--workers N] [--import MODULE] [--run-id ID]
+                 [--extractors regex-only|llm-only|cascade] [--strategy gaps|all] [--confirm llm|none] [--workers N] [--import MODULE] [--run-id ID]
                  [--retry-errors] [--allow-failed-calls]
     evidence replay RUN [--cache DIR] [--corpus DIR]
     evidence reexec RUN [--extractor NAME] [--cache DIR] [--corpus DIR]
@@ -75,6 +75,9 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("--extractors", default="cascade", choices=["cascade", "regex-only", "llm-only"])
     r.add_argument("--strategy", default="gaps", choices=["all", "gaps"],
                    help="gaps: the funnel, escalate only the gaps (default); all: every extractor on every document")
+    r.add_argument("--confirm", default="llm", choices=["none", "llm"],
+                   help="llm: an item only GLiNER found counts only when the LLM extractor finds it too (default); "
+                        "none: keep every item")
     r.add_argument("--workers", type=_workers, default=3,
                    help="papers whose model calls run at once; outputs do not depend on it")
     r.add_argument("--import", dest="imports", action="append", default=[], help="module that registers extractors")
@@ -173,7 +176,7 @@ def _dispatch(args: argparse.Namespace) -> int:
         try:
             root = run(args.protocol, args.corpus, args.out, cache=args.cache, selection=args.extractors,
                        model=args.model, imports=args.imports, run_id=args.run_id, retry_errors=args.retry_errors,
-                       strategy=args.strategy, workers=args.workers)
+                       strategy=args.strategy, workers=args.workers, confirm=args.confirm)
         except RunDirExists as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2

@@ -29,6 +29,14 @@ supervisor's):
   baseline condition the regex missed (condition is the gap at round 1, measurement only at round 2, where a
   two-step cascade has nothing); see Part D's as-built note.
 
+Confirmation (`Settings.confirm`, Part D's as-built note of 29 Oct): with `llm` (the default), an item that only
+GLiNER extractors found (every id in its `found_by` of kind `model`) is *unconfirmed* when the type's cascade has an
+LLM extractor; once that extractor's position has run, unconfirmed items are dropped from the merge and listed in
+its event (`unconfirmed`). In `all` every position runs, so only the drop applies. In `gaps`, before the funnel
+stops (complete or exhausted), each type with unconfirmed items whose LLM position has not run runs it, as a funnel
+step of the next round with its focus unchanged; then completeness is decided again. With `none` (runs before
+29 Oct) every item counts.
+
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
 Both repeat the strategy from run.json; every funnel decision depends only on checked results, so a `gaps`
@@ -78,6 +86,7 @@ from .rundir import (ANSWER_FILE, CACHE_FILE, CALLS_DIR, EVENTS_FILE, EVIDENCE_F
 
 Selection = Literal["cascade", "regex-only", "llm-only"]
 Strategy = Literal["all", "gaps"]
+Confirm = Literal["none", "llm"]
 KINDS: dict[str, tuple[str, ...]] = {"cascade": ("regex", "model", "llm", "agent"), "regex-only": ("regex",),
                                      "llm-only": ("llm",)}
 ENGINE = "evidence-engine"
@@ -98,11 +107,13 @@ class Settings:
     # the model that service served when the run was made (GET /info; execute_run fills it): every gliner_* step
     # that pins no `model` gets it, so a replay without the service builds the ids of the recorded run
     gliner_model: str | None = None
+    confirm: Confirm = "llm"                       # llm: GLiNER-only items need the LLM extractor too; none: keep all
 
     def json(self) -> dict[str, Any]:
+        # `confirm` only when it is llm: the settings of a run made before it existed are unchanged
         return {"corpus": self.corpus, "cache": self.cache, "selection": self.selection, "model": self.model,
                 "imports": list(self.imports), "strategy": self.strategy, "gliner_url": self.gliner_url,
-                "gliner_model": self.gliner_model}
+                "gliner_model": self.gliner_model, **({"confirm": self.confirm} if self.confirm == "llm" else {})}
 
 
 def default_provider(alias: str) -> Any:
@@ -203,8 +214,9 @@ class Execution:
     def __init__(self, protocol: Protocol, corpus: Corpus, root: Path, run_id: str, calls: CallCache,
                  cascades: dict[str, list[tuple[ExtractorRef, Extractor]]], provider: Provider | None,
                  locator: Locator | None, strategy: Strategy = "all", run_calls: RunCalls | None = None,
-                 phase: Literal["warm", "run"] = "run") -> None:
+                 phase: Literal["warm", "run"] = "run", confirm: Confirm = "none") -> None:
         self.protocol, self.corpus, self.root, self.calls = protocol, corpus, root, calls
+        self.confirm = confirm
         self.run_calls, self.phase = run_calls, phase    # the run's calls.jsonl (mode `run` only), this pass
         self.cascades, self.provider, self.locator, self.strategy = cascades, provider, locator, strategy
         self.events = Events(root / EVENTS_FILE, run_id)
@@ -283,13 +295,18 @@ class Execution:
         round_no = 0
         while True:
             complete, gap, gap_types = self.complete(state, round_no)
-            if complete:
-                state.stopped_after = max((s["position"] for s in state.steps), default=None)
-                return
-            pending = [t for t in phases if t in gap_types
-                       and state.next_position.get(t, 0) < len(self.cascades.get(t, []))]
+            pending = [] if complete else [t for t in phases if t in gap_types
+                                           and state.next_position.get(t, 0) < len(self.cascades.get(t, []))]
             if not pending:
-                return   # exhausted: the gap stays recorded in the last decision
+                awaiting = [t for t in phases if self._awaiting_llm(state, t)]
+                if awaiting:   # before stopping: the LLM position of each type with unconfirmed items, then decide again
+                    round_no += 1
+                    for etype in awaiting:
+                        self.run_position(state, [etype], self._llm_position(etype), round_no=round_no)
+                    continue
+                if complete:
+                    state.stopped_after = max((s["position"] for s in state.steps), default=None)
+                return   # complete, or exhausted: the gap stays recorded in the last decision
             round_no += 1
             focus = focus_for(gap or "", self.protocol, state.merged)
             for etype in pending:
@@ -336,12 +353,36 @@ class Execution:
                 if position is not None:
                     break
             items, sources, collisions = merge.merge(results, spec)
+            llm = self._llm_position(etype)
+            dropped = (self._unconfirmed(etype, items)
+                       if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
+            items = [i for i in items if i.item_id not in dropped]
             state.merged[etype] = items
+            # only a merge that dropped items carries the key: a record without confirmation is unchanged
+            unconfirmed: dict[str, Any] = {"unconfirmed": dropped} if dropped else {}
             self.events.add("merge", used=sorted({i.item_id for _, r in results for i in r.items}),
                             generated=[i.item_id for i in items], agent_id=ENGINE, group_id=state.doc.id,
                             custom={"document": state.doc.id, "evidence_type": etype, "sources": sources,
-                                    "collisions": collisions})
+                                    "collisions": collisions, **unconfirmed})
         state.steps += [ran[p] for p in sorted(ran)]
+
+    def _llm_position(self, etype: str) -> int | None:
+        """The cascade position of the type's first LLM extractor, the one that confirms GLiNER items; None with
+        `confirm: none` or without one."""
+        if self.confirm == "none":
+            return None
+        return next((p for p, (_, e) in enumerate(self.cascades.get(etype, [])) if e.spec.kind == "llm"), None)
+
+    def _unconfirmed(self, etype: str, items: list[Item]) -> list[str]:
+        """The ids of the items only GLiNER extractors (kind `model`) found."""
+        kind = {e.spec.extractor_id: e.spec.kind for _, e in self.cascades.get(etype, [])}
+        return [i.item_id for i in items if all(kind.get(x) == "model" for x in i.found_by)]
+
+    def _awaiting_llm(self, state: DocState, etype: str) -> bool:
+        """The type has unconfirmed items and its LLM position has not run yet (`gaps`)."""
+        llm = self._llm_position(etype)
+        return (llm is not None and state.next_position.get(etype, 0) <= llm
+                and bool(self._unconfirmed(etype, state.merged.get(etype, []))))
 
     def _unavailable(self, extractor: Extractor, task: ExtractionTask, state: DocState, position: int) -> bool:
         """An extractor whose `available()` says False (a GLiNER step without its service) is not run, before the
@@ -450,7 +491,7 @@ class Execution:
 
 def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[str, list[tuple[ExtractorRef, Extractor]]],
           provider: Provider | None, locator: Locator | None, strategy: Strategy, workers: int,
-          run_calls: RunCalls | None = None) -> None:
+          run_calls: RunCalls | None = None, confirm: Confirm = "none") -> None:
     """Fill the record cache with every paper's calls, `workers` papers at once; the outputs are thrown away,
     except the rows each call adds to the run's calls.jsonl (`run_calls`, phase `warm`) as it completes."""
     with tempfile.TemporaryDirectory() as tmp, ThreadPoolExecutor(workers) as pool:
@@ -458,7 +499,7 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
             root = Path(tmp) / str(i)
             root.mkdir()
             Execution(protocol, corpus, root, f"warm-{i}", calls, cascades, provider, locator, strategy,
-                      run_calls, "warm").document(paper)
+                      run_calls, "warm", confirm).document(paper)
         futures = [pool.submit(one, i, p) for i, p in enumerate(corpus.papers)]
         try:
             for future in futures:
@@ -490,12 +531,14 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
     cascades = build_extractors(protocol, settings.selection, settings.model, settings.gliner_url, settings.gliner_model)
     cache = CallCache(JsonlCache(Path(settings.cache) / CACHE_FILE), mode, bypass, retry_errors, attempts)
     run_calls = RunCalls(root / RUN_CALLS_FILE) if mode == "run" else None
-    ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls)
+    ex = Execution(protocol, corpus, root, run_id, cache, cascades, provider, locator, settings.strategy, run_calls,
+                   confirm=settings.confirm)
     ex.outputs[PROTOCOL_FILE] = sha256_hex(protocol_bytes)
     ex.cost["workers"] = workers
     t0 = time.monotonic()
     if mode == "run" and workers > 1 and settings.selection != "regex-only" and provider is not None:
-        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls)
+        _warm(protocol, corpus, cache, cascades, provider, locator, settings.strategy, workers, run_calls,
+              settings.confirm)
     for paper in corpus.papers:
         ex.document(paper)
     ex.finish()
@@ -527,11 +570,12 @@ def _spec_json(spec: ExtractorSpec) -> dict[str, Any]:
 def run(protocol_path: Path | str, corpus: Path | str, out_dir: Path | str, *, cache: Path | str | None = None,
         selection: Selection = "cascade", model: str | None = None, imports: list[str] | None = None,
         provider: Provider | None = None, locator: Locator | None = None, run_id: str | None = None,
-        retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3) -> Path:
+        retry_errors: bool = False, strategy: Strategy = "gaps", workers: int = 3, confirm: Confirm = "llm") -> Path:
     """A normal run: cached calls are reused, new ones are made and stored."""
     settings = Settings(corpus=str(Path(corpus).resolve()),
                         cache=str((Path(cache) if cache else Path(out_dir) / "cache").resolve()),
-                        selection=selection, model=model, imports=list(imports or []), strategy=strategy)
+                        selection=selection, model=model, imports=list(imports or []), strategy=strategy,
+                        confirm=confirm)
     return execute_run(Path(protocol_path).read_bytes(), settings, out_dir, run_id=run_id,
                        provider=provider if provider is not None else default_provider, locator=locator,
                        retry_errors=retry_errors, workers=workers)

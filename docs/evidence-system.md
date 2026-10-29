@@ -626,6 +626,20 @@ screen ─► position 0 of every type (regex) ─► complete? ─► stop
   "relevant" (recall = the share of the truly relevant papers kept); the `all` run is compared with the
   `gaps` run through `evaluate compare` over both reports (one row per run), not by `evaluate score` alone.
 
+**As built (29 Oct): GLiNER items need LLM confirmation.** In the EV3 runs, items that only the GLiNER
+extractors found were almost always wrong (metrics 0 of 21, datasets 0 of 11). `Settings.confirm`
+(`evidence run --confirm llm|none`, default `llm`) makes such an item *unconfirmed*: every extractor in its
+`found_by` has kind `model`, and the type's cascade (as built for the run's selection) has an LLM extractor.
+Once that LLM position has run, unconfirmed items are dropped from the merge and their ids listed in the merge
+event's `unconfirmed` (present only when not empty); an item the LLM extractor also found is the same merged
+item and stays, with both ids in `found_by`. In `all` every position runs, so only the drop applies. In `gaps`,
+before the funnel stops (complete or exhausted), each type with unconfirmed items whose LLM position has not run
+runs it, as a normal funnel step of the next round with its focus unchanged; then completeness is decided again
+(a study complete only through a GLiNER item can become incomplete). Without GLiNER, or with `regex-only` or
+`llm-only`, nothing changes. run.json's settings carry `confirm` only when it is `llm`; replay of a run without
+the key uses `none`, so older runs replay byte for byte. Known limit: items of a later type that link to a
+dropped item (a measurement on a GLiNER-only metric) keep the link.
+
 # Part E. Proposal flow (contract, 17 Oct 2026; our design)
 
 The supervisor marked LLM protocol generation "with user dialogue" optional (§8). This is that dialogue
