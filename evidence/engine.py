@@ -32,10 +32,10 @@ supervisor's):
 Confirmation (`Settings.confirm`, Part D's as-built note of 29 Oct): with `llm` (the default), an item that only
 GLiNER extractors found (every id in its `found_by` of kind `model`) is *unconfirmed* when the type's cascade has an
 LLM extractor; once that extractor's position has run, unconfirmed items are dropped from the merge and listed in
-its event (`unconfirmed`). In `all` every position runs, so only the drop applies. In `gaps`, before the funnel
-stops (complete or exhausted), each type with unconfirmed items whose LLM position has not run runs it, as a funnel
-step of the next round with its focus unchanged; then completeness is decided again. With `none` (runs before
-29 Oct) every item counts.
+its event (`unconfirmed`). In `all` every position runs, so only the drop applies. In `gaps` the confirmation is
+eager: when a type's position leaves unconfirmed items and its LLM position has not run, that position runs at once
+(a step of the same round, focus unchanged), before the merge and before a later type links to the items, so no
+link ever points at an id a later merge replaced. With `none` (runs before 29 Oct) every item counts.
 
 `replay` rebuilds a run from the record cache only and checks every output hash against the recorded
 run.json; `reexec` runs extractors again, bypassing the cache, and reports the differences (reexec.json).
@@ -295,18 +295,13 @@ class Execution:
         round_no = 0
         while True:
             complete, gap, gap_types = self.complete(state, round_no)
-            pending = [] if complete else [t for t in phases if t in gap_types
-                                           and state.next_position.get(t, 0) < len(self.cascades.get(t, []))]
+            if complete:
+                state.stopped_after = max((s["position"] for s in state.steps), default=None)
+                return
+            pending = [t for t in phases if t in gap_types
+                       and state.next_position.get(t, 0) < len(self.cascades.get(t, []))]
             if not pending:
-                awaiting = [t for t in phases if self._awaiting_llm(state, t)]
-                if awaiting:   # before stopping: the LLM position of each type with unconfirmed items, then decide again
-                    round_no += 1
-                    for etype in awaiting:
-                        self.run_position(state, [etype], self._llm_position(etype), round_no=round_no)
-                    continue
-                if complete:
-                    state.stopped_after = max((s["position"] for s in state.steps), default=None)
-                return   # complete, or exhausted: the gap stays recorded in the last decision
+                return   # exhausted: the gap stays recorded in the last decision
             round_no += 1
             focus = focus_for(gap or "", self.protocol, state.merged)
             for etype in pending:
@@ -352,9 +347,25 @@ class Execution:
                 state.next_position[etype] = p + 1
                 if position is not None:
                     break
-            items, sources, collisions = merge.merge(results, spec)
+            # `gaps`: GLiNER items wait for the type's LLM position now, before a later type links to them (a later
+            # merge would change their ids); a step of this round at that position, with the type's focus unchanged
             llm = self._llm_position(etype)
-            dropped = (self._unconfirmed(etype, items)
+            if position is not None and llm is not None and self._awaiting_llm(state, etype, results, spec):
+                ref, extractor = cascade[llm]
+                task = ExtractionTask(protocol=self.ref, evidence_type=etype,  # type: ignore[arg-type]
+                                      field_schema_sha256=spec.schema_sha256, document=state.doc, scope=found.scope,
+                                      context=tuple(i.item_id for i in context),
+                                      budget=ref.budget if extractor.spec.kind == "agent" else None,
+                                      focus=state.focus.get(etype) if llm > 0 else None)
+                if not self._unavailable(extractor, task, state, llm):
+                    call_id, result = self._call(extractor, task, state.text, state.index, spec, context, llm)
+                    results.append((call_id, result))
+                    step = ran.setdefault(llm, {"round": round_no, "position": llm, "types": [], "calls": []})
+                    step["types"].append(etype)
+                    step["calls"].append(call_id)
+                state.next_position[etype] = llm + 1
+            items, sources, collisions = merge.merge(results, spec)
+            dropped =(self._unconfirmed(etype, items)
                        if llm is not None and (position is None or state.next_position.get(etype, 0) > llm) else [])
             items = [i for i in items if i.item_id not in dropped]
             state.merged[etype] = items
@@ -378,11 +389,12 @@ class Execution:
         kind = {e.spec.extractor_id: e.spec.kind for _, e in self.cascades.get(etype, [])}
         return [i.item_id for i in items if all(kind.get(x) == "model" for x in i.found_by)]
 
-    def _awaiting_llm(self, state: DocState, etype: str) -> bool:
-        """The type has unconfirmed items and its LLM position has not run yet (`gaps`)."""
+    def _awaiting_llm(self, state: DocState, etype: str, results: list[tuple[str, ExtractionResult]],
+                      spec: EvidenceTypeSpec) -> bool:
+        """The type's results so far, merged, have unconfirmed items and its LLM position has not run yet (`gaps`)."""
         llm = self._llm_position(etype)
         return (llm is not None and state.next_position.get(etype, 0) <= llm
-                and bool(self._unconfirmed(etype, state.merged.get(etype, []))))
+                and bool(self._unconfirmed(etype, merge.merge(results, spec)[0])))
 
     def _unavailable(self, extractor: Extractor, task: ExtractionTask, state: DocState, position: int) -> bool:
         """An extractor whose `available()` says False (a GLiNER step without its service) is not run, before the

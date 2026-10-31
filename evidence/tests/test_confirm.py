@@ -95,16 +95,35 @@ def test_confirmed_item_kept_with_both_extractors(tmp_path: Path) -> None:
     assert [i.split("@")[0] for i in item["found_by"]] == ["gliner_metric", "llm_metric"]
 
 
-def test_unconfirmed_escalates_to_llm_in_gaps(tmp_path: Path) -> None:
+def test_unconfirmed_confirmed_eagerly_in_gaps(tmp_path: Path) -> None:
     run = served_run(tmp_path, TABLE, metric_script(None), strategy="gaps")   # the LLM confirms nothing
     llm = [e for e in rows(run) if e["subtype"] == "extractor_call" and e["agent_id"].startswith("llm_metric@")
            and e["custom_metadata"]["document"] == "P1"]
     assert len(llm) == 1
     funnel = json.loads((run / "funnel.json").read_text(encoding="utf-8"))["documents"]["P1"]
-    assert funnel["decisions"][0]["complete"] is True                    # complete after position 0 ...
-    assert {"round": 1, "position": 1, "types": ["metric"], "calls": [llm[0]["task_id"]]} in funnel["steps"]
-    assert metrics(run) == []                                            # ... and the GLiNER metric is gone
-    assert funnel["decisions"][-1]["complete"] is False
+    # the LLM position runs in round 0, right after GLiNER's, before the measurements link to the metric ...
+    assert {"round": 0, "position": 1, "types": ["metric"], "calls": [llm[0]["task_id"]]} in funnel["steps"]
+    assert metrics(run) == []                                            # ... the GLiNER metric is gone
+    assert funnel["decisions"][0]["complete"] is False                   # ... before the first decision
+
+
+def test_gaps_confirm_keeps_measurement_links(tmp_path: Path) -> None:
+    """The LLM agrees with GLiNER's metric: the measurements link to the confirmed metric (not to a GLiNER-only id
+    a later merge replaced), so the study reads as with `none`."""
+    script = metric_script("Factual accuracy", quote="Factual accuracy (%)")
+    a = served_run(tmp_path, TABLE, script, confirm="none", strategy="gaps", out="a")
+    gliner.forget()
+    b = served_run(tmp_path, TABLE, script, confirm="llm", strategy="gaps", out="b")
+    direction = [json.loads((r / "answer.json").read_text(encoding="utf-8"))["studies"][0]["direction"] for r in (a, b)]
+    assert direction == ["supports", "supports"]
+    items = [json.loads(x) for x in (b / "evidence.jsonl").read_text(encoding="utf-8").splitlines()]
+    ids = {i["item_id"] for i in items}
+    assert [(i["item_id"], v) for i in items for v in i["links"].values() if v not in ids] == []
+    assert [[x.split("@")[0] for x in i["found_by"]] for i in metrics(b)] == [["gliner_metric", "llm_metric"]]
+    llm = [e for e in rows(b) if e["subtype"] == "extractor_call" and e["agent_id"].startswith("llm_metric@")]
+    funnel = json.loads((b / "funnel.json").read_text(encoding="utf-8"))["documents"]["P1"]
+    assert {"round": 0, "position": 1, "types": ["metric"], "calls": [llm[0]["task_id"]]} in funnel["steps"]
+    assert [d["complete"] for d in funnel["decisions"]] == [True]
 
 
 def test_unconfirmed_dropped_llm_variant_kept(tmp_path: Path) -> None:

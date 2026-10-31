@@ -632,13 +632,17 @@ extractors found were almost always wrong (metrics 0 of 21, datasets 0 of 11). `
 `found_by` has kind `model`, and the type's cascade (as built for the run's selection) has an LLM extractor.
 Once that LLM position has run, unconfirmed items are dropped from the merge and their ids listed in the merge
 event's `unconfirmed` (present only when not empty); an item the LLM extractor also found is the same merged
-item and stays, with both ids in `found_by`. In `all` every position runs, so only the drop applies. In `gaps`,
-before the funnel stops (complete or exhausted), each type with unconfirmed items whose LLM position has not run
-runs it, as a normal funnel step of the next round with its focus unchanged; then completeness is decided again
-(a study complete only through a GLiNER item can become incomplete). Without GLiNER, or with `regex-only` or
-`llm-only`, nothing changes. run.json's settings carry `confirm` only when it is `llm`; replay of a run without
-the key uses `none`, so older runs replay byte for byte. Known limit: items of a later type that link to a
-dropped item (a measurement on a GLiNER-only metric) keep the link.
+item and stays, with both ids in `found_by`. In `all` every position of a type runs before the next type, so only
+the drop applies. In `gaps` the confirmation is eager (fixed 1 Nov): when a type's position leaves unconfirmed
+items and its LLM position has not run, that LLM position runs at once, in the same round (a funnel step at the LLM
+position, with the type's focus unchanged), before the type is merged and before any later type gets its items as
+context. So later types (a measurement linking its metric) only ever see confirmed items, and a merge never
+changes the id of an item they already link to. (Built first, 29 Oct, the LLM position ran at the end of the
+funnel; re-merging then gave the confirmed metric a new id and left the measurements' links dangling, so a study
+the LLM agreed with became `no_pair`.) Without GLiNER, or with `regex-only` or `llm-only`, nothing changes.
+run.json's settings carry `confirm` only when it is `llm`; replay of a run without the key uses `none`, so older
+runs replay byte for byte. Known limit: when the LLM confirm call fails (status `error`), the type's GLiNER-only
+items are still dropped.
 
 # Part E. Proposal flow (contract, 17 Oct 2026; our design)
 

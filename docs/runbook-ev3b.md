@@ -12,7 +12,8 @@ the failed-call and retry rules, the scoring table, the hand-back commands, the 
 
 - Engine: `evidence run --confirm {none,llm}`, default `llm`. An item that only GLiNER found now counts only when
   the LLM extractor finds it too. The merge events carry `custom_metadata["unconfirmed"]`: the ids of the dropped
-  items (the key is there only when something was dropped). This changes every cascade run. `regex-only` and
+  items (the key is there only when something was dropped). Under `gaps` the LLM step of a type runs right after
+  its GLiNER step, in the same round, when GLiNER found something. This changes every cascade run. `regex-only` and
   `llm-only` runs have no GLiNER step and are unchanged.
 - RAG: `evaluate rag-baseline --max-tokens N`. `per_paper` defaults to 16,384 answer tokens (EV3: 4,096, so some
   long answers were cut off). `global` keeps 4,096, so its EV3 cache entries are still hits.
@@ -223,9 +224,10 @@ repeats (run the script of 1a on `$RUNS/agent-baseline` and say "no repeats" or 
 confirmed and dropped. The merge events' `sources` map each item id to the **call ids** that found it; the extractor
 of a call is the `agent_id` of its `extractor_call` event (same `task_id`). GLiNER-proposed items are the ones with a
 `gliner_*` call among their sources; dropped are the ids in `unconfirmed`; confirmed = proposed minus dropped. Under
-`gaps` a merge event is written again for each type and round, so the script collects sets keyed by (document,
-evidence type, item id) and never sums events. No model call; login node is fine (first `source "$EV/in-job.env"`, so
-`$EV`, `$RUNS` and `$QS` are set):
+`gaps` a merge event is written again for each type and round, and a later merge can give an item a new id, so the
+script reads only the **last** merge event of each (document, evidence type): its `sources` cover every call of that
+type so far. No model call; login node is fine (first `source "$EV/in-job.env"`, so `$EV`, `$RUNS` and `$QS` are
+set):
 
 ```bash
 source "$EV/in-job.env"
@@ -235,15 +237,16 @@ import json, sys
 # `sources` of a merge event lists CALL ids; the extractor of a call is the agent_id of its extractor_call event.
 events = [json.loads(x) for x in open(sys.argv[1] + "/events.jsonl", encoding="utf-8")]
 agent = {e["task_id"]: e["agent_id"] for e in events if e.get("subtype") == "extractor_call"}
-proposed, dropped = set(), set()          # keyed (document, evidence type, item id): a merge repeats per round
+last = {}                                 # (document, evidence type) -> its last merge: a merge repeats per round
 for e in events:
-    if e.get("subtype") != "merge":
-        continue
-    c = e["custom_metadata"]
+    if e.get("subtype") == "merge":
+        last[(e["custom_metadata"]["document"], e["custom_metadata"]["evidence_type"])] = e["custom_metadata"]
+proposed, dropped = set(), set()          # keyed (document, evidence type, item id)
+for (doc, etype), c in last.items():
     for item, calls in c["sources"].items():
         if any(agent.get(x, "").startswith("gliner_") for x in calls):
-            proposed.add((c["document"], c["evidence_type"], item))
-    dropped |= {(c["document"], c["evidence_type"], i) for i in c.get("unconfirmed", [])}
+            proposed.add((doc, etype, item))
+    dropped |= {(doc, etype, i) for i in c.get("unconfirmed", [])}
 dropped &= proposed
 print(f"GLiNER confirm: proposed={len(proposed)} confirmed={len(proposed - dropped)} dropped={len(dropped)}")
 EOF
@@ -259,7 +262,8 @@ corpus: `rag-hallucination`, `rag-latency`, `inv-metrics`, `inv-datasets`, `cons
 all of them means the script or the run is wrong: stop and report (**USER**). Under `gaps` GLiNER runs only where an
 earlier step left a gap, so a 0 on a single question is a note. `rag-factuality` and `inv-methods` use protocols
 (`rag-factuality.yaml`, `inv-methods.yaml`) with no GLiNER step, so `proposed=0` there is expected. `dropped` above 0
-is the new behaviour, not a failure.
+is the new behaviour, not a failure. Caveat: when the LLM confirm call fails (status `error`), the GLiNER items
+of that type are still dropped; they count as `dropped`, so check `failures.md` before reading a high `dropped`.
 
 ## 6. The deliverable: `reports/ev3b/summary.md`
 
