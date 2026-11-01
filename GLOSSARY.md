@@ -51,3 +51,23 @@ _Avoid_: parser, scraper
 **Funnel**:
 The order in which extractors are tried on a paper, cheapest first, with only the evidence still missing passed on to the next, costlier one.
 _Avoid_: cascade, pipeline
+
+**Domain pack**:
+A folder that holds everything topic-specific: evidence types, their names and wordings, units, generator vocabulary, protocols and questions. Shown as **topic** in the web app. The code never names a topic.
+_Avoid_: vocabulary file, config
+
+**Study**:
+One paper in the corpus. A study can hold many comparisons.
+_Avoid_: experiment (when the whole paper is meant)
+
+**Comparison**:
+One treatment-vs-control result inside a study, on one metric and one dataset.
+_Avoid_: pair, study (when one result is meant)
+
+**Treatment / control**:
+The two sides of a comparison as the code names them: the thing being tested and what it is compared against. Users see the domain's own names (e.g. "RAG system / closed-book model"), proposed by an agent from a separate sample of papers and approved by the user.
+_Avoid_: rag / baseline (in generic code)
+
+**Chaining**:
+Concluding A versus C from study 1 (A versus B) and study 2 (B versus C) when no paper compares A and C directly.
+_Avoid_: transitivity (in user-facing text)
