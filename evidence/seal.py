@@ -4,6 +4,10 @@ A run that finishes is sealed with status `complete` after run.json. A run that 
 reader expects, in its empty form (`fill_expected`), then a manifest with status `failed` and the error; it has no
 run.json, so it still reads as a crashed run (RunDir.complete, RunDirExists). `check` recomputes the hashes:
 `evidence verify` names each file that was edited, removed or added since the seal.
+
+`prov.ttl` (`evidence prov`) is derived from the sealed files and may be written after the seal: `check` does
+not count it as extra when the manifest does not list it, and checks its hash when it does. `evidence reexec`
+writes reexec.json before the seal (execute_run's `before_seal`).
 """
 from __future__ import annotations
 
@@ -15,7 +19,7 @@ from typing import TYPE_CHECKING, Any
 from jsonio import file_sha256, write_json
 
 from .rundir import (ANSWER_FILE, CALLS_DIR, EVIDENCE_FILE, FUNNEL_FILE, GRAPH_FILE, LOCATE_FILE, LOCK_FILE,
-                     NAMES_FILE, REASON_FILE, read_json)
+                     NAMES_FILE, PROV_FILE, REASON_FILE, read_json)
 
 if TYPE_CHECKING:
     from .engine import Settings
@@ -23,7 +27,8 @@ if TYPE_CHECKING:
 MANIFEST_FILE = "manifest.json"
 PRE_EV4 = "no manifest (pre-EV4)"
 REPO = Path(__file__).resolve().parents[1]
-__all__ = ["MANIFEST_FILE", "PRE_EV4", "check", "code_commit", "fill_expected", "seal"]
+DERIVED = (PROV_FILE,)   # written from the sealed files by our own commands, possibly after the seal
+__all__ = ["DERIVED", "MANIFEST_FILE", "PRE_EV4", "check", "code_commit", "fill_expected", "seal"]
 
 
 def code_commit() -> str | None:
@@ -71,15 +76,21 @@ def seal(root: Path, corpus_manifest_sha256: str, *, status: str, error: str | N
 
 
 def check(root: Path) -> dict[str, Any] | str:
-    """The files whose sha256 differs from the manifest, those it lists that are gone and those it does not list;
-    `PRE_EV4` when the run has no manifest (a run made before sealing: judged on its chain only)."""
+    """The files whose sha256 differs from the manifest, those it lists that are gone and those it does not list
+    (a `DERIVED` file never counts as extra: it is rebuilt from the others); `intact` when there are none.
+    `PRE_EV4` when the run has no manifest (a run made before sealing: judged on its chain only). The key is
+    `intact`, not `ok`, so that `evidence verify`'s top-level "ok" is the only "ok" it prints."""
     if not (root / MANIFEST_FILE).is_file():
         return PRE_EV4
-    manifest = read_json(root / MANIFEST_FILE)
-    sealed: dict[str, str] = manifest["files"]
+    try:
+        manifest = read_json(root / MANIFEST_FILE)
+        sealed = {str(k): str(v) for k, v in manifest["files"].items()}
+    except (ValueError, KeyError, TypeError, AttributeError) as exc:
+        return {"intact": False, "mismatched": [], "missing": [], "extra": [], "status": None,
+                "error": f"unreadable {MANIFEST_FILE}: {type(exc).__name__}"}
     now = _hashes(root)
     mismatched = sorted(f for f in sealed if f in now and now[f] != sealed[f])
     missing = sorted(f for f in sealed if f not in now)
-    extra = sorted(f for f in now if f not in sealed)
-    return {"ok": not (mismatched or missing or extra), "mismatched": mismatched, "missing": missing, "extra": extra,
-            "status": manifest.get("status")}
+    extra = sorted(f for f in now if f not in sealed and f not in DERIVED)
+    return {"intact": not (mismatched or missing or extra), "mismatched": mismatched, "missing": missing,
+            "extra": extra, "status": manifest.get("status")}

@@ -11,7 +11,8 @@ import pytest
 import yaml
 
 from agent.anchor import Index, text_sha256
-from evidence import engine, protocol
+from jsonio import file_sha256
+from evidence import engine, protocol, seal
 from evidence.calls import EngineContext
 from evidence.contract import DocumentRef, ExtractionTask, ProtocolRef
 from evidence.extractors import get, gliner
@@ -268,6 +269,12 @@ def test_gliner_up_after_the_run_started_is_used_and_recorded(tmp_path: Path, mo
     assert record["settings"]["gliner_model"] == "fake/gliner-a"
     [spec] = [s for k, s in record["extractor_specs"].items() if k.startswith("gliner_")]
     assert spec["config"]["model"] == "fake/gliner-a"
+    # the lock was rewritten with the ids the run used, and the seal hashed that final lock
+    lock = json.loads((run / "protocol.lock.json").read_text(encoding="utf-8"))
+    assert spec["extractor_id"] in [i for ids in lock["extractors"].values() for i in ids]
+    manifest = json.loads((run / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["protocol_lock_sha256"] == file_sha256(run / "protocol.lock.json") == record["outputs"]["protocol.lock.json"]
+    assert seal.check(run)["intact"]
     gliner.forget()
     new, report = replay(run)
     assert report["ok"], report

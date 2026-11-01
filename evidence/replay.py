@@ -75,9 +75,8 @@ def reexec(run_dir: Path | str, extractor: str | None = None, *, cache: Path | s
     new = execute_run((run_dir / PROTOCOL_FILE).read_bytes(), _settings(record, cache, corpus),
                       out_dir or run_dir.parent, mode="reexec", bypass=bypass, locator=locator,
                       provider=provider if provider is not None else default_provider,
-                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}")
-    report = compare(run_dir, new, extractor)
-    write_json(new / REEXEC_FILE, report)
+                      source_run=record["run_id"], attempts=_attempts(run_dir), run_id=f"{record['run_id']}-reexec-{_stamp()}",
+                      before_seal=lambda new: write_json(new / REEXEC_FILE, compare(run_dir, new, extractor)))
     return new
 
 

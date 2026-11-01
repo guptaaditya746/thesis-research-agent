@@ -88,8 +88,10 @@ import dataclasses
 import importlib
 import json
 import os
+import sys
 import tempfile
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -769,9 +771,11 @@ def _warm(protocol: Protocol, corpus: Corpus, calls: CallCache, cascades: dict[s
 def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, *, mode: Mode = "run",
                 run_id: str | None = None, provider: Provider | None = None, locator: Locator | None = None,
                 bypass: Any = None, retry_errors: bool = False, source_run: str | None = None,
-                attempts: dict[str, int] | None = None, workers: int = 1, source_dir: Path | None = None) -> Path:
+                attempts: dict[str, int] | None = None, workers: int = 1, source_dir: Path | None = None,
+                before_seal: Callable[[Path], None] | None = None) -> Path:
     """Execute and write one run directory; returns its path. `source_dir`: the folder of the recorded run; in
-    mode replay its reason.json is read instead of reasoning again (a reexec reasons again: its items may differ)."""
+    mode replay its reason.json is read instead of reasoning again (a reexec reasons again: its items may differ).
+    `before_seal(root)`: writes more files into the finished run (reexec.json) before manifest.json seals it."""
     for module in settings.imports:
         importlib.import_module(module)
     protocol = parse(protocol_bytes.decode("utf-8"), settings.domains)
@@ -809,9 +813,12 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
             ex.document(paper)
         ex.finish()
     except BaseException as exc:   # a crash or Ctrl-C: every file a reader expects, a failed seal, no run.json
-        sealing.fill_expected(root, settings)
-        sealing.seal(root, corpus.manifest_sha256, status="failed",
-                     error=f"{type(exc).__name__}: {modelcall.redact(str(exc))[:300]}")
+        try:
+            sealing.fill_expected(root, settings)
+            sealing.seal(root, corpus.manifest_sha256, status="failed",
+                         error=f"{type(exc).__name__}: {modelcall.redact(str(exc))[:300]}")
+        except Exception as failed:   # the caller must still see the run's own error (its type sets the exit code)
+            print(f"WARN {root}: could not seal the failed run: {type(failed).__name__}: {failed}", file=sys.stderr)
         raise
     ex.cost["seconds"] = round(time.monotonic() - t0, 3)
     if settings.gliner_model is None:   # GLiNER came up after the run started: record the model it served
@@ -830,6 +837,8 @@ def execute_run(protocol_bytes: bytes, settings: Settings, out_dir: Path | str, 
         "cost": ex.cost, "chain_head": ex.events.head, "settings": settings.json(),
         **({"dangling_links": ex.dangling} if settings.relink == "on" else {}),
         **({"unresolved_names": ex.unresolved_names} if settings.names == "on" else {})})
+    if before_seal is not None:
+        before_seal(root)
     sealing.seal(root, corpus.manifest_sha256, status="complete")   # last: after run.json and the final lock
     return root
 

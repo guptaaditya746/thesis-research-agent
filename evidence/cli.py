@@ -252,7 +252,7 @@ def _verify(run: Path) -> int:
     head = read_json(run / RUN_FILE).get("chain_head") if (run / RUN_FILE).is_file() else None
     report = verify(run / EVENTS_FILE, head=head)
     manifest = seal.check(run)
-    sealed = manifest == seal.PRE_EV4 or bool(manifest["ok"])
+    sealed = manifest == seal.PRE_EV4 or bool(manifest["intact"])
     print(json.dumps({"ok": report.ok and sealed, "records": report.records, "head": report.head, "chain_head": head,
                       "errors": report.errors, "manifest": manifest}, indent=1))
     return 0 if report.ok and sealed else 1
